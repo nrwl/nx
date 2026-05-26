@@ -56,7 +56,7 @@ describe('application generator', () => {
     expect(tree.read('test/.eslintrc.json', 'utf-8')).toMatchSnapshot();
     expect(tree.read('test/src/app/App.spec.ts', 'utf-8')).toMatchSnapshot();
     expect(
-      tree.read('test-e2e/playwright.config.ts', 'utf-8')
+      tree.read('test-e2e/playwright.config.mts', 'utf-8')
     ).toMatchSnapshot();
     expect(listFiles(tree)).toMatchSnapshot();
   });

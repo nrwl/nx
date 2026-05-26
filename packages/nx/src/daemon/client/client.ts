@@ -194,7 +194,7 @@ export class DaemonClient {
     {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
-      includeDependentProjects?: boolean;
+      includeDependencies?: boolean;
       allowPartialGraph?: boolean;
     }
   > = new Map();
@@ -361,7 +361,7 @@ export class DaemonClient {
     config: {
       watchProjects: string[] | 'all';
       includeGlobalWorkspaceFiles?: boolean;
-      includeDependentProjects?: boolean;
+      includeDependencies?: boolean;
       allowPartialGraph?: boolean;
     },
     callback: (

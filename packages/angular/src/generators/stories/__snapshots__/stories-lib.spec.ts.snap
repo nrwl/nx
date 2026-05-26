@@ -1,4 +1,4 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`angularStories generator: libraries Stories for non-empty Angular library should generate stories file for standalone components 1`] = `
 "import type { Meta, StoryObj } from '@storybook/angular';

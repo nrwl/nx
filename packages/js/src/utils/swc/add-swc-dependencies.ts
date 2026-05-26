@@ -24,13 +24,21 @@ export function getSwcDependencies(): {
 export function addSwcDependencies(tree: Tree) {
   const { dependencies, devDependencies } = getSwcDependencies();
 
-  return addDependenciesToPackageJson(tree, dependencies, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {
   return addDependenciesToPackageJson(
     tree,
     {},
-    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion }
+    { '@swc-node/register': swcNodeVersion, '@swc/core': swcCoreVersion },
+    undefined,
+    true
   );
 }

@@ -1,4 +1,4 @@
-import { calculateHashForCreateNodes } from '@nx/devkit/internal';
+import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
   CreateNodesV2,
   CreateNodesContextV2,
@@ -85,11 +85,18 @@ export const createNodesV2: CreateNodesV2<GradlePluginOptions> = [
     );
 
     try {
+      const buildFileProjectRoots = buildFiles.map((f) => dirname(f));
+      const buildFileHashes = await calculateHashesForCreateNodes(
+        buildFileProjectRoots,
+        normalizeOptions(options) ?? {},
+        context
+      );
       return createNodesFromFiles(
         makeCreateNodesForGradleConfigFile(
           gradleReport,
           pluginCache,
-          gradleProjectRootToTestFilesMap
+          gradleProjectRootToTestFilesMap,
+          buildFileHashes
         ),
         buildFiles,
         options,
@@ -105,21 +112,40 @@ export const makeCreateNodesForGradleConfigFile =
   (
     gradleReport: GradleReport,
     pluginCache: PluginCache<Partial<ProjectConfiguration>>,
-    gradleProjectRootToTestFilesMap: Record<string, string[]> = {}
+    gradleProjectRootToTestFilesMap: Record<string, string[]> = {},
+    hashes?: string[]
   ) =>
   async (
     gradleFilePath,
     options: GradlePluginOptions | undefined,
-    context: CreateNodesContextV2
+    context: CreateNodesContextV2,
+    idx?: number
   ) => {
     const projectRoot = dirname(gradleFilePath);
     options = normalizeOptions(options);
 
-    const hash = await calculateHashForCreateNodes(
-      projectRoot,
-      options ?? {},
-      context
-    );
+    let hash: string;
+    if (hashes && idx !== undefined) {
+      hash = hashes[idx];
+      if (hash === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
+    } else {
+      const [computed] = await calculateHashesForCreateNodes(
+        [projectRoot],
+        options ?? {},
+        context
+      );
+      if (computed === undefined) {
+        throw new Error(
+          `Failed to compute hash for gradle project at ${projectRoot}`
+        );
+      }
+      hash = computed;
+    }
+
     if (!pluginCache.has(hash)) {
       pluginCache.set(
         hash,
@@ -370,7 +396,6 @@ function getTestCiTargets(
     targetGroups[targetGroupName].push(targetName);
     dependsOn.push({
       target: targetName,
-      projects: 'self',
       params: 'forward',
     });
   });

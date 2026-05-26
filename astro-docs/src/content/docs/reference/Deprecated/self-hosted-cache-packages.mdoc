@@ -1,0 +1,84 @@
+---
+title: 'Deprecation notice: self-hosted remote cache packages'
+description: '@nx/s3-cache, @nx/gcs-cache, @nx/azure-cache, and @nx/shared-fs-cache are deprecated due to CVE-2025-36852 (CREEP).'
+template: splash
+head:
+  - tag: meta
+    attrs:
+      name: robots
+      content: index, follow
+---
+
+`@nx/s3-cache`, `@nx/gcs-cache`, `@nx/azure-cache`, and `@nx/shared-fs-cache` are deprecated as of 2026-05-21.
+The CREEP vulnerability ([CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852)) affects all four packages.
+The flaw is in their design and cannot be patched.
+
+These packages use a single credential that grants read and write access across the entire cache.
+Nothing in the bucket tracks which branch produced which artifact.
+
+An attacker can open a PR off `main` with no source changes but a modified CI workflow that builds a malicious artifact.
+The CI workflow isn't part of the cache key, so the PR hashes to the same key that `main` will hash to.
+If the PR uploads its artifact first, every later `main` build with that key gets a cache hit on the poisoned artifact and ships it without rebuilding.
+
+Supply chain attacks against open-source ecosystems are now a near-weekly occurrence, and cache poisoning is a known vector.
+We have no evidence that these packages have been exploited in the wild, but the design above guarantees that any attempt will succeed.
+Treat these packages as a live risk and migrate.
+
+The packages stay on npm so existing builds don't break for now.
+They will not receive updates or security patches, and may be removed in the future.
+
+For information on the vulnerability, see [The CREEP vulnerability and build cache security](https://nx.dev/blog/creep-vulnerability-build-cache-security#the-creep-vulnerability).
+
+## Affected packages
+
+- `@nx/s3-cache`
+- `@nx/gcs-cache`
+- `@nx/azure-cache`
+- `@nx/shared-fs-cache`
+
+## Recommended: Migrate to Nx Cloud OR disable remote cache
+
+[Nx Cloud](https://nx.dev/nx-cloud) is the best solution for remote cache.
+It includes a free tier for small teams and requires no infrastructure on your side.
+
+To connect your workspace, see [Connect to Nx Cloud](/docs/getting-started/nx-cloud).
+If you need on-premises storage, see [Self-hosted caching](/docs/guides/tasks--caching/self-hosted-caching).
+
+If you cannot use Nx Cloud right now, we recommend disabling remote cache to avoid exploitation of the CREEP vulnerability.
+
+## Advanced: Build your own
+
+{% aside type="caution" title="Self-hosting a remote cache is high-risk" %}
+Implementing a remote cache server yourself means accepting full responsibility for the threat model that CREEP exposed.
+You must understand cache poisoning, artifact integrity, and access control before you deploy one.
+A misconfigured implementation reproduces the same vulnerability these deprecated packages had.
+
+The OpenAPI spec requires a 409 Conflict response when a client tries to write a cache key that already exists.
+Implementations that allow overwriting existing entries are vulnerable even without a race.
+Your implementation must enforce 409 on existing keys.
+
+Most teams should use Nx Cloud instead.
+{% /aside %}
+
+If you have the resources to harden and operate a cache server, you can implement the [Nx remote cache OpenAPI specification](/docs/guides/tasks--caching/self-hosted-caching#build-your-own-caching-server).
+The four deprecated packages will not be updated to match that specification.
+
+## FAQ
+
+### Were these packages compromised?
+
+No. These remote cache packages have not been compromised.
+The security issue is that bucket-based cache solutions are open to cache poisoning attacks by design.
+
+### What should I do if I'm using one of these packages today?
+
+Migrate to Nx Cloud, or implement the OpenAPI specification yourself if you have the resources to harden it.
+The packages stay on npm but will not be patched.
+
+### Will these packages receive security patches?
+
+No. The vulnerability is in the design of the packages, not in a fixable bug.
+
+### Will the packages be unpublished from npm?
+
+No. They remain on npm for now so existing builds do not break immediately. They will not receive updates.

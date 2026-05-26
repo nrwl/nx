@@ -6,7 +6,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';

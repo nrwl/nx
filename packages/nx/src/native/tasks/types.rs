@@ -30,7 +30,7 @@ pub struct Task {
     /// Unix timestamp of when a Batch Task ends
     pub end_time: Option<i64>,
     /// Determines if a given task should be cacheable.
-    pub cache: Option<bool>,
+    pub cache: bool,
     /// Determines if a given task should be parallelizable.
     pub parallelism: Option<bool>,
     /// This denotes if the task runs continuously

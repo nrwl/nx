@@ -86,6 +86,7 @@ export interface MigrationsJsonEntry {
   description?: string;
   implementation?: string;
   factory?: string;
+  prompt?: string;
   requires?: Record<string, string>;
 }
 
@@ -97,7 +98,8 @@ export interface GeneratedMigrationDetails {
   version: string;
   package: string;
   description: string;
-  implementation: string;
+  implementation?: string;
+  prompt?: string;
 }
 
 export interface MigrationsJson {

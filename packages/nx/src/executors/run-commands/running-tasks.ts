@@ -2,8 +2,8 @@ import * as pc from 'picocolors';
 import { ChildProcess, spawn, Serializable } from 'child_process';
 import { env as appendLocalEnv } from 'npm-run-path';
 import { isAbsolute, join } from 'path';
-import treeKill from 'tree-kill';
 import { ExecutorContext } from '../../config/misc-interfaces';
+import { killProcessTree, killProcessTreeGraceful } from '../../native';
 import {
   createPseudoTerminal,
   PseudoTerminal,
@@ -30,6 +30,11 @@ export class ParallelRunningTasks implements RunningTask {
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
 
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitCode = 0;
+  private exitTerminalOutput = '';
+
   constructor(
     options: NormalizedRunCommandsOptions,
     context: ExecutorContext,
@@ -55,6 +60,9 @@ export class ParallelRunningTasks implements RunningTask {
   }
 
   async getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      return { code: this.exitCode, terminalOutput: this.exitTerminalOutput };
+    }
     return new Promise((res) => {
       this.onExit((code, terminalOutput) => {
         res({ code, terminalOutput });
@@ -67,6 +75,10 @@ export class ParallelRunningTasks implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.exitCode, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
@@ -76,16 +88,18 @@ export class ParallelRunningTasks implements RunningTask {
     }
   }
 
-  async kill(signal?: NodeJS.Signals) {
-    await Promise.all(
-      this.childProcesses.map(async (p) => {
-        try {
-          return p.kill();
-        } catch (e) {
-          console.error(`Unable to terminate "${p.command}"\nError:`, e);
-        }
-      })
-    );
+  async kill(signal?: NodeJS.Signals): Promise<void> {
+    await Promise.allSettled(this.childProcesses.map((p) => p.kill(signal)));
+  }
+
+  private emitExit(code: number, terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitCode = code;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(code, terminalOutput);
+    }
   }
 
   private async run() {
@@ -123,9 +137,7 @@ export class ParallelRunningTasks implements RunningTask {
         }
       }
 
-      for (const cb of this.exitCallbacks) {
-        cb(code, terminalOutput);
-      }
+      this.emitExit(code, terminalOutput);
     } else {
       const runningProcesses = new Set<RunningNodeProcess>();
       let hasFailure = false;
@@ -154,10 +166,7 @@ export class ParallelRunningTasks implements RunningTask {
             failureDetails = { childProcess, code, terminalOutput };
 
             // Immediately terminate all other running processes
-            await this.terminateRemainingProcesses(
-              runningProcesses,
-              childProcess
-            );
+            this.terminateRemainingProcesses(runningProcesses, childProcess);
           }
 
           runningProcesses.delete(childProcess);
@@ -174,49 +183,23 @@ export class ParallelRunningTasks implements RunningTask {
           process.stderr.write(output);
         }
 
-        for (const cb of this.exitCallbacks) {
-          cb(1, terminalOutput);
-        }
+        this.emitExit(1, terminalOutput);
       } else {
-        for (const cb of this.exitCallbacks) {
-          cb(0, terminalOutput);
-        }
+        this.emitExit(0, terminalOutput);
       }
     }
   }
 
-  private async terminateRemainingProcesses(
+  private terminateRemainingProcesses(
     runningProcesses: Set<RunningNodeProcess>,
     failedProcess: RunningNodeProcess
-  ): Promise<void> {
-    const terminationPromises: Promise<void>[] = [];
-
+  ): void {
     const processesToTerminate = [...runningProcesses].filter(
       (p) => p !== failedProcess
     );
     for (const process of processesToTerminate) {
       runningProcesses.delete(process);
-
-      // Terminate the process
-      terminationPromises.push(
-        process.kill('SIGTERM').catch((err) => {
-          // Log error but don't fail the entire operation
-          if (this.streamOutput) {
-            console.error(
-              `Failed to terminate process "${process.command}":`,
-              err
-            );
-          }
-        })
-      );
-    }
-
-    // Wait for all terminations to complete with a timeout
-    if (terminationPromises.length > 0) {
-      await Promise.race([
-        Promise.all(terminationPromises),
-        new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
-      ]);
+      process.kill('SIGTERM').catch(() => {});
     }
   }
 }
@@ -229,6 +212,10 @@ export class SeriallyRunningTasks implements RunningTask {
   private code: number | null = 0;
   private error: any;
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitTerminalOutput = '';
 
   constructor(
     options: NormalizedRunCommandsOptions,
@@ -243,13 +230,29 @@ export class SeriallyRunningTasks implements RunningTask {
       .finally(() => {
         const terminalOutput = this.terminalOutputChunks.join('');
         this.terminalOutputChunks = [];
-        for (const cb of this.exitCallbacks) {
-          cb(this.code, terminalOutput);
-        }
+        this.emitExit(terminalOutput);
       });
   }
 
+  private emitExit(terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(this.code, terminalOutput);
+    }
+  }
+
   getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      if (this.error) {
+        return Promise.reject(this.error);
+      }
+      return Promise.resolve({
+        code: this.code,
+        terminalOutput: this.exitTerminalOutput,
+      });
+    }
     return new Promise((res, rej) => {
       this.onExit((code, terminalOutput) => {
         if (this.error) {
@@ -262,6 +265,10 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.code, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
@@ -274,7 +281,7 @@ export class SeriallyRunningTasks implements RunningTask {
   }
 
   kill(signal?: NodeJS.Signals) {
-    return this.currentProcess.kill(signal);
+    return this.currentProcess?.kill(signal);
   }
 
   private async run(
@@ -379,7 +386,14 @@ class RunningNodeProcess implements RunningTask {
   private exitCallbacks: Array<(code: number, terminalOutput: string) => void> =
     [];
   private outputCallbacks: Array<(terminalOutput: string) => void> = [];
+  private killPromise: Promise<void> | null = null;
+  private closedPromise: Promise<void>;
   public command: string;
+
+  // Memoized exit so late getResults()/onExit() callers don't hang.
+  private exited = false;
+  private exitCode = 0;
+  private exitTerminalOutput = '';
 
   constructor(
     commandConfig: RunCommandsCommandOptions,
@@ -400,9 +414,15 @@ class RunningNodeProcess implements RunningTask {
     }
     this.childProcess = spawn(commandConfig.command, [], {
       shell: true,
+      detached: process.platform !== 'win32',
       env,
       cwd,
       windowsHide: true,
+      stdio: ['inherit', 'pipe', 'pipe'],
+    });
+
+    this.closedPromise = new Promise<void>((resolve) => {
+      this.childProcess.on('close', resolve);
     });
     this.childProcess.stdout?.setEncoding('utf8');
     this.childProcess.stderr?.setEncoding('utf8');
@@ -417,6 +437,12 @@ class RunningNodeProcess implements RunningTask {
   }
 
   getResults(): Promise<{ code: number; terminalOutput: string }> {
+    if (this.exited) {
+      return Promise.resolve({
+        code: this.exitCode,
+        terminalOutput: this.exitTerminalOutput,
+      });
+    }
     return new Promise((res) => {
       this.onExit((code, terminalOutput) => {
         res({ code, terminalOutput });
@@ -429,6 +455,10 @@ class RunningNodeProcess implements RunningTask {
   }
 
   onExit(cb: (code: number, terminalOutput: string) => void): void {
+    if (this.exited) {
+      cb(this.exitCode, this.exitTerminalOutput);
+      return;
+    }
     this.exitCallbacks.push(cb);
   }
 
@@ -436,18 +466,34 @@ class RunningNodeProcess implements RunningTask {
     this.childProcess.send(message);
   }
 
+  private emitExit(code: number, terminalOutput: string): void {
+    if (this.exited) return;
+    this.exited = true;
+    this.exitCode = code;
+    this.exitTerminalOutput = terminalOutput;
+    for (const cb of this.exitCallbacks) {
+      cb(code, terminalOutput);
+    }
+  }
+
   kill(signal?: NodeJS.Signals): Promise<void> {
-    return new Promise<void>((res, rej) => {
-      treeKill(this.childProcess.pid, signal, (err) => {
-        // On Windows, tree-kill (which uses taskkill) may fail when the process or its child process is already terminated.
-        // Ignore the errors, otherwise we will log them unnecessarily.
-        if (err && process.platform !== 'win32') {
-          rej(err);
-        } else {
-          res();
-        }
-      });
-    });
+    if (this.killPromise) return this.killPromise;
+    if (!this.childProcess.pid) return Promise.resolve();
+    // Cache the promise so concurrent callers (e.g. cleanup() after a
+    // fire-and-forget kill from cleanUpUnneededContinuousTasks) await the
+    // same in-progress operation instead of no-oping.
+    this.killPromise = killProcessTreeGraceful(
+      this.childProcess.pid,
+      signal
+    ).then(() =>
+      // Wait for stdio drain and close events before the orchestrator
+      // tears down the event loop via process.exit().
+      Promise.race([
+        this.closedPromise,
+        new Promise<void>((resolve) => setTimeout(resolve, 1000)),
+      ])
+    );
+    return this.killPromise;
   }
 
   private triggerOutputListeners(output: string) {
@@ -460,6 +506,35 @@ class RunningNodeProcess implements RunningTask {
     commandConfig: RunCommandsCommandOptions,
     streamOutput: boolean
   ) {
+    // Named handlers so they can be removed when the child exits.
+    // Otherwise each RunningNodeProcess leaks process listeners; with
+    // many run-commands tasks this triggers MaxListenersExceededWarning.
+    const isForked = !!process.env.NX_FORKED_TASK_EXECUTOR;
+    const onProcessExit = () => {
+      if (this.childProcess.pid && !this.killPromise) {
+        killProcessTree(this.childProcess.pid);
+      }
+    };
+    const onSigInt = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigTerm = () => {
+      this.kill('SIGTERM');
+    };
+    const onSigHup = () => {
+      this.kill('SIGTERM');
+    };
+    const removeProcessListeners = () => {
+      process.removeListener('exit', onProcessExit);
+      if (isForked) {
+        process.removeListener('SIGINT', onSigInt);
+        process.removeListener('SIGTERM', onSigTerm);
+        process.removeListener('SIGHUP', onSigHup);
+      }
+    };
+
+    this.childProcess.stdout.setEncoding('utf8');
+    this.childProcess.stderr.setEncoding('utf8');
     this.childProcess.stdout.on('data', (data) => {
       const output = addColorAndPrefix(data, commandConfig);
 
@@ -469,10 +544,7 @@ class RunningNodeProcess implements RunningTask {
       if (streamOutput) {
         process.stdout.write(output);
       }
-      if (
-        this.readyWhenStatus.length &&
-        isReady(this.readyWhenStatus, data.toString())
-      ) {
+      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, data)) {
         for (const cb of this.exitCallbacks) {
           cb(0, this.terminalOutputChunks.join(''));
         }
@@ -487,10 +559,7 @@ class RunningNodeProcess implements RunningTask {
       if (streamOutput) {
         process.stderr.write(output);
       }
-      if (
-        this.readyWhenStatus.length &&
-        isReady(this.readyWhenStatus, err.toString())
-      ) {
+      if (this.readyWhenStatus.length && isReady(this.readyWhenStatus, err)) {
         for (const cb of this.exitCallbacks) {
           cb(1, this.terminalOutputChunks.join(''));
         }
@@ -505,54 +574,37 @@ class RunningNodeProcess implements RunningTask {
       const terminalOutput = this.terminalOutputChunks.join('');
       this.terminalOutputChunks = [];
       removeProcessListeners();
-      for (const cb of this.exitCallbacks) {
-        cb(1, terminalOutput);
-      }
+      this.emitExit(1, terminalOutput);
     });
-
-    // Store signal/exit handlers so they can be removed when the child exits.
-    // Without cleanup, each RunningNodeProcess leaks 4 process listeners.
-    // In a large monorepo (2600+ run-commands tasks), these accumulate and
-    // cause a multi-minute synchronous hang at process.exit() as each handler
-    // calls treeKill on an already-dead PID.
-    const onExit = () => {
-      this.kill();
-    };
-    const onSigInt = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigTerm = () => {
-      this.kill('SIGTERM');
-    };
-    const onSigHup = () => {
-      this.kill('SIGTERM');
-    };
-    const removeProcessListeners = () => {
-      process.removeListener('exit', onExit);
-      process.removeListener('SIGINT', onSigInt);
-      process.removeListener('SIGTERM', onSigTerm);
-      process.removeListener('SIGHUP', onSigHup);
-    };
-
     this.childProcess.on('exit', (code, signal) => {
       if (code === null) {
         code = signalToCode(signal);
       }
       removeProcessListeners();
+      const terminalOutput = this.terminalOutputChunks.join('');
+      this.terminalOutputChunks = [];
       if (!this.readyWhenStatus.length || isReady(this.readyWhenStatus)) {
-        const terminalOutput = this.terminalOutputChunks.join('');
-        this.terminalOutputChunks = [];
-        for (const cb of this.exitCallbacks) {
-          cb(code, terminalOutput);
-        }
+        this.emitExit(code, terminalOutput);
+      } else if (code !== 0) {
+        // Process crashed before readyWhen matched; surface the failure so
+        // awaiters unblock. A clean exit (code 0) is left as-is — a parallel
+        // companion command may still produce the readyWhen output.
+        this.emitExit(code, terminalOutput);
       }
     });
-
-    // Terminate any task processes on exit
-    process.on('exit', onExit);
-    process.on('SIGINT', onSigInt);
-    process.on('SIGTERM', onSigTerm);
-    process.on('SIGHUP', onSigHup);
+    // Terminate any task processes on exit (sync, last resort).
+    // Skip if graceful kill is already in progress — it tracks cleanup
+    // subprocesses and we must not interfere with them.
+    process.on('exit', onProcessExit);
+    // In the direct path, detached children don't get OS SIGINT (own process
+    // group via setsid); the orchestrator's cleanup() sends SIGTERM via
+    // killProcessTreeGraceful. Signal handlers here are only needed in the
+    // forked path where there's no orchestrator to dispatch signals.
+    if (isForked) {
+      process.on('SIGINT', onSigInt);
+      process.on('SIGTERM', onSigTerm);
+      process.on('SIGHUP', onSigHup);
+    }
   }
 }
 
@@ -719,21 +771,31 @@ function registerProcessListener(
     }
   });
 
-  // Terminate any task processes on exit
+  // Terminate any task processes on exit (sync, last resort).
+  // The per-child exit handlers and PseudoTerminal.shutdown() use the
+  // sync killProcessTree for this path. We call kill() here as a
+  // best-effort fallback — it returns a Promise but on 'exit' only
+  // synchronous work runs, so the initial signal is sent but the
+  // grace period won't be awaited. That's acceptable: 'exit' is the
+  // last resort after SIGINT/SIGTERM handlers have already had their
+  // chance to do graceful shutdown.
   process.on('exit', () => {
     runningTask.kill();
   });
-  process.on('SIGINT', () => {
-    runningTask.kill('SIGTERM');
-  });
-  process.on('SIGTERM', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
-  process.on('SIGHUP', () => {
-    runningTask.kill('SIGTERM');
-    // no exit here because we expect child processes to terminate which
-    // will store results to the cache and will terminate this process
-  });
+  // In the direct path, the orchestrator handles signal dispatch to children.
+  // These handlers are only needed in the forked path where there's no
+  // orchestrator.
+  if (process.env.NX_FORKED_TASK_EXECUTOR) {
+    process.on('SIGINT', () => {
+      Promise.resolve(runningTask.kill('SIGTERM')).finally(() => {
+        process.exit(signalToCode('SIGINT'));
+      });
+    });
+    process.on('SIGTERM', () => {
+      runningTask.kill('SIGTERM');
+    });
+    process.on('SIGHUP', () => {
+      runningTask.kill('SIGTERM');
+    });
+  }
 }

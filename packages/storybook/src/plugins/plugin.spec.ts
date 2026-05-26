@@ -120,7 +120,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-app --includeDependentProjects -- npx nx build-deps my-app",
+                    "command": "npx nx watch --projects my-app --includeDependencies -- npx nx build-deps my-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -220,7 +220,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-ng-app --includeDependentProjects -- npx nx build-deps my-ng-app",
+                    "command": "npx nx watch --projects my-ng-app --includeDependencies -- npx nx build-deps my-ng-app",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",
@@ -318,7 +318,7 @@ describe('@nx/storybook/plugin', () => {
                     },
                   },
                   "watch-deps": {
-                    "command": "npx nx watch --projects my-react-lib --includeDependentProjects -- npx nx build-deps my-react-lib",
+                    "command": "npx nx watch --projects my-react-lib --includeDependencies -- npx nx build-deps my-react-lib",
                     "continuous": true,
                     "dependsOn": [
                       "build-deps",

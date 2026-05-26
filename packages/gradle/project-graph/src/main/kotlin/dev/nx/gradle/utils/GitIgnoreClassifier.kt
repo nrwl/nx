@@ -75,7 +75,10 @@ class GitIgnoreClassifier(private val workspaceRoot: File) {
 
     val relativePath =
         try {
-          path.relativeTo(workspaceRoot).path
+          path
+              .relativeTo(workspaceRoot)
+              .path
+              .replace(File.separatorChar, FastIgnoreRule.PATH_SEPARATOR)
         } catch (e: IllegalArgumentException) {
           return false
         }

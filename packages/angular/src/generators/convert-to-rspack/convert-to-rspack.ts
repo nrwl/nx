@@ -21,6 +21,7 @@ import type { RspackPluginOptions } from '@nx/rspack/plugin';
 import { prompt } from 'enquirer';
 import { relative, resolve } from 'path';
 import { join } from 'path/posix';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import { nxVersion } from '../../utils/versions';
 import { getAngularRspackVersion, versions } from '../utils/version-utils';
 import { createConfig } from './lib/create-config';
@@ -332,6 +333,7 @@ export async function convertToRspack(
   tree: Tree,
   schema: ConvertToRspackSchema
 ) {
+  assertSupportedAngularVersion(tree);
   let { project: projectName } = schema;
   if (!projectName) {
     projectName = await getProjectToConvert(tree);

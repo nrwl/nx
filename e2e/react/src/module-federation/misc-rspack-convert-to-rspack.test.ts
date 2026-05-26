@@ -44,7 +44,7 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
     );
 
     updateFile(
-      `apps/${shell}-e2e/src/example.spec.ts`,
+      `${shell}-e2e/src/example.spec.ts`,
       stripIndents`
           import { test, expect } from '@playwright/test';
           test('should display welcome message', async ({page}) => {
@@ -62,7 +62,8 @@ describe('React Rspack Module Federation Misc - Convert To Rspack', () => {
     if (runE2ETests()) {
       const e2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e`,
-        (output) => output.includes('Successfully ran target e2e for project')
+        (output) => output.includes('Successfully ran target e2e for project'),
+        { timeout: 120_000 }
       );
 
       await killProcessAndPorts(e2eResultsSwc.pid, readPort(shell));

@@ -133,9 +133,9 @@ export default function Index() {
 `;
 
 exports[`Remix Application Integrated Repo --e2eTestRunner should generate a cypress e2e application for the app 1`] = `
-"import { nxE2EPreset } from '@nx/cypress/plugins/cypress-preset';
-import { defineConfig } from 'cypress';
-export default defineConfig({
+"const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
   e2e: {
     ...nxE2EPreset(__filename, {
       cypressDir: 'src',
@@ -164,13 +164,20 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+// import 'dotenv/config';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .mts file so Node forces ESM regardless of workspace
+ * \`type\`. Playwright routes \`.mts\` through its ESM loader (dynamic import,
+ * bypassing the pirates CJS-compile path), and Nx's native TS strip loads
+ * \`.mts\` directly. Playwright's configLoader auto-discovers
+ * \`playwright.config.mts\` via its extension list
+ * (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(import.meta.dirname, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,
@@ -389,7 +396,7 @@ exports[`Remix Application Standalone Project Repo --e2eTestRunner should genera
 import { defineConfig } from 'cypress';
 export default defineConfig({
   e2e: {
-    ...nxE2EPreset(__filename, {
+    ...nxE2EPreset(import.meta.url, {
       cypressDir: 'src',
       webServerCommands: {
         default: 'npx nx run test:dev',
@@ -699,13 +706,20 @@ const baseURL = process.env['BASE_URL'] || 'http://localhost:3000';
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
  */
-// require('dotenv').config();
+// import 'dotenv/config';
 
 /**
  * See https://playwright.dev/docs/test-configuration.
+ *
+ * Generated as a .mts file so Node forces ESM regardless of workspace
+ * \`type\`. Playwright routes \`.mts\` through its ESM loader (dynamic import,
+ * bypassing the pirates CJS-compile path), and Nx's native TS strip loads
+ * \`.mts\` directly. Playwright's configLoader auto-discovers
+ * \`playwright.config.mts\` via its extension list
+ * (.ts/.js/.mts/.mjs/.cts/.cjs).
  */
 export default defineConfig({
-  ...nxE2EPreset(__filename, { testDir: './src' }),
+  ...nxE2EPreset(import.meta.dirname, { testDir: './src' }),
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     baseURL,

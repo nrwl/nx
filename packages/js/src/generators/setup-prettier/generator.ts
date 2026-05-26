@@ -4,6 +4,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { prettierVersion } from '../../utils/versions';
 import type { GeneratorOptions } from './schema';
@@ -12,6 +13,8 @@ export async function setupPrettierGenerator(
   tree: Tree,
   options: GeneratorOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedTypescriptVersion(tree);
+
   const prettierTask = generatePrettierSetup(tree, {
     skipPackageJson: options.skipPackageJson,
   });

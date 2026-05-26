@@ -2,6 +2,15 @@
   "name": "@nx/workspace",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Workspace plugin contains executors and generators that are useful for any Nx workspace. It should be present in every Nx workspace and other plugins build on it.",
   "repository": {
     "type": "git",
@@ -19,9 +28,15 @@
     "Cypress",
     "CLI"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "tasks-runners/default": [
+        "dist/tasks-runners/default.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -36,6 +51,30 @@
     "packageGroup": {
       "nx-cloud": "latest",
       "nx": "*"
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./tasks-runners/default": {
+      "@nx/nx-source": "./tasks-runners/default.ts",
+      "types": "./dist/tasks-runners/default.d.ts",
+      "default": "./dist/tasks-runners/default.js"
+    },
+    "./presets/*": {
+      "@nx/nx-source": "./presets/*.json",
+      "default": "./dist/presets/*.json"
+    },
+    "./presets/*.json": {
+      "@nx/nx-source": "./presets/*.json",
+      "default": "./dist/presets/*.json"
     }
   },
   "dependencies": {

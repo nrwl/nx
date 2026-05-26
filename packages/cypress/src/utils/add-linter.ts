@@ -10,8 +10,6 @@ import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
-import {
   addExtendsToLintConfig,
   addOverrideToLintConfig,
   addPluginsToLintConfig,
@@ -19,8 +17,8 @@ import {
   findEslintFile,
   isEslintConfigSupported,
   replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 import { versions } from './versions';
 
 export interface CyLinterOptions {
@@ -83,7 +81,9 @@ export async function addLinterToCyProject(
       addDependenciesToPackageJson(
         tree,
         {},
-        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion }
+        { 'eslint-plugin-cypress': pkgVersions.eslintPluginCypressVersion },
+        undefined,
+        true
       )
     );
   }

@@ -2,7 +2,7 @@ import {
   calculateProjectDependencies,
   createTmpTsConfig,
   DependentBuildableProjectNode,
-} from '@nx/js/src/utils/buildable-libs-utils';
+} from '@nx/js/internal';
 import { ProjectGraph, readCachedProjectGraph } from '@nx/devkit';
 import { join } from 'path';
 

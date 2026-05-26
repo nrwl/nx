@@ -7,7 +7,7 @@ import {
   getProjectConfigByPath,
   getTempTailwindPath,
   isCtProjectUsingBuildProject,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/internal';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -20,7 +20,7 @@ import {
   readTargetOptions,
   stripIndents,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { existsSync, lstatSync, mkdirSync, writeFileSync } from 'fs';
 import { dirname, join, relative, sep } from 'path';
 import { gte } from 'semver';
