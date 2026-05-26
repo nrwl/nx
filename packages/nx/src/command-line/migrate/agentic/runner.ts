@@ -1,13 +1,31 @@
 import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { extname } from 'path';
 import { migratePrompt } from '../safe-prompt';
-import { readHandoff, waitForValidHandoff } from './handoff';
+import {
+  HandoffReadFailureReason,
+  readHandoffWithReason,
+  waitForValidHandoff,
+} from './handoff';
 import {
   AgentDefinition,
   DetectedInstalledAgent,
   HandoffOutcome,
   InvocationContext,
 } from './types';
+
+/**
+ * Carries the underlying failure mode into the ambiguous-outcome prompt so the
+ * user can see *why* the agent's handoff is missing/malformed (spawn ENOENT,
+ * non-zero exit, JSON parse error, …) instead of every cause collapsing into
+ * the same "the agent did not write a handoff" message.
+ */
+interface AmbiguousCause {
+  spawnError?: string;
+  exitCode?: number | null;
+  exitSignal?: NodeJS.Signals | null;
+  exitError?: string;
+  handoff?: { reason: HandoffReadFailureReason; detail?: string };
+}
 
 // How long to wait for the agent to exit gracefully after sending SIGINT once
 // a valid handoff has been written. Long enough for an interactive agent to
@@ -50,15 +68,14 @@ export async function runAgentic(
 
   let child: ChildProcess;
   try {
-    // windowsHide is duplicated as a literal here to satisfy the
-    // @nx/workspace-require-windows-hide lint rule; adapted.options already
-    // carries it.
     child = spawn(adapted.binary, adapted.args, {
       ...adapted.options,
       windowsHide: true,
     });
-  } catch {
-    return resolveFromHandoffOrPrompt(handoffFilePath);
+  } catch (err) {
+    return resolveFromHandoffOrPrompt(handoffFilePath, false, {
+      spawnError: err instanceof Error ? err.message : String(err),
+    });
   }
 
   // Counts user-initiated SIGINTs caught while the agent runs. The agent
@@ -79,21 +96,21 @@ export async function runAgentic(
 
   const handoffWatchAbort = new AbortController();
   const exitPromise = waitForExit(child);
-  // Polls for a valid handoff file. When the agent's instructions tell it to
-  // write the handoff JSON as its last step, this races ahead of the agent's
-  // own exit (interactive REPL agents may stay open at a prompt) so the
-  // orchestrator can close the session itself.
   const handoffPromise = waitForValidHandoff(handoffFilePath, {
     signal: handoffWatchAbort.signal,
     intervalMs: handoffPollIntervalMs,
   });
 
+  let exitInfo: ExitInfo = {};
   try {
     const winner = await Promise.race([
-      exitPromise.then(() => 'exit' as const),
-      // The rejection handler swallows the abort-triggered rejection that
-      // fires from the `finally` block below after the race has already
-      // settled — without it node would log it as an unhandled rejection.
+      exitPromise.then((info) => {
+        exitInfo = info;
+        return 'exit' as const;
+      }),
+      // Rejection handler swallows the abort-triggered rejection from the
+      // `finally` block after the race has settled — otherwise Node logs it
+      // as an unhandled rejection.
       handoffPromise.then(
         () => 'handoff' as const,
         () => 'exit' as const
@@ -101,22 +118,29 @@ export async function runAgentic(
     ]);
     if (winner === 'handoff') {
       await closeAgentSession(child, exitPromise);
+      exitInfo = await exitPromise;
     }
   } finally {
     handoffWatchAbort.abort();
     process.removeListener('SIGINT', swallowSigint);
-    // Some agent TUIs (notably Codex) clear ICANON/ECHO/OPOST when they
-    // take over the controlling tty and do not restore them on exit —
-    // particularly when we close them via SIGINT. With OPOST off, every
-    // subsequent `\n` we emit is a bare line-feed (no implicit CR) and the
-    // per-migration output renders as a column-skewed staircase. They also
-    // leave inline TUI cells painted on rows our wrapped log lines partially
-    // overwrite, so cells past the end of our text bleed through as
-    // unrelated fragments.
     restoreTerminalAfterAgent();
   }
 
-  return resolveFromHandoffOrPrompt(handoffFilePath, userInterruptCount > 0);
+  return resolveFromHandoffOrPrompt(
+    handoffFilePath,
+    userInterruptCount > 0,
+    exitInfoToCause(exitInfo)
+  );
+}
+
+function exitInfoToCause(info: ExitInfo): AmbiguousCause {
+  const cause: AmbiguousCause = {};
+  if (info.code !== undefined && info.code !== null && info.code !== 0) {
+    cause.exitCode = info.code;
+  }
+  if (info.signal) cause.exitSignal = info.signal;
+  if (info.error) cause.exitError = info.error.message;
+  return cause;
 }
 
 function restoreTerminalAfterAgent(): void {
@@ -150,7 +174,7 @@ function restoreTerminalAfterAgent(): void {
  */
 async function closeAgentSession(
   child: ChildProcess,
-  exitPromise: Promise<void>
+  exitPromise: Promise<ExitInfo>
 ): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
   try {
@@ -183,45 +207,53 @@ async function closeAgentSession(
   await exitPromise;
 }
 
-function waitForExit(child: ChildProcess): Promise<void> {
-  return new Promise<void>((resolve) => {
+interface ExitInfo {
+  code?: number | null;
+  signal?: NodeJS.Signals | null;
+  error?: Error;
+}
+
+function waitForExit(child: ChildProcess): Promise<ExitInfo> {
+  return new Promise<ExitInfo>((resolve) => {
     let settled = false;
-    const done = () => {
+    const done = (info: ExitInfo) => {
       if (settled) return;
       settled = true;
-      resolve();
+      resolve(info);
     };
-    child.on('exit', done);
+    child.on('exit', (code, signal) => done({ code, signal }));
     // `error` fires when spawn itself fails (e.g. binary disappeared between
     // detection and run). Treat it as exit with no handoff so the ambiguous
     // flow kicks in.
-    child.on('error', done);
+    child.on('error', (error) => done({ error }));
   });
 }
 
 async function resolveFromHandoffOrPrompt(
   handoffFilePath: string,
-  userInterrupted = false
+  userInterrupted = false,
+  cause: AmbiguousCause = {}
 ): Promise<HandoffOutcome> {
-  const handoff = readHandoff(handoffFilePath);
-  if (handoff !== null) {
+  const read = readHandoffWithReason(handoffFilePath);
+  if (read.ok) {
     return {
-      kind: handoff.status,
-      summary: handoff.summary,
-      extras: handoff.extras,
+      kind: read.handoff.status,
+      summary: read.handoff.summary,
+      extras: read.handoff.extras,
     };
   }
   if (userInterrupted) {
-    // The user pressed Ctrl+C during the agent run. Don't show the
-    // abort/continue prompt — they already told us what they want, and
-    // the TTY state after a SIGINT-killed child trips enquirer's
-    // setRawMode-EIO and ERR_USE_AFTER_CLOSE bugs anyway. The orchestrator
-    // surfaces the abort outcome via its standard failure cascade (`✗
-    // Aborted by user.` / `NX Prompt migration … was aborted by user.`)
-    // so no additional message is needed here.
+    // User pressed Ctrl+C. Don't show the abort/continue prompt — they
+    // already told us what they want, and the TTY state after a
+    // SIGINT-killed child trips enquirer's setRawMode-EIO and
+    // ERR_USE_AFTER_CLOSE bugs. The orchestrator's standard failure
+    // cascade surfaces the abort outcome.
     return { kind: 'ambiguous-abort' };
   }
-  return promptAmbiguous();
+  return promptAmbiguous({
+    ...cause,
+    handoff: { reason: read.reason, detail: read.detail },
+  });
 }
 
 /**
@@ -274,20 +306,23 @@ function escapeCmdCommand(arg: string): string {
   return escapeCmdArg(arg).replace(CMD_META_CHARS, '^$1');
 }
 
-async function promptAmbiguous(): Promise<HandoffOutcome> {
+async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
   // Blank line keeps the prompt from gluing to the agent's exit message
   // (e.g. Claude Code's "Resume this session with: claude --resume <id>"),
   // which would otherwise sit immediately above this question.
   console.log();
+  const causeLines = describeAmbiguousCause(cause);
+  if (causeLines.length > 0) {
+    process.stdout.write(causeLines.map((l) => `  ${l}`).join('\n') + '\n\n');
+  }
   // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
   // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
-  // Any other rejection (programmatic or otherwise) we treat as abort.
+  // Any other rejection we treat as abort.
   try {
     const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
       name: 'choice',
       type: 'select',
-      message:
-        'The agent did not write a handoff file. How should nx migrate proceed?',
+      message: 'How should nx migrate proceed?',
       choices: [
         { name: 'abort', message: 'Treat as failed — abort the run' },
         {
@@ -302,4 +337,45 @@ async function promptAmbiguous(): Promise<HandoffOutcome> {
   } catch {
     return { kind: 'ambiguous-abort' };
   }
+}
+
+function describeAmbiguousCause(cause: AmbiguousCause): string[] {
+  const lines: string[] = [];
+  if (cause.spawnError) {
+    lines.push(`Could not spawn the agent: ${cause.spawnError}`);
+  }
+  if (cause.exitError) {
+    lines.push(`Agent process emitted an error: ${cause.exitError}`);
+  }
+  if (cause.exitCode !== undefined && cause.exitCode !== null) {
+    lines.push(`Agent exited with code ${cause.exitCode}.`);
+  }
+  if (cause.exitSignal) {
+    lines.push(`Agent was terminated by signal ${cause.exitSignal}.`);
+  }
+  switch (cause.handoff?.reason) {
+    case 'missing':
+      lines.push('No handoff file was written.');
+      break;
+    case 'read-error':
+      lines.push(
+        `Handoff file could not be read${
+          cause.handoff.detail ? `: ${cause.handoff.detail}` : '.'
+        }`
+      );
+      break;
+    case 'parse-error':
+      lines.push(
+        `Handoff file contained invalid JSON${
+          cause.handoff.detail ? `: ${cause.handoff.detail}` : '.'
+        }`
+      );
+      break;
+    case 'shape-mismatch':
+      lines.push(
+        'Handoff file was missing required fields or had an unexpected shape.'
+      );
+      break;
+  }
+  return lines;
 }

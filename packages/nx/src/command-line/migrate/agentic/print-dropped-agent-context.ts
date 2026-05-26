@@ -34,10 +34,23 @@ export function formatDroppedAgentContextForOuterAgent(
   return [
     preamble,
     ``,
-    `<agent_context migration="${id}">`,
+    `<agent_context migration="${escapeXmlAttr(id)}">`,
     ...entries.map(renderListItem),
     `</agent_context>`,
   ].join('\n');
+}
+
+// Migration package/name come from arbitrary user-authored package.json /
+// migrations.json — a name with `"` / `<` / `>` / `&` would produce malformed
+// XML the outer agent can't parse. `'` is not strictly required for
+// double-quoted attribute values but is included for defense.
+function escapeXmlAttr(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 export function printDroppedAgentContextForOuterAgent(

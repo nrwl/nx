@@ -1,22 +1,7 @@
 import * as pc from 'picocolors';
-import {
-  commitChanges,
-  getLatestCommitSha,
-  hasUncommittedChanges,
-} from '../../utils/git-utils';
+import { hasUncommittedChanges, tryCommitChanges } from '../../utils/git-utils';
 import { logger } from '../../utils/logger';
 import { output } from '../../utils/output';
-
-/**
- * Commit lifecycle helpers for `nx migrate --run-migrations`.
- *
- * Both helpers share a non-obvious invariant worth documenting once: when
- * `commitChanges` is called with a `directory` argument it swallows `git
- * commit` failures (missing `user.email`, hook rejection, "nothing to commit")
- * and returns the existing HEAD unchanged. To detect whether a new commit
- * actually landed, compare HEAD before vs after the call instead of relying
- * on the return value.
- */
 
 /**
  * Creates a per-migration commit when `shouldCreateCommits` is true. Returns
@@ -40,22 +25,26 @@ export async function commitMigrationIfRequested(
     return null;
   }
   const commitMessage = `${commitPrefix}${migration.name}`;
-  // See file-level note: `commitChanges` swallows errors when given a
-  // directory, so compare HEAD before vs after to detect a real commit.
-  const before = getLatestCommitSha(root);
-  const after = commitChanges(commitMessage, root);
-  if (after && after !== before) {
-    return after;
+  try {
+    const sha = tryCommitChanges(commitMessage, root);
+    if (sha) return sha;
+    // Defensive: `tryCommitChanges` succeeded but `git rev-parse HEAD`
+    // returned null. Should never happen post-commit; fall through.
+    logger.info(
+      pc.red(
+        `Could not resolve HEAD after committing ${migration.name}. The migration's diff remains in the working tree.`
+      )
+    );
+    return null;
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    logger.info(
+      pc.red(
+        `Could not create a commit for ${migration.name}:\n${reason}\nThe migration's diff remains in the working tree; inspect with \`git status\` / \`git diff\` before re-running.`
+      )
+    );
+    return null;
   }
-  // There were stageable changes but HEAD didn't advance — `git commit`
-  // failed (e.g. hook rejection, missing user.email/user.name) and the
-  // failure was swallowed by `commitChanges`.
-  logger.info(
-    pc.red(
-      `Could not create a commit for ${migration.name}. Check that user.email/user.name are configured and that commit hooks are not rejecting the commit.`
-    )
-  );
-  return null;
 }
 
 /**
@@ -72,34 +61,30 @@ export function commitCheckpointBeforeMigrations(
   commitPrefix: string
 ): void {
   if (!hasUncommittedChanges(root)) return;
-  // See file-level note: compare HEAD before vs after to detect a real commit.
-  // Otherwise we'd falsely log a checkpoint and migration 1 would absorb the
-  // pre-existing state, defeating the point.
-  const before = getLatestCommitSha(root);
-  let after: string | null = null;
-  let thrown: unknown;
   try {
-    after = commitChanges(
+    const sha = tryCommitChanges(
       `${commitPrefix}checkpoint before running migrations`,
       root
     );
-  } catch (e) {
-    thrown = e;
+    if (sha) {
+      logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));
+      return;
+    }
+    output.warn({
+      title: 'Could not create checkpoint commit before migrations',
+      bodyLines: [
+        'The commit succeeded but HEAD could not be resolved.',
+        `Migration 1's commit will absorb any pre-existing working-tree state.`,
+      ],
+    });
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : String(err);
+    output.warn({
+      title: 'Could not create checkpoint commit before migrations',
+      bodyLines: [
+        reason,
+        `Migration 1's commit will absorb any pre-existing working-tree state.`,
+      ],
+    });
   }
-  if (after && after !== before) {
-    logger.info(pc.dim(`- Checkpoint commit created: ${after}`));
-    return;
-  }
-  const reason = thrown instanceof Error ? thrown.message : undefined;
-  output.warn({
-    title: 'Could not create checkpoint commit before migrations',
-    bodyLines: [
-      ...(reason
-        ? [reason]
-        : [
-            'The commit produced no new HEAD. Check that `user.email` / `user.name` are configured and that commit hooks are not rejecting the commit.',
-          ]),
-      `Migration 1's commit will absorb any pre-existing working-tree state.`,
-    ],
-  });
 }

@@ -405,6 +405,45 @@ export function commitChanges(
   return getLatestCommitSha(directory);
 }
 
+/**
+ * Sibling of `commitChanges` that always throws on git failure with the real
+ * stderr attached. Use this when the caller needs to distinguish hook
+ * rejection / GPG signing failures / LFS lock errors from a successful no-op.
+ * Callers should pre-check `hasUncommittedChanges` to avoid the "nothing to
+ * commit" rejection (which `git commit` exits non-zero for).
+ */
+export function tryCommitChanges(
+  commitMessage: string,
+  directory: string
+): string | null {
+  try {
+    execSync('git add -A', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+    });
+    execSync('git commit --no-verify -F -', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      input: commitMessage,
+      cwd: directory,
+      windowsHide: true,
+    });
+  } catch (err) {
+    const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
+    const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
+    const detail = [stderr, stdout]
+      .map((s) => s?.trim())
+      .filter(Boolean)
+      .join('\n');
+    throw new Error(
+      detail || (err instanceof Error ? err.message : String(err))
+    );
+  }
+  return getLatestCommitSha(directory);
+}
+
 export function getLatestCommitSha(directory?: string): string | null {
   try {
     return execSync('git rev-parse HEAD', {

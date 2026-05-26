@@ -60,18 +60,45 @@ export function stepHandoffPath(
   );
 }
 
+export type HandoffReadFailureReason =
+  | 'missing'
+  | 'read-error'
+  | 'parse-error'
+  | 'shape-mismatch';
+
+export type HandoffReadResult =
+  | { ok: true; handoff: HandoffFile }
+  | { ok: false; reason: HandoffReadFailureReason; detail?: string };
+
 /**
- * Reads and validates a handoff file written by an agent. Returns `null` when
- * the file is missing, unreadable, malformed, or has an unexpected shape — the
- * caller treats `null` as the "ambiguous" outcome and asks the user how to
- * proceed.
+ * Reads and validates a handoff file written by an agent. Returns a tagged
+ * result so callers (the in-loop poller and the post-exit resolver) can
+ * distinguish "file not yet written" from "file written but garbage" — the
+ * latter is surfaced to the user instead of being collapsed into the same
+ * generic ambiguous-outcome prompt.
  */
-export function readHandoff(filePath: string): HandoffFile | null {
+export function readHandoffWithReason(filePath: string): HandoffReadResult {
+  let raw: string;
+  try {
+    raw = readFileSync(filePath, 'utf-8');
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException)?.code;
+    if (code === 'ENOENT') return { ok: false, reason: 'missing' };
+    return {
+      ok: false,
+      reason: 'read-error',
+      detail: err instanceof Error ? err.message : String(err),
+    };
+  }
   let parsed: unknown;
   try {
-    parsed = JSON.parse(readFileSync(filePath, 'utf-8'));
-  } catch {
-    return null;
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    return {
+      ok: false,
+      reason: 'parse-error',
+      detail: err instanceof Error ? err.message : String(err),
+    };
   }
   if (
     !parsed ||
@@ -79,17 +106,27 @@ export function readHandoff(filePath: string): HandoffFile | null {
     Array.isArray(parsed) ||
     typeof (parsed as Record<string, unknown>).summary !== 'string'
   ) {
-    return null;
+    return { ok: false, reason: 'shape-mismatch' };
   }
   const { status, summary, ...extras } = parsed as Record<string, unknown>;
   if (status !== 'success' && status !== 'failed') {
-    return null;
+    return { ok: false, reason: 'shape-mismatch' };
   }
-  const result: HandoffFile = { status, summary: summary as string };
+  const handoff: HandoffFile = { status, summary: summary as string };
   if (Object.keys(extras).length > 0) {
-    result.extras = extras;
+    handoff.extras = extras;
   }
-  return result;
+  return { ok: true, handoff };
+}
+
+/**
+ * Convenience wrapper preserving the original null-on-any-failure contract.
+ * Used by the polling loop (`waitForValidHandoff`) where every failure mode
+ * is "keep waiting" — the file may be missing, mid-write, or being rewritten.
+ */
+export function readHandoff(filePath: string): HandoffFile | null {
+  const result = readHandoffWithReason(filePath);
+  return result.ok ? result.handoff : null;
 }
 
 /**

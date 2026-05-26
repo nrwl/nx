@@ -59,7 +59,9 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
 /**
  * Convenience wrapper that installs the capture, runs `fn`, restores on
  * completion or throw, and returns the captured logs alongside `fn`'s value.
- * Throws from `fn` propagate; the captured logs are discarded on throw.
+ * Throws from `fn` propagate with the captured logs attached as
+ * `(err as any).capturedLogs` — the most useful diagnostic when a generator
+ * crashes mid-output.
  */
 export async function withGeneratorOutputCapture<T>(
   fn: () => Promise<T> | T
@@ -68,6 +70,11 @@ export async function withGeneratorOutputCapture<T>(
   try {
     const result = await fn();
     return { result, logs: capture.flush() };
+  } catch (err) {
+    if (err && typeof err === 'object') {
+      (err as { capturedLogs?: string }).capturedLogs = capture.flush();
+    }
+    throw err;
   } finally {
     capture.restore();
   }
