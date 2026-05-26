@@ -7,7 +7,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
-import { resetTerminalAfterAgent } from '../migrate-output';
+import { resetSgrAfterAgent } from '../migrate-output';
 import { mkdirSafely, stepHandoffPath } from './handoff';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
@@ -150,7 +150,7 @@ export async function runAgenticPromptStep(
   // Some agent TUIs leave cursor/SGR state behind on exit. Reset before our
   // own log lines so the outcome line lands clean instead of overlaid on the
   // agent's trailing status bar.
-  resetTerminalAfterAgent();
+  resetSgrAfterAgent();
 
   switch (outcome.kind) {
     case 'success':

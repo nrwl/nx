@@ -428,17 +428,16 @@ describe('runAgentic', () => {
       handoffFilePath,
       handoffPollIntervalMs: 5,
       gracefulExitMs: 20,
+      forceKillWaitMs: 20,
     });
     const elapsed = Date.now() - start;
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
     expect(child.kill).toHaveBeenCalledWith('SIGKILL');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
-    // Sanity: orchestrator returned in a bounded time, did not hang.
-    // gracefulExitMs (20) + FORCE_KILL_WAIT_MS (500) + FORCE_KILL_WAIT_MS
-    // (500, second bound in the caller) + jitter. 5s is the upper bound to
-    // catch a hang; the real number is ~1s.
-    expect(elapsed).toBeLessThan(5_000);
+    // Each injected bound caps a real-time wait; the assertion verifies the
+    // orchestrator unblocks within them rather than hanging on `exitPromise`.
+    expect(elapsed).toBeLessThan(500);
   });
 
   it('uses taskkill /T /F instead of SIGINT to terminate the agent process tree on Windows', async () => {
@@ -508,11 +507,12 @@ describe('runAgentic', () => {
         invocationContext: defaultInvocation(),
         handoffFilePath,
         handoffPollIntervalMs: 5,
+        forceKillWaitMs: 20,
       });
       const elapsed = Date.now() - start;
 
       expect(outcome).toEqual({ kind: 'success', summary: 'done' });
-      expect(elapsed).toBeLessThan(5_000);
+      expect(elapsed).toBeLessThan(500);
     });
   });
 

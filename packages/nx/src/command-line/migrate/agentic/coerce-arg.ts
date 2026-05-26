@@ -7,8 +7,11 @@ export function coerceAgenticArg(value: unknown): string | boolean | undefined {
   // yargs collects repeated occurrences into an array; error rather than
   // silently picking last/first. `--agentic` is single-value by intent.
   if (Array.isArray(value)) {
+    const received = value
+      .map((v) => (typeof v === 'string' ? `--agentic=${v}` : '--agentic'))
+      .join(' ');
     throw new Error(
-      'Error: --agentic was passed more than once. Specify --agentic at most one time.'
+      `Error: --agentic was passed more than once (received: ${received}). Specify --agentic at most one time.`
     );
   }
   if (value === true || value === '' || value === 'true' || value === 'yes') {

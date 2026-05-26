@@ -5,7 +5,7 @@ jest.mock('./handoff', () => ({
   mkdirSafely: jest.fn(),
 }));
 jest.mock('../migrate-output', () => ({
-  resetTerminalAfterAgent: jest.fn(),
+  resetSgrAfterAgent: jest.fn(),
 }));
 jest.mock('../../../utils/logger', () => ({
   logger: { info: jest.fn() },

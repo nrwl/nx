@@ -18,7 +18,7 @@ import { isHybridMigration } from './migration-shape';
  * reset + newline so our log lines land on a clean row instead of being
  * overlaid by leftover status bars.
  */
-export function resetTerminalAfterAgent(): void {
+export function resetSgrAfterAgent(): void {
   process.stdout.write('\x1b[0m\n');
 }
 

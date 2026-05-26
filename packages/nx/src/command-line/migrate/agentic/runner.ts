@@ -43,6 +43,8 @@ export interface RunAgenticArgs {
   handoffPollIntervalMs?: number;
   /** Override the SIGINT-to-SIGTERM grace period (test seam). */
   gracefulExitMs?: number;
+  /** Override the post-force-kill safety bound (test seam). */
+  forceKillWaitMs?: number;
 }
 
 /**
@@ -60,6 +62,7 @@ export async function runAgentic(
     handoffFilePath,
     handoffPollIntervalMs,
     gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
+    forceKillWaitMs = FORCE_KILL_WAIT_MS,
   } = args;
   const spec = definition.buildInteractive(invocationContext);
 
@@ -118,18 +121,23 @@ export async function runAgentic(
       ),
     ]);
     if (winner === 'handoff') {
-      await closeAgentSession(child, exitPromise, gracefulExitMs);
+      await closeAgentSession(
+        child,
+        exitPromise,
+        gracefulExitMs,
+        forceKillWaitMs
+      );
       // `closeAgentSession` already bounded its own wait. Bound this one
       // too so the orchestrator can't hang if the child stays stuck after
       // SIGKILL / taskkill (e.g. D-state on a hung NFS read). The .then()
       // callback registered on `exitPromise` above (line 109) keeps
       // `exitInfo` current if it does resolve later in the same turn.
-      await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
+      await raceWithTimeout(exitPromise, forceKillWaitMs);
     }
   } finally {
     handoffWatchAbort.abort();
     process.removeListener('SIGINT', swallowSigint);
-    restoreTerminalAfterAgent();
+    restoreTermiosAfterAgent();
   }
 
   return resolveFromHandoffOrPrompt(
@@ -155,7 +163,7 @@ function exitInfoToCause(info: ExitInfo): AmbiguousCause {
   return cause;
 }
 
-function restoreTerminalAfterAgent(): void {
+function restoreTermiosAfterAgent(): void {
   // OPOST is a POSIX termios flag; Windows consoles don't use it.
   if (process.platform === 'win32') return;
   if (!process.stdin.isTTY) return;
@@ -208,12 +216,13 @@ const FORCE_KILL_WAIT_MS = 500;
 async function closeAgentSession(
   child: ChildProcess,
   exitPromise: Promise<ExitInfo>,
-  gracefulExitMs: number
+  gracefulExitMs: number,
+  forceKillWaitMs: number
 ): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
 
   if (process.platform === 'win32') {
-    await forceKillWindowsTree(child, exitPromise);
+    await forceKillWindowsTree(child, exitPromise, forceKillWaitMs);
     return;
   }
 
@@ -245,12 +254,13 @@ async function closeAgentSession(
   } catch {
     /* child already gone */
   }
-  await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
+  await raceWithTimeout(exitPromise, forceKillWaitMs);
 }
 
 async function forceKillWindowsTree(
   child: ChildProcess,
-  exitPromise: Promise<ExitInfo>
+  exitPromise: Promise<ExitInfo>,
+  forceKillWaitMs: number
 ): Promise<void> {
   const pid = child.pid;
   // `child.pid` is undefined only when spawn itself failed (Node docs).
@@ -274,7 +284,7 @@ async function forceKillWindowsTree(
       /* taskkill missing, pid already dead, or timed out — fall through */
     }
   }
-  await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
+  await raceWithTimeout(exitPromise, forceKillWaitMs);
 }
 
 async function raceWithTimeout(

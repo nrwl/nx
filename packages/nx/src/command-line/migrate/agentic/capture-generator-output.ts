@@ -37,7 +37,7 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
   for (const method of CONSOLE_METHODS) {
     if ((console[method] as { [CAPTURED_MARKER]?: true })[CAPTURED_MARKER]) {
       logger.verbose(
-        `nx migrate: refusing to layer a second generator-output capture; the previous one was not restored. This typically means a caller skipped its \`try/finally\` — the outer capture's output will not include this run.`
+        `nx migrate: refusing to layer a second generator-output capture; the previous one was not restored. This typically means a caller skipped its \`try/finally\`. The inner caller's \`flush()\` will return empty, but its console output is still being captured by the outer install.`
       );
       return NOOP_CAPTURE;
     }

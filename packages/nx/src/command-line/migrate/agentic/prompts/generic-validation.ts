@@ -57,8 +57,8 @@ export const GENERIC_VALIDATION_FILE_LIST_CAP = 50;
  * - No `<precedence>` block — there's no external instructions file to defer
  *   to.
  * - File-list cap: when the diff exceeds `GENERIC_VALIDATION_FILE_LIST_CAP`,
- *   the first N entries render verbatim and the remainder is summarized by
- *   guessed project key with counts.
+ *   the first N entries render verbatim and the remainder collapses into a
+ *   `… and N more files.` count line.
  * - The lead sentence frames the agent as a validator, not an applier.
  */
 export function buildGenericValidationUserPrompt(
