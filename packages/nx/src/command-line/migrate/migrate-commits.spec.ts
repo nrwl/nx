@@ -68,6 +68,11 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(installDeps).toHaveBeenCalledTimes(1);
+    // Embedded `expect` above asserts the ordering when `mockHas` is
+    // invoked, but provides no positive signal that it was invoked at all.
+    // If `commitMigrationIfRequested` ever short-circuits before checking
+    // the working tree, the embedded `expect` would silently never run.
+    expect(mockHas).toHaveBeenCalledTimes(1);
   });
 
   it('returns null and logs a neutral no-op message when there are no uncommitted changes', async () => {

@@ -77,6 +77,16 @@ describe('runAgentic', () => {
   let originalListeners: NodeJS.SignalsListener[];
 
   let warnSpy: jest.SpyInstance;
+  // Tracked at suite scope so `afterEach` can always restore the
+  // `process.on` spy, even if the test body threw before its inline
+  // cleanup. Without this, a failed assertion would leak the spy and the
+  // next test's `captureSigintHandlers` would wrap the leaked one
+  // (spy-on-spy: SIGINT registrations would land in both `handlers` arrays
+  // and `length === 1` checks would fail in mysterious ways).
+  let sigintCapture: {
+    handlers: NodeJS.SignalsListener[];
+    restore: () => void;
+  } | null = null;
 
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-agentic-runner-'));
@@ -85,6 +95,7 @@ describe('runAgentic', () => {
     mockExecSync.mockReset();
     mockPrompt.mockReset();
     warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
+    sigintCapture = null;
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
 
@@ -94,9 +105,15 @@ describe('runAgentic', () => {
     try {
       warnSpy.mockRestore();
     } finally {
-      rmSync(workspace, { recursive: true, force: true });
-      // Sanity: every test must clean up its SIGINT listener.
-      expect(process.listeners('SIGINT').length).toBe(originalListeners.length);
+      try {
+        sigintCapture?.restore();
+      } finally {
+        rmSync(workspace, { recursive: true, force: true });
+        // Sanity: every test must clean up its SIGINT listener.
+        expect(process.listeners('SIGINT').length).toBe(
+          originalListeners.length
+        );
+      }
     }
   });
 
@@ -114,6 +131,29 @@ describe('runAgentic', () => {
       }
     }
     return [];
+  }
+
+  // Find the SIGINT handler `runAgentic` registered on `process`. Tests
+  // previously used a listener-diff (`process.listeners('SIGINT')` then
+  // filter out the originals); the diff approach is fragile if any other
+  // code transiently registers a SIGINT listener during the same tick.
+  // Instead, capture the registration via `process.on('SIGINT', …)` so we
+  // bind to exactly the listener `runAgentic` installed. Call `restore()`
+  // when the test is done with the spy (typically right after the async
+  // `runAgentic` call returns).
+  function captureSigintHandlers(): {
+    handlers: NodeJS.SignalsListener[];
+    restore: () => void;
+  } {
+    const handlers: NodeJS.SignalsListener[] = [];
+    const realOn = process.on.bind(process);
+    const spy = jest
+      .spyOn(process, 'on')
+      .mockImplementation((event: string | symbol, listener: any) => {
+        if (event === 'SIGINT') handlers.push(listener);
+        return realOn(event as any, listener as any);
+      });
+    return { handlers, restore: () => spy.mockRestore() };
   }
 
   function spawnWithHandoff(
@@ -492,17 +532,22 @@ describe('runAgentic', () => {
   });
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
+    // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
+    // …)` behaves inconsistently across jest workers (the signal name
+    // collides with jest's own handlers), so we capture exactly the listener
+    // `runAgentic` registered via a `process.on` spy and trigger it. The
+    // capture is restored in `afterEach` regardless of whether this test
+    // body completes — see `let sigintCapture` at suite scope.
+    sigintCapture = captureSigintHandlers();
+    const localCapture = sigintCapture;
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
-        // …)` behaves inconsistently across jest workers (the signal name
-        // collides with jest's own handlers), so we bypass it and trigger the
-        // listener via its registration delta.
-        const newListeners = (
-          process.listeners('SIGINT') as NodeJS.SignalsListener[]
-        ).filter((l) => !originalListeners.includes(l));
-        for (const l of newListeners) l('SIGINT');
+        // No assertion inside `setImmediate`: a throw here is outside
+        // Jest's awaited promise chain and would be silently swallowed.
+        // If `handlers[0]` is undefined, calling it throws TypeError and
+        // the test times out — a visible failure.
+        localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });
       return child;
@@ -515,6 +560,9 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
+    // Verify the spy captured exactly the runner-registered listener —
+    // post-await so the assertion lives inside Jest's promise chain.
+    expect(localCapture.handlers).toHaveLength(1);
     // userInterrupted=true short-circuits the ambiguous prompt.
     expect(mockPrompt).not.toHaveBeenCalled();
     expect(outcome.kind).toBe('ambiguous-abort');
@@ -588,13 +636,12 @@ describe('runAgentic', () => {
   });
 
   it('drops Ctrl+C-typical exit fields (code 130 / SIGINT) from the ambiguous-abort causeSummary when the user interrupted', async () => {
+    sigintCapture = captureSigintHandlers();
+    const localCapture = sigintCapture;
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        const newListeners = (
-          process.listeners('SIGINT') as NodeJS.SignalsListener[]
-        ).filter((l) => !originalListeners.includes(l));
-        for (const l of newListeners) l('SIGINT');
+        localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });
       return child;
@@ -607,6 +654,7 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
+    expect(localCapture.handlers).toHaveLength(1);
     expect(outcome.kind).toBe('ambiguous-abort');
     // 130 / SIGINT / missing-handoff are all consequences of the user's own
     // Ctrl+C; the runner must not parrot them back as "the agent crashed".
@@ -616,6 +664,8 @@ describe('runAgentic', () => {
   });
 
   it('keeps a separate-crash diagnostic in the ambiguous-abort causeSummary even when the user interrupted', async () => {
+    sigintCapture = captureSigintHandlers();
+    const localCapture = sigintCapture;
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
@@ -624,10 +674,7 @@ describe('runAgentic', () => {
         // should still surface — the user pressed Ctrl+C but there's also a
         // separate crash signal worth showing.
         child.emit('error', new Error('IPC channel disconnected'));
-        const newListeners = (
-          process.listeners('SIGINT') as NodeJS.SignalsListener[]
-        ).filter((l) => !originalListeners.includes(l));
-        for (const l of newListeners) l('SIGINT');
+        localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 1, null));
       });
       return child;
@@ -639,6 +686,8 @@ describe('runAgentic', () => {
       invocationContext: defaultInvocation(),
       handoffFilePath,
     });
+
+    expect(localCapture.handlers).toHaveLength(1);
 
     expect(outcome.kind).toBe('ambiguous-abort');
     if (outcome.kind === 'ambiguous-abort') {
