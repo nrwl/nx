@@ -121,6 +121,7 @@ import {
   type MigrationOutcome,
   type MigrationOutcomeKind,
 } from './migrate-output';
+import { isHybridMigration, isPromptOnlyMigration } from './migration-shape';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -2369,18 +2370,7 @@ type ExecutableMigration = {
   prompt?: string;
 };
 
-// `factory` is the legacy Angular schematics field; treat it equivalently.
-function hasDeterministicImplementation(m: ExecutableMigration): boolean {
-  return !!(m.implementation || m.factory);
-}
-
-export function isPromptOnlyMigration(m: ExecutableMigration): boolean {
-  return !!m.prompt && !hasDeterministicImplementation(m);
-}
-
-export function isHybridMigration(m: ExecutableMigration): boolean {
-  return !!m.prompt && hasDeterministicImplementation(m);
-}
+export { isPromptOnlyMigration, isHybridMigration };
 
 export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {
   return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
@@ -2608,10 +2598,6 @@ export async function executeMigrations(
             root,
             m,
             isVerbose,
-            /* shouldCreateCommits: */ false,
-            commitPrefix,
-            installDepsIfChanged,
-            /* handleInstallDeps: */ false,
             /* captureGeneratorOutput: */ !!agenticRun
           );
         migrationEmittedNextSteps.push(...nextSteps);
@@ -2682,27 +2668,14 @@ export async function executeMigrations(
         // changes uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
-        const {
-          changes,
-          nextSteps,
-          agentContext,
-          logs,
-          madeChanges,
-          committedSha: generatorSha,
-        } = await runNxOrAngularMigration(
-          root,
-          m,
-          isVerbose,
-          /* shouldCreateCommits: */ validationRun
-            ? false
-            : shouldCreateCommits,
-          commitPrefix,
-          installDepsIfChanged,
-          /* handleInstallDeps: */ false,
-          /* captureGeneratorOutput: */ !!validationRun
-        );
+        const { changes, nextSteps, agentContext, logs, madeChanges } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* captureGeneratorOutput: */ !!validationRun
+          );
         migrationEmittedNextSteps.push(...nextSteps);
-        committedSha = generatorSha;
         const canRunValidation = !!validationRun && changes.length > 0;
 
         if (canRunValidation) {
@@ -2723,8 +2696,6 @@ export async function executeMigrations(
             },
             mode: 'generic-validation',
           });
-          // Validation gates the commit, so any sha for this migration was
-          // created here (the deterministic-phase call ran with commits off).
           committedSha = await commitMigrationIfRequested(
             root,
             m,
@@ -2750,6 +2721,16 @@ export async function executeMigrations(
             migrationsWithNoChanges.push(m);
             outcome = 'no-changes';
           } else {
+            committedSha = await commitMigrationIfRequested(
+              root,
+              m,
+              shouldCreateCommits,
+              commitPrefix,
+              installDepsIfChanged
+            );
+            if (committedSha) {
+              logger.info(pc.dim(`Committed as ${committedSha}`));
+            }
             outcome = 'applied';
           }
         }
@@ -2812,7 +2793,7 @@ export async function executeMigrations(
   };
 }
 
-class ChangedDepInstaller {
+export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
 
@@ -2858,10 +2839,6 @@ export async function runNxOrAngularMigration(
     version: string;
   },
   isVerbose: boolean,
-  shouldCreateCommits: boolean,
-  commitPrefix: string,
-  installDepsIfChanged?: () => Promise<void>,
-  handleInstallDeps = false,
   captureGeneratorOutput = false
 ): Promise<{
   changes: FileChange[];
@@ -2869,18 +2846,7 @@ export async function runNxOrAngularMigration(
   agentContext: string[];
   logs: string;
   madeChanges: boolean;
-  /**
-   * Sha of the commit created by this function when `shouldCreateCommits` is
-   * true. Null when commits weren't requested, when the migration made no
-   * changes, or when the commit failed. Used by the executor loop to track
-   * the last successful commit for the failure-recap "last completed" anchor.
-   */
-  committedSha: string | null;
 }> {
-  if (!installDepsIfChanged) {
-    const changedDepInstaller = new ChangedDepInstaller(root);
-    installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
-  }
   const { collection, collectionPath } = readMigrationCollection(
     migration.package,
     root
@@ -2912,14 +2878,7 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return {
-        changes,
-        nextSteps,
-        agentContext,
-        logs,
-        madeChanges,
-        committedSha: null,
-      };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
@@ -2947,14 +2906,7 @@ export async function runNxOrAngularMigration(
     logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return {
-        changes,
-        nextSteps,
-        agentContext,
-        logs,
-        madeChanges,
-        committedSha: null,
-      };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
@@ -2962,23 +2914,7 @@ export async function runNxOrAngularMigration(
     logger.info('');
   }
 
-  let committedSha: string | null = null;
-  if (shouldCreateCommits) {
-    committedSha = await commitMigrationIfRequested(
-      root,
-      migration,
-      shouldCreateCommits,
-      commitPrefix,
-      installDepsIfChanged
-    );
-    if (committedSha) {
-      logger.info(pc.dim(`Committed as ${committedSha}`));
-    }
-  } else if (handleInstallDeps) {
-    await installDepsIfChanged();
-  }
-
-  return { changes, nextSteps, agentContext, logs, madeChanges, committedSha };
+  return { changes, nextSteps, agentContext, logs, madeChanges };
 }
 
 async function runMigrations(

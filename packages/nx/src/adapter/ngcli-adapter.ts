@@ -393,7 +393,11 @@ async function createRecorder(
   host: NxScopedHost,
   record: {
     loggingQueue: string[];
-    changes: FileChange[];
+    // Optional sink — only the migration path needs the structured change
+    // list (consumed by the agentic validation prompt's `<files_changed>`
+    // block). Regular schematic runs read only `loggingQueue` and shouldn't
+    // pay the allocation per `FileChange`.
+    changes?: FileChange[];
     error: boolean;
   },
   logger: logging.Logger
@@ -416,15 +420,15 @@ async function createRecorder(
       record.loggingQueue.push(
         tags.oneLine`${pc.white('UPDATE')} ${eventPath}`
       );
-      record.changes.push(emptyFileChange('UPDATE', eventPath));
+      record.changes?.push(emptyFileChange('UPDATE', eventPath));
     } else if (event.kind === 'create') {
       record.loggingQueue.push(
         tags.oneLine`${pc.green('CREATE')} ${eventPath}`
       );
-      record.changes.push(emptyFileChange('CREATE', eventPath));
+      record.changes?.push(emptyFileChange('CREATE', eventPath));
     } else if (event.kind === 'delete') {
       record.loggingQueue.push(`${pc.yellow('DELETE')} ${eventPath}`);
-      record.changes.push({ type: 'DELETE', path: eventPath, content: null });
+      record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
     } else if (event.kind === 'rename') {
       record.loggingQueue.push(
         `${pc.blue('RENAME')} ${eventPath} => ${event.to}`
@@ -433,8 +437,8 @@ async function createRecorder(
       // (e.g. the agentic validation prompt's `<files_changed>` block) see
       // both endpoints.
       const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
-      record.changes.push({ type: 'DELETE', path: eventPath, content: null });
-      record.changes.push(emptyFileChange('CREATE', toPath));
+      record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
+      record.changes?.push(emptyFileChange('CREATE', toPath));
     }
   };
 }
@@ -464,7 +468,6 @@ async function runSchematic(
 ): Promise<{ status: number; loggingQueue: string[] }> {
   const record = {
     loggingQueue: [] as string[],
-    changes: [] as FileChange[],
     error: false,
   };
   workflow.reporter.subscribe(

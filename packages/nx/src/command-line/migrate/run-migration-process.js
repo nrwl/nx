@@ -1,4 +1,5 @@
-const { runNxOrAngularMigration } = require('./migrate');
+const { runNxOrAngularMigration, ChangedDepInstaller } = require('./migrate');
+const { commitMigrationIfRequested } = require('./migrate-commits');
 const { execSync } = require('child_process');
 
 async function runMigrationProcess() {
@@ -33,15 +34,30 @@ async function runMigrationProcess() {
       windowsHide: true,
     }).trim();
 
+    // `ChangedDepInstaller` snapshots package.json deps at construction time
+    // so we can detect post-migration dep drift and run a single install
+    // regardless of whether commits are on (commit path installs internally
+    // before commit) or off (we install explicitly afterward).
+    const installer = new ChangedDepInstaller(workspacePath);
+    const installDepsIfChanged = () => installer.installDepsIfChanged();
+
     const { changes: fileChanges, nextSteps } = await runNxOrAngularMigration(
       workspacePath,
       migration,
-      false,
-      configuration.createCommits,
-      configuration.commitPrefix,
-      undefined,
-      true
+      false
     );
+
+    if (configuration.createCommits) {
+      await commitMigrationIfRequested(
+        workspacePath,
+        migration,
+        true,
+        configuration.commitPrefix,
+        installDepsIfChanged
+      );
+    } else {
+      await installDepsIfChanged();
+    }
 
     const gitRefAfter = execSync('git rev-parse HEAD', {
       cwd: workspacePath,

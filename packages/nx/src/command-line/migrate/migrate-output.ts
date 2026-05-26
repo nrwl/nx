@@ -1,5 +1,6 @@
 import * as pc from 'picocolors';
 import { logger } from '../../utils/logger';
+import { isHybridMigration } from './migration-shape';
 
 /**
  * Presentation layer for `nx migrate --run-migrations`. Pure helpers — every
@@ -10,16 +11,6 @@ import { logger } from '../../utils/logger';
  * Inputs are typed structurally (e.g. `{ name: string }[]`) so this module
  * stays decoupled from `ExecutableMigration` and the executor in migrate.ts.
  */
-
-// Local mirror of `isHybridMigration` to avoid a circular import on the
-// orchestrator. Kept structural — 3 lines, matching the canonical predicate.
-function isHybridMigrationLocal(m: {
-  prompt?: string;
-  implementation?: string;
-  factory?: string;
-}): boolean {
-  return !!m.prompt && !!(m.implementation || m.factory);
-}
 
 /**
  * Some agent TUIs (codex, opencode) don't fully reset their cursor / SGR state
@@ -224,7 +215,7 @@ export function buildDirectiveBlockBodyLines(opts: {
   if (hasDeferred) {
     lines.push('Apply the deferred prompts below, in order:');
     skippedPrompts.forEach((m, i) => {
-      const kindHint = isHybridMigrationLocal(m)
+      const kindHint = isHybridMigration(m)
         ? ' — hybrid prompt phase'
         : ' — prompt-only migration';
       lines.push(`  ${i + 1}. ${m.prompt}`);
