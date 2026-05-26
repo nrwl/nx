@@ -1,5 +1,6 @@
 import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { extname } from 'path';
+import { output } from '../../../utils/output';
 import { migratePrompt } from '../safe-prompt';
 import {
   HandoffReadFailureReason,
@@ -455,18 +456,27 @@ function escapeCmdCommand(arg: string): string {
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
   // Blank line keeps the prompt from gluing to the agent's exit message
   // (e.g. Claude Code's "Resume this session with: claude --resume <id>"),
-  // which would otherwise sit immediately above this question.
-  console.log();
+  // which would otherwise sit immediately above this question. Use
+  // stderr so the spacer lands in the same stream as `output.warn` and
+  // the enquirer prompt — buffered stdout could otherwise reorder it.
+  process.stderr.write('\n');
+  // Render the cause as an `output.warn` block ABOVE the enquirer prompt
+  // rather than inlining it into the prompt's `message`. Two reasons:
+  // (1) `output.warn`'s NX-prefixed yellow framing is visually distinct
+  //     from the prompt's selection-highlight color, so the user reads the
+  //     cause as a banner, not as part of the question itself.
+  // (2) enquirer's `select` redraw machinery uses different math for
+  //     `clear` (wrap-aware via `cliui`-style width) vs `restore` (raw
+  //     `\n`-split line count) — a multi-line `message` on a narrow
+  //     terminal can leave orphaned cells on arrow-key re-renders. Keeping
+  //     the prompt's `message` single-line sidesteps that asymmetry.
   const causeLines = describeAmbiguousCause(cause);
-  const lead =
-    causeLines.length > 0
-      ? [
-          'The agent run ended without a usable handoff:',
-          ...causeLines.map((l) => `  ${l}`),
-          '',
-        ]
-      : [];
-  const message = [...lead, 'How should nx migrate proceed?'].join('\n');
+  if (causeLines.length > 0) {
+    output.warn({
+      title: 'The agent run ended without a usable handoff',
+      bodyLines: causeLines,
+    });
+  }
   // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
   // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
   // Any other rejection we treat as abort.
@@ -474,7 +484,7 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
     const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
       name: 'choice',
       type: 'select',
-      message,
+      message: 'How should nx migrate proceed?',
       choices: [
         { name: 'abort', message: 'Treat as failed — abort the run' },
         {

@@ -13,6 +13,7 @@ jest.mock('enquirer', () => ({
 
 import { execSync, spawn } from 'child_process';
 import { prompt } from 'enquirer';
+import { output } from '../../../utils/output';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
@@ -75,20 +76,45 @@ describe('runAgentic', () => {
   let handoffFilePath: string;
   let originalListeners: NodeJS.SignalsListener[];
 
+  let warnSpy: jest.SpyInstance;
+
   beforeEach(() => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-agentic-runner-'));
     handoffFilePath = join(workspace, 'handoff.json');
     mockSpawn.mockReset();
     mockExecSync.mockReset();
     mockPrompt.mockReset();
+    warnSpy = jest.spyOn(output, 'warn').mockImplementation(() => {});
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
 
   afterEach(() => {
-    rmSync(workspace, { recursive: true, force: true });
-    // Sanity: every test must clean up its SIGINT listener.
-    expect(process.listeners('SIGINT').length).toBe(originalListeners.length);
+    // `try/finally` so a thrown `mockRestore` (e.g. spy already restored)
+    // cannot leak the tmp workspace or skip the SIGINT-listener sanity check.
+    try {
+      warnSpy.mockRestore();
+    } finally {
+      rmSync(workspace, { recursive: true, force: true });
+      // Sanity: every test must clean up its SIGINT listener.
+      expect(process.listeners('SIGINT').length).toBe(originalListeners.length);
+    }
   });
+
+  // Read the lines passed to `output.warn` for the ambiguous-prompt cause
+  // block. Tests previously inspected `mockPrompt.mock.calls[0][0].message`;
+  // the cause is now rendered as a top-level warning ABOVE the prompt
+  // (`output.warn.bodyLines`) and the prompt's message is single-line.
+  // Scoped inside `describe('runAgentic')` so it cannot be called from a
+  // suite where `warnSpy` is not installed.
+  function ambiguousCauseLines(): string[] {
+    for (const call of warnSpy.mock.calls) {
+      const arg = call[0] as { title?: string; bodyLines?: string[] };
+      if (arg?.title === 'The agent run ended without a usable handoff') {
+        return arg.bodyLines ?? [];
+      }
+    }
+    return [];
+  }
 
   function spawnWithHandoff(
     handoff: unknown,
@@ -494,7 +520,7 @@ describe('runAgentic', () => {
     expect(outcome.kind).toBe('ambiguous-abort');
   });
 
-  it('threads spawn errors into the ambiguous prompt body', async () => {
+  it('threads spawn errors into the ambiguous-prompt cause banner above the prompt', async () => {
     mockSpawn.mockImplementation(() => {
       throw new Error('ENOENT: no such file or directory');
     });
@@ -507,12 +533,17 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    const message = mockPrompt.mock.calls[0][0].message as string;
-    expect(message).toContain('Could not spawn the agent');
-    expect(message).toContain('ENOENT');
+    const lines = ambiguousCauseLines();
+    expect(lines.join('\n')).toContain('Could not spawn the agent');
+    expect(lines.join('\n')).toContain('ENOENT');
+    // The prompt itself stays single-line — multi-line `message` triggers
+    // enquirer's wrap-asymmetric redraw on narrow terminals.
+    expect(mockPrompt.mock.calls[0][0].message).toBe(
+      'How should nx migrate proceed?'
+    );
   });
 
-  it('threads a non-zero exit code into the ambiguous prompt body', async () => {
+  it('threads a non-zero exit code into the ambiguous-prompt cause banner', async () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => child.emit('exit', 1, null));
@@ -527,15 +558,16 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    const message = mockPrompt.mock.calls[0][0].message as string;
-    expect(message).toContain('Agent exited with code 1');
+    expect(ambiguousCauseLines().join('\n')).toContain(
+      'Agent exited with code 1'
+    );
   });
 
-  it('distinguishes a clean exit (code 0, no handoff) from a non-zero crash in the ambiguous prompt body', async () => {
+  it('distinguishes a clean exit (code 0, no handoff) from a non-zero crash in the ambiguous-prompt cause banner', async () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       // Agent exits cleanly without writing a handoff — distinct from a
-      // crash. The prompt body should NOT say "Agent exited with code 0"
+      // crash. The cause banner should NOT say "Agent exited with code 0"
       // (which sounds normal) but should say "exited cleanly without
       // writing a handoff" so the user can distinguish the two cases.
       setImmediate(() => child.emit('exit', 0, null));
@@ -550,11 +582,9 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    const message = mockPrompt.mock.calls[0][0].message as string;
-    expect(message).toContain(
-      'exited cleanly (code 0) without writing a handoff'
-    );
-    expect(message).not.toMatch(/Agent exited with code 0\./);
+    const text = ambiguousCauseLines().join('\n');
+    expect(text).toContain('exited cleanly (code 0) without writing a handoff');
+    expect(text).not.toMatch(/Agent exited with code 0\./);
   });
 
   it('drops Ctrl+C-typical exit fields (code 130 / SIGINT) from the ambiguous-abort causeSummary when the user interrupted', async () => {
@@ -620,7 +650,7 @@ describe('runAgentic', () => {
     }
   });
 
-  it('threads a handoff parse error into the ambiguous prompt body', async () => {
+  it('threads a handoff parse error into the ambiguous-prompt cause banner', async () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
@@ -638,8 +668,7 @@ describe('runAgentic', () => {
       handoffFilePath,
     });
 
-    const message = mockPrompt.mock.calls[0][0].message as string;
-    expect(message).toContain('invalid JSON');
+    expect(ambiguousCauseLines().join('\n')).toContain('invalid JSON');
   });
 
   it('routes a Windows .cmd shim through the cmd.exe adapter', async () => {
