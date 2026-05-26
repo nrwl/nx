@@ -2,6 +2,7 @@ import {
   installGeneratorOutputCapture,
   withGeneratorOutputCapture,
 } from './capture-generator-output';
+import { logger } from '../../../utils/logger';
 
 describe('generator output capture', () => {
   const originalLog = console.log;
@@ -73,6 +74,39 @@ describe('generator output capture', () => {
       capture.restore();
       capture.restore();
       expect(console.log).toBe(originalLog);
+    });
+
+    it('refuses to layer a second install when the first was not restored, returning a noop handle', () => {
+      const verboseSpy = jest
+        .spyOn(logger, 'verbose')
+        .mockImplementation(() => {});
+      const logSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      const outer = installGeneratorOutputCapture();
+      // Capture the wrapper we just installed; the inner install must NOT
+      // replace it (otherwise restore order would un-wrap the outer's
+      // wrapper but reinstate the inner's "original", which IS the outer
+      // wrapper — a permanent leak).
+      const outerWrapper = console.log;
+
+      const inner = installGeneratorOutputCapture();
+      console.log('hidden from inner');
+
+      expect(console.log).toBe(outerWrapper);
+      expect(verboseSpy).toHaveBeenCalledWith(
+        expect.stringContaining('refusing to layer a second')
+      );
+
+      // The inner returns a noop handle — flush is empty, restore is a
+      // safe no-op that doesn't disturb the outer.
+      expect(inner.flush()).toBe('');
+      inner.restore();
+      expect(console.log).toBe(outerWrapper);
+
+      // Outer remains functional.
+      expect(outer.flush()).toContain('hidden from inner');
+      outer.restore();
+      expect(logSpy).toHaveBeenCalledWith('hidden from inner');
     });
   });
 

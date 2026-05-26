@@ -207,6 +207,37 @@ describe('handoff', () => {
     });
   });
 
+  describe('readHandoffWithReason — prototype-pollution defense', () => {
+    it('rebuilds `extras` on a null-prototype object so a hostile `__proto__` key cannot pollute', () => {
+      const file = join(workspace, 'handoff.json');
+      // Write the JSON as a raw string so `__proto__` lands as a real
+      // JSON key. Using `JSON.stringify({ __proto__: ... })` would not
+      // work because object-literal `__proto__` syntax sets the prototype
+      // chain (so `JSON.stringify` silently drops it from the output).
+      // Only a hand-written JSON document can force `JSON.parse` to
+      // materialize `__proto__` as an own enumerable property.
+      writeFileSync(
+        file,
+        '{"status":"success","summary":"ok","custom":"data","__proto__":{"polluted":true}}'
+      );
+
+      const result = readHandoffWithReason(file);
+      expect(result.ok).toBe(true);
+      if (!result.ok) return;
+
+      // `__proto__` survives as an own data key on a null-prototype
+      // container; its presence does NOT affect Object.prototype.
+      const extras = result.handoff.extras!;
+      expect(Object.getPrototypeOf(extras)).toBeNull();
+      expect(({} as Record<string, unknown>).polluted).toBeUndefined();
+      expect(extras.custom).toBe('data');
+      // The own-key survives (we don't filter — we just contain).
+      expect(Object.keys(extras)).toEqual(
+        expect.arrayContaining(['custom', '__proto__'])
+      );
+    });
+  });
+
   describe('readHandoffWithReason', () => {
     it('returns a missing reason when the file does not exist', () => {
       const result = readHandoffWithReason(join(workspace, 'nope.json'));

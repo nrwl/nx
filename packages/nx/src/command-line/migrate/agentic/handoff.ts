@@ -131,12 +131,28 @@ export function readHandoffWithReason(filePath: string): HandoffReadResult {
   ) {
     return { ok: false, reason: 'shape-mismatch' };
   }
-  const { status, summary, ...extras } = parsed as Record<string, unknown>;
+  const obj = parsed as Record<string, unknown>;
+  const status = obj.status;
+  const summary = obj.summary;
   if (status !== 'success' && status !== 'failed') {
     return { ok: false, reason: 'shape-mismatch' };
   }
+  // Rebuild the extras bag on a null-prototype object via `Object.keys`
+  // rather than rest-spreading. `JSON.parse` materializes `__proto__` (and
+  // similar Object.prototype-shadowing keys) as own enumerable properties,
+  // and rest-spread carries them through. Today no caller `Object.assign`s
+  // `extras` into another object so the exposure is adjacency-only, but the
+  // defense costs nothing and prevents a latent prototype-pollution gadget
+  // from existing in the codebase.
+  const extras: Record<string, unknown> = Object.create(null);
+  let hasExtras = false;
+  for (const key of Object.keys(obj)) {
+    if (key === 'status' || key === 'summary') continue;
+    extras[key] = obj[key];
+    hasExtras = true;
+  }
   const handoff: HandoffFile = { status, summary: summary as string };
-  if (Object.keys(extras).length > 0) {
+  if (hasExtras) {
     handoff.extras = extras;
   }
   return { ok: true, handoff };

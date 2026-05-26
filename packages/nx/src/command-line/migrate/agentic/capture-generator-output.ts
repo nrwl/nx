@@ -1,4 +1,5 @@
 import { format } from 'node:util';
+import { logger } from '../../../utils/logger';
 
 /**
  * Tees every line written to `console.{log,warn,error,info,debug}` into an
@@ -13,6 +14,11 @@ import { format } from 'node:util';
  *
  * Restoration is idempotent. Callers should wrap their invocation in
  * `try/finally` (or use the helper below) so the patch is reverted on throw.
+ *
+ * Re-entrant install is detected via a per-method `Symbol.for(...)` marker
+ * and refused with a `logger.verbose` warning — see the body for the trade
+ * off. The marker also lets a leaked first install be diagnosable rather
+ * than silently compounding into a wrapper-wrapping-a-wrapper.
  */
 export interface GeneratorOutputCapture {
   flush(): string;
@@ -28,14 +34,38 @@ const CONSOLE_METHODS: ConsoleMethod[] = [
   'debug',
 ];
 
+// Marks a `console[method]` function as a capture wrapper installed by this
+// module. If we ever see it on entry, the previous install never ran its
+// `restore()` — most likely a caller forgot `try/finally`. Layering a second
+// capture on top would let the leak compound silently; refuse + log instead.
+const CAPTURED_MARKER = Symbol.for('nx-migrate.generator-output-captured');
+
+const NOOP_CAPTURE: GeneratorOutputCapture = {
+  flush: () => '',
+  restore: () => {
+    /* noop */
+  },
+};
+
 export function installGeneratorOutputCapture(): GeneratorOutputCapture {
+  // Refuse to layer if the previous install never restored. Returns a noop
+  // handle so callers' `flush()` / `restore()` calls remain safe.
+  for (const method of CONSOLE_METHODS) {
+    if ((console[method] as { [CAPTURED_MARKER]?: true })[CAPTURED_MARKER]) {
+      logger.verbose(
+        `nx migrate: refusing to layer a second generator-output capture; the previous one was not restored. This typically means a caller skipped its \`try/finally\` — the outer capture's output will not include this run.`
+      );
+      return NOOP_CAPTURE;
+    }
+  }
+
   const buffer: string[] = [];
   const originals = new Map<ConsoleMethod, Console[ConsoleMethod]>();
 
   for (const method of CONSOLE_METHODS) {
     originals.set(method, console[method]);
     const original = console[method].bind(console);
-    console[method] = ((...args: unknown[]) => {
+    const wrapper = ((...args: unknown[]) => {
       original(...args);
       try {
         buffer.push(format(...args));
@@ -44,7 +74,14 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
         // with a throwing `toString()` would otherwise turn a benign
         // `console.log(...)` into a generator crash.
       }
-    }) as Console[ConsoleMethod];
+    }) as Console[ConsoleMethod] & { [CAPTURED_MARKER]?: true };
+    Object.defineProperty(wrapper, CAPTURED_MARKER, {
+      value: true,
+      enumerable: false,
+      configurable: true,
+      writable: false,
+    });
+    console[method] = wrapper;
   }
 
   let restored = false;
