@@ -2777,8 +2777,23 @@ export async function executeMigrations(
       logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
+        // `withGeneratorOutputCapture` attaches the deterministic-phase
+        // generator's `console.*` output to the thrown error as `capturedLogs`
+        // (best-effort; may be absent when the attachment fails). Surface it
+        // on the failure block so the user sees what the generator printed
+        // before it crashed.
+        const capturedLogs = (e as { capturedLogs?: unknown })?.capturedLogs;
+        const bodyLines =
+          typeof capturedLogs === 'string' && capturedLogs.length > 0
+            ? [
+                'Output from the generator before it failed:',
+                '',
+                ...capturedLogs.split('\n'),
+              ]
+            : undefined;
         output.error({
           title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+          bodyLines,
         });
         logFailureRecap({
           migrationIndex,

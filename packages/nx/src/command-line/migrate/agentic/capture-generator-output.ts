@@ -78,7 +78,14 @@ export async function withGeneratorOutputCapture<T>(
     return { result, logs: capture.flush() };
   } catch (err) {
     if (err && typeof err === 'object') {
-      (err as { capturedLogs?: string }).capturedLogs = capture.flush();
+      // A frozen / sealed / non-extensible error would make this throw a
+      // TypeError under TS-emitted strict-mode code, masking the original
+      // generator error. Swallow that failure; the diagnostic is best-effort.
+      try {
+        (err as { capturedLogs?: string }).capturedLogs = capture.flush();
+      } catch {
+        /* attachment failed; preserve the original error */
+      }
     }
     throw err;
   } finally {

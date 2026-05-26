@@ -128,13 +128,38 @@ describe('generator output capture', () => {
         },
       };
 
-      // The console.log call itself should be a no-op for the capture buffer
-      // (and definitely should not propagate the toString error).
+      // `%s` forces `util.format` to coerce `hostile` via `String(hostile)`,
+      // which routes through `toString()`. Without the try/catch around
+      // `format(...)` inside the capture wrapper, that would propagate.
       const { result } = await withGeneratorOutputCapture(() => {
-        console.log(hostile);
+        console.log('%s', hostile);
         return 'ok';
       });
       expect(result).toBe('ok');
+    });
+
+    it('does not mask the original error when attaching capturedLogs would throw', async () => {
+      jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      const original = new Error('original failure');
+      Object.freeze(original);
+
+      let caught: unknown;
+      try {
+        await withGeneratorOutputCapture(() => {
+          console.log('progress before crash');
+          throw original;
+        });
+      } catch (err) {
+        caught = err;
+      }
+
+      expect(caught).toBe(original);
+      expect((caught as Error).message).toBe('original failure');
+      // Attachment was silently dropped; the diagnostic is best-effort.
+      expect(
+        (caught as { capturedLogs?: string }).capturedLogs
+      ).toBeUndefined();
     });
   });
 });
