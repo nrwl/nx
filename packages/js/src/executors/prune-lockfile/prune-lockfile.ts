@@ -7,10 +7,14 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/internal';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { type PackageJson } from 'nx/src/utils/package-json';
+import {
+  type PackageJson,
+  type PackageJsonDependencySection,
+} from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   getLockFileName,
@@ -27,7 +31,7 @@ export default async function pruneLockfileExecutor(
 ) {
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
-  const packageJson = getPackageJson(schema, context);
+  const packageJson = resolveCatalogReferences(getPackageJson(schema, context));
   mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
 
@@ -102,6 +106,48 @@ function mergeAllowScripts(packageJson: PackageJson) {
     ...rootPackageJson.allowScripts,
     ...packageJson.allowScripts,
   };
+}
+
+export function resolveCatalogReferences(
+  packageJson: PackageJson
+): PackageJson {
+  const manager = getCatalogManager(workspaceRoot);
+  if (!manager) {
+    return packageJson;
+  }
+
+  const sections: PackageJsonDependencySection[] = [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+    'peerDependencies',
+  ];
+  const resolved: PackageJson = { ...packageJson };
+  for (const section of sections) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    const resolvedDeps: Record<string, string> = { ...deps };
+    for (const [packageName, version] of Object.entries(deps)) {
+      if (!manager.isCatalogReference(version)) {
+        continue;
+      }
+      const resolvedVersion = manager.resolveCatalogReference(
+        workspaceRoot,
+        packageName,
+        version
+      );
+      if (!resolvedVersion) {
+        throw new Error(
+          `Could not resolve catalog reference for package ${packageName}@${version}.`
+        );
+      }
+      resolvedDeps[packageName] = resolvedVersion;
+    }
+    resolved[section] = resolvedDeps;
+  }
+  return resolved;
 }
 
 function getPackageJson(
