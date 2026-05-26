@@ -62,10 +62,6 @@ export function buildExplicitTypeScriptDependencies(
   for (const [project, fileData] of Object.entries(
     ctx.filesToProcess.projectFileMap
   )) {
-    if (ctx.projects[project]?.metadata?.skipSourceAnalysis) {
-      continue;
-    }
-
     filesToProcess[project] ??= [];
     for (const { file } of fileData) {
       if (moduleExtensions.some((ext) => file.endsWith(ext))) {
