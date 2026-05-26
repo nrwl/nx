@@ -388,6 +388,95 @@ describe('runAgentic', () => {
     expect(message).toContain('Agent exited with code 1');
   });
 
+  it('distinguishes a clean exit (code 0, no handoff) from a non-zero crash in the ambiguous prompt body', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      // Agent exits cleanly without writing a handoff — distinct from a
+      // crash. The prompt body should NOT say "Agent exited with code 0"
+      // (which sounds normal) but should say "exited cleanly without
+      // writing a handoff" so the user can distinguish the two cases.
+      setImmediate(() => child.emit('exit', 0, null));
+      return child;
+    });
+    mockPrompt.mockResolvedValue({ choice: 'abort' });
+
+    await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    const message = mockPrompt.mock.calls[0][0].message as string;
+    expect(message).toContain(
+      'exited cleanly (code 0) without writing a handoff'
+    );
+    expect(message).not.toMatch(/Agent exited with code 0\./);
+  });
+
+  it('drops Ctrl+C-typical exit fields (code 130 / SIGINT) from the ambiguous-abort causeSummary when the user interrupted', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        const newListeners = (
+          process.listeners('SIGINT') as NodeJS.SignalsListener[]
+        ).filter((l) => !originalListeners.includes(l));
+        for (const l of newListeners) l('SIGINT');
+        setImmediate(() => child.emit('exit', 130, 'SIGINT'));
+      });
+      return child;
+    });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    expect(outcome.kind).toBe('ambiguous-abort');
+    // 130 / SIGINT / missing-handoff are all consequences of the user's own
+    // Ctrl+C; the runner must not parrot them back as "the agent crashed".
+    if (outcome.kind === 'ambiguous-abort') {
+      expect(outcome.causeSummary).toBeUndefined();
+    }
+  });
+
+  it('keeps a separate-crash diagnostic in the ambiguous-abort causeSummary even when the user interrupted', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        // Agent emits a non-Ctrl+C error event, the SIGINT listener fires,
+        // then a non-typical (non-130, non-SIGINT) exit follows. The cause
+        // should still surface — the user pressed Ctrl+C but there's also a
+        // separate crash signal worth showing.
+        child.emit('error', new Error('IPC channel disconnected'));
+        const newListeners = (
+          process.listeners('SIGINT') as NodeJS.SignalsListener[]
+        ).filter((l) => !originalListeners.includes(l));
+        for (const l of newListeners) l('SIGINT');
+        setImmediate(() => child.emit('exit', 1, null));
+      });
+      return child;
+    });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    expect(outcome.kind).toBe('ambiguous-abort');
+    if (outcome.kind === 'ambiguous-abort') {
+      expect(outcome.causeSummary).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('IPC channel disconnected'),
+        ])
+      );
+    }
+  });
+
   it('threads a handoff parse error into the ambiguous prompt body', async () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {

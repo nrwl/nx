@@ -138,7 +138,13 @@ export async function runAgentic(
 
 function exitInfoToCause(info: ExitInfo): AmbiguousCause {
   const cause: AmbiguousCause = {};
-  if (info.code !== undefined && info.code !== null && info.code !== 0) {
+  // Include `code === 0` so the prompt can distinguish "agent exited cleanly
+  // without writing a handoff" (likely the user closed the agent on purpose,
+  // or the agent terminated without invoking the handoff step) from "agent
+  // was killed before it could write" (signal) or "agent crashed" (non-zero
+  // code). Without this distinction every clean-exit-no-handoff collapses
+  // into the same uninformative ambiguous-prompt body.
+  if (info.code !== undefined && info.code !== null) {
     cause.exitCode = info.code;
   }
   if (info.signal) cause.exitSignal = info.signal;
@@ -172,8 +178,9 @@ function restoreTerminalAfterAgent(): void {
 
 /**
  * Sends SIGINT (graceful, equivalent to the user typing Ctrl+C in the REPL),
- * waits up to `AGENT_GRACEFUL_EXIT_MS` for the child to exit, and escalates to
- * SIGTERM as a fallback. Always resolves once the child has exited.
+ * waits up to the configured graceful-exit timeout for the child to exit, and
+ * escalates to SIGTERM as a fallback. Always resolves once the child has
+ * exited.
  *
  * Windows caveat: when `adaptSpawnForWindowsShim` wrapped the binary in
  * `cmd.exe /d /s /c "..."` (the npm `.cmd` shim path), `child.kill('SIGINT')`
@@ -225,19 +232,45 @@ interface ExitInfo {
   error?: Error;
 }
 
+// How long to wait after the first `exit`/`error` event before settling, so a
+// complementary second event (e.g. `error` from IPC followed by `exit` from
+// the child process actually terminating) can land in the same `ExitInfo`
+// rather than being dropped. Imperceptible for an interactive agent flow.
+//
+// For an `error`-only path (e.g. spawn ENOENT — Node emits `error` but never
+// `exit`) this timer is the SOLE settlement mechanism. The 10ms wall-clock
+// cost shows up once per failed run; it does NOT compound across migrations.
+const EXIT_MERGE_WINDOW_MS = 10;
+
 function waitForExit(child: ChildProcess): Promise<ExitInfo> {
   return new Promise<ExitInfo>((resolve) => {
+    const info: ExitInfo = {};
+    let pending: NodeJS.Timeout | null = null;
     let settled = false;
-    const done = (info: ExitInfo) => {
+    const settle = () => {
       if (settled) return;
       settled = true;
+      if (pending) clearTimeout(pending);
       resolve(info);
     };
-    child.on('exit', (code, signal) => done({ code, signal }));
+    const onFirst = () => {
+      if (settled || pending) return;
+      pending = setTimeout(settle, EXIT_MERGE_WINDOW_MS);
+    };
+    child.on('exit', (code, signal) => {
+      info.code = code;
+      info.signal = signal;
+      onFirst();
+    });
     // `error` fires when spawn itself fails (e.g. binary disappeared between
-    // detection and run). Treat it as exit with no handoff so the ambiguous
-    // flow kicks in.
-    child.on('error', (error) => done({ error }));
+    // detection and run) OR alongside `exit` when the process started but
+    // emitted an error event later. Treat both as exit with no handoff so
+    // the ambiguous flow kicks in; field-merge so we don't drop the loser's
+    // contribution when both fire.
+    child.on('error', (error) => {
+      info.error = error;
+      onFirst();
+    });
   });
 }
 
@@ -254,18 +287,49 @@ async function resolveFromHandoffOrPrompt(
       extras: read.handoff.extras,
     };
   }
+  const fullCause: AmbiguousCause = {
+    ...cause,
+    handoff: { reason: read.reason, detail: read.detail },
+  };
   if (userInterrupted) {
     // User pressed Ctrl+C. Don't show the abort/continue prompt — they
     // already told us what they want, and the TTY state after a
     // SIGINT-killed child trips enquirer's setRawMode-EIO and
     // ERR_USE_AFTER_CLOSE bugs. The orchestrator's standard failure
     // cascade surfaces the abort outcome.
-    return { kind: 'ambiguous-abort' };
+    //
+    // Forward the underlying cause as pre-rendered summary lines so the
+    // caller can log it before "Aborted by user" — a Ctrl+C that masked
+    // a SEPARATE crash still needs to show the user what crashed. Scrub
+    // fields that are just the Ctrl+C itself reverberating: exit code
+    // 130 (SIGINT) / 143 (SIGTERM from our escalation) and signals
+    // SIGINT / SIGTERM reflect the user's own keystroke (and our
+    // graceful-exit handling of it); surfacing them as "agent crashed"
+    // would be noise. Anything else — code 1, code 137 (OOM), an
+    // unrelated signal — is a separate diagnostic worth keeping. Note
+    // that `spawnError` is structurally impossible here: the spawn-throw
+    // path returns directly without registering the SIGINT listener, so
+    // `userInterrupted` can never be true on that branch.
+    const exitWasCtrlC =
+      cause.exitCode === 130 ||
+      cause.exitCode === 143 ||
+      cause.exitSignal === 'SIGINT' ||
+      cause.exitSignal === 'SIGTERM';
+    const userScrubbed: AmbiguousCause = {
+      exitError: cause.exitError,
+      exitCode: exitWasCtrlC ? undefined : cause.exitCode,
+      exitSignal: exitWasCtrlC ? undefined : cause.exitSignal,
+      handoff:
+        read.ok || read.reason === 'missing'
+          ? undefined
+          : { reason: read.reason, detail: read.detail },
+    };
+    const causeSummary = describeAmbiguousCause(userScrubbed);
+    return causeSummary.length > 0
+      ? { kind: 'ambiguous-abort', causeSummary }
+      : { kind: 'ambiguous-abort' };
   }
-  return promptAmbiguous({
-    ...cause,
-    handoff: { reason: read.reason, detail: read.detail },
-  });
+  return promptAmbiguous(fullCause);
 }
 
 /**
@@ -366,14 +430,35 @@ function describeAmbiguousCause(cause: AmbiguousCause): string[] {
     lines.push(`Agent process emitted an error: ${cause.exitError}`);
   }
   if (cause.exitCode !== undefined && cause.exitCode !== null) {
-    lines.push(`Agent exited with code ${cause.exitCode}.`);
+    // Distinguish clean-exit-without-handoff (likely a deliberate close by
+    // the user, or the agent ended its session without invoking the handoff
+    // step) from a non-zero crash, so the prompt body doesn't collapse them
+    // into the same uninformative "exited with code N" line.
+    lines.push(
+      cause.exitCode === 0
+        ? 'Agent exited cleanly (code 0) without writing a handoff.'
+        : `Agent exited with code ${cause.exitCode}.`
+    );
   }
   if (cause.exitSignal) {
     lines.push(`Agent was terminated by signal ${cause.exitSignal}.`);
   }
+  // When another cause line already explains why no handoff was produced
+  // (a spawn error, an exit code/signal, an emitted process error), the
+  // bare "No handoff file was written." line is redundant — every other
+  // case is an implicit "and that's why nothing was written". Only emit
+  // it when there is no other explanation. read-error / parse-error /
+  // shape-mismatch are independent diagnostics and always surface.
+  const handoffMissingIsRedundant =
+    !!cause.spawnError ||
+    !!cause.exitError ||
+    cause.exitCode !== undefined ||
+    cause.exitSignal !== undefined;
   switch (cause.handoff?.reason) {
     case 'missing':
-      lines.push('No handoff file was written.');
+      if (!handoffMissingIsRedundant) {
+        lines.push('No handoff file was written.');
+      }
       break;
     case 'read-error':
       lines.push(

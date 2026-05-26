@@ -175,6 +175,17 @@ export async function runAgenticPromptStep(
       );
     }
     case 'ambiguous-abort':
+      // When Ctrl+C masked an underlying crash, the runner forwards the
+      // pre-rendered cause lines so we surface them before "Aborted by
+      // user" — otherwise the user sees only "aborted" with no signal that
+      // anything also crashed. When the abort came from the user picking
+      // "abort" at the prompt, the cause was already shown there.
+      if (outcome.causeSummary && outcome.causeSummary.length > 0) {
+        logger.info(pc.dim('The agent run ended without a usable handoff:'));
+        for (const line of outcome.causeSummary) {
+          logger.info(pc.dim(`  ${line}`));
+        }
+      }
       logger.info(`${pc.red('✗')} Aborted by user.`);
       throw new Error(
         `Prompt migration ${migration.package}: ${migration.name} was aborted by user.`

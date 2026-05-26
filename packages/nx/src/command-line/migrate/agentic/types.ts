@@ -63,12 +63,19 @@ export interface HandoffFile {
  * Outcome the runner reports back to the migrate orchestrator after a single
  * agentic step. The four kinds mirror the (a)/(b)/(c) matrix plus the user's
  * choice when (c) fires.
+ *
+ * `ambiguous-abort.causeSummary`: pre-rendered explanation lines describing
+ * what happened underneath. Populated only when the user pressed Ctrl+C and
+ * we suspect a crash also contributed (we bypass the ambiguous prompt in
+ * that path, so the user never sees the in-prompt cause display). When the
+ * abort came from the user explicitly choosing "abort" at the prompt, the
+ * cause was already shown there and `causeSummary` is omitted.
  */
 export type HandoffOutcome =
   | { kind: 'success'; summary: string; extras?: Record<string, unknown> }
   | { kind: 'failed'; summary: string; extras?: Record<string, unknown> }
   | { kind: 'ambiguous-continue' }
-  | { kind: 'ambiguous-abort' };
+  | { kind: 'ambiguous-abort'; causeSummary?: string[] };
 
 /**
  * Result of the up-front resolution phase that runs once per `--run-migrations`
