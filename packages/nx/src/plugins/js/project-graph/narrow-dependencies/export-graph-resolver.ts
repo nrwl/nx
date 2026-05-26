@@ -32,12 +32,8 @@ export class ExportGraphResolver {
       join(baseCandidate, 'index.cjs'),
     ];
 
-    const results = await Promise.all(
-      candidates.map((candidate) => this.cache.isFile(candidate))
-    );
-    const index = results.findIndex(Boolean);
-
-    return index >= 0 ? this.toWorkspacePath(candidates[index]) : undefined;
+    const match = await this.findFirstExistingPath(candidates);
+    return match ? this.toWorkspacePath(match) : undefined;
   }
 
   async findEntryPoint(projectRoot: string): Promise<string | undefined> {
@@ -50,12 +46,7 @@ export class ExportGraphResolver {
       join(this.workspaceRoot, projectRoot, 'index.js'),
     ];
 
-    const results = await Promise.all(
-      entryPoints.map((entryPoint) => this.cache.isFile(entryPoint))
-    );
-    const index = results.findIndex(Boolean);
-
-    return index >= 0 ? entryPoints[index] : undefined;
+    return this.findFirstExistingPath(entryPoints);
   }
 
   async resolveTargetExportedSymbols(
@@ -169,7 +160,9 @@ export class ExportGraphResolver {
     for (const statement of sourceAst.statements) {
       if (ts.isExportDeclaration(statement)) {
         if (!statement.exportClause && statement.moduleSpecifier) {
-          const spec = statement.moduleSpecifier.getText(sourceAst).slice(1, -1);
+          const spec = statement.moduleSpecifier
+            .getText(sourceAst)
+            .slice(1, -1);
           if (spec.startsWith('.')) {
             starReexportSpecs.push(spec);
           }
@@ -178,7 +171,9 @@ export class ExportGraphResolver {
           ts.isNamedExports(statement.exportClause)
         ) {
           if (statement.moduleSpecifier) {
-            const spec = statement.moduleSpecifier.getText(sourceAst).slice(1, -1);
+            const spec = statement.moduleSpecifier
+              .getText(sourceAst)
+              .slice(1, -1);
             if (spec.startsWith('.')) {
               namedReexportSpecs.push({
                 spec,
@@ -211,25 +206,14 @@ export class ExportGraphResolver {
       }
     }
 
-    const namedResolvedPaths = await Promise.all(
-      namedReexportSpecs.map(({ spec }) => this.resolveRelativeImport(filePath, spec))
-    );
-    const namedSubOrigins = await Promise.all(
-      namedResolvedPaths.map((resolvedPath) => {
-        if (!resolvedPath) {
-          return Promise.resolve(new Map<string, Set<string>>());
-        }
-
-        return this.resolveExportOriginsFromFile(
-          join(this.workspaceRoot, resolvedPath),
-          new Set(visited)
-        );
-      })
+    const namedReexports = await this.resolveReexportOrigins(
+      filePath,
+      namedReexportSpecs.map(({ spec }) => spec),
+      visited
     );
 
     for (const [index, { elements }] of namedReexportSpecs.entries()) {
-      const resolvedPath = namedResolvedPaths[index];
-      const subOrigins = namedSubOrigins[index];
+      const { resolvedPath, subOrigins } = namedReexports[index];
       if (!resolvedPath) {
         continue;
       }
@@ -247,23 +231,13 @@ export class ExportGraphResolver {
       }
     }
 
-    const starResolvedPaths = await Promise.all(
-      starReexportSpecs.map((spec) => this.resolveRelativeImport(filePath, spec))
-    );
-    const starSubOrigins = await Promise.all(
-      starResolvedPaths.map((resolvedPath) => {
-        if (!resolvedPath) {
-          return Promise.resolve(new Map<string, Set<string>>());
-        }
-
-        return this.resolveExportOriginsFromFile(
-          join(this.workspaceRoot, resolvedPath),
-          new Set(visited)
-        );
-      })
+    const starReexports = await this.resolveReexportOrigins(
+      filePath,
+      starReexportSpecs,
+      visited
     );
 
-    for (const subOrigins of starSubOrigins) {
+    for (const { subOrigins } of starReexports) {
       for (const [name, files] of subOrigins) {
         this.addOriginSet(origins, name, files);
       }
@@ -340,7 +314,10 @@ export class ExportGraphResolver {
       .slice(1, -1);
 
     if (specifier.startsWith('.')) {
-      const resolvedPath = await this.resolveRelativeImport(currentFile, specifier);
+      const resolvedPath = await this.resolveRelativeImport(
+        currentFile,
+        specifier
+      );
       if (!resolvedPath) {
         return undefined;
       }
@@ -382,13 +359,63 @@ export class ExportGraphResolver {
 
   private toWorkspacePath(absolutePath: string): string {
     const relativePath = absolutePath.replace(this.workspaceRoot, '');
-    return relativePath
-      .split(/[\\/]/)
-      .filter(Boolean)
-      .join('/');
+    return relativePath.split(/[\\/]/).filter(Boolean).join('/');
   }
 
-  private collectDeclaredNames(statement: ts.Statement, into: Set<string>): void {
+  private async findFirstExistingPath(
+    candidates: string[]
+  ): Promise<string | undefined> {
+    const results = await Promise.all(
+      candidates.map((candidate) => this.cache.isFile(candidate))
+    );
+    const index = results.findIndex(Boolean);
+
+    return index >= 0 ? candidates[index] : undefined;
+  }
+
+  private async resolveReexportOrigins(
+    filePath: string,
+    specs: string[],
+    visited: Set<string>
+  ): Promise<
+    Array<{
+      resolvedPath: string | undefined;
+      subOrigins: Map<string, Set<string>>;
+    }>
+  > {
+    const resolvedPaths = await Promise.all(
+      specs.map((spec) => this.resolveRelativeImport(filePath, spec))
+    );
+    const subOrigins = await Promise.all(
+      resolvedPaths.map((resolvedPath) =>
+        this.resolveOriginsForResolvedPath(resolvedPath, visited)
+      )
+    );
+
+    return resolvedPaths.map((resolvedPath, index) => ({
+      resolvedPath,
+      subOrigins: subOrigins[index],
+    }));
+  }
+
+  private resolveOriginsForResolvedPath(
+    resolvedPath: string | undefined,
+    visited: Set<string>
+  ): Promise<Map<string, Set<string>>> {
+    if (!resolvedPath) {
+      return Promise.resolve(new Map<string, Set<string>>());
+    }
+
+    return this.resolveExportOriginsFromFile(
+      join(this.workspaceRoot, resolvedPath),
+      new Set(visited)
+    );
+  }
+
+  private collectDeclaredNames(
+    statement: ts.Statement,
+    into: Set<string>
+  ): void {
     if (ts.isFunctionDeclaration(statement) && statement.name) {
       into.add(statement.name.text);
     } else if (ts.isClassDeclaration(statement) && statement.name) {
@@ -414,8 +441,9 @@ export class ExportGraphResolver {
       (ts.canHaveModifiers?.(node) ? ts.getModifiers?.(node) : undefined);
 
     return (
-      modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ??
-      false
+      modifiers?.some(
+        (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+      ) ?? false
     );
   }
 

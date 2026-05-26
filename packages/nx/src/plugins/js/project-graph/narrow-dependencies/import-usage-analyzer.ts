@@ -21,14 +21,11 @@ export class ImportUsageAnalyzer {
   async analyzeImportsForTarget(
     params: AnalyzeImportsParams
   ): Promise<ImportInsight> {
-    const relativeSpecifiers = new Set<string>();
-
-    for (const statement of params.sourceAst.statements) {
-      const specifier = this.extractModuleSpecifier(statement, params.sourceAst);
-      if (specifier?.startsWith('.')) {
-        relativeSpecifiers.add(specifier);
-      }
-    }
+    const relativeSpecifiers = new Set(
+      this.collectRelativeModuleStatements(params.sourceAst).map(
+        ({ specifier }) => specifier
+      )
+    );
 
     ts.forEachChild(params.sourceAst, function collectDynamic(node) {
       if (
@@ -77,7 +74,13 @@ export class ImportUsageAnalyzer {
         const specifier = statement.moduleSpecifier
           .getText(params.sourceAst)
           .slice(1, -1);
-        if (!this.matchesTargetImport(specifier, params.targetMatch, resolvedRelativeImports)) {
+        if (
+          !this.matchesTargetImport(
+            specifier,
+            params.targetMatch,
+            resolvedRelativeImports
+          )
+        ) {
           continue;
         }
 
@@ -119,7 +122,9 @@ export class ImportUsageAnalyzer {
           continue;
         }
 
-        const localNames = this.collectRuntimeImportedNames(statement.importClause);
+        const localNames = this.collectRuntimeImportedNames(
+          statement.importClause
+        );
         if (localNames.length === 0) {
           hasRetainedUsage = true;
           continue;
@@ -134,7 +139,13 @@ export class ImportUsageAnalyzer {
           .getText(params.sourceAst)
           .slice(1, -1);
 
-        if (this.matchesTargetImport(specifier, params.targetMatch, resolvedRelativeImports)) {
+        if (
+          this.matchesTargetImport(
+            specifier,
+            params.targetMatch,
+            resolvedRelativeImports
+          )
+        ) {
           matched = true;
           hasReexport = true;
 
@@ -152,7 +163,11 @@ export class ImportUsageAnalyzer {
     }
 
     const matchesTargetImmediate = (specifier: string) =>
-      this.matchesTargetImport(specifier, params.targetMatch, resolvedRelativeImports);
+      this.matchesTargetImport(
+        specifier,
+        params.targetMatch,
+        resolvedRelativeImports
+      );
 
     ts.forEachChild(params.sourceAst, function visit(node) {
       if (
@@ -204,32 +219,10 @@ export class ImportUsageAnalyzer {
   ): Set<string> {
     const names = new Set<string>();
 
-    for (const statement of sourceAst.statements) {
-      if (ts.isImportDeclaration(statement)) {
-        const specifier = statement.moduleSpecifier
-          .getText(sourceAst)
-          .slice(1, -1);
-        if (!this.matchesAlias(specifier, targetMatch)) {
-          continue;
-        }
-
-        this.collectImportedNamesFromMatchedStatement(
-          names,
-          statement,
-          sourceAst,
-          resolveNamespaceImports
-        );
-        continue;
-      }
-
-      if (ts.isExportDeclaration(statement) && statement.moduleSpecifier) {
-        const specifier = statement.moduleSpecifier
-          .getText(sourceAst)
-          .slice(1, -1);
-        if (!this.matchesAlias(specifier, targetMatch)) {
-          continue;
-        }
-
+    this.forEachMatchedModuleStatement(
+      sourceAst,
+      (specifier) => this.matchesAlias(specifier, targetMatch),
+      (statement) => {
         this.collectImportedNamesFromMatchedStatement(
           names,
           statement,
@@ -237,7 +230,7 @@ export class ImportUsageAnalyzer {
           resolveNamespaceImports
         );
       }
-    }
+    );
 
     return names;
   }
@@ -316,7 +309,10 @@ export class ImportUsageAnalyzer {
     return false;
   }
 
-  private matchesAlias(specifier: string, targetMatch: TargetMatchData): boolean {
+  private matchesAlias(
+    specifier: string,
+    targetMatch: TargetMatchData
+  ): boolean {
     return (
       (!!targetMatch.packageName && specifier === targetMatch.packageName) ||
       targetMatch.aliases.some(
@@ -431,22 +427,18 @@ export class ImportUsageAnalyzer {
     resolveNamespaceImports: boolean
   ): Promise<Set<string>> {
     const names = new Set<string>();
-    const relativeSpecs: Array<{ spec: string; statement: ts.Statement }> = [];
-
-    for (const statement of sourceAst.statements) {
-      const specifier = this.extractModuleSpecifier(statement, sourceAst);
-      if (specifier?.startsWith('.')) {
-        relativeSpecs.push({ spec: specifier, statement });
-      }
-    }
+    const relativeSpecs = this.collectRelativeModuleStatements(sourceAst);
 
     if (relativeSpecs.length === 0) {
       return names;
     }
 
     const resolved = await Promise.all(
-      relativeSpecs.map(({ spec }) =>
-        this.exportGraphResolver.resolveRelativeImport(sourceFilePath, spec)
+      relativeSpecs.map(({ specifier }) =>
+        this.exportGraphResolver.resolveRelativeImport(
+          sourceFilePath,
+          specifier
+        )
       )
     );
     const normalizedRoot = targetMatch.root.split('\\').join('/');
@@ -471,6 +463,47 @@ export class ImportUsageAnalyzer {
     return names;
   }
 
+  private collectRelativeModuleStatements(
+    sourceAst: ts.SourceFile
+  ): Array<{ specifier: string; statement: ts.Statement }> {
+    const relativeStatements: Array<{
+      specifier: string;
+      statement: ts.Statement;
+    }> = [];
+
+    this.forEachModuleStatement(sourceAst, (statement, specifier) => {
+      if (specifier.startsWith('.')) {
+        relativeStatements.push({ specifier, statement });
+      }
+    });
+
+    return relativeStatements;
+  }
+
+  private forEachMatchedModuleStatement(
+    sourceAst: ts.SourceFile,
+    matches: (specifier: string) => boolean,
+    visitor: (statement: ts.Statement) => void
+  ): void {
+    this.forEachModuleStatement(sourceAst, (statement, specifier) => {
+      if (matches(specifier)) {
+        visitor(statement);
+      }
+    });
+  }
+
+  private forEachModuleStatement(
+    sourceAst: ts.SourceFile,
+    visitor: (statement: ts.Statement, specifier: string) => void
+  ): void {
+    for (const statement of sourceAst.statements) {
+      const specifier = this.extractModuleSpecifier(statement, sourceAst);
+      if (specifier !== undefined) {
+        visitor(statement, specifier);
+      }
+    }
+  }
+
   private collectImportedNamesFromMatchedStatement(
     names: Set<string>,
     statement: ts.Statement,
@@ -493,7 +526,10 @@ export class ImportUsageAnalyzer {
         }
 
         const namespaceName = statement.importClause.namedBindings.name.text;
-        const accessed = this.collectNamespacePropertyAccesses(sourceAst, namespaceName);
+        const accessed = this.collectNamespacePropertyAccesses(
+          sourceAst,
+          namespaceName
+        );
         if (accessed === undefined || accessed.size === 0) {
           names.add('*');
         } else {
