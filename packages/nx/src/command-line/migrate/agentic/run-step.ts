@@ -1,4 +1,3 @@
-import { mkdirSync } from 'fs';
 import { dirname } from 'path';
 import * as pc from 'picocolors';
 import { getRunNxBaseCommand } from '../../../utils/child-process';
@@ -9,7 +8,7 @@ import {
   getPackageManagerCommand,
 } from '../../../utils/package-manager';
 import { resetTerminalAfterAgent } from '../migrate-output';
-import { stepHandoffPath } from './handoff';
+import { mkdirSafely, stepHandoffPath } from './handoff';
 import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
 import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
@@ -85,7 +84,10 @@ export async function runAgenticPromptStep(
   // The system prompt tells the agent the parent dir exists, so the agent
   // doesn't defensively `mkdir -p` (which triggers a workspace-permission
   // prompt in agents like Claude Code every run).
-  mkdirSync(dirname(handoffFilePath), { recursive: true });
+  mkdirSafely(
+    dirname(handoffFilePath),
+    `handoff directory for ${migration.name}`
+  );
   const pm = detectPackageManager(root);
   const systemContext = buildSystemPrompt({
     workspaceRoot: root,

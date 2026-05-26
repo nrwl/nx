@@ -1,12 +1,20 @@
 import { access, constants } from 'fs/promises';
 import which from 'which';
+import { logger } from '../../../utils/logger';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
 async function isExecutable(path: string): Promise<boolean> {
   try {
     await access(path, constants.X_OK);
     return true;
-  } catch {
+  } catch (err) {
+    // EACCES on an existing path means "this looks installed but we can't
+    // execute it" — surface so the user can answer "why isn't my agent
+    // detected?" without grep-debugging the filesystem.
+    const code = (err as NodeJS.ErrnoException)?.code;
+    if (code && code !== 'ENOENT') {
+      logger.verbose(`Agent detection: cannot probe ${path} (${code}).`);
+    }
     return false;
   }
 }
@@ -15,9 +23,20 @@ async function findOnPath(
   binaryNames: readonly string[]
 ): Promise<string | null> {
   for (const name of binaryNames) {
-    const found = await which(name, { nothrow: true });
-    if (typeof found === 'string') {
-      return found;
+    try {
+      const found = await which(name);
+      if (typeof found === 'string') {
+        return found;
+      }
+    } catch (err) {
+      // `which` throws when the binary isn't found OR on access errors;
+      // log the latter so detection failures stay debuggable.
+      const code = (err as NodeJS.ErrnoException)?.code;
+      if (code && code !== 'ENOENT') {
+        logger.verbose(
+          `Agent detection: PATH probe for "${name}" failed (${code}).`
+        );
+      }
     }
   }
   return null;

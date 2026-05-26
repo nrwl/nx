@@ -111,9 +111,9 @@ function shouldPromptForAgentic(
 async function firePromptForAgentic(
   migrations: ReadonlyArray<{ prompt?: string }>
 ): Promise<boolean> {
-  // Caller (`resolveFlag`) guarantees at least one prompt-bearing migration —
-  // the "Yes"/"No" hints below assume that. If we later extend the prompt to
-  // fire for generator-only runs (validation-only), the hints need to branch.
+  // The "Yes"/"No" hints below assume at least one prompt-bearing migration is
+  // queued. If we later extend the prompt to fire for generator-only runs
+  // (validation-only), the hints need to branch.
   const promptCount = migrations.filter((m) => !!m.prompt).length;
   const yesHint = `Apply ${promptCount} prompt migration${
     promptCount === 1 ? '' : 's'

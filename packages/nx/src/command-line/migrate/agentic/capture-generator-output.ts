@@ -37,7 +37,13 @@ export function installGeneratorOutputCapture(): GeneratorOutputCapture {
     const original = console[method].bind(console);
     console[method] = ((...args: unknown[]) => {
       original(...args);
-      buffer.push(format(...args));
+      try {
+        buffer.push(format(...args));
+      } catch {
+        // `format` is robust against the common pathologies but a user arg
+        // with a throwing `toString()` would otherwise turn a benign
+        // `console.log(...)` into a generator crash.
+      }
     }) as Console[ConsoleMethod];
   }
 

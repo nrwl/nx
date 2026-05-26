@@ -171,6 +171,14 @@ function restoreTerminalAfterAgent(): void {
  * Sends SIGINT (graceful, equivalent to the user typing Ctrl+C in the REPL),
  * waits up to `AGENT_GRACEFUL_EXIT_MS` for the child to exit, and escalates to
  * SIGTERM as a fallback. Always resolves once the child has exited.
+ *
+ * Windows caveat: when `adaptSpawnForWindowsShim` wrapped the binary in
+ * `cmd.exe /d /s /c "..."` (the npm `.cmd` shim path), `child.kill('SIGINT')`
+ * is mapped by Node to `TerminateProcess` on the cmd.exe handle. That kills
+ * cmd.exe but does not cascade to the actual agent process, which becomes
+ * orphaned. A proper fix would `taskkill /T /F /PID <pid>` the cmd-shim path;
+ * until then, agents that don't exit on their own after a handoff write will
+ * survive on Windows. Tracked as a follow-up.
  */
 async function closeAgentSession(
   child: ChildProcess,

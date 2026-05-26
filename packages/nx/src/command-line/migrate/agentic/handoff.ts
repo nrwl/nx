@@ -8,6 +8,24 @@ export function runDirPath(workspaceRoot: string, runId: string): string {
 }
 
 /**
+ * `mkdir -p` with a contextual error wrapper. Without this, the raw
+ * ENOSPC/EACCES/EROFS surfaces with no indication of which directory the
+ * migrate orchestrator was trying to create.
+ */
+export function mkdirSafely(dir: string, purpose: string): void {
+  try {
+    mkdirSync(dir, { recursive: true });
+  } catch (err) {
+    const code = (err as NodeJS.ErrnoException)?.code;
+    throw new Error(
+      `Could not create ${purpose} at ${dir}${code ? ` (${code})` : ''}: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
+  }
+}
+
+/**
  * Wipes any prior contents for this run id and recreates an empty directory.
  *
  * Scope of the wipe is intentionally narrow (only `<run-id>/`) so that handoff
@@ -17,7 +35,7 @@ export function runDirPath(workspaceRoot: string, runId: string): string {
 export function initRunDir(workspaceRoot: string, runId: string): string {
   const dir = runDirPath(workspaceRoot, runId);
   rmSync(dir, { recursive: true, force: true });
-  mkdirSync(dir, { recursive: true });
+  mkdirSafely(dir, 'nx migrate run directory');
   return dir;
 }
 
