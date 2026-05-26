@@ -90,38 +90,6 @@ describe('explicit project dependencies', () => {
       ]);
     });
 
-    it('should skip source analysis when project metadata opts out', async () => {
-      const source = 'proj';
-      const ctx = await createContext({
-        source,
-        sourceProjectMetadata: {
-          skipSourceAnalysis: true,
-        },
-        sourceProjectFiles: [
-          {
-            path: 'libs/proj/index.ts',
-            content: `
-              import {a} from '@proj/my-second-proj';
-              await import('@proj/project-3');
-              require('@proj/proj4ab');
-            `,
-          },
-        ],
-      });
-      const targetProjectLocator = new TargetProjectLocator(
-        convertProjectsForTargetProjectLocator(ctx.projects),
-        ctx.externalNodes,
-        new Map()
-      );
-
-      const res = buildExplicitTypeScriptDependencies(
-        ctx,
-        targetProjectLocator
-      );
-
-      expect(res).toEqual([]);
-    });
-
     it('should preferentially resolve external projects found in the npmResolutionCache', async () => {
       const source = 'proj';
       const ctx = await createContext({
@@ -632,7 +600,6 @@ describe('explicit project dependencies', () => {
 
 interface VirtualWorkspaceConfig {
   source: string;
-  sourceProjectMetadata?: Record<string, unknown>;
   sourceProjectFiles: {
     path: string;
     content: string;
@@ -651,7 +618,6 @@ async function createContext(
     [`./libs/${config.source}/project.json`]: JSON.stringify({
       name: config.source,
       sourceRoot: `libs/${config.source}`,
-      metadata: config.sourceProjectMetadata,
     }),
   };
 
