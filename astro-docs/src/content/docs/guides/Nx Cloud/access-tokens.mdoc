@@ -11,7 +11,11 @@ filter: 'type:Guides'
 The permissions and membership define what developers can access on [nx.app](https://cloud.nx.app?utm_source=nx.dev&utm_medium=docs&utm_campaign=nx-cloud-security), but they don't affect what happens when you run Nx commands in CI. To manage that, you need to provision CI access tokens in your workspace settings, under the `Access Control` tab.
 Learn more about [cache security best practices](/docs/concepts/ci-concepts/cache-security).
 
-![Access Control Settings Page](../../../../assets/nx-cloud/access-control-settings.avif)
+{% aside type="tip" title="Quickest path: use recommended settings" %}
+The **Access Control** tab in your Nx Cloud workspace has a **Use recommended settings** button that generates the right CI access tokens, requires developer logins for cache reads, etc.
+
+![](../../../../assets/nx-cloud/access-control-settings.avif)
+{% /aside %}
 
 ## Access types
 
