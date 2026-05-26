@@ -3,6 +3,7 @@ import type { BundlerKind } from './types';
 
 export type DependencyNarrowingOptions = {
   mode?: 'semantic' | 'strict' | 'aggressive';
+  concurrency?: number;
   respectSideEffects?: boolean;
   removeTypeOnlyEdges?: boolean;
   treatMissingPackageJsonAsSideEffectFree?: boolean;
@@ -16,6 +17,7 @@ export type DependencyNarrowingOptions = {
 
 export type NormalizedDependencyNarrowingOptions = {
   mode: 'semantic' | 'strict' | 'aggressive';
+  concurrency: number;
   respectSideEffects: boolean;
   removeTypeOnlyEdges: boolean;
   treatMissingPackageJsonAsSideEffectFree: boolean;
@@ -29,6 +31,7 @@ export type NormalizedDependencyNarrowingOptions = {
 
 const DEFAULT_OPTIONS: NormalizedDependencyNarrowingOptions = {
   mode: 'semantic',
+  concurrency: 50,
   respectSideEffects: true,
   removeTypeOnlyEdges: true,
   treatMissingPackageJsonAsSideEffectFree: false,
@@ -40,17 +43,29 @@ const DEFAULT_OPTIONS: NormalizedDependencyNarrowingOptions = {
   debug: false,
 };
 
+export type NormalizedOptions = NormalizedDependencyNarrowingOptions;
+
 export function normalizeDependencyNarrowingOptions(
   options?: DependencyNarrowingOptions
 ): NormalizedDependencyNarrowingOptions {
   return {
     ...DEFAULT_OPTIONS,
     ...options,
+    concurrency: normalizeConcurrency(options?.concurrency),
     bundlerAdapters:
       options?.bundlerAdapters && options.bundlerAdapters.length > 0
         ? options.bundlerAdapters
         : DEFAULT_OPTIONS.bundlerAdapters,
   };
+}
+
+function normalizeConcurrency(concurrency: number | undefined): number {
+  if (!Number.isFinite(concurrency) || concurrency === undefined) {
+    return DEFAULT_OPTIONS.concurrency;
+  }
+
+  const normalized = Math.floor(concurrency);
+  return normalized > 0 ? normalized : DEFAULT_OPTIONS.concurrency;
 }
 
 export function getJsPluginDependencyNarrowingOptions(
