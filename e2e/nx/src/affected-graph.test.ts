@@ -4,6 +4,7 @@ import {
   newProject,
   readFile,
   readJson,
+  updateJson,
   cleanupProject,
   runCLI,
   runCLIAsync,
@@ -604,6 +605,72 @@ describe('show projects --affected', () => {
       },
       outputs: [`coverage/apps/${myapp}`],
     });
+  }, 120000);
+
+  it('should reduce affected fan-out for imports not used in emitted code when dependency narrowing is enabled', async () => {
+    const unusedConsumer = uniq('unused-consumer');
+    const usedConsumer = uniq('used-consumer');
+    const sharedLib = uniq('shared-lib');
+
+    updateJson('nx.json', (json) => ({
+      ...json,
+      pluginsConfig: {
+        ...json.pluginsConfig,
+        '@nx/js': {
+          ...json.pluginsConfig?.['@nx/js'],
+          dependencyNarrowing: {
+            ...json.pluginsConfig?.['@nx/js']?.dependencyNarrowing,
+            affectedNarrowing: true,
+            respectSideEffects: false,
+          },
+        },
+      },
+    }));
+    runCLI('reset');
+
+    runCLI(
+      `generate @nx/web:app ${unusedConsumer} --directory=apps/${unusedConsumer} --unitTestRunner=vitest`
+    );
+    runCLI(
+      `generate @nx/web:app ${usedConsumer} --directory=apps/${usedConsumer} --unitTestRunner=vitest`
+    );
+    runCLI(`generate @nx/js:lib ${sharedLib} --directory=libs/${sharedLib}`);
+
+    updateFile(
+      `libs/${sharedLib}/src/index.ts`,
+      `export const unusedValue = 'unused';\nexport const usedValue = 'used';\n`
+    );
+
+    updateFile(
+      `apps/${unusedConsumer}/src/app/app.element.spec.ts`,
+      `import { unusedValue } from '@${proj}/${sharedLib}';\n\n` +
+        `describe('unused import consumer', () => {\n` +
+        `  it('uses the import only in a type position', () => {\n` +
+        `    type ImportedValue = typeof unusedValue;\n` +
+        `    const value: ImportedValue = 'unused';\n` +
+        `    expect(value).toEqual('unused');\n` +
+        `  });\n` +
+        `});\n`
+    );
+
+    updateFile(
+      `apps/${usedConsumer}/src/app/app.element.spec.ts`,
+      `import { usedValue } from '@${proj}/${sharedLib}';\n\n` +
+        `describe('used import consumer', () => {\n` +
+        `  it('uses the imported value', () => {\n` +
+        `    expect(usedValue).toEqual('used');\n` +
+        `  });\n` +
+        `});\n`
+    );
+
+    const { stdout } = await runCLIAsync(
+      `show projects --affected --files=libs/${sharedLib}/src/index.ts --exclude=${unusedConsumer}-e2e,${usedConsumer}-e2e`
+    );
+
+    const affectedProjects = stdout.split('\n').filter(Boolean);
+    expect(affectedProjects).toContain(sharedLib);
+    expect(affectedProjects).toContain(usedConsumer);
+    expect(affectedProjects).not.toContain(unusedConsumer);
   }, 120000);
 
   function compareTwoArrays(a: string[], b: string[]) {
