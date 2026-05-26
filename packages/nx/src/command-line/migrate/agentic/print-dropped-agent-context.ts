@@ -1,4 +1,5 @@
 import {
+  escapeXmlBody,
   filterNonEmptyStrings,
   renderListItem,
 } from './prompts/shared-rendering';
@@ -28,14 +29,22 @@ export function formatDroppedAgentContextForOuterAgent(
     return '';
   }
   const id = `${input.migration.package}:${input.migration.name}`;
-  const preamble = input.migration.prompt
-    ? `ℹ Hints from the ${input.migration.name} generator for the AI agent driving this run, when applying ${input.migration.prompt}:`
-    : `ℹ Hints from the ${input.migration.name} generator for the AI agent driving this run:`;
+  // Migration metadata and agentContext entries are user-authored (migrations
+  // are published by third-party packages); escape any `<` / `&` so a hostile
+  // value can't break out of the surrounding XML-framed block. The agent
+  // reads `&lt;/agent_context&gt;` as literal text, not a closing tag.
+  const safeName = escapeXmlBody(input.migration.name);
+  const safePrompt = input.migration.prompt
+    ? escapeXmlBody(input.migration.prompt)
+    : undefined;
+  const preamble = safePrompt
+    ? `ℹ Hints from the ${safeName} generator for the AI agent driving this run, when applying ${safePrompt}:`
+    : `ℹ Hints from the ${safeName} generator for the AI agent driving this run:`;
   return [
     preamble,
     ``,
     `<agent_context migration="${escapeXmlAttr(id)}">`,
-    ...entries.map(renderListItem),
+    ...entries.map((entry) => renderListItem(escapeXmlBody(entry))),
     `</agent_context>`,
   ].join('\n');
 }

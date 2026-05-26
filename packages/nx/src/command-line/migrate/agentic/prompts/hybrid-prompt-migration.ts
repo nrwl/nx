@@ -1,5 +1,6 @@
 import type { FileChange } from '../../../../generators/tree';
 import {
+  escapeXmlBody,
   filterNonEmptyStrings,
   renderFileEntry,
   renderGitInspectInstruction,
@@ -54,22 +55,29 @@ export interface HybridPromptMigrationContext {
 export function buildHybridPromptUserPrompt(
   ctx: HybridPromptMigrationContext
 ): string {
+  // Migration metadata, generator stdout, file paths from `tree.write`, and
+  // `agentContext` entries arrive from third-party migration packages; escape
+  // any `<` / `&` so a hostile value can't break out of the surrounding
+  // XML-framed block. The agent reads `&lt;/migration&gt;` etc. as literal
+  // text, not closing tags. See `escapeXmlBody` for the underlying rationale.
   const lines: string[] = [
     `Complete the AI-driven step that follows the generator phase of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did. The step may apply additional changes, verify the generator's output, or both — follow the instructions file.`,
     ``,
     `<migration>`,
-    `package: ${ctx.package}`,
-    `version: ${ctx.version}`,
-    `name: ${ctx.name}`,
+    `package: ${escapeXmlBody(ctx.package)}`,
+    `version: ${escapeXmlBody(ctx.version)}`,
+    `name: ${escapeXmlBody(ctx.name)}`,
   ];
 
   if (ctx.description) {
-    lines.push(...renderKeyMultilineValue('description', ctx.description));
+    lines.push(
+      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
+    );
   }
 
   lines.push(`</migration>`);
 
-  const logs = stripAnsi(ctx.impl?.logs ?? '').trim();
+  const logs = escapeXmlBody(stripAnsi(ctx.impl?.logs ?? '').trim());
   const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);
   const hasDiffContext = !!ctx.impl?.hasDiffContext;
   const hasGeneratorOutput = !!ctx.impl?.changes && ctx.impl.changes.length > 0;
@@ -105,14 +113,14 @@ export function buildHybridPromptUserPrompt(
     lines.push(
       ``,
       `<advisory_context note="hints from the generator phase; consult while following the instructions, not as separate tasks">`,
-      ...agentContext.map(renderListItem),
+      ...agentContext.map((entry) => renderListItem(escapeXmlBody(entry))),
       `</advisory_context>`
     );
   }
 
   lines.push(
     ``,
-    `<instructions_file>${ctx.promptPath}</instructions_file>`,
+    `<instructions_file>${escapeXmlBody(ctx.promptPath)}</instructions_file>`,
     ``,
     `<precedence>If anything in the sections above conflicts with the instructions file, the instructions file wins.</precedence>`,
     ``,
@@ -127,5 +135,8 @@ export function buildHybridPromptUserPrompt(
 
 function renderFileList(changes: FileChange[] | undefined): string {
   if (!changes || changes.length === 0) return '';
-  return changes.map(renderFileEntry).join('\n');
+  return changes
+    .map((change) => ({ ...change, path: escapeXmlBody(change.path) }))
+    .map(renderFileEntry)
+    .join('\n');
 }

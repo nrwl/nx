@@ -1,4 +1,4 @@
-import { renderKeyMultilineValue } from './shared-rendering';
+import { escapeXmlBody, renderKeyMultilineValue } from './shared-rendering';
 
 export interface PromptMigrationContext {
   package: string;
@@ -25,23 +25,29 @@ export interface PromptMigrationContext {
 export function buildPromptMigrationUserPrompt(
   ctx: PromptMigrationContext
 ): string {
+  // Migration metadata and the prompt path arrive from third-party migration
+  // packages; escape interpolations so a hostile value can't break out of the
+  // surrounding XML frame. The agent reads `&lt;/migration&gt;` as literal
+  // text, not a closing tag. See `escapeXmlBody` for the underlying rationale.
   const lines = [
     `Apply one prompt-based migration to this Nx workspace.`,
     ``,
     `<migration>`,
-    `package: ${ctx.package}`,
-    `version: ${ctx.version}`,
-    `name: ${ctx.name}`,
+    `package: ${escapeXmlBody(ctx.package)}`,
+    `version: ${escapeXmlBody(ctx.version)}`,
+    `name: ${escapeXmlBody(ctx.name)}`,
   ];
 
   if (ctx.description) {
-    lines.push(...renderKeyMultilineValue('description', ctx.description));
+    lines.push(
+      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
+    );
   }
 
   lines.push(
     `</migration>`,
     ``,
-    `<instructions_file>${ctx.promptPath}</instructions_file>`,
+    `<instructions_file>${escapeXmlBody(ctx.promptPath)}</instructions_file>`,
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step, then write your handoff JSON to:`,
     `<handoff_path>`,

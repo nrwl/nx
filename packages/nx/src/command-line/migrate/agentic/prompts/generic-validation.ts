@@ -1,5 +1,6 @@
 import type { FileChange } from '../../../../generators/tree';
 import {
+  escapeXmlBody,
   filterNonEmptyStrings,
   renderFileEntry,
   renderGitInspectInstruction,
@@ -62,22 +63,29 @@ export const GENERIC_VALIDATION_FILE_LIST_CAP = 50;
 export function buildGenericValidationUserPrompt(
   ctx: GenericValidationPromptContext
 ): string {
+  // Migration metadata, generator stdout, file paths from `tree.write`, and
+  // `agentContext` entries arrive from third-party migration packages; escape
+  // any `<` / `&` so a hostile value can't break out of the surrounding
+  // XML-framed block. The agent reads `&lt;/migration&gt;` etc. as literal
+  // text, not closing tags. See `escapeXmlBody` for the underlying rationale.
   const lines: string[] = [
     `You are validating the output of an Nx migration's deterministic generator phase. The generator has already run; inspect what it produced, verify the workspace is in a consistent state for what this migration intended to accomplish, apply any minor in-scope fixes the generator should have produced cleanly, and report findings.`,
     ``,
     `<migration>`,
-    `package: ${ctx.package}`,
-    `version: ${ctx.version}`,
-    `name: ${ctx.name}`,
+    `package: ${escapeXmlBody(ctx.package)}`,
+    `version: ${escapeXmlBody(ctx.version)}`,
+    `name: ${escapeXmlBody(ctx.name)}`,
   ];
 
   if (ctx.description) {
-    lines.push(...renderKeyMultilineValue('description', ctx.description));
+    lines.push(
+      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
+    );
   }
 
   lines.push(`</migration>`);
 
-  const logs = stripAnsi(ctx.impl.logs ?? '').trim();
+  const logs = escapeXmlBody(stripAnsi(ctx.impl.logs ?? '').trim());
   if (logs) {
     lines.push(
       ``,
@@ -102,7 +110,7 @@ export function buildGenericValidationUserPrompt(
     lines.push(
       ``,
       `<advisory_context note="hints emitted by the generator; treat as supplementary context, not separate tasks">`,
-      ...agentContext.map(renderListItem),
+      ...agentContext.map((entry) => renderListItem(escapeXmlBody(entry))),
       `</advisory_context>`
     );
   }
@@ -148,11 +156,18 @@ function renderEmbeddedFileListBlock(
 }
 
 function renderFileListBody(changes: FileChange[]): string[] {
-  if (changes.length <= GENERIC_VALIDATION_FILE_LIST_CAP) {
-    return changes.map(renderFileEntry);
+  // File paths from `tree.write` are user-authored; escape `<` / `&` so a
+  // hostile path can't break out of `<files_changed>`. `change.type` is an
+  // nx-controlled enum (CREATE/UPDATE/DELETE) and needs no escape.
+  const safe = changes.map((change) => ({
+    ...change,
+    path: escapeXmlBody(change.path),
+  }));
+  if (safe.length <= GENERIC_VALIDATION_FILE_LIST_CAP) {
+    return safe.map(renderFileEntry);
   }
-  const shown = changes.slice(0, GENERIC_VALIDATION_FILE_LIST_CAP);
-  const remaining = changes.length - GENERIC_VALIDATION_FILE_LIST_CAP;
+  const shown = safe.slice(0, GENERIC_VALIDATION_FILE_LIST_CAP);
+  const remaining = safe.length - GENERIC_VALIDATION_FILE_LIST_CAP;
   return [
     ...shown.map(renderFileEntry),
     ``,
