@@ -1,5 +1,5 @@
 import type { Tree } from 'nx/src/devkit-exports';
-import { lt } from 'semver';
+import { coerce, lt } from 'semver';
 import {
   getInstalledPackageVersion,
   isNonSemverDistTag,
@@ -73,7 +73,14 @@ export function assertSupportedInstalledPackageVersion(
   minSupportedVersion: string
 ): void {
   const installed = getInstalledPackageVersion(packageName);
-  if (!installed || !lt(installed, minSupportedVersion)) {
+  if (!installed) {
+    return;
+  }
+  // Coerce strips any prerelease tag (e.g. `19.0.0-rc.1` → `19.0.0`) so a
+  // prerelease of the supported major isn't wrongly flagged as below floor
+  // by semver's spec-mandated `lt(prerelease, release) === true` ordering.
+  const normalized = coerce(installed)?.version;
+  if (!normalized || !lt(normalized, minSupportedVersion)) {
     return;
   }
   throwForUnsupportedVersion(packageName, installed, minSupportedVersion);
