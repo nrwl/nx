@@ -284,6 +284,30 @@ By default, Nx will mark all projects as affected whenever your package manager'
 
 The flag `projectsAffectedByDependencyUpdates` can be set to `auto`, `all`, or an array that contains project specifiers. The default value is `all`.
 
+## Reduce affected fan-out for JavaScript and TypeScript projects
+
+If your workspace uses `@nx/js` source analysis, you can also enable dependency narrowing to reduce affected fan-out from source-level imports.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {
+        "affectedNarrowing": true
+      }
+    }
+  }
+}
+```
+
+This is different from `projectsAffectedByDependencyUpdates`.
+
+- `projectsAffectedByDependencyUpdates` controls what happens when the lock file changes.
+- `dependencyNarrowing.affectedNarrowing` makes `nx affected` more precise for JavaScript and TypeScript source changes.
+
+See [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing) for the full workflow.
+
 ## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.
