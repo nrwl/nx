@@ -32,7 +32,14 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx', 'typescript', '@nx/webpack'],
+          ignoredDependencies: [
+            'nx',
+            'typescript',
+            '@nx/webpack',
+            'express',
+            'koa',
+            'fastify',
+          ],
         },
       ],
     },
