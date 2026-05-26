@@ -35,10 +35,11 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/node": "workspace:*",
+    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "express": "^4.21.2"
+    "express": ">=4.0.0 <6.0.0"
   },
   "peerDependenciesMeta": {
     "express": {
