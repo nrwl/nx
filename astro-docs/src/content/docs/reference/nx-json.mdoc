@@ -183,9 +183,11 @@ This will exclude all e2e projects except `toolkit-workspace-e2e`.
 
 ### Plugin-specific configuration with `pluginsConfig`
 
-Use `pluginsConfig` for behavior that a plugin reads from `nx.json` outside of the `plugins` array.
+Use `pluginsConfig` for plugin-specific settings that Nx reads from `nx.json` outside of the `plugins` array.
 
-For example, `@nx/js` can narrow project graph edges after source analysis:
+Keys are plugin package names such as `@nx/js`.
+
+For example:
 
 ```json
 // nx.json
@@ -200,21 +202,7 @@ For example, `@nx/js` can narrow project graph edges after source analysis:
 }
 ```
 
-`dependencyNarrowing` is opt-in. Once enabled, Nx can remove source-derived edges when it can prove that the imported runtime symbols are unused.
-
-Common `@nx/js` dependency narrowing options:
-
-| Property                                  | Default | Description                                                                                       |
-| ----------------------------------------- | ------- | ------------------------------------------------------------------------------------------------- |
-| `concurrency`                             | `50`    | Number of files Nx analyzes in parallel.                                                          |
-| `respectSideEffects`                      | `true`  | Keeps edges for projects that may have side effects.                                              |
-| `removeTypeOnlyEdges`                     | `true`  | Allows type-only imports to be removed from the project graph.                                    |
-| `treatMissingPackageJsonAsSideEffectFree` | `false` | Treats projects without a `package.json` as side-effect-free when side effects are being checked. |
-| `resolveNamespaceImports`                 | `false` | Tracks accessed properties on namespace imports instead of keeping the whole edge by default.     |
-| `fallbackToStaticGraph`                   | `true`  | Falls back to the normal static graph when aggressive narrowing cannot use bundler signals.       |
-| `affectedNarrowing`                       | `true`  | Reduces affected fan-out when a change only touches exports that consumers do not use.            |
-
-For the workflow and tradeoffs, see [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing).
+For `@nx/js` dependency narrowing behavior and options, see [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing).
 
 ## Task options
 
