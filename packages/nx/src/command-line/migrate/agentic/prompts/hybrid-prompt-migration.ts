@@ -113,7 +113,7 @@ export function buildHybridPromptUserPrompt(
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step using the sections above as context, then write your handoff JSON to:`,
     `<handoff_path>`,
-    ctx.handoffFileAbsolutePath,
+    escapeXmlBody(ctx.handoffFileAbsolutePath),
     `</handoff_path>`
   );
 

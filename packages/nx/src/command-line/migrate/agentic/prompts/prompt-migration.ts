@@ -47,7 +47,7 @@ export function buildPromptMigrationUserPrompt(
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step, then write your handoff JSON to:`,
     `<handoff_path>`,
-    ctx.handoffFileAbsolutePath,
+    escapeXmlBody(ctx.handoffFileAbsolutePath),
     `</handoff_path>`
   );
 

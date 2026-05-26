@@ -1,3 +1,5 @@
+import { escapeXmlBody } from './shared-rendering';
+
 export type AgenticPromptMode = 'author' | 'generic-validation';
 
 export interface SystemPromptContext {
@@ -51,9 +53,9 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
   return [
     `You are an AI assistant invoked by \`nx migrate\` to apply one migration step from an Nx workspace upgrade. Each step has its own instructions; nx runs you once per step and reads your handoff file to decide whether to continue.`,
     ``,
-    `<workspace_root>${ctx.workspaceRoot}</workspace_root>`,
+    `<workspace_root>${escapeXmlBody(ctx.workspaceRoot)}</workspace_root>`,
     ``,
-    `<package_manager>${ctx.packageManager}</package_manager>`,
+    `<package_manager>${escapeXmlBody(ctx.packageManager)}</package_manager>`,
     `Use \`${ctx.packageManager}\` for any package-manager invocation in this workspace. To invoke nx, use \`${ctx.nxInvocation} …\`. Do not default to a different package manager based on your own preference.`,
     ``,
     `<opening_brief>`,
@@ -66,7 +68,7 @@ export function buildSystemPrompt(ctx: SystemPromptContext): string {
     `1. Summarize what you did or why you couldn't in one or two sentences. Then note that writing the handoff file next will close this session and \`nx migrate\` will continue with the next step. Offer the user a chance to ask follow-up questions or redirect before you write — if they have none, proceed with the write.`,
     `2. Write a JSON file at:`,
     `   <handoff_path>`,
-    `   ${ctx.handoffFileAbsolutePath}`,
+    `   ${escapeXmlBody(ctx.handoffFileAbsolutePath)}`,
     `   </handoff_path>`,
     `   With this shape:`,
     `   {`,

@@ -118,7 +118,7 @@ export function buildGenericValidationUserPrompt(
     ``,
     `Once you finish, write your handoff JSON to:`,
     `<handoff_path>`,
-    ctx.handoffFileAbsolutePath,
+    escapeXmlBody(ctx.handoffFileAbsolutePath),
     `</handoff_path>`
   );
 
