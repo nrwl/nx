@@ -6,11 +6,14 @@ filter: 'type:References'
 
 The Nx Cloud GitHub App requires the following permissions to provide CI/CD integration and setup experiences. Most information is used transiently during operations and not stored in our systems.
 
+{% callout type="note" title="Administration (read & write) permission removed." %}
+The Nx Cloud GitHub App no longer requests the `Administration` (read & write) permission. It was previously required to generate new workspaces from the browser; that feature has since been removed, so we've dropped the permission to reduce the access we request.
+{% /callout %}
+
 ## Required permissions
 
 Repository permissions:
 
-- `Administration: Read & Write`
 - `Checks: Read & Write`
 - `Contents: Read & Write`
 - `Commit Statuses: Read`
@@ -26,12 +29,6 @@ Organization permissions:
 - `Members: Read Only`
 
 ## Permission details
-
-### Administration (write)
-
-**Used for:** Creating new repositories with a pre-configured Nx workspace during initial onboarding.
-
-**When it's used:** Only when you explicitly choose to create a new workspace through Nx Cloud's setup flow. [Single tenant instances](/docs/enterprise/single-tenant/overview) can safely forego this scope and will only lose the ability to create new workspaces through the app.
 
 ### Checks (write)
 
