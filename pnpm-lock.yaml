@@ -2494,6 +2494,9 @@ importers:
       '@angular/compiler-cli':
         specifier: catalog:angular-supported-versions
         version: 21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2)
+      '@nx/devkit':
+        specifier: workspace:*
+        version: link:../devkit
       '@rsbuild/core':
         specifier: '>=1.0.5 <2.0.0'
         version: 1.1.8

@@ -10,6 +10,7 @@ import {
   SetupCompilationOptions,
   StylesheetTransformResult,
 } from './setup-compilation';
+import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
 
 export async function setupCompilationWithAngularCompilation(
   config: Pick<RsbuildConfig, 'source'>,
@@ -18,6 +19,8 @@ export async function setupCompilationWithAngularCompilation(
   angularCompilation?: AngularCompilation,
   modifiedFiles?: Set<string>
 ) {
+  assertSupportedAngularRspackCompilerVersions();
+
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
   angularCompilation ??= await createAngularCompilation(
