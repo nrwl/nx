@@ -4244,15 +4244,15 @@ describe('Migration', () => {
         });
       });
 
-      it('rejects non-string entries (in object shape and legacy array)', () => {
+      it('filters non-string entries per bucket so a single bad entry does not drop the whole array', () => {
         expect(
           parseMigrationReturn({
             nextSteps: ['ok', 1, null] as any,
             agentContext: [true, 'ok'] as any,
           })
-        ).toEqual({ nextSteps: [], agentContext: [] });
+        ).toEqual({ nextSteps: ['ok'], agentContext: ['ok'] });
         expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
-          nextSteps: [],
+          nextSteps: ['ok'],
           agentContext: [],
         });
       });

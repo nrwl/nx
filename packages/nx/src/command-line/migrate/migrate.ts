@@ -118,6 +118,8 @@ import {
   logAgenticSuccessOutcome,
   logFailureRecap,
   logMigrationBoundary,
+  type MigrationOutcome,
+  type MigrationOutcomeKind,
 } from './migrate-output';
 import { filterDowngradedUpdates } from './update-filters';
 import {
@@ -2547,9 +2549,10 @@ export async function executeMigrations(
   // render them distinctly per resolution mode.
   const migrationEmittedNextSteps: string[] = [];
   const skippedPrompts: ExecutableMigration[] = [];
-  const completedSuccessfully: ExecutableMigration[] = [];
-  let lastCommittedSha: string | null = null;
-  let committedShasCount = 0;
+  // One record per migration that returned without throwing. The failing
+  // migration (if any) has no record — `outcomes.length` plus the implicit
+  // "the in-flight one threw" equals `migrationIndex` in the catch block.
+  const outcomes: MigrationOutcome[] = [];
   // Prompt-only migrations whose agent never ran. Hybrid migrations with a
   // skipped prompt are NOT counted here — their deterministic half still ran.
   let notRunMigrationsCount = 0;
@@ -2559,16 +2562,7 @@ export async function executeMigrations(
       ? 'deferred to the AI agent driving this run'
       : 'agentic flow disabled';
 
-  // Hoisted so every dep-install / commit site goes through the same path —
-  // a new site that forgets to call `recordCommit` corrupts both the tally
-  // and the failure recap.
   const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
-  const recordCommit = (sha: string | null): void => {
-    if (sha) {
-      lastCommittedSha = sha;
-      committedShasCount++;
-    }
-  };
 
   const totalMigrations = sortedMigrations.length;
   let migrationIndex = 0;
@@ -2576,6 +2570,8 @@ export async function executeMigrations(
     migrationIndex++;
     logMigrationBoundary(migrationIndex, totalMigrations, m.package, m.name);
     try {
+      let outcome: MigrationOutcomeKind;
+      let committedSha: string | null = null;
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
           const stepResult = await agenticRun.runStep({
@@ -2585,25 +2581,26 @@ export async function executeMigrations(
             runDir: agenticRun.runDir,
             installDepsIfChanged,
           });
-          const sha = await commitMigrationIfRequested(
+          committedSha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             installDepsIfChanged
           );
-          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
-            sha,
+            committedSha,
             stepResult.summary
           );
+          outcome = 'applied';
         } else {
           logger.info(
             pc.dim(`↷ Skipped — ${skipReason}. Listed in next steps.`)
           );
           skippedPrompts.push(m);
           notRunMigrationsCount++;
+          outcome = 'deferred';
         }
       } else if (isHybridMigration(m)) {
         const { changes, nextSteps, agentContext, logs, madeChanges } =
@@ -2637,19 +2634,19 @@ export async function executeMigrations(
               hasDiffContext: agenticHasDiffContext,
             },
           });
-          const sha = await commitMigrationIfRequested(
+          committedSha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             installDepsIfChanged
           );
-          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
-            sha,
+            committedSha,
             stepResult.summary
           );
+          outcome = 'applied';
         } else {
           // The inner prompt step doesn't run here (agentic disabled, or
           // running inside an outer agent). Under `inside-agent`, surface the
@@ -2668,17 +2665,17 @@ export async function executeMigrations(
           if (!madeChanges) {
             migrationsWithNoChanges.push(m);
           }
-          const sha = await commitMigrationIfRequested(
+          committedSha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             installDepsIfChanged
           );
-          recordCommit(sha);
-          if (sha) {
-            logger.info(pc.dim(`Committed as ${sha}`));
+          if (committedSha) {
+            logger.info(pc.dim(`Committed as ${committedSha}`));
           }
+          outcome = 'deferred';
         }
       } else {
         // Defer commit until validation succeeds; failed validation leaves
@@ -2691,7 +2688,7 @@ export async function executeMigrations(
           agentContext,
           logs,
           madeChanges,
-          committedSha,
+          committedSha: generatorSha,
         } = await runNxOrAngularMigration(
           root,
           m,
@@ -2705,7 +2702,7 @@ export async function executeMigrations(
           /* captureGeneratorOutput: */ !!validationRun
         );
         migrationEmittedNextSteps.push(...nextSteps);
-        recordCommit(committedSha);
+        committedSha = generatorSha;
         const canRunValidation = !!validationRun && changes.length > 0;
 
         if (canRunValidation) {
@@ -2726,21 +2723,23 @@ export async function executeMigrations(
             },
             mode: 'generic-validation',
           });
-          const sha = await commitMigrationIfRequested(
+          // Validation gates the commit, so any sha for this migration was
+          // created here (the deterministic-phase call ran with commits off).
+          committedSha = await commitMigrationIfRequested(
             root,
             m,
             shouldCreateCommits,
             commitPrefix,
             installDepsIfChanged
           );
-          recordCommit(sha);
           logAgenticSuccessOutcome(
             stepResult.ambiguous
               ? 'Marked complete by user'
               : 'Validation passed',
-            sha,
+            committedSha,
             stepResult.summary
           );
+          outcome = 'applied';
         } else {
           // Inner validation step didn't run. Surface `agentContext` under
           // `inside-agent` so the outer driving agent can ingest it.
@@ -2749,10 +2748,13 @@ export async function executeMigrations(
           }
           if (!madeChanges) {
             migrationsWithNoChanges.push(m);
+            outcome = 'no-changes';
+          } else {
+            outcome = 'applied';
           }
         }
       }
-      completedSuccessfully.push(m);
+      outcomes.push({ migration: m, outcome, committedSha });
       logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
@@ -2775,8 +2777,7 @@ export async function executeMigrations(
         logFailureRecap({
           migrationIndex,
           totalMigrations,
-          completedSuccessfully,
-          lastCommittedSha,
+          outcomes,
           migrationEmittedNextSteps,
           insideAgent: agentic?.kind === 'inside-agent',
         });
@@ -2807,7 +2808,7 @@ export async function executeMigrations(
     nextSteps: combinedNextSteps,
     skippedPrompts,
     migrationEmittedNextSteps,
-    committedShasCount,
+    committedShasCount: outcomes.filter((o) => o.committedSha).length,
   };
 }
 
@@ -3109,6 +3110,7 @@ async function runMigrations(
     skippedPromptsCount,
     insideAgent,
   });
+  const tallyBody = tallyLine ? [tallyLine] : undefined;
   // Only claim the workspace is up to date when no prompt halves were
   // deferred — otherwise there's pending work the user still needs to apply.
   const upToDateSuffix =
@@ -3120,17 +3122,17 @@ async function runMigrations(
       : 'Re-run with --agentic to apply them. See next steps below.';
     output.warn({
       title: `No migrations from '${opts.runMigrations}' were applied — every entry is a prompt-only migration. ${remediation}`,
-      bodyLines: [tallyLine],
+      bodyLines: tallyBody,
     });
   } else if (ranWithChangesCount > 0) {
     output.success({
       title: `Successfully finished running migrations from '${opts.runMigrations}'.${upToDateSuffix}`,
-      bodyLines: [tallyLine],
+      bodyLines: tallyBody,
     });
   } else {
     output.success({
       title: `No changes were made from running '${opts.runMigrations}'.${upToDateSuffix}`,
-      bodyLines: [tallyLine],
+      bodyLines: tallyBody,
     });
   }
 
@@ -3218,18 +3220,27 @@ export function parseMigrationReturn(value: unknown): {
   nextSteps: string[];
   agentContext: string[];
 } {
-  if (isStringArray(value)) {
-    return { nextSteps: value, agentContext: [] };
+  if (Array.isArray(value)) {
+    return { nextSteps: filterStrings(value), agentContext: [] };
   }
   if (value && typeof value === 'object') {
     const obj = value as Record<string, unknown>;
     return {
-      nextSteps: isStringArray(obj.nextSteps) ? obj.nextSteps : [],
-      agentContext: isStringArray(obj.agentContext) ? obj.agentContext : [],
+      nextSteps: filterStrings(obj.nextSteps),
+      agentContext: filterStrings(obj.agentContext),
     };
   }
   // Catches `void`, mistakenly-returned generator callbacks, malformed values.
   return { nextSteps: [], agentContext: [] };
+}
+
+// Bucket-level tolerance: a single non-string entry shouldn't discard the
+// whole `nextSteps` / `agentContext` array. Migration authors occasionally
+// push `null` / `undefined` / a number into the array; we drop the bad entries
+// and keep the rest so end-of-run guidance isn't silently lost.
+function filterStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === 'string');
 }
 
 export async function migrate(
@@ -3537,10 +3548,3 @@ const getNgCompatLayer = (() => {
     return _ngCliAdapter;
   };
 })();
-
-function isStringArray(value: unknown): value is string[] {
-  if (!Array.isArray(value)) {
-    return false;
-  }
-  return value.every((v) => typeof v === 'string');
-}

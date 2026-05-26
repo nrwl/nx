@@ -61,6 +61,23 @@ export function logAgenticSuccessOutcome(
 }
 
 /**
+ * Per-migration outcome record consumed by the failure recap. One entry is
+ * appended per iteration that returned without throwing; the failing migration
+ * has no record.
+ *
+ * - `applied`: ran fully to completion, including any agentic step.
+ * - `no-changes`: generator ran but produced no diff (counts as applied work).
+ * - `deferred`: prompt half was not applied (agent disabled or inside-agent
+ *   mode hands it off). For hybrid migrations the deterministic half still ran.
+ */
+export type MigrationOutcomeKind = 'applied' | 'no-changes' | 'deferred';
+export interface MigrationOutcome {
+  migration: { name: string };
+  outcome: MigrationOutcomeKind;
+  committedSha: string | null;
+}
+
+/**
  * Logs a structured recap when a migration throws mid-loop. Inserted between
  * the "Failed to run X" error block and the re-throw so the user (or AI agent
  * driving the run) can see what completed before the failure without scrolling
@@ -68,44 +85,56 @@ export function logAgenticSuccessOutcome(
  *
  * Counts-based rather than full migration lists so a 24-migration run that
  * fails at #12 doesn't dump 24 names into the recap — readers scroll up to
- * see specifics in the per-migration log.
+ * see specifics in the per-migration log. The "last applied" anchor pairs the
+ * most recent fully-applied migration with the sha its commit actually
+ * produced, so a skipped/deferred step trailing an applied one can't borrow
+ * the earlier sha.
  */
 export function logFailureRecap(opts: {
   migrationIndex: number;
   totalMigrations: number;
-  completedSuccessfully: ReadonlyArray<{ name: string }>;
-  lastCommittedSha: string | null;
+  outcomes: ReadonlyArray<MigrationOutcome>;
   migrationEmittedNextSteps: string[];
   insideAgent: boolean;
 }): void {
   const {
     migrationIndex,
     totalMigrations,
-    completedSuccessfully,
-    lastCommittedSha,
+    outcomes,
     migrationEmittedNextSteps,
     insideAgent,
   } = opts;
-  const completed = completedSuccessfully.length;
+  const appliedCount = outcomes.filter(
+    (o) => o.outcome === 'applied' || o.outcome === 'no-changes'
+  ).length;
+  const deferredCount = outcomes.filter((o) => o.outcome === 'deferred').length;
   const notAttempted = totalMigrations - migrationIndex;
-  const last = completedSuccessfully[completedSuccessfully.length - 1];
+  // Walk back to the most recent applied record that actually produced a sha
+  // — skipped/deferred steps and no-changes runs (no commit) don't anchor.
+  let lastApplied: MigrationOutcome | undefined;
+  for (let i = outcomes.length - 1; i >= 0; i--) {
+    const o = outcomes[i];
+    if (o.outcome === 'applied' && o.committedSha) {
+      lastApplied = o;
+      break;
+    }
+  }
 
   logger.info('');
   logger.info(
     `Run halted at migration ${migrationIndex} of ${totalMigrations}.`
   );
-  if (completed === 0) {
+  if (appliedCount === 0 && deferredCount === 0) {
     logger.info(`0 migrations completed. ${notAttempted} not attempted.`);
   } else {
-    const anchor =
-      last && lastCommittedSha
-        ? ` (last: ${last.name} → ${lastCommittedSha})`
-        : last
-          ? ` (last: ${last.name})`
-          : '';
-    logger.info(
-      `${completed} migration${completed === 1 ? '' : 's'} completed${anchor}. ${notAttempted} not attempted.`
-    );
+    const anchor = lastApplied
+      ? ` (last: ${lastApplied.migration.name} → ${lastApplied.committedSha})`
+      : '';
+    const parts: string[] = [`${appliedCount} applied${anchor}`];
+    if (deferredCount > 0) {
+      parts.push(`${deferredCount} deferred`);
+    }
+    logger.info(`${parts.join(', ')}. ${notAttempted} not attempted.`);
     logger.info(`See the per-migration log above for full details.`);
   }
   if (migrationEmittedNextSteps.length > 0) {
@@ -129,24 +158,30 @@ export function logFailureRecap(opts: {
 }
 
 /**
- * Builds the tally body line shown under the top end-of-run NX block.
+ * Builds the tally body line shown under the top end-of-run NX block. Returns
+ * `null` when there is nothing meaningful to tally (e.g. an empty
+ * migrations.json), so the caller can omit the body entirely instead of
+ * emitting a misleading `0 prompt migrations skipped.` line.
  *
  * Rule (kept coherent across every scenario):
  * - When at least one migration was applied: `<N> migrations applied, <K> commits created[, <D> prompt migrations <skipped|deferred>]`.
  *   The `<K> commits created` part stays even at 0 — it tells the reader work
  *   was applied but not committed (the J4/J8 information made explicit).
- * - When zero migrations were applied (all-skipped): `<D> prompt migrations <skipped|deferred>` only.
+ * - When zero migrations were applied but some prompt halves were
+ *   skipped/deferred: `<D> prompt migrations <skipped|deferred>` only.
+ * - When zero of either: no body line.
  */
 export function buildTallyBodyLine(opts: {
   appliedCount: number;
   committedShasCount: number;
   skippedPromptsCount: number;
   insideAgent: boolean;
-}): string {
+}): string | null {
   const { appliedCount, committedShasCount, skippedPromptsCount, insideAgent } =
     opts;
   const skipVerb = insideAgent ? 'deferred' : 'skipped';
   if (appliedCount === 0) {
+    if (skippedPromptsCount === 0) return null;
     return `${skippedPromptsCount} prompt migration${
       skippedPromptsCount === 1 ? '' : 's'
     } ${skipVerb}.`;
