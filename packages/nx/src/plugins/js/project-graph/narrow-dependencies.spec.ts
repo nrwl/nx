@@ -93,10 +93,23 @@ describe('@nx/js project graph narrowing', () => {
     ).toMatchObject({
       debug: true,
       affectedNarrowing: false,
+      concurrency: 50,
       respectSideEffects: true,
       removeTypeOnlyEdges: true,
       fallbackToStaticGraph: true,
     });
+  });
+
+  it('normalizes explicit concurrency values', () => {
+    expect(
+      normalizeDependencyNarrowingOptions({ concurrency: 7 }).concurrency
+    ).toBe(7);
+    expect(
+      normalizeDependencyNarrowingOptions({ concurrency: 0 }).concurrency
+    ).toBe(50);
+    expect(
+      normalizeDependencyNarrowingOptions({ concurrency: 3.9 }).concurrency
+    ).toBe(3);
   });
 });
 
