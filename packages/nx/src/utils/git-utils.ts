@@ -437,8 +437,12 @@ export function tryCommitChanges(
       .map((s) => s?.trim())
       .filter(Boolean)
       .join('\n');
+    // `{ cause }` carries the original `ChildProcessError` (with `.signal`,
+    // `.status`, `.code`) through to any caller that wants to inspect it.
+    // Without it we'd drop everything but stderr/stdout text.
     throw new Error(
-      detail || (err instanceof Error ? err.message : String(err))
+      detail || (err instanceof Error ? err.message : String(err)),
+      { cause: err }
     );
   }
   return getLatestCommitSha(directory);

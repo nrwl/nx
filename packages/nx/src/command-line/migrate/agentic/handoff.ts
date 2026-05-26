@@ -17,10 +17,15 @@ export function mkdirSafely(dir: string, purpose: string): void {
     mkdirSync(dir, { recursive: true });
   } catch (err) {
     const code = (err as NodeJS.ErrnoException)?.code;
+    // `{ cause }` preserves the original ErrnoException so callers can read
+    // `.cause.code`/`.cause.path`/`.cause.syscall` for targeted remediation.
+    // Without it the only signal beyond the formatted message would be the
+    // code string we splice in below.
     throw new Error(
       `Could not create ${purpose} at ${dir}${code ? ` (${code})` : ''}: ${
         err instanceof Error ? err.message : String(err)
-      }`
+      }`,
+      { cause: err }
     );
   }
 }

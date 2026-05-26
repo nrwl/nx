@@ -23,20 +23,14 @@ async function findOnPath(
   binaryNames: readonly string[]
 ): Promise<string | null> {
   for (const name of binaryNames) {
-    try {
-      const found = await which(name);
-      if (typeof found === 'string') {
-        return found;
-      }
-    } catch (err) {
-      // `which` throws when the binary isn't found OR on access errors;
-      // log the latter so detection failures stay debuggable.
-      const code = (err as NodeJS.ErrnoException)?.code;
-      if (code && code !== 'ENOENT') {
-        logger.verbose(
-          `Agent detection: PATH probe for "${name}" failed (${code}).`
-        );
-      }
+    // `which@3` only throws on missing binary (`ENOENT`-equivalent); its
+    // underlying `isexe` swallows EACCES via `ignoreErrors: true`, so a
+    // try/catch around `which(name)` would catch nothing useful. Use the
+    // `{ nothrow: true }` variant for a null-on-miss contract without the
+    // throw-per-missing-binary cost.
+    const found = await which(name, { nothrow: true });
+    if (typeof found === 'string') {
+      return found;
     }
   }
   return null;

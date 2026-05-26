@@ -3,6 +3,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import {
   initRunDir,
+  mkdirSafely,
   readHandoff,
   readHandoffWithReason,
   stepHandoffPath,
@@ -18,6 +19,39 @@ describe('handoff', () => {
 
   afterEach(() => {
     rmSync(workspace, { recursive: true, force: true });
+  });
+
+  describe('mkdirSafely', () => {
+    it('preserves the original ErrnoException as `cause` so callers can read .code / .path / .syscall', () => {
+      // Force a cross-platform real failure: write a regular file in the
+      // tmp workspace, then try to mkdir UNDER it. Every supported Node
+      // platform (Linux / macOS / Windows) rejects this with an
+      // ErrnoException carrying `.code` ('ENOTDIR' on POSIX, 'ENOENT'
+      // on Windows) plus `.path` and `.syscall: 'mkdir'`. The wrapper
+      // must preserve the original via `{ cause }` instead of
+      // synthesizing a fresh Error from its message.
+      const regularFile = join(workspace, 'not-a-directory');
+      writeFileSync(regularFile, '');
+      let caught: unknown;
+      try {
+        mkdirSafely(join(regularFile, 'child'), 'test');
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      const wrapper = caught as Error & { cause?: unknown };
+      expect(wrapper.message).toContain('Could not create test');
+      // `wrapper.cause` is the original ErrnoException from fs. Inspect
+      // its fields directly — `instanceof Error` can be flaky across the
+      // Node fs realm in some environments, but `.code` / `.syscall` are
+      // structural and reliable.
+      const cause = wrapper.cause as
+        | (NodeJS.ErrnoException & { syscall?: string })
+        | undefined;
+      expect(cause).toBeDefined();
+      expect(cause?.code).toBeTruthy();
+      expect(cause?.syscall).toBe('mkdir');
+    });
   });
 
   describe('initRunDir', () => {
