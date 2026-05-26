@@ -10,6 +10,8 @@ function updateAngularVersionUtils(
   const angularVersion = packageVersionMap.get('@angular/core')!;
   const angularDevkitVersion = packageVersionMap.get('@angular/cli')!;
   const ngPackagrVersion = packageVersionMap.get('ng-packagr')!;
+  const zoneJsVersion = packageVersionMap.get('zone.js');
+  const rxjsVersion = packageVersionMap.get('rxjs');
 
   versionUtilContents = versionUtilContents.replace(
     /export const angularVersion = '.+';/,
@@ -29,6 +31,22 @@ function updateAngularVersionUtils(
       isPrerelease ? ngPackagrVersion : `~${ngPackagrVersion}`
     }';`
   );
+  if (zoneJsVersion) {
+    versionUtilContents = versionUtilContents.replace(
+      /export const zoneJsVersion = '.+';/,
+      `export const zoneJsVersion = '${
+        isPrerelease ? zoneJsVersion : `~${zoneJsVersion}`
+      }';`
+    );
+  }
+  if (rxjsVersion) {
+    versionUtilContents = versionUtilContents.replace(
+      /export const rxjsVersion = '.+';/,
+      `export const rxjsVersion = '${
+        isPrerelease ? rxjsVersion : `~${rxjsVersion}`
+      }';`
+    );
+  }
 
   writeFileSync(pathToFile, versionUtilContents);
 }
