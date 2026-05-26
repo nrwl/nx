@@ -29,8 +29,6 @@ export async function createConfig(
   > = {},
   configEnvVar = 'NGRS_CONFIG'
 ): Promise<Configuration[]> {
-  assertSupportedRspackCoreVersion();
-
   const configurationMode =
     process.env[configEnvVar] ??
     (process.env['WEBPACK_SERVE'] ? 'development' : 'production');
