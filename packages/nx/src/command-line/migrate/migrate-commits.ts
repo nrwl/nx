@@ -28,12 +28,8 @@ export async function commitMigrationIfRequested(
   try {
     const sha = tryCommitChanges(commitMessage, root);
     if (sha) return sha;
-    // Defensive: `tryCommitChanges` returned without throwing, which by
-    // contract means the commit landed — only `git rev-parse HEAD` failed
-    // (transient refs-lock race, etc.). The diff is NOT in the working
-    // tree; do not tell the user it is, or they'll re-run and double-commit.
-    // Coloring is yellow (warning), not red — this is a degraded-but-correct
-    // state, not a failure.
+    // `null` return = commit landed but HEAD-resolve failed (see
+    // `tryCommitChanges`). Yellow, not red — degraded-but-correct.
     logger.info(
       pc.yellow(
         `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
@@ -74,10 +70,8 @@ export function commitCheckpointBeforeMigrations(
       logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));
       return;
     }
-    // Defensive: `tryCommitChanges` returned without throwing — by contract
-    // the checkpoint commit landed; only `git rev-parse HEAD` failed
-    // transiently. Pre-existing working-tree state has been captured; do
-    // not tell the user the next migration will absorb it.
+    // `null` return = commit landed but HEAD-resolve failed (see
+    // `tryCommitChanges`). State is captured, just unanchored.
     output.warn({
       title: 'Could not resolve checkpoint commit sha',
       bodyLines: [

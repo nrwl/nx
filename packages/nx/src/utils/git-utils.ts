@@ -411,6 +411,10 @@ export function commitChanges(
  * rejection / GPG signing failures / LFS lock errors from a successful no-op.
  * Callers should pre-check `hasUncommittedChanges` to avoid the "nothing to
  * commit" rejection (which `git commit` exits non-zero for).
+ *
+ * Returns `null` (rather than throwing) when the commit itself succeeded but
+ * `git rev-parse HEAD` failed transiently — by contract the diff is no
+ * longer in the working tree, so callers must NOT report it as such.
  */
 export function tryCommitChanges(
   commitMessage: string,

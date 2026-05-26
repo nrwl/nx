@@ -58,8 +58,7 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
     })
     .option('createCommits', {
-      describe:
-        'Automatically create a git commit after each migration runs. Defaults to `false`; soft-forced to `true` when `--agentic` is enabled (pass `--no-create-commits` to opt out, which disables the diff context handed to the agent).',
+      describe: 'Automatically create a git commit after each migration runs.',
       type: 'boolean',
       alias: ['C'],
     })

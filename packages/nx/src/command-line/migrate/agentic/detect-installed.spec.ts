@@ -141,10 +141,6 @@ describe('detectInstalledAgents', () => {
   });
 
   it('calls `which` with `{ nothrow: true }` to avoid the throw-per-missing-binary cost', async () => {
-    // `which@3` only throws on missing binary; wrapping each call in
-    // try/catch would catch nothing useful (EACCES is swallowed by isexe
-    // internally via `ignoreErrors: true`). `{ nothrow: true }` returns
-    // null on miss with no thrown Error allocation per probe.
     mockWhich.mockResolvedValue(null);
     await detectInstalledAgents([
       makeDefinition({ id: 'claude-code', binaryNames: ['claude'] }),

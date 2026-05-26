@@ -77,12 +77,9 @@ describe('runAgentic', () => {
   let originalListeners: NodeJS.SignalsListener[];
 
   let warnSpy: jest.SpyInstance;
-  // Tracked at suite scope so `afterEach` can always restore the
-  // `process.on` spy, even if the test body threw before its inline
-  // cleanup. Without this, a failed assertion would leak the spy and the
-  // next test's `captureSigintHandlers` would wrap the leaked one
-  // (spy-on-spy: SIGINT registrations would land in both `handlers` arrays
-  // and `length === 1` checks would fail in mysterious ways).
+  // Suite-scoped so `afterEach` can restore the `process.on` spy even if a
+  // test body threw before its inline cleanup — a leaked spy turns the next
+  // test's `captureSigintHandlers` into a spy-on-spy.
   let sigintCapture: {
     handlers: NodeJS.SignalsListener[];
     restore: () => void;
@@ -117,12 +114,8 @@ describe('runAgentic', () => {
     }
   });
 
-  // Read the lines passed to `output.warn` for the ambiguous-prompt cause
-  // block. Tests previously inspected `mockPrompt.mock.calls[0][0].message`;
-  // the cause is now rendered as a top-level warning ABOVE the prompt
-  // (`output.warn.bodyLines`) and the prompt's message is single-line.
-  // Scoped inside `describe('runAgentic')` so it cannot be called from a
-  // suite where `warnSpy` is not installed.
+  // Reads the lines `output.warn` received for the ambiguous-prompt cause
+  // block — rendered as a top-level warning above the prompt.
   function ambiguousCauseLines(): string[] {
     for (const call of warnSpy.mock.calls) {
       const arg = call[0] as { title?: string; bodyLines?: string[] };
@@ -133,14 +126,9 @@ describe('runAgentic', () => {
     return [];
   }
 
-  // Find the SIGINT handler `runAgentic` registered on `process`. Tests
-  // previously used a listener-diff (`process.listeners('SIGINT')` then
-  // filter out the originals); the diff approach is fragile if any other
-  // code transiently registers a SIGINT listener during the same tick.
-  // Instead, capture the registration via `process.on('SIGINT', …)` so we
-  // bind to exactly the listener `runAgentic` installed. Call `restore()`
-  // when the test is done with the spy (typically right after the async
-  // `runAgentic` call returns).
+  // Capture the SIGINT handler `runAgentic` registers via a `process.on` spy.
+  // Avoids the listener-diff approach which is fragile against any other
+  // SIGINT registration happening in the same tick.
   function captureSigintHandlers(): {
     handlers: NodeJS.SignalsListener[];
     restore: () => void;
@@ -177,6 +165,27 @@ describe('runAgentic', () => {
       userPrompt: 'user',
       workspaceRoot,
     } as const;
+  }
+
+  async function withPlatform<T>(
+    value: NodeJS.Platform,
+    fn: () => Promise<T>
+  ): Promise<T> {
+    const original = process.platform;
+    Object.defineProperty(process, 'platform', {
+      configurable: true,
+      writable: true,
+      value,
+    });
+    try {
+      return await fn();
+    } finally {
+      Object.defineProperty(process, 'platform', {
+        configurable: true,
+        writable: true,
+        value: original,
+      });
+    }
   }
 
   it('passes binary, args, cwd, merged env, and stdio: inherit through to spawn', async () => {
@@ -433,13 +442,7 @@ describe('runAgentic', () => {
   });
 
   it('uses taskkill /T /F instead of SIGINT to terminate the agent process tree on Windows', async () => {
-    const originalPlatform = process.platform;
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: 'win32',
-    });
-    try {
+    await withPlatform('win32', async () => {
       const child = fakeChild({ exitOnKill: false });
       // Mark the pid so we can assert taskkill was invoked with it.
       Object.defineProperty(child, 'pid', { value: 4242, configurable: true });
@@ -476,23 +479,11 @@ describe('runAgentic', () => {
       expect(opts.windowsHide).toBe(true);
       expect(opts.timeout).toBe(2_000);
       expect(outcome).toEqual({ kind: 'success', summary: 'done' });
-    } finally {
-      Object.defineProperty(process, 'platform', {
-        configurable: true,
-        writable: true,
-        value: originalPlatform,
-      });
-    }
+    });
   });
 
   it('still returns when taskkill is missing or fails on Windows', async () => {
-    const originalPlatform = process.platform;
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: 'win32',
-    });
-    try {
+    await withPlatform('win32', async () => {
       const child = fakeChild({ exitOnKill: false });
       Object.defineProperty(child, 'pid', { value: 4242, configurable: true });
       mockSpawn.mockImplementation(() => {
@@ -522,13 +513,7 @@ describe('runAgentic', () => {
 
       expect(outcome).toEqual({ kind: 'success', summary: 'done' });
       expect(elapsed).toBeLessThan(5_000);
-    } finally {
-      Object.defineProperty(process, 'platform', {
-        configurable: true,
-        writable: true,
-        value: originalPlatform,
-      });
-    }
+    });
   });
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
@@ -721,19 +706,13 @@ describe('runAgentic', () => {
   });
 
   it('routes a Windows .cmd shim through the cmd.exe adapter', async () => {
-    const originalPlatform = process.platform;
-    Object.defineProperty(process, 'platform', {
-      configurable: true,
-      writable: true,
-      value: 'win32',
-    });
-    const detected: DetectedInstalledAgent = {
-      ...makeDetected(),
-      binary: 'C:\\Users\\u\\AppData\\Roaming\\npm\\claude.cmd',
-    };
-    spawnWithHandoff({ status: 'success', summary: 'ok' });
+    await withPlatform('win32', async () => {
+      const detected: DetectedInstalledAgent = {
+        ...makeDetected(),
+        binary: 'C:\\Users\\u\\AppData\\Roaming\\npm\\claude.cmd',
+      };
+      spawnWithHandoff({ status: 'success', summary: 'ok' });
 
-    try {
       await runAgentic({
         detected,
         definition: makeDefinition(),
@@ -746,13 +725,7 @@ describe('runAgentic', () => {
       const [binary, args] = mockSpawn.mock.calls[0];
       expect(binary).toMatch(/cmd\.exe$/i);
       expect(args.slice(0, 3)).toEqual(['/d', '/s', '/c']);
-    } finally {
-      Object.defineProperty(process, 'platform', {
-        configurable: true,
-        writable: true,
-        value: originalPlatform,
-      });
-    }
+    });
   });
 });
 

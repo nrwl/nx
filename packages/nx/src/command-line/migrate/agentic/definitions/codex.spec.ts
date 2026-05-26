@@ -13,10 +13,6 @@ describe('codexDefinition', () => {
     });
   });
 
-  // Round-trip guard: argv flows verbatim to the spawned process, so even
-  // hostile workspace paths / migration ids embedded in the system context
-  // must reach codex untouched. If we ever add shell-style escaping here,
-  // these assertions catch the regression.
   it.each([
     ['embedded newlines', 'line1\nline2'],
     ['equals signs', 'key1=val1\nkey2=val2'],

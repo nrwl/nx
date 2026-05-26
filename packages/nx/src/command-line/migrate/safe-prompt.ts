@@ -26,9 +26,6 @@ import { output } from '../../utils/output';
  * The handler emits a single-line notice via `output.warn` and exits with
  * POSIX status 130 (128 + SIGINT). Synchronous exit is correct here: the
  * user explicitly asked to abort, there's no recovery state to preserve.
- *
- * Accepts both single-question and array-of-questions inputs (matching
- * enquirer's own signature). Returns the same shape enquirer returns.
  */
 export async function migratePrompt<T = any>(
   questions: Parameters<typeof enquirerPrompt>[0]

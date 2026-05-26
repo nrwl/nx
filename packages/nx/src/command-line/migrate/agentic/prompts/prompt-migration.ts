@@ -25,10 +25,6 @@ export interface PromptMigrationContext {
 export function buildPromptMigrationUserPrompt(
   ctx: PromptMigrationContext
 ): string {
-  // Migration metadata and the prompt path arrive from third-party migration
-  // packages; escape interpolations so a hostile value can't break out of the
-  // surrounding XML frame. The agent reads `&lt;/migration&gt;` as literal
-  // text, not a closing tag. See `escapeXmlBody` for the underlying rationale.
   const lines = [
     `Apply one prompt-based migration to this Nx workspace.`,
     ``,

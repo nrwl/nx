@@ -133,12 +133,8 @@ export async function runAgenticPromptStep(
     );
   }
 
-  const agentDisplay = agentic.selectedAgent.displayName;
-  const phasePreMarker =
-    mode === 'generic-validation'
-      ? `→ Validating with ${agentDisplay}…`
-      : `→ Running prompt with ${agentDisplay}…`;
-  logger.info(pc.dim(phasePreMarker));
+  const phase = mode === 'generic-validation' ? 'Validating' : 'Running prompt';
+  logger.info(pc.dim(`→ ${phase} with ${agentic.selectedAgent.displayName}…`));
 
   const outcome: HandoffOutcome = await runAgentic({
     detected: agentic.selectedAgent,

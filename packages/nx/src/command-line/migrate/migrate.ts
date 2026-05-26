@@ -2367,8 +2367,7 @@ type ExecutableMigration = {
   prompt?: string;
 };
 
-// `factory` is the legacy Angular schematics field; getImplementationPath
-// accepts either form. Treat them equivalently when classifying the entry.
+// `factory` is the legacy Angular schematics field; treat it equivalently.
 function hasDeterministicImplementation(m: ExecutableMigration): boolean {
   return !!(m.implementation || m.factory);
 }
@@ -2388,11 +2387,10 @@ export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {
 export function formatSkippedPromptsNextStep(
   skipped: ExecutableMigration[]
 ): string {
-  const lines = [
+  return [
     'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:',
     ...skipped.map((m) => `  - ${m.prompt}`),
-  ];
-  return lines.join('\n');
+  ].join('\n');
 }
 
 /**
@@ -2509,10 +2507,7 @@ export async function executeMigrations(
       : 1;
   });
 
-  // `runStep` is bound here (not imported at the module top) so non-agentic
-  // runs don't pay the cost of loading the agentic chain at startup. Same
-  // pattern as `printDroppedAgentContext` below — load only when the
-  // resolution mode dictates it's needed.
+  // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
   let agenticRun:
     | {
         agentic: EnabledResolvedAgentic;
@@ -2548,35 +2543,25 @@ export async function executeMigrations(
     )
   );
   logger.info('');
-  // Migration-emitted next-steps strings (from MigrationReturnObject.nextSteps).
-  // Tracked separately from the skipped-prompts list so the end-of-run logic
-  // can render them distinctly: inside-agent gets a directive block that
-  // subsumes both; other modes get the legacy "additional information" block.
+  // Tracked separately from `skippedPrompts` so the end-of-run logic can
+  // render them distinctly per resolution mode.
   const migrationEmittedNextSteps: string[] = [];
   const skippedPrompts: ExecutableMigration[] = [];
-  // Migrations that finished without throwing. Used to populate the failure
-  // recap when a later migration in the run throws.
   const completedSuccessfully: ExecutableMigration[] = [];
   let lastCommittedSha: string | null = null;
   let committedShasCount = 0;
-  // Prompt-only migrations whose agent never ran — i.e., the migration didn't
-  // execute at all. Hybrid migrations with a skipped prompt are NOT counted
-  // here because their deterministic half still ran.
+  // Prompt-only migrations whose agent never ran. Hybrid migrations with a
+  // skipped prompt are NOT counted here — their deterministic half still ran.
   let notRunMigrationsCount = 0;
 
-  // Wording for the skip parenthetical, branched on resolution mode so we
-  // don't say "agentic flow disabled" when the flow was actually deferred to
-  // the AI agent driving the run.
   const skipReason =
     agentic?.kind === 'inside-agent'
       ? 'deferred to the AI agent driving this run'
       : 'agentic flow disabled';
 
-  // Hoisted once so call sites stay tight and the bookkeeping invariants are
-  // enforced in one place: every dep-install boundary goes through the same
-  // installer, and every commit feeds both the tally and the failure-recap
-  // anchor (a new commit site that forgets to track these silently corrupts
-  // both the end-of-run summary and the recap).
+  // Hoisted so every dep-install / commit site goes through the same path —
+  // a new site that forgets to call `recordCommit` corrupts both the tally
+  // and the failure recap.
   const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
   const recordCommit = (sha: string | null): void => {
     if (sha) {
@@ -2633,7 +2618,6 @@ export async function executeMigrations(
             /* captureGeneratorOutput: */ !!agenticRun
           );
         migrationEmittedNextSteps.push(...nextSteps);
-        const generatorMadeChanges = madeChanges;
 
         if (agenticRun) {
           // Install any deps the deterministic phase added/bumped before the
@@ -2681,7 +2665,7 @@ export async function executeMigrations(
             printDroppedAgentContext({ migration: m, agentContext });
           }
           skippedPrompts.push(m);
-          if (!generatorMadeChanges) {
+          if (!madeChanges) {
             migrationsWithNoChanges.push(m);
           }
           const sha = await commitMigrationIfRequested(
@@ -2697,10 +2681,8 @@ export async function executeMigrations(
           }
         }
       } else {
-        // Defer the commit until validation succeeds when the new generic-
-        // validation step runs — failed validation throws before the explicit
-        // commit, leaving the generator's changes + the agent's partial fixes
-        // uncommitted in the working tree for the user to review.
+        // Defer commit until validation succeeds; failed validation leaves
+        // changes uncommitted in the working tree for the user to review.
         const validationRun =
           agenticRun && shouldRunValidation ? agenticRun : undefined;
         const {
@@ -2760,11 +2742,8 @@ export async function executeMigrations(
             stepResult.summary
           );
         } else {
-          // No inner validation step ran. Under `inside-agent`, surface the
-          // generator-emitted `agentContext` to stdout so the outer driving
-          // agent can ingest it. Reaches this branch when there were no
-          // changes (regardless of agentContext) or when agentic is disabled
-          // / inside-agent.
+          // Inner validation step didn't run. Surface `agentContext` under
+          // `inside-agent` so the outer driving agent can ingest it.
           if (printDroppedAgentContext && agentContext.length > 0) {
             printDroppedAgentContext({ migration: m, agentContext });
           }
@@ -2777,11 +2756,9 @@ export async function executeMigrations(
       logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
-        // `withGeneratorOutputCapture` attaches the deterministic-phase
-        // generator's `console.*` output to the thrown error as `capturedLogs`
-        // (best-effort; may be absent when the attachment fails). Surface it
-        // on the failure block so the user sees what the generator printed
-        // before it crashed.
+        // `withGeneratorOutputCapture` attaches the generator's `console.*`
+        // output as `capturedLogs` (best-effort; may be absent). Surface it
+        // so the user sees what the generator printed before it crashed.
         const capturedLogs = (e as { capturedLogs?: unknown })?.capturedLogs;
         const bodyLines =
           typeof capturedLogs === 'string' && capturedLogs.length > 0
@@ -2816,9 +2793,8 @@ export async function executeMigrations(
     logSkippedPostMigrationInstall(root);
   }
 
-  // Combined-view next-steps array for back-compat with repair.ts (which
-  // consumes a single `nextSteps` field). Internally, runMigrations uses the
-  // split fields (skippedPrompts, migrationEmittedNextSteps) directly.
+  // Combined-view next-steps array kept for back-compat with repair.ts, which
+  // consumes the single `nextSteps` field.
   const combinedNextSteps = [...migrationEmittedNextSteps];
   if (skippedPrompts.length > 0) {
     combinedNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
@@ -2912,10 +2888,9 @@ export async function runNxOrAngularMigration(
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
   let logs = '';
-  // `madeChanges` is populated from `changes.length > 0` for both Nx and
-  // Angular migrations — Angular's `ngResult.changes` is synthesized from the
-  // schematic's DryRunEvent stream so callers can treat the two paths
-  // uniformly for commit/validation gating.
+  // Angular's `ngResult.changes` is synthesized from the schematic's
+  // DryRunEvent stream so Nx and Angular paths can share commit/validation
+  // gating via `changes.length > 0`.
   let madeChanges = false;
   logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
@@ -2998,7 +2973,6 @@ export async function runNxOrAngularMigration(
     if (committedSha) {
       logger.info(pc.dim(`Committed as ${committedSha}`));
     }
-    // if we are running this function alone, we need to install deps internally
   } else if (handleInstallDeps) {
     await installDepsIfChanged();
   }
@@ -3121,8 +3095,8 @@ async function runMigrations(
     shouldRunValidation
   );
 
-  const ranCount = migrations.length - notRunMigrationsCount;
-  const ranWithChangesCount = ranCount - migrationsWithNoChanges.length;
+  const ranWithChangesCount =
+    migrations.length - notRunMigrationsCount - migrationsWithNoChanges.length;
   // The "applied" tally counts fully-completed migrations — those that left no
   // deferred work behind. Hybrid migrations whose prompt half was deferred
   // count as "deferred", not "applied", so the two tally components add up to

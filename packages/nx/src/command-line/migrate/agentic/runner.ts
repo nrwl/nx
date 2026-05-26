@@ -72,10 +72,7 @@ export async function runAgentic(
 
   let child: ChildProcess;
   try {
-    child = spawn(adapted.binary, adapted.args, {
-      ...adapted.options,
-      windowsHide: true,
-    });
+    child = spawn(adapted.binary, adapted.args, adapted.options);
   } catch (err) {
     return resolveFromHandoffOrPrompt(handoffFilePath, false, {
       spawnError: err instanceof Error ? err.message : String(err),
@@ -351,7 +348,7 @@ async function resolveFromHandoffOrPrompt(
   cause: AmbiguousCause = {}
 ): Promise<HandoffOutcome> {
   const read = readHandoffWithReason(handoffFilePath);
-  if (read.ok) {
+  if (read.ok === true) {
     return {
       kind: read.handoff.status,
       summary: read.handoff.summary,
@@ -391,14 +388,15 @@ async function resolveFromHandoffOrPrompt(
       exitCode: exitWasCtrlC ? undefined : cause.exitCode,
       exitSignal: exitWasCtrlC ? undefined : cause.exitSignal,
       handoff:
-        read.ok || read.reason === 'missing'
+        read.reason === 'missing'
           ? undefined
           : { reason: read.reason, detail: read.detail },
     };
     const causeSummary = describeAmbiguousCause(userScrubbed);
-    return causeSummary.length > 0
-      ? { kind: 'ambiguous-abort', causeSummary }
-      : { kind: 'ambiguous-abort' };
+    return {
+      kind: 'ambiguous-abort',
+      ...(causeSummary.length > 0 && { causeSummary }),
+    };
   }
   return promptAmbiguous(fullCause);
 }

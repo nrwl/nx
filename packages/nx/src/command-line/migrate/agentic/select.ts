@@ -3,15 +3,15 @@ import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
 import { AGENT_DEFINITIONS } from './registry';
-import {
-  AgentDefinition,
-  AgentId,
-  DetectedInstalledAgent,
-  ResolvedAgentic,
-} from './types';
+import { AgentId, DetectedInstalledAgent, ResolvedAgentic } from './types';
 
 /** Possible values for `--agentic` after yargs normalization. */
 export type AgenticArg = undefined | boolean | AgentId;
+
+const INSTALL_SUPPORTED_AGENTS_HINT = [
+  'Install one of the supported agents and re-run the migration:',
+  ...AGENT_DEFINITIONS.map((def) => `  - ${def.displayName}`),
+];
 
 export interface ResolveAgenticInput {
   agentic: AgenticArg;
@@ -26,12 +26,11 @@ export async function resolveAgentic(
   input: ResolveAgenticInput
 ): Promise<ResolvedAgentic> {
   if (isInsideAgent()) {
-    const explicit =
-      input.agentic === true || typeof input.agentic === 'string';
     output.log({
-      title: explicit
-        ? 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent — the outer agent drives the migration. The explicit --agentic flag is ignored in this context.'
-        : 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent.',
+      title:
+        input.agentic === true || typeof input.agentic === 'string'
+          ? 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent — the outer agent drives the migration. The explicit --agentic flag is ignored in this context.'
+          : 'Agentic flow skipped: nx detected this run is invoked from inside an AI agent.',
     });
     return { kind: 'inside-agent' };
   }
@@ -82,7 +81,7 @@ async function resolveFlag(
   if (!isInteractive) {
     return { enabled: false };
   }
-  if (!shouldPromptForAgentic(input.migrations)) {
+  if (!input.migrations.some((m) => !!m.prompt)) {
     return { enabled: false };
   }
   if (detected.length === 0) {
@@ -100,12 +99,6 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
     ],
   });
   throw new Error('Agentic flow requires an interactive terminal.');
-}
-
-function shouldPromptForAgentic(
-  migrations: ReadonlyArray<{ prompt?: string }>
-): boolean {
-  return migrations.some((m) => !!m.prompt);
 }
 
 async function firePromptForAgentic(
@@ -151,12 +144,7 @@ async function selectAgent(
     if (detected.length === 0) {
       output.error({
         title: `The agent "${explicitId}" was requested via --agentic but no supported AI agent is installed on this machine.`,
-        bodyLines: [
-          'Install one of the supported agents and re-run the migration:',
-          ...AGENT_DEFINITIONS.map(
-            (def: AgentDefinition) => `  - ${def.displayName}`
-          ),
-        ],
+        bodyLines: INSTALL_SUPPORTED_AGENTS_HINT,
       });
       throw new Error(`The requested agent "${explicitId}" is not installed.`);
     }
@@ -175,12 +163,7 @@ async function selectAgent(
     output.error({
       title:
         'Agentic flow was enabled, but no supported AI agent is installed on this machine.',
-      bodyLines: [
-        'Install one of the supported agents and re-run the migration:',
-        ...AGENT_DEFINITIONS.map(
-          (def: AgentDefinition) => `  - ${def.displayName}`
-        ),
-      ],
+      bodyLines: INSTALL_SUPPORTED_AGENTS_HINT,
     });
     throw new Error('No installed AI agent available.');
   }

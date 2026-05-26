@@ -439,13 +439,9 @@ async function createRecorder(
   };
 }
 
-// The Angular workflow has already flushed file content to disk by the time
-// our recorder runs, and our only downstream consumer (the agentic prompt
-// builders) reads `path` + `type` and nothing else. So we synthesize
-// FileChange entries with `content: Buffer.alloc(0)` rather than copying the
-// real bytes — avoids per-event allocation and retention of the entire
-// migration's write set in memory. `null` is reserved for DELETE per the
-// FileChange contract.
+// Empty content for non-DELETE FileChange entries: the Angular workflow has
+// already flushed bytes to disk, and our only downstream consumer (agentic
+// prompt builders) reads `path` + `type` only. `null` is reserved for DELETE.
 function emptyFileChange(
   type: Extract<FileChange['type'], 'CREATE' | 'UPDATE'>,
   path: string

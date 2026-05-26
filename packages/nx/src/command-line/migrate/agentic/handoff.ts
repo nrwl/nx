@@ -145,14 +145,12 @@ export function readHandoffWithReason(filePath: string): HandoffReadResult {
   // defense costs nothing and prevents a latent prototype-pollution gadget
   // from existing in the codebase.
   const extras: Record<string, unknown> = Object.create(null);
-  let hasExtras = false;
   for (const key of Object.keys(obj)) {
     if (key === 'status' || key === 'summary') continue;
     extras[key] = obj[key];
-    hasExtras = true;
   }
   const handoff: HandoffFile = { status, summary: summary as string };
-  if (hasExtras) {
+  if (Object.keys(extras).length > 0) {
     handoff.extras = extras;
   }
   return { ok: true, handoff };

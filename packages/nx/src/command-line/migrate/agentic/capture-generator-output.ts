@@ -2,23 +2,10 @@ import { format } from 'node:util';
 import { logger } from '../../../utils/logger';
 
 /**
- * Tees every line written to `console.{log,warn,error,info,debug}` into an
- * internal buffer while preserving the original behavior (the line still
- * reaches the original stream). `nx/src/utils/logger`'s `logger` ultimately
- * delegates to `console`, so a generator using either the devkit `logger` or
- * `console` directly is captured here.
- *
- * Stops short of intercepting `process.stdout.write` / `process.stderr.write`:
- * those bypass `console` and would also pick up unrelated framework output.
- * Migration generators in practice use the devkit logger or `console`.
- *
- * Restoration is idempotent. Callers should wrap their invocation in
- * `try/finally` (or use the helper below) so the patch is reverted on throw.
- *
- * Re-entrant install is detected via a per-method `Symbol.for(...)` marker
- * and refused with a `logger.verbose` warning — see the body for the trade
- * off. The marker also lets a leaked first install be diagnosable rather
- * than silently compounding into a wrapper-wrapping-a-wrapper.
+ * Tees `console.{log,warn,error,info,debug}` into an internal buffer while
+ * preserving the original behavior. Does not intercept
+ * `process.{stdout,stderr}.write` — those bypass `console` and would also
+ * pick up unrelated framework output. Restoration is idempotent.
  */
 export interface GeneratorOutputCapture {
   flush(): string;
@@ -34,17 +21,14 @@ const CONSOLE_METHODS: ConsoleMethod[] = [
   'debug',
 ];
 
-// Marks a `console[method]` function as a capture wrapper installed by this
-// module. If we ever see it on entry, the previous install never ran its
-// `restore()` — most likely a caller forgot `try/finally`. Layering a second
-// capture on top would let the leak compound silently; refuse + log instead.
+// Marks `console[method]` as a wrapper installed by this module. Seeing it on
+// entry means the previous install never restored — refuse rather than layer,
+// otherwise the leak compounds silently into a wrapper-wrapping-a-wrapper.
 const CAPTURED_MARKER = Symbol.for('nx-migrate.generator-output-captured');
 
 const NOOP_CAPTURE: GeneratorOutputCapture = {
   flush: () => '',
-  restore: () => {
-    /* noop */
-  },
+  restore: () => {},
 };
 
 export function installGeneratorOutputCapture(): GeneratorOutputCapture {

@@ -23,25 +23,11 @@ async function findOnPath(
   binaryNames: readonly string[]
 ): Promise<string | null> {
   for (const name of binaryNames) {
-    // `which@3` only throws on missing binary (`ENOENT`-equivalent); its
-    // underlying `isexe` swallows EACCES via `ignoreErrors: true`, so a
-    // try/catch around `which(name)` would catch nothing useful. Use the
-    // `{ nothrow: true }` variant for a null-on-miss contract without the
-    // throw-per-missing-binary cost.
+    // `{ nothrow: true }` avoids the throw-per-missing-binary overhead;
+    // `which@3` swallows EACCES internally via `isexe`'s ignoreErrors.
     const found = await which(name, { nothrow: true });
     if (typeof found === 'string') {
       return found;
-    }
-  }
-  return null;
-}
-
-async function findInWellKnownPaths(
-  paths: readonly string[]
-): Promise<string | null> {
-  for (const candidate of paths) {
-    if (await isExecutable(candidate)) {
-      return candidate;
     }
   }
   return null;
@@ -60,14 +46,15 @@ async function detectOne(
     };
   }
 
-  const inWellKnown = await findInWellKnownPaths(definition.wellKnownPaths());
-  if (inWellKnown) {
-    return {
-      id: definition.id,
-      displayName: definition.displayName,
-      binary: inWellKnown,
-      source: 'well-known',
-    };
+  for (const candidate of definition.wellKnownPaths()) {
+    if (await isExecutable(candidate)) {
+      return {
+        id: definition.id,
+        displayName: definition.displayName,
+        binary: candidate,
+        source: 'well-known',
+      };
+    }
   }
 
   return null;

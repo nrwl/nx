@@ -209,11 +209,9 @@ export function buildDirectiveBlockBodyLines(opts: {
   }
   lines.push('');
   lines.push(
-    hasDeferred || hasNotes
-      ? hasDeferred && hasNotes
-        ? 'Finally, summarize what was done across the run and commit the changes per workspace conventions.'
-        : 'Then summarize what was done across the run and commit the changes per workspace conventions.'
-      : 'Summarize what was done across the run and commit the changes per workspace conventions.'
+    hasDeferred && hasNotes
+      ? 'Finally, summarize what was done across the run and commit the changes per workspace conventions.'
+      : 'Then summarize what was done across the run and commit the changes per workspace conventions.'
   );
   return lines;
 }
