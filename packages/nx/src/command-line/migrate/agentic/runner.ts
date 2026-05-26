@@ -121,7 +121,12 @@ export async function runAgentic(
     ]);
     if (winner === 'handoff') {
       await closeAgentSession(child, exitPromise, gracefulExitMs);
-      exitInfo = await exitPromise;
+      // `closeAgentSession` already bounded its own wait. Bound this one
+      // too so the orchestrator can't hang if the child stays stuck after
+      // SIGKILL / taskkill (e.g. D-state on a hung NFS read). The .then()
+      // callback registered on `exitPromise` above (line 109) keeps
+      // `exitInfo` current if it does resolve later in the same turn.
+      await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
     }
   } finally {
     handoffWatchAbort.abort();
@@ -176,19 +181,31 @@ function restoreTerminalAfterAgent(): void {
   }
 }
 
+// Bound on how long we wait for `exitPromise` to settle after force-killing
+// the child. SIGKILL is uncatchable so the kernel reaps within microseconds
+// in the normal case; the bound exists only to escape pathological states
+// (uninterruptible kernel calls, taskkill returning without the child
+// actually exiting) so the migrate orchestrator can't hang forever.
+const FORCE_KILL_WAIT_MS = 500;
+
 /**
- * Sends SIGINT (graceful, equivalent to the user typing Ctrl+C in the REPL),
- * waits up to the configured graceful-exit timeout for the child to exit, and
- * escalates to SIGTERM as a fallback. Always resolves once the child has
- * exited.
+ * Stops the agent process after a successful handoff. Platform-branched:
  *
- * Windows caveat: when `adaptSpawnForWindowsShim` wrapped the binary in
- * `cmd.exe /d /s /c "..."` (the npm `.cmd` shim path), `child.kill('SIGINT')`
- * is mapped by Node to `TerminateProcess` on the cmd.exe handle. That kills
- * cmd.exe but does not cascade to the actual agent process, which becomes
- * orphaned. A proper fix would `taskkill /T /F /PID <pid>` the cmd-shim path;
- * until then, agents that don't exit on their own after a handoff write will
- * survive on Windows. Tracked as a follow-up.
+ * - POSIX: SIGINT (graceful, equivalent to user Ctrl+C) → wait
+ *   `gracefulExitMs` for the child to exit → SIGKILL → wait
+ *   `FORCE_KILL_WAIT_MS` (bounded) → return. SIGTERM is intentionally
+ *   skipped: a process that ignores SIGINT for 5s will hit the same
+ *   handler on SIGTERM, the extra step only delays the inevitable.
+ *
+ * - Windows: skip SIGINT entirely. `child.kill('*')` on Windows is a
+ *   `TerminateProcess` call regardless of the signal name (Windows has
+ *   no POSIX signals), and on the `cmd.exe /d /s /c "..."` shim path it
+ *   would terminate cmd.exe while leaving the agent orphaned (parent
+ *   death doesn't cascade to children on Windows). `taskkill /T /F`
+ *   walks the process tree and kills cmd.exe AND the agent atomically;
+ *   that's the only reliable shutdown path here. `taskkill` failures
+ *   (binary missing, race with already-dead pid) are swallowed; the
+ *   safety bound returns regardless.
  */
 async function closeAgentSession(
   child: ChildProcess,
@@ -196,6 +213,13 @@ async function closeAgentSession(
   gracefulExitMs: number
 ): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
+
+  if (process.platform === 'win32') {
+    await forceKillWindowsTree(child, exitPromise);
+    return;
+  }
+
+  // POSIX path.
   try {
     child.kill('SIGINT');
   } catch {
@@ -207,23 +231,69 @@ async function closeAgentSession(
     await Promise.race([
       exitPromise,
       new Promise<void>((resolve) => {
-        escalation = setTimeout(() => {
-          if (child.exitCode === null && child.signalCode === null) {
-            try {
-              child.kill('SIGTERM');
-            } catch {
-              /* child already gone */
-            }
-          }
-          resolve();
-        }, gracefulExitMs);
+        escalation = setTimeout(resolve, gracefulExitMs);
       }),
     ]);
   } finally {
     if (escalation) clearTimeout(escalation);
   }
-  // If we escalated via SIGTERM, wait for the actual exit.
-  await exitPromise;
+  if (child.exitCode !== null || child.signalCode !== null) return;
+
+  // Graceful timeout elapsed without the agent exiting. SIGKILL is
+  // uncatchable; bound the post-kill wait so a pathological uninterruptible
+  // syscall can't hang us forever.
+  try {
+    child.kill('SIGKILL');
+  } catch {
+    /* child already gone */
+  }
+  await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
+}
+
+async function forceKillWindowsTree(
+  child: ChildProcess,
+  exitPromise: Promise<ExitInfo>
+): Promise<void> {
+  const pid = child.pid;
+  // `child.pid` is undefined only when spawn itself failed (Node docs).
+  // In that case the `error` event already fired, `exitPromise` resolved,
+  // and the early-return guard at the top of `closeAgentSession` should
+  // have short-circuited before we got here. Reaching this branch with
+  // an undefined pid means a narrow race between handoff-detection and
+  // error-event propagation; we cannot taskkill without a pid, so the
+  // best we can do is wait briefly and return — the OS reaps the process
+  // independently if it ever started.
+  if (pid !== undefined) {
+    try {
+      execSync(`taskkill /T /F /PID ${pid}`, {
+        stdio: 'ignore',
+        windowsHide: true,
+        // Bound the taskkill call itself so a hung Windows shell can't
+        // hang us. 2s is generous; taskkill normally completes in ms.
+        timeout: 2_000,
+      });
+    } catch {
+      /* taskkill missing, pid already dead, or timed out — fall through */
+    }
+  }
+  await raceWithTimeout(exitPromise, FORCE_KILL_WAIT_MS);
+}
+
+async function raceWithTimeout(
+  promise: Promise<unknown>,
+  timeoutMs: number
+): Promise<void> {
+  let timer: NodeJS.Timeout | undefined;
+  try {
+    await Promise.race([
+      promise,
+      new Promise<void>((resolve) => {
+        timer = setTimeout(resolve, timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 interface ExitInfo {

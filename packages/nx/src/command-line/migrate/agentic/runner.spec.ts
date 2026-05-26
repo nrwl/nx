@@ -5,17 +5,19 @@ import { join } from 'path';
 
 jest.mock('child_process', () => ({
   spawn: jest.fn(),
+  execSync: jest.fn(),
 }));
 jest.mock('enquirer', () => ({
   prompt: jest.fn(),
 }));
 
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { prompt } from 'enquirer';
 import { adaptSpawnForWindowsShim, runAgentic } from './runner';
 import { AgentDefinition, DetectedInstalledAgent } from './types';
 
 const mockSpawn = spawn as unknown as jest.Mock;
+const mockExecSync = execSync as unknown as jest.Mock;
 const mockPrompt = prompt as unknown as jest.Mock;
 
 function makeDetected(): DetectedInstalledAgent {
@@ -77,6 +79,7 @@ describe('runAgentic', () => {
     workspace = mkdtempSync(join(tmpdir(), 'nx-agentic-runner-'));
     handoffFilePath = join(workspace, 'handoff.json');
     mockSpawn.mockReset();
+    mockExecSync.mockReset();
     mockPrompt.mockReset();
     originalListeners = process.listeners('SIGINT') as NodeJS.SignalsListener[];
   });
@@ -289,7 +292,7 @@ describe('runAgentic', () => {
     expect(outcome).toEqual({ kind: 'ambiguous-continue' });
   });
 
-  it('escalates to SIGTERM when the agent does not exit within the grace period after SIGINT', async () => {
+  it('escalates to SIGKILL when the agent does not exit within the grace period after SIGINT (POSIX)', async () => {
     const child = fakeChild({ exitOnKill: false });
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
@@ -300,10 +303,11 @@ describe('runAgentic', () => {
       });
       return child;
     });
-    // Once SIGTERM is sent, simulate the child finally giving up.
+    // SIGKILL is uncatchable — when it lands, the OS terminates the process
+    // and Node emits `exit` with `signal: 'SIGKILL'`.
     child.kill.mockImplementation((signal?: NodeJS.Signals) => {
-      if (signal === 'SIGTERM') {
-        setImmediate(() => child.emit('exit', null, 'SIGTERM'));
+      if (signal === 'SIGKILL') {
+        setImmediate(() => child.emit('exit', null, 'SIGKILL'));
       }
       return true;
     });
@@ -318,8 +322,147 @@ describe('runAgentic', () => {
     });
 
     expect(child.kill).toHaveBeenCalledWith('SIGINT');
-    expect(child.kill).toHaveBeenCalledWith('SIGTERM');
+    expect(child.kill).toHaveBeenCalledWith('SIGKILL');
+    // SIGTERM is intentionally skipped — a process that ignores SIGINT
+    // hits the same handler on SIGTERM.
+    expect(child.kill).not.toHaveBeenCalledWith('SIGTERM');
     expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+  });
+
+  it('returns within the post-kill safety bound when SIGKILL is also ignored (POSIX pathological D-state)', async () => {
+    const child = fakeChild({ exitOnKill: false });
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        writeFileSync(
+          handoffFilePath,
+          JSON.stringify({ status: 'success', summary: 'done' })
+        );
+      });
+      return child;
+    });
+    // Pathological: SIGKILL is sent but the child never emits `exit`
+    // (e.g. uninterruptible kernel call). The 500ms post-kill safety bound
+    // must let the orchestrator proceed regardless.
+    child.kill.mockReturnValue(true);
+
+    const start = Date.now();
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+      handoffPollIntervalMs: 5,
+      gracefulExitMs: 20,
+    });
+    const elapsed = Date.now() - start;
+
+    expect(child.kill).toHaveBeenCalledWith('SIGINT');
+    expect(child.kill).toHaveBeenCalledWith('SIGKILL');
+    expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+    // Sanity: orchestrator returned in a bounded time, did not hang.
+    // gracefulExitMs (20) + FORCE_KILL_WAIT_MS (500) + FORCE_KILL_WAIT_MS
+    // (500, second bound in the caller) + jitter. 5s is the upper bound to
+    // catch a hang; the real number is ~1s.
+    expect(elapsed).toBeLessThan(5_000);
+  });
+
+  it('uses taskkill /T /F instead of SIGINT to terminate the agent process tree on Windows', async () => {
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, 'platform', {
+      configurable: true,
+      writable: true,
+      value: 'win32',
+    });
+    try {
+      const child = fakeChild({ exitOnKill: false });
+      // Mark the pid so we can assert taskkill was invoked with it.
+      Object.defineProperty(child, 'pid', { value: 4242, configurable: true });
+      mockSpawn.mockImplementation(() => {
+        setImmediate(() => {
+          writeFileSync(
+            handoffFilePath,
+            JSON.stringify({ status: 'success', summary: 'done' })
+          );
+        });
+        return child;
+      });
+      mockExecSync.mockImplementation(() => {
+        // Simulate taskkill walking the process tree and killing the agent;
+        // Node emits `exit` after the underlying process is reaped.
+        setImmediate(() => child.emit('exit', null, 'SIGTERM'));
+        return Buffer.from('');
+      });
+
+      const outcome = await runAgentic({
+        detected: makeDetected(),
+        definition: makeDefinition(),
+        invocationContext: defaultInvocation(),
+        handoffFilePath,
+        handoffPollIntervalMs: 5,
+      });
+
+      // SIGINT is skipped on Windows — it would TerminateProcess(cmd.exe)
+      // and orphan the agent. taskkill walks the tree atomically instead.
+      expect(child.kill).not.toHaveBeenCalled();
+      expect(mockExecSync).toHaveBeenCalledTimes(1);
+      const [taskkillCmd, opts] = mockExecSync.mock.calls[0];
+      expect(taskkillCmd).toBe('taskkill /T /F /PID 4242');
+      expect(opts.windowsHide).toBe(true);
+      expect(opts.timeout).toBe(2_000);
+      expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+    } finally {
+      Object.defineProperty(process, 'platform', {
+        configurable: true,
+        writable: true,
+        value: originalPlatform,
+      });
+    }
+  });
+
+  it('still returns when taskkill is missing or fails on Windows', async () => {
+    const originalPlatform = process.platform;
+    Object.defineProperty(process, 'platform', {
+      configurable: true,
+      writable: true,
+      value: 'win32',
+    });
+    try {
+      const child = fakeChild({ exitOnKill: false });
+      Object.defineProperty(child, 'pid', { value: 4242, configurable: true });
+      mockSpawn.mockImplementation(() => {
+        setImmediate(() => {
+          writeFileSync(
+            handoffFilePath,
+            JSON.stringify({ status: 'success', summary: 'done' })
+          );
+        });
+        return child;
+      });
+      // taskkill throws (binary missing, race with dead pid, etc.) — the
+      // safety bound must still let the orchestrator proceed.
+      mockExecSync.mockImplementation(() => {
+        throw new Error('taskkill: not found');
+      });
+
+      const start = Date.now();
+      const outcome = await runAgentic({
+        detected: makeDetected(),
+        definition: makeDefinition(),
+        invocationContext: defaultInvocation(),
+        handoffFilePath,
+        handoffPollIntervalMs: 5,
+      });
+      const elapsed = Date.now() - start;
+
+      expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+      expect(elapsed).toBeLessThan(5_000);
+    } finally {
+      Object.defineProperty(process, 'platform', {
+        configurable: true,
+        writable: true,
+        value: originalPlatform,
+      });
+    }
   });
 
   it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
