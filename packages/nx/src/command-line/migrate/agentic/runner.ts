@@ -74,8 +74,9 @@ export async function runAgentic(
   });
 
   let child: ChildProcess;
+  const spawnOptions = adapted.options;
   try {
-    child = spawn(adapted.binary, adapted.args, adapted.options);
+    child = spawn(adapted.binary, adapted.args, spawnOptions);
   } catch (err) {
     return resolveFromHandoffOrPrompt(handoffFilePath, false, {
       spawnError: err instanceof Error ? err.message : String(err),
