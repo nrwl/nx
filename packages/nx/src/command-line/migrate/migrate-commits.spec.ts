@@ -105,7 +105,10 @@ describe('commitMigrationIfRequested', () => {
   it('surfaces the real git stderr from tryCommitChanges and mentions the diff stays in the working tree', async () => {
     mockHas.mockReturnValue(true);
     mockTry.mockImplementation(() => {
-      throw new Error('hook rejected: signed commits required');
+      // Realistic --no-verify-compatible failure: `tryCommitChanges` passes
+      // --no-verify so client-side hooks cannot fire; gpg-sign failures
+      // (driven by `commit.gpgsign`) are not bypassed by --no-verify.
+      throw new Error('error: gpg failed to sign the data');
     });
 
     const sha = await commitMigrationIfRequested(
@@ -117,8 +120,30 @@ describe('commitMigrationIfRequested', () => {
     );
     expect(sha).toBeNull();
     const message = mockInfo.mock.calls[0][0] as string;
-    expect(message).toContain('hook rejected: signed commits required');
+    expect(message).toContain('gpg failed to sign');
     expect(message).toContain('remains in the working tree');
+  });
+
+  it('honestly reports that the commit landed when tryCommitChanges returns without a sha (HEAD-resolve race)', async () => {
+    // `tryCommitChanges` returns null (not throws) — by contract this means
+    // the commit landed but `git rev-parse HEAD` failed transiently. The
+    // user must NOT be told the diff is still in the working tree, or
+    // they'd re-run and double-commit.
+    mockHas.mockReturnValue(true);
+    mockTry.mockReturnValue(null);
+
+    const sha = await commitMigrationIfRequested(
+      ROOT,
+      { name: 'm1' },
+      true,
+      PREFIX,
+      installDeps
+    );
+    expect(sha).toBeNull();
+    const message = mockInfo.mock.calls[0][0] as string;
+    expect(message).toContain('commit for m1 was created');
+    expect(message).toContain('sha could not be resolved');
+    expect(message).not.toContain('remains in the working tree');
   });
 });
 
@@ -156,6 +181,25 @@ describe('commitCheckpointBeforeMigrations', () => {
     expect(warnArg.title).toContain('Could not create checkpoint commit');
     expect(warnArg.bodyLines.join('\n')).toContain('gpg failed to sign');
     expect(warnArg.bodyLines.join('\n')).toContain(
+      "Migration 1's commit will absorb"
+    );
+  });
+
+  it('honestly reports that the checkpoint commit landed when tryCommitChanges returns without a sha (HEAD-resolve race)', () => {
+    // `tryCommitChanges` returns null (not throws) — by contract the
+    // checkpoint commit landed but HEAD-resolve failed transiently. We
+    // must not tell the user migration 1 will absorb pre-existing state.
+    mockHas.mockReturnValue(true);
+    mockTry.mockReturnValue(null);
+
+    commitCheckpointBeforeMigrations(ROOT, PREFIX);
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    const warnArg = mockWarn.mock.calls[0][0];
+    expect(warnArg.title).toContain('Could not resolve checkpoint commit sha');
+    expect(warnArg.bodyLines.join('\n')).toContain(
+      'checkpoint commit was created'
+    );
+    expect(warnArg.bodyLines.join('\n')).not.toContain(
       "Migration 1's commit will absorb"
     );
   });
