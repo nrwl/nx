@@ -142,7 +142,7 @@ export const createDependencies: CreateDependencies = async (
   const explicitProjectDependencies = buildExplicitDependencies(
     pluginConfig,
     ctx
-  ) as RawDependency[];
+  );
   performance.mark('build typescript dependencies - end');
   performance.measure(
     'build typescript dependencies',

@@ -1,9 +1,6 @@
-export type RawDependency = {
-  source: string;
-  target: string;
-  type: string;
-  sourceFile?: string;
-};
+import type { RawProjectGraphDependency } from '../../../project-graph/project-graph-builder';
+
+export type RawDependency = RawProjectGraphDependency;
 
 export type BundlerKind =
   | 'esbuild'
