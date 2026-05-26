@@ -40,6 +40,8 @@ export interface RunAgenticArgs {
   handoffFilePath: string;
   /** Override the handoff-file poll interval (test seam). */
   handoffPollIntervalMs?: number;
+  /** Override the SIGINT-to-SIGTERM grace period (test seam). */
+  gracefulExitMs?: number;
 }
 
 /**
@@ -56,6 +58,7 @@ export async function runAgentic(
     invocationContext,
     handoffFilePath,
     handoffPollIntervalMs,
+    gracefulExitMs = AGENT_GRACEFUL_EXIT_MS,
   } = args;
   const spec = definition.buildInteractive(invocationContext);
 
@@ -117,7 +120,7 @@ export async function runAgentic(
       ),
     ]);
     if (winner === 'handoff') {
-      await closeAgentSession(child, exitPromise);
+      await closeAgentSession(child, exitPromise, gracefulExitMs);
       exitInfo = await exitPromise;
     }
   } finally {
@@ -182,7 +185,8 @@ function restoreTerminalAfterAgent(): void {
  */
 async function closeAgentSession(
   child: ChildProcess,
-  exitPromise: Promise<ExitInfo>
+  exitPromise: Promise<ExitInfo>,
+  gracefulExitMs: number
 ): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
   try {
@@ -205,7 +209,7 @@ async function closeAgentSession(
             }
           }
           resolve();
-        }, AGENT_GRACEFUL_EXIT_MS);
+        }, gracefulExitMs);
       }),
     ]);
   } finally {
@@ -320,9 +324,15 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
   // which would otherwise sit immediately above this question.
   console.log();
   const causeLines = describeAmbiguousCause(cause);
-  if (causeLines.length > 0) {
-    process.stdout.write(causeLines.map((l) => `  ${l}`).join('\n') + '\n\n');
-  }
+  const lead =
+    causeLines.length > 0
+      ? [
+          'The agent run ended without a usable handoff:',
+          ...causeLines.map((l) => `  ${l}`),
+          '',
+        ]
+      : [];
+  const message = [...lead, 'How should nx migrate proceed?'].join('\n');
   // `migratePrompt` injects `options.cancel` so Ctrl+C and Esc exit cleanly
   // via `process.exit(130)` before enquirer's broken cancel cleanup runs.
   // Any other rejection we treat as abort.
@@ -330,7 +340,7 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
     const response = await migratePrompt<{ choice: 'abort' | 'continue' }>({
       name: 'choice',
       type: 'select',
-      message: 'How should nx migrate proceed?',
+      message,
       choices: [
         { name: 'abort', message: 'Treat as failed — abort the run' },
         {

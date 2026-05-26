@@ -289,6 +289,127 @@ describe('runAgentic', () => {
     expect(outcome).toEqual({ kind: 'ambiguous-continue' });
   });
 
+  it('escalates to SIGTERM when the agent does not exit within the grace period after SIGINT', async () => {
+    const child = fakeChild({ exitOnKill: false });
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        writeFileSync(
+          handoffFilePath,
+          JSON.stringify({ status: 'success', summary: 'done' })
+        );
+      });
+      return child;
+    });
+    // Once SIGTERM is sent, simulate the child finally giving up.
+    child.kill.mockImplementation((signal?: NodeJS.Signals) => {
+      if (signal === 'SIGTERM') {
+        setImmediate(() => child.emit('exit', null, 'SIGTERM'));
+      }
+      return true;
+    });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+      handoffPollIntervalMs: 5,
+      gracefulExitMs: 20,
+    });
+
+    expect(child.kill).toHaveBeenCalledWith('SIGINT');
+    expect(child.kill).toHaveBeenCalledWith('SIGTERM');
+    expect(outcome).toEqual({ kind: 'success', summary: 'done' });
+  });
+
+  it('passes a SIGINT during the agent run through without crashing and aborts directly afterward', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        // Invoke runAgentic's SIGINT listener directly. `process.emit('SIGINT',
+        // …)` behaves inconsistently across jest workers (the signal name
+        // collides with jest's own handlers), so we bypass it and trigger the
+        // listener via its registration delta.
+        const newListeners = (
+          process.listeners('SIGINT') as NodeJS.SignalsListener[]
+        ).filter((l) => !originalListeners.includes(l));
+        for (const l of newListeners) l('SIGINT');
+        setImmediate(() => child.emit('exit', 130, 'SIGINT'));
+      });
+      return child;
+    });
+
+    const outcome = await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    // userInterrupted=true short-circuits the ambiguous prompt.
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(outcome.kind).toBe('ambiguous-abort');
+  });
+
+  it('threads spawn errors into the ambiguous prompt body', async () => {
+    mockSpawn.mockImplementation(() => {
+      throw new Error('ENOENT: no such file or directory');
+    });
+    mockPrompt.mockResolvedValue({ choice: 'abort' });
+
+    await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    const message = mockPrompt.mock.calls[0][0].message as string;
+    expect(message).toContain('Could not spawn the agent');
+    expect(message).toContain('ENOENT');
+  });
+
+  it('threads a non-zero exit code into the ambiguous prompt body', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => child.emit('exit', 1, null));
+      return child;
+    });
+    mockPrompt.mockResolvedValue({ choice: 'abort' });
+
+    await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    const message = mockPrompt.mock.calls[0][0].message as string;
+    expect(message).toContain('Agent exited with code 1');
+  });
+
+  it('threads a handoff parse error into the ambiguous prompt body', async () => {
+    const child = fakeChild();
+    mockSpawn.mockImplementation(() => {
+      setImmediate(() => {
+        writeFileSync(handoffFilePath, '{ not valid json');
+        child.emit('exit', 0);
+      });
+      return child;
+    });
+    mockPrompt.mockResolvedValue({ choice: 'abort' });
+
+    await runAgentic({
+      detected: makeDetected(),
+      definition: makeDefinition(),
+      invocationContext: defaultInvocation(),
+      handoffFilePath,
+    });
+
+    const message = mockPrompt.mock.calls[0][0].message as string;
+    expect(message).toContain('invalid JSON');
+  });
+
   it('routes a Windows .cmd shim through the cmd.exe adapter', async () => {
     const originalPlatform = process.platform;
     Object.defineProperty(process, 'platform', {

@@ -100,5 +100,41 @@ describe('generator output capture', () => {
 
       expect(console.log).toBe(before);
     });
+
+    it('attaches captured logs to the thrown error as `capturedLogs`', async () => {
+      jest.spyOn(console, 'log').mockImplementation(() => {});
+
+      let captured: unknown;
+      try {
+        await withGeneratorOutputCapture(() => {
+          console.log('progress line 1');
+          console.log('progress line 2');
+          throw new Error('boom');
+        });
+      } catch (err) {
+        captured = err;
+      }
+      const errWithLogs = captured as Error & { capturedLogs?: string };
+      expect(errWithLogs).toBeInstanceOf(Error);
+      expect(errWithLogs.capturedLogs).toContain('progress line 1');
+      expect(errWithLogs.capturedLogs).toContain('progress line 2');
+    });
+
+    it('does not crash when a captured user arg has a throwing toString()', async () => {
+      jest.spyOn(console, 'log').mockImplementation(() => {});
+      const hostile = {
+        toString() {
+          throw new Error('toString blew up');
+        },
+      };
+
+      // The console.log call itself should be a no-op for the capture buffer
+      // (and definitely should not propagate the toString error).
+      const { result } = await withGeneratorOutputCapture(() => {
+        console.log(hostile);
+        return 'ok';
+      });
+      expect(result).toBe('ok');
+    });
   });
 });

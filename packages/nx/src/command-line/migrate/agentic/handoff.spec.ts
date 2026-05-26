@@ -4,6 +4,7 @@ import { join } from 'path';
 import {
   initRunDir,
   readHandoff,
+  readHandoffWithReason,
   stepHandoffPath,
   waitForValidHandoff,
 } from './handoff';
@@ -168,6 +169,51 @@ describe('handoff', () => {
         status: 'success',
         summary: 'done',
         extras: { changedFiles: ['a.ts'], notes: 'fyi' },
+      });
+    });
+  });
+
+  describe('readHandoffWithReason', () => {
+    it('returns a missing reason when the file does not exist', () => {
+      const result = readHandoffWithReason(join(workspace, 'nope.json'));
+      expect(result).toEqual({ ok: false, reason: 'missing' });
+    });
+
+    it('returns a parse-error reason with detail when JSON is malformed', () => {
+      const file = join(workspace, 'broken.json');
+      writeFileSync(file, '{ not json');
+      const result = readHandoffWithReason(file);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        expect(result.reason).toBe('parse-error');
+        expect(result.detail).toBeTruthy();
+      }
+    });
+
+    it('returns a shape-mismatch reason for a valid JSON without `summary`', () => {
+      const file = join(workspace, 'shape.json');
+      writeFileSync(file, JSON.stringify({ status: 'success' }));
+      const result = readHandoffWithReason(file);
+      expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
+    });
+
+    it('returns a shape-mismatch reason for an unknown `status` value', () => {
+      const file = join(workspace, 'status.json');
+      writeFileSync(file, JSON.stringify({ status: 'maybe', summary: 'x' }));
+      const result = readHandoffWithReason(file);
+      expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
+    });
+
+    it('returns the parsed handoff under `ok` when the file is valid', () => {
+      const file = join(workspace, 'good.json');
+      writeFileSync(
+        file,
+        JSON.stringify({ status: 'success', summary: 'done' })
+      );
+      const result = readHandoffWithReason(file);
+      expect(result).toEqual({
+        ok: true,
+        handoff: { status: 'success', summary: 'done' },
       });
     });
   });

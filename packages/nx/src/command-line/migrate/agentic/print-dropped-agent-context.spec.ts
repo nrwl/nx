@@ -34,6 +34,21 @@ describe('formatDroppedAgentContextForOuterAgent', () => {
     );
   });
 
+  it('escapes XML-special characters in the migration attribute so hostile names cannot break the outer agent parser', () => {
+    const out = formatDroppedAgentContextForOuterAgent({
+      migration: { package: '@nx/has"quote', name: "fix<>&'all" },
+      agentContext: ['hint'],
+    });
+    expect(out).toContain(
+      '<agent_context migration="@nx/has&quot;quote:fix&lt;&gt;&amp;&apos;all">'
+    );
+    // The raw hostile chars `<`, `>`, `"`, and `'` must not appear inside the
+    // attribute value. (`&` is excluded from the check because every escape
+    // sequence starts with it.)
+    const attr = out.match(/migration="([^"]*)"/)![1];
+    expect(attr).not.toMatch(/[<>"']/);
+  });
+
   it('returns an empty string when no usable entries remain after filtering', () => {
     expect(
       formatDroppedAgentContextForOuterAgent({

@@ -52,6 +52,31 @@ describe('opencodeDefinition', () => {
     expect(opencodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
+  // Round-trip guard: the system context is embedded as a JSON-stringified
+  // value under OPENCODE_CONFIG_CONTENT. JSON handles quoting / newlines /
+  // angle-brackets, so hostile workspace paths in the prompt must come back
+  // out unchanged after a JSON.parse round-trip.
+  it.each([
+    ['embedded newlines', 'line1\nline2'],
+    ['equals signs and braces', '{ key: "value" }'],
+    ['double quotes', 'workspace at "/Users/me/work"'],
+    ['angle brackets', 'before <script>after'],
+    ['ampersands', 'a && b'],
+    ['backticks and dollars', '`whoami` $HOME'],
+    ['windows-style path', 'C:\\Users\\me\\My Documents\\ws'],
+  ])(
+    'round-trips hostile system context through OPENCODE_CONFIG_CONTENT (%s)',
+    (_label, hostile) => {
+      const spec = opencodeDefinition.buildInteractive({
+        systemContext: hostile,
+        userPrompt: 'user',
+        workspaceRoot: '/ws',
+      });
+      const parsed = JSON.parse(spec.env!.OPENCODE_CONFIG_CONTENT as string);
+      expect(parsed.agent['nx-migrate'].prompt).toBe(hostile);
+    }
+  );
+
   it('injects the system context via OPENCODE_CONFIG_CONTENT under the transient agent name', () => {
     const spec = opencodeDefinition.buildInteractive({
       systemContext: 'system text',
