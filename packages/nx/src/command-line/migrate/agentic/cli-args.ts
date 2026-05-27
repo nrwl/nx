@@ -1,6 +1,5 @@
-// Yargs-facing helpers for `--agentic`. Kept zero-dep so the command-object
-// can import them without dragging in the rest of the agentic chain on every
-// `nx <anything>` CLI startup.
+// Zero-dep helpers for --agentic — keeps the agentic chain out of every
+// nx CLI startup.
 
 /**
  * Canonical list of agent ids for the migrate agentic flow. Used by the yargs

@@ -16,8 +16,7 @@ export interface SystemPromptContext {
    * e.g. `npx nx`, `pnpm exec nx`, `./nx` (encapsulated install). Passed in
    * explicitly because the right form depends on both the package manager
    * (`npm nx …` doesn't work) and whether the workspace has a root
-   * `package.json` (encapsulated installs use `./nx` / `.\nx.bat`). Compute
-   * via `getRunNxBaseCommand` and hand the result over.
+   * `package.json` (encapsulated installs use `./nx` / `.\nx.bat`).
    */
   nxInvocation: string;
   /**

@@ -393,10 +393,8 @@ async function createRecorder(
   host: NxScopedHost,
   record: {
     loggingQueue: string[];
-    // Optional sink — only the migration path needs the structured change
-    // list (consumed by the agentic validation prompt's `<files_changed>`
-    // block). Regular schematic runs read only `loggingQueue` and shouldn't
-    // pay the allocation per `FileChange`.
+    // Optional sink — only the migration path populates it; other callers
+    // skip the per-FileChange allocation.
     changes?: FileChange[];
     error: boolean;
   },

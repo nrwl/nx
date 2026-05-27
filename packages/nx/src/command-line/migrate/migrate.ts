@@ -1129,9 +1129,8 @@ export async function parseMigrationsOptions(options: {
   const { mode, installedNxVersion } = resolved;
   let { targetPackage, targetVersion } = resolved;
 
-  // Spec §10: prompt or warn when crossing more than one major boundary.
-  // Each major's metadata may have pruned migrations from much-older versions,
-  // so jumping multiple majors at once can silently skip migrations.
+  // Crossing more than one major can silently skip migrations: each
+  // major's metadata may have pruned entries from much-older versions.
   const multiMajorResult = await maybePromptOrWarnMultiMajorMigration({
     mode,
     options,
@@ -1181,9 +1180,8 @@ function assertThirdPartyModeFlagCompatibility(options: {
   }
 }
 
-// Parses the positional, resolves `--mode`, defaults the target package and
-// version when omitted (mode-aware: third-party anchors to the installed
-// canonical, others to `nx@latest`), and enforces the era gate when `--mode`
+// Defaults target package/version mode-aware (third-party → installed
+// canonical, otherwise nx@latest) and enforces the era gate when --mode
 // is explicit.
 async function resolveTargetAndMode(args: {
   positional: string | undefined;
@@ -1269,12 +1267,12 @@ async function resolveTargetAndMode(args: {
 }
 
 // `--mode=third-party` upper-bound gate. The third-party walk follows nx's
-// `packageGroup` (e.g. `@nx/js`, `@nx/angular`); a target or `--to` above the
-// installed version would expand the walk past it and surface third-party
-// bumps that only exist in the newer plugin's history. The first-party set
-// is sourced from the installed nx package's declared `packageGroup`
-// (authoritative for the user's current Nx universe). Legacy era falls back
-// to the hardcoded `LEGACY_NRWL_PACKAGE_GROUP`.
+// `packageGroup`; a target or `--to` above the installed version would
+// expand the walk past it and surface third-party bumps that only exist in
+// the newer plugin's history. The first-party set is sourced from the
+// installed nx package's declared `packageGroup` (authoritative for the
+// user's current Nx universe). Legacy era falls back to the hardcoded
+// `LEGACY_NRWL_PACKAGE_GROUP`.
 function assertThirdPartyTargetBounds(args: {
   targetPackage: string;
   targetVersion: string;
@@ -1972,10 +1970,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let fromOverrides = opts.from;
     let excludeApplied = opts.excludeAppliedMigrations;
     if (mode === 'third-party') {
-      // For third-party, walk the canonical Nx target so cross-plugin third-party
-      // dependencies (e.g. typescript managed by @nx/js but used by @nx/angular)
-      // stay consistent. Force a from-zero walk + exclude-applied so we surface
-      // any third-party updates that may have been skipped previously.
+      // For third-party, walk the canonical Nx target so cross-plugin
+      // third-party dependencies (e.g. typescript managed by @nx/js but
+      // used by @nx/angular) stay consistent.
       const canonical = resolveCanonicalNxPackage(opts.targetVersion);
       walkedTargetPackage = canonical;
       fromOverrides = { [canonical]: '0.0.0' };
@@ -1991,9 +1988,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // `@nx/workspace` is version-synced with `nx` and declares an
       // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
       // `ng-update` field, whereas `nx` declares the full @nx/* plugin
-      // fan-out. Their transitive first-party closures are equivalent, so
-      // when `@nx/workspace` is the target we source the set from `nx`
-      // directly to capture the full plugin set.
+      // fan-out. Their transitive first-party closures are equivalent.
       const sourcePackage =
         walkedTargetPackage === '@nx/workspace' ? 'nx' : walkedTargetPackage;
       const rootMetadata = await fetch(sourcePackage, opts.targetVersion);
@@ -2567,10 +2562,6 @@ export async function executeMigrations(
   // `hasDiffContext` flag in the hybrid-agentic and validation-agentic
   // prompt branches is suppressed (the prompt-only-with-agentic branch
   // doesn't use `hasDiffContext`). See call sites below.
-  //
-  // `package` is tracked alongside `name` so migrations with colliding
-  // names across packages don't conflate (e.g. `@nx/react:update-22-0-0`
-  // and `@nx/angular:update-22-0-0`).
   const pendingMigrations: { package: string; name: string }[] = [];
   // Prompt-only migrations whose agent never ran. Hybrid migrations with a
   // skipped prompt are NOT counted here — their deterministic half still ran.
@@ -2583,8 +2574,7 @@ export async function executeMigrations(
 
   const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
 
-  // Single funnel for per-migration commit attempts. Handles the pending
-  // tracking + back-annotation. Returns `{ sha, failed }`:
+  // Single funnel for per-migration commit attempts. Returns `{ sha, failed }`:
   //   - `failed: false, sha: string`: commit landed cleanly.
   //   - `failed: false, sha: null`: either (a) HEAD-resolve race (commit
   //     landed but `git rev-parse HEAD` failed transiently — the diff
@@ -2619,10 +2609,7 @@ export async function executeMigrations(
     if (result.status === 'committed') {
       // The commit absorbed every pending migration's diff. Back-annotate
       // the earlier outcome records so the failure recap can anchor them,
-      // then clear pending. We back-annotate even when `result.sha` is
-      // null (HEAD-resolve race on the absorbing commit) — the diff is no
-      // longer in the working tree, so prior migrations should not appear
-      // in the "uncommitted" recap list; the sha is simply unrecoverable.
+      // then clear pending.
       //
       // The key is `package:name`; matching on `name` alone would conflate
       // across packages. Guard `!o.committedAsPartOf` so a subsequent
@@ -3149,10 +3136,9 @@ async function runMigrations(
 
   const ranWithChangesCount =
     migrations.length - notRunMigrationsCount - migrationsWithNoChanges.length;
-  // The "applied" tally counts fully-completed migrations — those that left no
-  // deferred work behind. Hybrid migrations whose prompt half was deferred
-  // count as "deferred", not "applied", so the two tally components add up to
-  // the migration total without double-counting.
+  // The "applied" tally counts fully-completed migrations — those that
+  // left no deferred work behind. Hybrid migrations whose prompt half was
+  // deferred count as "deferred", not "applied".
   const appliedCount = migrations.length - skippedPrompts.length;
   const insideAgent = agentic.kind === 'inside-agent';
   const tallyLine = buildTallyBodyLine({
@@ -3172,9 +3158,8 @@ async function runMigrations(
   // Demote `output.success` to `output.warn` when there's uncommitted state
   // retained from failed commits — the run did its work, but it would be
   // misleading to lead with a green "Successfully finished" before the
-  // retained-state block. `.bind(output)` is required: both methods invoke
-  // `this.addNewline()` internally, and assigning the method reference to
-  // a local would otherwise call it with `this === undefined` at runtime.
+  // retained-state block. `.bind(output)` is required: assigning the method
+  // reference to a local would otherwise call it with `this === undefined`.
   const completionLog = (
     retainedAtSuccess.length > 0 ? output.warn : output.success
   ).bind(output);
@@ -3216,10 +3201,8 @@ async function runMigrations(
   }
 
   if (insideAgent) {
-    // Under inside-agent the consumer of the next-steps section is another AI
-    // agent, not a human. Emit a directive block that subsumes deferred
-    // prompts + migration-emitted notes + commit guidance, so the outer agent
-    // has explicit instructions to act on (not just relay).
+    // Under inside-agent, emit a directive block so the outer agent has
+    // explicit instructions to act on, not just relay.
     const directiveLines = buildDirectiveBlockBodyLines({
       skippedPrompts,
       migrationEmittedNextSteps,

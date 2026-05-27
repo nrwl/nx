@@ -528,10 +528,9 @@ describe('runAgentic', () => {
     const child = fakeChild();
     mockSpawn.mockImplementation(() => {
       setImmediate(() => {
-        // No assertion inside `setImmediate`: a throw here is outside
-        // Jest's awaited promise chain and would be silently swallowed.
-        // If `handlers[0]` is undefined, calling it throws TypeError and
-        // the test times out — a visible failure.
+        // No expect inside setImmediate — Jest silently swallows throws
+        // here. A missing handler triggers TypeError + timeout, which is
+        // visible.
         localCapture.handlers[0]('SIGINT');
         setImmediate(() => child.emit('exit', 130, 'SIGINT'));
       });

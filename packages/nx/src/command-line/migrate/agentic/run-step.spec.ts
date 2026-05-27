@@ -67,11 +67,9 @@ describe('runAgenticPromptStep', () => {
   beforeEach(() => {
     mockRunAgentic.mockReset();
     mockGetDefinition.mockReset();
-    // Clear mocks that are created at jest.mock(...) factory time so
-    // assertions about call counts / call args don't see leakage from
-    // earlier tests in the file. `mockReset` would wipe the factory
-    // return value (`detectPackageManager` etc. would start returning
-    // undefined), so use `mockClear` to wipe only the call history.
+    // mockClear (not mockReset) — mockReset wipes the factory return
+    // values set at jest.mock() time, so detectPackageManager etc. would
+    // start returning undefined.
     const { logger } = jest.requireMock('../../../utils/logger') as {
       logger: { info: jest.Mock };
     };

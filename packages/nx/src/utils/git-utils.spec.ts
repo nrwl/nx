@@ -208,9 +208,8 @@ describe('git utils tests', () => {
     });
 
     it('preserves the original git error as `cause` so callers can inspect signal/status/code', () => {
-      // Realistic ChildProcessError shape: a `stderr` Buffer plus a `status`
-      // (exit code) on the thrown object. Without `{ cause: err }` on the
-      // rethrow, callers lose those fields entirely — only the formatted
+      // Without `{ cause: err }` on the rethrow, callers lose .status /
+      // .signal from the original ChildProcessError — only the formatted
       // message survives.
       const originalErr = Object.assign(
         new Error('Command failed: git commit ...'),

@@ -18,9 +18,8 @@ export interface PromptMigrationContext {
  * already lives in the system prompt; this message just identifies the
  * migration and points at the instructions file.
  *
- * XML tags wrap path values and the migration metadata so the agent does not
- * misread them as headers or prose. See `system-prompt.ts` for the rationale
- * behind the structuring convention.
+ * XML tags wrap path values and the migration metadata so the agent does
+ * not misread them as headers or prose.
  */
 export function buildPromptMigrationUserPrompt(
   ctx: PromptMigrationContext

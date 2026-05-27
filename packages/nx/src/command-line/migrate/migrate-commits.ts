@@ -42,9 +42,8 @@ export async function commitMigrationIfRequested(
 ): Promise<CommitResult> {
   if (!shouldCreateCommits) return { status: 'disabled' };
   await installDepsIfChanged();
-  // A migration may legitimately produce no commit-worthy delta — generator
-  // wrote only to gitignored paths, or the prompt half made no change. Detect
-  // that up front so we can log it neutrally instead of as a red error.
+  // Generator may have only touched gitignored paths, or the prompt half
+  // made no change — log neutrally instead of as an error.
   if (!hasUncommittedChanges(root)) {
     logger.info(pc.dim(`- No changes to commit for ${migration.name}.`));
     return { status: 'no-changes' };
@@ -56,8 +55,8 @@ export async function commitMigrationIfRequested(
   try {
     const sha = tryCommitChanges(commitMessage, root);
     if (sha) return { status: 'committed', sha };
-    // `null` return = commit landed but HEAD-resolve failed (see
-    // `tryCommitChanges`). Yellow, not red — degraded-but-correct.
+    // null = commit landed but `git rev-parse HEAD` failed (see
+    // `tryCommitChanges`). Degraded-but-correct — log yellow, not red.
     logger.info(
       pc.yellow(
         `The commit for ${migration.name} was created, but its sha could not be resolved (\`git rev-parse HEAD\` failed transiently). Continuing without recording the sha for this step.`
@@ -124,7 +123,7 @@ export function commitCheckpointBeforeMigrations(
       logger.info(pc.dim(`- Checkpoint commit created: ${sha}`));
       return;
     }
-    // `null` return = commit landed but HEAD-resolve failed (see
+    // null = commit landed but `git rev-parse HEAD` failed (see
     // `tryCommitChanges`). State is captured, just unanchored.
     output.warn({
       title: 'Could not resolve checkpoint commit sha',

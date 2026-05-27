@@ -24,7 +24,7 @@ async function findOnPath(
 ): Promise<string | null> {
   for (const name of binaryNames) {
     // `{ nothrow: true }` avoids the throw-per-missing-binary overhead;
-    // `which@3` swallows EACCES internally via `isexe`'s ignoreErrors.
+    // EACCES on existing-but-unexecutable paths is handled by `isExecutable`.
     const found = await which(name, { nothrow: true });
     if (typeof found === 'string') {
       return found;

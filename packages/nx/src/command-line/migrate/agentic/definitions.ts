@@ -59,8 +59,6 @@ const OPENCODE_TRANSIENT_AGENT_NAME = 'nx-migrate';
 
 function opencodeWellKnownPaths(): string[] {
   if (process.platform === 'win32') {
-    // Windows install paths for OpenCode haven't been verified yet; rely on
-    // PATH detection for now.
     return [];
   }
   const candidates: string[] = [];

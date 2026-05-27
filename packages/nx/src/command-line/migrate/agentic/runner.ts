@@ -83,16 +83,11 @@ export async function runAgentic(
     });
   }
 
-  // Counts user-initiated SIGINTs caught while the agent runs. The agent
-  // owns the terminal and handles its own SIGINT semantics, so we swallow
-  // at the process level. A non-zero count after the agent exits tells the
-  // resolver "the user pressed Ctrl+C" → skip the abort/continue prompt
-  // and abort directly. This isn't just UX: enquirer misbehaves in the
-  // wonky TTY state that follows a SIGINT-killed child (Bug A:
-  // ERR_USE_AFTER_CLOSE during cancel cleanup; Bug B: setRawMode EIO
-  // during prompt initialization). Both surface as EventEmitter errors /
-  // unhandled rejections from async chains an `await` try/catch cannot
-  // intercept, so bypassing enquirer entirely is the safe path.
+  // Counts SIGINTs while the agent runs. Non-zero after exit means the
+  // user pressed Ctrl+C → skip the ambiguous abort/continue prompt, because
+  // enquirer misbehaves in the TTY state left by a SIGINT-killed child
+  // (ERR_USE_AFTER_CLOSE, setRawMode EIO) and the errors surface from async
+  // chains that `await` cannot catch.
   let userInterruptCount = 0;
   const swallowSigint = () => {
     userInterruptCount++;
@@ -128,11 +123,9 @@ export async function runAgentic(
         gracefulExitMs,
         forceKillWaitMs
       );
-      // `closeAgentSession` already bounded its own wait. Bound this one
-      // too so the orchestrator can't hang if the child stays stuck after
-      // SIGKILL / taskkill (e.g. D-state on a hung NFS read). The .then()
-      // callback registered on `exitPromise` above (line 109) keeps
-      // `exitInfo` current if it does resolve later in the same turn.
+      // Extra safety bound so the orchestrator can't hang if the child
+      // stays stuck after SIGKILL / taskkill (e.g. D-state on a hung NFS
+      // read, or taskkill returning before the process actually exits).
       await raceWithTimeout(exitPromise, forceKillWaitMs);
     }
   } finally {
@@ -165,7 +158,6 @@ function exitInfoToCause(info: ExitInfo): AmbiguousCause {
 }
 
 function restoreTermiosAfterAgent(): void {
-  // OPOST is a POSIX termios flag; Windows consoles don't use it.
   if (process.platform === 'win32') return;
   if (!process.stdin.isTTY) return;
   try {
@@ -177,10 +169,9 @@ function restoreTermiosAfterAgent(): void {
       stdio: ['ignore', 'ignore', 'ignore'],
       windowsHide: true,
     });
-    // `\r` → column 0 of the current row.
-    // `\x1B[J` → clear from cursor to end of screen. Wipes any agent TUI
-    //   cells on or below our row that our subsequent log lines won't
-    //   overwrite (e.g., a status footer past where our text wraps).
+    // Carriage-return + clear to end of screen, to wipe any agent TUI
+    // cells below our row that subsequent log lines won't overwrite
+    // (e.g. a status footer past where our text wraps).
     process.stdout.write('\r\x1B[J');
   } catch {
     // best-effort — if stty isn't on PATH or /dev/tty isn't accessible,
@@ -188,11 +179,9 @@ function restoreTermiosAfterAgent(): void {
   }
 }
 
-// Bound on how long we wait for `exitPromise` to settle after force-killing
-// the child. SIGKILL is uncatchable so the kernel reaps within microseconds
-// in the normal case; the bound exists only to escape pathological states
-// (uninterruptible kernel calls, taskkill returning without the child
-// actually exiting) so the migrate orchestrator can't hang forever.
+// Safety bound after force-kill. SIGKILL normally reaps in microseconds;
+// the bound exists for uninterruptible kernel calls or taskkill returning
+// before the process actually exits.
 const FORCE_KILL_WAIT_MS = 500;
 
 /**
@@ -264,21 +253,17 @@ async function forceKillWindowsTree(
   forceKillWaitMs: number
 ): Promise<void> {
   const pid = child.pid;
-  // `child.pid` is undefined only when spawn itself failed (Node docs).
-  // In that case the `error` event already fired, `exitPromise` resolved,
-  // and the early-return guard at the top of `closeAgentSession` should
-  // have short-circuited before we got here. Reaching this branch with
-  // an undefined pid means a narrow race between handoff-detection and
-  // error-event propagation; we cannot taskkill without a pid, so the
-  // best we can do is wait briefly and return — the OS reaps the process
-  // independently if it ever started.
+  // `child.pid` is undefined only when spawn itself failed; the early-return
+  // guard in `closeAgentSession` should short-circuit that path. Reaching
+  // here without a pid means a narrow race between handoff-detection and
+  // error-event propagation — without a pid we can't taskkill, so wait
+  // briefly and return.
   if (pid !== undefined) {
     try {
       execSync(`taskkill /T /F /PID ${pid}`, {
         stdio: 'ignore',
         windowsHide: true,
-        // Bound the taskkill call itself so a hung Windows shell can't
-        // hang us. 2s is generous; taskkill normally completes in ms.
+        // Bound so a hung Windows shell can't block the orchestrator.
         timeout: 2_000,
       });
     } catch {
@@ -311,14 +296,10 @@ interface ExitInfo {
   error?: Error;
 }
 
-// How long to wait after the first `exit`/`error` event before settling, so a
-// complementary second event (e.g. `error` from IPC followed by `exit` from
-// the child process actually terminating) can land in the same `ExitInfo`
-// rather than being dropped. Imperceptible for an interactive agent flow.
-//
-// For an `error`-only path (e.g. spawn ENOENT — Node emits `error` but never
-// `exit`) this timer is the SOLE settlement mechanism. The 10ms wall-clock
-// cost shows up once per failed run; it does NOT compound across migrations.
+// Merge window so a paired exit + error both land in the same ExitInfo
+// (e.g. error from IPC followed by exit when the process actually
+// terminates). For error-only paths like spawn ENOENT — where Node fires
+// error but never exit — this timer is the SOLE settlement mechanism.
 const EXIT_MERGE_WINDOW_MS = 10;
 
 function waitForExit(child: ChildProcess): Promise<ExitInfo> {
@@ -463,22 +444,14 @@ function escapeCmdCommand(arg: string): string {
 }
 
 async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
-  // Blank line keeps the prompt from gluing to the agent's exit message
-  // (e.g. Claude Code's "Resume this session with: claude --resume <id>"),
-  // which would otherwise sit immediately above this question. Use
-  // stderr so the spacer lands in the same stream as `output.warn` and
-  // the enquirer prompt — buffered stdout could otherwise reorder it.
+  // stderr blank line so the spacer lands in the same stream as output.warn
+  // and the enquirer prompt — buffered stdout could otherwise reorder it
+  // and glue the prompt to the agent's trailing exit message.
   process.stderr.write('\n');
-  // Render the cause as an `output.warn` block ABOVE the enquirer prompt
-  // rather than inlining it into the prompt's `message`. Two reasons:
-  // (1) `output.warn`'s NX-prefixed yellow framing is visually distinct
-  //     from the prompt's selection-highlight color, so the user reads the
-  //     cause as a banner, not as part of the question itself.
-  // (2) enquirer's `select` redraw machinery uses different math for
-  //     `clear` (wrap-aware via `cliui`-style width) vs `restore` (raw
-  //     `\n`-split line count) — a multi-line `message` on a narrow
-  //     terminal can leave orphaned cells on arrow-key re-renders. Keeping
-  //     the prompt's `message` single-line sidesteps that asymmetry.
+  // Cause rendered ABOVE the prompt rather than inlined into prompt.message:
+  // enquirer's select redraw uses different math for clear (wrap-aware) vs
+  // restore (raw \n-split count), so a multi-line message can leave orphaned
+  // cells on arrow-key re-renders. Keeping message single-line sidesteps it.
   const causeLines = describeAmbiguousCause(cause);
   if (causeLines.length > 0) {
     output.warn({
@@ -532,12 +505,10 @@ function describeAmbiguousCause(cause: AmbiguousCause): string[] {
   if (cause.exitSignal) {
     lines.push(`Agent was terminated by signal ${cause.exitSignal}.`);
   }
-  // When another cause line already explains why no handoff was produced
-  // (a spawn error, an exit code/signal, an emitted process error), the
-  // bare "No handoff file was written." line is redundant — every other
-  // case is an implicit "and that's why nothing was written". Only emit
-  // it when there is no other explanation. read-error / parse-error /
-  // shape-mismatch are independent diagnostics and always surface.
+  // "No handoff file was written." is redundant when another cause line
+  // already implies it (spawn error, exit code/signal, process error).
+  // Independent diagnostics (read-error, parse-error, shape-mismatch) always
+  // surface — they're not implied by the exit shape.
   const handoffMissingIsRedundant =
     !!cause.spawnError ||
     !!cause.exitError ||

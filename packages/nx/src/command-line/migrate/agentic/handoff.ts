@@ -44,10 +44,9 @@ export function initRunDir(workspaceRoot: string, runId: string): string {
   return dir;
 }
 
-// Windows reserves a fixed set of device names (CON, PRN, AUX, NUL, COM1-9,
-// LPT1-9). Any path segment matching one of these — with or without an
-// extension — refuses to open. A migration named `CON` would otherwise
-// produce `CON.json`, which the agent's handoff write would fail silently.
+// Windows reserved device names fail to open even with an extension —
+// a migration named `CON` would otherwise produce a `CON.json` that the
+// agent can't write to.
 const WINDOWS_RESERVED_NAMES = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\..*)?$/i;
 
 /**
@@ -137,13 +136,9 @@ export function readHandoffWithReason(filePath: string): HandoffReadResult {
   if (status !== 'success' && status !== 'failed') {
     return { ok: false, reason: 'shape-mismatch' };
   }
-  // Rebuild the extras bag on a null-prototype object via `Object.keys`
-  // rather than rest-spreading. `JSON.parse` materializes `__proto__` (and
-  // similar Object.prototype-shadowing keys) as own enumerable properties,
-  // and rest-spread carries them through. Today no caller `Object.assign`s
-  // `extras` into another object so the exposure is adjacency-only, but the
-  // defense costs nothing and prevents a latent prototype-pollution gadget
-  // from existing in the codebase.
+  // Null-prototype object guards against a prototype-pollution gadget:
+  // JSON.parse materializes `__proto__` as an own enumerable property, and
+  // a rest-spread would carry it through to wherever extras gets merged.
   const extras: Record<string, unknown> = Object.create(null);
   for (const key of Object.keys(obj)) {
     if (key === 'status' || key === 'summary') continue;

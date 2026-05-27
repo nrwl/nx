@@ -180,7 +180,7 @@ async function selectAgent(
   // a TTY before resolving an enabled state, so this is defense-in-depth.
   requireInteractiveOrAbort(isInteractive);
 
-  // Blank line for the same reason as `firePromptForAgentic`.
+  // Blank line keeps the prompt from gluing to the preceding output.
   console.log();
   const response = await migratePrompt<{ id: AgentId }>({
     name: 'id',

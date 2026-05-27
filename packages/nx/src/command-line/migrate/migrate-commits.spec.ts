@@ -74,10 +74,8 @@ describe('commitMigrationIfRequested', () => {
       installDeps
     );
     expect(installDeps).toHaveBeenCalledTimes(1);
-    // Embedded `expect` above asserts the ordering when `mockHas` is
-    // invoked, but provides no positive signal that it was invoked at all.
-    // If `commitMigrationIfRequested` ever short-circuits before checking
-    // the working tree, the embedded `expect` would silently never run.
+    // The embedded expect in mockHas never fires if the mock never runs,
+    // so assert call count to catch a short-circuit before that point.
     expect(mockHas).toHaveBeenCalledTimes(1);
   });
 
@@ -181,9 +179,8 @@ describe('commitMigrationIfRequested', () => {
   it('returns failed with the real git stderr from tryCommitChanges; message tells the user a future commit will absorb the diff', async () => {
     mockHas.mockReturnValue(true);
     mockTry.mockImplementation(() => {
-      // Realistic --no-verify-compatible failure: `tryCommitChanges` passes
-      // --no-verify so client-side hooks cannot fire; gpg-sign failures
-      // (driven by `commit.gpgsign`) are not bypassed by --no-verify.
+      // GPG signing failures aren't bypassed by --no-verify (unlike
+      // client-side hooks).
       throw new Error('error: gpg failed to sign the data');
     });
 

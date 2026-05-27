@@ -406,15 +406,15 @@ export function commitChanges(
 }
 
 /**
- * Sibling of `commitChanges` that always throws on git failure with the real
- * stderr attached. Use this when the caller needs to distinguish hook
- * rejection / GPG signing failures / LFS lock errors from a successful no-op.
- * Callers should pre-check `hasUncommittedChanges` to avoid the "nothing to
- * commit" rejection (which `git commit` exits non-zero for).
+ * Throws on git failure with the real stderr attached. Use this when the
+ * caller needs to distinguish hook rejection / GPG signing failures / LFS
+ * lock errors from a successful no-op. Callers should pre-check
+ * `hasUncommittedChanges` to avoid the "nothing to commit" rejection
+ * (which `git commit` exits non-zero for).
  *
- * Returns `null` (rather than throwing) when the commit itself succeeded but
- * `git rev-parse HEAD` failed transiently — by contract the diff is no
- * longer in the working tree, so callers must NOT report it as such.
+ * Returns `null` (rather than throwing) when the commit itself succeeded
+ * but `git rev-parse HEAD` failed transiently — by contract the diff is
+ * no longer in the working tree, so callers must NOT report it as such.
  */
 export function tryCommitChanges(
   commitMessage: string,
@@ -441,9 +441,8 @@ export function tryCommitChanges(
       .map((s) => s?.trim())
       .filter(Boolean)
       .join('\n');
-    // `{ cause }` carries the original `ChildProcessError` (with `.signal`,
-    // `.status`, `.code`) through to any caller that wants to inspect it.
-    // Without it we'd drop everything but stderr/stdout text.
+    // `{ cause }` preserves structured fields (.signal, .status, .code)
+    // for callers to inspect; otherwise only stderr/stdout text survives.
     throw new Error(
       detail || (err instanceof Error ? err.message : String(err)),
       { cause: err }

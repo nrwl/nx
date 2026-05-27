@@ -34,10 +34,8 @@ async function runMigrationProcess() {
       windowsHide: true,
     }).trim();
 
-    // `ChangedDepInstaller` snapshots package.json deps at construction time
-    // so we can detect post-migration dep drift and run a single install
-    // regardless of whether commits are on (commit path installs internally
-    // before commit) or off (we install explicitly afterward).
+    // Snapshot package.json deps now so we can detect post-migration drift
+    // and run a single install, whether commits are on or off.
     const installer = new ChangedDepInstaller(workspacePath);
     const installDepsIfChanged = () => installer.installDepsIfChanged();
 

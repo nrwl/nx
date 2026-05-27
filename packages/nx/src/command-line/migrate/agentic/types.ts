@@ -64,12 +64,10 @@ export interface HandoffFile {
  * agentic step. The four kinds mirror the (a)/(b)/(c) matrix plus the user's
  * choice when (c) fires.
  *
- * `ambiguous-abort.causeSummary`: pre-rendered explanation lines describing
- * what happened underneath. Populated only when the user pressed Ctrl+C and
- * we suspect a crash also contributed (we bypass the ambiguous prompt in
- * that path, so the user never sees the in-prompt cause display). When the
- * abort came from the user explicitly choosing "abort" at the prompt, the
- * cause was already shown there and `causeSummary` is omitted.
+ * `ambiguous-abort.causeSummary`: pre-rendered explanation lines. Populated
+ * when Ctrl+C bypasses the ambiguous prompt (so the cause was never shown
+ * inline) and forwarded so the caller can surface it. Omitted when the user
+ * chose "abort" at the prompt — the cause was already shown there.
  */
 export type HandoffOutcome =
   | { kind: 'success'; summary: string; extras?: Record<string, unknown> }
