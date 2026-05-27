@@ -3172,9 +3172,12 @@ async function runMigrations(
   // Demote `output.success` to `output.warn` when there's uncommitted state
   // retained from failed commits — the run did its work, but it would be
   // misleading to lead with a green "Successfully finished" before the
-  // retained-state block.
-  const completionLog =
-    retainedAtSuccess.length > 0 ? output.warn : output.success;
+  // retained-state block. `.bind(output)` is required: both methods invoke
+  // `this.addNewline()` internally, and assigning the method reference to
+  // a local would otherwise call it with `this === undefined` at runtime.
+  const completionLog = (
+    retainedAtSuccess.length > 0 ? output.warn : output.success
+  ).bind(output);
   const completionTitlePrefix =
     retainedAtSuccess.length > 0
       ? 'Finished running migrations with uncommitted state retained'
