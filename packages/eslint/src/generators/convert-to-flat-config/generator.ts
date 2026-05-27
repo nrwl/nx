@@ -20,6 +20,7 @@ import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { hasEslintPlugin } from '../utils/plugin';
 import { basename, join } from 'path';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import {
   eslintConfigPrettierVersion,
   eslintrcVersion,
@@ -35,6 +36,8 @@ export async function convertToFlatConfigGenerator(
   tree: Tree,
   options: ConvertToFlatConfigGeneratorSchema
 ): Promise<void | GeneratorCallback> {
+  assertSupportedEslintVersion(tree);
+
   const eslintFile = findEslintFile(tree);
   if (!eslintFile) {
     throw new Error('Could not find root eslint file');

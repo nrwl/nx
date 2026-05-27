@@ -15,6 +15,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { nxVersion, versions } from '../../utils/versions';
 import {
   determineEslintConfigFormat,
@@ -93,6 +94,8 @@ export async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedEslintVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

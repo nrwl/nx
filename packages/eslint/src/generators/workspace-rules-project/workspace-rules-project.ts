@@ -21,8 +21,9 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { join } from 'path';
-import { nxVersion } from '../../utils/versions';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';
+import { nxVersion } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
@@ -38,6 +39,8 @@ export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
+  assertSupportedEslintVersion(tree);
+
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion

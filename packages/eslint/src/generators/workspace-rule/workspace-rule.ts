@@ -16,6 +16,7 @@ import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { useFlatConfig } from '../../utils/flat-config';
 import { versions } from '../../utils/versions';
 
@@ -28,6 +29,8 @@ export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
+  assertSupportedEslintVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const flatConfig = useFlatConfig(tree);
