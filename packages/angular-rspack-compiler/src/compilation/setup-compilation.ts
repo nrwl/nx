@@ -27,6 +27,7 @@ export interface SetupCompilationOptions {
   hasServer?: boolean;
   includePaths?: string[];
   sass?: Sass;
+  watch?: boolean;
 }
 
 export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
@@ -113,7 +114,7 @@ export async function setupCompilation(
       tailwindConfiguration,
     },
     options.inlineStyleLanguage,
-    false
+    !!options.watch
   );
 
   return {
