@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jetify-com/devbox/0.12.0/.schema/devbox.schema.json",
+  "packages": [
+    "nodejs_20",
+    "pnpm",
+    "rustup",
+    "jdk",
+    "git",
+    "pkg-config"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo 'Welcome to the Nx devbox environment!'",
+      "echo 'Run: pnpm install && pnpm build' to get started"
+    ],
+    "scripts": {
+      "install": "pnpm install",
+      "build": "pnpm build",
+      "test": "nx run-many -t test",
+      "check": "pnpm run check"
+    }
+  }
+}

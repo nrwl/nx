@@ -48,6 +48,10 @@ out
 # Angular Cache
 .angular
 
+# Nix build result symlinks
+/result
+/result-*
+
 # Astro Cache
 .astro
 

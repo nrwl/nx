@@ -31,6 +31,20 @@ Nx is a monorepo solution for TypeScript and polyglot codebases. Built with Rust
 
 Visit the [Nx quickstart docs](https://nx.dev/docs/quickstart) to get started.
 
+## Nix
+
+This repository provides a Nix flake for reproducible development environments.
+
+```bash
+# Enter the development shell
+nix develop github:levonk/nx
+
+# Or with Devbox
+devbox shell
+```
+
+The flake exposes `devShells.<system>.default` with Node.js, pnpm, Rust, and Java preconfigured.
+
 ## Why Nx?
 
 - **Incremental by design -** Run `npx nx init` in any npm/pnpm/yarn workspace. Nx picks up your existing `package.json` scripts, caches their outputs, and runs only what's

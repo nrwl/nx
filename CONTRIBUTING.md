@@ -39,6 +39,22 @@ This repo contains a mix of different technologies, including:
 
 ## Development Workstation Setup
 
+### Option 1: Nix (Flakes) or Devbox
+
+If you have [Nix](https://nixos.org/) with flakes enabled, or [Devbox](https://www.jetify.com/devbox), you can use the provided flake for a reproducible development environment:
+
+```bash
+# Using Nix
+nix develop github:levonk/nx
+
+# Using Devbox
+devbox shell
+```
+
+This provides Node.js 20, pnpm, Rust, Java, and other required tools.
+
+### Option 2: VSCode Dev Containers
+
 If you are using `VSCode`, and provided you have [Docker](https://docker.com) installed on your machine, then you can leverage [Dev Containers](https://containers.dev) through this [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers), to easily setup your development environment, with everything needed to contribute to Nx, already installed (namely `NodeJS`, `Yarn`, `Rust`, `Cargo`, plus some useful extensions like `Nx Console`).
 
 To do so, simply:
