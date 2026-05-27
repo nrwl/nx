@@ -34,6 +34,6 @@ export {
   getTypeScriptEslintVersionToInstall,
 } from './src/utils/version-utils';
 
-export { eslint9__typescriptESLintVersion } from './src/utils/versions';
+export { typescriptESLintVersion } from './src/utils/versions';
 
 export type { Schema } from './src/executors/lint/schema';

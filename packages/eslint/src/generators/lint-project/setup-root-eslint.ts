@@ -6,11 +6,9 @@ import {
 } from '@nx/devkit';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
-  eslint9__eslintVersion,
-  eslint9__typescriptESLintVersion,
   eslintConfigPrettierVersion,
   nxVersion,
-  typescriptESLintVersion,
+  versions,
 } from '../../utils/versions';
 import {
   getGlobalEsLintConfiguration,
@@ -58,18 +56,21 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
     tree.write('.eslintignore', 'node_modules\n');
   }
 
-  return !options.skipPackageJson
-    ? addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@nx/eslint-plugin': nxVersion,
-          '@typescript-eslint/parser': typescriptESLintVersion,
-          '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
-        }
-      )
-    : () => {};
+  if (options.skipPackageJson) {
+    return () => {};
+  }
+
+  const { typescriptESLintVersion } = versions(tree);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@nx/eslint-plugin': nxVersion,
+      '@typescript-eslint/parser': typescriptESLintVersion,
+      '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
+      'eslint-config-prettier': eslintConfigPrettierVersion,
+    }
+  );
 }
 
 function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
@@ -81,17 +82,20 @@ function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
     )
   );
 
-  return !options.skipPackageJson
-    ? addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@eslint/js': eslint9__eslintVersion,
-          '@nx/eslint-plugin': nxVersion,
-          eslint: eslint9__eslintVersion,
-          'eslint-config-prettier': eslintConfigPrettierVersion,
-          'typescript-eslint': eslint9__typescriptESLintVersion,
-        }
-      )
-    : () => {};
+  if (options.skipPackageJson) {
+    return () => {};
+  }
+
+  const { eslintVersion, typescriptESLintVersion } = versions(tree);
+  return addDependenciesToPackageJson(
+    tree,
+    {},
+    {
+      '@eslint/js': eslintVersion,
+      '@nx/eslint-plugin': nxVersion,
+      eslint: eslintVersion,
+      'eslint-config-prettier': eslintConfigPrettierVersion,
+      'typescript-eslint': typescriptESLintVersion,
+    }
+  );
 }

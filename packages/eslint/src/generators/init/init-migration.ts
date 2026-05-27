@@ -20,7 +20,7 @@ import {
   getGlobalFlatEslintConfiguration,
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
-import { eslintVersion, nxVersion } from '../../utils/versions';
+import { nxVersion, versions } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
@@ -65,6 +65,7 @@ export function migrateConfigToMonorepoStyle(
   } else {
     if (useFlatConfig(tree)) {
       // we need this for the compat
+      const { eslintVersion } = versions(tree);
       addDependenciesToPackageJson(
         tree,
         {},

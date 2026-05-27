@@ -3,14 +3,14 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { getDeclaredPackageVersion } from '@nx/devkit/internal';
 import { gte, lt } from 'semver';
-import { getInstalledPackageVersion } from '../../utils/version-utils';
 
 export default async function (tree: Tree): Promise<GeneratorCallback> {
   const devDependencies: Record<string, string> = {};
 
   const checkPackageAndMigrate = (pkgName: string) => {
-    const pkgVersion = getInstalledPackageVersion(pkgName, tree);
+    const pkgVersion = getDeclaredPackageVersion(tree, pkgName);
     if (!!pkgVersion && gte(pkgVersion, '8.0.0') && lt(pkgVersion, '8.13.0')) {
       devDependencies[pkgName] = '^8.13.0';
     }
