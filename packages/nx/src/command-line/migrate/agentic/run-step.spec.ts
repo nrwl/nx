@@ -1,5 +1,5 @@
 jest.mock('./runner', () => ({ runAgentic: jest.fn() }));
-jest.mock('./registry', () => ({ getAgentDefinition: jest.fn() }));
+jest.mock('./definitions', () => ({ getAgentDefinition: jest.fn() }));
 jest.mock('./handoff', () => ({
   ...jest.requireActual('./handoff'),
   mkdirSafely: jest.fn(),
@@ -19,7 +19,7 @@ jest.mock('../../../utils/child-process', () => ({
 }));
 
 import { runAgentic } from './runner';
-import { getAgentDefinition } from './registry';
+import { getAgentDefinition } from './definitions';
 import { runAgenticPromptStep } from './run-step';
 import {
   DetectedInstalledAgent,

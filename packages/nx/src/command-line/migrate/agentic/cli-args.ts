@@ -1,7 +1,20 @@
-// Shape-only normalization of --agentic; validation of agent-id strings is
-// done upstream in the yargs `.check()` chain. Kept zero-dep so the yargs
-// command-object can import it without dragging in the rest of the agentic
-// chain on every `nx <anything>` CLI startup.
+// Yargs-facing helpers for `--agentic`. Kept zero-dep so the command-object
+// can import them without dragging in the rest of the agentic chain on every
+// `nx <anything>` CLI startup.
+
+/**
+ * Canonical list of agent ids for the migrate agentic flow. Used by the yargs
+ * layer for `--agentic` validation and by the runtime as the source of truth
+ * for the {@link AgentId} union.
+ */
+export const AGENT_IDS = ['claude-code', 'codex', 'opencode'] as const;
+
+export type AgentId = (typeof AGENT_IDS)[number];
+
+/**
+ * Shape-only normalization of `--agentic`; validation of agent-id strings is
+ * done upstream in the yargs `.check()` chain.
+ */
 export function coerceAgenticArg(value: unknown): string | boolean | undefined {
   if (value === undefined) return undefined;
   // yargs collects repeated occurrences into an array; error rather than

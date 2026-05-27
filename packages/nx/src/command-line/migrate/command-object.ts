@@ -2,8 +2,7 @@ import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
-import { AGENT_IDS } from './agentic/agent-ids';
-import { coerceAgenticArg } from './agentic/coerce-arg';
+import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',

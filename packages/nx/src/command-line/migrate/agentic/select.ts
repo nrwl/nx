@@ -2,7 +2,7 @@ import { output } from '../../../utils/output';
 import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
-import { AGENT_DEFINITIONS } from './registry';
+import { AGENT_DEFINITIONS } from './definitions';
 import { AgentId, DetectedInstalledAgent, ResolvedAgentic } from './types';
 
 /** Possible values for `--agentic` after yargs normalization. */

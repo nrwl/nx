@@ -13,7 +13,7 @@ import { buildGenericValidationUserPrompt } from './prompts/generic-validation';
 import { buildHybridPromptUserPrompt } from './prompts/hybrid-prompt-migration';
 import { buildPromptMigrationUserPrompt } from './prompts/prompt-migration';
 import { AgenticPromptMode, buildSystemPrompt } from './prompts/system-prompt';
-import { getAgentDefinition } from './registry';
+import { getAgentDefinition } from './definitions';
 import { runAgentic } from './runner';
 import { EnabledResolvedAgentic, HandoffOutcome } from './types';
 

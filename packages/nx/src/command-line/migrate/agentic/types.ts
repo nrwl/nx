@@ -1,4 +1,4 @@
-import type { AgentId } from './agent-ids';
+import type { AgentId } from './cli-args';
 export type { AgentId };
 
 /**
