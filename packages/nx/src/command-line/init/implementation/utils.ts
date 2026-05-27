@@ -257,6 +257,13 @@ export function updateGitIgnore(root: string) {
       }
       lines.push('.nx/workspace-data');
     }
+    if (!contents.includes('.nx/migrate-runs')) {
+      if (!sepIncluded) {
+        lines.push('\n');
+        sepIncluded = true;
+      }
+      lines.push('.nx/migrate-runs');
+    }
 
     writeFileSync(ignorePath, lines.join('\n'), 'utf-8');
   } catch {}

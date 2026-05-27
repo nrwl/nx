@@ -171,6 +171,11 @@
       "version": "23.0.0-beta.13",
       "description": "Converts nx.json `targetDefaults` from the legacy record shape to the new filtered array shape.",
       "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array"
+    },
+    "23-0-0-add-migrate-runs-to-git-ignore": {
+      "version": "23.0.0-beta.18",
+      "description": "Adds .nx/migrate-runs to .gitignore",
+      "implementation": "./dist/src/migrations/update-23-0-0/add-migrate-runs-to-git-ignore"
     }
   }
 }

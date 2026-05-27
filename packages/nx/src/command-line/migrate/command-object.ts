@@ -2,6 +2,7 @@ import { Argv, CommandModule } from 'yargs';
 import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
+import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -28,9 +29,9 @@ export const yargsInternalMigrateCommand: CommandModule = {
     ),
 };
 
-function withMigrationOptions(yargs: Argv) {
-  const defaultCommitPrefix = 'chore: [nx migration] ';
+export const DEFAULT_MIGRATION_COMMIT_PREFIX = 'chore: [nx migration] ';
 
+function withMigrationOptions(yargs: Argv) {
   return withVerbose(yargs)
     .positional('packageAndVersion', {
       describe: `The target package and version (e.g, @nx/workspace@16.0.0).`,
@@ -59,13 +60,12 @@ function withMigrationOptions(yargs: Argv) {
       describe: 'Automatically create a git commit after each migration runs.',
       type: 'boolean',
       alias: ['C'],
-      default: false,
     })
     .option('commitPrefix', {
       describe:
         'Commit prefix to apply to the commit for each migration, when --create-commits is enabled.',
       type: 'string',
-      default: defaultCommitPrefix,
+      default: DEFAULT_MIGRATION_COMMIT_PREFIX,
     })
     .option('interactive', {
       describe:
@@ -96,6 +96,16 @@ function withMigrationOptions(yargs: Argv) {
       type: 'string',
       choices: ['direct', 'gradual'],
     })
+    .option('agentic', {
+      describe:
+        'Enable the agentic flow for prompt-based migrations and AI-driven review. Pass `--agentic=<agent>` to pin a specific agent (claude-code, codex, or opencode). Pass `--agentic=false` or `--no-agentic` to disable.',
+      coerce: coerceAgenticArg,
+    })
+    .option('validate', {
+      describe:
+        'When `--agentic` resolves to an enabled agent, run agent-driven validation after generator-only migrations that have no `prompt:` field. Defaults to on; pass `--no-validate` to opt out. Has no effect when `--agentic` is disabled, when running inside an outer agent, or when running non-interactively without an explicit agent.',
+      type: 'boolean',
+    })
     .check(
       ({
         createCommits,
@@ -103,8 +113,15 @@ function withMigrationOptions(yargs: Argv) {
         from,
         excludeAppliedMigrations,
         mode,
+        agentic,
       }) => {
-        if (!createCommits && commitPrefix !== defaultCommitPrefix) {
+        const agenticMayEnableCommits =
+          agentic !== undefined && agentic !== false && createCommits !== false;
+        if (
+          createCommits !== true &&
+          !agenticMayEnableCommits &&
+          commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
+        ) {
           throw new Error(
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'
           );
@@ -112,6 +129,16 @@ function withMigrationOptions(yargs: Argv) {
         if (excludeAppliedMigrations && !from && mode !== 'third-party') {
           throw new Error(
             'Error: Excluding migrations that should have been previously applied requires --from to be set'
+          );
+        }
+        if (
+          typeof agentic === 'string' &&
+          !(AGENT_IDS as readonly string[]).includes(agentic)
+        ) {
+          throw new Error(
+            `Error: Invalid --agentic value "${agentic}". Allowed: ${AGENT_IDS.join(
+              ', '
+            )}, true, false.`
           );
         }
         return true;

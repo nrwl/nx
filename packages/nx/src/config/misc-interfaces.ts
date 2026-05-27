@@ -77,9 +77,29 @@ export type PackageJsonUpdates = {
  * Returning a string[] from the migration function will be interpreted as
  * a list of next steps to be displayed to the user.
  */
+/**
+ * Structured return value for a migration function.
+ *
+ * - `nextSteps`: workspace-wide notes surfaced to the human in the `nx migrate`
+ *   post-run summary. Same audience as the legacy `string[]` return.
+ * - `agentContext`: for hybrid migrations (`implementation` + `prompt`). When the
+ *   paired prompt runs under `--agentic`, these strings are delivered to the
+ *   agent as part of its outer prompt. When no agent runs, this bucket is
+ *   silently dropped — it is agent-only by contract. Content meant for the
+ *   human in any scenario belongs in `nextSteps`.
+ */
+export interface MigrationReturnObject {
+  nextSteps?: string[];
+  agentContext?: string[];
+}
+
 export type Migration = (
   tree: Tree
-) => void | Promise<void> | string[] | Promise<string[]>;
+) =>
+  | void
+  | string[]
+  | MigrationReturnObject
+  | Promise<void | string[] | MigrationReturnObject>;
 
 export interface MigrationsJsonEntry {
   version: string;

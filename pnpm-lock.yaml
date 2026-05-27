@@ -198,6 +198,9 @@ catalogs:
     webpack-dev-server:
       specifier: ^5.2.1
       version: 5.2.3
+    which:
+      specifier: ^3.0.1
+      version: 3.0.1
     yargs:
       specifier: ^17.6.2
       version: 17.7.2
@@ -843,6 +846,9 @@ importers:
       '@types/tmp':
         specifier: ^0.2.6
         version: 0.2.6
+      '@types/which':
+        specifier: ^3.0.4
+        version: 3.0.4
       '@types/yargs':
         specifier: 17.0.10
         version: 17.0.10
@@ -3377,6 +3383,9 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
+      which:
+        specifier: 'catalog:'
+        version: 3.0.1
       yaml:
         specifier: ^2.8.3
         version: 2.9.0
@@ -12532,6 +12541,9 @@ packages:
 
   '@types/use-sync-external-store@0.0.3':
     resolution: {integrity: sha512-EwmlvuaxPNej9+T4v5AuBPJa2x2UOJVdjCtDHgcDqitUeOtjnJKJ+apYjVcAoBEMjKW1VVFGZLUb5+qqa09XFA==}
+
+  '@types/which@3.0.4':
+    resolution: {integrity: sha512-liyfuo/106JdlgSchJzXEQCVArk0CvevqPote8F8HgWgJ3dRCcTHgJIsLDuee0kxk/mhbInzIZk3QWSZJ8R+2w==}
 
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
@@ -35004,6 +35016,8 @@ snapshots:
   '@types/unist@3.0.3': {}
 
   '@types/use-sync-external-store@0.0.3': {}
+
+  '@types/which@3.0.4': {}
 
   '@types/ws@8.18.1':
     dependencies:

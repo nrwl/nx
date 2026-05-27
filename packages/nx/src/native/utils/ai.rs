@@ -81,6 +81,21 @@ fn is_vscode_ai() -> bool {
     }
 }
 
+/// Detects if the current process is being run by the OpenAI Codex CLI.
+///
+/// `CODEX_THREAD_ID` is set per session by the Codex CLI (verified against
+/// `openai/codex` Rust source). Do not use `CODEX_TUI_RECORD_SESSION` — that
+/// variable is *read* by Codex, not set by it.
+fn is_codex_ai() -> bool {
+    match env::var("CODEX_THREAD_ID") {
+        Ok(_) => {
+            debug!("Codex AI detected via CODEX_THREAD_ID environment variable");
+            true
+        }
+        Err(_) => false,
+    }
+}
+
 /// Detects which AI agent is running and returns its name.
 /// Returns None if no agent is detected or when running inside the Nx daemon.
 /// Filtering against supported agents should be done on the TypeScript side.
@@ -96,6 +111,8 @@ pub fn detect_ai_agent() -> Option<String> {
         Some("cursor".to_string())
     } else if is_opencode_ai() {
         Some("opencode".to_string())
+    } else if is_codex_ai() {
+        Some("codex".to_string())
     } else if is_gemini_ai() {
         Some("gemini".to_string())
     } else if is_vscode_ai() {
@@ -121,6 +138,7 @@ pub fn is_ai_agent() -> bool {
         || is_replit_ai()
         || is_cursor_ai()
         || is_opencode_ai()
+        || is_codex_ai()
         || is_gemini_ai()
         || is_vscode_ai();
 
@@ -144,6 +162,7 @@ mod tests {
             "CURSOR_TRACE_ID",
             "COMPOSER_NO_INTERACTION",
             "OPENCODE",
+            "CODEX_THREAD_ID",
             "GEMINI_CLI",
             "VSCODE_AGENT",
         ];
@@ -164,6 +183,7 @@ mod tests {
         let original_cursor_trace_id = env::var("CURSOR_TRACE_ID").ok();
         let original_composer_no_interaction = env::var("COMPOSER_NO_INTERACTION").ok();
         let original_opencode = env::var("OPENCODE").ok();
+        let original_codex_thread_id = env::var("CODEX_THREAD_ID").ok();
         let original_gemini_cli = env::var("GEMINI_CLI").ok();
         let original_vscode_agent = env::var("VSCODE_AGENT").ok();
 
@@ -186,6 +206,10 @@ mod tests {
         assert!(
             !is_opencode_ai(),
             "Should not detect OpenCode AI without OPENCODE"
+        );
+        assert!(
+            !is_codex_ai(),
+            "Should not detect Codex AI without CODEX_THREAD_ID"
         );
         assert!(
             !is_gemini_ai(),
@@ -258,6 +282,21 @@ mod tests {
         );
         unsafe {
             env::remove_var("OPENCODE");
+        }
+
+        // Test Codex AI detection
+        unsafe {
+            env::set_var("CODEX_THREAD_ID", "thread-abc");
+        }
+        assert!(is_codex_ai(), "Should detect Codex AI with CODEX_THREAD_ID");
+        assert!(is_ai_agent(), "Main function should detect Codex AI");
+        assert_eq!(
+            detect_ai_agent(),
+            Some("codex".to_string()),
+            "detect_ai_agent should return codex"
+        );
+        unsafe {
+            env::remove_var("CODEX_THREAD_ID");
         }
 
         // Test Cursor AI detection with wrong PAGER
@@ -370,6 +409,11 @@ mod tests {
         if let Some(val) = original_opencode {
             unsafe {
                 env::set_var("OPENCODE", val);
+            }
+        }
+        if let Some(val) = original_codex_thread_id {
+            unsafe {
+                env::set_var("CODEX_THREAD_ID", val);
             }
         }
         if let Some(val) = original_gemini_cli {
