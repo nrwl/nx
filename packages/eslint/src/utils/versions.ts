@@ -33,7 +33,7 @@ type CompatVersions = 8;
 const versionMap: Record<CompatVersions, EslintVersions> = {
   8: {
     eslintVersion: '~8.57.0',
-    typescriptESLintVersion: '^7.16.0',
+    typescriptESLintVersion: '^8.40.0',
   },
 };
 
@@ -43,10 +43,10 @@ export function versions(tree: Tree): EslintVersions {
     const eslintMajorVersion = major(installedEslintVersion);
     return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
   }
-  // No ESLint declared yet — honor the user's flat-config preference for the
-  // fresh-install lane. Legacy (eslintrc) workspaces need the v8/v7 lane
-  // because `@typescript-eslint/rule-tester` v8+ dropped eslintrc support
-  // entirely and v7 rule-tester is pinned to ESLint v8.
+  // No ESLint declared yet — fresh installs honor the user's flat-config
+  // preference. Without flat config, install ESLint v8 (eslintrc lane); with
+  // flat config, install ESLint v9. Both lanes ship typescript-eslint v8 to
+  // match the `@nx/eslint-plugin` `@typescript-eslint/parser` peer.
   return useFlatConfig(tree) ? latestVersions : versionMap[8];
 }
 
