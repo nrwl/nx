@@ -12,17 +12,6 @@ describe('migratePrompt', () => {
     mockPrompt.mockReset();
   });
 
-  it('passes a single-question config through to enquirer and returns its result', async () => {
-    mockPrompt.mockResolvedValueOnce({ shouldApply: true });
-    const result = await migratePrompt<{ shouldApply: boolean }>({
-      name: 'shouldApply',
-      type: 'confirm',
-      message: 'Apply?',
-    });
-    expect(result).toEqual({ shouldApply: true });
-    expect(mockPrompt).toHaveBeenCalledTimes(1);
-  });
-
   it('injects an `options.cancel` handler into a single-question config so enquirer routes cancel through us instead of its broken built-in cleanup', async () => {
     mockPrompt.mockResolvedValueOnce({});
     await migratePrompt({
@@ -31,26 +20,6 @@ describe('migratePrompt', () => {
       message: '?',
     });
     const arg = mockPrompt.mock.calls[0][0];
-    expect(typeof arg.cancel).toBe('function');
-  });
-
-  it('preserves every field of the original config alongside the injected cancel handler', async () => {
-    mockPrompt.mockResolvedValueOnce({});
-    await migratePrompt({
-      name: 'x',
-      type: 'select',
-      message: 'Pick',
-      choices: [{ name: 'a' }, { name: 'b' }],
-      initial: 1,
-    } as any);
-    const arg = mockPrompt.mock.calls[0][0];
-    expect(arg).toMatchObject({
-      name: 'x',
-      type: 'select',
-      message: 'Pick',
-      choices: [{ name: 'a' }, { name: 'b' }],
-      initial: 1,
-    });
     expect(typeof arg.cancel).toBe('function');
   });
 

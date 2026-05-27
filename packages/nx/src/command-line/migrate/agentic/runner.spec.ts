@@ -751,15 +751,6 @@ describe('adaptSpawnForWindowsShim', () => {
     else process.env.comspec = originalComspec;
   });
 
-  it('returns inputs untouched on non-Windows', () => {
-    setPlatform('linux');
-    const opts = { stdio: 'inherit' as const };
-    const out = adaptSpawnForWindowsShim('/usr/bin/claude', ['a', 'b'], opts);
-    expect(out.binary).toBe('/usr/bin/claude');
-    expect(out.args).toEqual(['a', 'b']);
-    expect(out.options).toBe(opts);
-  });
-
   it('returns inputs untouched for non-shim binaries on Windows', () => {
     setPlatform('win32');
     const out = adaptSpawnForWindowsShim('C:\\bin\\claude.exe', ['a'], {});

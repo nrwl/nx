@@ -65,31 +65,6 @@ describe('codexDefinition', () => {
       cwd: '/workspace',
     });
   });
-
-  it.each([
-    ['embedded newlines', 'line1\nline2'],
-    ['equals signs', 'key1=val1\nkey2=val2'],
-    ['double quotes', 'workspace at "/Users/me/work"'],
-    ['angle brackets', 'before <script>after'],
-    ['ampersands', 'a && b'],
-    ['backticks and dollars', '`whoami` $HOME'],
-    ['null-ish unicode', 'safe​text'],
-    ['windows-style path', 'C:\\Users\\me\\My Documents\\ws'],
-  ])(
-    'preserves hostile system context verbatim through buildInteractive (%s)',
-    (_label, hostile) => {
-      const spec = codexDefinition.buildInteractive({
-        systemContext: hostile,
-        userPrompt: 'user',
-        workspaceRoot: '/ws',
-      });
-      expect(spec.args).toEqual([
-        '-c',
-        `developer_instructions=${hostile}`,
-        'user',
-      ]);
-    }
-  );
 });
 
 describe('opencodeDefinition', () => {

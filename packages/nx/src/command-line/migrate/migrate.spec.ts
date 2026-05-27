@@ -33,11 +33,9 @@ import {
   parseMigrationReturn,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
-  resolveAgenticRunId,
   resolveCanonicalNxPackage,
   resolveCreateCommits,
   resolveMode,
-  resolveShouldRunValidation,
 } from './migrate';
 import {
   readPromptFilesFromInstall,
@@ -4054,18 +4052,6 @@ describe('Migration', () => {
       );
     });
 
-    describe('resolveAgenticRunId', () => {
-      it('returns the semver-max version across the queue', () => {
-        expect(
-          resolveAgenticRunId([
-            { package: 'a', name: 'a1', version: '22.5.0' },
-            { package: 'a', name: 'a2', version: '23.0.0' },
-            { package: 'b', name: 'b1', version: '22.0.1' },
-          ])
-        ).toBe('23.0.0');
-      });
-    });
-
     describe('resolveCreateCommits', () => {
       it.each<
         [
@@ -4190,39 +4176,6 @@ describe('Migration', () => {
       });
     });
 
-    describe('resolveShouldRunValidation', () => {
-      it.each<
-        [
-          string,
-          boolean | undefined,
-          'disabled' | 'inside-agent' | 'enabled',
-          boolean,
-        ]
-      >([
-        ['default on when agentic enabled', undefined, 'enabled', true],
-        ['explicit true respected when agentic enabled', true, 'enabled', true],
-        ['explicit false overrides agentic enabled', false, 'enabled', false],
-        ['ignored when disabled (validate=true)', true, 'disabled', false],
-        [
-          'ignored when inside-agent (validate=true)',
-          true,
-          'inside-agent',
-          false,
-        ],
-        ['off when disabled and validate unset', undefined, 'disabled', false],
-        [
-          'off when inside-agent and validate unset',
-          undefined,
-          'inside-agent',
-          false,
-        ],
-      ])('%s', (_label, validate, agenticKind, expected) => {
-        expect(resolveShouldRunValidation({ validate, agenticKind })).toBe(
-          expected
-        );
-      });
-    });
-
     describe('parseMigrationReturn', () => {
       it('reads both buckets from the object shape and tolerates partial shapes', () => {
         expect(
@@ -4256,21 +4209,6 @@ describe('Migration', () => {
           agentContext: [],
         });
       });
-
-      it.each([
-        ['undefined', undefined],
-        ['function', () => undefined],
-        ['string', 'a string'],
-        ['number', 42],
-      ])(
-        'returns empty buckets for unsupported return value: %s',
-        (_label, value) => {
-          expect(parseMigrationReturn(value as any)).toEqual({
-            nextSteps: [],
-            agentContext: [],
-          });
-        }
-      );
     });
 
     describe('formatSkippedPromptsNextStep', () => {

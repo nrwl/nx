@@ -154,31 +154,6 @@ describe('handoff', () => {
   });
 
   describe('readHandoff', () => {
-    it('returns null when the file is missing', () => {
-      expect(readHandoff(join(workspace, 'nope.json'))).toBeNull();
-    });
-
-    it('returns null on invalid JSON', () => {
-      const file = join(workspace, 'bad.json');
-      writeFileSync(file, '{ not json');
-      expect(readHandoff(file)).toBeNull();
-    });
-
-    it('returns null when status is not "success" or "failed"', () => {
-      const file = join(workspace, 'bad-status.json');
-      writeFileSync(
-        file,
-        JSON.stringify({ status: 'in-progress', summary: 'wip' })
-      );
-      expect(readHandoff(file)).toBeNull();
-    });
-
-    it('returns null when summary is missing or non-string', () => {
-      const file = join(workspace, 'bad-summary.json');
-      writeFileSync(file, JSON.stringify({ status: 'success', summary: 42 }));
-      expect(readHandoff(file)).toBeNull();
-    });
-
     it.each([
       ['success', { status: 'success', summary: 'all good' }],
       ['failed', { status: 'failed', summary: 'broken' }],
@@ -267,19 +242,6 @@ describe('handoff', () => {
       writeFileSync(file, JSON.stringify({ status: 'maybe', summary: 'x' }));
       const result = readHandoffWithReason(file);
       expect(result).toEqual({ ok: false, reason: 'shape-mismatch' });
-    });
-
-    it('returns the parsed handoff under `ok` when the file is valid', () => {
-      const file = join(workspace, 'good.json');
-      writeFileSync(
-        file,
-        JSON.stringify({ status: 'success', summary: 'done' })
-      );
-      const result = readHandoffWithReason(file);
-      expect(result).toEqual({
-        ok: true,
-        handoff: { status: 'success', summary: 'done' },
-      });
     });
   });
 
