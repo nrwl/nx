@@ -1181,7 +1181,7 @@ importers:
         version: 5.3.14(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack@5.105.2)
       tmp:
         specifier: ~0.2.4
-        version: 0.2.4
+        version: 0.2.6
       toml-eslint-parser:
         specifier: ^1.0.3
         version: 1.0.3
@@ -2466,7 +2466,7 @@ importers:
         version: 5.3.0
       tmp:
         specifier: ~0.2.1
-        version: 0.2.4
+        version: 0.2.6
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3270,7 +3270,7 @@ importers:
         version: 2.2.0
       tmp:
         specifier: ~0.2.1
-        version: 0.2.4
+        version: 0.2.6
       tree-kill:
         specifier: ^1.2.2
         version: 1.2.2
@@ -23522,6 +23522,10 @@ packages:
     resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
     engines: {node: '>=14.14'}
 
+  tmp@0.2.6:
+    resolution: {integrity: sha512-5sJPdPjfI5Kx+qbrDesxkglRBxW//g7hCsqspEjwkewGvBMGIKMOTKzLt1hFVJzyadba3lDUN20O9qhvbQUSTA==}
+    engines: {node: '>=14.14'}
+
   tmpl@1.0.5:
     resolution: {integrity: sha512-3f0uOEAQwIqGuWW2MVzYg8fV/QNnc/IpuJNG837rLuczAaLVHslWHZQj4IGiEl5Hs3kkbhwL9Ab7Hrsmuj+Smw==}
 
@@ -31897,7 +31901,7 @@ snapshots:
       minimatch: 10.2.5
       nx: 23.0.0-beta.12(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))
       semver: 7.7.4
-      tmp: 0.2.4
+      tmp: 0.2.6
       tslib: 2.8.1
       yargs-parser: 21.1.1
 
@@ -39213,7 +39217,7 @@ snapshots:
       request-progress: 3.0.0
       semver: 7.7.4
       supports-color: 8.1.1
-      tmp: 0.2.4
+      tmp: 0.2.6
       tree-kill: 1.2.2
       untildify: 4.0.0
       yauzl: 2.10.0
@@ -39255,7 +39259,7 @@ snapshots:
       request-progress: 3.0.0
       supports-color: 8.1.1
       systeminformation: 5.31.6
-      tmp: 0.2.4
+      tmp: 0.2.6
       tree-kill: 1.2.2
       tslib: 1.14.1
       untildify: 4.0.0
@@ -39574,7 +39578,7 @@ snapshots:
       stream-json: 1.9.1
       strip-ansi: 6.0.1
       telnet-client: 1.2.8
-      tmp: 0.2.4
+      tmp: 0.2.6
       trace-event-lib: 1.4.1
       which: 1.3.1
       ws: 7.5.10
@@ -50719,13 +50723,15 @@ snapshots:
 
   tmp-promise@3.0.3:
     dependencies:
-      tmp: 0.2.4
+      tmp: 0.2.6
 
   tmp@0.0.33:
     dependencies:
       os-tmpdir: 1.0.2
 
   tmp@0.2.4: {}
+
+  tmp@0.2.6: {}
 
   tmpl@1.0.5: {}
 
