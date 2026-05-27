@@ -5,6 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { join } from 'path';
 import { major } from 'semver';
+import { useFlatConfig } from './flat-config';
 
 export const nxVersion = require(join('@nx/eslint', 'package.json')).version;
 
@@ -38,11 +39,15 @@ const versionMap: Record<CompatVersions, EslintVersions> = {
 
 export function versions(tree: Tree): EslintVersions {
   const installedEslintVersion = getInstalledEslintVersion(tree);
-  if (!installedEslintVersion) {
-    return latestVersions;
+  if (installedEslintVersion) {
+    const eslintMajorVersion = major(installedEslintVersion);
+    return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
   }
-  const eslintMajorVersion = major(installedEslintVersion);
-  return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
+  // No ESLint declared yet — honor the user's flat-config preference for the
+  // fresh-install lane. Legacy (eslintrc) workspaces need the v8/v7 lane
+  // because `@typescript-eslint/rule-tester` v8+ dropped eslintrc support
+  // entirely and v7 rule-tester is pinned to ESLint v8.
+  return useFlatConfig(tree) ? latestVersions : versionMap[8];
 }
 
 export function getInstalledEslintVersion(tree?: Tree): string | null {
