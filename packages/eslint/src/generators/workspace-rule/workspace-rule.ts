@@ -52,7 +52,9 @@ export async function lintWorkspaceRuleGenerator(
       addDependenciesToPackageJson(
         tree,
         {},
-        { '@typescript-eslint/rule-tester': typescriptESLintVersion }
+        { '@typescript-eslint/rule-tester': typescriptESLintVersion },
+        undefined,
+        true
       )
     );
   }

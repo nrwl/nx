@@ -73,7 +73,7 @@ export function migrateConfigToMonorepoStyle(
           '@eslint/js': eslintVersion,
         },
         undefined,
-        keepExistingVersions
+        keepExistingVersions ?? true
       );
       tree.write(
         tree.exists(`eslint.config.${eslintConfigFormat}`)
@@ -132,7 +132,9 @@ export function migrateConfigToMonorepoStyle(
     {},
     {
       '@nx/eslint-plugin': nxVersion,
-    }
+    },
+    undefined,
+    keepExistingVersions ?? true
   );
 }
 

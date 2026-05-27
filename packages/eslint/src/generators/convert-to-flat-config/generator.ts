@@ -423,5 +423,5 @@ function processConvertedConfig(
     devDependencies['@eslint/js'] = eslintVersion;
   }
 
-  addDependenciesToPackageJson(tree, {}, devDependencies);
+  addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true);
 }

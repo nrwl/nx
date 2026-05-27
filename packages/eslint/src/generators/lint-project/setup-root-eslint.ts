@@ -69,7 +69,9 @@ function setUpLegacyRootEslintRc(tree: Tree, options: SetupRootEsLintOptions) {
       '@typescript-eslint/parser': typescriptESLintVersion,
       '@typescript-eslint/eslint-plugin': typescriptESLintVersion,
       'eslint-config-prettier': eslintConfigPrettierVersion,
-    }
+    },
+    undefined,
+    true
   );
 }
 
@@ -96,6 +98,8 @@ function setUpRootFlatConfig(tree: Tree, options: SetupRootEsLintOptions) {
       eslint: eslintVersion,
       'eslint-config-prettier': eslintConfigPrettierVersion,
       'typescript-eslint': typescriptESLintVersion,
-    }
+    },
+    undefined,
+    true
   );
 }

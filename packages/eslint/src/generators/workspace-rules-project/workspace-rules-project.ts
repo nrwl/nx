@@ -131,7 +131,9 @@ export async function lintWorkspaceRulesProjectGenerator(
       {},
       {
         '@typescript-eslint/utils': typescriptEslintVersion,
-      }
+      },
+      undefined,
+      true
     )
   );
 
