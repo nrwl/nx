@@ -109,6 +109,10 @@ import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
 import {
+  applyAgenticHandoffGitignoreFallback,
+  isHandoffGitignoreMigration,
+} from './agentic/handoff-gitignore';
+import {
   commitCheckpointBeforeMigrations,
   commitMigrationIfRequested,
 } from './migrate-commits';
@@ -2487,6 +2491,16 @@ export async function executeMigrations(
 
   const migrationsWithNoChanges: ExecutableMigration[] = [];
   const sortedMigrations = migrations.sort((a, b) => {
+    // Under `--agentic`, hoist the v23 migration that ignores
+    // `.nx/migrate-runs` to position 0 so its .gitignore update lands
+    // before any per-migration commit absorbs the run's handoff scratch.
+    // See `agentic/handoff-gitignore.ts` for the full rationale and the
+    // inline-fallback path that covers intra-pre-v23 agentic runs.
+    if (agentic?.kind === 'enabled') {
+      if (isHandoffGitignoreMigration(a)) return -1;
+      if (isHandoffGitignoreMigration(b)) return 1;
+    }
+
     // special case for the split configuration migration to run first
     if (a.name === '15-7-0-split-configuration-into-project-json-files') {
       return -1;
@@ -3097,6 +3111,20 @@ async function runMigrations(
 
   if (effectiveCreateCommits) {
     commitCheckpointBeforeMigrations(root, commitPrefix);
+  }
+
+  if (agentic.kind === 'enabled') {
+    const { packageJson: nxPackageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(root)
+    );
+    await applyAgenticHandoffGitignoreFallback({
+      migrations,
+      installedNxVersion: nxPackageJson.version,
+      effectiveCreateCommits,
+      commitPrefix,
+      root,
+    });
   }
 
   const {
