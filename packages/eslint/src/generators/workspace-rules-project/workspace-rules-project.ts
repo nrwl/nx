@@ -22,8 +22,7 @@ import {
 } from '@nx/js/internal';
 import { join } from 'path';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
-import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';
-import { nxVersion } from '../../utils/versions';
+import { nxVersion, versions } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
@@ -124,13 +123,13 @@ export async function lintWorkspaceRulesProjectGenerator(
   // Add swc dependencies
   tasks.push(addSwcRegisterDependencies(tree));
 
-  const typescriptEslintVersion = getTypeScriptEslintVersionToInstall(tree);
+  const { typescriptESLintVersion } = versions(tree);
   tasks.push(
     addDependenciesToPackageJson(
       tree,
       {},
       {
-        '@typescript-eslint/utils': typescriptEslintVersion,
+        '@typescript-eslint/utils': typescriptESLintVersion,
       },
       undefined,
       true

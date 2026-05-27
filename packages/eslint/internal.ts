@@ -31,9 +31,8 @@ export { setupRootEsLint } from './src/generators/lint-project/setup-root-eslint
 
 export {
   getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
-} from './src/utils/version-utils';
-
-export { typescriptESLintVersion } from './src/utils/versions';
+  typescriptESLintVersion,
+  versions,
+} from './src/utils/versions';
 
 export type { Schema } from './src/executors/lint/schema';
