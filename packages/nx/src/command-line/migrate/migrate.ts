@@ -114,6 +114,7 @@ import {
 } from './migrate-commits';
 import {
   buildDirectiveBlockBodyLines,
+  buildRetainedAtSuccessBody,
   buildTallyBodyLine,
   logAgenticSuccessOutcome,
   logFailureRecap,
@@ -2543,6 +2544,20 @@ export async function executeMigrations(
   // migration (if any) has no record — `outcomes.length` plus the implicit
   // "the in-flight one threw" equals `migrationIndex` in the catch block.
   const outcomes: MigrationOutcome[] = [];
+  // Migrations whose own commits failed and whose diffs therefore sit
+  // uncommitted in the working tree. The next successful commit will absorb
+  // them via `git add -A`; we annotate that commit's body with this list
+  // and back-annotate the absorbed outcomes with `committedAsPartOf`.
+  //
+  // While non-empty, the working tree carries prior-migration state, so the
+  // `hasDiffContext` flag in the hybrid-agentic and validation-agentic
+  // prompt branches is suppressed (the prompt-only-with-agentic branch
+  // doesn't use `hasDiffContext`). See call sites below.
+  //
+  // `package` is tracked alongside `name` so migrations with colliding
+  // names across packages don't conflate (e.g. `@nx/react:update-22-0-0`
+  // and `@nx/angular:update-22-0-0`).
+  const pendingMigrations: { package: string; name: string }[] = [];
   // Prompt-only migrations whose agent never ran. Hybrid migrations with a
   // skipped prompt are NOT counted here — their deterministic half still ran.
   let notRunMigrationsCount = 0;
@@ -2554,6 +2569,75 @@ export async function executeMigrations(
 
   const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
 
+  // Single funnel for per-migration commit attempts. Handles the pending
+  // tracking + back-annotation. Returns `{ sha, failed }`:
+  //   - `failed: false, sha: string`: commit landed cleanly.
+  //   - `failed: false, sha: null`: either (a) HEAD-resolve race (commit
+  //     landed but `git rev-parse HEAD` failed transiently — the diff
+  //     cleared, sha unrecoverable), or (b) no commit attempted/needed
+  //     (`--no-create-commits` or no diff to commit). Both are non-failure.
+  //   - `failed: true, sha: null`: commit was attempted and errored. Diff
+  //     retained in WT; pushed onto `pendingMigrations`.
+  async function attemptMigrationCommit(
+    m: ExecutableMigration
+  ): Promise<{ sha: string | null; failed: boolean }> {
+    let result: Awaited<ReturnType<typeof commitMigrationIfRequested>>;
+    try {
+      result = await commitMigrationIfRequested(
+        root,
+        m,
+        shouldCreateCommits,
+        commitPrefix,
+        installDepsIfChanged,
+        pendingMigrations
+      );
+    } catch (err) {
+      // `commitMigrationIfRequested` awaits `installDepsIfChanged` before
+      // any commit attempt; a `runInstall` failure (e.g. NpmPeerDepsInstall)
+      // throws past it. Treat that as a commit failure for tracking
+      // purposes — the migration's diff is on disk, and pretending we never
+      // attempted would silently drop it from the retained-state recap and
+      // body annotations — then re-raise so the outer loop runs its
+      // failure path.
+      pendingMigrations.push({ package: m.package, name: m.name });
+      throw err;
+    }
+    if (result.status === 'committed') {
+      // The commit absorbed every pending migration's diff. Back-annotate
+      // the earlier outcome records so the failure recap can anchor them,
+      // then clear pending. We back-annotate even when `result.sha` is
+      // null (HEAD-resolve race on the absorbing commit) — the diff is no
+      // longer in the working tree, so prior migrations should not appear
+      // in the "uncommitted" recap list; the sha is simply unrecoverable.
+      //
+      // The key is `package:name`; matching on `name` alone would conflate
+      // across packages. Guard `!o.committedAsPartOf` so a subsequent
+      // absorption-of-same-name cannot overwrite an earlier annotation.
+      if (pendingMigrations.length > 0) {
+        const absorbedKeys = new Set(
+          pendingMigrations.map((p) => `${p.package}:${p.name}`)
+        );
+        for (const o of outcomes) {
+          const key = `${o.migration.package}:${o.migration.name}`;
+          if (absorbedKeys.has(key) && !o.committedAsPartOf) {
+            o.committedAsPartOf = { name: m.name, sha: result.sha };
+          }
+        }
+      }
+      pendingMigrations.length = 0;
+      return { sha: result.sha, failed: false };
+    }
+    if (result.status === 'failed') {
+      // Diff is still in WT. Subsequent prompts cannot claim git-isolation
+      // until a later commit absorbs the backlog.
+      pendingMigrations.push({ package: m.package, name: m.name });
+      return { sha: null, failed: true };
+    }
+    // `no-changes` and `disabled` leave pending untouched and are not
+    // commit failures — the user gets no surprise warning in the recap.
+    return { sha: null, failed: false };
+  }
+
   const totalMigrations = sortedMigrations.length;
   let migrationIndex = 0;
   for (const m of sortedMigrations) {
@@ -2562,6 +2646,7 @@ export async function executeMigrations(
     try {
       let outcome: MigrationOutcomeKind;
       let committedSha: string | null = null;
+      let commitFailed = false;
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
           const stepResult = await agenticRun.runStep({
@@ -2571,13 +2656,8 @@ export async function executeMigrations(
             runDir: agenticRun.runDir,
             installDepsIfChanged,
           });
-          committedSha = await commitMigrationIfRequested(
-            root,
-            m,
-            shouldCreateCommits,
-            commitPrefix,
-            installDepsIfChanged
-          );
+          ({ sha: committedSha, failed: commitFailed } =
+            await attemptMigrationCommit(m));
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             committedSha,
@@ -2617,16 +2697,15 @@ export async function executeMigrations(
               logs,
               changes,
               agentContext,
-              hasDiffContext: agenticHasDiffContext,
+              // When prior commits failed, the working tree carries their
+              // diff. The git-inspect path of the prompt would mislead the
+              // agent in that case; fall back to embedded `<files_changed>`.
+              hasDiffContext:
+                agenticHasDiffContext && pendingMigrations.length === 0,
             },
           });
-          committedSha = await commitMigrationIfRequested(
-            root,
-            m,
-            shouldCreateCommits,
-            commitPrefix,
-            installDepsIfChanged
-          );
+          ({ sha: committedSha, failed: commitFailed } =
+            await attemptMigrationCommit(m));
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
             committedSha,
@@ -2651,13 +2730,16 @@ export async function executeMigrations(
           if (!madeChanges) {
             migrationsWithNoChanges.push(m);
           }
-          committedSha = await commitMigrationIfRequested(
-            root,
-            m,
-            shouldCreateCommits,
-            commitPrefix,
-            installDepsIfChanged
-          );
+          // Only attempt a commit when this migration's deterministic
+          // phase actually produced changes. Otherwise the absorbing
+          // `git add -A` would build a commit subject naming this no-op
+          // migration even though its content is entirely prior pending
+          // diffs — confusing `git log` / `git blame` attribution. Pending
+          // stays pending and the next change-producing migration absorbs.
+          if (madeChanges) {
+            ({ sha: committedSha, failed: commitFailed } =
+              await attemptMigrationCommit(m));
+          }
           if (committedSha) {
             logger.info(pc.dim(`Committed as ${committedSha}`));
           }
@@ -2692,17 +2774,15 @@ export async function executeMigrations(
               logs,
               changes,
               agentContext,
-              hasDiffContext: agenticHasDiffContext,
+              // See the hybrid agentic branch above for the rationale on
+              // why `pendingMigrations` gates git-inspect context.
+              hasDiffContext:
+                agenticHasDiffContext && pendingMigrations.length === 0,
             },
             mode: 'generic-validation',
           });
-          committedSha = await commitMigrationIfRequested(
-            root,
-            m,
-            shouldCreateCommits,
-            commitPrefix,
-            installDepsIfChanged
-          );
+          ({ sha: committedSha, failed: commitFailed } =
+            await attemptMigrationCommit(m));
           logAgenticSuccessOutcome(
             stepResult.ambiguous
               ? 'Marked complete by user'
@@ -2721,13 +2801,8 @@ export async function executeMigrations(
             migrationsWithNoChanges.push(m);
             outcome = 'no-changes';
           } else {
-            committedSha = await commitMigrationIfRequested(
-              root,
-              m,
-              shouldCreateCommits,
-              commitPrefix,
-              installDepsIfChanged
-            );
+            ({ sha: committedSha, failed: commitFailed } =
+              await attemptMigrationCommit(m));
             if (committedSha) {
               logger.info(pc.dim(`Committed as ${committedSha}`));
             }
@@ -2735,7 +2810,12 @@ export async function executeMigrations(
           }
         }
       }
-      outcomes.push({ migration: m, outcome, committedSha });
+      outcomes.push({
+        migration: { package: m.package, name: m.name },
+        outcome,
+        committedSha,
+        commitFailed,
+      });
       logger.info('');
     } catch (e) {
       if (!(e instanceof NpmPeerDepsInstallError)) {
@@ -2759,6 +2839,7 @@ export async function executeMigrations(
           migrationIndex,
           totalMigrations,
           outcomes,
+          pendingMigrations,
           migrationEmittedNextSteps,
           insideAgent: agentic?.kind === 'inside-agent',
         });
@@ -2790,6 +2871,11 @@ export async function executeMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount: outcomes.filter((o) => o.committedSha).length,
+    // Migrations whose commits failed and never got absorbed by a later
+    // commit. The caller surfaces them so a successful run doesn't claim
+    // "up to date" while leaving uncommitted diffs in the working tree.
+    // Formatted as `package: name` for direct display.
+    retainedAtSuccess: pendingMigrations.map((p) => `${p.package}: ${p.name}`),
   };
 }
 
@@ -3020,6 +3106,7 @@ async function runMigrations(
     skippedPrompts,
     migrationEmittedNextSteps,
     committedShasCount,
+    retainedAtSuccess,
   } = await executeMigrations(
     root,
     migrations,
@@ -3047,10 +3134,23 @@ async function runMigrations(
     insideAgent,
   });
   const tallyBody = tallyLine ? [tallyLine] : undefined;
-  // Only claim the workspace is up to date when no prompt halves were
-  // deferred — otherwise there's pending work the user still needs to apply.
+  // Only claim "up to date" when there's nothing pending: no deferred
+  // prompts AND no migrations whose commits failed without being absorbed.
   const upToDateSuffix =
-    skippedPromptsCount > 0 ? '' : ' This workspace is up to date!';
+    skippedPromptsCount > 0 || retainedAtSuccess.length > 0
+      ? ''
+      : ' This workspace is up to date!';
+
+  // Demote `output.success` to `output.warn` when there's uncommitted state
+  // retained from failed commits — the run did its work, but it would be
+  // misleading to lead with a green "Successfully finished" before the
+  // retained-state block.
+  const completionLog =
+    retainedAtSuccess.length > 0 ? output.warn : output.success;
+  const completionTitlePrefix =
+    retainedAtSuccess.length > 0
+      ? 'Finished running migrations with uncommitted state retained'
+      : 'Successfully finished running migrations';
 
   if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
     const remediation = insideAgent
@@ -3061,14 +3161,26 @@ async function runMigrations(
       bodyLines: tallyBody,
     });
   } else if (ranWithChangesCount > 0) {
-    output.success({
-      title: `Successfully finished running migrations from '${opts.runMigrations}'.${upToDateSuffix}`,
+    completionLog({
+      title: `${completionTitlePrefix} from '${opts.runMigrations}'.${upToDateSuffix}`,
       bodyLines: tallyBody,
     });
   } else {
-    output.success({
+    // Pathological-but-possible: a no-op run that still has retained state
+    // (e.g. pre-existing pending diffs that no commit absorbed). Demote
+    // explicitly rather than rely on the implicit invariant.
+    completionLog({
       title: `No changes were made from running '${opts.runMigrations}'.${upToDateSuffix}`,
       bodyLines: tallyBody,
+    });
+  }
+
+  if (retainedAtSuccess.length > 0) {
+    output.warn({
+      title: `Working-tree state retained from ${retainedAtSuccess.length} migration${
+        retainedAtSuccess.length === 1 ? '' : 's'
+      } whose commits could not be created`,
+      bodyLines: buildRetainedAtSuccessBody(retainedAtSuccess),
     });
   }
 
