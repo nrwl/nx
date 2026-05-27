@@ -80,7 +80,7 @@
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
-    "yaml": "^2.6.0",
+    "yaml": "^2.8.3",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"
   },
