@@ -9,7 +9,7 @@ import {
   runSingleCommandWithPseudoTerminal,
   SeriallyRunningTasks,
 } from './running-tasks';
-import { isAlreadyQuoted, needsShellQuoting } from '../../utils/shell-quoting';
+import { wrapArgIntoQuotesIfNeeded } from '../../utils/shell-quoting';
 
 export const LARGE_BUFFER = 1024 * 1000000;
 export type Json = {
@@ -438,29 +438,4 @@ function filterPropKeysFromUnParsedOptions(
     }
   }
   return parsedOptions;
-}
-
-function wrapArgIntoQuotesIfNeeded(arg: string): string {
-  if (arg.includes('=')) {
-    // Split only on first '=' to handle values containing '='
-    const eqIndex = arg.indexOf('=');
-    const key = arg.substring(0, eqIndex);
-    const value = arg.substring(eqIndex + 1);
-    if (
-      key.startsWith('--') &&
-      needsShellQuoting(value) &&
-      !isAlreadyQuoted(value)
-    ) {
-      // Escape any existing double quotes in the value before wrapping
-      const escaped = value.replace(/"/g, '\\"');
-      return `${key}="${escaped}"`;
-    }
-    return arg;
-  } else if (needsShellQuoting(arg) && !isAlreadyQuoted(arg)) {
-    // Escape any existing double quotes in the value before wrapping
-    const escaped = arg.replace(/"/g, '\\"');
-    return `"${escaped}"`;
-  } else {
-    return arg;
-  }
 }
