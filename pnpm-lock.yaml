@@ -184,8 +184,8 @@ catalogs:
       specifier: ^0.2.12
       version: 0.2.15
     tmp:
-      specifier: ~0.2.1
-      version: 0.2.4
+      specifier: ~0.2.6
+      version: 0.2.6
     tree-kill:
       specifier: ^1.2.2
       version: 1.2.2
@@ -1277,7 +1277,7 @@ importers:
         version: 5.3.14(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack@5.105.2)
       tmp:
         specifier: 'catalog:'
-        version: 0.2.4
+        version: 0.2.6
       toml-eslint-parser:
         specifier: ^1.0.3
         version: 1.0.3
@@ -2569,7 +2569,7 @@ importers:
         version: 5.4.1
       tmp:
         specifier: 'catalog:'
-        version: 0.2.4
+        version: 0.2.6
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -3376,7 +3376,7 @@ importers:
         version: 2.2.0
       tmp:
         specifier: 'catalog:'
-        version: 0.2.4
+        version: 0.2.6
       tsconfig-paths:
         specifier: catalog:typescript
         version: 4.2.0
@@ -22995,6 +22995,10 @@ packages:
 
   tmp@0.2.4:
     resolution: {integrity: sha512-UdiSoX6ypifLmrfQ/XfiawN6hkjSBpCjhKxxZcWlUUmoXLaCKQU0bx4HF/tdDK2uzRuchf1txGvrWBzYREssoQ==}
+    engines: {node: '>=14.14'}
+
+  tmp@0.2.6:
+    resolution: {integrity: sha512-5sJPdPjfI5Kx+qbrDesxkglRBxW//g7hCsqspEjwkewGvBMGIKMOTKzLt1hFVJzyadba3lDUN20O9qhvbQUSTA==}
     engines: {node: '>=14.14'}
 
   tmpl@1.0.5:
@@ -49315,6 +49319,8 @@ snapshots:
       os-tmpdir: 1.0.2
 
   tmp@0.2.4: {}
+
+  tmp@0.2.6: {}
 
   tmpl@1.0.5: {}
 
