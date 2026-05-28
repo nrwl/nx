@@ -46,13 +46,21 @@ async function runMigrationProcess() {
     );
 
     if (configuration.createCommits) {
-      await commitMigrationIfRequested(
+      const commitResult = await commitMigrationIfRequested(
         workspacePath,
         migration,
         true,
         configuration.commitPrefix,
         installDepsIfChanged
       );
+      if (commitResult.status === 'failed') {
+        // Single-migration UI child surfaces the failure via stdout (logged
+        // inside commitMigrationIfRequested) and continues with success-
+        // with-warning. The executor's absorption flow does not apply here:
+        // there is no later migration that could pick up this migration's
+        // diff, so the working tree is left in its post-migration state
+        // for the user to commit or revert through the UI.
+      }
     } else {
       await installDepsIfChanged();
     }
