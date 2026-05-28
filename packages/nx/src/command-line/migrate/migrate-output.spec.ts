@@ -2,12 +2,102 @@ import {
   buildDirectiveBlockBodyLines,
   buildRetainedAtSuccessBody,
   buildTallyBodyLine,
+  countLandedCommits,
   logFailureRecap,
+  retainedMigrations,
+  type CommitState,
   type MigrationOutcome,
+  type MigrationOutcomeKind,
 } from './migrate-output';
 import { logger } from '../../utils/logger';
 
 describe('migrate-output', () => {
+  const PKG = '@test/pkg';
+  // `applied` covers both the sha-known case (case 1) and the HEAD-resolve
+  // race (case 2: commit landed but `git rev-parse HEAD` returned null) via
+  // the same `commit: { kind: 'landed', sha }` shape. Pass `null` for sha to
+  // model the HEAD-race; pass a string for the normal case.
+  const applied = (
+    name: string,
+    sha: string | null = null,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'applied',
+    commit: { kind: 'landed', sha },
+  });
+  // `appliedNoCommit` models the `--no-create-commits` / no-op-step case:
+  // the migration succeeded but no commit was attempted.
+  const appliedNoCommit = (
+    name: string,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'applied',
+    commit: { kind: 'none' },
+  });
+  const deferred = (
+    name: string,
+    sha: string | null = null,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'deferred',
+    commit: { kind: 'landed', sha },
+  });
+  const deferredNoCommit = (
+    name: string,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'deferred',
+    commit: { kind: 'none' },
+  });
+  const noChanges = (name: string, pkg: string = PKG): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'no-changes',
+    commit: { kind: 'none' },
+  });
+  const failedCommit = (
+    name: string,
+    kind: MigrationOutcomeKind = 'applied',
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind,
+    commit: { kind: 'failed' },
+  });
+  const absorbed = (
+    name: string,
+    intoName: string,
+    intoSha: string | null,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'completed',
+    kind: 'applied',
+    commit: { kind: 'absorbed', into: { name: intoName, sha: intoSha } },
+  });
+  // `aborted` models a migration that threw mid-loop (the executor's catch
+  // block records it with `status: 'aborted'`). The commit state is the
+  // disambiguation between "the throw left a diff in the WT" (`failed`) and
+  // "the throw left a clean WT" (`none`).
+  const aborted = (
+    name: string,
+    commit: CommitState,
+    pkg: string = PKG
+  ): MigrationOutcome => ({
+    migration: { package: pkg, name },
+    status: 'aborted',
+    commit,
+  });
+
   describe('buildTallyBodyLine', () => {
     it('returns null when nothing meaningful happened (empty migrations.json)', () => {
       expect(
@@ -179,6 +269,63 @@ describe('migrate-output', () => {
     });
   });
 
+  describe('countLandedCommits', () => {
+    it('counts landed commits including the HEAD-resolve-race case (sha: null)', () => {
+      // The HEAD-race outcome (M2: kind=landed, sha=null) was the
+      // pre-refactor undercount bug — the old `outcomes.filter(o => o.committedSha)`
+      // filter dropped it. The union encoding makes "the commit landed,
+      // sha or not" a single tag, so the count is correct by construction.
+      const outcomes: MigrationOutcome[] = [
+        applied('m1', 'sha1'),
+        applied('m2', null),
+        appliedNoCommit('m3'),
+        failedCommit('m4'),
+        absorbed('m5', 'm6', 'sha6'),
+        applied('m6', 'sha6'),
+      ];
+
+      expect(countLandedCommits(outcomes)).toBe(3);
+    });
+
+    it('does not double-count absorbed predecessors (the absorbing commit is the only landed record for the group)', () => {
+      const outcomes: MigrationOutcome[] = [
+        absorbed('m1', 'm2', 'sha2'),
+        absorbed('m1-bis', 'm2', 'sha2'),
+        applied('m2', 'sha2'),
+      ];
+
+      expect(countLandedCommits(outcomes)).toBe(1);
+    });
+
+    it('returns 0 when no commits landed', () => {
+      const outcomes: MigrationOutcome[] = [
+        appliedNoCommit('m1'),
+        failedCommit('m2'),
+        aborted('m3', { kind: 'failed' }),
+      ];
+
+      expect(countLandedCommits(outcomes)).toBe(0);
+    });
+  });
+
+  describe('retainedMigrations', () => {
+    it('returns only outcomes whose own commit failed and was not absorbed', () => {
+      const outcomes: MigrationOutcome[] = [
+        applied('m1', 'sha1'),
+        failedCommit('m2'),
+        absorbed('m3', 'm5', 'sha5'),
+        appliedNoCommit('m4'),
+        applied('m5', 'sha5'),
+        aborted('m6', { kind: 'failed' }, '@nx/foo'),
+      ];
+
+      expect(retainedMigrations(outcomes)).toEqual([
+        { package: '@test/pkg', name: 'm2' },
+        { package: '@nx/foo', name: 'm6' },
+      ]);
+    });
+  });
+
   describe('logFailureRecap', () => {
     let infoSpy: jest.SpyInstance;
     beforeEach(() => {
@@ -211,21 +358,9 @@ describe('migrate-output', () => {
 
     it('anchors the "last" line on the most recent applied record with a sha, ignoring deferred work that followed', () => {
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'a' },
-          outcome: 'applied',
-          committedSha: 'aaa',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'b' },
-          outcome: 'applied',
-          committedSha: 'bbb',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'c' },
-          outcome: 'deferred',
-          committedSha: null,
-        },
+        applied('a', 'aaa'),
+        applied('b', 'bbb'),
+        deferredNoCommit('c'),
       ];
 
       logFailureRecap({
@@ -242,13 +377,7 @@ describe('migrate-output', () => {
     });
 
     it('omits the anchor segment when applied records have no committed sha', () => {
-      const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'a' },
-          outcome: 'applied',
-          committedSha: null,
-        },
-      ];
+      const outcomes: MigrationOutcome[] = [appliedNoCommit('a')];
 
       logFailureRecap({
         migrationIndex: 2,
@@ -263,16 +392,8 @@ describe('migrate-output', () => {
 
     it('reports zero applied with the deferred count when only deferred work completed', () => {
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'a' },
-          outcome: 'deferred',
-          committedSha: null,
-        },
-        {
-          migration: { package: '@test/pkg', name: 'b' },
-          outcome: 'deferred',
-          committedSha: null,
-        },
+        deferredNoCommit('a'),
+        deferredNoCommit('b'),
       ];
 
       logFailureRecap({
@@ -290,16 +411,8 @@ describe('migrate-output', () => {
 
     it('does not count no-changes runs in the anchor walk-back even though they count as applied work', () => {
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'a' },
-          outcome: 'applied',
-          committedSha: 'aaa',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'b' },
-          outcome: 'no-changes',
-          committedSha: null,
-        },
+        applied('a', 'aaa'),
+        noChanges('b'),
       ];
 
       logFailureRecap({
@@ -320,22 +433,9 @@ describe('migrate-output', () => {
       // most recent applied with anchoring info. The recap reports the sha
       // of the commit that actually contains M3's contribution.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: 'sha1',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm3' },
-          outcome: 'applied',
-          committedSha: null,
-          committedAsPartOf: { name: 'm4', sha: 'sha4' },
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm4' },
-          outcome: 'applied',
-          committedSha: 'sha4',
-        },
+        applied('m1', 'sha1'),
+        absorbed('m3', 'm4', 'sha4'),
+        applied('m4', 'sha4'),
       ];
 
       logFailureRecap({
@@ -358,16 +458,8 @@ describe('migrate-output', () => {
       // land, it just didn't return a sha), which is what excludes M2 from
       // the retained-state filter.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: 'sha1',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm2' },
-          outcome: 'applied',
-          committedSha: null,
-        },
+        applied('m1', 'sha1'),
+        applied('m2'),
       ];
 
       logFailureRecap({
@@ -389,16 +481,8 @@ describe('migrate-output', () => {
       // and no `committedAsPartOf`, there is nothing "retained" in the
       // working tree to surface to the user.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: 'sha1',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm2' },
-          outcome: 'no-changes',
-          committedSha: null,
-        },
+        applied('m1', 'sha1'),
+        noChanges('m2'),
       ];
 
       logFailureRecap({
@@ -421,23 +505,9 @@ describe('migrate-output', () => {
       // working tree; the recap surfaces them so the user knows what is
       // uncommitted.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: 'sha1',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm2' },
-          outcome: 'applied',
-          committedSha: null,
-          commitFailed: true,
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm3' },
-          outcome: 'applied',
-          committedSha: null,
-          commitFailed: true,
-        },
+        applied('m1', 'sha1'),
+        failedCommit('m2'),
+        failedCommit('m3'),
       ];
 
       logFailureRecap({
@@ -470,16 +540,8 @@ describe('migrate-output', () => {
       // failure occurred. The recap must not imply that commits "could not
       // be created".
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: null,
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm2' },
-          outcome: 'applied',
-          committedSha: null,
-        },
+        appliedNoCommit('m1'),
+        appliedNoCommit('m2'),
       ];
 
       logFailureRecap({
@@ -502,12 +564,7 @@ describe('migrate-output', () => {
       // fails and no later commit absorbs the diff, the recap must surface
       // the retained state regardless of the deferred outcome kind.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'hybrid-mig' },
-          outcome: 'deferred',
-          committedSha: null,
-          commitFailed: true,
-        },
+        failedCommit('hybrid-mig', 'deferred'),
       ];
 
       logFailureRecap({
@@ -525,15 +582,19 @@ describe('migrate-output', () => {
       expect(logged).toContain('  - @test/pkg: hybrid-mig');
     });
 
-    it('lists in-flight pendingMigrations entries even when no outcome record exists for them', () => {
-      // When the in-flight migration's install throws before its outcome
-      // can be pushed, the executor only has it in `pendingMigrations`.
-      // The recap must still surface it as retained working-tree state.
+    it("lists an in-flight migration as retained when the executor records it with `status: 'aborted'`", () => {
+      // When the in-flight migration throws before its outcome can be pushed
+      // as `completed`, the executor's catch block pushes an `aborted`
+      // record with `commit: { kind: 'failed' }` (because the throw left a
+      // diff in the working tree). The recap surfaces it as retained state.
+      const outcomes: MigrationOutcome[] = [
+        aborted('in-flight-mig', { kind: 'failed' }, '@nx/foo'),
+      ];
+
       logFailureRecap({
         migrationIndex: 2,
         totalMigrations: 3,
-        outcomes: [],
-        pendingMigrations: [{ package: '@nx/foo', name: 'in-flight-mig' }],
+        outcomes,
         migrationEmittedNextSteps: [],
         insideAgent: false,
       });
@@ -545,32 +606,26 @@ describe('migrate-output', () => {
       expect(logged).toContain('  - @nx/foo: in-flight-mig');
     });
 
-    it('dedupes between outcomes and pendingMigrations entries by package:name', () => {
-      // When the in-flight failure also has an outcome record (e.g. it
-      // tried a commit then failed before push? Or the executor pushed it
-      // before re-raising), we should not list it twice.
+    it('does not list an aborted in-flight migration when the working tree was clean (commit: none)', () => {
+      // The throw escaped before the migration produced any diff. The catch
+      // block records `aborted` with `commit: { kind: 'none' }` so the
+      // recap correctly omits it from the retained-state section.
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@nx/foo', name: 'shared' },
-          outcome: 'applied',
-          committedSha: null,
-          commitFailed: true,
-        },
+        aborted('clean-throw', { kind: 'none' }, '@nx/foo'),
       ];
 
       logFailureRecap({
         migrationIndex: 2,
         totalMigrations: 3,
         outcomes,
-        pendingMigrations: [{ package: '@nx/foo', name: 'shared' }],
         migrationEmittedNextSteps: [],
         insideAgent: false,
       });
 
       const logged = linesLogged();
-      // Should appear exactly once in the bullet list.
-      const bullets = logged.filter((l) => l === '  - @nx/foo: shared');
-      expect(bullets).toHaveLength(1);
+      expect(
+        logged.some((l) => l.includes('Working-tree state retained from'))
+      ).toBe(false);
     });
 
     it('does not list a migration whose commit failed and was later absorbed', () => {
@@ -578,23 +633,9 @@ describe('migrate-output', () => {
       // anchor points to M3, and M2 is NOT in the uncommitted-state list
       // because its diff did clear (just under a different sha).
       const outcomes: MigrationOutcome[] = [
-        {
-          migration: { package: '@test/pkg', name: 'm1' },
-          outcome: 'applied',
-          committedSha: 'sha1',
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm2' },
-          outcome: 'applied',
-          committedSha: null,
-          commitFailed: true,
-          committedAsPartOf: { name: 'm3', sha: 'sha3' },
-        },
-        {
-          migration: { package: '@test/pkg', name: 'm3' },
-          outcome: 'applied',
-          committedSha: 'sha3',
-        },
+        applied('m1', 'sha1'),
+        absorbed('m2', 'm3', 'sha3'),
+        applied('m3', 'sha3'),
       ];
 
       logFailureRecap({
@@ -616,13 +657,7 @@ describe('migrate-output', () => {
       logFailureRecap({
         migrationIndex: 2,
         totalMigrations: 4,
-        outcomes: [
-          {
-            migration: { package: '@test/pkg', name: 'a' },
-            outcome: 'applied',
-            committedSha: 'aaa',
-          },
-        ],
+        outcomes: [applied('a', 'aaa')],
         migrationEmittedNextSteps: ['follow-up step 1', 'follow-up step 2'],
         insideAgent: false,
       });
