@@ -1,7 +1,11 @@
 import { existsSync, readdirSync } from 'fs';
 import { pathToFileURL } from 'node:url';
 import { workspaceRoot } from 'nx/src/devkit-exports';
-import { registerTsProject } from 'nx/src/devkit-internals';
+import {
+  forceRegisterEsmLoader,
+  loadTsFile,
+  registerTsProject,
+} from 'nx/src/devkit-internals';
 import { dirname, extname, join, sep } from 'path';
 
 export let dynamicImport = new Function(
@@ -40,16 +44,73 @@ async function loadTypeScriptModule(
 ): Promise<any> {
   const tsConfigPath = getTypeScriptConfigPath(path, tsconfigFileNames);
 
-  if (tsConfigPath) {
-    const unregisterTsProject = registerTsProject(tsConfigPath);
+  if (!tsConfigPath) {
+    return await loadModuleByExtension(path, extension);
+  }
+
+  // loadTsFile was added in nx@23. @nx/devkit's peer range supports older
+  // nx majors, so fall back to the legacy registerTsProject + require path
+  // when loadTsFile isn't available on the host nx.
+  if (typeof loadTsFile !== 'function') {
+    const cleanup = registerTsProject(tsConfigPath);
     try {
       return await loadModuleByExtension(path, extension);
     } finally {
-      unregisterTsProject();
+      cleanup();
     }
   }
 
-  return await loadModuleByExtension(path, extension);
+  // Both .ts and .mts go through loadTsFile first. Node 22.12+ supports
+  // require() of synchronous ESM by default, and loadTsFile's lazy fallback
+  // covers swc/ts-node + tsconfig-paths registration when needed (swc-node
+  // hooks .cts/.mts/.ts via Module._extensions). Async-only ESM modules
+  // (top-level await) throw ERR_REQUIRE_ASYNC_MODULE and fall through to
+  // dynamic import(). ERR_REQUIRE_ESM is the legacy code for the same case
+  // - kept for older Node lines.
+  try {
+    return loadTsFile(path, tsConfigPath);
+  } catch (e: any) {
+    if (
+      e?.code !== 'ERR_REQUIRE_ESM' &&
+      e?.code !== 'ERR_REQUIRE_ASYNC_MODULE'
+    ) {
+      throw e;
+    }
+
+    // The module must be loaded via dynamic import(). Register
+    // tsconfig-paths first so workspace alias imports resolve, then try a
+    // native dynamic import. Node 22.18+ LTS strips TS types on the ESM
+    // path natively, so pure-ESM TLA configs load without any swc/ts-node
+    // ESM loader. Only escalate to forceRegisterEsmLoader (which throws
+    // when neither @swc-node/register nor ts-node is installed) if the
+    // native attempt hits unsupported TS syntax.
+    const cleanup = registerTsProject(tsConfigPath);
+    try {
+      return await loadESM(path);
+    } catch (esmErr: any) {
+      if (
+        esmErr?.code !== 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX' ||
+        typeof forceRegisterEsmLoader !== 'function'
+      ) {
+        throw esmErr;
+      }
+      // Module.register is global and one-shot per process. After this
+      // runs, every subsequent ESM import in the process is routed
+      // through the registered loader, forfeiting Node's native TS
+      // stripping for the dynamic-import path. If neither swc-node nor
+      // ts-node is installed, forceRegisterEsmLoader throws - surface the
+      // original ESM error in that case so the user sees the real
+      // problem, not a misleading "loader missing" message.
+      try {
+        forceRegisterEsmLoader();
+      } catch {
+        throw esmErr;
+      }
+      return await loadESM(path);
+    } finally {
+      cleanup();
+    }
+  }
 }
 
 function getTypeScriptConfigPath(

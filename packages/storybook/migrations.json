@@ -19,7 +19,8 @@
         "storybook": ">=10.0.0"
       },
       "description": "Update workspace to use Storybook v10",
-      "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10"
+      "implementation": "./src/migrations/update-22-1-0/migrate-to-storybook-10",
+      "prompt": "./src/generators/migrate-10/files/ai-instructions-for-cjs-esm.md"
     }
   },
   "packageJsonUpdates": {

@@ -303,6 +303,7 @@ export function runCommandUntil(
     encoding: 'utf-8',
     env: {
       CI: 'true',
+      NX_DAEMON: 'true',
       // Use new versioning by default in e2e tests
       NX_INTERNAL_USE_LEGACY_VERSIONING: 'false',
       ...getStrippedEnvironmentVariables(),
@@ -434,7 +435,7 @@ export function runCLI(
     }${opts.redirectStderr ? ' 2>&1' : ''}`;
     logInfo(`Run Command: ${command}`);
     const startTime = performance.now();
-    const logs = execSync(commandToRun, {
+    const result = execSync(commandToRun, {
       cwd: opts.cwd || tmpProjPath(),
       env: {
         CI: 'true',
@@ -459,12 +460,12 @@ export function runCLI(
     if (opts.verbose ?? isVerboseE2ERun()) {
       output.log({
         title: `Original command: ${command}`,
-        bodyLines: [logs as string],
+        bodyLines: [result as string],
         color: 'green',
       });
     }
 
-    const r = stripVTControlCharacters(logs);
+    const r = stripVTControlCharacters(result);
 
     runCLI.lastExitCode = 0;
     return r;
@@ -480,7 +481,10 @@ export function runCLI(
     }
     if (opts.silenceError) {
       runCLI.lastExitCode = (e.status ?? 1) as number;
-      return stripVTControlCharacters(e.stdout + e.stderr);
+      // When redirectStderr is not set, stderr wasn't merged into stdout by the
+      // shell, so concat both so callers still see everything.
+      const output = opts.redirectStderr ? e.stdout : e.stdout + e.stderr;
+      return stripVTControlCharacters(output);
     } else {
       logError(`Original command: ${command}`, `${e.stdout}\n\n${e.stderr}`);
       throw e;

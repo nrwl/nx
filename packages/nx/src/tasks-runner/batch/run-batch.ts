@@ -6,7 +6,7 @@ import {
   BatchResults,
 } from './batch-messages';
 import { workspaceRoot } from '../../utils/workspace-root';
-import { combineOptionsForExecutor } from '../../utils/params';
+import { combineOptionsForExecutor, Options } from '../../utils/params';
 import { TaskGraph } from '../../config/task-graph';
 import { ExecutorContext } from '../../config/misc-interfaces';
 import { readProjectsConfigurationFromProjectGraph } from '../../project-graph/project-graph';
@@ -62,7 +62,7 @@ async function runTasks(
     const targetConfiguration =
       projectConfiguration.targets[task.target.target];
     input[task.id] = combineOptionsForExecutor(
-      task.overrides,
+      task.overrides as Options,
       task.target.configuration,
       targetConfiguration,
       batchExecutor.schema,

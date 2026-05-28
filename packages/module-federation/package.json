@@ -22,9 +22,82 @@
   "license": "MIT",
   "homepage": "https://nx.dev",
   "main": "index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    },
+    "./package.json": "./package.json",
+    "./package": "./package.json",
+    "./executors.json": "./executors.json",
+    "./migrations.json": "./migrations.json",
+    "./executors": "./executors.json",
+    "./migrations": "./migrations.json",
+    "./angular": {
+      "types": "./angular.d.ts",
+      "default": "./angular.js"
+    },
+    "./angular.js": {
+      "types": "./angular.d.ts",
+      "default": "./angular.js"
+    },
+    "./rspack": {
+      "types": "./rspack.d.ts",
+      "default": "./rspack.js"
+    },
+    "./rspack.js": {
+      "types": "./rspack.d.ts",
+      "default": "./rspack.js"
+    },
+    "./webpack": {
+      "types": "./webpack.d.ts",
+      "default": "./webpack.js"
+    },
+    "./webpack.js": {
+      "types": "./webpack.d.ts",
+      "default": "./webpack.js"
+    },
+    "./url-helpers": {
+      "types": "./url-helpers.d.ts",
+      "default": "./url-helpers.js"
+    },
+    "./url-helpers.js": {
+      "types": "./url-helpers.d.ts",
+      "default": "./url-helpers.js"
+    },
+    "./src/utils": {
+      "types": "./src/utils/index.d.ts",
+      "default": "./src/utils/index.js"
+    },
+    "./src/utils/models": {
+      "types": "./src/utils/models/index.d.ts",
+      "default": "./src/utils/models/index.js"
+    },
+    "./src/executors/utils": {
+      "types": "./src/executors/utils/index.d.ts",
+      "default": "./src/executors/utils/index.js"
+    },
+    "./src/plugins/models": {
+      "types": "./src/plugins/models/index.d.ts",
+      "default": "./src/plugins/models/index.js"
+    },
+    "./src/plugins/utils": {
+      "types": "./src/plugins/utils/index.d.ts",
+      "default": "./src/plugins/utils/index.js"
+    },
+    "./src/*": {
+      "types": "./src/*.d.ts",
+      "default": "./src/*.js"
+    },
+    "./src/*.js": {
+      "types": "./src/*.d.ts",
+      "default": "./src/*.js"
+    }
+  },
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "^2.3.3",
+    "@module-federation/enhanced": "catalog:",
     "@module-federation/node": "^2.7.21",
     "@module-federation/sdk": "^2.1.0",
     "@nx/devkit": "workspace:*",
@@ -32,10 +105,10 @@
     "@nx/web": "workspace:*",
     "@rspack/core": "catalog:rspack",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "catalog:",
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
-    "webpack": "^5.101.3"
+    "webpack": "catalog:"
   },
   "devDependencies": {
     "nx": "workspace:*"

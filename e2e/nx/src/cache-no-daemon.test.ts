@@ -6,6 +6,7 @@ import {
   newProject,
   readFile,
   removeFile,
+  reservePort,
   rmDist,
   runCLI as _runCLI,
   RunCmdOpts,
@@ -647,9 +648,16 @@ console.log('Build complete');
 
   describe('http remote cache', () => {
     let cacheServer: any;
-    beforeAll(() => {
+    let cachePort: number;
+    let unboundPort: number;
+    beforeAll(async () => {
+      cachePort = await reservePort();
+      // A second port we deliberately don't bind, used by the
+      // "should error if server is not running" test.
+      unboundPort = await reservePort();
       cacheServer = fork(join(__dirname, '__fixtures__', 'remote-cache.js'), {
         stdio: 'inherit',
+        env: { ...process.env, PORT: String(cachePort) },
       });
     });
 
@@ -675,7 +683,7 @@ console.log('Build complete');
       );
       runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -686,7 +694,7 @@ console.log('Build complete');
       runCLI(`reset`);
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
       });
@@ -712,7 +720,7 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3000',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${cachePort}`,
         },
         silenceError: true,
       });
@@ -740,13 +748,13 @@ console.log('Build complete');
       );
       const output = runCLI(`build ${projectName}`, {
         env: {
-          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: 'http://localhost:3001',
+          NX_SELF_HOSTED_REMOTE_CACHE_SERVER: `http://localhost:${unboundPort}`,
           NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN: 'test-token',
         },
         silenceError: true,
       });
 
-      expect(output).toContain('http://localhost:3001');
+      expect(output).toContain(`http://localhost:${unboundPort}`);
     });
   });
 

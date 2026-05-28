@@ -1,6 +1,6 @@
 import { Tree, updateJson, writeJson } from '@nx/devkit';
-import * as shared from '@nx/js/src/utils/typescript/create-ts-config';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import * as shared from '@nx/js';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export function createTsConfig(
   host: Tree,

@@ -1,4 +1,8 @@
 import {
+  determineProjectNameAndRootOptions,
+  logShowProjectCommand,
+} from '@nx/devkit/internal';
+import {
   addDependenciesToPackageJson,
   addProjectConfiguration,
   formatFiles,
@@ -14,29 +18,27 @@ import {
   updateJson,
   writeJson,
 } from '@nx/devkit';
-import { determineProjectNameAndRootOptions } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { lintProjectGenerator } from '@nx/eslint';
 import {
   javaScriptOverride,
   typeScriptOverride,
-} from '@nx/eslint/src/generators/init/global-eslint-config';
+  addPluginsToLintConfig,
+  isEslintConfigSupported,
+  replaceOverridesInLintConfig,
+} from '@nx/eslint/internal';
 import * as path from 'path';
 import { axiosVersion } from '../../utils/versions';
 import { Schema } from './schema';
 import {
-  addPluginsToLintConfig,
-  isEslintConfigSupported,
-  replaceOverridesInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
-import { findRootJestPreset } from '@nx/jest/src/utils/config/config-file';
-import { getInstalledJestMajorVersion } from '@nx/jest/src/utils/versions';
+  findRootJestPreset,
+  getInstalledJestMajorVersion,
+} from '@nx/jest/internal';
 import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+  addSwcTestConfig,
+} from '@nx/js/internal';
 import { relative } from 'node:path/posix';
-import { addSwcTestConfig } from '@nx/js/src/utils/swc/add-swc-config';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
 export async function e2eProjectGenerator(host: Tree, options: Schema) {

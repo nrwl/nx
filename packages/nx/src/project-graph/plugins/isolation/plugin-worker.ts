@@ -1,3 +1,5 @@
+// Must be the first import — see enable-compile-cache.ts.
+import '../../../utils/enable-compile-cache';
 import { performance } from 'node:perf_hooks';
 
 performance.mark(`plugin worker ${process.pid} code loading -- start`);

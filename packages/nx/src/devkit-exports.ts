@@ -27,6 +27,7 @@ export type {
 export type {
   Generator,
   Migration,
+  MigrationReturnObject,
   GeneratorCallback,
   PromiseExecutor,
   AsyncIteratorExecutor,
@@ -88,6 +89,8 @@ export type {
   PluginConfiguration,
   ExpandedPluginConfiguration,
   TargetDefaults,
+  TargetDefaultEntry,
+  TargetDefaultsRecord,
   NxAffectedConfig,
 } from './config/nx-json';
 

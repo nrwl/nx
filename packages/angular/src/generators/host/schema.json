@@ -43,6 +43,10 @@
       "default": "webpack",
       "enum": ["webpack", "rspack"]
     },
+    "port": {
+      "type": "number",
+      "description": "The port at which the Consumer (host) application should be served. Defaults to 4200."
+    },
     "dynamic": {
       "type": "boolean",
       "description": "Should the host application use dynamic federation?",

@@ -1,23 +1,23 @@
+// The global jest setup (`scripts/unit-test-setup.js`) mocks
+// `nx/src/project-graph/project-graph` to return an empty graph for every
+// test, but this suite is the one place that exercises the real
+// `buildProjectGraphAndSourceMapsWithoutDaemon` implementation, so opt out.
+jest.unmock('./project-graph');
+
 import { buildProjectGraphAndSourceMapsWithoutDaemon } from './project-graph';
 import * as plugins from './plugins/get-plugins';
 
-jest.mock(
-  '../utils/workspace-context',
-  () => {
-    return {
-      globWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
-      multiGlobWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
-      getNxWorkspaceFilesFromContext: jest.fn().mockReturnValue({
-        projectFileMap: {},
-        globalFiles: [],
-        externalReferences: {},
-      }),
-    } satisfies Partial<typeof workspaceContext>;
-  },
-  {
-    virtual: true,
-  }
-);
+jest.mock('../utils/workspace-context', () => {
+  return {
+    globWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
+    multiGlobWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
+    getNxWorkspaceFilesFromContext: jest.fn().mockReturnValue({
+      projectFileMap: {},
+      globalFiles: [],
+      externalReferences: {},
+    }),
+  } satisfies Partial<typeof workspaceContext>;
+});
 
 import * as workspaceContext from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';

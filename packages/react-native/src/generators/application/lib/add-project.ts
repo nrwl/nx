@@ -10,6 +10,7 @@ import {
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
 import type { PackageJson } from 'nx/src/utils/package-json';
+import { warnReactNativeExecutorGenerating } from '../../../utils/deprecation';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const nxJson = readNxJson(host);
@@ -18,6 +19,10 @@ export function addProject(host: Tree, options: NormalizedSchema) {
       ? p === '@nx/react-native/plugin'
       : p.plugin === '@nx/react-native/plugin'
   );
+
+  if (!hasPlugin) {
+    warnReactNativeExecutorGenerating();
+  }
 
   const project: ProjectConfiguration = {
     root: options.appProjectRoot,

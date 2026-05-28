@@ -13,8 +13,8 @@ import {
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
   updateOverrideInLintConfig,
-} from '@nx/eslint/src/generators/utils/eslint-file';
-import { useFlatConfig } from '@nx/eslint/src/utils/flat-config';
+  useFlatConfig,
+} from '@nx/eslint/internal';
 
 interface NormalizedSchema {
   linter?: Linter | LinterType;

@@ -2,7 +2,7 @@ import { resolve } from 'path';
 import { ExecutorContext } from '@nx/devkit';
 
 import type { RollupExecutorOptions } from '../schema';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export interface NormalizedRollupExecutorOptions extends RollupExecutorOptions {
   projectRoot: string;

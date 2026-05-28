@@ -2,8 +2,8 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import {
   combineAsyncIterables,
   createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/devkit/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';

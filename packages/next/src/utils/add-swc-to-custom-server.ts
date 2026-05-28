@@ -10,9 +10,8 @@ import {
   swcCoreVersion,
   swcNodeVersion,
   swcHelpersVersion,
-} from '@nx/js/src/utils/versions';
-import { addSwcConfig } from '@nx/js/src/utils/swc/add-swc-config';
-
+  addSwcConfig,
+} from '@nx/js/internal';
 export function configureForSwc(
   tree: Tree,
   projectRoot: string,

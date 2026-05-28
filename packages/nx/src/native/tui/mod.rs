@@ -16,6 +16,7 @@ pub mod tui_app;
 pub mod tui_core;
 pub mod tui_state;
 pub mod utils;
+pub mod vt100_adapter;
 
 pub use inline_app::InlineApp;
 pub use lifecycle::BatchInfo;

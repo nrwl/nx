@@ -144,66 +144,78 @@ export default async function* mavenBatchExecutor(
   // Collect terminal output from failed tasks
   const failedTaskOutputs: string[] = [];
 
-  // Yield results as they stream in
-  for await (const line of rl) {
-    if (line.startsWith('NX_RESULT:')) {
-      try {
-        const jsonStr = line.slice('NX_RESULT:'.length);
-        const data = JSON.parse(jsonStr);
-        const result = {
-          success: data.result.success ?? false,
-          terminalOutput: data.result.terminalOutput ?? '',
-          startTime: data.result.startTime,
-          endTime: data.result.endTime,
-        };
+  const taskIds = Object.keys(taskGraph.tasks);
+  const yielded = new Set<string>();
 
-        // Collect terminal output from failed tasks
-        if (!result.success && result.terminalOutput) {
-          failedTaskOutputs.push(result.terminalOutput);
+  try {
+    for await (const line of rl) {
+      if (line.startsWith('NX_RESULT:')) {
+        try {
+          const data = JSON.parse(line.slice('NX_RESULT:'.length));
+          const result: TaskResult = {
+            success: data.result.success ?? false,
+            status: data.result.status,
+            terminalOutput: data.result.terminalOutput ?? '',
+            startTime: data.result.startTime,
+            endTime: data.result.endTime,
+          };
+
+          if (!result.success && result.terminalOutput) {
+            failedTaskOutputs.push(result.terminalOutput);
+          }
+
+          yielded.add(data.task);
+          yield { task: data.task, result };
+        } catch (e) {
+          console.error('[Maven Batch] Failed to parse result line:', line, e);
         }
-
-        yield {
-          task: data.task,
-          result,
-        };
-      } catch (e) {
-        console.error('[Maven Batch] Failed to parse result line:', line, e);
+      } else if (line.trim()) {
+        stderrLines.push(line);
       }
-    } else if (line.trim()) {
-      // Collect non-empty stderr lines for error reporting
-      stderrLines.push(line);
     }
-  }
 
-  // Wait for process to exit
-  await new Promise<void>((resolve, reject) => {
-    child.on('close', (code) => {
-      if (process.env.NX_VERBOSE_LOGGING === 'true') {
-        console.log(`[Maven Batch] Process exited with code: ${code}`);
+    const exitCode = await new Promise<number>(
+      (resolvePromise, rejectPromise) => {
+        child.on('close', (code) => {
+          if (process.env.NX_VERBOSE_LOGGING === 'true') {
+            console.log(`[Maven Batch] Process exited with code: ${code}`);
+          }
+          resolvePromise(code ?? 0);
+        });
+        child.on('error', rejectPromise);
       }
-      // If process exited unexpectedly, print captured stderr
-      if (code !== 0 && stderrLines.length > 0) {
+    );
+
+    if (exitCode !== 0) {
+      if (stderrLines.length > 0) {
         console.error(
-          `[Maven Batch] Process exited with code ${code}. Stderr output:`
+          `[Maven Batch] Process exited with code ${exitCode}. Stderr output:`
         );
         for (const line of stderrLines) {
           console.error(line);
         }
       }
-      // Print failed task outputs to stderr so they appear in error.message
       if (failedTaskOutputs.length > 0) {
         console.error('\n[Maven Batch] Failed task outputs:');
         for (const output of failedTaskOutputs) {
           console.error(output);
         }
       }
-      // Reject promise if batch runner exited with non-zero code
-      if (code !== 0) {
-        reject(new Error(`Maven batch runner exited with code ${code}`));
-      } else {
-        resolve();
+      throw new Error(`Maven batch runner exited with code ${exitCode}`);
+    }
+  } catch (e) {
+    // Runner crashed before reporting on every task — backfill so Nx doesn't hang.
+    for (const taskId of taskIds) {
+      if (!yielded.has(taskId)) {
+        yielded.add(taskId);
+        yield {
+          task: taskId,
+          result: {
+            success: false,
+            terminalOutput: (e as Error).toString(),
+          },
+        };
       }
-    });
-    child.on('error', reject);
-  });
+    }
+  }
 }

@@ -1,5 +1,5 @@
-import { registerTsProject } from '@nx/js/src/internal';
-import { clearRequireCache } from '@nx/devkit/src/utils/config-utils';
+import { clearRequireCache } from '@nx/devkit/internal';
+import { loadTsFile } from '@nx/js/internal';
 
 export function resolveUserDefinedWebpackConfig(
   path: string,
@@ -21,9 +21,7 @@ export function resolveUserDefinedWebpackConfig(
     return require(path);
   }
 
-  const cleanupTranspiler = registerTsProject(tsConfig);
-  const maybeCustomWebpackConfig = require(path);
-  cleanupTranspiler();
+  const maybeCustomWebpackConfig = loadTsFile(path, tsConfig);
 
   // If the user provides a configuration in TS file
   // then there are 3 cases for exporing an object. The first one is:

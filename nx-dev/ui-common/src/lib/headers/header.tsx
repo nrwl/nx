@@ -126,14 +126,14 @@ export function Header({
   return (
     <div className="fixed inset-x-0 top-0 isolate z-[5] flex px-4 print:hidden">
       <div
-        className="absolute inset-x-0 top-0 mx-auto h-20 max-w-7xl backdrop-blur"
+        className="absolute inset-x-0 top-0 mx-auto h-20 max-w-7xl backdrop-blur-sm"
         style={{
           maskImage:
             'linear-gradient(to bottom, #000000 20%, transparent calc(100% - 20%))',
         }}
       />
       {/*DESKTOP*/}
-      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-zinc-200/40 bg-white/70 px-4 py-2 shadow-sm backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-zinc-800/60 dark:bg-zinc-950/40">
+      <div className="mx-auto mt-2 hidden w-full max-w-7xl items-center justify-between space-x-10 rounded-xl border border-zinc-200/40 bg-white/70 px-4 py-2 shadow-xs backdrop-blur-xl backdrop-saturate-150 lg:flex dark:border-zinc-800/60 dark:bg-zinc-950/40">
         {/*PRIMARY NAVIGATION*/}
         <div className="flex flex-shrink-0 text-sm">
           {/*LOGO*/}
@@ -156,7 +156,7 @@ export function Header({
             <Link
               href={docsUrl}
               title="Documentation"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEventViaGtm(
@@ -171,7 +171,7 @@ export function Header({
             <Link
               href="/blog"
               title="Blog"
-              className="hidden px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
             >
               Blog
@@ -183,7 +183,7 @@ export function Header({
                   <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-blue-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
+                      'group inline-flex items-center px-3 py-2 leading-tight font-medium outline-0 dark:text-zinc-200'
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
@@ -229,7 +229,7 @@ export function Header({
                   <PopoverButton
                     className={cx(
                       open ? 'text-blue-500 dark:text-blue-500' : '',
-                      'group inline-flex items-center px-3 py-2 font-medium leading-tight outline-0 dark:text-zinc-200'
+                      'group inline-flex items-center px-3 py-2 leading-tight font-medium outline-0 dark:text-zinc-200'
                     )}
                   >
                     <span className="transition duration-150 ease-in-out group-hover:text-blue-500 dark:group-hover:text-blue-500">
@@ -266,7 +266,7 @@ export function Header({
             <Link
               href="/nx-cloud"
               title="Nx Cloud"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEventViaGtm(
@@ -281,7 +281,7 @@ export function Header({
             <Link
               href="/nx-cloud#plans"
               title="Nx Cloud Pricing"
-              className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEventViaGtm(
@@ -298,7 +298,7 @@ export function Header({
             <Link
               href="/enterprise"
               title="Nx for Enterprises"
-              className="hidden gap-2 px-3 py-2 font-semibold leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+              className="hidden gap-2 px-3 py-2 leading-tight font-semibold hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
               prefetch={false}
               onClick={() =>
                 sendCustomEventViaGtm(
@@ -324,7 +324,7 @@ export function Header({
                     scrollCtaButtons.length > 0 &&
                     isScrolled
                       ? 'opacity-0 blur-sm'
-                      : 'opacity-100 blur-0'
+                      : 'blur-0 opacity-100'
                   }`}
                 >
                   {(ctaButtons && ctaButtons.length > 0
@@ -339,7 +339,7 @@ export function Header({
                 {scrollCtaButtons && scrollCtaButtons.length > 0 && (
                   <div
                     className={`absolute inset-0 flex justify-end space-x-2 transition-all duration-700 ease-in-out ${
-                      isScrolled ? 'opacity-100 blur-0' : 'opacity-0 blur-sm'
+                      isScrolled ? 'blur-0 opacity-100' : 'opacity-0 blur-sm'
                     }`}
                   >
                     {scrollCtaButtons.map((buttonProps, index) => (
@@ -443,7 +443,7 @@ export function Header({
                           <div className="ml-3 flex h-7 items-center">
                             <button
                               type="button"
-                              className="dark:hovers:text-blue-500 relative rounded-md text-zinc-600 hover:text-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:text-zinc-400 dark:focus:ring-blue-500"
+                              className="dark:hovers:text-blue-500 relative rounded-md text-zinc-600 hover:text-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:text-zinc-400 dark:focus:ring-blue-500"
                               onClick={() => setIsOpen(!isOpen)}
                             >
                               <span className="absolute -inset-2.5" />
@@ -467,7 +467,7 @@ export function Header({
                               scrollCtaButtons.length > 0 &&
                               isScrolled
                                 ? 'opacity-0 blur-sm'
-                                : 'opacity-100 blur-0'
+                                : 'blur-0 opacity-100'
                             }`}
                           >
                             <ButtonLink
@@ -494,7 +494,7 @@ export function Header({
                             <div
                               className={`absolute inset-0 space-y-2 transition-all duration-500 ease-in-out ${
                                 isScrolled
-                                  ? 'opacity-100 blur-0'
+                                  ? 'blur-0 opacity-100'
                                   : 'opacity-0 blur-sm'
                               }`}
                             >
@@ -513,7 +513,7 @@ export function Header({
                           <Link
                             href={docsUrl}
                             title="Documentation"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
+                            className="block py-4 leading-tight font-medium hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEventViaGtm(
@@ -528,7 +528,7 @@ export function Header({
                           <Link
                             href="/blog"
                             title="Blog"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
+                            className="block py-4 leading-tight font-medium hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                           >
                             Blog
@@ -618,7 +618,7 @@ export function Header({
                           <Link
                             href="/nx-cloud"
                             title="Nx Cloud"
-                            className="flex w-full gap-2 py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
+                            className="flex w-full gap-2 py-4 leading-tight font-medium hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEventViaGtm(
@@ -633,7 +633,7 @@ export function Header({
                           <Link
                             href="/nx-cloud#plans"
                             title="Nx Cloud Pricing"
-                            className="hidden gap-2 px-3 py-2 font-medium leading-tight hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
+                            className="hidden gap-2 px-3 py-2 leading-tight font-medium hover:text-blue-500 md:inline-flex dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEventViaGtm(
@@ -686,7 +686,7 @@ export function Header({
                           <Link
                             href="/contact"
                             title="Contact"
-                            className="block py-4 font-medium leading-tight hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
+                            className="block py-4 leading-tight font-medium hover:text-blue-500 dark:text-zinc-200 dark:hover:text-blue-500"
                             prefetch={false}
                             onClick={() =>
                               sendCustomEventViaGtm(

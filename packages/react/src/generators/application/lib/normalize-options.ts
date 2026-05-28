@@ -2,14 +2,14 @@ import { Tree, names, readNxJson } from '@nx/devkit';
 import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
+} from '@nx/devkit/internal';
 import {
   assertValidReactRouter,
   assertValidStyle,
 } from '../../../utils/assertion';
 import { NormalizedSchema, Schema } from '../schema';
 import { findFreePort } from './find-free-port';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 export async function normalizeOptions<T extends Schema = Schema>(
   host: Tree,

@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   getProjects,
@@ -7,7 +8,6 @@ import {
   updateProjectConfiguration,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { WebpackExecutorOptions } from '../../executors/webpack/schema';
 import { extractWebpackOptions } from './lib/extract-webpack-options';
 import { normalizePathOptions } from './lib/normalize-path-options';
@@ -116,7 +116,7 @@ export async function convertConfigToWebpackPluginGenerator(
                 // To enhance configurations after Nx plugins have applied, you can add a new plugin with the \`apply\` method.
                 // e.g. \`{ apply: (compiler) => { /* modify compiler.options */ }\`
                 // eslint-disable-next-line react-hooks/rules-of-hooks
-                await useLegacyNxPlugin(require('./webpack.config.old'), options),
+                await useLegacyNxPlugin(require('./webpack.config.old${ext}'), options),
               ],
               });
           `

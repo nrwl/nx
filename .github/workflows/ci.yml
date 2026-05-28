@@ -13,6 +13,10 @@ env:
   NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
   NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
   PNPM_HOME: ~/.pnpm
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs), pulling pnpm 11 and breaking install.
+  COREPACK_DEFAULT_TO_LATEST: '0'
 
 jobs:
   main-linux:
@@ -80,6 +84,9 @@ jobs:
 
       - name: Install project dependencies
         run: pnpm install --frozen-lockfile
+
+      - name: Restore .NET analyzer projects
+        run: dotnet restore nx.sln
 
       - name: Nx Report
         run:
@@ -308,6 +315,10 @@ jobs:
         run: |
           pnpm install --frozen-lockfile
           pnpm playwright install --with-deps
+
+      - name: Restore .NET packages
+        if: steps.check-changes.outputs.has_changes == 'true'
+        run: dotnet restore nx.sln
 
       - name: Run E2E Tests for macOS
         if: steps.check-changes.outputs.has_changes == 'true'

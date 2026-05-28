@@ -8,6 +8,7 @@ import { join, resolve as pathResolve } from 'path';
 import { ExpoRunOptions } from './schema';
 import { prebuildAsync } from '../prebuild/prebuild.impl';
 import { podInstall } from '../../utils/pod-install-task';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoRunOutput {
   success: boolean;
@@ -19,6 +20,8 @@ export default async function* runExecutor(
   options: ExpoRunOptions,
   context: ExecutorContext
 ): AsyncGenerator<ExpoRunOutput> {
+  warnExpoExecutorDeprecation('run');
+
   if (platform() !== 'darwin' && options.platform === 'ios') {
     throw new Error(`The run-ios build requires Mac to run`);
   }

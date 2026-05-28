@@ -1,3 +1,4 @@
+import { createAsyncIterable } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   parseTargetString,
@@ -13,14 +14,16 @@ import {
 import { fork } from 'child_process';
 import customServer from './custom-server.impl';
 import { createCliOptions } from '../../utils/create-cli-options';
-import { createAsyncIterable } from '@nx/devkit/src/utils/async-iterable';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { getInstalledNextVersionRuntime } from '../../utils/runtime-version-utils';
+import { warnNextServerExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function* serveExecutor(
   options: NextServeBuilderOptions,
   context: ExecutorContext
 ) {
+  warnNextServerExecutorDeprecation();
+
   const buildOptions = readTargetOptions<NextBuildBuilderOptions>(
     parseTargetString(options.buildTarget, context),
     context

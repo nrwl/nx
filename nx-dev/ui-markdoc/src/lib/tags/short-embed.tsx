@@ -90,7 +90,7 @@ export function ShortEmbeds({
     >
       <aside
         id="short-embed"
-        className="not-content fixed bottom-5 right-5 z-50 w-80"
+        className="not-content fixed right-5 bottom-5 z-50 w-80"
       >
         <Transition
           appear={true}
@@ -109,7 +109,7 @@ export function ShortEmbeds({
               onClick={() => {
                 setTimeout(() => setIsShowing(false), 500);
               }}
-              className="absolute right-2 top-2"
+              className="absolute top-2 right-2"
               title="Close"
             >
               <XMarkIcon className="h-4 w-4" />
@@ -135,7 +135,7 @@ export function ShortEmbeds({
                             setUserInteraction(true);
                             setCurrentVideo(config);
                           }}
-                          className="flex h-24 overflow-hidden rounded-lg border border-zinc-200 bg-white/40 text-sm shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:cursor-pointer hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+                          className="flex h-24 overflow-hidden rounded-lg border border-zinc-200 bg-white/40 text-sm shadow-xs transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:cursor-pointer hover:bg-white dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
                         >
                           <div className="w-32 shrink-0">
                             <img
@@ -144,7 +144,7 @@ export function ShortEmbeds({
                               alt={`Another recommendation: ${config.title}`}
                             />
                           </div>
-                          <div className="grid h-full w-full shrink grid-cols-1 content-center overflow-ellipsis p-2">
+                          <div className="grid h-full w-full shrink grid-cols-1 content-center p-2 overflow-ellipsis">
                             {config.title}
                           </div>
                         </div>

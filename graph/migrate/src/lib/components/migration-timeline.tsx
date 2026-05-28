@@ -145,7 +145,7 @@ export function MigrationTimeline({
         {onCancel && (
           <button
             onClick={onCancel}
-            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50"
           >
             Cancel the migration
           </button>
@@ -156,7 +156,7 @@ export function MigrationTimeline({
         {/* Timeline lines */}
         {/* Solid line for visible migrations */}
         <div
-          className="absolute left-10 top-0 w-0.5 bg-slate-200"
+          className="absolute top-0 left-10 w-0.5 bg-slate-200"
           style={{
             height: hasFutureMigrationsHidden ? 'calc(100% - 15%)' : '100%',
           }}
@@ -209,7 +209,7 @@ export function MigrationTimeline({
 
                   <div
                     className={twMerge(
-                      `ml-6 mt-1`,
+                      `mt-1 ml-6`,
                       expandedMigrations[currentMigration.id] ? '-mt-1' : ''
                     )}
                   >
@@ -217,7 +217,7 @@ export function MigrationTimeline({
                       <div className="flex w-full items-center gap-4 font-medium">
                         <span
                           onClick={() => toggleMigrationExpanded(migration.id)}
-                          className={`flex-shrink-0 cursor-pointer whitespace-nowrap text-base ${
+                          className={`flex-shrink-0 cursor-pointer text-base whitespace-nowrap ${
                             nxConsoleMetadata.completedMigrations?.[
                               migration.id
                             ]?.type === 'successful'
@@ -244,7 +244,7 @@ export function MigrationTimeline({
                                 onRunMigration(migration);
                               }}
                               type="button"
-                              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                             >
                               <ArrowPathIcon
                                 className="h-5 w-5"
@@ -319,7 +319,7 @@ export function MigrationTimeline({
               />
               <div
                 className={twMerge(
-                  `ml-6 mt-1`,
+                  `mt-1 ml-6`,
                   expandedMigrations[currentMigration.id] ? '-mt-1' : ''
                 )}
               >
@@ -348,7 +348,7 @@ export function MigrationTimeline({
                             onRunMigration(currentMigration);
                           }}
                           type="button"
-                          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                          className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                         >
                           <ArrowPathIcon
                             className="h-5 w-5"
@@ -364,7 +364,7 @@ export function MigrationTimeline({
                             onSkipMigration(currentMigration);
                           }}
                           type="button"
-                          className="flex items-center rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
+                          className="flex items-center rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
                         >
                           <XMarkIcon className="h-5 w-5" aria-hidden="true" />{' '}
                           Skip
@@ -379,7 +379,7 @@ export function MigrationTimeline({
                               onUndoMigration(currentMigration);
                             }}
                             type="button"
-                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+                            className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-xs transition-colors hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
                           >
                             <XMarkIcon className="h-5 w-5" aria-hidden="true" />{' '}
                             Undo and Skip
@@ -390,7 +390,7 @@ export function MigrationTimeline({
                               onReviewMigration(currentMigration.id);
                             }}
                             type="button"
-                            className="flex items-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-600 dark:border-blue-600 dark:bg-blue-600 hover:dark:bg-blue-700"
+                            className="flex items-center gap-2 rounded-md border border-blue-500 bg-blue-500 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-blue-600 dark:border-blue-600 dark:bg-blue-600 hover:dark:bg-blue-700"
                           >
                             <CheckIcon className="h-5 w-5" aria-hidden="true" />{' '}
                             Approve Changes
@@ -438,7 +438,7 @@ export function MigrationTimeline({
 
                   <div
                     className={twMerge(
-                      `ml-6 mt-1`,
+                      `mt-1 ml-6`,
                       expandedMigrations[migration.id] &&
                         !nxConsoleMetadata.completedMigrations?.[migration.id]
                         ? '-mt-1'
@@ -471,7 +471,7 @@ export function MigrationTimeline({
                                 onSkipMigration(migration);
                               }}
                               type="button"
-                              className="flex items-center gap-2 rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
+                              className="flex items-center gap-2 rounded-md border border-red-500 bg-red-500 px-4 py-2 text-sm font-medium text-white shadow-xs hover:bg-red-600 dark:border-red-700 dark:bg-red-600 hover:dark:bg-red-700"
                             >
                               <XMarkIcon
                                 className="h-5 w-5"
@@ -507,7 +507,7 @@ export function MigrationTimeline({
               {hasFutureMigrationsHidden && (
                 <div
                   key="show-future-migrations"
-                  className="relative mb-1 mt-9 w-full"
+                  className="relative mt-9 mb-1 w-full"
                 >
                   <TimelineButton
                     icon={ChevronDownIcon}
@@ -530,7 +530,7 @@ export function MigrationTimeline({
               {showAllFutureMigrations && (
                 <div
                   key="show-future-migrations"
-                  className="relative mb-1 mt-6 w-full"
+                  className="relative mt-6 mb-1 w-full"
                 >
                   <TimelineButton
                     icon={ChevronUpIcon}
@@ -565,7 +565,7 @@ interface TimelineButtonProps {
 function TimelineButton({ icon: Icon, onClick }: TimelineButtonProps) {
   return (
     <div
-      className="absolute left-0 top-0 flex h-6 w-6 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full bg-slate-300 text-slate-700"
+      className="absolute top-0 left-0 flex h-6 w-6 -translate-x-1/2 cursor-pointer items-center justify-center rounded-full bg-slate-300 text-slate-700"
       onClick={onClick}
     >
       <Icon className="h-4 w-4" />
@@ -649,7 +649,7 @@ function MigrationStateCircle({
     <div
       className={twMerge(
         !!Icon ? 'h-8 w-8' : 'mt-1 h-6 w-6',
-        `absolute left-0 top-0 flex -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
+        `absolute top-0 left-0 flex -translate-x-1/2 cursor-pointer items-center justify-center rounded-full ${bgColor} ${textColor}`,
         needsAttention ? 'animate-pulse' : ''
       )}
       onClick={onClick}

@@ -1,14 +1,14 @@
 use std::collections::{HashMap, HashSet};
 use std::path::{MAIN_SEPARATOR, Path, PathBuf};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use crossbeam_channel::{Receiver, Sender, bounded, select, unbounded};
 use napi::bindgen_prelude::*;
 use napi::threadsafe_function::{ThreadsafeFunction, ThreadsafeFunctionCallMode};
 use notify::{RecursiveMode, Watcher as NotifyWatcher};
 use parking_lot::Mutex;
-use tracing::debug;
+use tracing::{debug, trace};
 
 #[cfg(not(target_os = "macos"))]
 use crate::native::glob::{NxGlobSet, build_glob_set};
@@ -20,11 +20,31 @@ use crate::native::watch::types::{
 };
 use crate::native::watch::watch_filterer;
 
+/// now − mtime in ms; `-1` if mtime is unreadable. Surfaces upstream
+/// delivery delay (kernel → inotify → notify worker → notify_rx).
+#[inline]
+fn event_age_ms(metadata: &std::io::Result<std::fs::Metadata>) -> i128 {
+    metadata
+        .as_ref()
+        .ok()
+        .and_then(|m| m.modified().ok())
+        .and_then(|mtime| SystemTime::now().duration_since(mtime).ok())
+        .map(|d| d.as_millis() as i128)
+        .unwrap_or(-1)
+}
+
 /// Trailing-edge debounce: emit accumulated events after this much silence.
 const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
+/// Grace given to the kernel→notify-crate hop on a force-flush so an event
+/// the caller just produced isn't missed. macOS FSEvents coalesces with
+/// noticeably more latency than Linux inotify, so it needs more room.
+#[cfg(target_os = "macos")]
+const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(50);
+#[cfg(not(target_os = "macos"))]
+const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
 
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -198,6 +218,7 @@ impl WatchPipeline {
         register_watches(&mut self.watcher, dirs)?;
 
         let mut nested_dirs: HashSet<PathBuf> = HashSet::new();
+        let mut backfilled_paths: Vec<PathBuf> = Vec::new();
         for dir in dirs {
             for rel_path in nx_walker_sync(dir, None) {
                 let full_path = dir.join(&rel_path);
@@ -207,7 +228,8 @@ impl WatchPipeline {
                     let path = full_path
                         .strip_prefix(&self.origin_path)
                         .map(Path::to_path_buf)
-                        .unwrap_or(full_path);
+                        .unwrap_or(full_path.clone());
+                    backfilled_paths.push(path.clone());
                     self.merge_event(WatchEventInternal {
                         path,
                         r#type: EventType::create,
@@ -215,6 +237,14 @@ impl WatchPipeline {
                 }
             }
         }
+
+        trace!(
+            files = ?backfilled_paths,
+            nested = ?nested_dirs,
+            "backfilled {} files, {} nested dirs",
+            backfilled_paths.len(),
+            nested_dirs.len()
+        );
 
         register_watches(&mut self.watcher, &nested_dirs)
     }
@@ -234,6 +264,19 @@ impl WatchPipeline {
 
         if !self.filterer.check_event(&raw) {
             return Ok(());
+        }
+
+        // Trace only events that survive the filter — Access reads and
+        // other floods are dropped above, so we don't pollute the log
+        // with their misleading age_ms (mtime there is the prior write,
+        // not the event).
+        for (path, metadata) in raw.paths() {
+            trace!(
+                ?path,
+                kind = ?raw.kind(),
+                age_ms = event_age_ms(metadata),
+                "ingest"
+            );
         }
 
         #[cfg(not(target_os = "macos"))]
@@ -295,17 +338,37 @@ impl WatchPipeline {
                             replies.push(extra);
                         }
                         let mut fatal: Option<String> = None;
-                        while let Ok(event) = self.notify_rx.try_recv() {
-                            if let Err(msg) = self.ingest_event(event) {
-                                fatal = Some(msg);
-                                break;
+
+                        let handler_started_at = Instant::now();
+
+                        // Wait briefly for notify-crate sends that are
+                        // mid-flight — a bare try_recv would miss them.
+                        match self.notify_rx.recv_timeout(FORCE_FLUSH_GRACE) {
+                            Ok(event) => {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                }
+                            }
+                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
+                            Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
+                                fatal = Some("watcher channel disconnected".to_string());
+                            }
+                        }
+
+                        if fatal.is_none() {
+                            while let Ok(event) = self.notify_rx.try_recv() {
+                                if let Err(msg) = self.ingest_event(event) {
+                                    fatal = Some(msg);
+                                    break;
+                                }
                             }
                         }
                         let watch_events = self.snapshot_events();
                         debug!(
                             count = watch_events.len(),
                             replies = replies.len(),
-                            "force-flush emitting events"
+                            elapsed = ?handler_started_at.elapsed(),
+                            "force-flush END"
                         );
                         for e in &watch_events {
                             debug!("  [{:?}] {}", e.r#type, e.path);
@@ -495,7 +558,9 @@ mod tests {
             }
         });
         w.watch_inner(callback).expect("start watch");
-        std::thread::sleep(Duration::from_millis(150));
+        // Drop any startup events FSEvents leaks from before the watch began.
+        std::thread::sleep(Duration::from_millis(300));
+        captured.lock().unwrap().clear();
         (w, captured)
     }
 
@@ -699,6 +764,25 @@ mod tests {
                 matches!(evt.r#type, EventType::create),
                 "{name} should classify as Create; got {:?}",
                 evt.r#type
+            );
+        }
+    }
+
+    #[test]
+    fn force_flush_pending_captures_in_flight_writes() {
+        // Write + immediate flush, hammered to surface the race.
+        let dir = tempdir().expect("tempdir");
+        let target = dir.path().join("nx.json");
+        fs::write(&target, "v1").expect("initial write");
+
+        let (watcher, _captured) = start_watcher(dir.path());
+
+        for i in 0..20 {
+            fs::write(&target, format!("v{i}")).expect("rewrite");
+            let events = watcher.force_flush_pending();
+            assert!(
+                events.iter().any(|e| e.path == "nx.json"),
+                "iteration {i}: missed nx.json event — got {events:?}"
             );
         }
     }

@@ -11,10 +11,6 @@ import {
 } from '../sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
 
-/**
- * TODO (@xiongemi): remove this function in v20.
- * @deprecated Going to use the default react storybook target. Use @nx/react:storybook executor instead.
- */
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,
   context: ExecutorContext

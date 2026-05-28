@@ -52,7 +52,7 @@ export async function watchTaskProjectsFileChangesForAssets(
   const unregisterFileWatcher = await daemonClient.registerFileWatcher(
     {
       watchProjects: taskInfos.map((t) => t.context.projectName),
-      includeDependentProjects: true,
+      includeDependencies: true,
       includeGlobalWorkspaceFiles: true,
     },
     (err, data) => {

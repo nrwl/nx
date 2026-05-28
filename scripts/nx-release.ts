@@ -76,9 +76,19 @@ const VALID_AUTHORS_FOR_LATEST = [
   const packagesToReset = [
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
+    'packages/devkit',
     'packages/dotnet',
+    'packages/cypress',
+    'packages/eslint',
+    'packages/eslint-plugin',
+    'packages/jest',
+    'packages/js',
     'packages/maven',
     'packages/nx',
+    'packages/playwright',
+    'packages/vite',
+    'packages/vitest',
+    'packages/workspace',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};
@@ -499,7 +509,7 @@ function determineDistTag(
 function hackFixForDevkitPeerDependencies() {
   const { readFileSync, writeFileSync } = require('fs');
   const devkitPackageJson = JSON.parse(
-    readFileSync('./dist/packages/devkit/package.json', 'utf-8')
+    readFileSync('./packages/devkit/package.json', 'utf-8')
   );
 
   const beforeVersion = devkitPackageJson.peerDependencies['nx'];
@@ -512,7 +522,7 @@ function hackFixForDevkitPeerDependencies() {
       majorVersion + 1
     } || ^${majorVersion}.0.0-0`;
     writeFileSync(
-      './dist/packages/devkit/package.json',
+      './packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)
     );
   }

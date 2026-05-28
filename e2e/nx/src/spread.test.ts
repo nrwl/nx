@@ -23,6 +23,12 @@ describe('Spread Token Merging', () => {
   });
   afterEach(() => {
     updateFile('nx.json', JSON.stringify(existingNxJson, null, 2));
+    // Reset daemon cache so the next test does not see stale plugin-inferred
+    // project graph data.  The PR enabling NX_DAEMON=true in runCLI means the
+    // daemon persists across tests; without a reset, re-adding a previously
+    // removed plugin to nx.json can cause the daemon to return a cached graph
+    // that is missing inferred targets.
+    runCLI('reset');
   });
 
   function getResolvedProject(name: string) {

@@ -1,6 +1,13 @@
 import {
+  calculateHashesForCreateNodes,
+  loadConfigFile,
+  getNamedInputs,
+} from '@nx/devkit/internal';
+import {
+  AggregateCreateNodesError,
   createNodesFromFiles,
   type CreateNodesContextV2,
+  CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -10,11 +17,8 @@ import {
   type TargetConfiguration,
   type TargetDependencyConfig,
 } from '@nx/devkit';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
-import { walkTsconfigExtendsChain } from '@nx/js/src/internal';
+import { walkTsconfigExtendsChain } from '@nx/js/internal';
 import type { PlaywrightTestConfig } from '@playwright/test';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync } from 'node:fs';
@@ -48,19 +52,58 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
       `playwright-${optionsHash}.hash`
     );
     const pluginCache = new PluginCache<PlaywrightTargets>(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, pluginCache, pmc),
+      const { entries, preErrors } = await filterPlaywrightConfigs(
         configFilePaths,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        { ...normalizedOptions, CI: process.env.CI },
+        context,
+        entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pluginCache,
+              pmc,
+              entries[idx].externalTsconfigInputs,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
-      pluginCache.writeToDisk(cachePath);
+      pluginCache.writeToDisk();
     }
   },
 ];
@@ -69,41 +112,14 @@ export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
-  options: PlaywrightPluginOptions,
+  normalizedOptions: NormalizedOptions,
   context: CreateNodesContextV2,
   pluginCache: PluginCache<PlaywrightTargets>,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  externalTsconfigInputs: string[],
+  hash: string
 ) {
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const normalizedOptions = normalizeOptions(options);
-
-  const externalTsconfigInputs = collectExternalTsconfigInputs(
-    projectRoot,
-    context.workspaceRoot
-  );
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    {
-      ...normalizedOptions,
-      CI: process.env.CI,
-    },
-    context,
-    [
-      getLockFileName(detectPackageManager(context.workspaceRoot)),
-      ...externalTsconfigInputs,
-    ]
-  );
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(
@@ -312,7 +328,6 @@ async function buildPlaywrightTargets(
 
       dependsOn.push({
         target: targetName,
-        projects: 'self',
         params: 'forward',
         options: 'forward',
       });
@@ -626,6 +641,50 @@ function normalizeAtomizedTaskBlobReportOutput(
   return output.endsWith('.zip')
     ? joinPathFragments(dirname(output), `${subfolder}.zip`)
     : joinPathFragments(output, `${subfolder}.zip`);
+}
+
+interface PlaywrightEntry {
+  configFile: string;
+  projectRoot: string;
+  externalTsconfigInputs: string[];
+}
+
+async function filterPlaywrightConfigs(
+  configFilePaths: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: PlaywrightEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFilePaths.map(async (configFile): Promise<PlaywrightEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        const externalTsconfigInputs = collectExternalTsconfigInputs(
+          projectRoot,
+          context.workspaceRoot
+        );
+        return { configFile, projectRoot, externalTsconfigInputs };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is PlaywrightEntry => c !== null),
+    preErrors,
+  };
 }
 
 /**

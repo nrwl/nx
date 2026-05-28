@@ -6,7 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { esbuildVersion } from '@nx/js/src/utils/versions';
+import { esbuildVersion } from '@nx/js/internal';
 import {
   expressTypingsVersion,
   expressVersion,

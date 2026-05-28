@@ -2,6 +2,7 @@ import { NormalizedSchema } from '../schema';
 import {
   addProjectConfiguration,
   joinPathFragments,
+  logger,
   ProjectConfiguration,
   TargetConfiguration,
   Tree,
@@ -24,6 +25,14 @@ export function addProject(host: Tree, options: NormalizedSchema) {
 
   if (options.bundler === 'webpack') {
     if (!hasWebpackPlugin(host) || !options.addPlugin) {
+      // Mirrors warnWebpackExecutorGenerating from @nx/webpack/src/utils/deprecation.
+      // Inlined to avoid a cross-package deep import; @nx/webpack's package
+      // exports field doesn't expose internal `src/...` paths, so the import
+      // works at compile time (via tsconfig project refs) but fails at runtime
+      // in published packages.
+      logger.warn(
+        'Generating targets that use the deprecated `@nx/webpack:webpack` and `@nx/webpack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/webpack:convert-to-inferred` next to migrate these targets to the `@nx/webpack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+      );
       project.targets = {
         build: createBuildTarget(options),
         serve: createServeTarget(options),
@@ -33,6 +42,12 @@ export function addProject(host: Tree, options: NormalizedSchema) {
     options.bundler === 'rspack' &&
     (!hasRspackPlugin(host) || !options.addPlugin)
   ) {
+    // Mirrors warnRspackExecutorGenerating from @nx/rspack/src/utils/deprecation.
+    // Inlined to avoid a cross-package import where react does not declare a
+    // TypeScript project reference to rspack.
+    logger.warn(
+      'Generating targets that use the deprecated `@nx/rspack:rspack` and `@nx/rspack:dev-server` executors. These executors will be removed in Nx v24. Run `nx g @nx/rspack:convert-to-inferred` next to migrate these targets to the `@nx/rspack/plugin` inferred plugin and prevent future generators from emitting executor targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    );
     project.targets = {
       build: createRspackBuildTarget(options),
       serve: createRspackServeTarget(options),

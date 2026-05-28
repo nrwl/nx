@@ -444,36 +444,52 @@ export function stringifyNpmLockfile(
   return JSON.stringify(output, null, 2);
 }
 
+const WORKSPACE_DEP_TYPES = [
+  'dependencies',
+  'optionalDependencies',
+  'peerDependencies',
+] as const;
+
 function mapWorkspaceModules(
   packageJson: NormalizedPackageJson,
   rootLockFile: NpmLockFile,
   workspaceModules: Map<string, ProjectGraphProjectNode>
 ) {
   const output: Record<string, NpmDependencyV3 & NpmDependencyV1> = {};
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
+  const snapshotsByName = new Map<string, NpmDependencyV3 & NpmDependencyV1>();
+  for (const snapshot of Object.values(
+    rootLockFile.packages || rootLockFile.dependencies || {}
   )) {
-    if (workspaceModules.has(pkgName)) {
-      let workspaceModuleDefinition: NpmDependencyV3 & NpmDependencyV1;
-      for (const [depName, depSnapshot] of Object.entries(
-        rootLockFile.packages || rootLockFile.dependencies
-      )) {
-        if (depSnapshot.name === pkgName) {
-          workspaceModuleDefinition = depSnapshot;
-          break;
-        }
-      }
+    if (snapshot.name) snapshotsByName.set(snapshot.name, snapshot);
+  }
 
-      output[`node_modules/${pkgName}`] = {
-        version: `file:./workspace_modules/${pkgName}`,
-        resolved: `workspace_modules/${pkgName}`,
-        link: true,
-      };
-      output[`workspace_modules/${pkgName}`] = {
-        name: pkgName,
-        version: `0.0.1`,
-        dependencies: workspaceModuleDefinition.dependencies,
-      };
+  // Walk transitive workspace deps so every workspace package
+  // copy-workspace-modules writes to disk has matching lockfile entries.
+  // Without this, `npm ci` errors with "Missing: <pkg> from lock file".
+  const queue: string[] = Object.keys(packageJson.dependencies ?? {});
+  const visited = new Set<string>();
+  while (queue.length > 0) {
+    const pkgName = queue.shift()!;
+    if (visited.has(pkgName) || !workspaceModules.has(pkgName)) continue;
+    visited.add(pkgName);
+
+    const snapshot = snapshotsByName.get(pkgName);
+
+    output[`node_modules/${pkgName}`] = {
+      version: `file:./workspace_modules/${pkgName}`,
+      resolved: `workspace_modules/${pkgName}`,
+      link: true,
+    };
+    output[`workspace_modules/${pkgName}`] = {
+      name: pkgName,
+      version: `0.0.1`,
+      dependencies: snapshot?.dependencies,
+    };
+
+    for (const depType of WORKSPACE_DEP_TYPES) {
+      const deps = snapshot?.[depType];
+      if (!deps) continue;
+      for (const depName of Object.keys(deps)) queue.push(depName);
     }
   }
   return output;

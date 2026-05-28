@@ -281,7 +281,7 @@ export async function resolveCurrentVersionFromGitTag(
   if (latestMatchingGitTag && latestMatchingGitTag.extractedVersion) {
     const currentVersion = latestMatchingGitTag.extractedVersion;
     logger.buffer(
-      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}", based on releaseTagPattern "${releaseTagPattern}"`
+      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}", based on releaseTag.pattern "${releaseTagPattern}"`
     );
     // Write to the cache if the release group is fixed
     if (releaseGroup.projectsRelationship === 'fixed') {

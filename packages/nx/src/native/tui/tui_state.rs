@@ -615,28 +615,15 @@ static_assertions::assert_impl_all!(TuiState: Send);
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_state() -> TuiState {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -669,13 +656,19 @@ mod tests {
         let mut state = create_test_state();
 
         // Initial status should be NotStarted
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::NotStarted));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::NotStarted)
+        );
 
         // Update status
-        state.update_task_status("app1", TaskStatus::InProgress);
+        state.update_task_status("app1:build", TaskStatus::InProgress);
 
         // Verify status updated
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::InProgress)
+        );
     }
 
     #[test]
@@ -687,12 +680,12 @@ mod tests {
     #[test]
     fn test_get_task_status_map() {
         let mut state = create_test_state();
-        state.update_task_status("app1", TaskStatus::Success);
-        state.update_task_status("app2", TaskStatus::InProgress);
+        state.update_task_status("app1:build", TaskStatus::Success);
+        state.update_task_status("app2:build", TaskStatus::InProgress);
 
         let map = state.get_task_status_map();
-        assert_eq!(map.get("app1"), Some(&TaskStatus::Success));
-        assert_eq!(map.get("app2"), Some(&TaskStatus::InProgress));
+        assert_eq!(map.get("app1:build"), Some(&TaskStatus::Success));
+        assert_eq!(map.get("app2:build"), Some(&TaskStatus::InProgress));
     }
 
     // === PTY Management Tests ===
@@ -705,10 +698,10 @@ mod tests {
         let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
 
         // Register PTY
-        state.register_pty_instance(String::from("app1"), pty.clone());
+        state.register_pty_instance(String::from("app1:build"), pty.clone());
 
         // Verify PTY is retrievable
-        let retrieved = state.get_pty_instance("app1");
+        let retrieved = state.get_pty_instance("app1:build");
         assert!(retrieved.is_some());
         assert!(Arc::ptr_eq(&pty, &retrieved.unwrap()));
     }
@@ -726,13 +719,13 @@ mod tests {
         let pty1 = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
         let pty2 = Arc::new(PtyInstance::non_interactive_with_dimensions(30, 120));
 
-        state.register_pty_instance(String::from("app1"), pty1.clone());
-        state.register_pty_instance(String::from("app2"), pty2.clone());
+        state.register_pty_instance(String::from("app1:build"), pty1.clone());
+        state.register_pty_instance(String::from("app2:build"), pty2.clone());
 
         let instances = state.get_pty_instances();
         assert_eq!(instances.len(), 2);
-        assert!(instances.contains_key("app1"));
-        assert!(instances.contains_key("app2"));
+        assert!(instances.contains_key("app1:build"));
+        assert!(instances.contains_key("app2:build"));
     }
 
     // === Quit Management Tests ===
@@ -817,7 +810,7 @@ mod tests {
 
         // Record start
         let before_start = current_timestamp_millis();
-        state.record_task_start("app1");
+        state.record_task_start("app1:build");
         let after_start = current_timestamp_millis();
 
         // Small delay
@@ -825,11 +818,11 @@ mod tests {
 
         // Record end
         let before_end = current_timestamp_millis();
-        state.record_task_end("app1");
+        state.record_task_end("app1:build");
         let after_end = current_timestamp_millis();
 
         // Verify timings
-        let (start, end) = state.get_task_timing("app1");
+        let (start, end) = state.get_task_timing("app1:build");
         assert!(start.is_some());
         assert!(end.is_some());
 
@@ -858,14 +851,14 @@ mod tests {
     fn test_get_task_start_and_end_times() {
         let mut state = create_test_state();
 
-        state.record_task_start("app1");
-        state.record_task_end("app1");
+        state.record_task_start("app1:build");
+        state.record_task_end("app1:build");
 
         let start_times = state.get_task_start_times();
         let end_times = state.get_task_end_times();
 
-        assert!(start_times.contains_key("app1"));
-        assert!(end_times.contains_key("app1"));
+        assert!(start_times.contains_key("app1:build"));
+        assert!(end_times.contains_key("app1:build"));
     }
 
     // === User Interaction Tests ===
@@ -923,7 +916,6 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::native::tasks::types::TaskTarget;
     use crate::native::tui::config;
 
     #[test]
@@ -936,14 +928,14 @@ mod integration_tests {
         let state_clone = state.clone();
         let handle = std::thread::spawn(move || {
             let mut s = state_clone.lock();
-            s.update_task_status("app1", TaskStatus::Success);
+            s.update_task_status("app1:build", TaskStatus::Success);
         });
 
         handle.join().unwrap();
 
         // Verify change is visible
         let s = state.lock();
-        assert_eq!(s.get_task_status("app1"), Some(TaskStatus::Success));
+        assert_eq!(s.get_task_status("app1:build"), Some(TaskStatus::Success));
     }
 
     #[test]
@@ -964,7 +956,7 @@ mod integration_tests {
 
     fn create_test_state() -> TuiState {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -991,18 +983,6 @@ mod integration_tests {
     }
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 }

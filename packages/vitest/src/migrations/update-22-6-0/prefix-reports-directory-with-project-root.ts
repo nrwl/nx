@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   readProjectConfiguration,
   type Tree,
@@ -5,7 +6,6 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { isAbsolute } from 'path';
 
 interface VitestExecutorOptions {

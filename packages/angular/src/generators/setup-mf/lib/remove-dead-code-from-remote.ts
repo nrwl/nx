@@ -1,6 +1,6 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, readProjectConfiguration } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedOptions } from '../schema';
 
 export function removeDeadCodeFromRemote(

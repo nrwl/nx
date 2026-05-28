@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import * as devkit from '@nx/devkit';
 import {
   NxJsonConfiguration,
@@ -10,6 +10,7 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -19,8 +20,8 @@ import { generateTestApplication } from '../utils/testing';
 import type { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use installed version in this repo's package.json
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 jest.mock('enquirer');
@@ -229,7 +230,7 @@ describe('app', () => {
       });
 
       expect(
-        appTree.exists('playwright-app-e2e/playwright.config.ts')
+        appTree.exists('playwright-app-e2e/playwright.config.mts')
       ).toBeTruthy();
       expect(
         appTree.exists('playwright-app-e2e/src/example.spec.ts')
@@ -868,12 +869,13 @@ describe('app', () => {
           },
         });
         const nxJson = readNxJson(appTree);
-        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
-          {
-            cache: true,
-            inputs: ['default', '^default'],
-          }
-        );
+        const unitTestDefault = normalizeTargetDefaults(
+          nxJson.targetDefaults
+        ).find((entry) => entry.executor === '@angular/build:unit-test');
+        expect(unitTestDefault).toMatchObject({
+          cache: true,
+          inputs: ['default', '^default'],
+        });
       });
 
       it('should install vitest, jsdom and @angular/build packages', async () => {
@@ -1109,7 +1111,7 @@ describe('app', () => {
         e2eTestRunner: E2eTestRunner.Playwright,
         name: 'root-app',
       });
-      expect(appTree.exists('e2e/playwright.config.ts')).toBeTruthy();
+      expect(appTree.exists('e2e/playwright.config.mts')).toBeTruthy();
       expect(appTree.exists('e2e/src/example.spec.ts')).toBeTruthy();
     });
 

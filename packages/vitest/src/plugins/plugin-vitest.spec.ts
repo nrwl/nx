@@ -128,6 +128,52 @@ describe('@nx/vitest', () => {
 
       expect(nodes).toMatchSnapshot();
     });
+
+    it('should sort atomized target names when test discovery returns shuffled paths', async () => {
+      // tinyglobby (which vitest uses for test discovery) does not sort its
+      // filesystem walk output. Simulate that by returning module IDs in
+      // non-alphabetic order; the plugin must sort them so atomized target
+      // insertion order is stable across runs.
+      // Dynamic import: jest.resetModules() in afterEach replaces the mock
+      // factory's `createVitest` between tests, so a top-level import would
+      // hold a stale reference.
+      const { createVitest } = await import('vitest/node');
+      (createVitest as jest.Mock).mockImplementationOnce(() => ({
+        getRelevantTestSpecifications: jest
+          .fn()
+          .mockResolvedValue([
+            { moduleId: 'src/c.test.ts' },
+            { moduleId: 'src/a.test.ts' },
+            { moduleId: 'src/b.test.ts' },
+          ]),
+      }));
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      const atomizedTargetNames = Object.keys(targets).filter((name) =>
+        name.startsWith('test-ci--')
+      );
+      expect(atomizedTargetNames).toEqual([
+        'test-ci--src/a.test.ts',
+        'test-ci--src/b.test.ts',
+        'test-ci--src/c.test.ts',
+      ]);
+
+      // dependsOn and target group ordering must agree with insertion order.
+      const dependsOn = (targets['test-ci'].dependsOn as string[]).filter(
+        (d: string) => d.startsWith('test-ci--')
+      );
+      expect(dependsOn).toEqual([
+        'test-ci--src/a.test.ts',
+        'test-ci--src/b.test.ts',
+        'test-ci--src/c.test.ts',
+      ]);
+    });
   });
 
   describe('typecheck enabled', () => {

@@ -111,6 +111,13 @@ async function sendToGA4(
 }
 
 /**
+ * Common WordPress / exploit-scanner probe patterns. Bots hit nx.dev with these
+ * paths constantly; matching upstreams don't exist and we never want to proxy them.
+ */
+const botProbeRegex =
+  /(wp-(includes|admin|content)|xmlrpc\.php|wlwmanifest|\.env|\.git\/)/i;
+
+/**
  * Paths that should be served by the Next.js app instead of Framer.
  * Everything else is proxied to Framer (or the blog site if configured).
  */
@@ -141,7 +148,13 @@ export default async function handler(
   context: Context
 ): Promise<Response> {
   const url = new URL(request.url);
-  const pathname = url.pathname;
+  // Collapse leading `/+` so a bot path like `//wp/...` can't be parsed as a
+  // protocol-relative URL (which would promote `wp` to the upstream host).
+  const pathname = url.pathname.replace(/^\/+/, '/');
+
+  if (botProbeRegex.test(pathname)) {
+    return new Response(null, { status: 404 });
+  }
 
   if (nextjsPaths.has(pathname)) return context.next();
 

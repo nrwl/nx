@@ -30,5 +30,5 @@
     }
   },
   "tags": [],
-  "implicitDependencies": [":gradle-project-graph"]
+  "implicitDependencies": [":gradle-project-graph", ":gradle-batch-runner"]
 }

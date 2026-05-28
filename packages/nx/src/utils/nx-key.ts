@@ -1,7 +1,6 @@
-import { logger } from './logger';
+import { getNxRequirePaths } from './installation-directory';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
-import { handleImport } from './handle-import';
 import type { NxKey } from '@nx/key';
 
 export function createNxKeyLicenseeInformation(nxKey: NxKey) {
@@ -18,39 +17,35 @@ export function createNxKeyLicenseeInformation(nxKey: NxKey) {
   }
 }
 
-export async function printNxKey() {
+// `await handleImport` walks node_modules and pays ~25ms per miss; `resolve`
+// is just the filesystem lookup and is microseconds when the package is absent.
+// Only treat MODULE_NOT_FOUND as "not installed" so unrelated errors (permission,
+// corrupt package.json, etc.) still surface instead of being silently hidden.
+function packageInstalled(name: string): boolean {
   try {
-    const key = await getNxKeyInformation();
-    if (key) {
-      logger.log(createNxKeyLicenseeInformation(key));
-    }
-  } catch {}
+    require.resolve(name, { paths: getNxRequirePaths() });
+    return true;
+  } catch (e: any) {
+    if (e?.code === 'MODULE_NOT_FOUND') return false;
+    throw e;
+  }
 }
 
 export async function getNxKeyInformation(): Promise<NxKey | null> {
-  try {
+  if (packageInstalled('@nx/key')) {
+    const { getNxKeyInformationAsync } = await import('@nx/key');
+    return getNxKeyInformationAsync(workspaceRoot);
+  }
+  if (packageInstalled('@nx/powerpack-license')) {
     const {
       getPowerpackLicenseInformation,
       getPowerpackLicenseInformationAsync,
-    } = (await handleImport(
-      '@nx/powerpack-license'
-    )) as typeof import('@nx/powerpack-license');
+    } = await import('@nx/powerpack-license');
     return (
       getPowerpackLicenseInformationAsync ?? getPowerpackLicenseInformation
     )(workspaceRoot);
-  } catch (e) {
-    try {
-      const { getNxKeyInformationAsync } = (await handleImport(
-        '@nx/key'
-      )) as typeof import('@nx/key');
-      return getNxKeyInformationAsync(workspaceRoot);
-    } catch (e) {
-      if ('code' in e && e.code === 'MODULE_NOT_FOUND') {
-        throw new NxKeyNotInstalledError(e);
-      }
-      throw e;
-    }
   }
+  throw new NxKeyNotInstalledError(new Error('MODULE_NOT_FOUND'));
 }
 
 export class NxKeyNotInstalledError extends Error {

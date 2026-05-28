@@ -26,13 +26,18 @@ export const tsNodeVersion = '10.9.1';
 export const lessVersion = '^4.3.0';
 
 export const jestPresetAngularVersion = '~16.0.0';
-export const typesNodeVersion = '20.19.9';
+export const typesNodeVersion = '^22.0.0';
 export const jasmineMarblesVersion = '^0.9.2';
 
 export const vitestVersion = '^4.0.8';
 export const jsdomVersion = '^27.1.0';
-// @angular/build uses rolldown which injects @oxc-project/runtime helpers
-// at transform time but doesn't declare it as a dependency
+// `@analogjs/vite-plugin-angular` (vitest-analog path) registers an
+// `angularVitestPlugin` whose `transform` hook downlevels `@angular/*`
+// fesm2022 modules via `vite.transformWithOxc({ target: 'es2016', … })`
+// so Zone.js `fakeAsync` can intercept async/await. The lowered code
+// emits external `@oxc-project/runtime/helpers/*` imports (oxc default
+// `HelperMode = 'Runtime'`). Nothing upstream declares the runtime, so
+// we add it explicitly to user projects.
 export const oxcProjectRuntimeVersion = '^0.115.0';
 
 export const jsoncEslintParserVersion = '^2.1.0';

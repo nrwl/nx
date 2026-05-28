@@ -1,8 +1,8 @@
 import { defaultMaxListeners } from 'events';
 import { writeFileSync } from 'fs';
-import * as pc from 'picocolors';
 import { relative } from 'path';
 import { performance } from 'perf_hooks';
+import * as pc from 'picocolors';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { ProjectGraph } from '../config/project-graph';
 import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
@@ -15,20 +15,21 @@ import { getInputs, TaskHasher } from '../hasher/task-hasher';
 import {
   BatchStatus,
   IS_WASM,
+  TaskStatus as NativeTaskStatus,
   parseTaskStatus,
   RunningTasksService,
   TaskDetails,
-  TaskStatus as NativeTaskStatus,
+  TaskInvocationTracker,
 } from '../native';
 import { NxArgs } from '../utils/command-line-utils';
 import { getLocalDbConnection } from '../utils/db-connection';
-import { output } from '../utils/output';
-import { combineOptionsForExecutor } from '../utils/params';
-import { workspaceRoot } from '../utils/workspace-root';
 import {
   EXPECTED_TERMINATION_SIGNALS,
   signalToCode,
 } from '../utils/exit-codes';
+import { output } from '../utils/output';
+import { combineOptionsForExecutor, Options } from '../utils/params';
+import { workspaceRoot } from '../utils/workspace-root';
 import {
   Cache,
   CachedResult,
@@ -41,9 +42,10 @@ import { ForkedProcessTaskRunner } from './forked-process-task-runner';
 import { isTuiEnabled } from './is-tui-enabled';
 import { TaskMetadata, TaskResult } from './life-cycle';
 import { PseudoTtyProcess } from './pseudo-terminal';
-import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { NoopChildProcess } from './running-tasks/noop-child-process';
+import { getColor, writePrefixedLines } from './running-tasks/output-prefix';
 import { RunningTask } from './running-tasks/running-task';
+import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
@@ -57,16 +59,26 @@ import {
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
-  isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
-import { SharedRunningTask } from './running-tasks/shared-running-task';
 
 type CacheHit = {
   task: Task;
   cachedResult: CachedResult & { remote: boolean };
 };
+
+/**
+ * Resolve a batch executor's per-task result to a TaskStatus. Prefers an
+ * explicit `status` from the executor; falls back to the `success` boolean
+ * for executors that pre-date the `status` field.
+ */
+function resolveBatchTaskStatus(result: {
+  success: boolean;
+  status?: TaskStatus;
+}): TaskStatus {
+  return result.status ?? (result.success ? 'success' : 'failure');
+}
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -85,6 +97,16 @@ export class TaskOrchestrator {
   private runningTasksService = !IS_WASM
     ? new RunningTasksService(getLocalDbConnection())
     : null;
+  private taskInvocationTracker = !IS_WASM
+    ? new TaskInvocationTracker(
+        getLocalDbConnection(),
+        Number(process.env.NX_INVOCATION_ROOT_PID ?? process.pid)
+      )
+    : null;
+  // Tracks tasks registered by THIS process so that recursive code paths
+  // (e.g. applyFromCacheOrRunBatch looping on incomplete batches) don't
+  // re-register and trip the DB uniqueness constraint.
+  private registeredInvocations = new Set<string>();
   private tasksSchedule = new TasksSchedule(
     this.projectGraph,
     this.projects,
@@ -158,6 +180,7 @@ export class TaskOrchestrator {
 
   async init() {
     this.setupSignalHandlers();
+    this.taskInvocationTracker?.cleanupStale();
 
     // Init the ForkedProcessTaskRunner, TasksSchedule, and Cache
     await Promise.all([
@@ -399,14 +422,47 @@ export class TaskOrchestrator {
     }
   }
 
+  /**
+   * Registers a task invocation and checks for loops across nested Nx processes.
+   * Uses the task_invocations DB table keyed by root PID. registerTask() throws
+   * on unique constraint violation when a parent Nx process already registered
+   * this task — indicating an infinite loop.
+   */
+  private detectTaskInvocationLoop(task: Task): void {
+    if (!this.taskInvocationTracker) return;
+    if (this.registeredInvocations.has(task.id)) return;
+    try {
+      this.taskInvocationTracker.registerTask(process.pid, task.id);
+      this.registeredInvocations.add(task.id);
+    } catch {
+      // Unique constraint violation — task already invoked by an ancestor Nx process
+      const chain = this.taskInvocationTracker.getInvocationChain();
+      const chainDisplay = chain.map((r) => r.taskId).join(' -> ');
+
+      output.error({
+        title: 'Recursive task invocation detected',
+        bodyLines: [
+          `Nx detected a recursive loop of task invocations:`,
+          ``,
+          `  ${chainDisplay} -> ${task.id}`,
+          ``,
+          `Task "${task.id}" was already invoked by a parent Nx process in this chain.`,
+          `This typically happens when a task's command (e.g., "nx ${task.target.target} ${task.target.project}")`,
+          `triggers a chain of tasks that eventually re-invokes itself.`,
+          ``,
+          `To fix this, review the command configuration for the tasks in the chain above.`,
+        ],
+      });
+      process.exit(1);
+    }
+  }
+
   // endregion Processing Scheduled Tasks
 
   // region Applying Cache
 
   private async applyCachedResults(tasks: Task[]): Promise<TaskResult[]> {
-    const cacheableTasks = tasks.filter((t) =>
-      isCacheableTask(t, this.options)
-    );
+    const cacheableTasks = tasks.filter((t) => t.cache);
     if (cacheableTasks.length === 0) return [];
 
     const cacheHits = await this.fetchCacheHits(cacheableTasks);
@@ -514,11 +570,7 @@ export class TaskOrchestrator {
     const candidates: Task[] = [];
     for (const id of scheduledTasks) {
       const task = this.taskGraph.tasks[id];
-      if (
-        task.hash &&
-        !task.continuous &&
-        isCacheableTask(task, this.options)
-      ) {
+      if (task.hash && !task.continuous && task.cache) {
         candidates.push(task);
       }
     }
@@ -669,6 +721,10 @@ export class TaskOrchestrator {
     if (taskIdsToSkip.length < tasks.length) {
       const runGraph = removeTasksFromTaskGraph(batch.taskGraph, taskIdsToSkip);
 
+      for (const task of Object.values(runGraph.tasks)) {
+        this.detectTaskInvocationLoop(task);
+      }
+
       batchResults = await this.runBatch(
         {
           id: batch.id,
@@ -763,19 +819,26 @@ export class TaskOrchestrator {
       // Heavy operations (caching, scheduling, complete) happen at batch-end in postRunSteps
       batchProcess.onTaskResults((taskId, result) => {
         const task = this.taskGraph.tasks[taskId];
-        const status = result.success ? 'success' : 'failure';
+        const status = resolveBatchTaskStatus(result);
 
-        this.options.lifeCycle.printTaskTerminalOutput(
-          task,
-          status,
-          result.terminalOutput ?? ''
-        );
-
+        // Append before print so printTaskTerminalOutput finds the PTY already
+        // populated and no-ops; reversing the order writes terminalOutput twice.
         if (result.terminalOutput) {
           this.options.lifeCycle.appendTaskOutput(
             taskId,
             result.terminalOutput,
             false
+          );
+        }
+
+        // Skipped tasks didn't run, so they have no terminal output and don't
+        // need a per-task PTY — calling printTaskTerminalOutput would otherwise
+        // allocate one just to write a cursor-hide escape.
+        if (status !== 'skipped') {
+          this.options.lifeCycle.printTaskTerminalOutput(
+            task,
+            status,
+            result.terminalOutput ?? ''
           );
         }
 
@@ -799,10 +862,11 @@ export class TaskOrchestrator {
         const task = this.taskGraph.tasks[taskId];
         task.startTime = result.startTime;
         task.endTime = result.endTime;
+        const status = resolveBatchTaskStatus(result);
         return {
-          code: result.success ? 0 : 1,
+          code: status === 'success' ? 0 : 1,
           task,
-          status: (result.success ? 'success' : 'failure') as TaskStatus,
+          status,
           terminalOutput: result.terminalOutput,
         };
       });
@@ -856,9 +920,7 @@ export class TaskOrchestrator {
   ): Promise<TaskResult[]> {
     if (!doNotSkipCache || tasks.length === 0) return [];
 
-    const cacheableTasks = tasks.filter((t) =>
-      isCacheableTask(t, this.options)
-    );
+    const cacheableTasks = tasks.filter((t) => t.cache);
     if (cacheableTasks.length === 0) return [];
 
     // Wait for any queued processTask promises to settle so task.hash is
@@ -989,6 +1051,8 @@ export class TaskOrchestrator {
     );
     this.discreteTaskExitHandled.set(task.id, discreteExitHandled);
 
+    this.detectTaskInvocationLoop(task);
+
     const childProcess = await this.runTask(
       task,
       streamOutput,
@@ -1044,7 +1108,7 @@ export class TaskOrchestrator {
       try {
         const { schema } = getExecutorForTask(task, this.projects);
         const combinedOptions = combineOptionsForExecutor(
-          task.overrides,
+          task.overrides as Options,
           task.target.configuration ?? targetConfiguration.defaultConfiguration,
           targetConfiguration,
           schema,
@@ -1291,6 +1355,7 @@ export class TaskOrchestrator {
           temporaryOutputPath,
           streamOutput
         );
+    this.detectTaskInvocationLoop(task);
     const childProcess = await this.runTask(
       task,
       streamOutput,
@@ -1478,6 +1543,8 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
+      this.taskInvocationTracker?.unregisterTask(task.id);
+      this.registeredInvocations.delete(task.id);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
@@ -1550,7 +1617,7 @@ export class TaskOrchestrator {
 
   private shouldCacheTaskResult(task: Task, code: number) {
     return (
-      isCacheableTask(task, this.options) &&
+      task.cache &&
       (process.env.NX_CACHE_FAILURES == 'true' ? true : code === 0)
     );
   }
@@ -1621,6 +1688,15 @@ export class TaskOrchestrator {
         ownsRunningTasksService,
         reason
       );
+    } else if (!this.isContinuousTaskNeeded(task.id)) {
+      // No remaining tasks depend on this — the task was about to be
+      // killed by cleanUpUnneededContinuousTasks anyway.
+      await this.completeContinuousTask(
+        task,
+        groupId,
+        ownsRunningTasksService,
+        'fulfilled'
+      );
     } else {
       console.error(
         `Task "${task.id}" is continuous but exited with code ${code}`
@@ -1632,6 +1708,14 @@ export class TaskOrchestrator {
         'crashed'
       );
     }
+  }
+
+  private isContinuousTaskNeeded(taskId: string): boolean {
+    return this.tasksSchedule
+      .getIncompleteTasks()
+      .some((t) =>
+        this.taskGraph.continuousDependencies[t.id]?.includes(taskId)
+      );
   }
 
   private async completeContinuousTask(
@@ -1708,9 +1792,11 @@ export class TaskOrchestrator {
       );
     }
 
-    // Kill all processes
-    this.forkedProcessTaskRunner.cleanup();
+    // Kill all processes — await forked runner cleanup for graceful shutdown
+    const forkedCleanup = this.forkedProcessTaskRunner.cleanup();
+    const continuousTaskIds = new Set(continuousSnapshot.map(([id]) => id));
     await Promise.all([
+      forkedCleanup,
       ...continuousSnapshot.map(async ([taskId, { runningTask }]) => {
         try {
           await runningTask.kill();
@@ -1727,13 +1813,16 @@ export class TaskOrchestrator {
           }
         }
       ),
-      ...Array.from(this.runningRunCommandsTasks).map(async ([taskId, t]) => {
-        try {
-          await t.kill();
-        } catch (e) {
-          console.error(`Unable to terminate ${taskId}\nError:`, e);
-        }
-      }),
+      // Skip tasks already killed via continuousSnapshot to avoid duplicate signals
+      ...Array.from(this.runningRunCommandsTasks)
+        .filter(([taskId]) => !continuousTaskIds.has(taskId))
+        .map(async ([taskId, t]) => {
+          try {
+            await t.kill();
+          } catch (e) {
+            console.error(`Unable to terminate ${taskId}\nError:`, e);
+          }
+        }),
     ]);
 
     // Discrete exit promises resolve promptly (process kill → getResults →
@@ -1743,19 +1832,25 @@ export class TaskOrchestrator {
   }
 
   private setupSignalHandlers() {
-    process.once('SIGINT', () => {
+    // Use process.on (not once) so the handler stays registered and absorbs
+    // re-raised signals from signal-exit. Without this, signal-exit's handler
+    // sees no remaining listeners after our once-handler auto-removes, and
+    // re-raises the signal — killing the process before async cleanup completes.
+    // The cleanup() idempotency guard (cleanupPromise) prevents double execution.
+    const handleSignal = (signal: NodeJS.Signals) => {
+      if (this.stopRequested) return;
       this.stopRequested = true;
       if (!this.tuiEnabled) {
         // Synchronously remove DB entries before async cleanup to prevent
         // new nx processes from seeing stale "Waiting for ..." messages.
-        // This replicates the cleanup that process.exit() + Rust Drop
-        // previously provided.
         for (const [taskId, { ownsRunningTasksService }] of this
           .runningContinuousTasks) {
           if (ownsRunningTasksService) {
             this.runningTasksService?.removeRunningTask(taskId);
           }
         }
+      }
+      if (signal === 'SIGINT' && !this.tuiEnabled) {
         // Silence output — pnpm (and similar wrappers) may exit before nx
         // finishes cleanup, returning the shell prompt. Any output after
         // that point would appear after the prompt.
@@ -1770,26 +1865,13 @@ export class TaskOrchestrator {
         if (this.resolveStopPromise) {
           this.resolveStopPromise();
         } else {
-          process.exit(signalToCode('SIGINT'));
+          process.exit(signalToCode(signal));
         }
       });
-    });
-    process.once('SIGTERM', () => {
-      this.stopRequested = true;
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
-    process.once('SIGHUP', () => {
-      this.stopRequested = true;
-      this.cleanup().finally(() => {
-        if (this.resolveStopPromise) {
-          this.resolveStopPromise();
-        }
-      });
-    });
+    };
+    process.on('SIGINT', () => handleSignal('SIGINT'));
+    process.on('SIGTERM', () => handleSignal('SIGTERM'));
+    process.on('SIGHUP', () => handleSignal('SIGHUP'));
   }
 
   private cleanUpUnneededContinuousTasks() {

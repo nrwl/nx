@@ -6,11 +6,14 @@ import { dirname, posix, relative, resolve } from 'path';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
+import { warnEslintExecutorDeprecation } from '../../utils/deprecation';
 
 export default async function run(
   options: Schema,
   context: ExecutorContext
 ): Promise<{ success: boolean }> {
+  warnEslintExecutorDeprecation();
+
   // hasTypeAwareRules is deprecated and no longer used, delete it so it's not passed to ESLint
   delete options.hasTypeAwareRules;
 

@@ -37,16 +37,6 @@ export function normalizeViteConfigFilePath(
       )
     ) {
       return joinPathFragments(contextRoot, projectRoot, `vite.config.${ext}`);
-    } else if (
-      existsSync(
-        joinPathFragments(contextRoot, projectRoot, `vitest.config.${ext}`)
-      )
-    ) {
-      return joinPathFragments(
-        contextRoot,
-        projectRoot,
-        `vitest.config.${ext}`
-      );
     }
   }
 }

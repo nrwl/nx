@@ -1,9 +1,11 @@
 import {
   cleanupProject,
   getPackageManagerCommand,
+  getSelectedPackageManager,
   killProcessAndPorts,
   newProject,
   readJson,
+  reservePort,
   runCLI,
   runCommand,
   runCommandUntil,
@@ -135,7 +137,7 @@ describe('@nx/vite/plugin', () => {
 
     it('should run serve-static', async () => {
       let process: ChildProcess;
-      const port = 8081;
+      const port = await reservePort();
 
       try {
         process = await runCommandUntil(
@@ -325,9 +327,18 @@ describe('@nx/vite/plugin', () => {
       );
 
       // Downgrade to Vite 7 and @vitejs/plugin-react v4 (v6 only supports Vite 8)
+      const isYarn = getSelectedPackageManager() === 'yarn';
       updateJson('package.json', (json) => {
         json.devDependencies['vite'] = '^7.0.0';
         json.devDependencies['@vitejs/plugin-react'] = '^4.2.0';
+        // Yarn classic's linker bombs ("could not find a copy of vite to link
+        // in node_modules/vitest/node_modules") when intersecting a
+        // top-level `^7.0.0` range with vitest's vite dep+peer combo. Pin
+        // vite via `resolutions` so yarn commits to a single version up
+        // front and skips the buggy hoisting path.
+        if (isYarn) {
+          json.resolutions = { ...(json.resolutions ?? {}), vite: '^7.0.0' };
+        }
         return json;
       });
       runCommand(getPackageManagerCommand().install);

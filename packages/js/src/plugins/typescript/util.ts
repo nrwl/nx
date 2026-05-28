@@ -53,7 +53,7 @@ export function addBuildAndWatchDepsTargets(
     targets[options.watchDepsTargetName ?? 'watch-deps'] = {
       continuous: true,
       dependsOn: [buildDepsTargetName],
-      command: `${pmc.exec} nx watch --projects ${projectName} --includeDependentProjects -- ${pmc.exec} nx ${buildDepsTargetName} ${projectName}`,
+      command: `${pmc.exec} nx watch --projects ${projectName} --includeDependencies -- ${pmc.exec} nx ${buildDepsTargetName} ${projectName}`,
     };
   }
 }

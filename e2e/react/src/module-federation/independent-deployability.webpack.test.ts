@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  getAvailablePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -28,13 +28,16 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     // Update remote to be loaded via script
     updateFile(
@@ -165,17 +168,20 @@ describe('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
+
     runCLI(
       `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
     );
-
-    const remotePort = readPort(remote);
 
     updateFile(
       `${lib}/src/lib/${lib}.ts`,
@@ -315,13 +321,16 @@ describe('Independent Deployability', () => {
   it('should support host and remote with library type var', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --devServerPort=${shellPort} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     // update host and remote to use library type var
     updateFile(

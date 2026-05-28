@@ -1,11 +1,11 @@
 import type { Tree } from '@nx/devkit';
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   joinPathFragments,
   readJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { addReleaseConfigForNonTsSolution } from '@nx/js/src/generators/library/utils/add-release-config';
+import { addReleaseConfigForNonTsSolution } from '@nx/js/internal';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import type { NormalizedSchema } from './normalized-schema';
 

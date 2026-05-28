@@ -1,4 +1,4 @@
-import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/src/utils/generate-globs';
+import { createGlobPatternsForDependencies as jsGenerateGlobs } from '@nx/js/internal';
 
 let hasWarned = false;
 

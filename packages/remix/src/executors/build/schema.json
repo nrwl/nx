@@ -6,6 +6,7 @@
   "title": "Remix Build",
   "description": "Build a Remix app.",
   "type": "object",
+  "x-deprecated": "The `@nx/remix:build` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/remix:convert-to-inferred` to migrate to the `@nx/remix/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "properties": {
     "outputPath": {
       "type": "string",

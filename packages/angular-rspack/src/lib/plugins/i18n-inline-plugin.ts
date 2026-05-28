@@ -75,7 +75,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
           { text: string | Buffer; map: sources.RawSourceMap | null }
         >();
         for (const [filename, { text, map }] of filesToInline.entries()) {
-          if (this.#checkAssetHasBeenProcessed(filename)) {
+          if (this.#shouldSkipPerLocaleEmit(filename)) {
             continue;
           }
           const result = await this.#transformWithBabel(
@@ -96,7 +96,7 @@ export class I18nInlinePlugin implements RspackPluginInstance {
           // TODO: Add support for diagnostics
         }
         for (const [filename, source] of additionalFiles.entries()) {
-          if (this.#checkAssetHasBeenProcessed(filename)) {
+          if (this.#shouldSkipPerLocaleEmit(filename)) {
             continue;
           }
           localeFiles.set(filename, {
@@ -135,8 +135,20 @@ export class I18nInlinePlugin implements RspackPluginInstance {
     });
   }
 
-  #checkAssetHasBeenProcessed(filename: string) {
-    return this.#outputPaths.has(filename.split('/')[0]);
+  // Returns true when an asset must not be duplicated per locale.
+  // - First segment matches a locale subPath: the asset is already inside a
+  //   per-locale dir (re-entrancy guard).
+  // - Path contains a `..` segment: the asset is globally scoped and emits
+  //   outside the per-locale dir (e.g. `LicenseWebpackPlugin`'s
+  //   `../3rdpartylicenses.txt`, which lands at `outputPath.base`). This
+  //   mirrors how Angular's application builder excludes
+  //   `BuildOutputFileType.Root` files from i18n inlining; without the
+  //   guard, every locale's emit would resolve to the same physical path
+  //   and rspack's `compareBeforeEmit` would surface them as undeclared
+  //   reads.
+  #shouldSkipPerLocaleEmit(filename: string) {
+    const segments = filename.split('/');
+    return this.#outputPaths.has(segments[0]) || segments.includes('..');
   }
 
   /**

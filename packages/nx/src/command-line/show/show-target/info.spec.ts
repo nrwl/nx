@@ -183,6 +183,181 @@ describe('show target info', () => {
     expect(parsed.dependsOn.sort()).toEqual(['lib-a:build', 'lib-b:build']);
   });
 
+  it('should expose transitive task deps and group them by target', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: { executor: '@nx/web:build', dependsOn: ['^build'] },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: { executor: '@nx/js:tsc', dependsOn: ['^build'] },
+            },
+          },
+          'lib'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/lib-b',
+            name: 'lib-b',
+            targets: { build: { executor: '@nx/js:tsc' } },
+          },
+          'lib'
+        )
+        .addDependency('my-app', 'lib-a')
+        .addDependency('lib-a', 'lib-b')
+        .build()
+    );
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.dependsOn).toEqual(['lib-a:build']);
+    expect(parsed.transitiveTasks).toEqual(['lib-b:build']);
+  });
+
+  it('should render a transitive-task summary line in text output', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: { executor: '@nx/web:build', dependsOn: ['^build'] },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: {
+              build: { executor: '@nx/js:tsc', dependsOn: ['^compile'] },
+            },
+          },
+          'lib'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/lib-b',
+            name: 'lib-b',
+            targets: { compile: { executor: '@nx/js:tsc' } },
+          },
+          'lib'
+        )
+        .addDependency('my-app', 'lib-a')
+        .addDependency('lib-a', 'lib-b')
+        .build()
+    );
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: false });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // With ≤3 unique transitive target names, list them.
+    expect(allLogged).toMatch(/and 1 compile transitive task/m);
+  });
+
+  it('should collapse the transitive-task summary to just a count when there are more than 3 unique target names', async () => {
+    const builder = new GraphBuilder().addProjectConfiguration(
+      {
+        root: 'apps/my-app',
+        name: 'my-app',
+        targets: {
+          build: { executor: '@nx/web:build', dependsOn: ['^build'] },
+        },
+      },
+      'app'
+    );
+
+    // direct: lib-0:build. transient fans out into 4 distinct target names
+    // (build, compile, lint, test) so the summary should collapse.
+    builder.addProjectConfiguration(
+      {
+        root: 'libs/lib-0',
+        name: 'lib-0',
+        targets: {
+          build: {
+            executor: '@nx/js:tsc',
+            dependsOn: ['^build', 'compile', 'lint', 'test'],
+          },
+          compile: { executor: '@nx/js:tsc' },
+          lint: { executor: '@nx/eslint:lint' },
+          test: { executor: '@nx/jest:jest' },
+        },
+      },
+      'lib'
+    );
+    builder.addProjectConfiguration(
+      {
+        root: 'libs/lib-1',
+        name: 'lib-1',
+        targets: { build: { executor: '@nx/js:tsc' } },
+      },
+      'lib'
+    );
+    builder.addDependency('my-app', 'lib-0');
+    builder.addDependency('lib-0', 'lib-1');
+    setGraph(builder.build());
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: false });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    // >3 unique target names collapses to bare count with no target names
+    expect(allLogged).toMatch(/and \d+ transitive tasks/m);
+    expect(allLogged).not.toMatch(/and \d+ build,/);
+  });
+
+  it('should filter dependsOn entries pointing at non-existent targets via task graph', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                dependsOn: ['^does-not-exist'],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/lib-a',
+            name: 'lib-a',
+            targets: { build: { executor: '@nx/js:tsc' } },
+          },
+          'lib'
+        )
+        .addDependency('my-app', 'lib-a')
+        .build()
+    );
+
+    await showTargetInfoHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.dependsOn).toBeUndefined();
+    expect(parsed.transitiveTasks).toBeUndefined();
+  });
+
   it('should expand self-reference dependsOn to same project taskId', async () => {
     setGraph(
       new GraphBuilder()

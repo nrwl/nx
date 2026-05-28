@@ -47,6 +47,21 @@ wrapperUrl=https://repo.maven.apache.org/maven2/org/apache/maven/wrapper/maven-w
     );
   });
 
+  it('should record build state while running Maven 4 resource phases in parallel', () => {
+    const output = runCLI(
+      'run-many -t resources,after:resources --parallel=3 --skip-nx-cache',
+      {
+        env: { NX_BATCH_MODE: 'true', NX_VERBOSE_LOGGING: 'true' },
+      }
+    );
+
+    expect(output).toContain('Successfully ran targets');
+    expect(output).toContain('resources');
+    expect(output).toContain('after:resources');
+    expect(output).not.toContain('context.terminal');
+    expect(output).not.toContain('Terminal.writer()');
+  });
+
   it('should install successfully after restoring cached package outputs', () => {
     // Step 1: Clean target directories to simulate a clean CI checkout
     runCLI('run-many -t clean');

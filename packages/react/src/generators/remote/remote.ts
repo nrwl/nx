@@ -1,3 +1,4 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -15,12 +16,8 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';

@@ -232,19 +232,19 @@ export default defineConfig({
 
     expect(tree.read('apps/app1/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
+      "import { defineConfig } from 'cypress';
 
-        export default defineConfig({
-          component: {
-            devServer: {
-              framework: 'react',
-              bundler: 'webpack',
-            },
+      export default defineConfig({
+        component: {
+          devServer: {
+            framework: 'react',
+            bundler: 'webpack',
           },
-          justInTimeCompile: false,
-        });
-        "
-      `);
+        },
+        justInTimeCompile: false,
+      });
+      "
+    `);
   });
 
   it('should remove the experimentalJustInTimeCompile property from the component config when set to true and it is using webpack', async () => {
@@ -302,18 +302,18 @@ export default defineConfig({
 
     expect(tree.read('apps/app1/cypress.config.ts', 'utf-8'))
       .toMatchInlineSnapshot(`
-        "import { defineConfig } from 'cypress';
+      "import { defineConfig } from 'cypress';
 
-        export default defineConfig({
-          component: {
-            devServer: {
-              framework: 'react',
-              bundler: 'webpack',
-            },
-            justInTimeCompile: false,
+      export default defineConfig({
+        component: {
+          devServer: {
+            framework: 'react',
+            bundler: 'webpack',
           },
-        });
-        "
-      `);
+          justInTimeCompile: false,
+        },
+      });
+      "
+    `);
   });
 });

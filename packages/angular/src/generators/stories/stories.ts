@@ -8,6 +8,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedAngularVersion } from '../../utils/assert-supported-angular-version';
 import componentStoryGenerator from '../component-story/component-story';
 import type { ComponentInfo } from '../utils/storybook-ast/component-info';
 import {
@@ -24,6 +25,7 @@ export async function angularStoriesGenerator(
   tree: Tree,
   options: StoriesGeneratorOptions
 ) {
+  assertSupportedAngularVersion(tree);
   const entryPoints = getProjectEntryPoints(tree, options.name);
   const componentsInfo: ComponentInfo[] = [];
   for (const entryPoint of entryPoints) {

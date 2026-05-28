@@ -6,6 +6,7 @@ export interface Schema {
   directory: string;
   name?: string;
   bundler?: 'webpack' | 'rspack';
+  port?: number;
   remotes?: string[];
   dynamic?: boolean;
   setParserOptionsProject?: boolean;

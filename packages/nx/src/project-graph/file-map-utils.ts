@@ -15,6 +15,7 @@ import {
 } from '../utils/workspace-context';
 import { workspaceRoot } from '../utils/workspace-root';
 import { readProjectsConfigurationFromProjectGraph } from './project-graph';
+import { buildAllWorkspaceFiles } from './utils/build-all-workspace-files';
 import {
   createProjectRootMappingsFromProjectConfigurations,
   findProjectForPath,
@@ -22,6 +23,11 @@ import {
 
 export interface WorkspaceFileMap {
   fileMap: FileMap;
+  /**
+   * @deprecated Derived from `fileMap.projectFileMap` + `fileMap.nonProjectFiles`.
+   * Will be removed in a future major. Compute it locally if needed.
+   */
+  allWorkspaceFiles?: FileData[];
 }
 
 export async function createProjectFileMapUsingProjectGraph(
@@ -66,12 +72,23 @@ export function createFileMap(
       nonProjectFiles.push(f);
     }
   }
-  return {
+  const result: WorkspaceFileMap = {
     fileMap: {
       projectFileMap,
       nonProjectFiles,
     },
   };
+  Object.defineProperty(result, 'allWorkspaceFiles', {
+    enumerable: false,
+    configurable: true,
+    get() {
+      return buildAllWorkspaceFiles(
+        result.fileMap.projectFileMap,
+        result.fileMap.nonProjectFiles
+      );
+    },
+  });
+  return result;
 }
 
 export function updateFileMap(

@@ -133,17 +133,34 @@ export function getAiConfigRepoPath(): string {
   // 1. Get latest commit hash (first 10 chars)
   const commitHash = getLatestCommitHash();
 
-  // 2. Check if cached version exists
+  // 2. Reuse cached version if it still has content (macOS may have
+  // swept its files but left the directory tree).
   const cachedPath = join(CACHE_DIR, commitHash);
-  if (existsSync(cachedPath)) {
+  if (hasRootFile(cachedPath)) {
     return cachedPath;
   }
 
-  // 3. Clone fresh
+  // 3. Wipe any empty skeleton, then clone fresh
+  if (existsSync(cachedPath)) {
+    rmSync(cachedPath, { recursive: true, force: true });
+  }
   cloneRepo(cachedPath);
 
   // 4. Clean up old cached versions
   cleanupOldCaches(commitHash);
 
   return cachedPath;
+}
+
+/**
+ * The repo always has at least one regular file at its root (e.g. README).
+ * If everything at the root is a directory, the cache was swept by macOS
+ * tmp cleanup and we should re-clone.
+ */
+function hasRootFile(dir: string): boolean {
+  try {
+    return readdirSync(dir, { withFileTypes: true }).some((e) => e.isFile());
+  } catch {
+    return false;
+  }
 }

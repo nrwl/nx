@@ -4,20 +4,37 @@ import { withEnvironmentVariables as withEnvironment } from '../internal-testing
 jest.mock('../project-graph/file-utils');
 
 describe('splitArgs', () => {
-  let originalBase: string;
-  let originalHead: string;
+  const blockedEnvVars = [
+    'NX_BASE',
+    'NX_HEAD',
+    'NX_PARALLEL',
+    'NX_SKIP_NX_CACHE',
+    'NX_DISABLE_NX_CACHE',
+    'NX_SKIP_REMOTE_CACHE',
+    'NX_DISABLE_REMOTE_CACHE',
+  ];
+  let envVarsToRestore: Record<string, string | undefined> = {};
+
+  function blockParentEnvVar(key: string) {
+    envVarsToRestore[key] = process.env[key];
+    delete process.env[key];
+  }
 
   beforeEach(() => {
-    originalBase = process.env.NX_BASE;
-    originalHead = process.env.NX_HEAD;
-
-    delete process.env.NX_BASE;
-    delete process.env.NX_HEAD;
+    envVarsToRestore = {};
+    for (const key of blockedEnvVars) {
+      blockParentEnvVar(key);
+    }
   });
 
   afterEach(() => {
-    process.env.NX_BASE = originalBase;
-    process.env.NX_HEAD = originalHead;
+    for (const [key, value] of Object.entries(envVarsToRestore)) {
+      if (value === undefined) {
+        delete process.env[key];
+      } else {
+        process.env[key] = value;
+      }
+    }
   });
 
   it('should split nx specific arguments into nxArgs', () => {

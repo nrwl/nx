@@ -4,7 +4,7 @@ import {
   readCachedProjectGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { statSync } from 'fs';
 import { basename, dirname, join, parse, relative, resolve } from 'path';
 import {

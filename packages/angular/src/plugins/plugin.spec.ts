@@ -1,5 +1,4 @@
 import type { CreateNodesContextV2 } from '@nx/devkit';
-import { mkdirSync, rmSync } from 'node:fs';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, type AngularProjectConfiguration } from './plugin';
 import { loadVite } from './utils/vitest';
@@ -18,10 +17,12 @@ describe('@nx/angular/plugin', () => {
   let createNodesFunction = createNodesV2[1];
   let context: CreateNodesContextV2;
   let tempFs: TempFs;
+  let cwd: string;
 
   beforeEach(async () => {
-    mkdirSync('tmp/project-graph-cache', { recursive: true });
     tempFs = new TempFs('angular-plugin');
+    cwd = process.cwd();
+    process.chdir(tempFs.tempDir);
     context = {
       nxJsonConfiguration: {
         namedInputs: {
@@ -37,7 +38,7 @@ describe('@nx/angular/plugin', () => {
   afterEach(() => {
     jest.resetModules();
     tempFs.cleanup();
-    rmSync('tmp/project-graph-cache', { recursive: true, force: true });
+    process.chdir(cwd);
   });
 
   it('should infer tasks from multiple projects in angular.json', async () => {

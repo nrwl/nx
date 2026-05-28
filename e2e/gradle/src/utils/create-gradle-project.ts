@@ -9,7 +9,9 @@ import { existsSync, readFileSync } from 'fs';
 import { appendFileSync, createFileSync, writeFileSync } from 'fs-extra';
 import { join, resolve } from 'path';
 
-const kotlinVersion = '2.1.20';
+// Kotlin 2.2+ is required to target JVM 24 bytecode; older versions cap at
+// JVM 23 and cause an inconsistent-JVM-target build failure on JDK 24.
+const kotlinVersion = '2.3.21';
 
 export function createGradleProject(
   projectName: string,
@@ -18,7 +20,10 @@ export function createGradleProject(
   packageName: string = 'gradleProject',
   addProjectJsonNamePrefix: string = ''
 ) {
-  e2eConsoleLogger(`Using java version: ${execSync('java -version')}`);
+  // `java -version` prints to stderr, so redirect it to capture the output.
+  const javaVersionOutput = execSync('java -version 2>&1').toString();
+  e2eConsoleLogger(`Using java version: ${javaVersionOutput}`);
+  const javaMajorVersion = parseJavaMajorVersion(javaVersionOutput);
   const gradleCommand = isWindows()
     ? resolve(`${__dirname}/../../../../gradlew.bat`)
     : resolve(`${__dirname}/../../../../gradlew`);
@@ -28,21 +33,32 @@ export function createGradleProject(
         cwd,
       })
   );
+  // Run setup-time gradle commands with --no-daemon so we don't leave a
+  // long-lived daemon holding inotify watches on the project dir. A daemon
+  // spawned here outlives the setup phase and interferes with later
+  // non-gradle filesystem operations (e.g. `nx import` runs `git
+  // filter-branch --tree-filter`, which fails with "Unable to read current
+  // working directory" when the daemon is concurrently watching the same
+  // tree). The actual test-body gradle calls keep daemons enabled.
   e2eConsoleLogger(
-    execSync(`${gradleCommand} help --task :init`, {
+    execSync(`${gradleCommand} help --task :init --no-daemon`, {
       cwd,
     }).toString()
   );
   e2eConsoleLogger(
     runCommand(
-      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --no-incubating --split-project --overwrite`,
+      // Pin the generated project's Java toolchain to the JDK that is
+      // actually installed. Without this, `gradle init` defaults to a fixed
+      // version (e.g. 21); if that differs from the installed JDK, Gradle
+      // falls back to downloading it via the foojay API, which makes the
+      // tests fail whenever foojay is unavailable.
+      `${gradleCommand} init --type ${type}-application --dsl ${type} --project-name ${projectName} --package ${packageName} --java-version ${javaMajorVersion} --no-incubating --split-project --overwrite --no-daemon`,
       {
         cwd,
       }
     )
   );
 
-  // Update Kotlin version to 2.0.21 after project creation
   if (type === 'kotlin') {
     updateKotlinVersion(cwd, type);
     // The Kotlin Gradle Plugin writes session/IPC files under .kotlin/.
@@ -53,12 +69,7 @@ export function createGradleProject(
 
   try {
     e2eConsoleLogger(
-      runCommand(`${gradleCommand} --stop`, {
-        cwd,
-      })
-    );
-    e2eConsoleLogger(
-      runCommand(`${gradleCommand} clean`, {
+      runCommand(`${gradleCommand} clean --no-daemon`, {
         cwd,
       })
     );
@@ -92,6 +103,19 @@ export function createGradleProject(
   addSpringBootPlugin(
     join(cwd, `app/build.gradle${type === 'kotlin' ? '.kts' : ''}`)
   );
+}
+
+function parseJavaMajorVersion(javaVersionOutput: string): string {
+  // Matches both modern (`24.0.2`) and legacy (`1.8.0_392`) version strings.
+  const match = javaVersionOutput.match(/version "(\d+)(?:\.(\d+))?/);
+  if (!match) {
+    throw new Error(
+      `Could not determine Java major version from: ${javaVersionOutput}`
+    );
+  }
+  // Legacy versions report as `1.8` etc., where the real major is the second
+  // segment; modern versions report the major directly.
+  return match[1] === '1' && match[2] ? match[2] : match[1];
 }
 
 function appendToGitignore(cwd: string, entry: string) {

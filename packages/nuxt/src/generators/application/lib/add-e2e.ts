@@ -1,4 +1,8 @@
 import {
+  getE2EWebServerInfo,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   addProjectConfiguration,
   ensurePackage,
   GeneratorCallback,
@@ -7,7 +11,6 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
 import type { PackageJson } from 'nx/src/utils/package-json';
@@ -134,12 +137,13 @@ async function getNuxtE2EWebServerInfo(
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = 4200;
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    'serve',
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.['serve'] &&
-    nxJson.targetDefaults?.['serve'].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.['serve'].options?.port;
+  if (serveTargetOptions?.port) {
+    e2ePort = serveTargetOptions.port;
   }
 
   return getE2EWebServerInfo(

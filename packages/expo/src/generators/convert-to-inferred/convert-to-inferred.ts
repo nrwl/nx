@@ -1,14 +1,14 @@
 import {
+  AggregatedLog,
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+} from '@nx/devkit/internal';
+import {
   createProjectGraphAsync,
   formatFiles,
   getProjects,
   type Tree,
 } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 import { createNodesV2 } from '../../../plugins/plugin';
 import { processBuildOptions } from './lib/process-build-options';
 import { postTargetTransformer } from './lib/post-target-transformer';

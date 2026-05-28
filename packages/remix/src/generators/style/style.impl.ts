@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -7,7 +8,6 @@ import {
 } from '@nx/devkit';
 import { RemixStyleSchema } from './schema';
 
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { dirname, relative } from 'path';
 import { insertImport } from '../../utils/insert-import';
 import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';

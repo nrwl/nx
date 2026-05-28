@@ -1,4 +1,8 @@
 import {
+  addBuildTargetDefaults,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   joinPathFragments,
   readJson,
@@ -8,20 +12,20 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
 import { getOutputDir, getUpdatedPackageJsonContent } from '@nx/js';
-import { getImportPath } from '@nx/js/src/utils/get-import-path';
 import {
+  getImportPath,
   getDefinedCustomConditionName,
   getProjectSourceRoot,
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 import { basename, dirname, join } from 'node:path/posix';
 import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
 import { PackageJson } from 'nx/src/utils/package-json';
 import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
+import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';
 import { esbuildInitGenerator } from '../init/init';
 import { EsBuildProjectSchema } from './schema';
 
@@ -29,6 +33,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: EsBuildProjectSchema
 ) {
+  assertSupportedEsbuildVersion(tree);
+
   const task = await esbuildInitGenerator(tree, {
     ...options,
     skipFormat: true,
@@ -152,9 +158,11 @@ function updatePackageJson(
     const projectTarget = project.targets[options.buildTarget];
     const mergedTarget = mergeTargetConfigurations(
       projectTarget,
-      (projectTarget.executor
-        ? nxJson.targetDefaults?.[projectTarget.executor]
-        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
+      readTargetDefaultsForTarget(
+        options.buildTarget,
+        nxJson.targetDefaults,
+        projectTarget.executor
+      )
     );
 
     const {

@@ -1,4 +1,8 @@
-import { parseVcsRemoteUrl, getVcsRemoteInfo } from './git-utils';
+import {
+  parseVcsRemoteUrl,
+  getVcsRemoteInfo,
+  tryCommitChanges,
+} from './git-utils';
 import { execSync } from 'child_process';
 
 jest.mock('child_process');
@@ -195,6 +199,45 @@ describe('git utils tests', () => {
       });
 
       expect(getVcsRemoteInfo()).toBeNull();
+    });
+  });
+
+  describe('tryCommitChanges', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('preserves the original git error as `cause` so callers can inspect signal/status/code', () => {
+      // Without `{ cause: err }` on the rethrow, callers lose .status /
+      // .signal from the original ChildProcessError — only the formatted
+      // message survives.
+      const originalErr = Object.assign(
+        new Error('Command failed: git commit ...'),
+        {
+          status: 128,
+          signal: null,
+          stderr: Buffer.from('error: gpg failed to sign the data\n'),
+          stdout: Buffer.from(''),
+        }
+      );
+      (execSync as jest.Mock).mockImplementation((cmd: string) => {
+        if (cmd.startsWith('git commit')) throw originalErr;
+        // Production code passes `encoding: 'utf8'` to `execSync`, so
+        // mirror that with a string return rather than a Buffer.
+        return '';
+      });
+
+      let caught: unknown;
+      try {
+        tryCommitChanges('msg', '/workspace');
+      } catch (err) {
+        caught = err;
+      }
+      expect(caught).toBeInstanceOf(Error);
+      const wrapper = caught as Error & { cause?: unknown };
+      expect(wrapper.message).toContain('gpg failed to sign');
+      expect(wrapper.cause).toBe(originalErr);
+      expect((wrapper.cause as { status?: number })?.status).toBe(128);
     });
   });
 });

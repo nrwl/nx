@@ -1,5 +1,5 @@
 import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { basename, dirname } from 'path';
 import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import ActionGenerator from '../action/action.impl';
@@ -32,7 +32,6 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
   tree.write(
     routeFilePath,
     stripIndents`
-
 
     export default function ${componentName}() {
     ${

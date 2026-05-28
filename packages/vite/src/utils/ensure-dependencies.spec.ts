@@ -55,39 +55,6 @@ describe('@nx/vite:init', () => {
     );
   });
 
-  it('should support --testEnvironment=jsdom', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'jsdom',
-      uiFramework: 'none',
-    });
-
-    const packageJson = readJson(tree, 'package.json');
-
-    expect(packageJson).toMatchSnapshot();
-  });
-
-  it('should support --testEnvironment=happy-dom', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'happy-dom',
-      uiFramework: 'none',
-    });
-
-    const packageJson = readJson(tree, 'package.json');
-
-    expect(packageJson).toMatchSnapshot();
-  });
-
-  it('should support --testEnvironment=edge-runtime', () => {
-    ensureDependencies(tree, {
-      testEnvironment: 'edge-runtime',
-      uiFramework: 'none',
-    });
-
-    const packageJson = readJson(tree, 'package.json');
-
-    expect(packageJson).toMatchSnapshot();
-  });
-
   it('should default to latest @vitejs/plugin-react when vite range is unparseable', () => {
     addDependenciesToPackageJson(tree, {}, { vite: 'workspace:*' });
 

@@ -1,5 +1,5 @@
 import { names, type TargetConfiguration, type Tree } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 export function processBuildOptions(
   _tree: Tree,

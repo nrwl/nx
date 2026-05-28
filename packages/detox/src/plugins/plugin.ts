@@ -1,4 +1,9 @@
 import {
+  getNamedInputs,
+  calculateHashesForCreateNodes,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateNodesContextV2,
   createNodesFromFiles,
   CreateNodesResult,
@@ -6,18 +11,13 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   NxJsonConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface DetoxPluginOptions {
   buildTargetName?: string;
@@ -27,46 +27,44 @@ export interface DetoxPluginOptions {
   watchDepsTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration<DetoxPluginOptions>>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
-}
+type DetoxTargets = Record<string, TargetConfiguration<DetoxPluginOptions>>;
 
 export const createNodes: CreateNodesV2<DetoxPluginOptions> = [
   '**/{detox.config,.detoxrc}.{json,js}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
-    const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const cachePath = join(workspaceDataDirectory, `detox-${optionsHash}.hash`);
+    const targetsCache = new PluginCache<DetoxTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
 
     try {
+      const projectRoots = configFiles.map((f) => dirname(f));
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
+        normalizedOptions,
+        context,
+        projectRoots.map(() => [lockFileName])
+      );
+
       return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache, pmc),
+        (configFile, _, ctx, idx) =>
+          createNodesInternal(
+            configFile,
+            normalizedOptions,
+            ctx,
+            targetsCache,
+            pmc,
+            projectHashes[idx]
+          ),
         configFiles,
         options,
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -77,28 +75,23 @@ async function createNodesInternal(
   configFile: string,
   options: DetoxPluginOptions,
   context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<DetoxPluginOptions>>
-  >,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  targetsCache: PluginCache<DetoxTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
 
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
-
-  targetsCache[hash] ??= buildDetoxTargets(projectRoot, options, context, pmc);
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      buildDetoxTargets(projectRoot, options, context, pmc)
+    );
+  }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };

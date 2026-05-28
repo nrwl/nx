@@ -54,7 +54,7 @@
     "@napi-rs/wasm-runtime": "0.2.4",
     "@yarnpkg/lockfile": "^1.1.0",
     "@zkochan/js-yaml": "catalog:",
-    "axios": "1.15.0",
+    "axios": "1.16.0",
     "picocolors": "catalog:",
     "cli-cursor": "3.1.0",
     "cli-spinners": "2.6.1",
@@ -67,21 +67,21 @@
     "flat": "^5.0.2",
     "ignore": "^7.0.5",
     "@jest/diff-sequences": "30.0.1",
-    "jsonc-parser": "3.2.0",
+    "jsonc-parser": "catalog:",
     "lines-and-columns": "2.0.3",
     "minimatch": "catalog:",
     "npm-run-path": "^4.0.1",
     "open": "^8.4.0",
-    "ora": "5.3.0",
+    "ora": "catalog:",
     "resolve.exports": "2.0.3",
     "semver": "catalog:",
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
-    "tmp": "~0.2.1",
-    "tree-kill": "^1.2.2",
+    "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
-    "yaml": "^2.6.0",
+    "which": "catalog:",
+    "yaml": "^2.8.3",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"
   },
@@ -205,9 +205,6 @@
       "src/native": [
         "dist/src/native/index.d.ts"
       ],
-      "src": [
-        "dist/src/index.d.ts"
-      ],
       "src/analytics": [
         "dist/src/analytics/index.d.ts"
       ],
@@ -316,11 +313,6 @@
       "@nx/nx-source": "./plugins/*.ts",
       "types": "./dist/plugins/*.d.ts",
       "default": "./dist/plugins/*.js"
-    },
-    "./src": {
-      "@nx/nx-source": "./src/index.ts",
-      "types": "./dist/src/index.d.ts",
-      "default": "./dist/src/index.js"
     },
     "./src/analytics": {
       "@nx/nx-source": "./src/analytics/index.ts",

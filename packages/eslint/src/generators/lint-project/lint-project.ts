@@ -23,6 +23,7 @@ import {
 } from '../utils/eslint-file';
 import { extname, join } from 'path';
 import { lintInitGenerator } from '../init/init';
+import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
 import { getProjects } from 'nx/src/generators/utils/project-configuration';
@@ -40,7 +41,7 @@ import {
 import { hasEslintPlugin } from '../utils/plugin';
 import { jsoncEslintParserVersion } from '../../utils/versions';
 import { setupRootEsLint } from './setup-root-eslint';
-import { getProjectType } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectType } from '@nx/js/internal';
 
 interface LintProjectOptions {
   project: string;
@@ -123,6 +124,7 @@ export async function lintProjectGeneratorInternal(
       };
     }
   } else {
+    warnEslintExecutorGenerating();
     projectConfig.targets ??= {};
     projectConfig.targets['lint'] = {
       executor: '@nx/eslint:lint',

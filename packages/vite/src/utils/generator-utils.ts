@@ -1,23 +1,20 @@
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   logger,
   offsetFromRoot,
   readJson,
-  readNxJson,
   readProjectConfiguration,
   TargetConfiguration,
   Tree,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { addBuildTargetDefaults } from '@nx/devkit/src/generators/target-defaults-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { ViteBuildExecutorOptions } from '../executors/build/schema';
 import { VitePreviewServerExecutorOptions } from '../executors/preview-server/schema';
-import { VitestExecutorOptions } from '../executors/test/schema';
 import { ViteConfigurationGeneratorSchema } from '../generators/configuration/schema';
 import { ensureViteConfigIsCorrect } from './vite-config-edit-utils';
-import { VitestGeneratorSchema } from '../generators/vitest/schema';
 
 export type Target = 'build' | 'serve' | 'test' | 'preview';
 export type TargetFlags = Partial<Record<Target, boolean>>;
@@ -79,50 +76,6 @@ export function findExistingJsBuildTargetInProject(targets: {
     }
   }
   return output;
-}
-
-export function addOrChangeTestTarget(
-  tree: Tree,
-  options: VitestGeneratorSchema,
-  hasPlugin: boolean
-) {
-  const nxJson = readNxJson(tree);
-
-  hasPlugin = nxJson.plugins?.some((p) =>
-    typeof p === 'string'
-      ? p === '@nx/vite/plugin'
-      : p.plugin === '@nx/vite/plugin' || hasPlugin
-  );
-
-  if (hasPlugin) {
-    return;
-  }
-
-  const project = readProjectConfiguration(tree, options.project);
-  const target = options.testTarget ?? 'test';
-
-  const reportsDirectory = joinPathFragments(
-    offsetFromRoot(project.root),
-    'coverage',
-    project.root === '.' ? options.project : project.root
-  );
-  const testOptions: VitestExecutorOptions = {
-    reportsDirectory,
-  };
-
-  project.targets ??= {};
-
-  if (project.targets[target]) {
-    throw new Error(`Target "${target}" already exists in the project.`);
-  } else {
-    project.targets[target] = {
-      executor: '@nx/vite:test',
-      outputs: ['{options.reportsDirectory}'],
-      options: testOptions,
-    };
-  }
-
-  updateProjectConfiguration(tree, options.project, project);
 }
 
 export function addBuildTarget(
@@ -372,7 +325,7 @@ export interface ViteConfigFileOptions {
   includeVitest?: boolean;
   inSourceTests?: boolean;
   testEnvironment?: 'node' | 'jsdom' | 'happy-dom' | 'edge-runtime' | string;
-  rollupOptionsExternal?: string[];
+  rolldownOptionsExternal?: string[];
   imports?: string[];
   plugins?: string[];
   coverageProvider?: 'v8' | 'istanbul' | 'custom';
@@ -424,9 +377,9 @@ export function createOrEditViteConfig(
       // Don't forget to update your package.json as well.
       formats: ['es' as const]
     },
-    rollupOptions: {
+    rolldownOptions: {
       // External packages that should not be bundled into your library.
-      external: [${options.rollupOptionsExternal ?? ''}]
+      external: [${options.rolldownOptionsExternal ?? ''}]
     },
   },`
       : `  build: {
@@ -751,8 +704,8 @@ function handleViteConfigFileExists(
           fileName: 'index',
           formats: ['es'],
         },
-        rollupOptions: {
-          external: options.rollupOptionsExternal ?? [],
+        rolldownOptions: {
+          external: options.rolldownOptionsExternal ?? [],
         },
         outDir: buildOutDir,
         reportCompressedSize: true,

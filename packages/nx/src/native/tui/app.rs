@@ -457,34 +457,32 @@ impl App {
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
-        // Check if a PTY instance already exists for this task
-        // If so, it already has all the output from the task execution
-        if self
-            .core
-            .state()
-            .lock()
-            .get_pty_instance(&task_id)
-            .is_some()
+        // If a PTY already exists, the task's output was streamed via
+        // append_task_output and we don't write it again. We still emit the
+        // cursor-hide escape — append_task_output doesn't, and a finished
+        // pane shouldn't show a blinking virtual cursor.
         {
-            // If the task is continuous, ensure the pty instances get resized appropriately
-            if self.is_task_continuous(&task_id) {
-                let _ = self.throttle_pty_resize();
+            let state = self.core.state().lock();
+            if let Some(pty) = state.get_pty_instance(&task_id) {
+                pty.process_output(b"\x1b[?25l");
+                drop(state);
+                if self.is_task_continuous(&task_id) {
+                    let _ = self.throttle_pty_resize();
+                }
+                return;
             }
-            return;
         }
 
-        // Tasks run within a pseudo-terminal always have a pty instance and do not need a new one
-        // Tasks not run within a pseudo-terminal need a new pty instance to print output
+        // Tasks not run within a pseudo-terminal need a new pty instance to print output.
         let (rows, cols) = self.calculate_pty_dimensions_for_mode();
         let pty = PtyInstance::non_interactive_with_dimensions(rows, cols);
 
-        // Add ANSI escape sequence to hide cursor at the end of output,
-        // it would be confusing to have it visible when a task is a cache hit
+        // Hide the cursor at the end of static output so it doesn't blink in
+        // a finished pane (most visible on cache hits).
         let output_with_hidden_cursor = format!("{}\x1b[?25l", output);
         write_output_to_pty(&pty, &output_with_hidden_cursor);
 
         self.register_pty_instance(&task_id, pty);
-        // Ensure the pty instances get resized appropriately
         let _ = self.throttle_pty_resize();
     }
 
@@ -2668,5 +2666,118 @@ impl TuiApp for App {
 
     fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::native::tasks::types::TaskGraph;
+    use crate::native::tui::config;
+    use crate::native::tui::lifecycle::TuiMode;
+    use crate::native::tui::tui_state::TuiState;
+    use hashbrown::HashSet;
+    use std::collections::HashMap;
+
+    fn create_test_app() -> App {
+        let tasks = vec![Task::new("app1:build", "build").with_project_root("/tmp/app1")];
+        let task_graph = TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+
+        let state = Arc::new(Mutex::new(TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        )));
+
+        App::with_state(state, TuiMode::FullScreen).unwrap()
+    }
+
+    /// `print_task_terminal_output` must hide the cursor whether or not the
+    /// PTY pre-existed. The PTY-exists branch (e.g. a batch task whose
+    /// terminal output was streamed via `append_task_output` first) used to
+    /// return early and lose the cursor-hide; that left a blinking virtual
+    /// cursor at the end of finished panes.
+    #[test]
+    fn test_print_task_terminal_output_hides_cursor_when_pty_already_exists() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        // Simulate a batch task: streamed terminal output creates the PTY,
+        // then the orchestrator calls `print_task_terminal_output` to mark
+        // the task as finished.
+        app.append_task_output(
+            task_id.clone(),
+            String::from("> Task :app1:build UP-TO-DATE\n"),
+        );
+        app.print_task_terminal_output(
+            task_id.clone(),
+            String::from("> Task :app1:build UP-TO-DATE\n"),
+        );
+
+        let state = app.core.state().lock();
+        let pty = state.get_pty_instance(&task_id).expect("PTY should exist");
+        assert!(
+            pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "cursor must be hidden after print_task_terminal_output finalizes the pane"
+        );
+    }
+
+    /// `append_task_output` is the streaming path — it must NOT hide the
+    /// cursor, otherwise a still-running task's pane would freeze its cursor
+    /// mid-stream.
+    #[test]
+    fn test_append_task_output_does_not_hide_cursor() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        app.append_task_output(task_id.clone(), String::from("first chunk\n"));
+        app.append_task_output(task_id.clone(), String::from("second chunk\n"));
+
+        let state = app.core.state().lock();
+        let pty = state.get_pty_instance(&task_id).expect("PTY should exist");
+        assert!(
+            !pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "append_task_output is for streaming; the cursor must remain visible"
+        );
+    }
+
+    /// Same finalization for the path where no PTY exists yet (cache hits,
+    /// non-streaming results).
+    #[test]
+    fn test_print_task_terminal_output_hides_cursor_when_no_pty_exists() {
+        let mut app = create_test_app();
+        let task_id = String::from("app1:build");
+
+        app.print_task_terminal_output(task_id.clone(), String::from("cached output\n"));
+
+        let state = app.core.state().lock();
+        let pty = state
+            .get_pty_instance(&task_id)
+            .expect("PTY should be created");
+        assert!(
+            pty.get_screen()
+                .expect("PTY parser should be readable")
+                .hide_cursor(),
+            "cursor must be hidden when print creates a fresh PTY"
+        );
     }
 }

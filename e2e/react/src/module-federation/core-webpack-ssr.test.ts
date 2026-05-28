@@ -3,11 +3,13 @@ import {
   killPorts,
   killProcessAndPorts,
   readJson,
+  reservePorts,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import {
@@ -32,10 +34,33 @@ describe('React Module Federation - Webpack SSR', () => {
       `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --no-interactive --skipFormat`
     );
 
+    // The generator should default ports to 4200..4203.
     expect(readPort(shell)).toEqual(4200);
     expect(readPort(remote1)).toEqual(4201);
     expect(readPort(remote2)).toEqual(4202);
     expect(readPort(remote3)).toEqual(4203);
+
+    // Override defaults with reserved ports so parallel tests don't collide
+    // when the SSR `server:*` targets bind sockets.
+    const [shellPort, remote1Port, remote2Port, remote3Port] =
+      await reservePorts(4);
+    const portMap: Array<[string, number]> = [
+      [shell, shellPort],
+      [remote1, remote1Port],
+      [remote2, remote2Port],
+      [remote3, remote3Port],
+    ];
+    for (const [app, port] of portMap) {
+      updateJson(`${app}/project.json`, (project) => {
+        project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
+        return project;
+      });
+    }
 
     [shell, remote1, remote2, remote3].forEach((app) => {
       checkFilesExist(
@@ -63,6 +88,26 @@ describe('React Module Federation - Webpack SSR', () => {
       `generate @nx/react:host ${shell} --ssr --bundler=webpack --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
+    const [shellPort, remote1Port, remote2Port, remote3Port] =
+      await reservePorts(4);
+    const portMap: Array<[string, number]> = [
+      [shell, shellPort],
+      [remote1, remote1Port],
+      [remote2, remote2Port],
+      [remote3, remote3Port],
+    ];
+    for (const [app, port] of portMap) {
+      updateJson(`${app}/project.json`, (project) => {
+        project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
+        return project;
+      });
+    }
+
     const serveResult = await runCommandUntil(
       `serve ${shell}`,
       (output) =>
@@ -82,6 +127,26 @@ describe('React Module Federation - Webpack SSR', () => {
     await runCLIAsync(
       `generate @nx/react:host ${shell} --bundler=webpack --ssr --remotes=${remote1},${remote2},${remote3} --style=css --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
+
+    const [shellPort, remote1Port, remote2Port, remote3Port] =
+      await reservePorts(4);
+    const portMap: Array<[string, number]> = [
+      [shell, shellPort],
+      [remote1, remote1Port],
+      [remote2, remote2Port],
+      [remote3, remote3Port],
+    ];
+    for (const [app, port] of portMap) {
+      updateJson(`${app}/project.json`, (project) => {
+        project.targets.serve.options.port = port;
+        // The SSR `server` target binds its own socket via @nx/{webpack,rspack}:ssr-dev-server
+        // and defaults to 4200. Pin it so parallel tests don't collide.
+        if (project.targets.server?.options) {
+          project.targets.server.options.port = port;
+        }
+        return project;
+      });
+    }
 
     const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 

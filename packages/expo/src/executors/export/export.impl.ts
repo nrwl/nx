@@ -9,6 +9,7 @@ import { ChildProcess, fork } from 'child_process';
 import { resolve as pathResolve } from 'path';
 
 import { ExportExecutorSchema } from './schema';
+import { warnExpoExecutorDeprecation } from '../../utils/deprecation';
 
 export interface ExpoExportOutput {
   success: boolean;
@@ -20,6 +21,8 @@ export default async function* exportExecutor(
   options: ExportExecutorSchema,
   context: ExecutorContext
 ): AsyncGenerator<ExpoExportOutput> {
+  warnExpoExecutorDeprecation('export');
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

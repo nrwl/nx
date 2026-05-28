@@ -1,4 +1,8 @@
 import {
+  getE2EWebServerInfo,
+  readTargetDefaultsForTarget,
+} from '@nx/devkit/internal';
+import {
   addProjectConfiguration,
   ensurePackage,
   joinPathFragments,
@@ -7,7 +11,6 @@ import {
   GeneratorCallback,
   writeJson,
 } from '@nx/devkit';
-import { getE2EWebServerInfo } from '@nx/devkit/src/generators/e2e-web-server-info-utils';
 import { webStaticServeGenerator } from '@nx/web';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { nxVersion } from '../../../utils/versions';
@@ -154,12 +157,13 @@ async function getNextE2EWebServerInfo(
   let e2ePort = isPluginBeingAdded ? 3000 : 4200;
 
   const defaultServeTarget = isPluginBeingAdded ? 'dev' : 'serve';
+  const serveTargetOptions = readTargetDefaultsForTarget(
+    defaultServeTarget,
+    nxJson.targetDefaults
+  )?.options;
 
-  if (
-    nxJson.targetDefaults?.[defaultServeTarget] &&
-    nxJson.targetDefaults?.[defaultServeTarget].options?.port
-  ) {
-    e2ePort = nxJson.targetDefaults?.[defaultServeTarget].options?.port;
+  if (serveTargetOptions?.port) {
+    e2ePort = serveTargetOptions.port;
   }
 
   return getE2EWebServerInfo(

@@ -1,3 +1,4 @@
+import { logShowProjectCommand } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -26,13 +27,12 @@ import { addLinting } from './lib/add-linting';
 import { customServerGenerator } from '../custom-server/custom-server';
 import { updateCypressTsConfig } from './lib/update-cypress-tsconfig';
 import { tsLibVersion } from '../../utils/versions';
-import { logShowProjectCommand } from '@nx/devkit/src/utils/log-show-project-command';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { sortPackageJsonFields } from '@nx/js/src/utils/package-json/sort-fields';
+  sortPackageJsonFields,
+} from '@nx/js/internal';
 import { configureForSwc } from '../../utils/add-swc-to-custom-server';
 import { updateJestConfig } from '../../utils/jest-config-util';
 import { isNext14, isNext15 } from '../../utils/version-utils';

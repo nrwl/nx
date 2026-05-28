@@ -1,4 +1,5 @@
 import { CreateNodesResultV2, CreateNodesV2, hashArray } from '@nx/devkit';
+import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
 import { runMavenAnalysis } from './maven-analyzer';
@@ -8,7 +9,6 @@ import {
   setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/devkit-internals';
 
 /**

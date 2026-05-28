@@ -3,27 +3,27 @@
     "update-20-0-4": {
       "version": "20.0.4-beta.0",
       "description": "Add gitignore entry for temporary vite config files.",
-      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
     },
     "update-20-0-6": {
       "version": "20.0.6-beta.0",
       "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
-      "implementation": "./src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
     },
     "update-20-5-0-install-jiti": {
       "version": "20.5.0-beta.2",
       "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
-      "implementation": "./src/migrations/update-20-5-0/install-jiti"
+      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti"
     },
     "update-20-5-0-update-resolve-conditions": {
       "version": "20.5.0-beta.3",
       "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
-      "implementation": "./src/migrations/update-20-5-0/update-resolve-conditions"
+      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions"
     },
     "eslint-ignore-vite-temp-files": {
       "version": "20.5.0-beta.3",
       "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
-      "implementation": "./src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
+      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
     },
     "update-22-2-0": {
       "version": "22.2.0-beta.1",
@@ -31,12 +31,33 @@
         "vitest": ">=4.0.0"
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vitest 4.",
-      "implementation": "./src/migrations/update-22-2-0/create-ai-instructions-for-vitest-4"
+      "prompt": "./dist/src/migrations/update-22-2-0/ai-instructions-for-vitest-4.md"
     },
     "migrate-vitest-to-vitest-package": {
       "version": "22.2.0-beta.2",
       "description": "Migrate Vitest usage from @nx/vite to @nx/vitest package.",
-      "implementation": "./src/migrations/update-22-2-0/migrate-vitest-to-vitest-package"
+      "implementation": "./dist/src/migrations/update-22-2-0/migrate-vitest-to-vitest-package"
+    },
+    "ensure-vitest-package-migration-23": {
+      "version": "23.0.0-beta.10",
+      "description": "Safety net: ensure any remaining @nx/vite:test executor usages are swapped to @nx/vitest:test and @nx/vitest is installed.",
+      "implementation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration"
+    },
+    "rename-rollup-options-to-rolldown-options": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "vite": ">=8.0.0"
+      },
+      "description": "Rename `rollupOptions` to `rolldownOptions` in vite config files (top-level and inside `environments`). Vite 8 replaced Rollup with Rolldown.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options"
+    },
+    "create-ai-instructions-for-vite-8": {
+      "version": "23.0.0-beta.10",
+      "requires": {
+        "vite": ">=8.0.0"
+      },
+      "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vite 8.",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vite-8.md"
     }
   },
   "packageJsonUpdates": {
@@ -148,6 +169,22 @@
           "version": "~2.1.2",
           "alwaysAddToPackageJson": false
         }
+      }
+    },
+    "23.0.0": {
+      "version": "23.0.0-beta.10",
+      "packages": {
+        "vite": {
+          "version": "^8.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitejs/plugin-react": {
+          "version": "^6.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      },
+      "incompatibleWith": {
+        "@remix-run/dev": "*"
       }
     }
   }
