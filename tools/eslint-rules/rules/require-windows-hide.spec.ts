@@ -23,6 +23,10 @@ ruleTester.run(RULE_NAME, rule, {
     `import { spawn } from 'child_process';
      const opts = { windowsHide: true };
      spawn('echo', ['hello'], opts);`,
+    // Member expression as last arg (could be options) - skip
+    `import { spawn } from 'child_process';
+     const adapted = { options: { windowsHide: true } };
+     spawn('echo', ['hello'], adapted.options);`,
     // Test file should be ignored
     {
       code: `import { spawn } from 'child_process';
