@@ -316,14 +316,13 @@ describe('Nx Plugin (TS solution)', () => {
     expect(configuration.tags).toContain('cypress-tag');
   });
 
-  it('should not load local plugin subpath imports from dist', async () => {
+  it('should load local plugin subpath imports from dist when no source condition is declared', async () => {
     const plugin = uniq('plugin');
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
 
-    updateFile(
-      `packages/${plugin}/src/plugins/cypress/plugin.ts`,
-      NX_PLUGIN_V2_CONTENTS
-    );
+    // Expose a subpath plugin via the dist artifact only (no custom source condition).
+    // Nx should fall through to whatever resolve.exports returns — the dist file —
+    // rather than hard-failing.
     createFile(
       `packages/${plugin}/dist/plugins/cypress/plugin.js`,
       `const { basename, dirname } = require("path");
@@ -385,19 +384,11 @@ exports.createNodesV2 = [
     );
     createFile(`packages/${inferredProject}/my-project-file`);
 
-    expect(() => runCLI(`show project ${inferredProject} --json`)).toThrow(
-      /resolvable source-pointing condition/
+    // With no source condition, Nx resolves to the dist artifact — loading
+    // should succeed (not hard-fail with a "custom condition" error).
+    expect(runCLI(`build ${inferredProject}`)).toContain(
+      'dist registered target'
     );
-
-    // Clean up the broken plugin registration so subsequent tests are not affected
-    updateJson(`nx.json`, (nxJson) => {
-      nxJson.plugins = (nxJson.plugins ?? []).filter(
-        (p) =>
-          typeof p === 'string' ||
-          p.plugin !== `@${workspaceName}/${plugin}/cypress`
-      );
-      return nxJson;
-    });
   });
 
   it('should respect and support generating plugins with a name different than the import path', async () => {

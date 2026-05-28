@@ -35,10 +35,16 @@ export function assertGeneratorsEnforceVersionFloor(options: {
 
   for (const [name, def] of entries) {
     it(`\`${name}\` throws on sub-floor ${packageName}`, async () => {
+      // generators.json is the published shape — factory paths point at the
+      // built `./dist/src/.../foo`. The spec runs against the source tree, so
+      // map the published path back to its source location.
       const [factoryRelative, exportName] = def.factory
         .replace(/^\.\//, '')
+        .replace(/^dist\//, '')
         .split('#');
-      const factoryModule = require(join(packageRoot, factoryRelative));
+      // Local-dist plugins point factories at `./dist/src/...`; Jest loads from `./src/...`.
+      const sourceRelative = factoryRelative.replace(/^dist\//, '');
+      const factoryModule = require(join(packageRoot, sourceRelative));
       const factory = exportName
         ? factoryModule[exportName]
         : (factoryModule.default ?? factoryModule);

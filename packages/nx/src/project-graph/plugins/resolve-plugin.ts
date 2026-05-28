@@ -6,10 +6,7 @@ import {
   getWorkspacePackagesMetadata,
   matchImportToWildcardEntryPointsToProjectMap,
 } from '../../plugins/js/utils/packages';
-import {
-  getRootTsConfigCustomConditions,
-  getRootTsConfigResolveExportsConditions,
-} from '../../plugins/js/utils/typescript';
+import { getRootTsConfigResolveExportsConditions } from '../../plugins/js/utils/typescript';
 import { readJsonFile } from '../../utils/fileutils';
 import { logger } from '../../utils/logger';
 import { normalizePath } from '../../utils/path';
@@ -229,18 +226,13 @@ function throwUnresolvableLocalPluginError(
   const subpath = getSubpathOfLocalPackage(moduleName, plugin);
   const packageName = plugin.projectConfig.metadata?.js?.packageName;
   if (subpath) {
-    const conditions = getRootTsConfigCustomConditions(root);
-    const exampleCondition = conditions[0] ?? 'development';
     throw new Error(
       `Unable to resolve local plugin "${moduleName}". The import targets ` +
         `the subpath "${subpath}" of the local package "${packageName}", but ` +
-        `the package's "exports" entry for "${subpath}" does not declare a ` +
-        `resolvable source-pointing condition recognized by Nx. Add a custom ` +
-        `condition pointing to the source file for that subpath in ` +
-        `"${path.relative(root, path.join(plugin.path, 'package.json'))}", ` +
-        `e.g. "${subpath}": { "${exampleCondition}": "<path/to/source>" }, and ` +
-        `ensure the condition name is listed in ` +
-        `"compilerOptions.customConditions" in your root tsconfig.`
+        `the package's "exports" map has no resolvable entry for "${subpath}", ` +
+        `or none of the matched paths exist on disk. Check the "exports" field ` +
+        `in "${path.relative(root, path.join(plugin.path, 'package.json'))}" ` +
+        `and ensure the source file referenced by "${subpath}" exists.`
     );
   }
 
@@ -272,23 +264,6 @@ function resolveSubpathFromExports(
       conditions: getRootTsConfigResolveExportsConditions(root),
     });
     if (!matches || !matches.length) {
-      return null;
-    }
-
-    // resolve.exports doesn't report which condition matched. If running with
-    // an empty conditions list (only `default`/`import`/`require` fallbacks)
-    // produces the same result, none of our source conditions matched —
-    // signal "no source-pointing condition" so the caller hard-fails instead
-    // of silently loading the package's built/dist target.
-    let fallbackMatches: string[] | void;
-    try {
-      fallbackMatches = resolveExports(pkg, subpath, { conditions: [] });
-    } catch {}
-    if (
-      fallbackMatches &&
-      fallbackMatches.length &&
-      fallbackMatches[0] === matches[0]
-    ) {
       return null;
     }
 

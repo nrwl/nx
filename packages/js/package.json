@@ -143,9 +143,13 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
+    "@swc/cli": ">=0.6.0 <0.9.0",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
+    "@swc/cli": {
+      "optional": true
+    },
     "verdaccio": {
       "optional": true
     }

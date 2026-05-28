@@ -59,7 +59,6 @@ import {
   getExecutorForTask,
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
-  isCacheableTask,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
@@ -463,9 +462,7 @@ export class TaskOrchestrator {
   // region Applying Cache
 
   private async applyCachedResults(tasks: Task[]): Promise<TaskResult[]> {
-    const cacheableTasks = tasks.filter((t) =>
-      isCacheableTask(t, this.options)
-    );
+    const cacheableTasks = tasks.filter((t) => t.cache);
     if (cacheableTasks.length === 0) return [];
 
     const cacheHits = await this.fetchCacheHits(cacheableTasks);
@@ -573,11 +570,7 @@ export class TaskOrchestrator {
     const candidates: Task[] = [];
     for (const id of scheduledTasks) {
       const task = this.taskGraph.tasks[id];
-      if (
-        task.hash &&
-        !task.continuous &&
-        isCacheableTask(task, this.options)
-      ) {
+      if (task.hash && !task.continuous && task.cache) {
         candidates.push(task);
       }
     }
@@ -927,9 +920,7 @@ export class TaskOrchestrator {
   ): Promise<TaskResult[]> {
     if (!doNotSkipCache || tasks.length === 0) return [];
 
-    const cacheableTasks = tasks.filter((t) =>
-      isCacheableTask(t, this.options)
-    );
+    const cacheableTasks = tasks.filter((t) => t.cache);
     if (cacheableTasks.length === 0) return [];
 
     // Wait for any queued processTask promises to settle so task.hash is
@@ -1626,7 +1617,7 @@ export class TaskOrchestrator {
 
   private shouldCacheTaskResult(task: Task, code: number) {
     return (
-      isCacheableTask(task, this.options) &&
+      task.cache &&
       (process.env.NX_CACHE_FAILURES == 'true' ? true : code === 0)
     );
   }

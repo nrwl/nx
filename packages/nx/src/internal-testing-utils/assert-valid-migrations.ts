@@ -52,6 +52,10 @@ function validateMigration(m: MigrationsJsonEntry, root: string) {
     }
   }
   if (m.prompt) {
-    expect(fs.existsSync(path.join(root, m.prompt))).toBe(true);
+    // migrations.json is the published shape — prompt paths point at the
+    // built `./dist/src/.../foo.md`. The spec runs against the source tree,
+    // so map the published path back to its source location.
+    const promptSourcePath = m.prompt.replace(/^\.?\/?dist\//, '');
+    expect(fs.existsSync(path.join(root, promptSourcePath))).toBe(true);
   }
 }

@@ -1,4 +1,4 @@
-import { addPlugin, checkAndCleanWithSemver } from '@nx/devkit/internal';
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,16 +6,14 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
-  getDependencyVersionFromPackageJson,
   readJson,
   readNxJson,
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
-import { satisfies, valid } from 'semver';
 import { createNodesV2 } from '../../plugins/typescript/plugin';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { generatePrettierSetup } from '../../utils/prettier';
 import { getRootTsConfigFileName } from '../../utils/typescript/ts-config';
 import {
@@ -25,50 +23,11 @@ import {
 import {
   nxVersion,
   prettierVersion,
-  supportedTypescriptVersions,
   swcHelpersVersion,
   tsLibVersion,
   typescriptVersion,
 } from '../../utils/versions';
 import { InitSchema } from './schema';
-
-async function getInstalledTypescriptVersion(
-  tree: Tree
-): Promise<string | null> {
-  const tsVersionInRootPackageJson = getDependencyVersionFromPackageJson(
-    tree,
-    'typescript'
-  );
-
-  if (!tsVersionInRootPackageJson) {
-    return null;
-  }
-  if (valid(tsVersionInRootPackageJson)) {
-    // it's a pinned version, return it
-    return tsVersionInRootPackageJson;
-  }
-
-  // it's a version range, check whether the installed version matches it
-  try {
-    const tsPackageJson = readModulePackageJson('typescript').packageJson;
-    const installedTsVersion =
-      tsPackageJson.devDependencies?.['typescript'] ??
-      tsPackageJson.dependencies?.['typescript'];
-    // the installed version matches the package.json version range
-    if (
-      installedTsVersion &&
-      satisfies(installedTsVersion, tsVersionInRootPackageJson)
-    ) {
-      return installedTsVersion;
-    }
-  } finally {
-    return checkAndCleanWithSemver(
-      tree,
-      'typescript',
-      tsVersionInRootPackageJson
-    );
-  }
-}
 
 export async function initGenerator(
   tree: Tree,
@@ -88,6 +47,8 @@ export async function initGeneratorInternal(
   tree: Tree,
   schema: InitSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedTypescriptVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(tree);
@@ -162,17 +123,8 @@ export async function initGeneratorInternal(
   // with --experimental-strip-types). loadTsFile registers swc/ts-node lazily
   // when a config uses syntax native strip can't handle.
 
-  if (!schema.js && !schema.keepExistingVersions) {
-    const installedTsVersion = await getInstalledTypescriptVersion(tree);
-
-    if (
-      !installedTsVersion ||
-      !satisfies(installedTsVersion, supportedTypescriptVersions, {
-        includePrerelease: true,
-      })
-    ) {
-      devDependencies['typescript'] = typescriptVersion;
-    }
+  if (!schema.js) {
+    devDependencies['typescript'] = typescriptVersion;
   }
 
   if (schema.formatter === 'prettier') {
@@ -198,7 +150,7 @@ export async function initGeneratorInternal(
         {},
         devDependencies,
         undefined,
-        schema.keepExistingVersions
+        schema.keepExistingVersions ?? true
       )
     : () => {};
   tasks.push(installTask);

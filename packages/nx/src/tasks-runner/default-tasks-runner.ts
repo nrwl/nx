@@ -93,8 +93,6 @@ export abstract class RemoteCacheV2 {
 
 export interface DefaultTasksRunnerOptions {
   parallel?: number;
-  cacheableOperations?: string[];
-  cacheableTargets?: string[];
   runtimeCacheInputs?: string[];
   cacheDirectory?: string;
   remoteCache?: RemoteCache;

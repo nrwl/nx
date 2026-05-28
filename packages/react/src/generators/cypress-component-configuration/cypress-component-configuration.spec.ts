@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   DependencyType,
   ProjectGraph,
@@ -21,8 +21,8 @@ jest.mock('@nx/devkit', () => ({
     .fn()
     .mockImplementation(async () => projectGraph),
 }));
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual<any>('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual<any>('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 // nested code imports graph from the repo, which might have innacurate graph version

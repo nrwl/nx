@@ -433,13 +433,15 @@ The three load-bearing patterns to verify:
 
 - Hard-code the public symbol set (the recursively-expanded `export`s of `src/index.ts`) in the migration.
 - For a **named** `import`/`export` declaration, partition the named bindings: public symbols go to `@nx/<name>`, the rest to `@nx/<name>/internal`. Classify an `orig as alias` binding by `orig`. If both groups are non-empty, replace the single declaration with two — one per target — preserving any `import type` / `export type` modifier.
-- A **namespace** import (`import * as ns`), a **default** import, `export *`, and every **call expression** (`require`, dynamic `import`, `jest.mock` family) reference the module as a whole and can't be symbol-split — route them to `@nx/<name>/internal`.
+- A **namespace** import (`import * as ns`), a **default** import, `export *`, every **call expression** (`require`, dynamic `import`, `jest.mock` family), and `typeof import('...')` **type queries** (`ImportTypeNode`) reference the module as a whole and can't be symbol-split — route them to `@nx/<name>/internal`.
 
-Skip the preserved subpaths from step 2 (e.g. `@nx/<name>/src/release/version-actions`). Use `ts.createSourceFile` for AST-based detection so you don't rewrite literals inside comments, template strings, or `typeof import('...')` type queries.
+Skip the preserved subpaths from step 2 (e.g. `@nx/<name>/src/release/version-actions`). Use `ts.createSourceFile` for AST-based detection so you don't rewrite literals inside comments or template strings.
+
+**Don't forget `typeof import('...')`.** It parses as an `ImportTypeNode`, not a `CallExpression`, so it's a separate AST branch from the `require`/dynamic-`import` handling. Real-world consumers use the idiom `const m = require('@nx/<name>/src/x') as typeof import('@nx/<name>/src/x')` to get a typed runtime `require` — if the codemod only rewrites the runtime arg, the type arg stays pointing at the now-removed `./src/*` wildcard and the consumer fails to type-check. Handle it explicitly: walk `ImportTypeNode`s and rewrite `node.argument.literal` when the string starts with `@nx/<name>/src/`.
 
 Register in `packages/<name>/migrations.json` with `version: <current beta>`. The description should state the routing rule: named public-symbol imports/exports go to `@nx/<name>`, everything else to `@nx/<name>/internal`.
 
-Add a spec covering: public-symbol import (→ `@nx/<name>`), internal-symbol import (→ `@nx/<name>/internal`), mixed import split into two, aliased bindings classified by original name, type-only split, `export { ... } from` (public / internal / mixed), `export *`, namespace import, single-quoted, double-quoted, deep subpath, `.js` extension, `require()`, dynamic `import()`, jest mock family, vi mock family, a non-mock `jest.*` call left alone, an import + `jest.mock` in the same file, preserved subpaths, non-`@nx/<name>` imports, `typeof import()` type queries, unrelated string literals inside comments.
+Add a spec covering: public-symbol import (→ `@nx/<name>`), internal-symbol import (→ `@nx/<name>/internal`), mixed import split into two, aliased bindings classified by original name, type-only split, `export { ... } from` (public / internal / mixed), `export *`, namespace import, **default import**, single-quoted, double-quoted, deep subpath, `.js` extension, `require()`, dynamic `import()`, **`typeof import()` type queries (→ `/internal`)**, **a `<typeof import()>require()` cast in tandem** (catches the regression where the runtime arg gets rewritten but the type arg doesn't), the **full** jest mock family (`it.each` over `MOCK_HELPER_METHODS`), the **full** vi mock family, **`jest.mock('...', factory)` with a factory argument**, a non-mock `jest.*` call left alone, an import + `jest.mock` in the same file, preserved subpaths, non-`@nx/<name>` imports, unrelated string literals inside comments. Make sure every entry in `PUBLIC_SYMBOLS` and every entry in `MOCK_HELPER_METHODS` is exercised at least once — drift from hardcoded sets is the most likely silent regression.
 
 **9. Watch for the published-version-mismatch gotcha in example/test builds.**
 
@@ -525,6 +527,34 @@ Reference implementations:
 - `packages/devkit/src/utils/package-json.ts` — `NX_VERSION = require(join('nx', 'package.json')).version` (dynamic form)
 
 This was the source of the workspace-migration e2e regressions (PR #35643) and is one of the most-failure-prone steps to forget. Audit aggressively.
+
+### 15b. Audit `ensurePackage` + `await import(...)` pairs
+
+Search for `ensurePackage\(['"]@nx/` inside `packages/<name>/src/`. For every match, look at the next 5–20 lines for a `await import('@nx/<other>/...')` pulling from the same package. This pattern is **broken** under `nodenext`:
+
+- Before migration: `module: commonjs` made TypeScript downlevel `await import('@nx/<other>')` to `Promise.resolve(require('@nx/<other>'))`. The synchronous `require()` honors `Module._initPaths`, which is exactly where `ensurePackage` registers the on-demand temp install. Resolution succeeds.
+- After migration: `module: nodenext` preserves `import()` as a true ESM dynamic import. ESM resolution **ignores** `Module._initPaths` — it walks up `node_modules` from the importing file's location only. The temp install lives in a different temp dir, so the import fails with `Cannot find package '@nx/<other>'`.
+
+**Fix**: replace the dynamic import with a synchronous `require()`. The `ensurePackage` side effect makes it findable via `_initPaths`, and `require()` honors that:
+
+```ts
+// Before
+ensurePackage('@nx/eslint', nxVersion);
+const { foo, bar } = await import('@nx/eslint/internal');
+
+// After
+ensurePackage('@nx/eslint', nxVersion);
+// `require()` honors Module._initPaths (which ensurePackage updates); ESM
+// dynamic `import()` doesn't, so it can't see the temp install.
+const {
+  foo,
+  bar,
+}: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
+```
+
+Collapse multiple successive `await import()`s of the same module into one `require()` destructuring while you're at it.
+
+This was the source of the M2 e2e regressions (Playwright/Web/React generators crashed at `Cannot find package '@nx/eslint'` from `ignore-vite-temp-files.js` and `ignore-vitest-temp-files.js`). One-line failure mode, but it can sit hidden in any code path that the unit-test suite doesn't exercise — only the published-then-installed flow exposes it. Audit every `ensurePackage` callsite.
 
 ### 16. Preserve `add-extra-dependencies` if the package has one
 

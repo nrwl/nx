@@ -1,11 +1,13 @@
 import {
-  calculateHashForCreateNodes,
+  calculateHashesForCreateNodes,
   loadConfigFile,
   getNamedInputs,
 } from '@nx/devkit/internal';
 import {
+  AggregateCreateNodesError,
   type CreateNodesContextV2,
   createNodesFromFiles,
+  CreateNodesResultV2,
   type CreateNodesV2,
   detectPackageManager,
   getPackageManagerCommand,
@@ -56,21 +58,52 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
+
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(
-            configFile,
-            options,
-            context,
-            pluginCache,
-            pmc,
-            lockFileName
-          ),
+      const { entries, preErrors } = await filterCypressConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultV2 = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              pluginCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
       pluginCache.writeToDisk();
     }
@@ -85,24 +118,10 @@ async function createNodesInternal(
   context: CreateNodesContextV2,
   pluginCache: PluginCache<CypressTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  lockFileName: string
+  projectHash: string
 ) {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFilePath);
-
-  // Do not create a project if package.json and project.json isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') &&
-    !siblingFiles.includes('project.json')
-  ) {
-    return {};
-  }
-
-  const hash =
-    (await calculateHashForCreateNodes(projectRoot, options, context, [
-      lockFileName,
-    ])) + configFilePath;
+  const hash = projectHash + configFilePath;
 
   if (!pluginCache.has(hash)) {
     pluginCache.set(
@@ -741,4 +760,43 @@ async function getSpecFilesAndPatternsForTestType(
   );
 
   return { specFiles, specPatterns, excludeSpecPatterns };
+}
+
+interface CypressEntry {
+  configFile: string;
+  projectRoot: string;
+}
+
+async function filterCypressConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContextV2
+): Promise<{
+  entries: CypressEntry[];
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(async (configFile): Promise<CypressEntry | null> => {
+      try {
+        const projectRoot = dirname(configFile);
+        const siblingFiles = readdirSync(
+          join(context.workspaceRoot, projectRoot)
+        );
+        if (
+          !siblingFiles.includes('package.json') &&
+          !siblingFiles.includes('project.json')
+        ) {
+          return null;
+        }
+        return { configFile, projectRoot };
+      } catch (e) {
+        preErrors.push([configFile, e as Error]);
+        return null;
+      }
+    })
+  );
+  return {
+    entries: candidates.filter((c): c is CypressEntry => c !== null),
+    preErrors,
+  };
 }

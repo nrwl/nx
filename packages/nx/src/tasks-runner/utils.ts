@@ -656,25 +656,6 @@ export function shouldStreamOutput(
   return false;
 }
 
-export function isCacheableTask(
-  task: Task,
-  options: {
-    cacheableOperations?: string[] | null;
-    cacheableTargets?: string[] | null;
-  }
-): boolean {
-  if (task.cache !== undefined) {
-    return task.cache;
-  }
-
-  const cacheable = options.cacheableOperations || options.cacheableTargets;
-  return (
-    cacheable &&
-    cacheable.indexOf(task.target.target) > -1 &&
-    !longRunningTask(task)
-  );
-}
-
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (

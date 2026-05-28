@@ -198,7 +198,7 @@ export async function generateWorkspaceFiles(
   const [packageMajor] = packageManagerVersion.split('.');
   if (options.packageManager === 'pnpm' && +packageMajor >= 7) {
     if (gte(packageManagerVersion, '10.6.0')) {
-      addPnpmSettings(tree, options);
+      addPnpmSettings(tree, options, packageManagerVersion);
     } else {
       createNpmrc(tree, options);
     }
@@ -345,13 +345,18 @@ async function createReadme(
   });
 }
 
-// ensure that pnpm install add all the missing peer deps
+function addPnpmSettings(
+  tree: Tree,
+  options: NormalizedSchema,
+  packageManagerVersion: string
+) {
+  const buildAllowlist = gte(packageManagerVersion, '11.0.0')
+    ? `allowBuilds:\n  nx: true`
+    : `onlyBuiltDependencies:\n  - nx`;
 
-function addPnpmSettings(tree: Tree, options: NormalizedSchema) {
   tree.write(
     join(options.directory, 'pnpm-workspace.yaml'),
-    `autoInstallPeers: true
-`
+    `autoInstallPeers: true\n${buildAllowlist}\n`
   );
 }
 

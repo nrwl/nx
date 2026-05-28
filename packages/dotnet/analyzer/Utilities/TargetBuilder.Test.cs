@@ -16,7 +16,8 @@ public static partial class TargetBuilder
         string projectDirectory,
         string workspaceRoot,
         PluginOptions options,
-        string productionInput)
+        string productionInput,
+        List<string> directoryBuildInputs)
     {
         // TODO(@AgentEnder): We should add this back in after external deps
         // support is fleshed out.
@@ -44,6 +45,7 @@ public static partial class TargetBuilder
                 new { workingDirectory = "absolute" },
                 new { dependentTasksOutputFiles = "**/*" },
                 // new { externalDependencies = externalDeps }
+                .. directoryBuildInputs
             ],
             Outputs = testResultsDir is null ? [] : [testResultsDir],
             Metadata = new TargetMetadata

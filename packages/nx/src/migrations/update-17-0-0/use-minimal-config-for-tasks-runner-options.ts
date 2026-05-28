@@ -25,7 +25,19 @@ export default async function migrate(tree: Tree) {
 
   const nxCloudClientSupported = await isNxCloudClientSupported(nxJson);
   updateJson<NxJsonConfiguration>(tree, 'nx.json', (nxJson) => {
-    const { runner, options } = nxJson.tasksRunnerOptions.default;
+    const { runner, options } = nxJson.tasksRunnerOptions.default as {
+      runner: string;
+      options: {
+        useDaemonProcess?: boolean;
+        accessToken?: string;
+        url?: string;
+        useLightClient?: boolean;
+        encryptionKey?: string;
+        parallel?: number;
+        cacheDirectory?: string;
+        cacheableOperations?: string[];
+      };
+    };
 
     // This property shouldn't ever be part of tasks runner options.
     if (options.useDaemonProcess !== undefined) {

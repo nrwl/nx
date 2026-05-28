@@ -10,9 +10,20 @@ packages:
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
+minimumReleaseAge: 1440
+minimumReleaseAgeExclude:
+  - nx
+  - '@nx/*'
+  - '@nrwl/*'
+  - create-nx-workspace
+  - create-nx-plugin
+  - tmp@0.2.6 # https://github.com/advisories/GHSA-ph9p-34f9-6g65
 overrides:
+  handlebars: '4.7.9'
   minimist: '^1.2.6'
-  underscore: '^1.12.1'
+  underscore: '^1.13.8'
+  brace-expansion: '5.0.6'
+  minimatch: '^10.2.5'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -41,11 +52,12 @@ catalog:
   rxjs: '^7.8.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
-  tmp: '~0.2.1'
+  tmp: '~0.2.6'
   tree-kill: '^1.2.2'
   verdaccio: '^6.3.2'
   webpack: '^5.101.3'
   webpack-dev-server: '^5.2.1'
+  which: '^3.0.1'
   yargs: '^17.6.2'
   yargs-parser: '21.1.1'
 catalogs:
@@ -144,3 +156,21 @@ catalogs:
     tailwind-merge: '^2.4.0'
   vite:
     vitest: '^4.0.0'
+allowBuilds:
+  '@nestjs/core': true
+  '@parcel/watcher': false
+  '@swc/core': false
+  '@tailwindcss/oxide': false
+  core-js: false
+  core-js-pure: false
+  cypress: false
+  detox: false
+  dtrace-provider: false
+  es5-ext: false
+  esbuild: false
+  less: false
+  lmdb: false
+  msgpackr-extract: false
+  nx: true
+  sharp: false
+  unrs-resolver: false

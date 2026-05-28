@@ -5,6 +5,11 @@ common-env-vars: &common-env-vars
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs created by create-nx-workspace), pulling pnpm 11 and
+  # breaking install. Same treatment as .github/workflows/{ci,e2e-matrix}.yml.
+  COREPACK_DEFAULT_TO_LATEST: '0'
   # These are need for build and link validation for next.js and astro apps
   NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
   NX_DEV_URL: 'https://canary.nx.dev'
@@ -74,7 +79,7 @@ common-init-steps: &common-init-steps
 
   - name: Restore .NET analyzer projects
     script: |
-      dotnet restore packages/dotnet/analyzer.Tests/MsbuildAnalyzer.Tests.csproj
+      dotnet restore nx.sln
 
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |

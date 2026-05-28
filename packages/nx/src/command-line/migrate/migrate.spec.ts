@@ -24,12 +24,17 @@ import * as packageMgrUtils from '../../utils/package-manager';
 import {
   filterDowngradedUpdates,
   formatCommandFailure,
+  formatSkippedPromptsNextStep,
+  isHybridMigration,
   isNpmPeerDepsError,
+  isPromptOnlyMigration,
   Migrator,
   normalizeVersion,
+  parseMigrationReturn,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
+  resolveCreateCommits,
   resolveMode,
 } from './migrate';
 import {
@@ -2075,6 +2080,22 @@ describe('Migration', () => {
         type: 'runMigrations',
         runMigrations: 'migrations.json',
         ifExists: true,
+        agentic: undefined,
+        validate: undefined,
+      });
+    });
+
+    it('should propagate the agentic and validate values when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        agentic: 'claude-code',
+        validate: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        agentic: 'claude-code',
+        validate: false,
       });
     });
 
@@ -3994,6 +4015,225 @@ describe('Migration', () => {
         '1.0.0'
       );
       expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0/x.md']);
+    });
+  });
+
+  describe('agentic helpers', () => {
+    const baseMigration = { package: 'p', name: 'n', version: '1.0.0' };
+
+    describe('isPromptOnlyMigration / isHybridMigration', () => {
+      it.each([
+        ['prompt only', { prompt: 'x.md' }, true, false],
+        [
+          'prompt + implementation (hybrid)',
+          { prompt: 'x.md', implementation: './impl.js' },
+          false,
+          true,
+        ],
+        [
+          'prompt + legacy factory (hybrid)',
+          { prompt: 'x.md', factory: './factory.js' },
+          false,
+          true,
+        ],
+        [
+          'implementation only (no prompt)',
+          { implementation: './impl.js' },
+          false,
+          false,
+        ],
+      ])(
+        'classifies %s correctly',
+        (_label, extra, expectedPromptOnly, expectedHybrid) => {
+          const migration = { ...baseMigration, ...extra };
+          expect(isPromptOnlyMigration(migration)).toBe(expectedPromptOnly);
+          expect(isHybridMigration(migration)).toBe(expectedHybrid);
+        }
+      );
+    });
+
+    describe('resolveCreateCommits', () => {
+      it.each<
+        [
+          string,
+          boolean | undefined,
+          'disabled' | 'inside-agent' | 'enabled',
+          { effective: boolean; agenticHasDiffContext: boolean },
+        ]
+      >([
+        [
+          'explicit true, no agentic',
+          true,
+          'disabled',
+          { effective: true, agenticHasDiffContext: false },
+        ],
+        [
+          'explicit false, no agentic',
+          false,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, no agentic',
+          undefined,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, inside-agent',
+          undefined,
+          'inside-agent',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, agentic enabled — soft-force on',
+          undefined,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+        [
+          'explicit true, agentic enabled',
+          true,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+      ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
+        expect(
+          resolveCreateCommits({
+            createCommits,
+            agenticKind,
+            isGitRepo: true,
+          })
+        ).toEqual(expected);
+      });
+
+      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('errors when --create-commits is explicit without a git repo', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
+
+      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.error).toBeUndefined();
+        expect(result.warning).toMatch(/not a git repository/);
+      });
+
+      it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('does not mention --commit-prefix when the prefix is unchanged', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).not.toMatch(/--commit-prefix/);
+      });
+    });
+
+    describe('parseMigrationReturn', () => {
+      it('reads both buckets from the object shape and tolerates partial shapes', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['a'],
+            agentContext: ['b', 'c'],
+          })
+        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
+        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
+          nextSteps: [],
+          agentContext: ['x'],
+        });
+      });
+
+      it('treats a string array as legacy workspace-wide nextSteps', () => {
+        expect(parseMigrationReturn(['a', 'b'])).toEqual({
+          nextSteps: ['a', 'b'],
+          agentContext: [],
+        });
+      });
+
+      it('filters non-string entries per bucket so a single bad entry does not drop the whole array', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['ok', 1, null] as any,
+            agentContext: [true, 'ok'] as any,
+          })
+        ).toEqual({ nextSteps: ['ok'], agentContext: ['ok'] });
+        expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
+          nextSteps: ['ok'],
+          agentContext: [],
+        });
+      });
+    });
+
+    describe('formatSkippedPromptsNextStep', () => {
+      it('renders a parent instruction line and an indented bullet per skipped path', () => {
+        const result = formatSkippedPromptsNextStep([
+          {
+            package: '@nx/storybook',
+            name: 'migrate-css',
+            version: '9.2.0',
+            prompt: 'tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md',
+          },
+          {
+            package: '@nx/rspack',
+            name: 'perf-options',
+            version: '2.0.0',
+            prompt: 'tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md',
+          },
+        ]);
+
+        expect(result).toBe(
+          'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:\n' +
+            '  - tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md\n' +
+            '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
+        );
+      });
     });
   });
 });

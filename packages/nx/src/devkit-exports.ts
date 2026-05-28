@@ -27,6 +27,7 @@ export type {
 export type {
   Generator,
   Migration,
+  MigrationReturnObject,
   GeneratorCallback,
   PromiseExecutor,
   AsyncIteratorExecutor,

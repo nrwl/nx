@@ -1,8 +1,12 @@
-import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { getInstalledPackageVersion } from '@nx/devkit/internal';
-import { clean, coerce, major } from 'semver';
+import { type Tree } from '@nx/devkit';
+import {
+  getDeclaredPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
+import { join } from 'path';
+import { major } from 'semver';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/cypress', 'package.json')).version;
 export const minSupportedCypressVersion = '13.0.0';
 export const eslintPluginCypressVersion = '^3.5.0';
 export const typesNodeVersion = '^22.0.0';
@@ -71,15 +75,7 @@ export function getInstalledCypressVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('cypress');
   }
-
-  const installedVersion = getDependencyVersionFromPackageJson(tree, 'cypress');
-  if (!installedVersion) {
-    return null;
-  }
-  if (installedVersion === 'latest' || installedVersion === 'next') {
-    return clean(cypressVersion) ?? coerce(cypressVersion)?.version ?? null;
-  }
-  return clean(installedVersion) ?? coerce(installedVersion)?.version ?? null;
+  return getDeclaredPackageVersion(tree, 'cypress');
 }
 
 export function getInstalledCypressMajorVersion(tree?: Tree): number | null {

@@ -40,6 +40,7 @@ import {
   resolveMaxCacheSize,
 } from '../../tasks-runner/cache';
 import { daemonClient } from '../../daemon/client/client';
+import { readNxPackageGroup } from '../../utils/nx-package-group';
 
 const nxPackageJson = readJsonFile<NxPackageJson>(
   require.resolve('nx/package.json')
@@ -47,9 +48,7 @@ const nxPackageJson = readJsonFile<NxPackageJson>(
 
 export const packagesWeCareAbout = [
   'lerna',
-  ...nxPackageJson['nx-migrations'].packageGroup.map((x) =>
-    typeof x === 'string' ? x : x.package
-  ),
+  ...readNxPackageGroup(),
   '@nrwl/schematics', // manually added since we don't publish it anymore.
   'typescript',
 ];

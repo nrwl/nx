@@ -57,3 +57,13 @@ export { signalToCode } from './utils/exit-codes';
 export { handleImport } from './utils/handle-import';
 export { PluginCache, safeWriteFileCache } from './utils/plugin-cache-utils';
 export { emitPluginWorkerLog } from './project-graph/plugins/isolation/worker-streaming';
+export {
+  resolveImplementation,
+  resolveSchema,
+  ImplementationResolutionError,
+  SchemaResolutionError,
+} from './config/schema-utils';
+export {
+  resolvePrompt,
+  PromptResolutionError,
+} from './command-line/migrate/prompt-files';

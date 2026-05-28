@@ -636,7 +636,7 @@ export interface Task {
   /** Unix timestamp of when a Batch Task ends */
   endTime?: number
   /** Determines if a given task should be cacheable. */
-  cache?: boolean
+  cache: boolean
   /** Determines if a given task should be parallelizable. */
   parallelism?: boolean
   /** This denotes if the task runs continuously */

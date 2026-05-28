@@ -3,10 +3,24 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/playwright",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
+    },
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/playwright/README.md"],
-      "commands": ["node ./scripts/copy-readme.js playwright"],
+      "outputs": ["{projectRoot}/README.md"],
+      "commands": [
+        "node ./scripts/copy-readme.js playwright packages/playwright/readme-template.md packages/playwright/README.md"
+      ],
       "inputs": ["copyReadme"]
     }
   },

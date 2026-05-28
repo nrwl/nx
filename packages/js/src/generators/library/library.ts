@@ -31,6 +31,7 @@ import {
 import { type PackageJson } from 'nx/src/utils/package-json';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
+import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';
 import { normalizeLinterOption } from '../../utils/generator-prompts';
 import { sortPackageJsonFields } from '../../utils/package-json/sort-fields';
 import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-package-json';
@@ -89,6 +90,8 @@ export async function libraryGeneratorInternal(
   tree: Tree,
   schema: LibraryGeneratorSchema
 ) {
+  assertSupportedTypescriptVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
@@ -934,7 +937,9 @@ function addProjectDependencies(
         esbuild:
           getDependencyVersionFromPackageJson(tree, 'esbuild') ??
           esbuildVersion,
-      }
+      },
+      undefined,
+      true
     );
   } else if (options.bundler == 'rollup') {
     const { dependencies, devDependencies } = getSwcDependencies();
@@ -945,26 +950,34 @@ function addProjectDependencies(
         ...devDependencies,
         '@nx/rollup': nxVersion,
         '@types/node': typesNodeVersion,
-      }
+      },
+      undefined,
+      true
     );
   } else if (options.bundler === 'tsc') {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { tslib: tsLibVersion, '@types/node': typesNodeVersion }
+      { tslib: tsLibVersion, '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   } else if (options.bundler === 'swc') {
     const { dependencies, devDependencies } = getSwcDependencies();
     return addDependenciesToPackageJson(
       tree,
       { ...dependencies },
-      { ...devDependencies, '@types/node': typesNodeVersion }
+      { ...devDependencies, '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   } else {
     return addDependenciesToPackageJson(
       tree,
       {},
-      { '@types/node': typesNodeVersion }
+      { '@types/node': typesNodeVersion },
+      undefined,
+      true
     );
   }
 
