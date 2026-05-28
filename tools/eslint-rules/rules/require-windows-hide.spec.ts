@@ -23,10 +23,6 @@ ruleTester.run(RULE_NAME, rule, {
     `import { spawn } from 'child_process';
      const opts = { windowsHide: true };
      spawn('echo', ['hello'], opts);`,
-    // Member expression as last arg (could be options) - skip
-    `import { spawn } from 'child_process';
-     const adapted = { options: { windowsHide: true } };
-     spawn('echo', ['hello'], adapted.options);`,
     // Test file should be ignored
     {
       code: `import { spawn } from 'child_process';
@@ -70,6 +66,13 @@ ruleTester.run(RULE_NAME, rule, {
     {
       code: `import * as cp from 'child_process';
              cp.spawn('echo', ['hello'], { stdio: 'inherit' });`,
+      errors: [{ messageId: 'missingWindowsHide' }],
+    },
+    // Member expression as args (no options) - must still report
+    {
+      code: `import { spawn } from 'child_process';
+             const config = { args: ['hello'] };
+             spawn('echo', config.args);`,
       errors: [{ messageId: 'missingWindowsHide' }],
     },
   ],
