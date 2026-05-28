@@ -42,7 +42,10 @@ import {
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
-import { hasUncommittedChanges, isGitRepository } from '../../utils/git-utils';
+import {
+  getUncommittedChangesSnapshot,
+  isGitRepository,
+} from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -2645,6 +2648,10 @@ export async function executeMigrations(
   for (const m of sortedMigrations) {
     migrationIndex++;
     logMigrationBoundary(migrationIndex, totalMigrations, m.package, m.name);
+    // Snapshot the WT for before/after comparison in the catch block.
+    // Content-sensitive so a dirty→dirty case (this migration mutating an
+    // already-dirty shared file like `package.json`) doesn't collapse.
+    const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
     try {
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
@@ -2812,18 +2819,20 @@ export async function executeMigrations(
       });
       logger.info('');
     } catch (e) {
-      // Record the in-flight migration as `aborted` so the recap and the
-      // tally see it. The throw could have come from anywhere inside the
-      // try block — generator, install, agent step. `hasUncommittedChanges`
-      // disambiguates between "the throw left a diff in the working tree"
-      // (treat as a failed commit so it shows under retained state) and
-      // "the throw escaped before any diff" (no commit to track).
+      // Record the in-flight migration as `aborted` so the recap and tally
+      // see it. `commit: 'failed'` requires both: (1) commits were
+      // requested — otherwise the "could not be created" recap line is
+      // false; (2) the WT snapshot diverged from the iteration baseline —
+      // net-new state, not the pre-existing pending diff. Else `'none'`.
+      const leftNewDiff =
+        getUncommittedChangesSnapshot(root) !== baselineWorkingTreeSnapshot;
       outcomes.push({
         migration: { package: m.package, name: m.name },
         status: 'aborted',
-        commit: hasUncommittedChanges(root)
-          ? { kind: 'failed' }
-          : { kind: 'none' },
+        commit:
+          shouldCreateCommits && leftNewDiff
+            ? { kind: 'failed' }
+            : { kind: 'none' },
       });
       if (!(e instanceof NpmPeerDepsInstallError)) {
         // `withGeneratorOutputCapture` attaches the generator's `console.*`
