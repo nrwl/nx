@@ -1,11 +1,18 @@
 import { joinPathFragments, output, type ExecutorContext } from '@nx/devkit';
-import { assertSupportedInstalledPackageVersion } from '@nx/devkit/internal';
+import {
+  assertSupportedInstalledPackageVersion,
+  getInstalledPackageVersion,
+} from '@nx/devkit/internal';
 import type { ESLint } from 'eslint';
 import { mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
+import { major } from 'semver';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
-import { warnEslintExecutorDeprecation } from '../../utils/deprecation';
+import {
+  warnEslintExecutorDeprecation,
+  warnEslintV8Deprecation,
+} from '../../utils/deprecation';
 import { minSupportedEslintVersion } from '../../utils/versions';
 import type { Schema } from './schema';
 import { resolveAndInstantiateESLint } from './utility/eslint-utils';
@@ -68,6 +75,11 @@ export default async function run(
   );
 
   assertSupportedInstalledPackageVersion('eslint', minSupportedEslintVersion);
+
+  const installedEslintVersion = getInstalledPackageVersion('eslint');
+  if (installedEslintVersion && major(installedEslintVersion) === 8) {
+    warnEslintV8Deprecation();
+  }
 
   if (printConfig) {
     try {
