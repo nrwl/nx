@@ -13,6 +13,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
+import { coerce, major } from 'semver';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
@@ -34,6 +35,14 @@ export async function lintWorkspaceRuleGenerator(
   const tasks: GeneratorCallback[] = [];
 
   const flatConfig = useFlatConfig(tree);
+  // ESLint v9 dropped the eslintrc-style `RuleTester` class even when running
+  // in eslintrc mode, so any workspace ending up on v9+ needs the flat-style
+  // `@typescript-eslint/rule-tester` template regardless of the config-file
+  // shape. We resolve the effective major from `versions(tree)` to cover both
+  // declared workspaces and fresh installs that will be bumped to v9.
+  const { eslintVersion, typescriptESLintVersion } = versions(tree);
+  const effectiveEslintMajor = major(coerce(eslintVersion));
+  const useFlatRuleTester = flatConfig || effectiveEslintMajor >= 9;
 
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
@@ -46,8 +55,7 @@ export async function lintWorkspaceRuleGenerator(
     })
   );
 
-  if (flatConfig) {
-    const { typescriptESLintVersion } = versions(tree);
+  if (useFlatRuleTester) {
     tasks.push(
       addDependenciesToPackageJson(
         tree,
@@ -68,7 +76,7 @@ export async function lintWorkspaceRuleGenerator(
   generateFiles(tree, join(__dirname, 'files'), ruleDir, {
     tmpl: '',
     name: options.name,
-    flatConfig,
+    useFlatRuleTester,
   });
 
   const nameCamelCase = camelize(options.name);
