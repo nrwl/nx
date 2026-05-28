@@ -175,7 +175,7 @@ describe('@nx/eslint:workspace-rule', () => {
       }
     });
 
-    it('should generate the flat-style rule-test template and install @typescript-eslint/rule-tester', async () => {
+    it('should generate the eslintrc rule-test template using flat-style RuleTester args and not install @typescript-eslint/rule-tester', async () => {
       await lintWorkspaceRuleGenerator(tree, {
         name: 'my-rule',
         directory: 'rules',
@@ -185,13 +185,15 @@ describe('@nx/eslint:workspace-rule', () => {
         'tools/eslint-rules/rules/my-rule.spec.ts',
         'utf-8'
       );
-      expect(spec).toContain("from '@typescript-eslint/rule-tester'");
-      expect(spec).not.toContain("from '@typescript-eslint/utils'");
+      expect(spec).toContain("from '@typescript-eslint/utils'");
+      expect(spec).toContain('languageOptions:');
+      expect(spec).not.toContain("from '@typescript-eslint/rule-tester'");
+      expect(spec).not.toContain('require.resolve');
 
       const packageJson = readJson(tree, 'package.json');
       expect(
-        packageJson.devDependencies['@typescript-eslint/rule-tester']
-      ).toBeDefined();
+        packageJson.devDependencies?.['@typescript-eslint/rule-tester']
+      ).toBeUndefined();
     });
   });
 
