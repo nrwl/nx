@@ -1,4 +1,4 @@
-<% if (flatConfig) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
+<% if (useFlatRuleTester) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './<%= name %>';
 
@@ -7,21 +7,14 @@ const ruleTester = new RuleTester({
     parser: require('@typescript-eslint/parser'),
   },
 } as RuleTesterConfig);
-<% } else if (eslintMajor >= 9) { %>import { TSESLint } from '@typescript-eslint/utils';
-import { rule, RULE_NAME } from './<%= name %>';
-
-const ruleTester = new TSESLint.RuleTester({
-  languageOptions: {
-    parser: require('@typescript-eslint/parser'),
-  },
-});
 <% } else { %>import { TSESLint } from '@typescript-eslint/utils';
 import { rule, RULE_NAME } from './<%= name %>';
 
 const ruleTester = new TSESLint.RuleTester({
   parser: require.resolve('@typescript-eslint/parser'),
 });
-<% } %>ruleTester.run(RULE_NAME, rule, {
+<% } %>
+ruleTester.run(RULE_NAME, rule, {
   valid: [`const example = true;`],
   invalid: [],
 });

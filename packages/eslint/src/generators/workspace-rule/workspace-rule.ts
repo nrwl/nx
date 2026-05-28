@@ -35,13 +35,15 @@ export async function lintWorkspaceRuleGenerator(
   const tasks: GeneratorCallback[] = [];
 
   const flatConfig = useFlatConfig(tree);
-  // ESLint v9 dropped the eslintrc-style `RuleTester` constructor shape.
-  // `TSESLint.RuleTester` (from `@typescript-eslint/utils`) just extends
-  // `eslint.RuleTester`, so its accepted args depend on the installed ESLint
-  // major. We resolve the effective major from `versions(tree)` so the eslintrc
-  // template emits the right constructor args for both v8 and v9 workspaces.
+  // ESLint v9 dropped the eslintrc-style `RuleTester` API. typescript-eslint's
+  // recommended replacement for any v9 workspace (flat or eslintrc) is the
+  // separate `@typescript-eslint/rule-tester` package, which has a flat-style
+  // API that works with ESLint v8.57+ and v9 alike. We resolve the effective
+  // major from `versions(tree)` to cover both declared workspaces and fresh
+  // installs that will be bumped to v9.
   const { eslintVersion, typescriptESLintVersion } = versions(tree);
-  const eslintMajor = major(coerce(eslintVersion));
+  const effectiveEslintMajor = major(coerce(eslintVersion));
+  const useFlatRuleTester = flatConfig || effectiveEslintMajor >= 9;
 
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
@@ -54,7 +56,7 @@ export async function lintWorkspaceRuleGenerator(
     })
   );
 
-  if (flatConfig) {
+  if (useFlatRuleTester) {
     tasks.push(
       addDependenciesToPackageJson(
         tree,
@@ -75,8 +77,7 @@ export async function lintWorkspaceRuleGenerator(
   generateFiles(tree, join(__dirname, 'files'), ruleDir, {
     tmpl: '',
     name: options.name,
-    flatConfig,
-    eslintMajor,
+    useFlatRuleTester,
   });
 
   const nameCamelCase = camelize(options.name);
