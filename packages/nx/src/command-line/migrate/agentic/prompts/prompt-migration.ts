@@ -1,4 +1,8 @@
-import { escapeXmlBody, renderKeyMultilineValue } from './shared-rendering';
+import {
+  escapeXmlBody,
+  renderHandoffPathFooter,
+  renderMigrationBlock,
+} from './shared-rendering';
 
 export interface PromptMigrationContext {
   package: string;
@@ -26,29 +30,13 @@ export function buildPromptMigrationUserPrompt(
 ): string {
   const lines = [
     `Apply one prompt-based migration to this Nx workspace.`,
-    ``,
-    `<migration>`,
-    `package: ${escapeXmlBody(ctx.package)}`,
-    `version: ${escapeXmlBody(ctx.version)}`,
-    `name: ${escapeXmlBody(ctx.name)}`,
-  ];
-
-  if (ctx.description) {
-    lines.push(
-      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
-    );
-  }
-
-  lines.push(
-    `</migration>`,
+    ...renderMigrationBlock(ctx),
     ``,
     `<instructions_file>${escapeXmlBody(ctx.promptPath)}</instructions_file>`,
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step, then write your handoff JSON to:`,
-    `<handoff_path>`,
-    escapeXmlBody(ctx.handoffFileAbsolutePath),
-    `</handoff_path>`
-  );
+    ...renderHandoffPathFooter(ctx.handoffFileAbsolutePath),
+  ];
 
   return lines.join('\n');
 }

@@ -87,3 +87,60 @@ export function renderGeneratorOutputBlock(logs: string): string[] {
     `</generator_output>`,
   ];
 }
+
+export interface MigrationBlockContext {
+  package: string;
+  name: string;
+  version: string;
+  description?: string;
+}
+
+// Identical `<migration>` block used by prompt-migration, hybrid, and
+// generic-validation builders. Leading blank included so callers can spread
+// directly after a lead sentence. Centralized so the schema and the
+// `escapeXmlBody` contract on values stay in lock-step.
+export function renderMigrationBlock(ctx: MigrationBlockContext): string[] {
+  const lines = [
+    ``,
+    `<migration>`,
+    `package: ${escapeXmlBody(ctx.package)}`,
+    `version: ${escapeXmlBody(ctx.version)}`,
+    `name: ${escapeXmlBody(ctx.name)}`,
+  ];
+  if (ctx.description) {
+    lines.push(
+      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
+    );
+  }
+  lines.push(`</migration>`);
+  return lines;
+}
+
+// `<handoff_path>` footer that follows the "write your handoff JSON to:"
+// sentence. No leading blank — the block is part of that sentence's structure,
+// not a separate section.
+export function renderHandoffPathFooter(
+  handoffFileAbsolutePath: string
+): string[] {
+  return [
+    `<handoff_path>`,
+    escapeXmlBody(handoffFileAbsolutePath),
+    `</handoff_path>`,
+  ];
+}
+
+// Advisory hints from the generator phase. The `note` attribute varies between
+// callers (hybrid vs generic-validation lead-in differs), so it's parameterized
+// rather than hardcoded. Entries are escaped here so callers can pass raw
+// strings.
+export function renderAdvisoryContext(
+  note: string,
+  entries: string[]
+): string[] {
+  return [
+    ``,
+    `<advisory_context note="${note}">`,
+    ...entries.map((entry) => renderListItem(escapeXmlBody(entry))),
+    `</advisory_context>`,
+  ];
+}

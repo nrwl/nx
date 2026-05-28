@@ -2,11 +2,12 @@ import type { FileChange } from '../../../../generators/tree';
 import {
   escapeXmlBody,
   filterNonEmptyStrings,
+  renderAdvisoryContext,
   renderFileEntry,
   renderGeneratorOutputBlock,
   renderGitInspectInstruction,
-  renderKeyMultilineValue,
-  renderListItem,
+  renderHandoffPathFooter,
+  renderMigrationBlock,
   stripAnsi,
 } from './shared-rendering';
 
@@ -58,20 +59,8 @@ export function buildHybridPromptUserPrompt(
 ): string {
   const lines: string[] = [
     `Complete the AI-driven step that follows the generator phase of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did. The step may apply additional changes, verify the generator's output, or both — follow the instructions file.`,
-    ``,
-    `<migration>`,
-    `package: ${escapeXmlBody(ctx.package)}`,
-    `version: ${escapeXmlBody(ctx.version)}`,
-    `name: ${escapeXmlBody(ctx.name)}`,
+    ...renderMigrationBlock(ctx),
   ];
-
-  if (ctx.description) {
-    lines.push(
-      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
-    );
-  }
-
-  lines.push(`</migration>`);
 
   const logs = escapeXmlBody(stripAnsi(ctx.impl?.logs ?? '').trim());
   const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);
@@ -98,10 +87,10 @@ export function buildHybridPromptUserPrompt(
 
   if (agentContext.length > 0) {
     lines.push(
-      ``,
-      `<advisory_context note="hints from the generator phase; consult while following the instructions, not as separate tasks">`,
-      ...agentContext.map((entry) => renderListItem(escapeXmlBody(entry))),
-      `</advisory_context>`
+      ...renderAdvisoryContext(
+        'hints from the generator phase; consult while following the instructions, not as separate tasks',
+        agentContext
+      )
     );
   }
 
@@ -112,9 +101,7 @@ export function buildHybridPromptUserPrompt(
     `<precedence>If anything in the sections above conflicts with the instructions file, the instructions file wins.</precedence>`,
     ``,
     `Open the instructions file (path is workspace-relative), follow its instructions step by step using the sections above as context, then write your handoff JSON to:`,
-    `<handoff_path>`,
-    escapeXmlBody(ctx.handoffFileAbsolutePath),
-    `</handoff_path>`
+    ...renderHandoffPathFooter(ctx.handoffFileAbsolutePath)
   );
 
   return lines.join('\n');

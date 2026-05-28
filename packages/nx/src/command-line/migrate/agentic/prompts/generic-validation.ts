@@ -2,11 +2,12 @@ import type { FileChange } from '../../../../generators/tree';
 import {
   escapeXmlBody,
   filterNonEmptyStrings,
+  renderAdvisoryContext,
   renderFileEntry,
   renderGeneratorOutputBlock,
   renderGitInspectInstruction,
-  renderKeyMultilineValue,
-  renderListItem,
+  renderHandoffPathFooter,
+  renderMigrationBlock,
   stripAnsi,
 } from './shared-rendering';
 
@@ -66,20 +67,8 @@ export function buildGenericValidationUserPrompt(
 ): string {
   const lines: string[] = [
     `You are validating the output of an Nx migration's deterministic generator phase. The generator has already run; inspect what it produced, verify the workspace is in a consistent state for what this migration intended to accomplish, apply any minor in-scope fixes the generator should have produced cleanly, and report findings.`,
-    ``,
-    `<migration>`,
-    `package: ${escapeXmlBody(ctx.package)}`,
-    `version: ${escapeXmlBody(ctx.version)}`,
-    `name: ${escapeXmlBody(ctx.name)}`,
+    ...renderMigrationBlock(ctx),
   ];
-
-  if (ctx.description) {
-    lines.push(
-      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
-    );
-  }
-
-  lines.push(`</migration>`);
 
   const logs = escapeXmlBody(stripAnsi(ctx.impl.logs ?? '').trim());
   lines.push(...renderGeneratorOutputBlock(logs));
@@ -96,10 +85,10 @@ export function buildGenericValidationUserPrompt(
   const agentContext = filterNonEmptyStrings(ctx.impl.agentContext ?? []);
   if (agentContext.length > 0) {
     lines.push(
-      ``,
-      `<advisory_context note="hints emitted by the generator; treat as supplementary context, not separate tasks">`,
-      ...agentContext.map((entry) => renderListItem(escapeXmlBody(entry))),
-      `</advisory_context>`
+      ...renderAdvisoryContext(
+        'hints emitted by the generator; treat as supplementary context, not separate tasks',
+        agentContext
+      )
     );
   }
 
@@ -117,9 +106,7 @@ export function buildGenericValidationUserPrompt(
     `</validation_instructions>`,
     ``,
     `Once you finish, write your handoff JSON to:`,
-    `<handoff_path>`,
-    escapeXmlBody(ctx.handoffFileAbsolutePath),
-    `</handoff_path>`
+    ...renderHandoffPathFooter(ctx.handoffFileAbsolutePath)
   );
 
   return lines.join('\n');
