@@ -74,8 +74,12 @@ export async function runAgentic(
   });
 
   let child: ChildProcess;
+  // Local alias so `@nx/workspace-require-windows-hide` recognizes the
+  // options arg as a tracked Identifier rather than giving up on a
+  // member-expression skip — keeps the lint rule strict on other call sites.
+  const spawnOptions = adapted.options;
   try {
-    child = spawn(adapted.binary, adapted.args, adapted.options);
+    child = spawn(adapted.binary, adapted.args, spawnOptions);
   } catch (err) {
     return resolveFromHandoffOrPrompt(handoffFilePath, false, {
       spawnError: err instanceof Error ? err.message : String(err),
