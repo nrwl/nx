@@ -111,6 +111,13 @@ export function MigrateApp({
     });
   };
 
+  const onAcknowledgePrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'acknowledge-prompt',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -122,6 +129,7 @@ export function MigrateApp({
       onFileClick={onFileClick}
       onSkipMigration={onSkipMigration}
       onUndoMigration={onUndoMigration}
+      onAcknowledgePrompt={onAcknowledgePrompt}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
       onStopMigration={onStopMigration}

@@ -5,8 +5,12 @@ import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
 import type { FileChange } from '../../generators/tree';
 import {
   getImplementationPath as getMigrationImplementationPath,
+  isHybridMigration,
+  isPromptOnlyMigration,
   readMigrationCollection,
 } from './migrate';
+
+export { isPromptOnlyMigration, isHybridMigration };
 
 let currentMigrationProcess: ChildProcess | null = null;
 let currentMigrationId: string | null = null;
@@ -32,6 +36,11 @@ export type SuccessfulMigration = {
   changedFiles: Omit<FileChange, 'content'>[];
   ref: string;
   nextSteps?: string[];
+  // True after the user clicks Mark as Completed on a hybrid migration whose
+  // generator already succeeded — confirms the AI prompt phase is done. Stays
+  // undefined for non-prompt migrations and for prompt-only (which use the
+  // existing successful state directly: no separate pre-ack phase).
+  acknowledgedPrompt?: boolean;
 };
 
 export type FailedMigration = {
@@ -146,6 +155,15 @@ export async function runSingleMigration(
       addRunningMigration(migration.id)
     );
 
+    // Prompt-only migrations have no deterministic implementation to spawn.
+    // The state-machine's auto-run hits this branch; the manual Mark-as-
+    // Completed path calls `recordPromptOnlySuccess` directly so it stays out
+    // of the process-tracking lifecycle.
+    if (isPromptOnlyMigration(migration)) {
+      recordPromptOnlySuccess(workspacePath, migration);
+      return;
+    }
+
     const gitRefBefore = execSync('git rev-parse HEAD', {
       cwd: workspacePath,
       encoding: 'utf-8',
@@ -227,7 +245,9 @@ export async function runSingleMigration(
           type: change.type,
         })),
         gitRefAfter,
-        nextSteps
+        isHybridMigration(migration)
+          ? appendPromptNextStep(nextSteps, migration)
+          : nextSteps
       )
     );
 
@@ -297,6 +317,14 @@ export async function getImplementationPath(
   workspacePath: string,
   migration: MigrationDetailsWithId
 ) {
+  // Prompt-only migrations have no implementation — the "source" the user
+  // wants to see is the prompt file itself. Resolving via the regular
+  // implementation lookup would throw because both `implementation` and
+  // `factory` are unset.
+  if (isPromptOnlyMigration(migration)) {
+    return join(workspacePath, migration.prompt!);
+  }
+
   const { collection, collectionPath } = readMigrationCollection(
     migration.package,
     workspacePath
@@ -336,6 +364,12 @@ export function addSuccessfulMigration(
     if (!copied.completedMigrations) {
       copied.completedMigrations = {};
     }
+    // Carry forward a previously-set acknowledgedPrompt so any caller that
+    // re-records a successful entry for the same id (no current trigger; this
+    // is defensive against future paths) cannot silently drop the user's ack.
+    const existing = copied.completedMigrations[id];
+    const acknowledgedPrompt =
+      existing?.type === 'successful' && existing.acknowledgedPrompt;
     copied.completedMigrations = {
       ...copied.completedMigrations,
       [id]: {
@@ -344,6 +378,7 @@ export function addSuccessfulMigration(
         changedFiles: fileChanges,
         ref,
         nextSteps,
+        ...(acknowledgedPrompt && { acknowledgedPrompt: true }),
       },
     };
     return copied;
@@ -451,16 +486,85 @@ export function undoMigration(workspacePath: string, id: string) {
     const existing = migrationsJsonMetadata.completedMigrations[id];
     if (existing.type !== 'successful')
       throw new Error(`undoMigration called on unsuccessful migration: ${id}`);
-    execSync(`git reset --hard ${existing.ref}^`, {
-      cwd: workspacePath,
-      encoding: 'utf-8',
-      windowsHide: true,
-    });
+    // No-changes successful entries (prompt-only short-circuit, generators
+    // that ran but produced no diff) have no migration commit to roll back;
+    // `existing.ref` is the unmodified HEAD at run time, so `ref^` would
+    // reset past unrelated history. Only flip the metadata to skipped.
+    if (existing.changedFiles.length > 0) {
+      execSync(`git reset --hard ${existing.ref}^`, {
+        cwd: workspacePath,
+        encoding: 'utf-8',
+        windowsHide: true,
+      });
+    }
     migrationsJsonMetadata.completedMigrations[id] = {
       type: 'skipped',
     };
     return migrationsJsonMetadata;
   };
+}
+
+/**
+ * Records that the user has confirmed completion of a prompt-bearing
+ * migration's AI prompt phase. Dispatches by shape so callers (the webview
+ * event handler in Nx Console) don't need to know which is which:
+ *  - prompt-only: records success directly (no spawn, no process lifecycle).
+ *  - hybrid: persists the `acknowledgedPrompt` flag on the existing
+ *    successful record from the generator phase.
+ */
+export function acknowledgeMigrationPrompt(
+  workspacePath: string,
+  migration: MigrationDetailsWithId
+) {
+  if (isPromptOnlyMigration(migration)) {
+    recordPromptOnlySuccess(workspacePath, migration);
+    return;
+  }
+  modifyMigrationsJsonMetadata(workspacePath, (metadata) => {
+    const existing = metadata.completedMigrations?.[migration.id];
+    if (!existing || existing.type !== 'successful') {
+      return metadata;
+    }
+    metadata.completedMigrations = {
+      ...metadata.completedMigrations,
+      [migration.id]: { ...existing, acknowledgedPrompt: true },
+    };
+    return metadata;
+  });
+}
+
+// Writes a successful record for a prompt-only migration without touching the
+// process-lifecycle tracking that `runSingleMigration` manages — safe to call
+// from `acknowledgeMigrationPrompt` while another migration may be running.
+function recordPromptOnlySuccess(
+  workspacePath: string,
+  migration: MigrationDetailsWithId
+) {
+  const ref = execSync('git rev-parse HEAD', {
+    cwd: workspacePath,
+    encoding: 'utf-8',
+    windowsHide: true,
+  }).trim();
+  modifyMigrationsJsonMetadata(
+    workspacePath,
+    addSuccessfulMigration(migration.id, [], ref, [promptNextStep(migration)])
+  );
+}
+
+function promptNextStep(migration: MigrationDetailsWithId): string {
+  // Callers gate via isPromptOnlyMigration / isHybridMigration which both
+  // check `!!migration.prompt`; the non-null assertion records that contract.
+  return `Run the AI prompt at ${migration.prompt!} to complete this migration.`;
+}
+
+// Appends the prompt-path reminder for hybrid migrations, deduping in case the
+// generator already returned the same line.
+function appendPromptNextStep(
+  steps: string[] | undefined,
+  migration: MigrationDetailsWithId
+): string[] {
+  const step = promptNextStep(migration);
+  return [...(steps ?? []).filter((s) => s !== step), step];
 }
 
 export function killMigrationProcess(

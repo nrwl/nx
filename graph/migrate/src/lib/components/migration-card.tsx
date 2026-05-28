@@ -2,15 +2,16 @@
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
-// nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 
 import {
   ArrowPathIcon,
+  CheckCircleIcon,
+  ClockIcon,
   CodeBracketIcon,
   ExclamationCircleIcon,
   ListBulletIcon,
   PlayIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { Pill } from '@nx/graph-internal-ui-project-details';
 import {
@@ -32,6 +33,11 @@ import {
   getMigrationType,
   isMigrationRunning,
 } from '../state/automatic/selectors';
+import {
+  isHybridShape,
+  isPromptOnlyShape,
+  type MigrationsJsonMetadata,
+} from '../migration-shape';
 
 export interface MigrationCardHandle {
   expand: () => void;
@@ -125,6 +131,17 @@ export const MigrationCard = forwardRef<
   const nextSteps =
     migrationResult?.type === 'successful' ? migrationResult.nextSteps : [];
 
+  const isPromptOnly = isPromptOnlyShape(migration);
+  const isHybrid = isHybridShape(migration);
+  const isPromptBearing = isPromptOnly || isHybrid;
+  const isSuccessful = migrationResult?.type === 'successful';
+  const acknowledgedPrompt =
+    isSuccessful && !!migrationResult.acknowledgedPrompt;
+  // For terminal non-success states the Failed/Skipped/Stopped pill in the
+  // card top-right already conveys the outcome — stay out of the way.
+  const showPromptStatusRow =
+    isPromptBearing && (!migrationResult || isSuccessful);
+
   const isSucceeded = useSelector(
     actor,
     (state) => getMigrationType(state.context, migration.id) === 'successful'
@@ -196,14 +213,37 @@ export const MigrationCard = forwardRef<
               )} */}
             </div>
             <span className="mb-2 text-sm">{migration.description}</span>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               {migration.package && (
                 <Pill
                   text={`${migration.package}: ${migration.version}`}
                   color={'grey'}
                 />
               )}
+              {isPromptBearing && <AIBadge />}
             </div>
+            {showPromptStatusRow && (
+              <PromptStatusRow
+                isHybrid={isHybrid}
+                isSuccessful={isSuccessful}
+                acknowledgedPrompt={acknowledgedPrompt}
+              />
+            )}
+            {/* Show the prompt path inline for prompt-only-pending so the user
+                can find what to run before clicking Mark as Run. Hybrid
+                migrations already get the path via the auto-injected next-step
+                in the bottom section. */}
+            {isPromptOnly && !isSuccessful && migration.prompt && (
+              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
+                Run this prompt:{' '}
+                <code
+                  className="cursor-pointer underline-offset-2 hover:underline"
+                  onClick={() => onViewImplementation()}
+                >
+                  {migration.prompt}
+                </code>
+              </div>
+            )}
           </div>
         </div>
 
@@ -243,7 +283,7 @@ export const MigrationCard = forwardRef<
               <Pill text="Stopped" color="yellow" />
             </div>
           )}
-          {onRunMigration && !isStopped && (
+          {onRunMigration && !isStopped && !isPromptOnly && (
             <span
               className={`rounded-md p-1 text-sm ring-1 transition-colors ring-inset ${
                 isSucceeded
@@ -383,3 +423,57 @@ export const MigrationCard = forwardRef<
     </div>
   );
 });
+
+function AIBadge() {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded bg-sky-300/10 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-sky-300 uppercase ring-1 ring-sky-300/40 ring-inset"
+      aria-label="AI-assisted migration"
+    >
+      <SparklesIcon className="h-3 w-3" />
+      AI
+    </span>
+  );
+}
+
+function PromptStatusRow({
+  isHybrid,
+  isSuccessful,
+  acknowledgedPrompt,
+}: {
+  isHybrid: boolean;
+  isSuccessful: boolean;
+  acknowledgedPrompt: boolean;
+}) {
+  // Prompt-only is "completed" the moment the metadata records success (the
+  // short-circuit does that); hybrid needs the separate acknowledgment.
+  const isCompleted = isSuccessful && (!isHybrid || acknowledgedPrompt);
+  const showGeneratorComplete = isHybrid && isSuccessful && !isCompleted;
+
+  return (
+    <div className="mt-3 flex items-center gap-3 text-xs">
+      {isCompleted ? (
+        <span className="inline-flex items-center gap-1 text-green-500">
+          <CheckCircleIcon className="h-3.5 w-3.5" />
+          Completed
+        </span>
+      ) : (
+        <>
+          {showGeneratorComplete && (
+            <>
+              <span className="inline-flex items-center gap-1 text-green-500">
+                <CheckCircleIcon className="h-3.5 w-3.5" />
+                Generator complete
+              </span>
+              <span className="text-slate-400/60">·</span>
+            </>
+          )}
+          <span className="inline-flex items-center gap-1 text-sky-300">
+            <ClockIcon className="h-3.5 w-3.5" />
+            AI prompt pending
+          </span>
+        </>
+      )}
+    </div>
+  );
+}

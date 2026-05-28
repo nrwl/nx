@@ -1,5 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-webpack5';
+// nx-ignore-next-line
+import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
+import { useState } from 'react';
 import { MigrateUI } from './migrate';
+import {
+  isPromptOnlyShape,
+  type MigrationsJsonMetadata,
+} from './migration-shape';
 
 const meta: Meta<typeof MigrateUI> = {
   component: MigrateUI,
@@ -313,6 +320,162 @@ export const PendingApproval: Story = {
     onFinish: (squash: boolean) => {
       console.log('finished', squash);
     },
+  },
+};
+
+export const PromptBearing: Story = {
+  args: {
+    // Ordering reflects the realistic flow: past migrations have already been
+    // processed (auto-run or approved), the current one is paused on review,
+    // and future ones are still waiting to be auto-run.
+    currentMigrationId: 'hybrid-pending-ack',
+    migrations: [
+      {
+        id: 'hybrid-completed',
+        name: 'update-imports',
+        description:
+          'Updates legacy imports, then prompts for manual import cleanup.',
+        version: '19.0.0',
+        package: '@nx/react',
+        implementation: './src/migrations/update-imports.ts',
+        prompt: 'tools/ai-migrations/@nx/react/19.0.0/import-cleanup.md',
+      },
+      {
+        id: 'prompt-only-completed',
+        name: 'adopt-new-router',
+        description: 'Adopt the new router API across the workspace.',
+        version: '19.0.0',
+        package: '@nx/react',
+        prompt: 'tools/ai-migrations/@nx/react/19.0.0/new-router.md',
+      },
+      {
+        id: 'hybrid-pending-ack',
+        name: 'update-jsx-runtime',
+        description:
+          'Updates JSX runtime config, then prompts for manual JSX refactor.',
+        version: '19.0.0',
+        package: '@nx/react',
+        implementation: './src/migrations/update-jsx-runtime.ts',
+        prompt: 'tools/ai-migrations/@nx/react/19.0.0/jsx-refactor.md',
+      },
+      {
+        id: 'prompt-only-pending',
+        name: 'migrate-class-components-to-hooks',
+        description:
+          'Convert class components to functional components using hooks.',
+        version: '19.0.0',
+        package: '@nx/react',
+        prompt: 'tools/ai-migrations/@nx/react/19.0.0/class-to-hooks.md',
+      },
+    ],
+    nxConsoleMetadata: {
+      completedMigrations: {
+        'hybrid-pending-ack': {
+          name: 'update-jsx-runtime',
+          type: 'successful',
+          changedFiles: [{ path: 'tsconfig.json', type: 'UPDATE' }],
+          ref: 'abc',
+          nextSteps: [
+            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/jsx-refactor.md to complete this migration.',
+          ],
+        },
+        'hybrid-completed': {
+          name: 'update-imports',
+          type: 'successful',
+          changedFiles: [{ path: 'src/app.tsx', type: 'UPDATE' }],
+          ref: 'def',
+          nextSteps: [
+            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/import-cleanup.md to complete this migration.',
+          ],
+          acknowledgedPrompt: true,
+        },
+        'prompt-only-completed': {
+          name: 'adopt-new-router',
+          type: 'successful',
+          changedFiles: [],
+          ref: 'ghi',
+          nextSteps: [
+            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/new-router.md to complete this migration.',
+          ],
+        },
+      },
+      targetVersion: '19.0.0',
+    },
+  },
+  // Storybook has no backend, so `onAcknowledgePrompt` mirrors what
+  // `acknowledgeMigrationPrompt` does server-side — records success for
+  // prompt-only, sets the ack flag for hybrid — so the full lifecycle is
+  // visible end-to-end. The state machine never auto-runs anything in this
+  // all-prompt-bearing story, so `onRunMigration` stays a logger.
+  render: function PromptBearingStory(args) {
+    const [metadata, setMetadata] = useState<MigrationsJsonMetadata>(
+      args.nxConsoleMetadata
+    );
+
+    const onAcknowledgePrompt = (migration: MigrationDetailsWithId) => {
+      setMetadata((prev) => {
+        if (isPromptOnlyShape(migration)) {
+          return {
+            ...prev,
+            completedMigrations: {
+              ...prev.completedMigrations,
+              [migration.id]: {
+                type: 'successful',
+                name: migration.id,
+                changedFiles: [],
+                ref: 'simulated',
+                nextSteps: [
+                  `Run the AI prompt at ${migration.prompt} to complete this migration.`,
+                ],
+              },
+            },
+          };
+        }
+        const existing = prev.completedMigrations?.[migration.id];
+        if (existing?.type !== 'successful') return prev;
+        return {
+          ...prev,
+          completedMigrations: {
+            ...prev.completedMigrations,
+            [migration.id]: { ...existing, acknowledgedPrompt: true },
+          },
+        };
+      });
+    };
+
+    return (
+      <MigrateUI
+        {...args}
+        nxConsoleMetadata={metadata}
+        onAcknowledgePrompt={onAcknowledgePrompt}
+        onRunMigration={(migration, configuration) =>
+          console.log('run migration', migration, configuration)
+        }
+        onRunMany={(migrations, configuration) =>
+          console.log('run many migrations', migrations, configuration)
+        }
+        onSkipMigration={(migration) =>
+          console.log('skip migration', migration)
+        }
+        onUndoMigration={(migration) =>
+          console.log('undo migration', migration)
+        }
+        onFileClick={(migration, file) =>
+          console.log('file click', migration, file)
+        }
+        onViewImplementation={(migration) =>
+          console.log('view implementation', migration)
+        }
+        onViewDocumentation={(migration) =>
+          console.log('view documentation', migration)
+        }
+        onCancel={() => console.log('cancel')}
+        onFinish={(squash) => console.log('finished', squash)}
+        onStopMigration={(migration) =>
+          console.log('stop migration', migration)
+        }
+      />
+    );
   },
 };
 
