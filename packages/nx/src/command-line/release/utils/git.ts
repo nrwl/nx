@@ -748,7 +748,7 @@ export async function getFirstProjectCommit(
         'HEAD',
         '--first-parent',
         '--',
-        `${projectRoot}/package.json`,
+        projectRoot,
       ])
     ).trim();
     const firstCommit = result.split('\n')[0];
