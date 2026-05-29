@@ -1,6 +1,6 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 
 const PORT = <%= port %>;
 const NAME = '<%= federationName %>';
@@ -13,19 +13,13 @@ export default defineConfig({
   dev: { assetPrefix: true },
   html: { template: './index.html' },
   source: { entry: { index: './src/index.ts' } },
-  plugins: [pluginReact()],
-  tools: {
-    rspack: (config, { appendPlugins }) => {
-      config.output ??= {};
-      config.output.uniqueName = NAME;
-      appendPlugins([
-        new ModuleFederationPlugin({
-          name: NAME,
-          // No build-time `remotes:` block - registered at runtime in
-          // src/mf.ts at module load time.
-          shared: ['react', 'react-dom'],
-        }),
-      ]);
-    },
-  },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      // No build-time `remotes:` block - registered at runtime in src/mf.ts
+      // at module load time.
+      shared: ['react', 'react-dom'],
+    }),
+  ],
 });

@@ -50,7 +50,7 @@ describe('@nx/react:consumer', () => {
     // Vite providers emit ESM, so the consumer's registerRemotes MUST set
     // `type: 'module'`. Without it the runtime loads the script as a classic
     // tag and the browser throws #RUNTIME-001 (Cannot use import statement).
-    expect(mf).toMatch(/^\s+type:\s*'module'/m);
+    expect(mf).toContain("({ ...remote, type: 'module' }))");
 
     const viteConfig = tree.read('apps/shell/vite.config.ts', 'utf-8');
     // No build-time `remotes:` property on the federation() call.
@@ -70,8 +70,10 @@ describe('@nx/react:consumer', () => {
     async (bundler, expectedProviderPort) => {
       await consumerGenerator(tree, { directory: 'apps/shell', bundler });
       const mf = tree.read('apps/shell/src/mf.ts', 'utf-8') ?? '';
+      expect(mf).toContain(`alias: 'my-provider'`);
+      expect(mf).toContain(`name: 'my_provider'`);
       expect(mf).toContain(
-        `'my-provider': 'http://localhost:${expectedProviderPort}/remoteEntry.js'`
+        `entry: 'http://localhost:${expectedProviderPort}/remoteEntry.js'`
       );
       expect(tree.exists('apps/my-provider')).toBe(false);
     }
@@ -90,8 +92,10 @@ describe('@nx/react:consumer', () => {
     expect(tree.exists('apps/p2/vite.config.ts')).toBe(true);
 
     const mf = tree.read('apps/shell/src/mf.ts', 'utf-8') ?? '';
-    expect(mf).toContain(`p1: 'http://localhost:5101/remoteEntry.js'`);
-    expect(mf).toContain(`p2: 'http://localhost:5102/remoteEntry.js'`);
+    expect(mf).toContain(`alias: 'p1'`);
+    expect(mf).toContain(`entry: 'http://localhost:5101/remoteEntry.js'`);
+    expect(mf).toContain(`alias: 'p2'`);
+    expect(mf).toContain(`entry: 'http://localhost:5102/remoteEntry.js'`);
 
     // App.tsx imports + renders every provider in PROVIDERS, not just the first.
     const app = tree.read('apps/shell/src/App.tsx', 'utf-8') ?? '';
@@ -106,6 +110,29 @@ describe('@nx/react:consumer', () => {
     expect(app).toContain(`<ProviderBoundary name="p2">`);
   });
 
+  // A provider's federation container name is derived from its project name
+  // (names().fileName -> toFederationName), which strips chars invalid in a JS
+  // identifier. The consumer must register that exact name, not a naive
+  // `alias.replace(/-/g, '_')`: for a camelCase name like `myCart` the provider
+  // emits `my_cart` while the naive transform yields `myCart`, so loadRemote
+  // would resolve the URL but the runtime would look up a container that
+  // doesn't exist.
+  it('registers each provider under the federation container name the provider emits', async () => {
+    await consumerGenerator(tree, {
+      directory: 'apps/shell',
+      bundler: 'vite',
+      providerNames: ['myCart'],
+    });
+    const mf = tree.read('apps/shell/src/mf.ts', 'utf-8') ?? '';
+    expect(mf).toContain(`alias: 'myCart'`);
+    expect(mf).toContain(`name: 'my_cart'`);
+
+    // The generated provider emits the same federation name we registered.
+    const providerConfig =
+      tree.read('apps/myCart/vite.config.ts', 'utf-8') ?? '';
+    expect(providerConfig).toContain(`name: 'my_cart'`);
+  });
+
   // The runtime needs `type: 'module'` for vite (ESM remoteEntry)
   // and NO type for rspack/rsbuild (UMD remoteEntry). Wrong combo => runtime
   // errors #RUNTIME-001 or #RUNTIME-002. The generator picks based on the
@@ -118,14 +145,22 @@ describe('@nx/react:consumer', () => {
     });
     await consumerGenerator(tree, { directory: 'apps/cp', bundler: 'rspack' });
 
-    expect(tree.read('apps/cv/src/mf.ts', 'utf-8')).toMatch(
-      /^\s+type:\s*'module'/m
+    // Assert on the registerRemotes() call shape, not a bare `type: 'module'`
+    // substring - the RUNTIME-002 comment in the UMD branch also mentions it.
+    expect(tree.read('apps/cv/src/mf.ts', 'utf-8')).toContain(
+      "({ ...remote, type: 'module' }))"
     );
-    expect(tree.read('apps/cr/src/mf.ts', 'utf-8')).not.toMatch(
-      /^\s+type:\s*'module'/m
+    expect(tree.read('apps/cr/src/mf.ts', 'utf-8')).toContain(
+      '({ ...remote }))'
     );
-    expect(tree.read('apps/cp/src/mf.ts', 'utf-8')).not.toMatch(
-      /^\s+type:\s*'module'/m
+    expect(tree.read('apps/cr/src/mf.ts', 'utf-8')).not.toContain(
+      "...remote, type: 'module'"
+    );
+    expect(tree.read('apps/cp/src/mf.ts', 'utf-8')).toContain(
+      '({ ...remote }))'
+    );
+    expect(tree.read('apps/cp/src/mf.ts', 'utf-8')).not.toContain(
+      "...remote, type: 'module'"
     );
   });
 

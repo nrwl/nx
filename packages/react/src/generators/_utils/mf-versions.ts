@@ -16,6 +16,10 @@ export const vitejsPluginReactVersion = '^6.0.2';
 // Rsbuild stack.
 export const rsbuildCoreVersion = '^1.4.0';
 export const rsbuildPluginReactVersion = '^1.3.0';
+// Official MF rsbuild integration. Peers @rsbuild/core ^1.3.21, so the pin
+// above satisfies it. Used instead of @module-federation/enhanced/rspack so
+// the federation config is a first-class rsbuild plugin, not a tools.rspack hack.
+export const moduleFederationRsbuildPluginVersion = '^2.5.0';
 
 // Rspack stack.
 export const rspackCoreVersion = '^2.0.3';

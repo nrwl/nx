@@ -56,7 +56,7 @@ exports[`@nx/react:provider generates a provider for the rsbuild bundler: rsbuil
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@module-federation/enhanced": "^2.4.0",
+    "@module-federation/rsbuild-plugin": "^2.5.0",
     "@rsbuild/core": "^1.4.0",
     "@rsbuild/plugin-react": "^1.3.0",
     "@types/react": "^19.0.0",
@@ -91,7 +91,7 @@ exports[`@nx/react:provider generates a provider for the rsbuild bundler: rsbuil
 ",
   "apps/my-provider/rsbuild.config.ts": "import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 
 const PORT = 3101;
 const NAME = 'my_provider';
@@ -108,25 +108,17 @@ export default defineConfig({
   dev: { assetPrefix: true },
   html: { template: './index.html' },
   source: { entry: { index: './src/index.ts' } },
-  plugins: [pluginReact()],
-  tools: {
-    rspack: (config, { appendPlugins }) => {
-      // uniqueName scopes the rspack runtime so it doesn't collide with
-      // other federated apps sharing the same global namespace.
-      config.output ??= {};
-      config.output.uniqueName = NAME;
-      appendPlugins([
-        new ModuleFederationPlugin({
-          name: NAME,
-          filename: 'remoteEntry.js',
-          exposes: {
-            './App': './src/App.tsx',
-          },
-          shared: ['react', 'react-dom'],
-        }),
-      ]);
-    },
-  },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      filename: 'remoteEntry.js',
+      exposes: {
+        './App': './src/App.tsx',
+      },
+      shared: ['react', 'react-dom'],
+    }),
+  ],
 });
 ",
   "apps/my-provider/src/App.tsx": "// Exposed by the federation plugin as 'my-provider/App'.

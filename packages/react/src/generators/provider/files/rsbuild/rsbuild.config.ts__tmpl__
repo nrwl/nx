@@ -1,6 +1,6 @@
 import { defineConfig } from '@rsbuild/core';
 import { pluginReact } from '@rsbuild/plugin-react';
-import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
 
 const PORT = <%= port %>;
 const NAME = '<%= federationName %>';
@@ -17,23 +17,15 @@ export default defineConfig({
   dev: { assetPrefix: true },
   html: { template: './index.html' },
   source: { entry: { index: './src/index.ts' } },
-  plugins: [pluginReact()],
-  tools: {
-    rspack: (config, { appendPlugins }) => {
-      // uniqueName scopes the rspack runtime so it doesn't collide with
-      // other federated apps sharing the same global namespace.
-      config.output ??= {};
-      config.output.uniqueName = NAME;
-      appendPlugins([
-        new ModuleFederationPlugin({
-          name: NAME,
-          filename: 'remoteEntry.js',
-          exposes: {
-            './<%= exposeName %>': './src/<%= componentName %>.tsx',
-          },
-          shared: ['react', 'react-dom'],
-        }),
-      ]);
-    },
-  },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      filename: 'remoteEntry.js',
+      exposes: {
+        './<%= exposeName %>': './src/<%= componentName %>.tsx',
+      },
+      shared: ['react', 'react-dom'],
+    }),
+  ],
 });

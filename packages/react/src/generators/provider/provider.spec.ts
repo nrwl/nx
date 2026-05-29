@@ -137,7 +137,12 @@ describe('@nx/react:provider', () => {
     });
     const config = tree.read('apps/shop/rsbuild.config.ts', 'utf-8') ?? '';
     expect(config).toMatch(/dev:\s*\{\s*assetPrefix:\s*true/);
-    expect(config).toContain('config.output.uniqueName = NAME');
+    // Federation is wired through the official rsbuild plugin (which scopes
+    // uniqueName from `name`), not the tools.rspack ModuleFederationPlugin hack.
+    expect(config).toContain(
+      "import { pluginModuleFederation } from '@module-federation/rsbuild-plugin'"
+    );
+    expect(config).toContain('pluginModuleFederation({');
   });
 
   // @rspack/cli loads rspack.config.ts as ESM (because the file

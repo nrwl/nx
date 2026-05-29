@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/schema",
   "$id": "NxReactConsumer",
   "title": "Create a Module Federation consumer",
-  "description": "Scaffold a React Module Federation consumer. The bundler is selected at generation time; remotes are registered dynamically at runtime from public/mf-remotes.json (no build-time remotes list).",
+  "description": "Scaffold a React Module Federation consumer. The bundler is selected at generation time; remotes are registered dynamically at runtime from an inline PROVIDERS list in src/mf.ts (no build-time remotes list).",
   "cli": "nx",
   "type": "object",
   "properties": {
@@ -35,7 +35,7 @@
     "providerNames": {
       "type": "array",
       "items": { "type": "string" },
-      "description": "Comma-separated list of provider project names to generate alongside this consumer. Each becomes an `@nx/react:provider` app sibling to the consumer and an entry in `public/mf-remotes.json`. Defaults to `[my-provider]` as a placeholder (no provider is generated until you pass the flag explicitly).",
+      "description": "Comma-separated list of provider project names to generate alongside this consumer. Each becomes an `@nx/react:provider` app sibling to the consumer and an entry in the `PROVIDERS` list in `src/mf.ts`. Defaults to `[my-provider]` as a placeholder (no provider is generated until you pass the flag explicitly).",
       "alias": "providers"
     }
   },

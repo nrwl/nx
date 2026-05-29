@@ -18,7 +18,11 @@ import {
 } from '../../utils/versions';
 import * as mfVersions from '../_utils/mf-versions';
 import { getConsumerDeps } from '../_utils/mf-dependencies';
-import { getDefaultPort, normalizeScaffoldOptions } from '../_utils/normalize';
+import {
+  getDefaultPort,
+  normalizeScaffoldOptions,
+  toFederationName,
+} from '../_utils/normalize';
 import providerGenerator from '../provider/provider';
 import type { ConsumerGeneratorSchema } from './schema';
 
@@ -59,6 +63,13 @@ export async function consumerGenerator(
   const providerDefaultPort = getDefaultPort(opts.bundler, 'provider');
   const providers = providerNames.map((name, i) => ({
     name,
+    // The federation container name the provider build emits. Must match the
+    // provider's federation `name`, which is derived the same way (see
+    // provider.ts / normalize.ts) - it strips chars that aren't valid in a JS
+    // identifier, so a naive `alias.replace(/-/g, '_')` in the consumer would
+    // diverge for names with dots/slashes/@ and loadRemote() would resolve the
+    // URL but look up the wrong container.
+    federationName: toFederationName(names(name).fileName),
     componentName: `Provider${names(name).className}`,
     directory: joinPathFragments(opts.projectRoot, '..', name),
     port: providerDefaultPort + i,
@@ -108,9 +119,14 @@ export async function consumerGenerator(
   // serving against a dev-mode vite provider would get the SPA-fallback HTML
   // and crash on JSON.parse. Swap to mf-manifest.json manually for prod if
   // you want the extra metadata.
-  const manifest = Object.fromEntries(
-    providers.map((p) => [p.name, `http://localhost:${p.port}/remoteEntry.js`])
-  );
+  const remotes = providers.map((p) => ({
+    // `alias` is the key the consumer references (loadRemote/lazyProvider);
+    // `name` is the provider's federation container name; `entry` is its
+    // remoteEntry.js URL.
+    alias: p.name,
+    name: p.federationName,
+    entry: `http://localhost:${p.port}/remoteEntry.js`,
+  }));
 
   // Vite emits ESM `remoteEntry.js`; rspack/rsbuild emit UMD. The federation
   // runtime needs `type: 'module'` for ESM (else loads as a classic <script>
@@ -125,7 +141,7 @@ export async function consumerGenerator(
     port: opts.port,
     bundler: opts.bundler,
     providers,
-    manifest,
+    remotes,
     remoteType,
     versions: {
       ...mfVersions,

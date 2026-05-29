@@ -1,30 +1,26 @@
 import { lazy, type ComponentType } from 'react';
 import { registerRemotes, loadRemote } from '@module-federation/runtime';
 
-// Edit this list to point at different providers. `remoteEntry.js` is the
-// per-provider entry every bundler emits at dev + build time.
-const PROVIDERS: Record<string, string> = <%- JSON.stringify(manifest, null, 2) %>;
+// The providers this consumer loads at runtime. Edit `entry` to point at a
+// different URL (`remoteEntry.js` is what every supported bundler emits at dev
+// + build time). `name` is the provider build's federation container name and
+// must match the provider's federation `name`; `alias` is the key you pass to
+// loadRemote()/lazyProvider().
+const PROVIDERS: Array<{ alias: string; name: string; entry: string }> =
+  <%- JSON.stringify(remotes, null, 2) %>;
 
 <% if (remoteType === 'module') { -%>
 // `type: 'module'` is required because the providers in this workspace are
 // vite-built and emit ESM remoteEntry.js. The federation runtime would load
 // it as a classic `<script>` tag otherwise and the browser would throw
 // `Cannot use import statement outside a module` (#RUNTIME-001).
+registerRemotes(PROVIDERS.map((remote) => ({ ...remote, type: 'module' })));
 <% } else { -%>
-// `type` is omitted so the federation runtime auto-detects the entry
-// format. The providers in this workspace are <%= bundler %>-built and emit
-// UMD; setting `type: 'module'` here breaks them with #RUNTIME-002.
+// `type` is omitted so the federation runtime auto-detects the entry format.
+// The providers in this workspace are <%= bundler %>-built and emit UMD;
+// setting `type: 'module'` here breaks them with #RUNTIME-002.
+registerRemotes(PROVIDERS.map((remote) => ({ ...remote })));
 <% } -%>
-registerRemotes(
-  Object.entries(PROVIDERS).map(([alias, entry]) => ({
-    name: alias.replace(/-/g, '_'),
-    alias,
-    entry,
-<% if (remoteType === 'module') { -%>
-    type: 'module',
-<% } -%>
-  }))
-);
 
 export function lazyProvider<Props = unknown>(
   alias: string,

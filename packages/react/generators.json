@@ -76,7 +76,7 @@
       "factory": "./src/generators/consumer/consumer",
       "schema": "./src/generators/consumer/schema.json",
       "x-type": "application",
-      "description": "Create a React Module Federation consumer that loads federated components dynamically via mf-remotes.json. Supports Vite (default), Rsbuild, and Rspack."
+      "description": "Create a React Module Federation consumer that loads federated components dynamically via an inline PROVIDERS list in src/mf.ts. Supports Vite (default), Rsbuild, and Rspack."
     },
     "provider": {
       "factory": "./src/generators/provider/provider",

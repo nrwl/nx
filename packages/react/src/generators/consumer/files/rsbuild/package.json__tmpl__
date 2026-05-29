@@ -13,7 +13,7 @@
     "react-dom": "<%= versions.reactDomVersion %>"
   },
   "devDependencies": {
-    "@module-federation/enhanced": "<%= versions.moduleFederationEnhancedVersion %>",
+    "@module-federation/rsbuild-plugin": "<%= versions.moduleFederationRsbuildPluginVersion %>",
     "@rsbuild/core": "<%= versions.rsbuildCoreVersion %>",
     "@rsbuild/plugin-react": "<%= versions.rsbuildPluginReactVersion %>",
     "@types/react": "<%= versions.typesReactVersion %>",

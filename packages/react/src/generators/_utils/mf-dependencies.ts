@@ -66,8 +66,8 @@ function bundlerDeps(bundler: SupportedBundler): DepsBundle {
       return {
         dependencies: {},
         devDependencies: {
-          '@module-federation/enhanced':
-            mfVersions.moduleFederationEnhancedVersion,
+          '@module-federation/rsbuild-plugin':
+            mfVersions.moduleFederationRsbuildPluginVersion,
           '@rsbuild/core': mfVersions.rsbuildCoreVersion,
           '@rsbuild/plugin-react': mfVersions.rsbuildPluginReactVersion,
         },
