@@ -36,6 +36,24 @@ describe('buildPromptMigrationUserPrompt', () => {
     expect(buildPromptMigrationUserPrompt(base)).not.toContain('description:');
   });
 
+  it('renders the <migration_docs> block when a docs path is provided', () => {
+    const result = buildPromptMigrationUserPrompt({
+      ...base,
+      docsPath:
+        'node_modules/@nx/storybook/src/migrations/9-2-0/migrate-css-imports.md',
+    });
+    expect(result).toContain(
+      'node_modules/@nx/storybook/src/migrations/9-2-0/migrate-css-imports.md'
+    );
+    expect(result).toMatch(/<migration_docs[\s\S]*<\/migration_docs>/);
+  });
+
+  it('omits the <migration_docs> block when no docs path is provided', () => {
+    expect(buildPromptMigrationUserPrompt(base)).not.toContain(
+      '<migration_docs'
+    );
+  });
+
   it('escapes user-authored interpolations so a hostile migration cannot break out of the surrounding XML frame', () => {
     const result = buildPromptMigrationUserPrompt({
       package: '@evil/pkg',

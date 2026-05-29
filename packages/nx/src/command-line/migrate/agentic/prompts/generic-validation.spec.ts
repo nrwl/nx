@@ -42,6 +42,17 @@ describe('buildGenericValidationUserPrompt', () => {
     expect(out).not.toContain('<precedence>');
   });
 
+  it('renders the <migration_docs> block when a docs path is provided, and omits it otherwise', () => {
+    const docsPath =
+      'node_modules/@nx/react/dist/src/migrations/update-21-1-0/rewrite-config.md';
+    const withDocs = buildGenericValidationUserPrompt({ ...baseCtx, docsPath });
+    expect(withDocs).toContain(docsPath);
+    expect(withDocs).toMatch(/<migration_docs[\s\S]*<\/migration_docs>/);
+    expect(buildGenericValidationUserPrompt(baseCtx)).not.toContain(
+      '<migration_docs'
+    );
+  });
+
   describe('files_changed / git-inspect rendering', () => {
     it('points the agent at git (no <files_changed>) when hasDiffContext is true', () => {
       const out = buildGenericValidationUserPrompt({

@@ -108,6 +108,13 @@ export interface MigrationsJsonEntry {
   factory?: string;
   prompt?: string;
   requires?: Record<string, string>;
+  /**
+   * Path to a markdown doc describing the migration, relative to the
+   * `migrations.json` and resolved like `implementation`/`factory`. Always
+   * supplementary; never stands in for them. Under `--run-migrations
+   * --agentic` the resolved path is passed to the agent as extra context.
+   */
+  docs?: string;
 }
 
 export type MigrationDetailsWithId = GeneratedMigrationDetails & {

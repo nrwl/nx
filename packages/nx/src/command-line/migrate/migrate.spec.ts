@@ -35,6 +35,7 @@ import {
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
   resolveCreateCommits,
+  resolveMigrationDocsPath,
   resolveMode,
 } from './migrate';
 import {
@@ -47,6 +48,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'fs';
@@ -4234,6 +4236,83 @@ describe('Migration', () => {
             '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
         );
       });
+    });
+  });
+
+  describe('resolveMigrationDocsPath', () => {
+    let tmpRoot: string;
+
+    const writeInstalledPackage = (
+      pkgName: string,
+      docsRelToMigrationsDir: string | null
+    ) => {
+      const pkgDir = join(tmpRoot, 'node_modules', pkgName);
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: pkgName,
+          version: '1.0.0',
+          'nx-migrations': './migrations.json',
+        })
+      );
+      writeFileSync(
+        join(pkgDir, 'migrations.json'),
+        JSON.stringify({ generators: {} })
+      );
+      if (docsRelToMigrationsDir) {
+        const docAbs = join(pkgDir, docsRelToMigrationsDir);
+        mkdirSync(dirname(docAbs), { recursive: true });
+        writeFileSync(docAbs, '# doc');
+      }
+    };
+
+    beforeEach(() => {
+      // realpath so the workspace-relative assertion isn't defeated by the
+      // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
+    });
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('returns undefined when the migration declares no docs', () => {
+      writeInstalledPackage('@nx/foo', null);
+      expect(
+        resolveMigrationDocsPath(tmpRoot, { package: '@nx/foo' })
+      ).toBeUndefined();
+    });
+
+    it('resolves the docs file to a workspace-relative node_modules path', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      expect(
+        resolveMigrationDocsPath(tmpRoot, {
+          package: '@nx/foo',
+          docs: './src/migrations/update-1-0-0/do.md',
+        })
+      ).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+    });
+
+    it('returns undefined when the docs file is not present in the installed package', () => {
+      writeInstalledPackage('@nx/foo', null);
+      expect(
+        resolveMigrationDocsPath(tmpRoot, {
+          package: '@nx/foo',
+          docs: './src/migrations/update-1-0-0/missing.md',
+        })
+      ).toBeUndefined();
+    });
+
+    it('returns undefined when the package cannot be resolved', () => {
+      expect(
+        resolveMigrationDocsPath(tmpRoot, {
+          package: '@nx/not-installed',
+          docs: './x.md',
+        })
+      ).toBeUndefined();
     });
   });
 });

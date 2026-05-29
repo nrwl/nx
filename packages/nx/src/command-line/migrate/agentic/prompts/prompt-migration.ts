@@ -2,6 +2,7 @@ import {
   escapeXmlBody,
   renderHandoffPathFooter,
   renderMigrationBlock,
+  renderMigrationDocsBlock,
 } from './shared-rendering';
 
 export interface PromptMigrationContext {
@@ -13,6 +14,8 @@ export interface PromptMigrationContext {
   promptPath: string;
   /** Absolute path the agent must write its handoff file to. */
   handoffFileAbsolutePath: string;
+  /** Workspace-relative path to the migration's documentation file, if any. */
+  docsPath?: string;
 }
 
 /**
@@ -31,6 +34,7 @@ export function buildPromptMigrationUserPrompt(
   const lines = [
     `Apply one prompt-based migration to this Nx workspace.`,
     ...renderMigrationBlock(ctx),
+    ...renderMigrationDocsBlock(ctx.docsPath),
     ``,
     `<instructions_file>${escapeXmlBody(ctx.promptPath)}</instructions_file>`,
     ``,

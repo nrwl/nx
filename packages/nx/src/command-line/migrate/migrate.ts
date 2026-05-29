@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
 import { migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
 import {
@@ -2374,6 +2374,7 @@ type ExecutableMigration = {
   implementation?: string;
   factory?: string;
   prompt?: string;
+  docs?: string;
 };
 
 export { isPromptOnlyMigration, isHybridMigration };
@@ -2652,6 +2653,9 @@ export async function executeMigrations(
     // Content-sensitive so a dirty→dirty case (this migration mutating an
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
+    // Resolve the migration's docs file once per iteration, only when an
+    // agentic step may consume it (skips the node_modules lookup otherwise).
+    const docsPath = agenticRun ? resolveMigrationDocsPath(root, m) : undefined;
     try {
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
@@ -2663,6 +2667,7 @@ export async function executeMigrations(
             agentic: agenticRun.agentic,
             runDir: agenticRun.runDir,
             installDepsIfChanged,
+            docsPath,
           });
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
@@ -2700,6 +2705,7 @@ export async function executeMigrations(
             agentic: agenticRun.agentic,
             runDir: agenticRun.runDir,
             installDepsIfChanged,
+            docsPath,
             implContext: {
               logs,
               changes,
@@ -2774,6 +2780,7 @@ export async function executeMigrations(
             agentic: validationRun.agentic,
             runDir: validationRun.runDir,
             installDepsIfChanged,
+            docsPath,
             implContext: {
               logs,
               changes,
@@ -3449,6 +3456,57 @@ export function getImplementationPath(
   }
 
   return { path: implPath, fnSymbol };
+}
+
+/**
+ * Resolves a migration's `docs` file to a workspace-relative path for the
+ * agentic prompt. The authored `docs` path is relative to the package's
+ * `migrations.json` and resolved against the installed package, the same way
+ * `implementation` / `factory` are resolved in `getImplementationPath`.
+ *
+ * Returns `undefined` when the migration declares no `docs` or the file can't
+ * be resolved. Docs are supplementary context, so a missing file is non-fatal
+ * here (unlike a missing implementation, which aborts the migration).
+ */
+export function resolveMigrationDocsPath(
+  root: string,
+  migration: { package: string; docs?: string }
+): string | undefined {
+  if (!migration.docs) {
+    return undefined;
+  }
+
+  let migrationsFilePath: string | null;
+  try {
+    migrationsFilePath = readPackageMigrationConfig(
+      migration.package,
+      root
+    ).migrations;
+  } catch {
+    return undefined;
+  }
+  if (!migrationsFilePath) {
+    return undefined;
+  }
+
+  const migrationsDir = dirname(migrationsFilePath);
+  let docsPath: string;
+  try {
+    docsPath = require.resolve(migration.docs, { paths: [migrationsDir] });
+  } catch {
+    try {
+      // workaround for a bug in node 12
+      docsPath = require.resolve(`${migrationsDir}/${migration.docs}`);
+    } catch {
+      return undefined;
+    }
+  }
+
+  // The agent runs with cwd = workspace root, so prefer a workspace-relative
+  // path. Fall back to the absolute path if the doc resolves outside root
+  // (e.g. an unusual hoisted/symlinked node_modules layout).
+  const relativePath = relative(root, docsPath);
+  return relativePath.startsWith('..') ? docsPath : relativePath;
 }
 
 class MigrationImplementationMissingError extends Error {

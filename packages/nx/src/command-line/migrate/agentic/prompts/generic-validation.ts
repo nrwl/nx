@@ -8,6 +8,7 @@ import {
   renderGitInspectInstruction,
   renderHandoffPathFooter,
   renderMigrationBlock,
+  renderMigrationDocsBlock,
   stripAnsi,
 } from './shared-rendering';
 
@@ -18,6 +19,8 @@ export interface GenericValidationPromptContext {
   description?: string;
   /** Absolute path the agent must write its handoff file to. */
   handoffFileAbsolutePath: string;
+  /** Workspace-relative path to the migration's documentation file, if any. */
+  docsPath?: string;
   /** Context captured from the deterministic generator phase. */
   impl: {
     /** Raw output from the generator (devkit logger + console). */
@@ -69,6 +72,8 @@ export function buildGenericValidationUserPrompt(
     `You are validating the output of an Nx migration's deterministic generator phase. The generator has already run; inspect what it produced, verify the workspace is in a consistent state for what this migration intended to accomplish, apply any minor in-scope fixes the generator should have produced cleanly, and report findings.`,
     ...renderMigrationBlock(ctx),
   ];
+
+  lines.push(...renderMigrationDocsBlock(ctx.docsPath));
 
   const logs = escapeXmlBody(stripAnsi(ctx.impl.logs ?? '').trim());
   lines.push(...renderGeneratorOutputBlock(logs));
