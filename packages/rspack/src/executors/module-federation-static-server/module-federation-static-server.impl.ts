@@ -27,6 +27,7 @@ import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';
+import { warnRspackMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,
@@ -248,6 +249,7 @@ export default async function* moduleFederationStaticServer(
   schema: ModuleFederationStaticServerSchema,
   context: ExecutorContext
 ) {
+  warnRspackMfStaticServerExecutorDeprecation();
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
 

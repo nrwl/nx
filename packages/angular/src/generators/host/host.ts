@@ -24,8 +24,10 @@ import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
+import { warnAngularHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function host(tree: Tree, schema: Schema) {
+  warnAngularHostGeneratorDeprecation();
   assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'host');
   validateOptions(tree, schema);

@@ -53,7 +53,8 @@
       "factory": "./src/generators/federate-module/federate-module",
       "schema": "./src/generators/federate-module/schema.json",
       "x-type": "application",
-      "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host."
+      "description": "Create a federated module, which is exposed by a remote and can be subsequently loaded by a host.",
+      "x-deprecated": "Angular Module Federation in Nx is no longer supported. Use `@angular-architects/native-federation` instead. Removed in Nx v24."
     },
     "init": {
       "factory": "./src/generators/init/init",
@@ -79,7 +80,8 @@
       "schema": "./src/generators/remote/schema.json",
       "x-type": "application",
       "description": "Generate a Remote Angular Module Federation Application.",
-      "aliases": ["producer"]
+      "aliases": ["producer"],
+      "x-deprecated": "Angular Module Federation in Nx is no longer supported. Use `@angular-architects/native-federation` instead. Removed in Nx v24."
     },
     "convert-to-with-mf": {
       "factory": "./src/generators/convert-to-with-mf/convert-to-with-mf",
@@ -91,7 +93,8 @@
       "schema": "./src/generators/host/schema.json",
       "x-type": "application",
       "description": "Generate a Host Angular Module Federation Application.",
-      "aliases": ["consumer"]
+      "aliases": ["consumer"],
+      "x-deprecated": "Angular Module Federation in Nx is no longer supported. Use `@angular-architects/native-federation` instead. Removed in Nx v24."
     },
     "ng-add": {
       "factory": "./src/generators/ng-add/ng-add",
@@ -138,7 +141,8 @@
     "setup-mf": {
       "factory": "./src/generators/setup-mf/setup-mf",
       "schema": "./src/generators/setup-mf/schema.json",
-      "description": "Generate a Module Federation configuration for a given Angular application."
+      "description": "Generate a Module Federation configuration for a given Angular application.",
+      "x-deprecated": "Angular Module Federation in Nx is no longer supported. Use `@angular-architects/native-federation` instead. Removed in Nx v24."
     },
     "setup-ssr": {
       "factory": "./src/generators/setup-ssr/setup-ssr",

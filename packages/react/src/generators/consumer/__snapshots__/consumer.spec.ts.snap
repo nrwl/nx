@@ -1,0 +1,758 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`@nx/react:consumer generates a consumer for the rsbuild bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-consumer",
+  "projectType": "application",
+  "root": "apps/my-consumer",
+  "sourceRoot": "apps/my-consumer/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild build",
+        "cwd": "apps/my-consumer",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild dev",
+        "cwd": "apps/my-consumer",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:consumer generates a consumer for the rsbuild bundler: rsbuild tree 1`] = `
+{
+  "apps/my-consumer/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-consumer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Rsbuild's html plugin injects the entry script automatically. -->
+  </body>
+</html>
+",
+  "apps/my-consumer/package.json": "{
+  "name": "my-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rsbuild dev --port 3100",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview --port 3100"
+  },
+  "dependencies": {
+    "@module-federation/runtime": "^2.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@module-federation/rsbuild-plugin": "^2.5.0",
+    "@rsbuild/core": "^1.4.0",
+    "@rsbuild/plugin-react": "^1.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~5.9.2"
+  }
+}
+",
+  "apps/my-consumer/project.json": "{
+  "name": "my-consumer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-consumer/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "rsbuild dev",
+        "cwd": "apps/my-consumer"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild build",
+        "cwd": "apps/my-consumer"
+      }
+    }
+  }
+}
+",
+  "apps/my-consumer/rsbuild.config.ts": "import { defineConfig } from '@rsbuild/core';
+import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+
+const PORT = 3100;
+const NAME = 'my_consumer';
+
+export default defineConfig({
+  server: { port: PORT },
+  // assetPrefix:true keeps chunk URLs aligned with the dev-server origin -
+  // mirrors the provider config so a consumer that also exposes federated
+  // modules later doesn't need a separate fix.
+  dev: { assetPrefix: true },
+  html: { template: './index.html' },
+  source: { entry: { index: './src/index.ts' } },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      // No build-time \`remotes:\` block - registered at runtime in src/mf.ts
+      // at module load time.
+      shared: ['react', 'react-dom'],
+    }),
+  ],
+});
+",
+  "apps/my-consumer/src/App.tsx": "import { Component, Suspense, type ReactNode } from 'react';
+import { lazyProvider } from './mf';
+
+// ProviderBoundary catches the lazy() rejection that fires when a provider's
+// remoteEntry.js can't be fetched (provider not running, network error,
+// etc.). Without it any one missing provider unmounts the whole consumer
+// tree. React has no built-in functional error boundary so this is a class.
+// Wrap each <ProviderBoundary> in your router of choice if you need routing.
+class ProviderBoundary extends Component<
+  { children: ReactNode; name: string },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div role="alert">
+          <p>
+            Provider &quot;{this.props.name}&quot; unavailable:{' '}
+            {this.state.error.message}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
+        {this.props.children}
+      </Suspense>
+    );
+  }
+}
+
+const ProviderMyProvider = lazyProvider('my-provider', 'App');
+
+export function App() {
+  return (
+    <main>
+      <h1>my-consumer</h1>
+      <ProviderBoundary name="my-provider">
+        <ProviderMyProvider />
+      </ProviderBoundary>
+    </main>
+  );
+}
+
+export default App;
+",
+  "apps/my-consumer/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-consumer/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom) is evaluated.
+import('./bootstrap');
+export {};
+",
+  "apps/my-consumer/src/mf.ts": "import { lazy, type ComponentType } from 'react';
+import { registerRemotes, loadRemote } from '@module-federation/runtime';
+
+// The providers this consumer loads at runtime. Edit \`entry\` to point at a
+// different URL (\`remoteEntry.js\` is what every supported bundler emits at dev
+// + build time). \`name\` is the provider build's federation container name and
+// must match the provider's federation \`name\`; \`alias\` is the key you pass to
+// loadRemote()/lazyProvider().
+const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
+  {
+    alias: 'my-provider',
+    name: 'my_provider',
+    entry: 'http://localhost:3101/remoteEntry.js',
+  },
+];
+
+// \`type\` is omitted so the federation runtime auto-detects the entry format.
+// The providers in this workspace are rsbuild-built and emit UMD;
+// setting \`type: 'module'\` here breaks them with #RUNTIME-002.
+registerRemotes(PROVIDERS.map((remote) => ({ ...remote })));
+
+export function lazyProvider<Props = unknown>(
+  alias: string,
+  exposeName: string,
+) {
+  return lazy(async () => {
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(
+      \`\${alias}/\${exposeName}\`,
+    );
+    return { default: mod!.default };
+  });
+}
+",
+  "apps/my-consumer/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+}
+`;
+
+exports[`@nx/react:consumer generates a consumer for the rspack bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-consumer",
+  "projectType": "application",
+  "root": "apps/my-consumer",
+  "sourceRoot": "apps/my-consumer/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack build --mode=production",
+        "cwd": "apps/my-consumer",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack serve --mode=development",
+        "cwd": "apps/my-consumer",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:consumer generates a consumer for the rspack bundler: rspack tree 1`] = `
+{
+  "apps/my-consumer/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-consumer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- HtmlRspackPlugin injects the entry script automatically; do not add it here. -->
+  </body>
+</html>
+",
+  "apps/my-consumer/package.json": "{
+  "name": "my-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve --mode=development",
+    "build": "rspack build --mode=production"
+  },
+  "dependencies": {
+    "@module-federation/enhanced": "^2.4.0",
+    "@module-federation/runtime": "^2.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@rspack/cli": "^2.0.3",
+    "@rspack/core": "^2.0.3",
+    "@rspack/dev-server": "2.0.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~5.9.2"
+  }
+}
+",
+  "apps/my-consumer/project.json": "{
+  "name": "my-consumer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-consumer/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "rspack serve --mode=development",
+        "cwd": "apps/my-consumer"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack build --mode=production",
+        "cwd": "apps/my-consumer"
+      }
+    }
+  }
+}
+",
+  "apps/my-consumer/rspack.config.ts": "import { defineConfig } from '@rspack/cli';
+import { rspack } from '@rspack/core';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// __dirname is undefined when @rspack/cli loads this config as ESM (it
+// does, because the file uses \`import\` statements). Derive it from the
+// module URL so the config works regardless of how the loader interprets it.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const PORT = 8100;
+const NAME = 'my_consumer';
+
+// Read mode from the rspack CLI arg (\`--mode=development|production\`) so the
+// config works the same on Windows + POSIX without depending on a shell
+// \`NODE_ENV=...\` prefix.
+export default defineConfig((_env, argv) => {
+  const isDev = argv.mode !== 'production';
+  return {
+    context: __dirname,
+    entry: { main: './src/index.ts' },
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      publicPath: 'auto',
+      uniqueName: NAME,
+      clean: true,
+    },
+    devServer: { port: PORT, historyApiFallback: true, hot: true },
+    resolve: { extensions: ['...', '.ts', '.tsx', '.jsx'] },
+    module: {
+      rules: [
+        {
+          test: /\\.(j|t)sx?$/,
+          exclude: [/node_modules/],
+          use: {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev },
+                },
+              },
+              env: {
+                targets:
+                  'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14',
+              },
+            },
+          },
+        },
+      ],
+    },
+    plugins: [
+      new rspack.HtmlRspackPlugin({ template: './index.html' }),
+      new ModuleFederationPlugin({
+        name: NAME,
+        // No build-time \`remotes:\` block - registered at runtime in
+        // src/mf.ts at module load time.
+        shared: ['react', 'react-dom'],
+      }),
+    ],
+  };
+});
+",
+  "apps/my-consumer/src/App.tsx": "import { Component, Suspense, type ReactNode } from 'react';
+import { lazyProvider } from './mf';
+
+// ProviderBoundary catches the lazy() rejection that fires when a provider's
+// remoteEntry.js can't be fetched (provider not running, network error,
+// etc.). Without it any one missing provider unmounts the whole consumer
+// tree. React has no built-in functional error boundary so this is a class.
+// Wrap each <ProviderBoundary> in your router of choice if you need routing.
+class ProviderBoundary extends Component<
+  { children: ReactNode; name: string },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div role="alert">
+          <p>
+            Provider &quot;{this.props.name}&quot; unavailable:{' '}
+            {this.state.error.message}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
+        {this.props.children}
+      </Suspense>
+    );
+  }
+}
+
+const ProviderMyProvider = lazyProvider('my-provider', 'App');
+
+export function App() {
+  return (
+    <main>
+      <h1>my-consumer</h1>
+      <ProviderBoundary name="my-provider">
+        <ProviderMyProvider />
+      </ProviderBoundary>
+    </main>
+  );
+}
+
+export default App;
+",
+  "apps/my-consumer/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-consumer/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom) is evaluated.
+import('./bootstrap');
+export {};
+",
+  "apps/my-consumer/src/mf.ts": "import { lazy, type ComponentType } from 'react';
+import { registerRemotes, loadRemote } from '@module-federation/runtime';
+
+// The providers this consumer loads at runtime. Edit \`entry\` to point at a
+// different URL (\`remoteEntry.js\` is what every supported bundler emits at dev
+// + build time). \`name\` is the provider build's federation container name and
+// must match the provider's federation \`name\`; \`alias\` is the key you pass to
+// loadRemote()/lazyProvider().
+const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
+  {
+    alias: 'my-provider',
+    name: 'my_provider',
+    entry: 'http://localhost:8101/remoteEntry.js',
+  },
+];
+
+// \`type\` is omitted so the federation runtime auto-detects the entry format.
+// The providers in this workspace are rspack-built and emit UMD;
+// setting \`type: 'module'\` here breaks them with #RUNTIME-002.
+registerRemotes(PROVIDERS.map((remote) => ({ ...remote })));
+
+export function lazyProvider<Props = unknown>(
+  alias: string,
+  exposeName: string,
+) {
+  return lazy(async () => {
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(
+      \`\${alias}/\${exposeName}\`,
+    );
+    return { default: mod!.default };
+  });
+}
+",
+  "apps/my-consumer/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+}
+`;
+
+exports[`@nx/react:consumer generates a consumer for the vite bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-consumer",
+  "projectType": "application",
+  "root": "apps/my-consumer",
+  "sourceRoot": "apps/my-consumer/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/my-consumer",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "apps/my-consumer",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:consumer generates a consumer for the vite bundler: vite tree 1`] = `
+{
+  "apps/my-consumer/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-consumer</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
+",
+  "apps/my-consumer/package.json": "{
+  "name": "my-consumer",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5100 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5100 --strictPort"
+  },
+  "dependencies": {
+    "@module-federation/runtime": "^2.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "^1.15.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "~5.9.2",
+    "vite": "^8.0.13"
+  }
+}
+",
+  "apps/my-consumer/project.json": "{
+  "name": "my-consumer",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-consumer/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "vite",
+        "cwd": "apps/my-consumer"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/my-consumer"
+      }
+    }
+  }
+}
+",
+  "apps/my-consumer/src/App.tsx": "import { Component, Suspense, type ReactNode } from 'react';
+import { lazyProvider } from './mf';
+
+// ProviderBoundary catches the lazy() rejection that fires when a provider's
+// remoteEntry.js can't be fetched (provider not running, network error,
+// etc.). Without it any one missing provider unmounts the whole consumer
+// tree. React has no built-in functional error boundary so this is a class.
+// Wrap each <ProviderBoundary> in your router of choice if you need routing.
+class ProviderBoundary extends Component<
+  { children: ReactNode; name: string },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div role="alert">
+          <p>
+            Provider &quot;{this.props.name}&quot; unavailable:{' '}
+            {this.state.error.message}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <Suspense fallback={<p>Loading {this.props.name}...</p>}>
+        {this.props.children}
+      </Suspense>
+    );
+  }
+}
+
+const ProviderMyProvider = lazyProvider('my-provider', 'App');
+
+export function App() {
+  return (
+    <main>
+      <h1>my-consumer</h1>
+      <ProviderBoundary name="my-provider">
+        <ProviderMyProvider />
+      </ProviderBoundary>
+    </main>
+  );
+}
+
+export default App;
+",
+  "apps/my-consumer/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-consumer/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom) is evaluated.
+import('./bootstrap');
+export {};
+",
+  "apps/my-consumer/src/mf.ts": "import { lazy, type ComponentType } from 'react';
+import { registerRemotes, loadRemote } from '@module-federation/runtime';
+
+// The providers this consumer loads at runtime. Edit \`entry\` to point at a
+// different URL (\`remoteEntry.js\` is what every supported bundler emits at dev
+// + build time). \`name\` is the provider build's federation container name and
+// must match the provider's federation \`name\`; \`alias\` is the key you pass to
+// loadRemote()/lazyProvider().
+const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
+  {
+    alias: 'my-provider',
+    name: 'my_provider',
+    entry: 'http://localhost:5101/remoteEntry.js',
+  },
+];
+
+// \`type: 'module'\` is required because the providers in this workspace are
+// vite-built and emit ESM remoteEntry.js. The federation runtime would load
+// it as a classic \`<script>\` tag otherwise and the browser would throw
+// \`Cannot use import statement outside a module\` (#RUNTIME-001).
+registerRemotes(PROVIDERS.map((remote) => ({ ...remote, type: 'module' })));
+
+export function lazyProvider<Props = unknown>(
+  alias: string,
+  exposeName: string,
+) {
+  return lazy(async () => {
+    const mod = await loadRemote<{ default: ComponentType<Props> }>(
+      \`\${alias}/\${exposeName}\`,
+    );
+    return { default: mod!.default };
+  });
+}
+",
+  "apps/my-consumer/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+  "apps/my-consumer/vite.config.ts": "import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { federation } from '@module-federation/vite';
+
+const PORT = 5100;
+
+export default defineConfig({
+  server: {
+    port: PORT,
+    strictPort: true,
+    host: '127.0.0.1',
+  },
+  preview: { port: PORT, strictPort: true },
+  build: { target: 'chrome89' },
+  plugins: [
+    federation({
+      name: 'my_consumer',
+      // No build-time \`remotes:\` block - the consumer registers them at
+      // runtime in src/mf.ts at module load time.
+      shared: {
+        react: { singleton: true },
+        'react-dom': { singleton: true },
+      },
+    }),
+    react(),
+  ],
+});
+",
+}
+`;

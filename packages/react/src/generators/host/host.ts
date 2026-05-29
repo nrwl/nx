@@ -34,11 +34,13 @@ import {
 } from '../../utils/versions';
 import { updateModuleFederationTsconfig } from './lib/update-module-federation-tsconfig';
 import { normalizeHostName } from './lib/normalize-host-name';
+import { warnReactHostGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  warnReactHostGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeHostName(host, schema.directory, schema.name);
   const options: NormalizedSchema = {
