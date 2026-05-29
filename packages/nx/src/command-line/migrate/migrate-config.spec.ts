@@ -1,4 +1,7 @@
-import { applyNxJsonMigrateDefaults } from './migrate-config';
+import {
+  applyNxJsonMigrateDefaults,
+  assertCommitPrefixHasCommits,
+} from './migrate-config';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
 import type { NxMigrateConfiguration } from '../../config/nx-json';
 
@@ -117,7 +120,8 @@ describe('applyNxJsonMigrateDefaults', () => {
       const config: NxMigrateConfiguration = {
         commitPrefix: 'chore: migrate ',
       };
-      expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
+      const merged = applyNxJsonMigrateDefaults(base, config, noEnv);
+      expect(() => assertCommitPrefixHasCommits(merged)).toThrow(
         /requires commits to be enabled/i
       );
     });
@@ -127,21 +131,21 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         createCommits: true,
       };
-      expect(() =>
-        applyNxJsonMigrateDefaults(base, config, noEnv)
-      ).not.toThrow();
+      const merged = applyNxJsonMigrateDefaults(base, config, noEnv);
+      expect(() => assertCommitPrefixHasCommits(merged)).not.toThrow();
     });
 
     it('allows a config commit prefix when createCommits is enabled via the CLI', () => {
       const config: NxMigrateConfiguration = {
         commitPrefix: 'chore: migrate ',
       };
-      const result = applyNxJsonMigrateDefaults(
+      const merged = applyNxJsonMigrateDefaults(
         { ...base, createCommits: true },
         config,
         noEnv
       );
-      expect(result.commitPrefix).toBe('chore: migrate ');
+      expect(merged.commitPrefix).toBe('chore: migrate ');
+      expect(() => assertCommitPrefixHasCommits(merged)).not.toThrow();
     });
 
     it('allows a config commit prefix when the agentic flow may enable commits', () => {
@@ -149,9 +153,40 @@ describe('applyNxJsonMigrateDefaults', () => {
         commitPrefix: 'chore: migrate ',
         agentic: 'claude-code',
       };
-      expect(() =>
-        applyNxJsonMigrateDefaults(base, config, noEnv)
-      ).not.toThrow();
+      const merged = applyNxJsonMigrateDefaults(base, config, noEnv);
+      expect(() => assertCommitPrefixHasCommits(merged)).not.toThrow();
+    });
+
+    it('allows a custom CLI commit prefix when commits are enabled via config', () => {
+      const config: NxMigrateConfiguration = { createCommits: true };
+      const merged = applyNxJsonMigrateDefaults(
+        { ...base, commitPrefix: 'cli prefix ' },
+        config,
+        noEnv
+      );
+      expect(merged.commitPrefix).toBe('cli prefix ');
+      expect(() => assertCommitPrefixHasCommits(merged)).not.toThrow();
+    });
+
+    it('allows a custom CLI commit prefix when agentic is enabled via config', () => {
+      const config: NxMigrateConfiguration = { agentic: 'claude-code' };
+      const merged = applyNxJsonMigrateDefaults(
+        { ...base, commitPrefix: 'cli prefix ' },
+        config,
+        noEnv
+      );
+      expect(() => assertCommitPrefixHasCommits(merged)).not.toThrow();
+    });
+
+    it('errors on a custom CLI commit prefix when there is no migrate config', () => {
+      const merged = applyNxJsonMigrateDefaults(
+        { ...base, commitPrefix: 'cli prefix ' },
+        undefined,
+        noEnv
+      );
+      expect(() => assertCommitPrefixHasCommits(merged)).toThrow(
+        /requires commits to be enabled/i
+      );
     });
 
     it('errors on an invalid config agentic value', () => {

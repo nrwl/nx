@@ -110,7 +110,10 @@ import {
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
-import { applyNxJsonMigrateDefaults } from './migrate-config';
+import {
+  applyNxJsonMigrateDefaults,
+  assertCommitPrefixHasCommits,
+} from './migrate-config';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
 import {
   applyAgenticHandoffGitignoreFallback,
@@ -2456,12 +2459,10 @@ export function resolveCreateCommits(args: {
     return { effective: true, agenticHasDiffContext: true };
   }
 
-  // Commits aren't enabled on this path. A custom commit prefix only reaches
-  // here via nx.json (the CLI guard rejects a custom `--commit-prefix` without
-  // commits) — e.g. `migrate.commitPrefix` paired with `migrate.agentic`, when
-  // the agentic flow then resolves to disabled (non-interactive / inside an
-  // agent). Surface that the prefix has no effect instead of dropping it
-  // silently.
+  // Commits aren't enabled here. A custom prefix only reaches this path via
+  // nx.json (e.g. `migrate.commitPrefix` + `migrate.agentic` when the agentic
+  // flow resolves to disabled); surface that it has no effect rather than
+  // dropping it silently.
   return {
     effective: createCommits === true,
     agenticHasDiffContext: false,
@@ -3341,6 +3342,7 @@ export async function migrate(
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
+    assertCommitPrefixHasCommits(mergedArgs);
     const opts = await parseMigrationsOptions(mergedArgs);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);

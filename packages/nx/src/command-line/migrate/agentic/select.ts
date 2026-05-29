@@ -214,7 +214,7 @@ async function firePromptForAgentic(
 // skipped on future runs. Reads and writes the raw `nx.json` file (not the
 // resolved config) so an `extends` preset isn't inlined back into the user's
 // file. JSONC comments are not preserved (writeJsonFile re-serializes). Never
-// throws — a failed write only costs the user the prompt again next time.
+// throws - a failed write only costs the user the prompt again next time.
 function persistAgenticChoice(value: boolean | AgentId): void {
   const nxJsonPath = join(workspaceRoot, 'nx.json');
   if (!existsSync(nxJsonPath)) {

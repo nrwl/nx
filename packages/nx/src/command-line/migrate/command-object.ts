@@ -148,7 +148,14 @@ function withMigrationOptions(yargs: Argv) {
         mode,
         agentic,
       }) => {
+        // Only an explicit `--no-create-commits` is decidable here, before the
+        // nx.json overlay runs: an explicit `false` can't be rescued by nx.json
+        // (the CLI flag wins, and the agentic flow can't enable commits when
+        // they're explicitly off). When `createCommits` is undefined, nx.json
+        // may still enable commits, so defer to the post-overlay
+        // `assertCommitPrefixHasCommits` check.
         if (
+          createCommits === false &&
           customCommitPrefixHasNoEffect({
             createCommits,
             commitPrefix,

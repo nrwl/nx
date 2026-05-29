@@ -42,7 +42,7 @@ export function applyNxJsonMigrateDefaults(
       merged.createCommits = migrateConfig.createCommits;
     }
     // `commitPrefix` carries a yargs default, so the default value is
-    // indistinguishable from "not provided" — treat it as not provided so
+    // indistinguishable from "not provided" - treat it as not provided so
     // nx.json can override it.
     if (
       (merged.commitPrefix === undefined ||
@@ -58,8 +58,6 @@ export function applyNxJsonMigrateDefaults(
     if (merged.validate === undefined && migrateConfig.validate !== undefined) {
       merged.validate = migrateConfig.validate;
     }
-
-    assertCommitPrefixHasCommits(merged);
   } else {
     if (merged.mode === undefined && migrateConfig.mode !== undefined) {
       assertOneOf(migrateConfig.mode, MIGRATE_MODES, 'mode');
@@ -114,9 +112,17 @@ function assertValidAgentic(agentic: unknown): void {
   }
 }
 
-// Re-runs the shared commit-prefix guard against the merged args: the yargs
-// `.check()` only saw the CLI args, before nx.json defaults were applied.
-function assertCommitPrefixHasCommits(merged: { [k: string]: any }): void {
+/**
+ * The single authority for the "a custom commit prefix needs commits enabled"
+ * invariant. Run it against the final merged args (after
+ * `applyNxJsonMigrateDefaults`): the yargs `.check()` only sees the CLI args,
+ * but nx.json may enable commits via `createCommits` or `agentic`. The CLI
+ * `.check()` only fast-fails the unrescuable explicit `--no-create-commits`
+ * case; everything else is decided here.
+ */
+export function assertCommitPrefixHasCommits(merged: {
+  [k: string]: any;
+}): void {
   const { createCommits, commitPrefix, agentic } = merged;
   if (customCommitPrefixHasNoEffect({ createCommits, commitPrefix, agentic })) {
     throw new Error(

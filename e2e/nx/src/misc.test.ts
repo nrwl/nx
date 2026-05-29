@@ -1040,7 +1040,7 @@ describe('migrate', () => {
     );
 
     expect(output).toContain(
-      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+      `A custom migrate commit prefix requires commits to be enabled`
     );
   });
 
