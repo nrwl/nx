@@ -3,17 +3,20 @@
     "migrate-development-custom-condition": {
       "version": "21.5.0-beta.2",
       "description": "Migrate the legacy 'development' custom condition to a workspace-unique custom condition name.",
-      "factory": "./dist/src/migrations/update-21-5-0/migrate-development-custom-condition"
+      "factory": "./dist/src/migrations/update-21-5-0/migrate-development-custom-condition",
+      "docs": "./dist/src/migrations/update-21-5-0/migrate-development-custom-condition.md"
     },
     "remove-external-options-from-js-executors": {
       "version": "22.0.0-beta.0",
       "description": "Remove the deprecated `external` and `externalBuildTargets` options from the `@nx/js:swc` and `@nx/js:tsc` executors.",
-      "factory": "./dist/src/migrations/update-22-0-0/remove-external-options-from-js-executors"
+      "factory": "./dist/src/migrations/update-22-0-0/remove-external-options-from-js-executors",
+      "docs": "./dist/src/migrations/update-22-0-0/remove-external-options-from-js-executors.md"
     },
     "remove-redundant-ts-project-references": {
       "version": "22.1.0-rc.1",
       "description": "Removes redundant TypeScript project references from project's tsconfig.json files when runtime tsconfig files (e.g., tsconfig.lib.json, tsconfig.app.json) exist.",
-      "factory": "./dist/src/migrations/update-22-1-0/remove-redundant-ts-project-references"
+      "factory": "./dist/src/migrations/update-22-1-0/remove-redundant-ts-project-references",
+      "docs": "./dist/src/migrations/update-22-1-0/remove-redundant-ts-project-references.md"
     },
     "23-0-0-rewrite-internal-subpath-imports": {
       "version": "23.0.0-beta.14",

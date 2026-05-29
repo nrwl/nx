@@ -4,7 +4,8 @@
       "cli": "nx",
       "version": "21.0.0-beta.11",
       "description": "Remove isolatedConfig option for @nx/webpack:webpack",
-      "implementation": "./src/migrations/update-21-0-0/remove-isolated-config"
+      "implementation": "./src/migrations/update-21-0-0/remove-isolated-config",
+      "docs": "./src/migrations/update-21-0-0/remove-isolated-config.md"
     },
     "update-22-0-0-remove-deprecated-options": {
       "cli": "nx",
@@ -16,7 +17,8 @@
       "cli": "nx",
       "version": "23.0.0-beta.10",
       "description": "Rewrites imports of NxTsconfigPathsWebpackPlugin from '@nx/webpack' to the sub-path '@nx/webpack/tsconfig-paths-plugin'.",
-      "factory": "./src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import"
+      "factory": "./src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import",
+      "docs": "./src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import.md"
     }
   },
   "packageJsonUpdates": {

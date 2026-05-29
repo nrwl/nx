@@ -3,27 +3,32 @@
     "update-20-0-4": {
       "version": "20.0.4-beta.0",
       "description": "Add gitignore entry for temporary vite config files.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "docs": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
     },
     "update-20-0-6": {
       "version": "20.0.6-beta.0",
       "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "docs": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
     },
     "update-20-5-0-install-jiti": {
       "version": "20.5.0-beta.2",
       "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
-      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti"
+      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti",
+      "docs": "./dist/src/migrations/update-20-5-0/install-jiti.md"
     },
     "update-20-5-0-update-resolve-conditions": {
       "version": "20.5.0-beta.3",
       "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
-      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions"
+      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions",
+      "docs": "./dist/src/migrations/update-20-5-0/update-resolve-conditions.md"
     },
     "eslint-ignore-vite-temp-files": {
       "version": "20.5.0-beta.3",
       "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
-      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
+      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files",
+      "docs": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files.md"
     },
     "update-22-2-0": {
       "version": "22.2.0-beta.1",
@@ -41,7 +46,8 @@
     "ensure-vitest-package-migration-23": {
       "version": "23.0.0-beta.10",
       "description": "Safety net: ensure any remaining @nx/vite:test executor usages are swapped to @nx/vitest:test and @nx/vitest is installed.",
-      "implementation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration"
+      "implementation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration",
+      "docs": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration.md"
     },
     "rename-rollup-options-to-rolldown-options": {
       "version": "23.0.0-beta.10",
@@ -49,7 +55,8 @@
         "vite": ">=8.0.0"
       },
       "description": "Rename `rollupOptions` to `rolldownOptions` in vite config files (top-level and inside `environments`). Vite 8 replaced Rollup with Rolldown.",
-      "implementation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options"
+      "implementation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options",
+      "docs": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options.md"
     },
     "create-ai-instructions-for-vite-8": {
       "version": "23.0.0-beta.10",

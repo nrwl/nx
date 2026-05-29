@@ -4,31 +4,36 @@
       "cli": "nx",
       "version": "20.2.0-beta.2",
       "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
-      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package"
+      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
+      "docs": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package.md"
     },
     "update-20-2-0-update-with-module-federation-import": {
       "cli": "nx",
       "version": "20.2.0-beta.2",
       "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
-      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
+      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package",
+      "docs": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package.md"
     },
     "ensure-nx-module-federation-package": {
       "cli": "nx",
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
-      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
+      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package",
+      "docs": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package.md"
     },
     "add-mf-env-var-to-target-defaults": {
       "cli": "nx",
       "version": "20.4.0-beta.0",
       "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
-      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
+      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults",
+      "docs": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults.md"
     },
     "update-21-0-0-update-babel-loose": {
       "cli": "nx",
       "version": "21.0.0-beta.11",
       "description": "Replaces `classProperties.loose` option with `loose`.",
-      "factory": "./src/migrations/update-21-0-0/update-babel-loose"
+      "factory": "./src/migrations/update-21-0-0/update-babel-loose",
+      "docs": "./src/migrations/update-21-0-0/update-babel-loose.md"
     },
     "update-22-0-0-add-svgr-to-webpack-config": {
       "cli": "nx",
@@ -40,7 +45,8 @@
       "cli": "nx",
       "version": "23.0.0-beta.10",
       "description": "Rewrites imports of NxReactWebpackPlugin from '@nx/react' to the sub-path '@nx/react/webpack-plugin'.",
-      "factory": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import"
+      "factory": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import",
+      "docs": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import.md"
     }
   },
   "packageJsonUpdates": {

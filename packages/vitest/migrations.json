@@ -3,7 +3,8 @@
     "update-20-3-0": {
       "version": "20.3.0-beta.2",
       "description": "Add gitignore entry for temporary vitest config files.",
-      "implementation": "./dist/src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore",
+      "docs": "./dist/src/migrations/update-20-3-0/add-vitest-temp-files-to-git-ignore.md"
     },
     "update-22-1-0": {
       "version": "22.1.0-beta.8",
@@ -21,7 +22,8 @@
     "update-22-6-0-prefix-reports-directory": {
       "version": "22.6.0-beta.11",
       "description": "Prefix reportsDirectory with {projectRoot} to maintain correct resolution after workspace-root-relative behavior change.",
-      "implementation": "./dist/src/migrations/update-22-6-0/prefix-reports-directory-with-project-root"
+      "implementation": "./dist/src/migrations/update-22-6-0/prefix-reports-directory-with-project-root",
+      "docs": "./dist/src/migrations/update-22-6-0/prefix-reports-directory-with-project-root.md"
     }
   },
   "packageJsonUpdates": {
