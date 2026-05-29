@@ -22,7 +22,7 @@ export async function setupCompilationWithAngularCompilation(
     await setupCompilation(config, options);
   angularCompilation ??= await createAngularCompilation(
     !options.aot,
-    options.hasServer,
+    !options.hasServer,
     false
   );
   modifiedFiles ??= new Set(rootNames);
