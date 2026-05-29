@@ -75,19 +75,21 @@ Omit the flag and the consumer ships a placeholder `my-provider` entry in `PROVI
 The consumer's `src/mf.ts` holds the remote list inline:
 
 ```ts
-const PROVIDERS: Record<string, string> = {
-  'my-provider': 'http://localhost:5101/remoteEntry.js',
-};
+// `name` is the provider's federation container name (derived from its
+// project name, so it can differ from `alias` - e.g. `myCart` -> `my_cart`).
+// `alias` is the key you loadRemote() with. `entry` is the remoteEntry.js URL.
+const PROVIDERS: Array<{ alias: string; name: string; entry: string }> = [
+  {
+    alias: 'my-provider',
+    name: 'my_provider',
+    entry: 'http://localhost:5101/remoteEntry.js',
+  },
+];
 
 registerRemotes(
-  Object.entries(PROVIDERS).map(([alias, entry]) => ({
-    name: alias.replace(/-/g, '_'),
-    alias,
-    entry,
-    // For vite providers only - vite emits ESM remoteEntry.js. The generator
-    // omits `type` for rspack/rsbuild (UMD) so the runtime auto-detects.
-    type: 'module',
-  }))
+  // For vite providers only - vite emits ESM remoteEntry.js. The generator
+  // omits `type` for rspack/rsbuild (UMD) so the runtime auto-detects.
+  PROVIDERS.map((remote) => ({ ...remote, type: 'module' }))
 );
 
 export function lazyProvider(alias, exposeName) {
@@ -159,11 +161,13 @@ For each `host` app in `apps/`:
 
 1. Delete `module-federation.config.ts`.
 2. Replace the bundler config with a plain `vite.config.ts` / `rsbuild.config.ts` / `rspack.config.ts` that uses
-   `@module-federation/vite` or `@module-federation/enhanced/rspack` directly. No `withModuleFederation` wrappers.
-3. Create `src/mf.ts` with a `PROVIDERS` constant (`Record<string, string>`) mapping each provider alias to its
-   `remoteEntry.js` URL. At module init, call `registerRemotes` from `@module-federation/runtime` with one
-   entry per PROVIDERS key (set `type: 'module'` for vite providers; omit it for rspack/rsbuild). Export
-   `lazyProvider(alias, exposeName)` that returns `React.lazy(() => loadRemote(...))`.
+   `@module-federation/vite` (vite), `@module-federation/rsbuild-plugin` (rsbuild), or
+   `@module-federation/enhanced/rspack` (rspack) directly. No `withModuleFederation` wrappers.
+3. Create `src/mf.ts` with a `PROVIDERS` constant - an array of `{ alias, name, entry }` where `name` is the
+   provider's federation container name (derived from its project name, so it can differ from `alias`, e.g.
+   `myCart` -> `my_cart`) and `entry` is its `remoteEntry.js` URL. At module init, call `registerRemotes` from
+   `@module-federation/runtime` with one entry per provider (set `type: 'module'` for vite providers; omit it for
+   rspack/rsbuild). Export `lazyProvider(alias, exposeName)` that returns `React.lazy(() => loadRemote(...))`.
 4. Replace all `import('remote-name/Module')` calls with `lazyProvider('remote-name', 'Module')`.
 5. Drop the `customWebpackConfig` block from `project.json`. Replace `serve` and `build` targets with `nx:run-commands`
    invocations of the bundler directly.
