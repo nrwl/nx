@@ -12,3 +12,7 @@ export const jsoncEslintParserVersion = '^2.1.0';
 export const eslint9__typescriptESLintVersion = '^8.40.0';
 export const eslint9__eslintVersion = '^9.8.0';
 export const eslintCompat = '^1.1.1';
+
+// Oxlint bridge (ESLint ↔ Oxlint coexistence)
+export const eslintPluginOxlintVersion = '^1.57.0';
+export const jitiVersion = '^2.6.1';

@@ -28,6 +28,11 @@
       "factory": "./dist/src/generators/convert-to-inferred/convert-to-inferred",
       "schema": "./dist/src/generators/convert-to-inferred/schema.json",
       "description": "Convert existing ESLint project(s) using `@nx/eslint:lint` executor to use `@nx/eslint/plugin`."
+    },
+    "setup-oxlint-bridge": {
+      "factory": "./src/generators/setup-oxlint-bridge/setup-oxlint-bridge",
+      "schema": "./src/generators/setup-oxlint-bridge/schema.json",
+      "description": "Install eslint-plugin-oxlint and inject the JITI bridge into ESLint flat config for Oxlint coexistence."
     }
   }
 }
