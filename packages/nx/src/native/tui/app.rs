@@ -624,8 +624,11 @@ impl App {
             return;
         }
 
-        // Success and failure trigger ungrouping
-        self.handle_batch_complete(batch_id, status);
+        // Success and failure trigger ungrouping. Route through the action queue
+        // (like StartBatch) so completion is applied on the event-loop thread
+        // AFTER the nested tasks' queued status/timing updates — otherwise the
+        // direct call races those updates and ungroups against stale component state.
+        self.dispatch_action(Action::EndBatch(batch_id, status));
     }
 
     pub fn handle_event(
@@ -1487,6 +1490,9 @@ impl App {
             }
             Action::StartBatch(batch_id, batch_info) => {
                 self.handle_batch_start(batch_id.clone(), batch_info.clone());
+            }
+            Action::EndBatch(batch_id, status) => {
+                self.handle_batch_complete(batch_id.clone(), *status);
             }
             _ => {}
         }
@@ -2498,6 +2504,21 @@ impl App {
     fn handle_batch_complete(&mut self, batch_id: String, final_status: BatchStatus) {
         // Early validation
         if batch_id.is_empty() {
+            return;
+        }
+
+        // A batch reports its status on every run iteration, and incomplete
+        // batches are re-run for their remaining tasks. Only complete (ungroup +
+        // clean up) once every nested task has reached a terminal state, so an
+        // intermediate report doesn't prematurely ungroup and then re-group.
+        // Safe to read component state here: EndBatch is processed on the
+        // event-loop thread after the nested tasks' queued status updates.
+        let all_tasks_complete = self
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map_or(false, |tasks_list| tasks_list.is_batch_complete(&batch_id));
+        if !all_tasks_complete {
             return;
         }
 

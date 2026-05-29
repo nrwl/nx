@@ -250,7 +250,10 @@ pub struct TasksList {
     run_mode: RunMode,
     column_visibility: Option<ColumnVisibility>, // Cached column visibility result
     terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
-    in_progress_tasks: Vec<String>, // Standalone in-progress tasks for selection (excludes batched)
+    // In-progress selectable entries for selection switching: standalone tasks
+    // and running batch groups, in start order. Excludes tasks nested in a batch
+    // (the batch group represents them).
+    in_progress_entries: Vec<SelectionEntry>,
     needs_sort: bool,            // Deferred sort flag - sort once per render frame
     perf_report_available: bool, // Whether the performance report exists yet (run finished)
 }
@@ -298,7 +301,7 @@ impl TasksList {
             run_mode,
             column_visibility: None,
             terminal_width: None,
-            in_progress_tasks: Vec::new(),
+            in_progress_entries: Vec::new(),
             needs_sort: false,
             perf_report_available: false,
         };
@@ -440,6 +443,49 @@ impl TasksList {
             }
         }
         false
+    }
+
+    /// Returns true if a task is nested under any batch group, expanded or
+    /// collapsed. Unlike [`Self::is_task_nested_in_expanded_batch`] (used for
+    /// rendering), this drives in-progress-list membership: a batched task is
+    /// never an independent selection target — the batch group represents it.
+    fn is_task_in_any_batch(&self, task_id: &str) -> bool {
+        let collections = [&self.display_items, &self.filtered_display_items];
+        for collection in &collections {
+            for display_item in *collection {
+                if let DisplayItem::BatchGroup(batch_group) = display_item {
+                    if batch_group.nested_tasks.contains(&task_id.to_string()) {
+                        return true;
+                    }
+                }
+            }
+        }
+        false
+    }
+
+    /// Returns true if every task in the batch has reached a terminal state.
+    /// Used to defer batch completion until all nested tasks have finished
+    /// (batches report status on intermediate re-run iterations).
+    pub fn is_batch_complete(&self, batch_id: &str) -> bool {
+        match self.get_batch_group_by_id(batch_id) {
+            Some(batch_group) => batch_group.nested_tasks.iter().all(|id| {
+                self.task_lookup.get(id).is_some_and(|task| {
+                    !matches!(
+                        task.status,
+                        TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
+                    )
+                })
+            }),
+            None => false,
+        }
+    }
+
+    /// Whether a completing batch's output is being followed by a focused output
+    /// pane (spacebar mode), in which case selection should stay on the batch's
+    /// last task so its output remains visible — mirroring the standalone
+    /// terminal-pane exception in [`Self::is_terminal_showing_task`].
+    fn is_terminal_showing_batch(&self) -> bool {
+        matches!(self.focus, Focus::MultipleOutput(_)) && self.spacebar_mode
     }
 
     /// Returns true if the task list is currently focused
@@ -1344,7 +1390,7 @@ impl TasksList {
 
         for task in &tasks {
             let task_id = &task.id;
-            let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
+            let is_in_batch = self.is_task_in_any_batch(task_id);
 
             // Update in task_lookup
             if let Some(task_item) = self.task_lookup.get_mut(task_id) {
@@ -1376,8 +1422,14 @@ impl TasksList {
             }
 
             // Add to in-progress list if standalone task
-            if !is_in_batch && !self.in_progress_tasks.iter().any(|id| id == task_id) {
-                self.in_progress_tasks.push(task_id.to_string());
+            if !is_in_batch
+                && !self
+                    .in_progress_entries
+                    .iter()
+                    .any(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+            {
+                self.in_progress_entries
+                    .push(SelectionEntry::Task(task_id.to_string()));
                 has_standalone_change = true;
             }
         }
@@ -1404,45 +1456,56 @@ impl TasksList {
         }
     }
 
-    /// Handles a standalone task finishing by switching selection to another in-progress task.
-    /// Only changes selection if the finished task was the currently selected task.
-    fn handle_standalone_task_finished(&mut self, task_id: &str, old_index: Option<usize>) {
-        // Only switch selection if the finished task was the selected task
-        let is_selected = {
-            let selection_manager = self.selection_manager.lock();
-            matches!(
-                selection_manager.get_selection(),
-                Some(SelectionEntry::Task(name)) if name == task_id
-            )
-        };
+    /// Selection transition when the currently-selected in-progress entry
+    /// (`finished`, a standalone task or a batch group) reaches a terminal state.
+    /// Shared by standalone-task completion and batch completion so both behave
+    /// identically. `finished` must already be removed from `in_progress_entries`;
+    /// `old_index` is its index there before removal. `keep_last` is selected when
+    /// no other work remains (the finished task for a standalone task, the
+    /// last-completed nested task for a batch). `terminal_showing` keeps `keep_last`
+    /// selected when the finished entry's output is being followed by a pane.
+    ///
+    /// Only changes selection if `finished` was the currently selected entry.
+    fn select_after_selected_finished(
+        &mut self,
+        finished: &SelectionEntry,
+        old_index: Option<usize>,
+        keep_last: Option<SelectionEntry>,
+        terminal_showing: bool,
+    ) {
+        let is_selected = self.selection_manager.lock().get_selection() == Some(finished);
         if !is_selected {
             return;
         }
 
-        // Check terminal pane exception
-        if self.is_terminal_showing_task(task_id) {
-            return; // Keep selection on finished task
-        }
-
-        let has_pending = self.has_pending_tasks();
-
-        // No more in-progress tasks?
-        if self.in_progress_tasks.is_empty() {
-            if has_pending {
-                self.selection_manager.lock().await_next_allocation();
+        // Terminal pane exception: keep the finished entry's output visible.
+        if terminal_showing {
+            if let Some(entry) = keep_last {
+                self.selection_manager.lock().select(Some(entry));
             }
-            // else: last task, keep selection (already on finished task)
             return;
         }
 
-        // Switch to task at same/lower position (clamped to valid range)
-        if let Some(old_idx) = old_index {
-            let clamped_idx = old_idx.min(self.in_progress_tasks.len().saturating_sub(1));
-            if let Some(next_task) = self.in_progress_tasks.get(clamped_idx) {
-                self.selection_manager.lock().select_task(next_task);
+        // No more in-progress entries (tasks or batches)?
+        if self.in_progress_entries.is_empty() {
+            if self.has_pending_tasks() {
+                // Wait for the next task/batch to start rather than latching onto
+                // a completed entry.
+                self.selection_manager.lock().await_next_allocation();
+            } else if let Some(entry) = keep_last {
+                // Last work — keep a relevant completed entry selected.
+                self.selection_manager.lock().select(Some(entry));
             }
-        } else if let Some(first) = self.in_progress_tasks.first() {
-            self.selection_manager.lock().select_task(first);
+            return;
+        }
+
+        // Switch to the entry at the same/lower position (clamped to valid range).
+        let target = old_index
+            .map(|idx| idx.min(self.in_progress_entries.len() - 1))
+            .and_then(|idx| self.in_progress_entries.get(idx).cloned())
+            .or_else(|| self.in_progress_entries.first().cloned());
+        if let Some(entry) = target {
+            self.selection_manager.lock().select(Some(entry));
         }
     }
 
@@ -1455,11 +1518,16 @@ impl TasksList {
             .map(|t| t.status)
             .unwrap_or(TaskStatus::NotStarted);
         let old_is_in_progress = matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
-        let is_in_batch = self.is_task_nested_in_expanded_batch(task_id);
+        // Rendering nests tasks only under EXPANDED batches; the in-progress
+        // selectable list excludes tasks under ANY batch (the group represents them).
+        let is_in_expanded_batch = self.is_task_nested_in_expanded_batch(task_id);
+        let is_in_any_batch = self.is_task_in_any_batch(task_id);
 
         // Get position BEFORE removing (for position-based selection switching)
-        let old_index = if old_is_in_progress && !is_in_batch {
-            self.in_progress_tasks.iter().position(|id| id == &task_id)
+        let old_index = if old_is_in_progress && !is_in_any_batch {
+            self.in_progress_entries
+                .iter()
+                .position(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
         } else {
             None
         };
@@ -1487,24 +1555,43 @@ impl TasksList {
         }
 
         // Update in-progress list and handle selection for standalone tasks
-        if !is_in_batch {
+        // (tasks nested in a batch are represented by the batch group).
+        if !is_in_any_batch {
             let new_is_in_progress = matches!(status, TaskStatus::InProgress | TaskStatus::Shared);
 
             if old_is_in_progress && !new_is_in_progress {
-                // Task finished - remove and handle selection
-                if let Some(idx) = self.in_progress_tasks.iter().position(|id| id == task_id) {
-                    self.in_progress_tasks.remove(idx);
+                // Task finished - remove and update selection if it was selected.
+                if let Some(idx) = self
+                    .in_progress_entries
+                    .iter()
+                    .position(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+                {
+                    self.in_progress_entries.remove(idx);
                 }
-                self.handle_standalone_task_finished(task_id, old_index);
+                let finished = SelectionEntry::Task(task_id.to_owned());
+                let terminal_showing = self.is_terminal_showing_task(task_id);
+                self.select_after_selected_finished(
+                    &finished,
+                    old_index,
+                    Some(finished.clone()),
+                    terminal_showing,
+                );
             } else if !old_is_in_progress && new_is_in_progress {
                 // Task started - add if not already present
-                if !self.in_progress_tasks.iter().any(|id| id == task_id) {
-                    self.in_progress_tasks.push(task_id.to_owned());
+                if !self
+                    .in_progress_entries
+                    .iter()
+                    .any(|e| matches!(e, SelectionEntry::Task(id) if id == task_id))
+                {
+                    self.in_progress_entries
+                        .push(SelectionEntry::Task(task_id.to_owned()));
                 }
             }
+        }
 
-            // Only re-sort when a standalone task changed — batch-nested task
-            // status changes don't affect display order.
+        // Re-sort unless the change was to a task nested in an expanded batch
+        // (those don't affect standalone display order).
+        if !is_in_expanded_batch {
             self.needs_sort = true;
         }
     }
@@ -1691,10 +1778,24 @@ impl TasksList {
         });
 
         // Add the batch group
+        let nested_tasks = batch_group.nested_tasks.clone();
         let batch_id = batch_group.batch_id.clone();
         self.display_items
             .push(DisplayItem::BatchGroup(batch_group));
         self.needs_sort = true;
+
+        // Reflect the running batch in the in-progress selectable list: drop any
+        // nested tasks tracked individually and represent them by the batch group.
+        self.in_progress_entries
+            .retain(|e| !matches!(e, SelectionEntry::Task(id) if nested_tasks.contains(id)));
+        if !self
+            .in_progress_entries
+            .iter()
+            .any(|e| matches!(e, SelectionEntry::BatchGroup(id) if id == &batch_id))
+        {
+            self.in_progress_entries
+                .push(SelectionEntry::BatchGroup(batch_id.clone()));
+        }
 
         // If selected task is now inside the collapsed batch, select the batch instead
         // Use the just-pushed batch group's nested_tasks for the O(1) contains check.
@@ -1718,26 +1819,52 @@ impl TasksList {
         // Capture current selection before removing batch
         let currently_selected = self.selection_manager.lock().get_selection().cloned();
 
+        // Capture the batch's slot in the in-progress list before removing it, so a
+        // finishing selected batch can hand selection to the neighbouring entry.
+        let batch_old_index = self
+            .in_progress_entries
+            .iter()
+            .position(|e| matches!(e, SelectionEntry::BatchGroup(id) if id == batch_id));
+        if let Some(idx) = batch_old_index {
+            self.in_progress_entries.remove(idx);
+        }
+
         // Remove batch and get its info
         let Some(batch_group) = self.remove_batch_group(batch_id) else {
             return;
         };
 
         // Restore selection based on what was selected before
-        let task_to_select = currently_selected.and_then(|selection| match &selection {
-            SelectionEntry::BatchGroup(id) if id == batch_id => {
-                // Batch was selected - select the last task to complete
-                self.find_last_completed_task(&batch_group.nested_tasks)
+        match currently_selected {
+            Some(SelectionEntry::BatchGroup(ref id)) if id == batch_id => {
+                // The selected batch finished. Mirror a standalone task finishing:
+                // move to the nearest in-progress entry, wait for the next
+                // allocation when only pending tasks remain, or keep the last
+                // completed task when this was the final work.
+                let keep_last = self
+                    .find_last_completed_task(&batch_group.nested_tasks)
                     .or_else(|| batch_group.sorted_tasks.first().cloned())
+                    .map(SelectionEntry::Task);
+                let terminal_showing = self.is_terminal_showing_batch();
+                let finished = SelectionEntry::BatchGroup(batch_id.to_owned());
+                self.select_after_selected_finished(
+                    &finished,
+                    batch_old_index,
+                    keep_last,
+                    terminal_showing,
+                );
             }
-            SelectionEntry::Task(task_id) if batch_group.nested_tasks.contains(task_id) => {
-                Some(task_id.clone())
+            Some(SelectionEntry::Task(ref task_id))
+                if batch_group.nested_tasks.contains(task_id) =>
+            {
+                // A nested task was selected - keep it selected as a standalone.
+                self.selection_manager.lock().select_task(task_id);
             }
-            _ => Some(selection.id().to_string()),
-        });
-
-        if let Some(task_id) = task_to_select {
-            self.selection_manager.lock().select_task(&task_id);
+            Some(other) => {
+                // Unrelated selection (another task or batch) - preserve it.
+                self.selection_manager.lock().select(Some(other));
+            }
+            None => {}
         }
     }
 
@@ -3291,6 +3418,197 @@ mod tests {
                 is_expanded
             );
         }
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_awaits_when_pending_remain() {
+        // Regression for the reported bug: when a selected in-progress batch
+        // group completes while pending tasks remain, selection must enter
+        // AwaitingNextAllocation (no selection) rather than latching onto a
+        // completed batch task — then promote to the next task that starts.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Batch the first two tasks; the batch is the only in-progress work, so
+        // it auto-selects. standalone:test stays pending.
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(
+            matches!(
+                tasks_list.selection_manager.lock().get_selection(),
+                Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+            ),
+            "batch group should auto-select while it is the only in-progress work"
+        );
+
+        // Batch tasks reach terminal state, then the batch completes. (Mirrors the
+        // orchestrator setting task statuses before the batch status.)
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        tasks_list.ungroup_batch_tasks("batch1");
+
+        // standalone:test is still pending -> selection waits across renders.
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(
+                manager.is_awaiting_next_allocation(),
+                "selection should await the next allocation, not a completed batch task"
+            );
+            assert!(manager.get_selection().is_none());
+        }
+
+        // The next task starts -> selection latches onto it.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[2].clone()]))
+            .unwrap();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+        ));
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_selects_other_in_progress_immediately() {
+        // When a selected batch completes while other work is still running,
+        // selection moves immediately to the nearest in-progress entry (no
+        // AwaitingNextAllocation gap).
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(3))).unwrap();
+
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+        ));
+
+        // A standalone task starts running alongside the batch; the explicit
+        // batch selection is preserved.
+        tasks_list
+            .update(Action::StartTasks(vec![test_tasks[2].clone()]))
+            .unwrap();
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        assert!(matches!(
+            tasks_list.selection_manager.lock().get_selection(),
+            Some(SelectionEntry::BatchGroup(id)) if id == "batch1"
+        ));
+
+        // Batch completes -> selection moves straight to the running standalone task.
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        tasks_list.ungroup_batch_tasks("batch1");
+        {
+            let manager = tasks_list.selection_manager.lock();
+            assert!(!manager.is_awaiting_next_allocation());
+            assert!(matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(name)) if *name == test_tasks[2].id
+            ));
+        }
+    }
+
+    #[test]
+    fn test_selected_batch_finishing_keeps_last_completed_when_no_work_remains() {
+        // When the selected batch is the final work, selection stays on the
+        // last-completed nested task.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        let mut terminal = create_test_terminal(120, 20);
+        tasks_list.update(Action::StartCommand(Some(2))).unwrap();
+
+        // Mark the standalone task done up front so only the batch is left.
+        tasks_list.update_task_status(&test_tasks[2].id, TaskStatus::Success);
+
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        // Deterministic last-completed: lib:build finishes after app:build.
+        if let Some(t) = tasks_list.task_lookup.get_mut(&test_tasks[0].id) {
+            t.end_time = Some(100);
+        }
+        if let Some(t) = tasks_list.task_lookup.get_mut(&test_tasks[1].id) {
+            t.end_time = Some(200);
+        }
+        tasks_list.ungroup_batch_tasks("batch1");
+
+        let manager = tasks_list.selection_manager.lock();
+        assert!(!manager.is_awaiting_next_allocation());
+        assert!(
+            matches!(
+                manager.get_selection(),
+                Some(SelectionEntry::Task(name)) if *name == test_tasks[1].id
+            ),
+            "should keep the last-completed batch task selected"
+        );
+    }
+
+    #[test]
+    fn test_is_batch_complete_requires_all_nested_terminal() {
+        // Guards the deferred ungroup: a batch is only "complete" once every
+        // nested task has reached a terminal state.
+        let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
+        tasks_list
+            .update(Action::StartTasks(vec![
+                test_tasks[0].clone(),
+                test_tasks[1].clone(),
+            ]))
+            .unwrap();
+        tasks_list.start_batch(
+            "batch1".to_string(),
+            "executor".to_string(),
+            vec![test_tasks[0].id.clone(), test_tasks[1].id.clone()],
+            0,
+            false,
+        );
+
+        assert!(!tasks_list.is_batch_complete("batch1"), "both in progress");
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        assert!(!tasks_list.is_batch_complete("batch1"), "one still running");
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
+        assert!(tasks_list.is_batch_complete("batch1"), "all terminal");
+        assert!(!tasks_list.is_batch_complete("nonexistent"));
     }
 
     #[test]
