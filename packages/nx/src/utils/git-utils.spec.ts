@@ -1,11 +1,20 @@
 import {
   parseVcsRemoteUrl,
   getVcsRemoteInfo,
+  getUncommittedChangesSnapshot,
   tryCommitChanges,
 } from './git-utils';
 import { execSync } from 'child_process';
+import * as fs from 'fs';
 
 jest.mock('child_process');
+jest.mock('fs', () => {
+  const actual: typeof import('fs') = jest.requireActual('fs');
+  return {
+    ...actual,
+    readFileSync: jest.fn(actual.readFileSync),
+  };
+});
 
 describe('git utils tests', () => {
   describe('parseVcsRemoteUrl', () => {
@@ -199,6 +208,120 @@ describe('git utils tests', () => {
       });
 
       expect(getVcsRemoteInfo()).toBeNull();
+    });
+  });
+
+  describe('getUncommittedChangesSnapshot', () => {
+    const mockReadFileSync = fs.readFileSync as jest.Mock;
+
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    function mockGit(map: {
+      diff?: string;
+      status?: string;
+      untracked?: string[];
+      diffThrows?: boolean;
+      statusThrows?: boolean;
+      untrackedThrows?: boolean;
+    }): void {
+      (execSync as jest.Mock).mockImplementation((cmd: string) => {
+        if (cmd.startsWith('git diff HEAD')) {
+          if (map.diffThrows) throw new Error('git diff failed');
+          return map.diff ?? '';
+        }
+        if (cmd.startsWith('git status')) {
+          if (map.statusThrows) throw new Error('git status failed');
+          return map.status ?? '';
+        }
+        if (cmd.startsWith('git ls-files')) {
+          if (map.untrackedThrows) throw new Error('git ls-files failed');
+          // `-z` mode emits NUL-terminated entries with no trailing newline.
+          return (map.untracked ?? []).map((p) => `${p}\0`).join('');
+        }
+        return '';
+      });
+    }
+
+    it('returns equal snapshots for an unchanged working tree across consecutive calls', () => {
+      mockGit({ diff: '', status: '', untracked: [] });
+      const a = getUncommittedChangesSnapshot('/repo');
+      const b = getUncommittedChangesSnapshot('/repo');
+      expect(a).toBe(b);
+      expect(a).not.toBe('');
+    });
+
+    it('distinguishes different content at the same modified tracked path (the codex collision case)', () => {
+      // Porcelain status is identical (`M package.json`) but the diff text
+      // differs because the contents differ. A status-only snapshot would
+      // collapse; the content-sensitive snapshot must not.
+      mockGit({
+        diff: 'diff --git a/package.json b/package.json\n+angular\n',
+        status: ' M package.json\n',
+        untracked: [],
+      });
+      const v1 = getUncommittedChangesSnapshot('/repo');
+      mockGit({
+        diff: 'diff --git a/package.json b/package.json\n+zone.js\n',
+        status: ' M package.json\n',
+        untracked: [],
+      });
+      const v2 = getUncommittedChangesSnapshot('/repo');
+      expect(v1).not.toBe(v2);
+    });
+
+    it('detects a newly added untracked file', () => {
+      mockGit({ diff: '', status: '', untracked: [] });
+      const before = getUncommittedChangesSnapshot('/repo');
+      mockGit({
+        diff: '',
+        status: '?? new.ts\n',
+        untracked: ['new.ts'],
+      });
+      mockReadFileSync.mockReturnValue(Buffer.from('content'));
+      const after = getUncommittedChangesSnapshot('/repo');
+      expect(before).not.toBe(after);
+    });
+
+    it('detects an untracked file whose contents change without any path change', () => {
+      mockGit({
+        diff: '',
+        status: '?? config.json\n',
+        untracked: ['config.json'],
+      });
+      mockReadFileSync.mockReturnValueOnce(Buffer.from('content_v1'));
+      const v1 = getUncommittedChangesSnapshot('/repo');
+      mockReadFileSync.mockReturnValueOnce(Buffer.from('content_v2'));
+      const v2 = getUncommittedChangesSnapshot('/repo');
+      expect(v1).not.toBe(v2);
+    });
+
+    it('returns equal snapshots after a write-then-revert (net-zero) sequence', () => {
+      mockGit({
+        diff: 'diff --git a/f b/f\n+x\n',
+        status: ' M f\n',
+        untracked: [],
+      });
+      const a = getUncommittedChangesSnapshot('/repo');
+      const b = getUncommittedChangesSnapshot('/repo');
+      expect(a).toBe(b);
+    });
+
+    it('preserves surviving probe signal when one git invocation fails', () => {
+      // A partial failure (status throws, diff still has real content) must
+      // not silently collapse the snapshot down to the same value a fully-
+      // clean working tree would produce — otherwise the catch-block
+      // classification would lose the throw-after-write signal.
+      mockGit({
+        diff: 'diff --git a/f b/f\n+x\n',
+        statusThrows: true,
+        untracked: [],
+      });
+      const partial = getUncommittedChangesSnapshot('/repo');
+      mockGit({ diff: '', status: '', untracked: [] });
+      const clean = getUncommittedChangesSnapshot('/repo');
+      expect(partial).not.toBe(clean);
     });
   });
 
