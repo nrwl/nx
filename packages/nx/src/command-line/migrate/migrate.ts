@@ -110,6 +110,7 @@ import {
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
+import { applyNxJsonMigrateDefaults } from './migrate-config';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
 import {
   applyAgenticHandoffGitignoreFallback,
@@ -3329,7 +3330,8 @@ export async function migrate(
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
-    const opts = await parseMigrationsOptions(args);
+    const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
+    const opts = await parseMigrationsOptions(mergedArgs);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
@@ -3338,10 +3340,10 @@ export async function migrate(
           root,
           opts,
           rawArgs,
-          args['verbose'],
-          args['createCommits'],
-          args['commitPrefix'],
-          args['skipInstall']
+          mergedArgs['verbose'],
+          mergedArgs['createCommits'],
+          mergedArgs['commitPrefix'],
+          mergedArgs['skipInstall']
         );
       } catch (e) {
         // The remediation guidance is already logged by `runInstall`; swallow

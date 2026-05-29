@@ -707,6 +707,55 @@ export interface NxSyncConfiguration {
   disabledTaskSyncGenerators?: string[];
 }
 
+export interface NxMigrateConfiguration {
+  /**
+   * Whether to automatically create a git commit after each migration runs.
+   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   */
+  createCommits?: boolean;
+
+  /**
+   * Commit message prefix applied to each migration commit when commits are
+   * enabled (via `createCommits` or `--create-commits`). Equivalent to the
+   * `--commit-prefix` flag. Defaults to `"chore: [nx migration] "`.
+   */
+  commitPrefix?: string;
+
+  /**
+   * Restricts which packages to migrate when migrating Nx itself. Equivalent to
+   * the `--mode` flag.
+   * - `first-party`: only Nx and its plugins.
+   * - `third-party`: only the third-party dependencies referenced by Nx.
+   * - `all`: everything (default).
+   */
+  mode?: 'first-party' | 'third-party' | 'all';
+
+  /**
+   * How to handle a migration that crosses more than one major version.
+   * Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE`
+   * environment variable takes precedence over this setting.
+   * - `direct`: migrate straight to the requested target.
+   * - `gradual`: migrate to the smallest recommended step.
+   */
+  multiMajorMode?: 'direct' | 'gradual';
+
+  /**
+   * Default for the agentic flow used by `nx migrate --run-migrations`.
+   * Equivalent to the `--agentic` flag.
+   * - `false`: never use the agentic flow.
+   * - `true`: use the agentic flow and resolve the installed agent.
+   * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`): always use that agent.
+   */
+  agentic?: boolean | 'claude-code' | 'codex' | 'opencode';
+
+  /**
+   * Whether to run agent-driven validation after generator-only migrations when
+   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
+   * to `true` when the agentic flow is enabled.
+   */
+  validate?: boolean;
+}
+
 /**
  * Nx.json configuration
  *
@@ -879,6 +928,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Configuration for the `nx migrate` command.
+   */
+  migrate?: NxMigrateConfiguration;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.
