@@ -1,4 +1,9 @@
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { output } from '../../../utils/output';
+import type { NxJsonConfiguration } from '../../../config/nx-json';
+import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { workspaceRoot } from '../../../utils/workspace-root';
 import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
@@ -46,26 +51,46 @@ export async function resolveAgentic(
   }
 
   const detected = await detectInstalledAgents(AGENT_DEFINITIONS);
-  const { enabled, explicitId } = await resolveFlag(
+  const { enabled, explicitId, persist } = await resolveFlag(
     input,
     isInteractive,
     detected
   );
 
   if (!enabled) {
+    if (persist === false) {
+      persistAgenticChoice(false);
+    }
     return { kind: 'disabled' };
   }
 
   const selected = await selectAgent(detected, explicitId, isInteractive);
 
+  if (persist === true) {
+    persistAgenticChoice(true);
+  } else if (persist === 'pin') {
+    persistAgenticChoice(selected.id);
+  }
+
   return { kind: 'enabled', selectedAgent: selected };
 }
+
+/**
+ * What to persist to `nx.json` `migrate.agentic` after the up-front prompt:
+ * `undefined` = don't persist, `false` = persist disabled, `true` = persist
+ * enabled (resolve the agent each run), `'pin'` = persist the selected agent id.
+ */
+type PersistChoice = undefined | boolean | 'pin';
 
 async function resolveFlag(
   input: ResolveAgenticInput,
   isInteractive: boolean,
   detected: DetectedInstalledAgent[]
-): Promise<{ enabled: boolean; explicitId?: AgentId }> {
+): Promise<{
+  enabled: boolean;
+  explicitId?: AgentId;
+  persist?: PersistChoice;
+}> {
   if (input.agentic === true) {
     if (!isInteractive) {
       warnAgenticInteractiveOnly();
@@ -93,7 +118,7 @@ async function resolveFlag(
   if (detected.length === 0) {
     return { enabled: false };
   }
-  return { enabled: await firePromptForAgentic(input.migrations) };
+  return firePromptForAgentic(input.migrations, detected);
 }
 
 function requireInteractiveOrAbort(isInteractive: boolean): void {
@@ -118,33 +143,102 @@ function warnAgenticInteractiveOnly(): void {
 }
 
 async function firePromptForAgentic(
-  migrations: ReadonlyArray<{ prompt?: string }>
-): Promise<boolean> {
-  // The "Yes"/"No" hints below assume at least one prompt-bearing migration is
-  // queued. If we later extend the prompt to fire for generator-only runs
-  // (validation-only), the hints need to branch.
+  migrations: ReadonlyArray<{ prompt?: string }>,
+  detected: DetectedInstalledAgent[]
+): Promise<{ enabled: boolean; persist?: PersistChoice }> {
+  // The apply hint assumes at least one prompt-bearing migration is queued. If
+  // we later extend the prompt to fire for generator-only runs (validation-
+  // only), the hint needs to branch.
   const promptCount = migrations.filter((m) => !!m.prompt).length;
-  const yesHint = `Apply ${promptCount} prompt migration${
+  const applyHint = `Apply ${promptCount} prompt migration${
     promptCount === 1 ? '' : 's'
   } and validate generator output with an AI agent`;
-  const noHint = `Skip prompts and run generators without AI validation`;
+  const skipHint = `Skip prompts and run generators without AI validation`;
+  const rememberHint = `Saved to nx.json so Nx won't ask again`;
+
+  // The pin-vs-flexible distinction only matters when more than one agent is
+  // installed. With a single agent, "always" simply persists `true`.
+  const choices =
+    detected.length > 1
+      ? [
+          { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
+          {
+            name: 'yes-flex',
+            message: "Yes, always (I'll pick the agent each run)",
+            hint: rememberHint,
+          },
+          {
+            name: 'yes-pin',
+            message: 'Yes, always with the same agent',
+            hint: rememberHint,
+          },
+          { name: 'no-once', message: 'No, just this time', hint: skipHint },
+          { name: 'no-never', message: 'No, never', hint: rememberHint },
+        ]
+      : [
+          { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
+          { name: 'yes-flex', message: 'Yes, always', hint: rememberHint },
+          { name: 'no-once', message: 'No, just this time', hint: skipHint },
+          { name: 'no-never', message: 'No, never', hint: rememberHint },
+        ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
   // `as any` because enquirer's TS types lag the runtime (per-choice `hint`
-  // and `value` are supported but not in the .d.ts).
-  const response = await migratePrompt<{ enable: 'yes' | 'no' }>({
-    name: 'enable',
-    type: 'autocomplete',
+  // is supported but not in the .d.ts).
+  const response = await migratePrompt<{ choice: string }>({
+    name: 'choice',
+    type: 'select',
     message: 'Enable the agentic flow?',
-    choices: [
-      { name: 'yes', message: 'Yes', hint: yesHint },
-      { name: 'no', message: 'No', hint: noHint },
-    ],
+    choices,
     initial: 0,
   } as any);
-  return response.enable === 'yes';
+
+  switch (response.choice) {
+    case 'yes-once':
+      return { enabled: true };
+    case 'yes-flex':
+      return { enabled: true, persist: true };
+    case 'yes-pin':
+      return { enabled: true, persist: 'pin' };
+    case 'no-never':
+      return { enabled: false, persist: false };
+    case 'no-once':
+    default:
+      return { enabled: false };
+  }
+}
+
+// Persists the user's agentic choice to `nx.json` so the up-front prompt is
+// skipped on future runs. Reads and writes the raw `nx.json` file (not the
+// resolved config) so an `extends` preset isn't inlined back into the user's
+// file. JSONC comments are not preserved (writeJsonFile re-serializes). Never
+// throws — a failed write only costs the user the prompt again next time.
+function persistAgenticChoice(value: boolean | AgentId): void {
+  const nxJsonPath = join(workspaceRoot, 'nx.json');
+  if (!existsSync(nxJsonPath)) {
+    output.warn({
+      title: `Could not save your agentic choice: no nx.json found at the workspace root.`,
+    });
+    return;
+  }
+  try {
+    const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath);
+    nxJson.migrate = { ...(nxJson.migrate ?? {}), agentic: value };
+    writeJsonFile(nxJsonPath, nxJson);
+    output.log({
+      title: `Saved your choice to nx.json (migrate.agentic = ${JSON.stringify(
+        value
+      )}). Nx won't ask again.`,
+    });
+  } catch (e) {
+    output.warn({
+      title: `Could not save your agentic choice to nx.json: ${
+        e instanceof Error ? e.message : String(e)
+      }`,
+    });
+  }
 }
 
 async function selectAgent(
