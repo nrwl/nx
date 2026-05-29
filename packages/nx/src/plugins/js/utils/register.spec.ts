@@ -6,6 +6,7 @@ import {
   isRequireInEsmScopeError,
   isTsEsmNamedExportLinkageError,
   isTsEsmSyntaxError,
+  NODENEXT_ESM_RESOLVER_SOURCE,
 } from './register';
 
 describe('getTsNodeCompilerOptions', () => {
@@ -204,5 +205,123 @@ describe('isTsEsmNamedExportLinkageError', () => {
       false
     );
     expect(isTsEsmNamedExportLinkageError(null, '/x.ts')).toBe(false);
+  });
+});
+
+describe('NodeNext ESM resolve hook (NODENEXT_ESM_RESOLVER_SOURCE)', () => {
+  type ResolveHook = (
+    specifier: string,
+    context: { parentURL?: string },
+    nextResolve: (specifier: string, context?: unknown) => Promise<any>
+  ) => Promise<{ url: string }>;
+
+  let resolve: ResolveHook;
+
+  beforeAll(() => {
+    // Exercise the exact shipped hook source. It's authored as an ESM module
+    // (registered as a `data:` module at runtime), so evaluate it as CommonJS
+    // here - Jest's VM can't honor a `data:` dynamic import without
+    // --experimental-vm-modules.
+    const cjs =
+      NODENEXT_ESM_RESOLVER_SOURCE.replace(
+        'export async function resolve',
+        'async function resolve'
+      ) + '\nmodule.exports = { resolve };';
+    const mod: { exports: { resolve?: ResolveHook } } = { exports: {} };
+    new Function('module', 'exports', cjs)(mod, mod.exports);
+    resolve = mod.exports.resolve!;
+  });
+
+  const TS_PARENT = 'file:///ws/src/index.ts';
+
+  // Mimics Node's default resolver: resolves specifiers in `existing`, throws
+  // ERR_MODULE_NOT_FOUND otherwise. Records every specifier it was asked for.
+  function makeNextResolve(existing: string[]) {
+    const set = new Set(existing);
+    const calls: string[] = [];
+    const nextResolve = async (specifier: string) => {
+      calls.push(specifier);
+      if (set.has(specifier)) {
+        return { url: `file:///resolved/${specifier}`, shortCircuit: true };
+      }
+      throw Object.assign(new Error(`Cannot find module '${specifier}'`), {
+        code: 'ERR_MODULE_NOT_FOUND',
+      });
+    };
+    return { nextResolve, calls };
+  }
+
+  it('rewrites a NodeNext .js specifier to .ts from a TypeScript parent', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.ts']);
+    const result = await resolve(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      nextResolve
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.ts');
+    // Tried the original first, then the .ts fallback.
+    expect(calls).toEqual(['./nodes.js', './nodes.ts']);
+  });
+
+  it('rewrites .mjs -> .mts and .cjs -> .cts', async () => {
+    const mjs = makeNextResolve(['./a.mts']);
+    expect(
+      (await resolve('./a.mjs', { parentURL: TS_PARENT }, mjs.nextResolve)).url
+    ).toBe('file:///resolved/./a.mts');
+
+    const cjs = makeNextResolve(['./b.cts']);
+    expect(
+      (await resolve('./b.cjs', { parentURL: TS_PARENT }, cjs.nextResolve)).url
+    ).toBe('file:///resolved/./b.cts');
+  });
+
+  it('does not hijack when the real .js file resolves', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.js']);
+    const result = await resolve(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      nextResolve
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.js');
+    // No .ts fallback attempt when the .js resolves.
+    expect(calls).toEqual(['./nodes.js']);
+  });
+
+  it('does not rewrite when the parent is not a TypeScript file', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./nodes.ts']);
+    await expect(
+      resolve(
+        './nodes.js',
+        { parentURL: 'file:///ws/src/index.js' },
+        nextResolve
+      )
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['./nodes.js']);
+  });
+
+  it('ignores bare (non-relative) specifiers', async () => {
+    const { nextResolve, calls } = makeNextResolve(['pkg/nodes.ts']);
+    await expect(
+      resolve('pkg/nodes.js', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['pkg/nodes.js']);
+  });
+
+  it('only rewrites .js/.mjs/.cjs, leaving other extensions untouched', async () => {
+    const { nextResolve, calls } = makeNextResolve(['./data.ts']);
+    await expect(
+      resolve('./data.json', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toMatchObject({ code: 'ERR_MODULE_NOT_FOUND' });
+    expect(calls).toEqual(['./data.json']);
+  });
+
+  it('rethrows non-MODULE_NOT_FOUND errors untouched', async () => {
+    const boom = Object.assign(new SyntaxError('boom'), { code: 'ERR_OTHER' });
+    const nextResolve = async () => {
+      throw boom;
+    };
+    await expect(
+      resolve('./nodes.js', { parentURL: TS_PARENT }, nextResolve)
+    ).rejects.toBe(boom);
   });
 });
