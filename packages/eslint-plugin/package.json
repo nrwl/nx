@@ -80,10 +80,13 @@
     }
   },
   "peerDependencies": {
-    "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "eslint-config-prettier": "catalog:eslint"
   },
   "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
     "eslint-config-prettier": {
       "optional": true
     }
