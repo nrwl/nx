@@ -67,11 +67,17 @@ async function resolveFlag(
   detected: DetectedInstalledAgent[]
 ): Promise<{ enabled: boolean; explicitId?: AgentId }> {
   if (input.agentic === true) {
-    requireInteractiveOrAbort(isInteractive);
+    if (!isInteractive) {
+      warnAgenticInteractiveOnly();
+      return { enabled: false };
+    }
     return { enabled: true };
   }
   if (typeof input.agentic === 'string') {
-    requireInteractiveOrAbort(isInteractive);
+    if (!isInteractive) {
+      warnAgenticInteractiveOnly();
+      return { enabled: false };
+    }
     return { enabled: true, explicitId: input.agentic };
   }
   // undefined — fire the up-front prompt only when we have a TTY, something
@@ -99,6 +105,16 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
     ],
   });
   throw new Error('Agentic flow requires an interactive terminal.');
+}
+
+function warnAgenticInteractiveOnly(): void {
+  output.warn({
+    title:
+      'Skipping the agentic flow: it is interactive-only in this release and this is a non-interactive terminal.',
+    bodyLines: [
+      'Continuing the migration without the agentic flow. Re-run in an interactive terminal to use it.',
+    ],
+  });
 }
 
 async function firePromptForAgentic(
@@ -141,22 +157,18 @@ async function selectAgent(
     if (match) {
       return match;
     }
-    if (detected.length === 0) {
-      output.error({
-        title: `The agent "${explicitId}" was requested via --agentic but no supported AI agent is installed on this machine.`,
-        bodyLines: INSTALL_SUPPORTED_AGENTS_HINT,
+    // The requested agent isn't installed. Rather than aborting the migration,
+    // warn and fall through to resolve from the agents that ARE installed
+    // (pick when 2+, auto-select the only one, error only when none exist).
+    if (detected.length > 0) {
+      output.warn({
+        title: `The requested agent "${explicitId}" is not installed; using the installed agent(s) instead.`,
+        bodyLines: [
+          'Currently installed agents:',
+          ...detected.map((d) => `  - ${d.displayName} (${d.id})`),
+        ],
       });
-      throw new Error(`The requested agent "${explicitId}" is not installed.`);
     }
-    output.error({
-      title: `The agent "${explicitId}" was requested via --agentic but is not installed.`,
-      bodyLines: [
-        'Install the requested agent and re-run, or pass --agentic without an explicit agent to choose from installed ones.',
-        'Currently installed agents:',
-        ...detected.map((d) => `  - ${d.displayName} (${d.id})`),
-      ],
-    });
-    throw new Error(`The requested agent "${explicitId}" is not installed.`);
   }
 
   if (detected.length === 0) {

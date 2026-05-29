@@ -27,6 +27,7 @@ const mockPrompt = prompt as unknown as jest.Mock;
 const mockDetect = detectInstalledAgents as unknown as jest.Mock;
 const mockOutputLog = output.log as unknown as jest.Mock;
 const mockOutputError = output.error as unknown as jest.Mock;
+const mockOutputWarn = output.warn as unknown as jest.Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'
@@ -63,6 +64,7 @@ describe('resolveAgentic', () => {
     mockDetect.mockReset();
     mockOutputLog.mockReset();
     mockOutputError.mockReset();
+    mockOutputWarn.mockReset();
     // Default to "no agents detected" — the few tests that exercise an enabled
     // flow override this with their own agent list.
     mockDetect.mockResolvedValue([]);
@@ -250,40 +252,55 @@ describe('resolveAgentic', () => {
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
-  it('aborts with an actionable list when --agentic=<id> is set but that agent is not among the other detected agents', async () => {
+  it('warns and falls back to the picker when --agentic=<id> is set but that agent is not installed (others present)', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    await expect(
-      resolveAgentic({
-        agentic: 'opencode',
-        migrations: [{ prompt: 'x.md' }],
-      })
-    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
-    expect(mockPrompt).not.toHaveBeenCalled();
-    const errArg = mockOutputError.mock.calls[0][0];
-    expect(errArg.title).toMatch(/is not installed\./);
-    // The remediation must offer the "drop the explicit flag" path when
-    // there ARE other agents to fall back to.
-    expect(errArg.bodyLines.join('\n')).toMatch(
-      /pass --agentic without an explicit agent/
+    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    // The picker fires over the installed agents instead of aborting.
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'codex' },
+    });
+    expect(mockOutputError).not.toHaveBeenCalled();
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+      /requested agent "opencode" is not installed/i
     );
   });
 
-  it('aborts without offering the "drop the explicit flag" remediation when --agentic=<id> is set and NO agents are installed', async () => {
+  it('warns and auto-uses the only installed agent when --agentic=<id> is set but that agent is not installed', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'claude-code' },
+    });
+    expect(mockOutputError).not.toHaveBeenCalled();
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+      /requested agent "opencode" is not installed/i
+    );
+  });
+
+  it('errors when --agentic=<id> is set and NO agents are installed', async () => {
     mockDetect.mockResolvedValue([]);
     await expect(
       resolveAgentic({
         agentic: 'opencode',
         migrations: [{ prompt: 'x.md' }],
       })
-    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    ).rejects.toThrow(/No installed AI agent/);
     expect(mockPrompt).not.toHaveBeenCalled();
     const errArg = mockOutputError.mock.calls[0][0];
     expect(errArg.title).toMatch(/no supported AI agent is installed/i);
-    // The circular "pass --agentic without an explicit agent" remediation
-    // must not appear when there's nothing to fall back to.
-    expect(errArg.bodyLines.join('\n')).not.toMatch(
-      /pass --agentic without an explicit agent/
-    );
     expect(errArg.bodyLines.join('\n')).toMatch(
       /install one of the supported agents/i
     );
@@ -303,15 +320,20 @@ describe('resolveAgentic', () => {
     ['--agentic=true', true],
     ['--agentic=<id>', 'claude-code'],
   ])(
-    'aborts when %s is passed in a non-TTY environment',
+    'warns and runs without the agentic flow when %s is passed in a non-TTY environment',
     async (_label, agentic) => {
       setTty(false);
-      await expect(
-        resolveAgentic({
-          agentic,
-          migrations: [{ prompt: 'x.md' }],
-        })
-      ).rejects.toThrow(/interactive terminal/);
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      const result = await resolveAgentic({
+        agentic,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toEqual({ kind: 'disabled' });
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockOutputWarn).toHaveBeenCalled();
+      expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+        /interactive-only/i
+      );
     }
   );
 
