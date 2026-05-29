@@ -65,6 +65,12 @@ export interface CreateWorkspaceOptions {
    * @description Enable or disable usage analytics
    */
   analytics?: boolean;
+  /**
+   * @description Trust third-party presets without prompting for confirmation.
+   * Useful for automated workflows where the preset publisher is already trusted.
+   * @default false
+   */
+  trustThirdPartyPreset?: boolean;
 }
 
 export const supportedAgents = [
