@@ -31,6 +31,39 @@ export const yargsInternalMigrateCommand: CommandModule = {
 
 export const DEFAULT_MIGRATION_COMMIT_PREFIX = 'chore: [nx migration] ';
 
+/** Allowed values for `--mode` / `migrate.mode`. */
+export const MIGRATE_MODES = ['first-party', 'third-party', 'all'] as const;
+export type MigrateMode = (typeof MIGRATE_MODES)[number];
+
+/** Allowed values for `--multi-major-mode` / `migrate.multiMajorMode`. */
+export const MULTI_MAJOR_MODES = ['direct', 'gradual'] as const;
+export type MultiMajorMode = (typeof MULTI_MAJOR_MODES)[number];
+
+/**
+ * Whether a custom commit prefix would be silently ignored: commits aren't
+ * enabled and the agentic flow can't enable them either. Shared by the yargs
+ * `.check()` (CLI args) and the nx.json overlay (merged args) so the rule lives
+ * in one place. `agentic` may flip commits on by default, so a configured
+ * agentic value (other than `false`, and not paired with `--no-create-commits`)
+ * keeps the prefix in play.
+ */
+export function customCommitPrefixHasNoEffect(args: {
+  createCommits: boolean | undefined;
+  commitPrefix: string | undefined;
+  agentic: unknown;
+}): boolean {
+  const agenticMayEnableCommits =
+    args.agentic !== undefined &&
+    args.agentic !== false &&
+    args.createCommits !== false;
+  return (
+    args.createCommits !== true &&
+    !agenticMayEnableCommits &&
+    args.commitPrefix !== undefined &&
+    args.commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
+  );
+}
+
 function withMigrationOptions(yargs: Argv) {
   return withVerbose(yargs)
     .positional('packageAndVersion', {
@@ -88,13 +121,13 @@ function withMigrationOptions(yargs: Argv) {
       describe:
         "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
-      choices: ['first-party', 'third-party', 'all'],
+      choices: MIGRATE_MODES,
     })
     .option('multiMajorMode', {
       describe:
         "Skip the multi-major migration prompt/warning and pick how to handle the jump. 'direct' migrates straight to the requested target. 'gradual' migrates to the smallest recommended step (re-run `nx migrate` to continue toward the original target). Equivalent env var: NX_MULTI_MAJOR_MODE=direct|gradual.",
       type: 'string',
-      choices: ['direct', 'gradual'],
+      choices: MULTI_MAJOR_MODES,
     })
     .option('agentic', {
       describe:
@@ -115,12 +148,12 @@ function withMigrationOptions(yargs: Argv) {
         mode,
         agentic,
       }) => {
-        const agenticMayEnableCommits =
-          agentic !== undefined && agentic !== false && createCommits !== false;
         if (
-          createCommits !== true &&
-          !agenticMayEnableCommits &&
-          commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
+          customCommitPrefixHasNoEffect({
+            createCommits,
+            commitPrefix,
+            agentic,
+          })
         ) {
           throw new Error(
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'

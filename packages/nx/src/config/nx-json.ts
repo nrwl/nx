@@ -3,6 +3,11 @@ import { dirname, join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
+import type { AgentId } from '../command-line/migrate/agentic/cli-args';
+import type {
+  MigrateMode,
+  MultiMajorMode,
+} from '../command-line/migrate/command-object';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -728,7 +733,7 @@ export interface NxMigrateConfiguration {
    * - `third-party`: only the third-party dependencies referenced by Nx.
    * - `all`: everything (default).
    */
-  mode?: 'first-party' | 'third-party' | 'all';
+  mode?: MigrateMode;
 
   /**
    * How to handle a migration that crosses more than one major version.
@@ -737,7 +742,7 @@ export interface NxMigrateConfiguration {
    * - `direct`: migrate straight to the requested target.
    * - `gradual`: migrate to the smallest recommended step.
    */
-  multiMajorMode?: 'direct' | 'gradual';
+  multiMajorMode?: MultiMajorMode;
 
   /**
    * Default for the agentic flow used by `nx migrate --run-migrations`.
@@ -746,7 +751,7 @@ export interface NxMigrateConfiguration {
    * - `true`: use the agentic flow and resolve the installed agent.
    * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`): always use that agent.
    */
-  agentic?: boolean | 'claude-code' | 'codex' | 'opencode';
+  agentic?: boolean | AgentId;
 
   /**
    * Whether to run agent-driven validation after generator-only migrations when

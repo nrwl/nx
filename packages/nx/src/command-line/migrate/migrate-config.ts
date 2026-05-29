@@ -1,10 +1,13 @@
 import type { NxMigrateConfiguration } from '../../config/nx-json';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
-import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
+import {
+  customCommitPrefixHasNoEffect,
+  DEFAULT_MIGRATION_COMMIT_PREFIX,
+  MIGRATE_MODES,
+  MULTI_MAJOR_MODES,
+} from './command-object';
 
 const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
-const VALID_MODES = ['first-party', 'third-party', 'all'];
-const VALID_MULTI_MAJOR_MODES = ['direct', 'gradual'];
 
 /**
  * Overlays `nx.json` `migrate` defaults onto the raw `nx migrate` CLI args so a
@@ -59,7 +62,7 @@ export function applyNxJsonMigrateDefaults(
     assertCommitPrefixHasCommits(merged);
   } else {
     if (merged.mode === undefined && migrateConfig.mode !== undefined) {
-      assertValidMode(migrateConfig.mode);
+      assertOneOf(migrateConfig.mode, MIGRATE_MODES, 'mode');
       merged.mode = migrateConfig.mode;
     }
     // The NX_MULTI_MAJOR_MODE env var is an established per-invocation override,
@@ -69,7 +72,11 @@ export function applyNxJsonMigrateDefaults(
       !env[MULTI_MAJOR_MODE_ENV] &&
       migrateConfig.multiMajorMode !== undefined
     ) {
-      assertValidMultiMajorMode(migrateConfig.multiMajorMode);
+      assertOneOf(
+        migrateConfig.multiMajorMode,
+        MULTI_MAJOR_MODES,
+        'multiMajorMode'
+      );
       merged.multiMajorMode = migrateConfig.multiMajorMode;
     }
   }
@@ -77,20 +84,14 @@ export function applyNxJsonMigrateDefaults(
   return merged;
 }
 
-function assertValidMode(mode: unknown): void {
-  if (!VALID_MODES.includes(mode as string)) {
+function assertOneOf(
+  value: unknown,
+  allowed: readonly string[],
+  field: string
+): void {
+  if (!allowed.includes(value as string)) {
     throw new Error(
-      `Error: Invalid nx.json migrate.mode "${mode}". Allowed: ${VALID_MODES.join(
-        ', '
-      )}.`
-    );
-  }
-}
-
-function assertValidMultiMajorMode(multiMajorMode: unknown): void {
-  if (!VALID_MULTI_MAJOR_MODES.includes(multiMajorMode as string)) {
-    throw new Error(
-      `Error: Invalid nx.json migrate.multiMajorMode "${multiMajorMode}". Allowed: ${VALID_MULTI_MAJOR_MODES.join(
+      `Error: Invalid nx.json migrate.${field} "${value}". Allowed: ${allowed.join(
         ', '
       )}.`
     );
@@ -113,21 +114,11 @@ function assertValidAgentic(agentic: unknown): void {
   }
 }
 
-// Mirrors the yargs `.check()` guard: a custom commit prefix has no effect
-// unless commits are enabled. Re-checked here because the yargs guard only saw
-// the CLI args, before nx.json defaults were merged in. The
-// `commitPrefix !== DEFAULT` test doubles as the "was it customized" sentinel,
-// matching how the prefix is overlaid above.
+// Re-runs the shared commit-prefix guard against the merged args: the yargs
+// `.check()` only saw the CLI args, before nx.json defaults were applied.
 function assertCommitPrefixHasCommits(merged: { [k: string]: any }): void {
   const { createCommits, commitPrefix, agentic } = merged;
-  const agenticMayEnableCommits =
-    agentic !== undefined && agentic !== false && createCommits !== false;
-  if (
-    createCommits !== true &&
-    !agenticMayEnableCommits &&
-    commitPrefix !== undefined &&
-    commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
-  ) {
+  if (customCommitPrefixHasNoEffect({ createCommits, commitPrefix, agentic })) {
     throw new Error(
       'Error: A custom migrate commit prefix requires commits to be enabled. Set `migrate.createCommits` to `true` in nx.json or pass `--create-commits`.'
     );
