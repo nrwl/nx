@@ -2456,9 +2456,19 @@ export function resolveCreateCommits(args: {
     return { effective: true, agenticHasDiffContext: true };
   }
 
+  // Commits aren't enabled on this path. A custom commit prefix only reaches
+  // here via nx.json (the CLI guard rejects a custom `--commit-prefix` without
+  // commits) — e.g. `migrate.commitPrefix` paired with `migrate.agentic`, when
+  // the agentic flow then resolves to disabled (non-interactive / inside an
+  // agent). Surface that the prefix has no effect instead of dropping it
+  // silently.
   return {
     effective: createCommits === true,
     agenticHasDiffContext: false,
+    warning:
+      commitPrefixIsCustom && createCommits !== true
+        ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
+        : undefined,
   };
 }
 

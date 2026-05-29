@@ -4174,6 +4174,39 @@ describe('Migration', () => {
         });
         expect(result.warning).not.toMatch(/--commit-prefix/);
       });
+
+      it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/no effect/);
+        expect(result.warning).toMatch(/createCommits/);
+      });
+
+      it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).toBeUndefined();
+      });
+
+      it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(true);
+        expect(result.warning).toBeUndefined();
+      });
     });
 
     describe('parseMigrationReturn', () => {
