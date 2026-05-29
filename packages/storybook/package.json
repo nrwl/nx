@@ -48,7 +48,7 @@
   },
   "peerDependencies": {
     "@nx/web": "workspace:*",
-    "storybook": ">=7.0.0 <11.0.0"
+    "storybook": ">=8.0.0 <11.0.0"
   },
   "peerDependenciesMeta": {
     "@nx/web": {
