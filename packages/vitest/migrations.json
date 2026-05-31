@@ -22,6 +22,11 @@
       "version": "22.6.0-beta.11",
       "description": "Prefix reportsDirectory with {projectRoot} to maintain correct resolution after workspace-root-relative behavior change.",
       "implementation": "./dist/src/migrations/update-22-6-0/prefix-reports-directory-with-project-root"
+    },
+    "update-analog-v3": {
+      "version": "23.0.0-beta.0",
+      "description": "Update AnalogJS packages to v3 and replace deprecated import paths.",
+      "implementation": "./src/migrations/update-analog-v3/update-analog-v3"
     }
   },
   "packageJsonUpdates": {
@@ -100,6 +105,19 @@
         },
         "@analogjs/vitest-angular": {
           "version": "~2.2.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-analog-v3": {
+      "version": "23.0.0-beta.0",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~3.0.0",
           "alwaysAddToPackageJson": false
         }
       }
