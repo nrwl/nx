@@ -62,7 +62,9 @@ export function versions(tree: Tree) {
 
 export function getInstalledJestVersion(tree?: Tree): string | null {
   if (!tree) {
-    return getInstalledPackageVersion('jest');
+    // Fall back to `@nx/jest`'s own jest when the workspace cwd can't resolve
+    // one (e.g. inferred-plugin createNodes runs against an empty workspace).
+    return getInstalledPackageVersion('jest') ?? getJestVersionFromRequire();
   }
 
   const installedVersion = getDependencyVersionFromPackageJson(tree, 'jest');
@@ -77,6 +79,14 @@ export function getInstalledJestVersion(tree?: Tree): string | null {
     );
   }
   return clean(installedVersion) ?? coerce(installedVersion)?.version ?? null;
+}
+
+function getJestVersionFromRequire(): string | null {
+  try {
+    return (<typeof import('jest')>require('jest')).getVersion();
+  } catch {
+    return null;
+  }
 }
 
 export function getInstalledJestVersionInfo(tree?: Tree): {
