@@ -601,8 +601,8 @@ importers:
         specifier: ^2.1.0
         version: 2.1.0
       '@monodon/rust':
-        specifier: 2.3.0
-        version: 2.3.0(@napi-rs/cli@3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1))(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+        specifier: 3.0.0
+        version: 3.0.0(@napi-rs/cli@3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1))(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@napi-rs/cli':
         specifier: 3.5.1
         version: 3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1)
@@ -2402,7 +2402,7 @@ importers:
         version: 2.3.0
       '@angular/build':
         specifier: catalog:angular-supported-versions
-        version: 21.2.0(34548aaea574a8d49ef3ef8d9bfa54b4)
+        version: 21.2.0(de19134c5273622bd3ce91befcb71b51)
       '@angular/localize':
         specifier: catalog:angular-supported-versions
         version: 21.2.0(@angular/compiler-cli@21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2))(@angular/compiler@21.2.0)
@@ -2508,7 +2508,7 @@ importers:
     dependencies:
       '@angular/build':
         specifier: catalog:angular-supported-versions
-        version: 21.2.0(34548aaea574a8d49ef3ef8d9bfa54b4)
+        version: 21.2.0(de19134c5273622bd3ce91befcb71b51)
       '@angular/compiler-cli':
         specifier: catalog:angular-supported-versions
         version: 21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2)
@@ -8238,8 +8238,8 @@ packages:
   '@module-federation/webpack-bundler-runtime@2.3.3':
     resolution: {integrity: sha512-W+P6ZF9J3gwnQuoF07YV0OiR1D6sI/uErUu4+c3QXxka3orANUHujkddNSsDxL1obAGoJa7Da99crZKf7u2j/w==}
 
-  '@monodon/rust@2.3.0':
-    resolution: {integrity: sha512-iMnMnO/UF84Cod+J0DHaSTJLTlxT5eWXuTFeFlge5AeKNlzhnfCa733M2LiZjD9WVfIGK5yy4go63S3bshB0mg==}
+  '@monodon/rust@3.0.0':
+    resolution: {integrity: sha512-c55j09hU9ar2EFbklh6aRz3ex8nMHazR2XkjscKZmYFsBYl8Ag/CpzbJ4MhopxBW2EhryWyv7m6ZEEnOWLYw6Q==}
     peerDependencies:
       '@napi-rs/cli': ^3.0.0-alpha.55
 
@@ -9378,11 +9378,6 @@ packages:
     peerDependenciesMeta:
       cypress:
         optional: true
-
-  '@nx/devkit@20.8.2':
-    resolution: {integrity: sha512-rr9p2/tZDQivIpuBUpZaFBK6bZ+b5SAjZk75V4tbCUqGW3+5OPuVvBPm+X+7PYwUF6rwSpewxkjWNeGskfCe+Q==}
-    peerDependencies:
-      nx: '>= 19 <= 21'
 
   '@nx/devkit@22.6.5':
     resolution: {integrity: sha512-9kvAI+kk2pfEXLqS8OyjI9XvWmp+Gdn7jPfxDAz8BOqxMyPy3p5hYl+jc4TIsLOWunAFl8azqrcYsHzEpaWCIA==}
@@ -25337,64 +25332,6 @@ snapshots:
       eslint: 9.39.4(jiti@2.6.1)
       typescript: 5.9.2
 
-  '@angular/build@21.2.0(34548aaea574a8d49ef3ef8d9bfa54b4)':
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@angular-devkit/architect': 0.2102.0(chokidar@3.6.0)
-      '@angular/compiler': 21.2.0
-      '@angular/compiler-cli': 21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2)
-      '@babel/core': 7.29.0
-      '@babel/helper-annotate-as-pure': 7.27.3
-      '@babel/helper-split-export-declaration': 7.24.7
-      '@inquirer/confirm': 5.1.21(@types/node@24.12.2)
-      '@vitejs/plugin-basic-ssl': 2.1.4(vite@7.3.1(@types/node@24.12.2)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.46.0)(tsx@4.20.5)(yaml@2.9.0))
-      beasties: 0.4.1
-      browserslist: 4.28.1
-      esbuild: 0.27.3
-      https-proxy-agent: 7.0.6
-      istanbul-lib-instrument: 6.0.3
-      jsonc-parser: 3.3.1
-      listr2: 9.0.5
-      magic-string: 0.30.21
-      mrmime: 2.0.1
-      parse5-html-rewriting-stream: 8.0.0
-      picomatch: 4.0.3
-      piscina: 5.1.4
-      rolldown: 1.0.0-rc.4
-      sass: 1.97.3
-      semver: 7.7.4
-      source-map-support: 0.5.21
-      tinyglobby: 0.2.15
-      tslib: 2.8.1
-      typescript: 5.9.2
-      undici: 7.22.0
-      vite: 7.3.1(@types/node@24.12.2)(jiti@2.6.1)(less@4.5.1)(lightningcss@1.32.0)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.46.0)(tsx@4.20.5)(yaml@2.9.0)
-      watchpack: 2.5.1
-    optionalDependencies:
-      '@angular/core': 21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0)
-      '@angular/localize': 21.2.0(@angular/compiler-cli@21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2))(@angular/compiler@21.2.0)
-      '@angular/platform-browser': 21.2.0(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))
-      '@angular/platform-server': 21.2.0(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/compiler@21.2.0)(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(@angular/platform-browser@21.2.0(@angular/common@21.2.0(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0))(rxjs@7.8.2))(@angular/core@21.2.0(@angular/compiler@21.2.0)(rxjs@7.8.2)(zone.js@0.16.0)))(rxjs@7.8.2)
-      '@angular/ssr': 21.2.0(04a10a167fdb5b9e93e7071d2f6d2277)
-      less: 4.5.1
-      lmdb: 3.5.1
-      ng-packagr: 21.2.0(@angular/compiler-cli@21.2.0(@angular/compiler@21.2.0)(typescript@5.9.2))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@5.9.2)
-      postcss: 8.5.8
-      tailwindcss: 4.1.11
-      vitest: 4.1.2(@types/node@24.12.2)(jsdom@26.1.0)(vite@8.0.0(@types/node@24.12.2)(esbuild@0.27.3)(jiti@2.6.1)(less@4.5.1)(sass-embedded@1.97.2)(sass@1.97.3)(terser@5.46.0)(tsx@4.20.5)(yaml@2.9.0))
-    transitivePeerDependencies:
-      - '@types/node'
-      - chokidar
-      - jiti
-      - lightningcss
-      - sass-embedded
-      - stylus
-      - sugarss
-      - supports-color
-      - terser
-      - tsx
-      - yaml
-
   '@angular/build@21.2.0(a8859e04184b94f7a58c470e139e255e)':
     dependencies:
       '@ampproject/remapping': 2.3.0
@@ -29618,11 +29555,11 @@ snapshots:
     transitivePeerDependencies:
       - node-fetch
 
-  '@monodon/rust@2.3.0(@napi-rs/cli@3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1))(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+  '@monodon/rust@3.0.0(@napi-rs/cli@3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1))(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
     dependencies:
       '@ltd/j-toml': 1.38.0
       '@napi-rs/cli': 3.5.1(@emnapi/runtime@1.7.1)(@types/node@24.12.2)(node-addon-api@7.1.1)
-      '@nx/devkit': 20.8.2(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      '@nx/devkit': 22.6.5(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       chalk: 4.1.2
       npm-run-path: 4.0.1
       semver: 7.5.4
@@ -31282,18 +31219,6 @@ snapshots:
       - supports-color
       - typescript
       - verdaccio
-
-  '@nx/devkit@20.8.2(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
-    dependencies:
-      ejs: 3.1.10
-      enquirer: 2.3.6
-      ignore: 5.3.2
-      minimatch: 10.2.5
-      nx: 23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18))
-      semver: 7.7.4
-      tmp: 0.2.6
-      tslib: 2.8.1
-      yargs-parser: 21.1.1
 
   '@nx/devkit@22.6.5(nx@23.0.0-beta.22(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
     dependencies:
