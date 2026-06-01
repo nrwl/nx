@@ -51,6 +51,7 @@ import {
 const YARN_LOCK_FILE = 'yarn.lock';
 const NPM_LOCK_FILE = 'package-lock.json';
 const PNPM_LOCK_FILE = 'pnpm-lock.yaml';
+const PNPM_LOCK_FILE_LEGACY = 'pnpm-lock.yml';
 
 export const LOCKFILES = [
   YARN_LOCK_FILE,
@@ -59,6 +60,15 @@ export const LOCKFILES = [
   BUN_LOCK_FILE,
   BUN_TEXT_LOCK_FILE,
 ];
+
+export const AUTO_AFFECTED_LOCK_FILES = [
+  YARN_LOCK_FILE,
+  NPM_LOCK_FILE,
+  PNPM_LOCK_FILE,
+  PNPM_LOCK_FILE_LEGACY,
+  BUN_LOCK_FILE,
+  BUN_TEXT_LOCK_FILE,
+] as const;
 
 const YARN_LOCK_PATH = join(workspaceRoot, YARN_LOCK_FILE);
 const NPM_LOCK_PATH = join(workspaceRoot, NPM_LOCK_FILE);
@@ -79,32 +89,17 @@ export function getLockFileNodes(
   keyMap: Map<string, any>;
 } {
   try {
-    if (packageManager === 'yarn') {
-      const packageJson = readJsonFile(
-        join(context.workspaceRoot, 'package.json')
-      );
-      return getYarnLockfileNodes(contents, lockFileHash, packageJson);
-    }
-    if (packageManager === 'pnpm') {
-      return getPnpmLockfileNodes(contents, lockFileHash);
-    }
-    if (packageManager === 'npm') {
-      return getNpmLockfileNodes(contents, lockFileHash);
-    }
-    if (packageManager === 'bun') {
-      const lockFilePath = getLockFilePath(packageManager);
-      if (lockFilePath.endsWith(BUN_TEXT_LOCK_FILE)) {
-        // Use new text-based parser
-        const nodes = getBunTextLockfileNodes(contents, lockFileHash);
-        return { nodes, keyMap: new Map() };
-      } else {
-        // Fallback to yarn parser for binary format
-        const packageJson = readJsonFile(
-          join(context.workspaceRoot, 'package.json')
-        );
-        return getYarnLockfileNodes(contents, lockFileHash, packageJson);
-      }
-    }
+    const packageJson =
+      packageManager === 'yarn' || packageManager === 'bun'
+        ? readJsonFile(join(context.workspaceRoot, 'package.json'))
+        : undefined;
+
+    return getLockFileNodesForName(
+      getLockFileName(packageManager),
+      contents,
+      lockFileHash,
+      packageJson
+    );
   } catch (e) {
     if (!isPostInstallProcess()) {
       output.error({
@@ -115,6 +110,38 @@ export function getLockFileNodes(
     throw e;
   }
   throw new Error(`Unknown package manager: ${packageManager}`);
+}
+
+export function getLockFileNodesForName(
+  lockFile: string,
+  contents: string,
+  lockFileHash: string,
+  packageJson?: PackageJson
+): {
+  nodes: Record<string, ProjectGraphExternalNode>;
+  keyMap: Map<string, any>;
+} {
+  if (lockFile === YARN_LOCK_FILE || lockFile === BUN_LOCK_FILE) {
+    // yarn-parser only reads optional fields plus an unused `name` for the
+    // synthetic root workspace node, which is identical across base/head and
+    // therefore irrelevant for affected diffing.
+    return getYarnLockfileNodes(
+      contents,
+      lockFileHash,
+      packageJson ?? ({} as PackageJson)
+    );
+  }
+  if (lockFile === PNPM_LOCK_FILE || lockFile === PNPM_LOCK_FILE_LEGACY) {
+    return getPnpmLockfileNodes(contents, lockFileHash);
+  }
+  if (lockFile === NPM_LOCK_FILE) {
+    return getNpmLockfileNodes(contents, lockFileHash);
+  }
+  if (lockFile === BUN_TEXT_LOCK_FILE) {
+    const nodes = getBunTextLockfileNodes(contents, lockFileHash);
+    return { nodes, keyMap: new Map() };
+  }
+  throw new Error(`Unknown lock file: ${lockFile}`);
 }
 
 /**
