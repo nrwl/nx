@@ -24,6 +24,7 @@ import {
 import { join } from 'node:path/posix';
 import type { PackageJson } from 'nx/src/utils/package-json';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 import { warnViteExecutorGenerating } from '../../utils/deprecation';
 import {
   addBuildTarget,
@@ -51,6 +52,8 @@ export async function viteConfigurationGeneratorInternal(
   tree: Tree,
   schema: ViteConfigurationGeneratorSchema
 ) {
+  assertSupportedViteVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const projectConfig = readProjectConfiguration(tree, schema.project);
