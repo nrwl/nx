@@ -7,6 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { nxVersion, vueVersion } from '../../utils/versions';
+import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 import { InitSchema } from './schema';
 
 function updateDependencies(host: Tree, schema: InitSchema) {
@@ -27,6 +28,8 @@ function updateDependencies(host: Tree, schema: InitSchema) {
 }
 
 export async function vueInitGenerator(host: Tree, schema: InitSchema) {
+  assertSupportedVueVersion(host);
+
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(host, schema);

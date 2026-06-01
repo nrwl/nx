@@ -39,6 +39,13 @@ export default [
             '@nx/storybook',
             '@nx/rsbuild',
             'eslint',
+            // Declared as optional peers for multi-version support signalling;
+            // installed into the user's app by generators, not imported by the
+            // plugin's own source.
+            'vue',
+            'vue-router',
+            'vue-tsc',
+            '@vitejs/plugin-vue',
           ],
         },
       ],
