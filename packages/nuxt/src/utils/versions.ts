@@ -1,5 +1,9 @@
 export const nxVersion = require('../../package.json').version;
 
+// Lowest Nuxt major the plugin supports. Nuxt 2 is EOL (2024-06-30); the
+// generators, inferred plugin and version map only handle v3 and v4.
+export const minSupportedNuxtVersion = '3.0.0';
+
 // Nuxt versions
 export const nuxtV4Version = '^4.0.0';
 export const nuxtV3Version = '^3.21.1';
@@ -9,6 +13,11 @@ export const nuxtVersion = nuxtV4Version; // Default to v4
 export const nuxtKitV4Version = '^4.0.0';
 export const nuxtKitV3Version = '^3.21.1';
 export const nuxtKitVersion = nuxtKitV4Version;
+
+// @nuxt/schema versions (aligned with Nuxt)
+export const nuxtSchemaV4Version = '^4.0.0';
+export const nuxtSchemaV3Version = '^3.21.1';
+export const nuxtSchemaVersion = nuxtSchemaV4Version;
 
 // nuxt deps
 export const h3Version = '^1.8.2';
