@@ -8,7 +8,6 @@ export interface Schema {
   rootModuleClassName?: string;
   standalone?: boolean;
   hydration?: boolean;
-  serverRouting?: boolean;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
 }
