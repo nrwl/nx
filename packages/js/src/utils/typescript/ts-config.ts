@@ -1,4 +1,10 @@
-import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
+import {
+  offsetFromRoot,
+  readJsonFile,
+  Tree,
+  updateJson,
+  workspaceRoot,
+} from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
 import type * as ts from 'typescript';
@@ -120,20 +126,13 @@ function ensureRelativePath(p: string): string {
  * tsconfig that defines `paths`.
  */
 export function resolvePathsBaseUrl(tsconfigPath: string): string {
-  if (!tsModule) {
-    tsModule = require('typescript');
-  }
-
   const chain: { dir: string; raw: any }[] = [];
   const queue: string[] = [tsconfigPath];
   while (queue.length > 0) {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const { config: raw } = tsModule.readConfigFile(
-        absolute,
-        tsModule.sys.readFile
-      );
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)
