@@ -1879,28 +1879,6 @@ describe('lib', () => {
   });
 
   describe('angular compat support', () => {
-    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts();
-
-      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
-        .toMatchInlineSnapshot(`
-        {
-          "enableI18nLegacyMessageIdFormat": false,
-          "strictInjectionParameters": true,
-          "strictInputAccessModifiers": true,
-          "strictTemplates": true,
-        }
-      `);
-    });
-
     it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -1924,126 +1902,6 @@ describe('lib', () => {
       `);
     });
 
-    it('should generate components with the "component" type for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        routing: true,
-        standalone: true,
-        skipFormat: true,
-      });
-
-      await runLibraryGeneratorWithOpts({
-        standalone: true,
-        routing: true,
-        lazy: true,
-        parent: 'app1/src/app/app.routes.ts',
-        skipFormat: true,
-      });
-
-      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "export * from './lib/lib.routes';
-
-        export * from './lib/my-lib/my-lib.component';"
-      `);
-      expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-
-        @Component({
-          selector: 'lib-my-lib',
-          imports: [],
-          templateUrl: './my-lib.component.html',
-          styleUrl: './my-lib.component.css'
-        })
-        export class MyLibComponent {}
-        "
-      `);
-      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.html')).toBe(
-        true
-      );
-      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.css')).toBe(
-        true
-      );
-      expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "import { ComponentFixture, TestBed } from '@angular/core/testing';
-        import { MyLibComponent } from './my-lib.component';
-
-        describe('MyLibComponent', () => {
-          let component: MyLibComponent;
-          let fixture: ComponentFixture<MyLibComponent>;
-
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [MyLibComponent]
-            }).compileComponents();
-
-            fixture = TestBed.createComponent(MyLibComponent);
-            component = fixture.componentInstance;
-            await fixture.whenStable();
-          });
-
-          it('should create', () => {
-            expect(component).toBeTruthy();
-          });
-        });
-        "
-      `);
-      expect(tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-        import { MyLibComponent } from './my-lib/my-lib.component';
-
-        export const myLibRoutes: Route[] = [
-          { path: '', component: MyLibComponent }
-        ];
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-
-        export const appRoutes: Route[] = [
-            { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes) },];
-        "
-      `);
-    });
-
-    it('should generate modules with the "." type separator for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts({
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('my-lib/src/lib/my-lib.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-
-        @NgModule({
-          imports: [CommonModule],
-        })
-        export class MyLibModule {}
-        "
-      `);
-    });
-
     it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -2063,28 +1921,6 @@ describe('lib', () => {
       );
       expect(devDependencies['jsdom']).toBe(
         backwardCompatibleVersions[20].jsdomVersion
-      );
-    });
-
-    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts({
-        unitTestRunner: UnitTestRunner.VitestAnalog,
-      });
-
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['vitest']).toBe(
-        backwardCompatibleVersions[19].vitestVersion
-      );
-      expect(devDependencies['jsdom']).toBe(
-        backwardCompatibleVersions[19].jsdomVersion
       );
     });
   });
