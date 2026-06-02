@@ -1,6 +1,6 @@
 import * as latestVersions from './versions';
 
-export const supportedVersions = [21, 20, 19] as const;
+export const supportedVersions = [21, 20] as const;
 export type SupportedVersion = (typeof supportedVersions)[number];
 
 export type PackageVersionNames = Exclude<
@@ -10,7 +10,6 @@ export type PackageVersionNames = Exclude<
 export type VersionMap = {
   21: Record<PackageVersionNames, string>;
   20: Record<PackageVersionNames, string>;
-  19: Record<PackageVersionNames | 'angularRspackVersion', string>;
 };
 
 export type PackageCompatVersions = VersionMap[SupportedVersion];
@@ -40,38 +39,6 @@ export const backwardCompatibleVersions: VersionMap = {
     tsNodeVersion: '10.9.1',
     lessVersion: '^4.3.0',
     jestPresetAngularVersion: '~14.6.1',
-    typesNodeVersion: '^22.0.0',
-    jasmineMarblesVersion: '^0.9.2',
-    jsoncEslintParserVersion: '^2.1.0',
-    webpackMergeVersion: '^5.8.0',
-    vitestVersion: '^3.1.1',
-    jsdomVersion: '~22.1.0',
-    oxcProjectRuntimeVersion: '^0.115.0',
-  },
-  19: {
-    angularVersion: '~19.2.0',
-    angularDevkitVersion: '~19.2.0',
-    ngPackagrVersion: '~19.2.0',
-    angularRspackVersion: '~20.6.1',
-    ngrxVersion: '~19.1.0',
-    rxjsVersion: '~7.8.0',
-    zoneJsVersion: '~0.15.0',
-    tsLibVersion: '^2.3.0',
-    corsVersion: '~2.8.5',
-    typesCorsVersion: '~2.8.5',
-    expressVersion: '^4.21.2',
-    typesExpressVersion: '^4.17.21',
-    browserSyncVersion: '^3.0.0',
-    moduleFederationNodeVersion: '^2.6.26',
-    moduleFederationEnhancedVersion: '^0.9.0',
-    angularEslintVersion: '^19.2.0',
-    typescriptEslintVersion: '^8.40.0',
-    postcssVersion: '^8.4.5',
-    postcssUrlVersion: '~10.1.3',
-    autoprefixerVersion: '^10.4.0',
-    tsNodeVersion: '10.9.1',
-    lessVersion: '^4.3.0',
-    jestPresetAngularVersion: '~14.4.0',
     typesNodeVersion: '^22.0.0',
     jasmineMarblesVersion: '^0.9.2',
     jsoncEslintParserVersion: '^2.1.0',

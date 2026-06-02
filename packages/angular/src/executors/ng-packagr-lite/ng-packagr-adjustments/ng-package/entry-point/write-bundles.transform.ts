@@ -7,12 +7,16 @@
  * - Fake the FESM2022 outputs pointing them to the ESM2022 outputs.
  */
 
+import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
+import {
+  isEntryPointInProgress,
+  isPackage,
+} from 'ng-packagr/src/lib/ng-package/nodes';
 import type { NgPackagrOptions } from 'ng-packagr/src/lib/ng-package/options.di';
+import { NgPackage } from 'ng-packagr/src/lib/ng-package/package';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import { dirname, join, normalize } from 'node:path';
-import { getNgPackagrVersionInfo } from '../../../../utilities/ng-packagr/ng-packagr-version';
-import { importNgPackagrPath } from '../../../../utilities/ng-packagr/package-imports';
 import { createNgEntryPoint, type NgEntryPointType } from './entry-point';
 
 async function shouldWriteFile(
@@ -29,18 +33,6 @@ async function shouldWriteFile(
 }
 
 export const writeBundlesTransform = (_options: NgPackagrOptions) => {
-  const { major: ngPackagrMajorVersion } = getNgPackagrVersionInfo();
-
-  const { transformFromPromise } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/graph/transform')
-  >('ng-packagr/src/lib/graph/transform', ngPackagrMajorVersion);
-  const { isEntryPointInProgress, isPackage } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/ng-package/nodes')
-  >('ng-packagr/src/lib/ng-package/nodes', ngPackagrMajorVersion);
-  const { NgPackage } = importNgPackagrPath<
-    typeof import('ng-packagr/src/lib/ng-package/package')
-  >('ng-packagr/src/lib/ng-package/package', ngPackagrMajorVersion);
-
   return transformFromPromise(async (graph) => {
     const entryPointNode = graph.find(isEntryPointInProgress());
     if (!entryPointNode) {
