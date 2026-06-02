@@ -304,7 +304,7 @@
       }
     },
     "conditions": {
-      "description": "Custom package resolution conditions used to resolve conditional exports/imports. Defaults to ['module', 'development'/'production']. The following special conditions are always present if the requirements are satisfied: 'default', 'import', 'require', 'browser', 'node'. _Note: this is only supported in Angular versions >= 20.0.0_.",
+      "description": "Custom package resolution conditions used to resolve conditional exports/imports. Defaults to ['module', 'development'/'production']. The following special conditions are always present if the requirements are satisfied: 'default', 'import', 'require', 'browser', 'node'.",
       "type": "array",
       "items": {
         "type": "string"
@@ -389,7 +389,7 @@
             },
             "sourcesContent": {
               "type": "boolean",
-              "description": "Output original source content for files within the source map. _Note: this is only supported in Angular versions >= 20.0.0_.",
+              "description": "Output original source content for files within the source map.",
               "default": true
             }
           },

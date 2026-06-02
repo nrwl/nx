@@ -2,7 +2,6 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   type Tree,
-  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -1103,78 +1102,6 @@ export class LibModule {}
         'utf-8'
       );
       expect(indexSource).toBe('');
-    });
-  });
-
-  describe('compat', () => {
-    it('should generate files with the "component" type for versions below v20', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      updateJson(tree, 'package.json', (json) => {
-        json.dependencies['@angular/core'] = '~19.2.0';
-        return json;
-      });
-      addProjectConfiguration(tree, 'lib1', {
-        projectType: 'library',
-        sourceRoot: 'libs/lib1/src',
-        root: 'libs/lib1',
-      });
-
-      await componentGenerator(tree, {
-        path: 'libs/lib1/src/lib/example/example',
-      });
-
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.ts', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-
-        @Component({
-          selector: 'example',
-          imports: [],
-          templateUrl: './example.component.html',
-          styleUrl: './example.component.css',
-        })
-        export class ExampleComponent {}
-        "
-      `);
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.html', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "<p>example works!</p>
-        "
-      `);
-      expect(
-        tree.read('libs/lib1/src/lib/example/example.component.css', 'utf-8')
-      ).toMatchInlineSnapshot(`""`);
-      expect(
-        tree.read(
-          'libs/lib1/src/lib/example/example.component.spec.ts',
-          'utf-8'
-        )
-      ).toMatchInlineSnapshot(`
-        "import { ComponentFixture, TestBed } from '@angular/core/testing';
-        import { ExampleComponent } from './example.component';
-
-        describe('ExampleComponent', () => {
-          let component: ExampleComponent;
-          let fixture: ComponentFixture<ExampleComponent>;
-
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [ExampleComponent],
-            }).compileComponents();
-
-            fixture = TestBed.createComponent(ExampleComponent);
-            component = fixture.componentInstance;
-            await fixture.whenStable();
-          });
-
-          it('should create', () => {
-            expect(component).toBeTruthy();
-          });
-        });
-        "
-      `);
     });
   });
 });

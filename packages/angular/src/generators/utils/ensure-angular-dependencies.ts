@@ -6,11 +6,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import {
-  getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
-  versions,
-} from './version-utils';
+import { getInstalledAngularDevkitVersion, versions } from './version-utils';
 
 export function ensureAngularDependencies(
   tree: Tree,
@@ -75,12 +71,6 @@ export function ensureAngularDependencies(
     installedAngularDevkitVersion ?? pkgVersions.angularDevkitVersion;
   devDependencies['@angular-devkit/schematics'] = angularDevkitVersion;
   devDependencies['@schematics/angular'] = angularDevkitVersion;
-
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-  if (angularMajorVersion < 20) {
-    devDependencies['@angular/build'] = angularDevkitVersion;
-    devDependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-  }
 
   return addDependenciesToPackageJson(
     tree,
