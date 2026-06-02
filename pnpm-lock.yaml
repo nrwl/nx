@@ -62,34 +62,34 @@ catalogs:
       version: 0.16.0
   angular-supported-versions:
     '@angular-devkit/build-angular':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular-devkit/core':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular-devkit/schematics':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular/build':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular/compiler-cli':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular/localize':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular/platform-server':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@angular/ssr':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     '@schematics/angular':
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     ng-packagr:
-      specifier: '>= 19.0.0 < 22.0.0'
+      specifier: '>= 20.0.0 < 22.0.0'
       version: 21.2.0
     rxjs:
       specifier: ^6.5.3 || ^7.5.0

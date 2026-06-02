@@ -71,11 +71,7 @@ export function updateProjectConfigForApplicationBuilder(
   buildTarget.options.ssr = {
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
-  if (options.serverRouting) {
-    buildTarget.options.outputMode = 'server';
-  } else {
-    buildTarget.options.prerender = true;
-  }
+  buildTarget.options.outputMode = 'server';
 
   updateProjectConfiguration(tree, options.project, project);
 }
