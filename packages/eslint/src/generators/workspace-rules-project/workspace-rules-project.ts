@@ -99,6 +99,13 @@ export async function lintWorkspaceRulesProjectGenerator(
     (json) => {
       delete json.compilerOptions?.module;
       delete json.compilerOptions?.moduleResolution;
+      // Inherits `module: node16` from the project's base `tsconfig.json`,
+      // which requires `isolatedModules: true` to reliably honor packages'
+      // `exports` maps (e.g. `@typescript-eslint/rule-tester`).
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        isolatedModules: true,
+      };
 
       if (json.include) {
         json.include = json.include.map((v) => {

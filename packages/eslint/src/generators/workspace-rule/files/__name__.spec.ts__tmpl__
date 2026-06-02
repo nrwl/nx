@@ -1,4 +1,4 @@
-<% if (flatConfig) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
+<% if (useFlatRuleTester) { %>import { RuleTester } from '@typescript-eslint/rule-tester';
 import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './<%= name %>';
 
