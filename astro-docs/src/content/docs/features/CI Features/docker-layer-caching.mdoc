@@ -77,10 +77,3 @@ After the cache is warm, subsequent builds should show:
 - `[CACHED]` markers in the `docker build` logs where layers were reused.
 - Shorter build times for unchanged layers.
 
-## Tips
-
-- **Use a stable cache tag** (like `main`) so subsequent builds find and reuse the cached layers.
-- **Use distinct cache names per image** (for example `my-app:main` and `my-api:main`) so different
-  builds don't overwrite each other's layers.
-
-See the [Docker registery cache docs](https://docs.docker.com/build/cache/backends/registry) for more details.
