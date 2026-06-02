@@ -15,6 +15,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
 import { tslibVersion } from '@nx/node/src/utils/versions';
 import { join } from 'path';
+import { assertSupportedExpressVersion } from '../../utils/assert-supported-express-version';
 import { nxVersion } from '../../utils/versions';
 import { initGenerator } from '../init/init';
 import type { Schema } from './schema';
@@ -76,6 +77,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedExpressVersion(tree);
+
   const options = await normalizeOptions(tree, schema);
 
   const tasks: GeneratorCallback[] = [];
@@ -92,7 +95,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
   addTypes(tree, options);
 
   if (!options.skipPackageJson) {
-    tasks.push(ensureDependencies(tree));
+    tasks.push(ensureDependencies(tree, options));
   }
 
   if (!options.skipFormat) {
@@ -132,10 +135,15 @@ async function normalizeOptions(
   };
 }
 
-function ensureDependencies(tree: Tree): GeneratorCallback {
+function ensureDependencies(
+  tree: Tree,
+  options: NormalizedSchema
+): GeneratorCallback {
   return addDependenciesToPackageJson(
     tree,
     { tslib: tslibVersion },
-    { '@nx/express': nxVersion }
+    { '@nx/express': nxVersion },
+    undefined,
+    options.keepExistingVersions ?? true
   );
 }

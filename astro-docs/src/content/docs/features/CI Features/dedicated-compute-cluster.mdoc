@@ -1,0 +1,73 @@
+---
+title: 'Dedicated Compute Cluster'
+description: 'Reserve an isolated Nx Cloud compute environment for your organization and unlock Docker-in-Docker, sandboxing, and read-through caches.'
+keywords:
+  [
+    dedicated compute,
+    single-tenant,
+    docker-in-docker,
+    nx agents,
+    add-on,
+    nx cloud,
+  ]
+sidebar:
+  label: Dedicated compute cluster
+  order: 20
+  badge: new!
+filter: 'type:Features'
+---
+
+A **dedicated compute cluster** reserves an isolated Nx Cloud compute environment for your
+organization, so your [Nx Agents](/docs/features/ci-features/distribute-task-execution) run in a
+cluster provisioned just for your org instead of on the shared multi-tenant pool.
+
+The dedicated cluster lets agents run Docker-in-Docker (DinD) and unlocks additional Nx Cloud
+add-ons that require isolation in order to run with elevated capabilities.
+
+{% aside type="note" title="Nx Cloud add-on" %}
+The **dedicated compute cluster** is an Nx Cloud add-on. Manage it under
+**Settings > Add-ons** for your organization. Nx Enterprise customers on
+[single-tenant](/docs/enterprise/single-tenant/overview) deployments already run in a dedicated
+environment and get these capabilities through their deployment.
+{% /aside %}
+
+## What it unlocks
+
+A dedicated compute cluster unlocks the following:
+
+- [**Docker-in-Docker**](#docker-in-docker-on-agents) - build and push container images, run
+  Testcontainers, and run any task that needs a Docker daemon, directly on Nx Agents.
+- [**Sandboxing**](/docs/features/ci-features/sandboxing) - confine each task to its declared
+  [`inputs`](/docs/reference/project-configuration#inputs-and-named-inputs) and [`outputs`](/docs/reference/project-configuration#outputs), and catch any read or write outside them.
+- [**Docker layer caching**](/docs/features/ci-features/docker-layer-caching) - reuse Docker build
+  layers across CI runs.
+- [**Docker read-through cache**](/docs/features/ci-features/docker-read-through-cache) - serve
+  repeated image pulls from a cache close to your agents.
+- [**npm read-through cache**](/docs/features/ci-features/npm-read-through-cache) - serve repeated
+  npm installs from a cache close to your agents.
+
+DinD is available on every agent in the cluster automatically. The four add-ons are enabled
+individually once the cluster is active, and are cancelled if you cancel the dedicated compute
+cluster.
+
+## Docker-in-Docker on agents
+
+Every agent in a dedicated compute cluster can run DinD. This lets your tasks build and push
+container images, run [Testcontainers](https://testcontainers.com), and execute any workflow that
+needs a Docker daemon, directly on Nx Agents.
+
+On the shared multi-tenant pool, agents run a fixed set of approved images and cannot run privileged
+containers. The dedicated cluster lifts that restriction for your organization, so you can run
+custom agent images and DinD workloads.
+
+## Enabling dedicated compute cluster
+
+A dedicated compute cluster is provisioned through your organization settings:
+
+1. Open **Settings > Add-ons** for your organization.
+2. On the **Dedicated compute cluster** card, click **Request add-on** and confirm.
+3. You will be notified via email when the cluster is ready to use.
+
+Once the cluster is active, the dependent add-ons (sandboxing, Docker layer caching, and the
+read-through caches) become available to enable on the same page. If you request one of them before
+the cluster is ready, it is queued and activates automatically when the cluster comes online.

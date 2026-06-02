@@ -19,6 +19,7 @@ import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
 import { normalizeOptions } from './lib/normalize-options';
 import { startRemotes } from './lib/start-dev-remotes';
 import type { Schema } from './schema';
+import { warnAngularMfDevSsrExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
@@ -44,6 +45,7 @@ export async function* moduleFederationSsrDevServerExecutor(
   schema: Schema,
   context: ExecutorContext
 ) {
+  warnAngularMfDevSsrExecutorDeprecation();
   const options = normalizeOptions(schema);
 
   assertBuilderPackageIsInstalled('@angular-devkit/build-angular');

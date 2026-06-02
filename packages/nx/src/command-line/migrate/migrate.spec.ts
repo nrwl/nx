@@ -24,14 +24,22 @@ import * as packageMgrUtils from '../../utils/package-manager';
 import {
   filterDowngradedUpdates,
   formatCommandFailure,
+  formatSkippedPromptsNextStep,
+  isHybridMigration,
   isNpmPeerDepsError,
+  isPromptOnlyMigration,
   Migrator,
   normalizeVersion,
+  parseMigrationReturn,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
+  resolveCreateCommits,
+  resolveDocumentationFileToWorkspacePath,
+  resolveMigrationForRun,
   resolveMode,
 } from './migrate';
+import { applyNxJsonMigrateDefaults } from './migrate-config';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -42,11 +50,13 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { logger } from '../../utils/logger';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -2075,6 +2085,22 @@ describe('Migration', () => {
         type: 'runMigrations',
         runMigrations: 'migrations.json',
         ifExists: true,
+        agentic: undefined,
+        validate: undefined,
+      });
+    });
+
+    it('should propagate the agentic and validate values when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        agentic: 'claude-code',
+        validate: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        agentic: 'claude-code',
+        validate: false,
       });
     });
 
@@ -2633,6 +2659,39 @@ describe('Migration', () => {
         child: { version: '2.0.0', addToPackageJson: false },
       });
     });
+
+    describe('nx.json migrate.mode overlay (integration)', () => {
+      it('does not treat nx.json migrate.mode as an explicit --mode for a non-Nx target', async () => {
+        // The original footgun: a workspace-wide migrate.mode default made
+        // `nx migrate <non-nx-pkg>` hard-fail with a `--mode` error the user
+        // never passed. The overlay must carry it as a default, not a flag.
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: '@angular/core' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: '@angular/core',
+          mode: 'all',
+        });
+      });
+
+      it('applies nx.json migrate.mode through the overlay for an Nx target', async () => {
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: 'nx@22.0.0' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          mode: 'first-party',
+        });
+      });
+    });
   });
 
   describe('resolveMode', () => {
@@ -2763,6 +2822,74 @@ describe('Migration', () => {
         'first-party',
         'all',
       ]);
+    });
+
+    it('uses the nx.json configured mode for an nx target without prompting', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('uses the nx.json configured mode for an nx target in CI', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'true';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('lets an explicit mode win over the nx.json configured mode', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        'all',
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('ignores the nx.json configured mode for a non-nx-equivalent target', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        '@nx/react',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
     });
   });
 
@@ -3616,6 +3743,38 @@ describe('Migration', () => {
       });
     });
 
+    // Regression guard: `documentation` rides through `createMigrateJson`'s
+    // spread untyped (GeneratedMigrationDetails treats it as optional and the
+    // generated migrations.json is written via an `as any` cast), so a future
+    // refactor could silently drop it from the generated file with no type
+    // error. This test fails if that happens.
+    it('should preserve the documentation field on migration entries', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              documented: {
+                version: '2.0.0',
+                description: 'documented migration',
+                implementation: './migrations/documented',
+                documentation: './src/migrations/update-2-0-0/documented.md',
+              },
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result.migrations[0]).toMatchObject({
+        name: 'documented',
+        documentation: './src/migrations/update-2-0-0/documented.md',
+      });
+    });
+
     it('should preserve both prompt and implementation on hybrid entries', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
@@ -3994,6 +4153,438 @@ describe('Migration', () => {
         '1.0.0'
       );
       expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0/x.md']);
+    });
+  });
+
+  describe('agentic helpers', () => {
+    const baseMigration = { package: 'p', name: 'n', version: '1.0.0' };
+
+    describe('isPromptOnlyMigration / isHybridMigration', () => {
+      it.each([
+        ['prompt only', { prompt: 'x.md' }, true, false],
+        [
+          'prompt + implementation (hybrid)',
+          { prompt: 'x.md', implementation: './impl.js' },
+          false,
+          true,
+        ],
+        [
+          'prompt + legacy factory (hybrid)',
+          { prompt: 'x.md', factory: './factory.js' },
+          false,
+          true,
+        ],
+        [
+          'implementation only (no prompt)',
+          { implementation: './impl.js' },
+          false,
+          false,
+        ],
+      ])(
+        'classifies %s correctly',
+        (_label, extra, expectedPromptOnly, expectedHybrid) => {
+          const migration = { ...baseMigration, ...extra };
+          expect(isPromptOnlyMigration(migration)).toBe(expectedPromptOnly);
+          expect(isHybridMigration(migration)).toBe(expectedHybrid);
+        }
+      );
+    });
+
+    describe('resolveCreateCommits', () => {
+      it.each<
+        [
+          string,
+          boolean | undefined,
+          'disabled' | 'inside-agent' | 'enabled',
+          { effective: boolean; agenticHasDiffContext: boolean },
+        ]
+      >([
+        [
+          'explicit true, no agentic',
+          true,
+          'disabled',
+          { effective: true, agenticHasDiffContext: false },
+        ],
+        [
+          'explicit false, no agentic',
+          false,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, no agentic',
+          undefined,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, inside-agent',
+          undefined,
+          'inside-agent',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, agentic enabled — soft-force on',
+          undefined,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+        [
+          'explicit true, agentic enabled',
+          true,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+      ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
+        expect(
+          resolveCreateCommits({
+            createCommits,
+            agenticKind,
+            isGitRepo: true,
+          })
+        ).toEqual(expected);
+      });
+
+      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('errors when --create-commits is explicit without a git repo', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
+
+      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.error).toBeUndefined();
+        expect(result.warning).toMatch(/not a git repository/);
+      });
+
+      it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('does not mention --commit-prefix when the prefix is unchanged', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).not.toMatch(/--commit-prefix/);
+      });
+
+      it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/no effect/);
+        expect(result.warning).toMatch(/createCommits/);
+      });
+
+      it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).toBeUndefined();
+      });
+
+      it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(true);
+        expect(result.warning).toBeUndefined();
+      });
+    });
+
+    describe('parseMigrationReturn', () => {
+      it('reads both buckets from the object shape and tolerates partial shapes', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['a'],
+            agentContext: ['b', 'c'],
+          })
+        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
+        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
+          nextSteps: [],
+          agentContext: ['x'],
+        });
+      });
+
+      it('treats a string array as legacy workspace-wide nextSteps', () => {
+        expect(parseMigrationReturn(['a', 'b'])).toEqual({
+          nextSteps: ['a', 'b'],
+          agentContext: [],
+        });
+      });
+
+      it('filters non-string entries per bucket so a single bad entry does not drop the whole array', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['ok', 1, null] as any,
+            agentContext: [true, 'ok'] as any,
+          })
+        ).toEqual({ nextSteps: ['ok'], agentContext: ['ok'] });
+        expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
+          nextSteps: ['ok'],
+          agentContext: [],
+        });
+      });
+    });
+
+    describe('formatSkippedPromptsNextStep', () => {
+      it('renders a parent instruction line and an indented bullet per skipped path', () => {
+        const result = formatSkippedPromptsNextStep([
+          {
+            package: '@nx/storybook',
+            name: 'migrate-css',
+            version: '9.2.0',
+            prompt: 'tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md',
+          },
+          {
+            package: '@nx/rspack',
+            name: 'perf-options',
+            version: '2.0.0',
+            prompt: 'tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md',
+          },
+        ]);
+
+        expect(result).toBe(
+          'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:\n' +
+            '  - tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md\n' +
+            '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
+        );
+      });
+    });
+  });
+
+  describe('resolveMigrationForRun', () => {
+    let tmpRoot: string;
+    let warnSpy: jest.SpyInstance;
+
+    const writeInstalledPackage = (
+      pkgName: string,
+      documentationRelToMigrationsDir: string | null
+    ) => {
+      const pkgDir = join(tmpRoot, 'node_modules', pkgName);
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: pkgName,
+          version: '1.0.0',
+          'nx-migrations': './migrations.json',
+        })
+      );
+      writeFileSync(
+        join(pkgDir, 'migrations.json'),
+        JSON.stringify({ generators: {} })
+      );
+      if (documentationRelToMigrationsDir) {
+        const docAbs = join(pkgDir, documentationRelToMigrationsDir);
+        mkdirSync(dirname(docAbs), { recursive: true });
+        writeFileSync(docAbs, '# doc');
+      }
+    };
+
+    beforeEach(() => {
+      // realpath so the workspace-relative assertion isn't defeated by the
+      // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
+      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves the documentation file to a workspace-relative node_modules path', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        true
+      );
+      expect(documentationPath).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns no documentation path (and does not warn) when none is declared', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not resolve documentation for non-agentic runs', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        false
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns and skips when a declared documentation file is not present', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/missing.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        './src/migrations/update-1-0-0/missing.md'
+      );
+    });
+
+    it('throws when an implementation migration package cannot be resolved', () => {
+      expect(() =>
+        resolveMigrationForRun(
+          tmpRoot,
+          {
+            package: '@nx/not-installed',
+            name: 'update-1-0-0',
+            implementation: './x',
+            documentation: './x.md',
+          },
+          true
+        )
+      ).toThrow();
+    });
+
+    it('is non-fatal for prompt-only migrations when the package cannot be resolved', () => {
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/not-installed',
+          name: 'update-1-0-0',
+          prompt: './x.md',
+          documentation: './x.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resolveDocumentationFileToWorkspacePath', () => {
+    let tmpRoot: string;
+
+    beforeEach(() => {
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-doc-resolve-')));
+    });
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves a package-relative documentation path to a workspace-relative path', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      const docAbs = join(migrationsDir, 'src/migrations/update-1-0-0/do.md');
+      mkdirSync(dirname(docAbs), { recursive: true });
+      writeFileSync(docAbs, '# doc');
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './src/migrations/update-1-0-0/do.md'
+        )
+      ).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+    });
+
+    it('returns undefined when the documentation file does not exist', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      mkdirSync(migrationsDir, { recursive: true });
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './missing.md'
+        )
+      ).toBeUndefined();
     });
   });
 });

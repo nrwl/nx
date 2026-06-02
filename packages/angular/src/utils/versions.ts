@@ -5,7 +5,7 @@ export const angularDevkitVersion = '~21.2.0';
 export const ngPackagrVersion = '~21.2.0';
 export const ngrxVersion = '^21.0.0';
 export const rxjsVersion = '~7.8.0';
-export const zoneJsVersion = '~0.15.0';
+export const zoneJsVersion = '~0.16.0';
 export const tsLibVersion = '^2.3.0';
 
 export const corsVersion = '~2.8.5';

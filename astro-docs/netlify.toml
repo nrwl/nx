@@ -130,6 +130,11 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
 to = "/docs/getting-started/setup-ci"
 
+# Resource usage consolidated into the Nx Cloud add-ons platform feature pages
+[[redirects]]
+from = "/docs/guides/nx-cloud/ci-resource-usage"
+to = "/docs/features/ci-features/resource-usage"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

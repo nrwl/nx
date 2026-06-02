@@ -11,11 +11,13 @@ import { extname, join } from 'path';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationSsrDevServerOptions } from './schema';
+import { warnRspackMfSsrDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 export default async function* moduleFederationSsrDevServer(
   ssrDevServerOptions: ModuleFederationSsrDevServerOptions,
   context: ExecutorContext
 ) {
+  warnRspackMfSsrDevServerExecutorDeprecation();
   const options = normalizeOptions(ssrDevServerOptions);
 
   const iter = ssrDevServerExecutor(options, context);

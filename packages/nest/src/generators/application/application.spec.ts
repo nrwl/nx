@@ -275,7 +275,7 @@ describe('application generator', () => {
             "@nestjs/common": "^11.0.0",
             "@nestjs/core": "^11.0.0",
             "@nestjs/platform-express": "^11.0.0",
-            "reflect-metadata": "^0.1.13",
+            "reflect-metadata": "^0.2.0",
             "rxjs": "^7.8.0",
             "tslib": "^2.3.0",
           },

@@ -3,12 +3,18 @@
     "update-21-2-0-migrate-storybook-v9": {
       "cli": "nx",
       "version": "21.2.0-beta.3",
+      "requires": {
+        "storybook": ">=9.0.0 <10.0.0"
+      },
       "description": "Update workspace to use Storybook v9",
       "implementation": "./src/migrations/update-21-1-0/update-sb-9"
     },
     "update-21-2-0-remove-addon-dependencies": {
       "cli": "nx",
       "version": "21.2.0-beta.3",
+      "requires": {
+        "storybook": ">=9.0.0 <10.0.0"
+      },
       "description": "Remove deprecated Storybook addon dependencies",
       "implementation": "./src/migrations/update-21-2-0/remove-addon-dependencies"
     },
@@ -26,6 +32,9 @@
   "packageJsonUpdates": {
     "20.2.0": {
       "version": "20.2.0-beta.5",
+      "requires": {
+        "storybook": ">=8.0.0 <9.0.0"
+      },
       "packages": {
         "@storybook/test-runner": {
           "version": "^0.19.0",
@@ -283,6 +292,9 @@
     },
     "20.8.0": {
       "version": "20.8.0-beta.0",
+      "requires": {
+        "storybook": ">=8.0.0 <9.0.0"
+      },
       "packages": {
         "@storybook/test-runner": {
           "version": "^0.22.0",
@@ -540,6 +552,9 @@
     },
     "21.1.0": {
       "version": "22.1.0-beta.3",
+      "requires": {
+        "storybook": ">=8.0.0 <9.0.0"
+      },
       "packages": {
         "@storybook/angular": {
           "version": "^9.0.5",

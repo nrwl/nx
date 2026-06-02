@@ -3,12 +3,20 @@
     "update-typescript-eslint-v8.13.0": {
       "version": "20.2.0-beta.5",
       "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
-      "implementation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0"
+      "implementation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0",
+      "requires": {
+        "@typescript-eslint/parser": ">=8.0.0"
+      },
+      "documentation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0.md"
     },
     "add-file-extensions-to-overrides": {
       "version": "20.3.0-beta.1",
       "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
-      "implementation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides"
+      "implementation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides",
+      "requires": {
+        "eslint": ">=8.57.0"
+      },
+      "documentation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides.md"
     },
     "update-executor-lint-inputs": {
       "version": "22.7.0-beta.12",

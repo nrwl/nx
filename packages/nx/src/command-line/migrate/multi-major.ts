@@ -1,4 +1,4 @@
-import { prompt } from 'enquirer';
+import { migratePrompt } from './safe-prompt';
 import { gt, major, minor, valid } from 'semver';
 import { isCI } from '../../utils/is-ci';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
@@ -118,7 +118,7 @@ async function promptMultiMajorMigration(args: {
     title: multiMajorHeader(args.targetPackage, args.installed, args.target),
     bodyLines: multiMajorBodyLines,
   });
-  const { chosen } = await prompt<{ chosen: string }>({
+  const { chosen } = await migratePrompt<{ chosen: string }>({
     type: 'select',
     name: 'chosen',
     message: 'How would you like to proceed?',

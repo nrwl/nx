@@ -620,7 +620,8 @@ jobs:
           pnpm build:wasm
       - name: Publish
         env:
-          VERSION: ${{ needs.resolve-required-data.outputs.version }}
+          # Not named `VERSION` to avoid MSBuild adopting it as $(Version).
+          NX_PUBLISH_VERSION: ${{ needs.resolve-required-data.outputs.version }}
           DRY_RUN: ${{ needs.resolve-required-data.outputs.dry_run_flag }}
           PUBLISH_BRANCH: ${{ needs.resolve-required-data.outputs.publish_branch }}
         run: |
@@ -628,10 +629,10 @@ jobs:
           # Create and check out the publish branch
           git checkout -b $PUBLISH_BRANCH
           echo ""
-          echo "Version set to: $VERSION"
+          echo "Version set to: $NX_PUBLISH_VERSION"
           echo "DRY_RUN set to: $DRY_RUN"
           echo ""
-          pnpm nx-release --local=false $VERSION $DRY_RUN
+          pnpm nx-release --local=false $NX_PUBLISH_VERSION $DRY_RUN
 
       - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release

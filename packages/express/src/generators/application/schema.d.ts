@@ -18,4 +18,5 @@ export interface Schema {
   setParserOptionsProject?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
+  keepExistingVersions?: boolean;
 }

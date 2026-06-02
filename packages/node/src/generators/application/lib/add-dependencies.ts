@@ -1,24 +1,16 @@
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,
-  getDependencyVersionFromPackageJson,
-  joinPathFragments,
   Tree,
-  updateJson,
 } from '@nx/devkit';
 import { esbuildVersion } from '@nx/js/internal';
 import {
-  expressTypingsVersion,
-  expressVersion,
-  fastifyAutoloadVersion,
-  fastifyPluginVersion,
-  fastifySensibleVersion,
-  fastifyVersion,
-  koaTypingsVersion,
-  koaVersion,
+  expressVersions,
+  fastifyVersions,
+  koaVersions,
+  nodeTypesVersions,
   nxVersion,
   tslibVersion,
-  typesNodeVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from './normalized-schema';
 
@@ -35,34 +27,39 @@ export function addProjectDependencies(
     },
     esbuild: {
       '@nx/esbuild': nxVersion,
-      esbuild:
-        getDependencyVersionFromPackageJson(tree, 'esbuild') ?? esbuildVersion,
+      esbuild: esbuildVersion,
     },
   };
 
+  const exprPkgVersions = expressVersions(tree);
+  const koaPkgVersions = koaVersions(tree);
+  const fastifyPkgVersions = fastifyVersions(tree);
+
   const frameworkDependencies = {
     express: {
-      express: expressVersion,
+      express: exprPkgVersions.expressVersion,
     },
     koa: {
-      koa: koaVersion,
+      koa: koaPkgVersions.koaVersion,
     },
     fastify: {
-      fastify: fastifyVersion,
-      'fastify-plugin': fastifyPluginVersion,
-      '@fastify/autoload': fastifyAutoloadVersion,
-      '@fastify/sensible': fastifySensibleVersion,
+      fastify: fastifyPkgVersions.fastifyVersion,
+      'fastify-plugin': fastifyPkgVersions.fastifyPluginVersion,
+      '@fastify/autoload': fastifyPkgVersions.fastifyAutoloadVersion,
+      '@fastify/sensible': fastifyPkgVersions.fastifySensibleVersion,
     },
   };
   const frameworkDevDependencies = {
     express: {
-      '@types/express': expressTypingsVersion,
+      '@types/express': exprPkgVersions.expressTypingsVersion,
     },
     koa: {
-      '@types/koa': koaTypingsVersion,
+      '@types/koa': koaPkgVersions.koaTypingsVersion,
     },
     fastify: {},
   };
+
+  const typesNodeVersion = nodeTypesVersions(tree).typesNodeVersion;
 
   return {
     installTask: addDependenciesToPackageJson(
@@ -75,7 +72,9 @@ export function addProjectDependencies(
         ...frameworkDevDependencies[options.framework],
         ...bundlers[options.bundler],
         '@types/node': typesNodeVersion,
-      }
+      },
+      undefined,
+      options.keepExistingVersions ?? true
     ),
     frameworkDependencies: frameworkDependencies[options.framework],
   };

@@ -22,6 +22,7 @@ import { updateModuleFederationProject } from '../../rules/update-module-federat
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
 import { maybeJs } from '../../utils/maybe-js';
+import { warnReactRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
@@ -129,6 +130,7 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  warnReactRemoteGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeRemoteName(host, schema.name, schema);
   const options: NormalizedSchema<Schema> = {

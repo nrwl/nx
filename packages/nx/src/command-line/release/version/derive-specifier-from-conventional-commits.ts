@@ -4,7 +4,11 @@ import type {
 } from '../../../config/project-graph';
 import { NxReleaseConfig } from '../config/config';
 import { ReleaseGroupWithName } from '../config/filter-release-groups';
-import { getFirstGitCommit, getLatestGitTagForPattern } from '../utils/git';
+import {
+  getFirstGitCommit,
+  getFirstProjectCommit,
+  getLatestGitTagForPattern,
+} from '../utils/git';
 import { ReleaseGraph } from '../utils/release-graph';
 import { resolveSemverSpecifierFromConventionalCommits } from '../utils/resolve-semver-specifier';
 import { SemverSpecifier, SemverSpecifierType } from '../utils/semver';
@@ -36,11 +40,12 @@ export async function deriveSpecifierFromConventionalCommits(
       : releaseGroup.projects;
 
   // latestMatchingGitTag will be undefined if the current version was resolved from the disk fallback.
-  // In this case, we want to use the first commit as the ref to be consistent with the changelog command.
+  // In this case, use the first commit that touched this project rather than the repo's first commit,
+  // to avoid scanning the entire git history for projects that were added after the repo was created.
   const previousVersionRef = latestMatchingGitTag
     ? latestMatchingGitTag.tag
     : fallbackCurrentVersionResolver === 'disk'
-      ? await getFirstGitCommit()
+      ? await getFirstProjectCommit(projectGraphNode.data.root)
       : undefined;
 
   if (!previousVersionRef) {

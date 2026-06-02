@@ -32,7 +32,12 @@
       }
     },
     "copy-assets": {
-      "dependsOn": [{ "projects": ["MsbuildAnalyzer"], "target": "publish" }]
+      "dependsOn": [
+        {
+          "projects": ["MsbuildAnalyzer"],
+          "target": "publish"
+        }
+      ]
     },
     "nx-release-publish": {
       "executor": "@nx/js:release-publish",

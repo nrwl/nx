@@ -104,6 +104,7 @@ export function updateGitIgnore(host: Tree) {
     '.nx/cache',
     '.nx/workspace-data',
     '.nx/self-healing',
+    '.nx/migrate-runs',
   ].forEach((file) => {
     if (!contents.includes(file)) {
       contents = [contents, file].join('\n');

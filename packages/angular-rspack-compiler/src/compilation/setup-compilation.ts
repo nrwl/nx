@@ -2,6 +2,7 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
+import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
 import {
   ComponentStylesheetBundler,
   findTailwindConfiguration,
@@ -52,6 +53,8 @@ export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
 ) {
+  assertSupportedAngularRspackCompilerVersions();
+
   const { readConfiguration } = await loadCompilerCli();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,

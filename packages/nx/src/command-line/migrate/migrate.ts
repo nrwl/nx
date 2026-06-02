@@ -1,8 +1,8 @@
 import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
-import { prompt } from 'enquirer';
+import { migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
 import {
@@ -13,6 +13,7 @@ import {
   lt,
   lte,
   major,
+  rsort,
   satisfies,
   valid,
 } from 'semver';
@@ -41,7 +42,10 @@ import {
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
-import { commitChanges } from '../../utils/git-utils';
+import {
+  getUncommittedChangesSnapshot,
+  isGitRepository,
+} from '../../utils/git-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -104,6 +108,35 @@ import {
   validateMigrationEntries,
   writePromptMigrationFiles,
 } from './prompt-files';
+import type { AgenticArg } from './agentic/select';
+import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
+import {
+  applyNxJsonMigrateDefaults,
+  assertCommitPrefixHasCommits,
+} from './migrate-config';
+import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
+import {
+  applyAgenticHandoffGitignoreFallback,
+  isHandoffGitignoreMigration,
+} from './agentic/handoff-gitignore';
+import {
+  commitCheckpointBeforeMigrations,
+  commitMigrationIfRequested,
+} from './migrate-commits';
+import {
+  buildDirectiveBlockBodyLines,
+  buildRetainedAtSuccessBody,
+  buildTallyBodyLine,
+  countLandedCommits,
+  logAgenticSuccessOutcome,
+  logFailureRecap,
+  logMigrationBoundary,
+  retainedMigrations,
+  type CommitState,
+  type MigrationOutcome,
+  type MigrationOutcomeKind,
+} from './migrate-output';
+import { isHybridMigration, isPromptOnlyMigration } from './migration-shape';
 import { filterDowngradedUpdates } from './update-filters';
 import {
   DIST_TAGS,
@@ -819,7 +852,7 @@ export class Migrator {
         );
     }
 
-    return await prompt([promptConfig]).then(
+    return await migratePrompt([promptConfig]).then(
       ({ shouldApply }: { shouldApply: boolean }) => {
         this.promptAnswers[promptKey] = shouldApply;
 
@@ -919,13 +952,19 @@ export async function resolveMode(
   context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
-  }
+  },
+  configuredMode?: MigrateMode
 ): Promise<MigrateMode> {
   if (mode) {
     return mode;
   }
   if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
     return 'all';
+  }
+  // nx.json `migrate.mode` pre-selects the value the interactive prompt would
+  // ask for; it applies only to Nx targets (non-Nx returned 'all' above).
+  if (configuredMode) {
+    return configuredMode;
   }
   if (!process.stdin.isTTY || isCI()) {
     return 'all';
@@ -946,7 +985,7 @@ export async function resolveMode(
     name: 'all',
     message: 'All (first-party and third-party)',
   });
-  const { mode: selected } = await prompt<{
+  const { mode: selected } = await migratePrompt<{
     mode: MigrateMode;
   }>({
     type: 'select',
@@ -1058,6 +1097,8 @@ type RunMigrations = {
   type: 'runMigrations';
   runMigrations: string;
   ifExists: boolean;
+  agentic: AgenticArg;
+  validate?: boolean;
 };
 
 export async function parseMigrationsOptions(options: {
@@ -1083,6 +1124,8 @@ export async function parseMigrationsOptions(options: {
       type: 'runMigrations',
       runMigrations: options.runMigrations as string,
       ifExists: options.ifExists as boolean,
+      agentic: options.agentic as AgenticArg,
+      validate: options.validate as boolean | undefined,
     };
   }
 
@@ -1102,9 +1145,8 @@ export async function parseMigrationsOptions(options: {
   const { mode, installedNxVersion } = resolved;
   let { targetPackage, targetVersion } = resolved;
 
-  // Spec §10: prompt or warn when crossing more than one major boundary.
-  // Each major's metadata may have pruned migrations from much-older versions,
-  // so jumping multiple majors at once can silently skip migrations.
+  // Crossing more than one major can silently skip migrations: each
+  // major's metadata may have pruned entries from much-older versions.
   const multiMajorResult = await maybePromptOrWarnMultiMajorMigration({
     mode,
     options,
@@ -1114,6 +1156,13 @@ export async function parseMigrationsOptions(options: {
   targetVersion = multiMajorResult.chosen;
 
   if (mode === 'third-party') {
+    // `mode` can resolve to third-party via nx.json, which bypasses the early
+    // CLI-only check above; re-assert against the resolved mode.
+    assertThirdPartyModeFlagCompatibility({
+      mode,
+      from: options.from,
+      excludeAppliedMigrations: options.excludeAppliedMigrations,
+    });
     assertThirdPartyTargetBounds({
       targetPackage,
       targetVersion,
@@ -1154,15 +1203,15 @@ function assertThirdPartyModeFlagCompatibility(options: {
   }
 }
 
-// Parses the positional, resolves `--mode`, defaults the target package and
-// version when omitted (mode-aware: third-party anchors to the installed
-// canonical, others to `nx@latest`), and enforces the era gate when `--mode`
+// Defaults target package/version mode-aware (third-party → installed
+// canonical, otherwise nx@latest) and enforces the era gate when --mode
 // is explicit.
 async function resolveTargetAndMode(args: {
   positional: string | undefined;
   from: Record<string, string>;
   options: {
     mode?: MigrateMode;
+    modeFromConfig?: MigrateMode;
     excludeAppliedMigrations?: boolean;
   };
 }): Promise<{
@@ -1192,7 +1241,8 @@ async function resolveTargetAndMode(args: {
     {
       hasFrom: Object.keys(from).length > 0,
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
-    }
+    },
+    options.modeFromConfig
   );
 
   let installedNxVersion: string | null | undefined;
@@ -1242,12 +1292,12 @@ async function resolveTargetAndMode(args: {
 }
 
 // `--mode=third-party` upper-bound gate. The third-party walk follows nx's
-// `packageGroup` (e.g. `@nx/js`, `@nx/angular`); a target or `--to` above the
-// installed version would expand the walk past it and surface third-party
-// bumps that only exist in the newer plugin's history. The first-party set
-// is sourced from the installed nx package's declared `packageGroup`
-// (authoritative for the user's current Nx universe). Legacy era falls back
-// to the hardcoded `LEGACY_NRWL_PACKAGE_GROUP`.
+// `packageGroup`; a target or `--to` above the installed version would
+// expand the walk past it and surface third-party bumps that only exist in
+// the newer plugin's history. The first-party set is sourced from the
+// installed nx package's declared `packageGroup` (authoritative for the
+// user's current Nx universe). Legacy era falls back to the hardcoded
+// `LEGACY_NRWL_PACKAGE_GROUP`.
 function assertThirdPartyTargetBounds(args: {
   targetPackage: string;
   targetVersion: string;
@@ -1945,10 +1995,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let fromOverrides = opts.from;
     let excludeApplied = opts.excludeAppliedMigrations;
     if (mode === 'third-party') {
-      // For third-party, walk the canonical Nx target so cross-plugin third-party
-      // dependencies (e.g. typescript managed by @nx/js but used by @nx/angular)
-      // stay consistent. Force a from-zero walk + exclude-applied so we surface
-      // any third-party updates that may have been skipped previously.
+      // For third-party, walk the canonical Nx target so cross-plugin
+      // third-party dependencies (e.g. typescript managed by @nx/js but
+      // used by @nx/angular) stay consistent.
       const canonical = resolveCanonicalNxPackage(opts.targetVersion);
       walkedTargetPackage = canonical;
       fromOverrides = { [canonical]: '0.0.0' };
@@ -1964,9 +2013,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // `@nx/workspace` is version-synced with `nx` and declares an
       // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
       // `ng-update` field, whereas `nx` declares the full @nx/* plugin
-      // fan-out. Their transitive first-party closures are equivalent, so
-      // when `@nx/workspace` is the target we source the set from `nx`
-      // directly to capture the full plugin set.
+      // fan-out. Their transitive first-party closures are equivalent.
       const sourcePackage =
         walkedTargetPackage === '@nx/workspace' ? 'nx' : walkedTargetPackage;
       const rootMetadata = await fetch(sourcePackage, opts.targetVersion);
@@ -2338,23 +2385,151 @@ function logNpmPeerDepsError(phase: MigrationInstallPhase): void {
   }
 }
 
+type ExecutableMigration = {
+  package: string;
+  name: string;
+  description?: string;
+  version: string;
+  implementation?: string;
+  factory?: string;
+  prompt?: string;
+  documentation?: string;
+};
+
+export { isPromptOnlyMigration, isHybridMigration };
+
+export function resolveAgenticRunId(migrations: ExecutableMigration[]): string {
+  return rsort(migrations.map((m) => normalizeVersion(m.version)))[0]!;
+}
+
+export function formatSkippedPromptsNextStep(
+  skipped: ExecutableMigration[]
+): string {
+  return [
+    'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:',
+    ...skipped.map((m) => `  - ${m.prompt}`),
+  ].join('\n');
+}
+
+/**
+ * Resolves the effective `--create-commits` state once the agentic flow has
+ * been resolved. The agent's outer prompt only embeds the impl-phase file list
+ * when per-migration commits isolate each migration's diff, so the diff-context
+ * flag returned here gates that section.
+ */
+export function resolveCreateCommits(args: {
+  createCommits: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+  isGitRepo: boolean;
+  /**
+   * Whether `--commit-prefix` was given a non-default value. When commits
+   * end up disabled, the prefix has no effect — the warning copy below
+   * surfaces that so the user isn't silently misled.
+   */
+  commitPrefixIsCustom?: boolean;
+}): {
+  effective: boolean;
+  agenticHasDiffContext: boolean;
+  warning?: string;
+  error?: string;
+} {
+  const { createCommits, agenticKind, isGitRepo, commitPrefixIsCustom } = args;
+
+  // Explicit `--create-commits` without git is a hard error — the user asked
+  // for something we cannot deliver.
+  if (createCommits === true && !isGitRepo) {
+    return {
+      effective: false,
+      agenticHasDiffContext: false,
+      error:
+        '`--create-commits` requires a git repository. Run `git init` first, or omit the flag.',
+    };
+  }
+
+  if (agenticKind === 'enabled') {
+    if (createCommits === false) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          "--no-create-commits was passed alongside --agentic. Without per-migration commits, the agent can't isolate the current migration's changes from earlier migrations in this run. Drop --no-create-commits for accurate per-migration review." +
+          (commitPrefixIsCustom
+            ? ' Note: the custom --commit-prefix value will have no effect because commits are disabled.'
+            : ''),
+      };
+    }
+    // Without git we cannot soft-force commits the user didn't explicitly
+    // opt into. Degrade rather than error: continue the agentic run, but
+    // without per-file diff context (which depends on per-migration commits).
+    if (!isGitRepo) {
+      return {
+        effective: false,
+        agenticHasDiffContext: false,
+        warning:
+          '`--agentic` enables per-migration commits by default, but the workspace is not a git repository. Continuing without commits — the agent will not receive per-file diff context. Run `git init` to enable.' +
+          (commitPrefixIsCustom
+            ? ' The custom --commit-prefix value will have no effect.'
+            : ''),
+      };
+    }
+    return { effective: true, agenticHasDiffContext: true };
+  }
+
+  // Commits aren't enabled here. A custom prefix only reaches this path via
+  // nx.json (e.g. `migrate.commitPrefix` + `migrate.agentic` when the agentic
+  // flow resolves to disabled); surface that it has no effect rather than
+  // dropping it silently.
+  return {
+    effective: createCommits === true,
+    agenticHasDiffContext: false,
+    warning:
+      commitPrefixIsCustom && createCommits !== true
+        ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
+        : undefined,
+  };
+}
+
+/**
+ * Resolves whether the framework-owned generic-validation agent step should run
+ * after generator-only migrations.
+ *
+ * Default-on when the agentic flow resolved to `enabled`; silently ignored
+ * otherwise (no warning emitted) — `--validate` requires an active agent
+ * session by definition. An explicit `--no-validate` (`validate === false`)
+ * opts out even when agentic is enabled.
+ */
+export function resolveShouldRunValidation(args: {
+  validate: boolean | undefined;
+  agenticKind: ResolvedAgentic['kind'];
+}): boolean {
+  return args.validate !== false && args.agenticKind === 'enabled';
+}
+
 export async function executeMigrations(
   root: string,
-  migrations: {
-    package: string;
-    name: string;
-    description?: string;
-    version: string;
-  }[],
+  migrations: ExecutableMigration[],
   isVerbose: boolean,
   shouldCreateCommits: boolean,
   commitPrefix: string,
-  shouldSkipInstall = false
+  shouldSkipInstall = false,
+  agentic?: ResolvedAgentic,
+  agenticHasDiffContext = false,
+  shouldRunValidation = false
 ) {
   const changedDepInstaller = new ChangedDepInstaller(root, shouldSkipInstall);
 
-  const migrationsWithNoChanges: typeof migrations = [];
+  const migrationsWithNoChanges: ExecutableMigration[] = [];
   const sortedMigrations = migrations.sort((a, b) => {
+    // Under `--agentic`, hoist the v23 migration that ignores
+    // `.nx/migrate-runs` to position 0 so its .gitignore update lands
+    // before any per-migration commit absorbs the run's handoff scratch.
+    // See `agentic/handoff-gitignore.ts` for the full rationale and the
+    // inline-fallback path that covers intra-pre-v23 agentic runs.
+    if (agentic?.kind === 'enabled') {
+      if (isHandoffGitignoreMigration(a)) return -1;
+      if (isHandoffGitignoreMigration(b)) return 1;
+    }
+
     // special case for the split configuration migration to run first
     if (a.name === '15-7-0-split-configuration-into-project-json-files') {
       return -1;
@@ -2368,32 +2543,362 @@ export async function executeMigrations(
       : 1;
   });
 
+  // Lazy-load the agentic chain so non-agentic runs don't pay its startup cost.
+  let agenticRun:
+    | {
+        agentic: EnabledResolvedAgentic;
+        runDir: string;
+        runStep: typeof import('./agentic/run-step').runAgenticPromptStep;
+      }
+    | undefined;
+  if (agentic?.kind === 'enabled' && sortedMigrations.length > 0) {
+    const { initRunDir } =
+      require('./agentic/handoff') as typeof import('./agentic/handoff');
+    const { runAgenticPromptStep } =
+      require('./agentic/run-step') as typeof import('./agentic/run-step');
+    agenticRun = {
+      agentic,
+      runDir: initRunDir(root, resolveAgenticRunId(sortedMigrations)),
+      runStep: runAgenticPromptStep,
+    };
+  }
+
+  const printDroppedAgentContext =
+    agentic?.kind === 'inside-agent'
+      ? (
+          require('./agentic/print-dropped-agent-context') as typeof import('./agentic/print-dropped-agent-context')
+        ).printDroppedAgentContextForOuterAgent
+      : undefined;
+
   logger.info(`Running the following migrations:`);
   sortedMigrations.forEach((m) =>
-    logger.info(`- ${m.package}: ${m.name} (${m.description})`)
+    logger.info(
+      m.description
+        ? `- ${m.package}: ${m.name} — ${m.description}`
+        : `- ${m.package}: ${m.name}`
+    )
   );
-  logger.info(`---------------------------------------------------------\n`);
-  const allNextSteps: string[] = [];
+  logger.info('');
+  // Tracked separately from `skippedPrompts` so the end-of-run logic can
+  // render them distinctly per resolution mode.
+  const migrationEmittedNextSteps: string[] = [];
+  const skippedPrompts: ExecutableMigration[] = [];
+  // One record per migration the loop touched. `status: 'completed'` records
+  // are pushed at the end of each successful iteration; `status: 'aborted'`
+  // is pushed by the catch block when a migration throws mid-iteration, so
+  // `outcomes` is the single source of truth for the recap and tally — no
+  // parallel "pending" list. `outcomes.length` always equals `migrationIndex`
+  // after the loop body runs.
+  const outcomes: MigrationOutcome[] = [];
+  // Prompt-only migrations whose agent never ran. Hybrid migrations with a
+  // skipped prompt are NOT counted here — their deterministic half still ran.
+  let notRunMigrationsCount = 0;
+
+  const skipReason =
+    agentic?.kind === 'inside-agent'
+      ? 'deferred to the AI agent driving this run'
+      : 'agentic flow disabled';
+
+  const installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
+
+  // Returns the migrations whose own commits failed and whose diffs are
+  // still sitting in the working tree — derived live from `outcomes`. The
+  // next successful commit absorbs them via `git add -A`; its commit body
+  // lists them so a reader of `git log -p` can see which prior migrations'
+  // diffs got pulled in.
+  const pendingForCommitBody = (): Array<{ package: string; name: string }> =>
+    outcomes
+      .filter((o) => o.commit.kind === 'failed')
+      .map((o) => ({ package: o.migration.package, name: o.migration.name }));
+
+  // True while at least one prior migration's commit has failed and its
+  // diff hasn't been absorbed yet. While true, the working tree carries
+  // prior-migration state, so the `hasDiffContext` flag in the hybrid-
+  // agentic and validation-agentic prompt branches is suppressed (the
+  // prompt-only-with-agentic branch doesn't use `hasDiffContext`).
+  const hasPendingCommitDebt = (): boolean =>
+    outcomes.some((o) => o.commit.kind === 'failed');
+
+  // Single funnel for per-migration commit attempts. Returns the
+  // `CommitState` to record on the migration's outcome. On `committed`,
+  // back-annotates any prior failed-commit outcomes to `kind: 'absorbed'`
+  // (their diffs were just rolled into this commit via `git add -A`).
+  async function attemptMigrationCommit(
+    m: ExecutableMigration
+  ): Promise<CommitState> {
+    const pending = pendingForCommitBody();
+    const result = await commitMigrationIfRequested(
+      root,
+      m,
+      shouldCreateCommits,
+      commitPrefix,
+      installDepsIfChanged,
+      pending
+    );
+    if (result.status === 'committed') {
+      // This commit absorbed every pending failed-commit migration's diff.
+      // Transition their `commit.kind: 'failed'` records to `'absorbed'` so
+      // the failure recap (if a later migration throws) can anchor them
+      // and the retained-state filter no longer counts them as
+      // uncommitted.
+      //
+      // The key is `package:name`; matching on `name` alone would conflate
+      // across packages. Guard the kind check so a subsequent absorption-
+      // of-same-name cannot overwrite an earlier annotation.
+      if (pending.length > 0) {
+        const absorbedKeys = new Set(
+          pending.map((p) => `${p.package}:${p.name}`)
+        );
+        for (const o of outcomes) {
+          const key = `${o.migration.package}:${o.migration.name}`;
+          if (absorbedKeys.has(key) && o.commit.kind === 'failed') {
+            o.commit = {
+              kind: 'absorbed',
+              into: { name: m.name, sha: result.sha },
+            };
+          }
+        }
+      }
+      return { kind: 'landed', sha: result.sha };
+    }
+    if (result.status === 'failed') {
+      // Diff is still in WT. Subsequent prompts cannot claim git-isolation
+      // until a later commit absorbs the backlog.
+      return { kind: 'failed' };
+    }
+    // `no-changes` and `disabled` — no commit attempted, nothing to record
+    // as a commit failure.
+    return { kind: 'none' };
+  }
+
+  const totalMigrations = sortedMigrations.length;
+  let migrationIndex = 0;
   for (const m of sortedMigrations) {
-    logger.info(`Running migration ${m.package}: ${m.name}`);
+    migrationIndex++;
+    logMigrationBoundary(migrationIndex, totalMigrations, m.package, m.name);
+    // Snapshot the WT for before/after comparison in the catch block.
+    // Content-sensitive so a dirty→dirty case (this migration mutating an
+    // already-dirty shared file like `package.json`) doesn't collapse.
+    const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
     try {
-      const { changes, nextSteps } = await runNxOrAngularMigration(
+      // Read this migration's collection once and derive everything from it:
+      // the implementation context (passed to runNxOrAngularMigration) and the
+      // documentation path (passed to the agent). Read fresh per iteration so a
+      // prior migration's reinstall is reflected.
+      const { resolvedCollection, documentationPath } = resolveMigrationForRun(
         root,
         m,
-        isVerbose,
-        shouldCreateCommits,
-        commitPrefix,
-        () => changedDepInstaller.installDepsIfChanged()
+        !!agenticRun
       );
-      allNextSteps.push(...nextSteps);
-      if (changes.length === 0) {
-        migrationsWithNoChanges.push(m);
+      let outcome: MigrationOutcomeKind;
+      let commit: CommitState = { kind: 'none' };
+      if (isPromptOnlyMigration(m)) {
+        if (agenticRun) {
+          const stepResult = await agenticRun.runStep({
+            root,
+            migration: m,
+            agentic: agenticRun.agentic,
+            runDir: agenticRun.runDir,
+            installDepsIfChanged,
+            documentationPath,
+          });
+          commit = await attemptMigrationCommit(m);
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
+            commit.kind === 'landed' ? commit.sha : null,
+            stepResult.summary
+          );
+          outcome = 'applied';
+        } else {
+          logger.info(
+            pc.dim(`↷ Skipped — ${skipReason}. Listed in next steps.`)
+          );
+          skippedPrompts.push(m);
+          notRunMigrationsCount++;
+          outcome = 'deferred';
+        }
+      } else if (isHybridMigration(m)) {
+        const { changes, nextSteps, agentContext, logs, madeChanges } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* captureGeneratorOutput: */ !!agenticRun,
+            resolvedCollection
+          );
+        migrationEmittedNextSteps.push(...nextSteps);
+
+        if (agenticRun) {
+          // Install any deps the deterministic phase added/bumped before the
+          // agent runs — the prompt half may depend on them being present in
+          // node_modules.
+          await installDepsIfChanged();
+          const stepResult = await agenticRun.runStep({
+            root,
+            migration: m,
+            agentic: agenticRun.agentic,
+            runDir: agenticRun.runDir,
+            installDepsIfChanged,
+            documentationPath,
+            implContext: {
+              logs,
+              changes,
+              agentContext,
+              // When prior commits failed, the working tree carries their
+              // diff. The git-inspect path of the prompt would mislead the
+              // agent in that case; fall back to embedded `<files_changed>`.
+              hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
+            },
+          });
+          commit = await attemptMigrationCommit(m);
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
+            commit.kind === 'landed' ? commit.sha : null,
+            stepResult.summary
+          );
+          outcome = 'applied';
+        } else {
+          // The inner prompt step doesn't run here (agentic disabled, or
+          // running inside an outer agent). Under `inside-agent`, surface the
+          // generator-emitted `agentContext` to stdout so the outer driving
+          // agent can ingest it. Under `disabled` the run is human-driven;
+          // agent-targeted context would only add noise — drop.
+          logger.info(
+            pc.dim(
+              `↷ Prompt phase skipped — ${skipReason}. Listed in next steps.`
+            )
+          );
+          if (printDroppedAgentContext && agentContext.length > 0) {
+            printDroppedAgentContext({ migration: m, agentContext });
+          }
+          skippedPrompts.push(m);
+          if (!madeChanges) {
+            migrationsWithNoChanges.push(m);
+          }
+          // Only attempt a commit when this migration's deterministic
+          // phase actually produced changes. Otherwise the absorbing
+          // `git add -A` would build a commit subject naming this no-op
+          // migration even though its content is entirely prior pending
+          // diffs — confusing `git log` / `git blame` attribution. Pending
+          // stays pending and the next change-producing migration absorbs.
+          if (madeChanges) {
+            commit = await attemptMigrationCommit(m);
+          }
+          if (commit.kind === 'landed' && commit.sha) {
+            logger.info(pc.dim(`Committed as ${commit.sha}`));
+          }
+          outcome = 'deferred';
+        }
+      } else {
+        // Defer commit until validation succeeds; failed validation leaves
+        // changes uncommitted in the working tree for the user to review.
+        const validationRun =
+          agenticRun && shouldRunValidation ? agenticRun : undefined;
+        const { changes, nextSteps, agentContext, logs, madeChanges } =
+          await runNxOrAngularMigration(
+            root,
+            m,
+            isVerbose,
+            /* captureGeneratorOutput: */ !!validationRun,
+            resolvedCollection
+          );
+        migrationEmittedNextSteps.push(...nextSteps);
+        const canRunValidation = !!validationRun && changes.length > 0;
+
+        if (canRunValidation) {
+          // Install any deps the deterministic phase added/bumped before the
+          // validation agent runs — the agent may run tasks that need them.
+          await installDepsIfChanged();
+          const stepResult = await validationRun.runStep({
+            root,
+            migration: m,
+            agentic: validationRun.agentic,
+            runDir: validationRun.runDir,
+            installDepsIfChanged,
+            documentationPath,
+            implContext: {
+              logs,
+              changes,
+              agentContext,
+              // See the hybrid agentic branch above for the rationale on
+              // why pending commit debt gates git-inspect context.
+              hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
+            },
+            mode: 'generic-validation',
+          });
+          commit = await attemptMigrationCommit(m);
+          logAgenticSuccessOutcome(
+            stepResult.ambiguous
+              ? 'Marked complete by user'
+              : 'Validation passed',
+            commit.kind === 'landed' ? commit.sha : null,
+            stepResult.summary
+          );
+          outcome = 'applied';
+        } else {
+          // Inner validation step didn't run. Surface `agentContext` under
+          // `inside-agent` so the outer driving agent can ingest it.
+          if (printDroppedAgentContext && agentContext.length > 0) {
+            printDroppedAgentContext({ migration: m, agentContext });
+          }
+          if (!madeChanges) {
+            migrationsWithNoChanges.push(m);
+            outcome = 'no-changes';
+          } else {
+            commit = await attemptMigrationCommit(m);
+            if (commit.kind === 'landed' && commit.sha) {
+              logger.info(pc.dim(`Committed as ${commit.sha}`));
+            }
+            outcome = 'applied';
+          }
+        }
       }
-      logger.info(`---------------------------------------------------------`);
+      outcomes.push({
+        migration: { package: m.package, name: m.name },
+        status: 'completed',
+        kind: outcome,
+        commit,
+      });
+      logger.info('');
     } catch (e) {
+      // Record the in-flight migration as `aborted` so the recap and tally
+      // see it. `commit: 'failed'` requires both: (1) commits were
+      // requested — otherwise the "could not be created" recap line is
+      // false; (2) the WT snapshot diverged from the iteration baseline —
+      // net-new state, not the pre-existing pending diff. Else `'none'`.
+      const leftNewDiff =
+        getUncommittedChangesSnapshot(root) !== baselineWorkingTreeSnapshot;
+      outcomes.push({
+        migration: { package: m.package, name: m.name },
+        status: 'aborted',
+        commit:
+          shouldCreateCommits && leftNewDiff
+            ? { kind: 'failed' }
+            : { kind: 'none' },
+      });
       if (!(e instanceof NpmPeerDepsInstallError)) {
+        // `withGeneratorOutputCapture` attaches the generator's `console.*`
+        // output as `capturedLogs` (best-effort; may be absent). Surface it
+        // so the user sees what the generator printed before it crashed.
+        const capturedLogs = (e as { capturedLogs?: unknown })?.capturedLogs;
+        const bodyLines =
+          typeof capturedLogs === 'string' && capturedLogs.length > 0
+            ? [
+                'Output from the generator before it failed:',
+                '',
+                ...capturedLogs.split('\n'),
+              ]
+            : undefined;
         output.error({
           title: `Failed to run ${m.name} from ${m.package}. This workspace is NOT up to date!`,
+          bodyLines,
+        });
+        logFailureRecap({
+          migrationIndex,
+          totalMigrations,
+          outcomes,
+          migrationEmittedNextSteps,
+          insideAgent: agentic?.kind === 'inside-agent',
         });
       }
       throw e;
@@ -2401,17 +2906,39 @@ export async function executeMigrations(
   }
 
   if (!shouldCreateCommits) {
-    await changedDepInstaller.installDepsIfChanged();
+    await installDepsIfChanged();
   }
 
   if (changedDepInstaller.skippedInstall) {
     logSkippedPostMigrationInstall(root);
   }
 
-  return { migrationsWithNoChanges, nextSteps: allNextSteps };
+  // Combined-view next-steps array kept for back-compat with repair.ts, which
+  // consumes the single `nextSteps` field.
+  const combinedNextSteps = [...migrationEmittedNextSteps];
+  if (skippedPrompts.length > 0) {
+    combinedNextSteps.push(formatSkippedPromptsNextStep(skippedPrompts));
+  }
+
+  return {
+    migrationsWithNoChanges,
+    skippedPromptsCount: skippedPrompts.length,
+    notRunMigrationsCount,
+    nextSteps: combinedNextSteps,
+    skippedPrompts,
+    migrationEmittedNextSteps,
+    committedShasCount: countLandedCommits(outcomes),
+    // Migrations whose commits failed and never got absorbed by a later
+    // commit. The caller surfaces them so a successful run doesn't claim
+    // "up to date" while leaving uncommitted diffs in the working tree.
+    // Formatted as `package: name` for direct display.
+    retainedAtSuccess: retainedMigrations(outcomes).map(
+      (p) => `${p.package}: ${p.name}`
+    ),
+  };
 }
 
-class ChangedDepInstaller {
+export class ChangedDepInstaller {
   private initialDeps: string;
   private _skippedInstall = false;
 
@@ -2457,35 +2984,45 @@ export async function runNxOrAngularMigration(
     version: string;
   },
   isVerbose: boolean,
-  shouldCreateCommits: boolean,
-  commitPrefix: string,
-  installDepsIfChanged?: () => Promise<void>,
-  handleInstallDeps = false
-): Promise<{ changes: FileChange[]; nextSteps: string[] }> {
-  if (!installDepsIfChanged) {
-    const changedDepInstaller = new ChangedDepInstaller(root);
-    installDepsIfChanged = () => changedDepInstaller.installDepsIfChanged();
-  }
-  const { collection, collectionPath } = readMigrationCollection(
-    migration.package,
-    root
-  );
+  captureGeneratorOutput = false,
+  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
+): Promise<{
+  changes: FileChange[];
+  nextSteps: string[];
+  agentContext: string[];
+  logs: string;
+  madeChanges: boolean;
+}> {
+  const { collection, collectionPath } =
+    resolvedCollection ?? readMigrationCollection(migration.package, root);
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
+  let agentContext: string[] = [];
+  let logs = '';
+  // Angular's `ngResult.changes` is synthesized from the schematic's
+  // DryRunEvent stream so Nx and Angular paths can share commit/validation
+  // gating via `changes.length > 0`.
+  let madeChanges = false;
+  logger.info(pc.dim('→ Running generator…'));
   if (!isAngularMigration(collection, migration.name)) {
-    ({ nextSteps, changes } = await runNxMigration(
+    ({ nextSteps, changes, agentContext, logs } = await runNxMigration(
       root,
       collectionPath,
       collection,
       migration.name,
-      migration.version
+      migration.version,
+      captureGeneratorOutput
     ));
+    madeChanges = changes.length > 0;
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
-    logger.info(`  ${migration.description}\n`);
-    if (changes.length < 1) {
+    if (migration.description) {
+      logger.info(`  ${migration.description}`);
+    }
+    logger.info('');
+    if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
@@ -2494,7 +3031,7 @@ export async function runNxOrAngularMigration(
   } else {
     const ngCliAdapter = await getNgCompatLayer();
     const migrationProjectGraph = await createProjectGraphAsync();
-    const { madeChanges, loggingQueue } = await ngCliAdapter.runMigration(
+    const ngResult = await ngCliAdapter.runMigration(
       root,
       migration.package,
       migration.name,
@@ -2502,52 +3039,39 @@ export async function runNxOrAngularMigration(
       isVerbose,
       migrationProjectGraph
     );
+    changes = ngResult.changes;
+    madeChanges = ngResult.madeChanges;
+    logs = ngResult.loggingQueue.join('\n');
 
     logger.info(`Ran ${migration.name} from ${migration.package}`);
-    logger.info(`  ${migration.description}\n`);
+    if (migration.description) {
+      logger.info(`  ${migration.description}`);
+    }
+    logger.info('');
     if (!madeChanges) {
       logger.info(`No changes were made\n`);
-      return { changes, nextSteps };
+      return { changes, nextSteps, agentContext, logs, madeChanges };
     }
 
     logger.info('Changes:');
-    loggingQueue.forEach((log) => logger.info('  ' + log));
+    ngResult.loggingQueue.forEach((log) => logger.info('  ' + log));
     logger.info('');
   }
 
-  if (shouldCreateCommits) {
-    await installDepsIfChanged();
-
-    const commitMessage = `${commitPrefix}${migration.name}`;
-    try {
-      const committedSha = commitChanges(commitMessage, root);
-
-      if (committedSha) {
-        logger.info(pc.dim(`- Commit created for changes: ${committedSha}`));
-      } else {
-        logger.info(
-          pc.red(
-            `- A commit could not be created/retrieved for an unknown reason`
-          )
-        );
-      }
-    } catch (e) {
-      logger.info(pc.red(`- ${e.message}`));
-    }
-    // if we are running this function alone, we need to install deps internally
-  } else if (handleInstallDeps) {
-    await installDepsIfChanged();
-  }
-
-  return { changes, nextSteps };
+  return { changes, nextSteps, agentContext, logs, madeChanges };
 }
 
 async function runMigrations(
   root: string,
-  opts: { runMigrations: string; ifExists: boolean },
+  opts: {
+    runMigrations: string;
+    ifExists: boolean;
+    agentic: AgenticArg;
+    validate?: boolean;
+  },
   args: string[],
   isVerbose: boolean,
-  shouldCreateCommits = false,
+  shouldCreateCommits: boolean | undefined,
   commitPrefix: string,
   shouldSkipInstall = false
 ) {
@@ -2587,40 +3111,176 @@ async function runMigrations(
     );
   }
 
+  const migrations: ExecutableMigration[] = readJsonFile(
+    join(root, opts.runMigrations)
+  ).migrations;
+
+  const { resolveAgentic } =
+    require('./agentic/select') as typeof import('./agentic/select');
+  const agentic = await resolveAgentic({
+    agentic: opts.agentic,
+    migrations,
+  });
+
+  const {
+    effective: effectiveCreateCommits,
+    agenticHasDiffContext,
+    warning: createCommitsWarning,
+    error: createCommitsError,
+  } = resolveCreateCommits({
+    createCommits: shouldCreateCommits,
+    agenticKind: agentic.kind,
+    isGitRepo: isGitRepository(root),
+    commitPrefixIsCustom: commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX,
+  });
+  if (createCommitsError) {
+    throw new Error(createCommitsError);
+  }
+  if (createCommitsWarning) {
+    output.warn({ title: createCommitsWarning });
+  }
+
+  const shouldRunValidation = resolveShouldRunValidation({
+    validate: opts.validate,
+    agenticKind: agentic.kind,
+  });
+
   output.log({
     title:
       `Running migrations from '${opts.runMigrations}'` +
-      (shouldCreateCommits ? ', with each applied in a dedicated commit' : ''),
+      (effectiveCreateCommits
+        ? ', with each applied in a dedicated commit'
+        : ''),
   });
 
-  const migrations: {
-    package: string;
-    name: string;
-    version: string;
-  }[] = readJsonFile(join(root, opts.runMigrations)).migrations;
+  if (effectiveCreateCommits) {
+    commitCheckpointBeforeMigrations(root, commitPrefix);
+  }
 
-  const { migrationsWithNoChanges, nextSteps } = await executeMigrations(
+  if (agentic.kind === 'enabled') {
+    const { packageJson: nxPackageJson } = readModulePackageJson(
+      'nx',
+      getNxRequirePaths(root)
+    );
+    await applyAgenticHandoffGitignoreFallback({
+      migrations,
+      installedNxVersion: nxPackageJson.version,
+      effectiveCreateCommits,
+      commitPrefix,
+      root,
+    });
+  }
+
+  const {
+    migrationsWithNoChanges,
+    skippedPromptsCount,
+    notRunMigrationsCount,
+    skippedPrompts,
+    migrationEmittedNextSteps,
+    committedShasCount,
+    retainedAtSuccess,
+  } = await executeMigrations(
     root,
     migrations,
     isVerbose,
-    shouldCreateCommits,
+    effectiveCreateCommits,
     commitPrefix,
-    shouldSkipInstall
+    shouldSkipInstall,
+    agentic,
+    agenticHasDiffContext,
+    shouldRunValidation
   );
 
-  if (migrationsWithNoChanges.length < migrations.length) {
-    output.success({
-      title: `Successfully finished running migrations from '${opts.runMigrations}'. This workspace is up to date!`,
+  const ranWithChangesCount =
+    migrations.length - notRunMigrationsCount - migrationsWithNoChanges.length;
+  // The "applied" tally counts fully-completed migrations — those that
+  // left no deferred work behind. Hybrid migrations whose prompt half was
+  // deferred count as "deferred", not "applied".
+  const appliedCount = migrations.length - skippedPrompts.length;
+  const insideAgent = agentic.kind === 'inside-agent';
+  const tallyLine = buildTallyBodyLine({
+    appliedCount,
+    committedShasCount,
+    skippedPromptsCount,
+    insideAgent,
+  });
+  const tallyBody = tallyLine ? [tallyLine] : undefined;
+  // Only claim "up to date" when there's nothing pending: no deferred
+  // prompts AND no migrations whose commits failed without being absorbed.
+  const upToDateSuffix =
+    skippedPromptsCount > 0 || retainedAtSuccess.length > 0
+      ? ''
+      : ' This workspace is up to date!';
+
+  // Demote `output.success` to `output.warn` when there's uncommitted state
+  // retained from failed commits — the run did its work, but it would be
+  // misleading to lead with a green "Successfully finished" before the
+  // retained-state block. `.bind(output)` is required: assigning the method
+  // reference to a local would otherwise call it with `this === undefined`.
+  const completionLog = (
+    retainedAtSuccess.length > 0 ? output.warn : output.success
+  ).bind(output);
+  const completionTitlePrefix =
+    retainedAtSuccess.length > 0
+      ? 'Finished running migrations with uncommitted state retained'
+      : 'Successfully finished running migrations';
+
+  if (notRunMigrationsCount === migrations.length && migrations.length > 0) {
+    const remediation = insideAgent
+      ? 'The AI agent driving this run should apply each prompt — see next steps below.'
+      : 'Re-run with --agentic to apply them. See next steps below.';
+    output.warn({
+      title: `No migrations from '${opts.runMigrations}' were applied — every entry is a prompt-only migration. ${remediation}`,
+      bodyLines: tallyBody,
+    });
+  } else if (ranWithChangesCount > 0) {
+    completionLog({
+      title: `${completionTitlePrefix} from '${opts.runMigrations}'.${upToDateSuffix}`,
+      bodyLines: tallyBody,
     });
   } else {
-    output.success({
-      title: `No changes were made from running '${opts.runMigrations}'. This workspace is up to date!`,
+    // Pathological-but-possible: a no-op run that still has retained state
+    // (e.g. pre-existing pending diffs that no commit absorbed). Demote
+    // explicitly rather than rely on the implicit invariant.
+    completionLog({
+      title: `No changes were made from running '${opts.runMigrations}'.${upToDateSuffix}`,
+      bodyLines: tallyBody,
     });
   }
-  if (nextSteps.length > 0) {
+
+  if (retainedAtSuccess.length > 0) {
+    output.warn({
+      title: `Working-tree state retained from ${retainedAtSuccess.length} migration${
+        retainedAtSuccess.length === 1 ? '' : 's'
+      } whose commits could not be created`,
+      bodyLines: buildRetainedAtSuccessBody(retainedAtSuccess),
+    });
+  }
+
+  if (insideAgent) {
+    // Under inside-agent, emit a directive block so the outer agent has
+    // explicit instructions to act on, not just relay.
+    const directiveLines = buildDirectiveBlockBodyLines({
+      skippedPrompts,
+      migrationEmittedNextSteps,
+    });
+    if (directiveLines.length > 0) {
+      output.log({
+        title: 'Next steps for the AI agent driving this run',
+        bodyLines: directiveLines,
+      });
+    }
+  } else if (skippedPromptsCount > 0 || migrationEmittedNextSteps.length > 0) {
+    // Non-inside-agent path keeps the legacy "additional information" shape —
+    // the consumer is the human user.
+    const bodyLines: string[] = [];
+    if (skippedPromptsCount > 0) {
+      bodyLines.push(formatSkippedPromptsNextStep(skippedPrompts));
+    }
+    bodyLines.push(...migrationEmittedNextSteps);
     output.log({
       title: `Some migrations have additional information, see below.`,
-      bodyLines: nextSteps.map((line) => `- ${line}`),
+      bodyLines: bodyLines.map((line) => `- ${line}`),
     });
   }
 }
@@ -2644,7 +3304,8 @@ async function runNxMigration(
   collectionPath: string,
   collection: MigrationsJson,
   name: string,
-  migrationVersion?: string
+  migrationVersion: string | undefined,
+  captureGeneratorOutput: boolean
 ) {
   const { path: implPath, fnSymbol } = getImplementationPath(
     collection,
@@ -2658,18 +3319,47 @@ async function runNxMigration(
     process.env.NX_VERBOSE_LOGGING === 'true',
     `migration ${collection.name}:${name}`
   );
-  let nextSteps = await fn(host, {});
-  // This accounts for migrations that mistakenly return a generator callback
-  // from a migration. We've never executed these, so its not a breaking change that
-  // we don't call them now... but currently shipping a migration with one wouldn't break
-  // the migrate flow, so we are being cautious.
-  if (!isStringArray(nextSteps)) {
-    nextSteps = [];
+  let result: unknown;
+  let logs = '';
+  if (captureGeneratorOutput) {
+    const { withGeneratorOutputCapture } =
+      require('./agentic/capture-generator-output') as typeof import('./agentic/capture-generator-output');
+    ({ result, logs } = await withGeneratorOutputCapture(() => fn(host, {})));
+  } else {
+    result = await fn(host, {});
   }
+  const { nextSteps, agentContext } = parseMigrationReturn(result);
   host.lock();
   const changes = host.listChanges();
   flushChanges(root, changes);
-  return { changes, nextSteps };
+  return { changes, nextSteps, agentContext, logs };
+}
+
+export function parseMigrationReturn(value: unknown): {
+  nextSteps: string[];
+  agentContext: string[];
+} {
+  if (Array.isArray(value)) {
+    return { nextSteps: filterStrings(value), agentContext: [] };
+  }
+  if (value && typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    return {
+      nextSteps: filterStrings(obj.nextSteps),
+      agentContext: filterStrings(obj.agentContext),
+    };
+  }
+  // Catches `void`, mistakenly-returned generator callbacks, malformed values.
+  return { nextSteps: [], agentContext: [] };
+}
+
+// Bucket-level tolerance: a single non-string entry shouldn't discard the
+// whole `nextSteps` / `agentContext` array. Migration authors occasionally
+// push `null` / `undefined` / a number into the array; we drop the bad entries
+// and keep the rest so end-of-run guidance isn't silently lost.
+function filterStrings(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === 'string');
 }
 
 export async function migrate(
@@ -2680,7 +3370,9 @@ export async function migrate(
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
-    const opts = await parseMigrationsOptions(args);
+    const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
+    assertCommitPrefixHasCommits(mergedArgs);
+    const opts = await parseMigrationsOptions(mergedArgs);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
@@ -2689,10 +3381,10 @@ export async function migrate(
           root,
           opts,
           rawArgs,
-          args['verbose'],
-          args['createCommits'],
-          args['commitPrefix'],
-          args['skipInstall']
+          mergedArgs['verbose'],
+          mergedArgs['createCommits'],
+          mergedArgs['commitPrefix'] ?? DEFAULT_MIGRATION_COMMIT_PREFIX,
+          mergedArgs['skipInstall']
         );
       } catch (e) {
         // The remediation guidance is already logged by `runInstall`; swallow
@@ -2800,6 +3492,90 @@ export function getImplementationPath(
   }
 
   return { path: implPath, fnSymbol };
+}
+
+/**
+ * Resolves a migration's collection once and derives everything the run loop
+ * needs from that single read: the implementation context (`collection` +
+ * `collectionPath`, handed to `runNxOrAngularMigration`) and, for agentic runs,
+ * the workspace-relative documentation path handed to the agent.
+ *
+ * Read fresh per migration (not cached across the loop) so a prior migration's
+ * reinstall is reflected, exactly as before. Error handling matches each field's
+ * role:
+ * - Migrations that run an implementation REQUIRE the collection; an unreadable
+ *   collection throws and aborts that migration (caught by the run loop).
+ * - Prompt-only migrations don't run an implementation, so the collection is
+ *   read only to resolve documentation - a failure there is non-fatal: the
+ *   prompt still runs and the supplementary doc is skipped with a warning.
+ */
+export function resolveMigrationForRun(
+  root: string,
+  migration: {
+    package: string;
+    name: string;
+    documentation?: string;
+    implementation?: string;
+    factory?: string;
+    prompt?: string;
+  },
+  resolveDocumentation: boolean
+): {
+  resolvedCollection?: { collection: MigrationsJson; collectionPath: string };
+  documentationPath?: string;
+} {
+  let resolvedCollection:
+    | { collection: MigrationsJson; collectionPath: string }
+    | undefined;
+  if (!isPromptOnlyMigration(migration)) {
+    resolvedCollection = readMigrationCollection(migration.package, root);
+  } else if (resolveDocumentation && migration.documentation) {
+    try {
+      resolvedCollection = readMigrationCollection(migration.package, root);
+    } catch {
+      // Non-fatal: documentation is supplementary; the warning below fires.
+    }
+  }
+
+  let documentationPath: string | undefined;
+  if (resolveDocumentation && migration.documentation) {
+    documentationPath = resolvedCollection
+      ? resolveDocumentationFileToWorkspacePath(
+          root,
+          dirname(resolvedCollection.collectionPath),
+          migration.documentation
+        )
+      : undefined;
+    if (!documentationPath) {
+      logger.warn(
+        `Could not resolve the "documentation" file "${migration.documentation}" declared for migration "${migration.package}: ${migration.name}". It will be skipped as additional context for the AI agent.`
+      );
+    }
+  }
+
+  return { resolvedCollection, documentationPath };
+}
+
+// Resolves a `documentation` path (relative to the package's migrations dir) to
+// a workspace-relative path - or the absolute path when it resolves outside the
+// workspace (unusual hoisted/symlinked layouts). The agent runs with cwd =
+// workspace root, so the workspace-relative form is preferred. Returns
+// undefined when the file can't be resolved.
+export function resolveDocumentationFileToWorkspacePath(
+  root: string,
+  migrationsDir: string,
+  documentation: string
+): string | undefined {
+  let documentationFile: string;
+  try {
+    documentationFile = require.resolve(documentation, {
+      paths: [migrationsDir],
+    });
+  } catch {
+    return undefined;
+  }
+  const relativePath = relative(root, documentationFile);
+  return relativePath.startsWith('..') ? documentationFile : relativePath;
 }
 
 class MigrationImplementationMissingError extends Error {
@@ -2977,10 +3753,3 @@ const getNgCompatLayer = (() => {
     return _ngCliAdapter;
   };
 })();
-
-function isStringArray(value: unknown): value is string[] {
-  if (!Array.isArray(value)) {
-    return false;
-  }
-  return value.every((v) => typeof v === 'string');
-}

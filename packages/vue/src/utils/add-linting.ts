@@ -14,7 +14,7 @@ import {
   updateOverrideInLintConfig,
   useFlatConfig,
   getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
+  versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Tree } from 'nx/src/generators/tree';
@@ -89,7 +89,7 @@ export async function addLinting(
       useFlatConfig(host)
     ) {
       devDependencies['@typescript-eslint/parser'] =
-        getTypeScriptEslintVersionToInstall(host);
+        versions(host).typescriptESLintVersion;
     }
 
     if (!options.skipPackageJson) {

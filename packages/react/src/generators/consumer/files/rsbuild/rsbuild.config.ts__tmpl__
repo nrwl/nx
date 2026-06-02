@@ -1,0 +1,25 @@
+import { defineConfig } from '@rsbuild/core';
+import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+
+const PORT = <%= port %>;
+const NAME = '<%= federationName %>';
+
+export default defineConfig({
+  server: { port: PORT },
+  // assetPrefix:true keeps chunk URLs aligned with the dev-server origin -
+  // mirrors the provider config so a consumer that also exposes federated
+  // modules later doesn't need a separate fix.
+  dev: { assetPrefix: true },
+  html: { template: './index.html' },
+  source: { entry: { index: './src/index.ts' } },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      // No build-time `remotes:` block - registered at runtime in src/mf.ts
+      // at module load time.
+      shared: ['react', 'react-dom'],
+    }),
+  ],
+});

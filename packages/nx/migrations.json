@@ -41,7 +41,8 @@
       "cli": "nx",
       "version": "17.0.0-beta.1",
       "description": "Updates the default cache directory to .nx/cache",
-      "implementation": "./dist/src/migrations/update-17-0-0/move-cache-directory"
+      "implementation": "./dist/src/migrations/update-17-0-0/move-cache-directory",
+      "documentation": "./dist/src/migrations/update-17-0-0/move-cache-directory.md"
     },
     "17.0.0-use-minimal-config-for-tasks-runner-options": {
       "cli": "nx",
@@ -93,33 +94,39 @@
     "move-use-daemon-process": {
       "version": "20.0.0-beta.7",
       "description": "Migration for v20.0.0-beta.7",
-      "implementation": "./dist/src/migrations/update-20-0-0/move-use-daemon-process"
+      "implementation": "./dist/src/migrations/update-20-0-0/move-use-daemon-process",
+      "documentation": "./dist/src/migrations/update-20-0-0/move-use-daemon-process.md"
     },
     "use-legacy-cache": {
       "version": "20.0.1",
       "description": "Set `useLegacyCache` to true for migrating workspaces",
       "implementation": "./dist/src/migrations/update-20-0-1/use-legacy-cache",
-      "x-repair-skip": true
+      "x-repair-skip": true,
+      "documentation": "./dist/src/migrations/update-20-0-1/use-legacy-cache.md"
     },
     "remove-legacy-cache": {
       "version": "21.0.0-beta.8",
       "description": "Removes the legacy cache configuration from nx.json",
-      "implementation": "./dist/src/migrations/update-21-0-0/remove-legacy-cache"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-legacy-cache",
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-legacy-cache.md"
     },
     "remove-custom-tasks-runner": {
       "version": "21.0.0-beta.8",
       "description": "Removes the legacy cache configuration from nx.json",
-      "implementation": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner",
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner.md"
     },
     "release-version-config-changes": {
       "version": "21.0.0-beta.11",
       "description": "Updates release version config based on the breaking changes in Nx v21",
-      "implementation": "./dist/src/migrations/update-21-0-0/release-version-config-changes"
+      "implementation": "./dist/src/migrations/update-21-0-0/release-version-config-changes",
+      "documentation": "./dist/src/migrations/update-21-0-0/release-version-config-changes.md"
     },
     "release-changelog-config-changes": {
       "version": "21.0.0-beta.11",
       "description": "Updates release changelog config based on the breaking changes in Nx v21",
-      "implementation": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes"
+      "implementation": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes",
+      "documentation": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes.md"
     },
     "22-0-0-release-version-config-changes": {
       "version": "22.0.0-beta.1",
@@ -159,7 +166,8 @@
       "cli": "nx",
       "version": "22.7.0-beta.0",
       "description": "Adds .nx/self-healing to .gitignore",
-      "implementation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore"
+      "implementation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore",
+      "documentation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore.md"
     },
     "23-0-0-consolidate-release-tag-config": {
       "version": "23.0.0-beta.16",
@@ -170,7 +178,13 @@
       "cli": "nx",
       "version": "23.0.0-beta.13",
       "description": "Converts nx.json `targetDefaults` from the legacy record shape to the new filtered array shape.",
-      "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array"
+      "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array",
+      "documentation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array.md"
+    },
+    "23-0-0-add-migrate-runs-to-git-ignore": {
+      "version": "23.0.0-beta.18",
+      "description": "Adds .nx/migrate-runs to .gitignore",
+      "implementation": "./dist/src/migrations/update-23-0-0/add-migrate-runs-to-git-ignore"
     }
   }
 }

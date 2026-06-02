@@ -18,7 +18,11 @@
     "resolveJsonModule": true
   },
   "include": ["src/**/*.ts", "src/lib/patch/patch-angular-build.ts"],
-  "references": [],
+  "references": [
+    {
+      "path": "../devkit/tsconfig.lib.json"
+    }
+  ],
   "exclude": [
     "vite.config.ts",
     "vite.config.mts",

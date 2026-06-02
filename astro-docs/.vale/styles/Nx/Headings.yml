@@ -67,6 +67,8 @@ exceptions:
   - Expo
   - React Native
   - Module Federation
+  - TanStack
+  - TanStack Router
   - IntelliJ
   - VS Code
   - VSCode

@@ -37,7 +37,7 @@
     }
   },
   "dependencies": {
-    "@angular/build": "catalog:angular-supported-versions",
+    "@nx/devkit": "workspace:*",
     "sass-embedded": "catalog:css",
     "semver": "catalog:",
     "ts-morph": "catalog:typescript",
@@ -50,6 +50,7 @@
     "memfs": "^4.17.0"
   },
   "peerDependencies": {
+    "@angular/build": "catalog:angular-supported-versions",
     "@angular/compiler-cli": "catalog:angular-supported-versions",
     "@rsbuild/core": ">=1.0.5 <2.0.0"
   },

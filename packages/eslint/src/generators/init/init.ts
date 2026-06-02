@@ -15,7 +15,8 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { eslintVersion, nxVersion } from '../../utils/versions';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
+import { nxVersion, versions } from '../../utils/versions';
 import {
   determineEslintConfigFormat,
   findEslintFile,
@@ -93,6 +94,8 @@ export async function initEsLint(
   tree: Tree,
   options: LinterInitOptions
 ): Promise<GeneratorCallback> {
+  assertSupportedEslintVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -164,6 +167,7 @@ export async function initEsLint(
 
   const tasks: GeneratorCallback[] = [];
   if (!options.skipPackageJson) {
+    const { eslintVersion } = versions(tree);
     tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/eslint'], []));
     tasks.push(
       addDependenciesToPackageJson(
@@ -174,7 +178,7 @@ export async function initEsLint(
           eslint: eslintVersion,
         },
         undefined,
-        options.keepExistingVersions
+        options.keepExistingVersions ?? true
       )
     );
   }
