@@ -2,7 +2,6 @@ import { join, relative } from 'node:path';
 import type { Plugin, ResolvedConfig } from 'vite';
 import { isDaemonEnabled, joinPathFragments, workspaceRoot } from '@nx/devkit';
 import { AssetGlob, CopyAssetsHandler } from '@nx/js/internal';
-import { CopyAssetsHandler } from '@nx/js/src/utils/assets/copy-assets-handler';
 import { warnNxCopyAssetsPluginDeprecation } from '../src/utils/deprecation';
 
 /**
