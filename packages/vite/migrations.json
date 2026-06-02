@@ -66,7 +66,7 @@
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vite-8.md"
     },
     "migrate-to-vitest-3": {
-      "version": "23.0.0-beta.13",
+      "version": "23.0.0-beta.22",
       "requires": {
         "vitest": ">=3.0.0"
       },
@@ -75,7 +75,7 @@
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-3.md"
     },
     "migrate-to-vitest-4": {
-      "version": "23.0.0-beta.13",
+      "version": "23.0.0-beta.22",
       "requires": {
         "vitest": ">=4.0.0"
       },
@@ -240,7 +240,7 @@
       }
     },
     "23.0.0-vitest-v3-floor": {
-      "version": "23.0.0-beta.13",
+      "version": "23.0.0-beta.22",
       "requires": {
         "vitest": "<3.0.0"
       },
@@ -264,7 +264,7 @@
       }
     },
     "23.0.0-vitest-v4": {
-      "version": "23.0.0-beta.13",
+      "version": "23.0.0-beta.22",
       "requires": {
         "vitest": ">=3.0.0 <4.0.0"
       },
