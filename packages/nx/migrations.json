@@ -42,7 +42,7 @@
       "version": "17.0.0-beta.1",
       "description": "Updates the default cache directory to .nx/cache",
       "implementation": "./dist/src/migrations/update-17-0-0/move-cache-directory",
-      "docs": "./dist/src/migrations/update-17-0-0/move-cache-directory.md"
+      "documentation": "./dist/src/migrations/update-17-0-0/move-cache-directory.md"
     },
     "17.0.0-use-minimal-config-for-tasks-runner-options": {
       "cli": "nx",
@@ -95,38 +95,38 @@
       "version": "20.0.0-beta.7",
       "description": "Migration for v20.0.0-beta.7",
       "implementation": "./dist/src/migrations/update-20-0-0/move-use-daemon-process",
-      "docs": "./dist/src/migrations/update-20-0-0/move-use-daemon-process.md"
+      "documentation": "./dist/src/migrations/update-20-0-0/move-use-daemon-process.md"
     },
     "use-legacy-cache": {
       "version": "20.0.1",
       "description": "Set `useLegacyCache` to true for migrating workspaces",
       "implementation": "./dist/src/migrations/update-20-0-1/use-legacy-cache",
       "x-repair-skip": true,
-      "docs": "./dist/src/migrations/update-20-0-1/use-legacy-cache.md"
+      "documentation": "./dist/src/migrations/update-20-0-1/use-legacy-cache.md"
     },
     "remove-legacy-cache": {
       "version": "21.0.0-beta.8",
       "description": "Removes the legacy cache configuration from nx.json",
       "implementation": "./dist/src/migrations/update-21-0-0/remove-legacy-cache",
-      "docs": "./dist/src/migrations/update-21-0-0/remove-legacy-cache.md"
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-legacy-cache.md"
     },
     "remove-custom-tasks-runner": {
       "version": "21.0.0-beta.8",
       "description": "Removes the legacy cache configuration from nx.json",
       "implementation": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner",
-      "docs": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner.md"
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-custom-tasks-runner.md"
     },
     "release-version-config-changes": {
       "version": "21.0.0-beta.11",
       "description": "Updates release version config based on the breaking changes in Nx v21",
       "implementation": "./dist/src/migrations/update-21-0-0/release-version-config-changes",
-      "docs": "./dist/src/migrations/update-21-0-0/release-version-config-changes.md"
+      "documentation": "./dist/src/migrations/update-21-0-0/release-version-config-changes.md"
     },
     "release-changelog-config-changes": {
       "version": "21.0.0-beta.11",
       "description": "Updates release changelog config based on the breaking changes in Nx v21",
       "implementation": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes",
-      "docs": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes.md"
+      "documentation": "./dist/src/migrations/update-21-0-0/release-changelog-config-changes.md"
     },
     "22-0-0-release-version-config-changes": {
       "version": "22.0.0-beta.1",
@@ -167,7 +167,7 @@
       "version": "22.7.0-beta.0",
       "description": "Adds .nx/self-healing to .gitignore",
       "implementation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore",
-      "docs": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore.md"
+      "documentation": "./dist/src/migrations/update-22-2-0/add-self-healing-to-gitignore.md"
     },
     "23-0-0-consolidate-release-tag-config": {
       "version": "23.0.0-beta.16",
@@ -179,7 +179,7 @@
       "version": "23.0.0-beta.13",
       "description": "Converts nx.json `targetDefaults` from the legacy record shape to the new filtered array shape.",
       "implementation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array",
-      "docs": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array.md"
+      "documentation": "./dist/src/migrations/update-23-0-0/convert-target-defaults-to-array.md"
     },
     "23-0-0-add-migrate-runs-to-git-ignore": {
       "version": "23.0.0-beta.18",

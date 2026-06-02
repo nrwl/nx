@@ -7,7 +7,7 @@
       "requires": {
         "@typescript-eslint/parser": ">=8.0.0"
       },
-      "docs": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0.md"
+      "documentation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0.md"
     },
     "add-file-extensions-to-overrides": {
       "version": "20.3.0-beta.1",
@@ -16,7 +16,7 @@
       "requires": {
         "eslint": ">=8.57.0"
       },
-      "docs": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides.md"
+      "documentation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides.md"
     },
     "update-executor-lint-inputs": {
       "version": "22.7.0-beta.12",

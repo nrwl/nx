@@ -35,7 +35,8 @@ import {
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
   resolveCreateCommits,
-  resolveMigrationDocsPath,
+  resolveDocumentationFileToWorkspacePath,
+  resolveMigrationForRun,
   resolveMode,
 } from './migrate';
 import {
@@ -54,6 +55,7 @@ import {
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { logger } from '../../utils/logger';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -3639,6 +3641,38 @@ describe('Migration', () => {
       });
     });
 
+    // Regression guard: `documentation` rides through `createMigrateJson`'s
+    // spread untyped (GeneratedMigrationDetails treats it as optional and the
+    // generated migrations.json is written via an `as any` cast), so a future
+    // refactor could silently drop it from the generated file with no type
+    // error. This test fails if that happens.
+    it('should preserve the documentation field on migration entries', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              documented: {
+                version: '2.0.0',
+                description: 'documented migration',
+                implementation: './migrations/documented',
+                documentation: './src/migrations/update-2-0-0/documented.md',
+              },
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result.migrations[0]).toMatchObject({
+        name: 'documented',
+        documentation: './src/migrations/update-2-0-0/documented.md',
+      });
+    });
+
     it('should preserve both prompt and implementation on hybrid entries', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
@@ -4239,12 +4273,13 @@ describe('Migration', () => {
     });
   });
 
-  describe('resolveMigrationDocsPath', () => {
+  describe('resolveMigrationForRun', () => {
     let tmpRoot: string;
+    let warnSpy: jest.SpyInstance;
 
     const writeInstalledPackage = (
       pkgName: string,
-      docsRelToMigrationsDir: string | null
+      documentationRelToMigrationsDir: string | null
     ) => {
       const pkgDir = join(tmpRoot, 'node_modules', pkgName);
       mkdirSync(pkgDir, { recursive: true });
@@ -4260,8 +4295,8 @@ describe('Migration', () => {
         join(pkgDir, 'migrations.json'),
         JSON.stringify({ generators: {} })
       );
-      if (docsRelToMigrationsDir) {
-        const docAbs = join(pkgDir, docsRelToMigrationsDir);
+      if (documentationRelToMigrationsDir) {
+        const docAbs = join(pkgDir, documentationRelToMigrationsDir);
         mkdirSync(dirname(docAbs), { recursive: true });
         writeFileSync(docAbs, '# doc');
       }
@@ -4271,47 +4306,149 @@ describe('Migration', () => {
       // realpath so the workspace-relative assertion isn't defeated by the
       // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
       tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
+      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves the documentation file to a workspace-relative node_modules path', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        true
+      );
+      expect(documentationPath).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns no documentation path (and does not warn) when none is declared', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not resolve documentation for non-agentic runs', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        false
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns and skips when a declared documentation file is not present', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/missing.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        './src/migrations/update-1-0-0/missing.md'
+      );
+    });
+
+    it('throws when an implementation migration package cannot be resolved', () => {
+      expect(() =>
+        resolveMigrationForRun(
+          tmpRoot,
+          {
+            package: '@nx/not-installed',
+            name: 'update-1-0-0',
+            implementation: './x',
+            documentation: './x.md',
+          },
+          true
+        )
+      ).toThrow();
+    });
+
+    it('is non-fatal for prompt-only migrations when the package cannot be resolved', () => {
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/not-installed',
+          name: 'update-1-0-0',
+          prompt: './x.md',
+          documentation: './x.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resolveDocumentationFileToWorkspacePath', () => {
+    let tmpRoot: string;
+
+    beforeEach(() => {
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-doc-resolve-')));
     });
 
     afterEach(() => {
       rmSync(tmpRoot, { recursive: true, force: true });
     });
 
-    it('returns undefined when the migration declares no docs', () => {
-      writeInstalledPackage('@nx/foo', null);
+    it('resolves a package-relative documentation path to a workspace-relative path', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      const docAbs = join(migrationsDir, 'src/migrations/update-1-0-0/do.md');
+      mkdirSync(dirname(docAbs), { recursive: true });
+      writeFileSync(docAbs, '# doc');
       expect(
-        resolveMigrationDocsPath(tmpRoot, { package: '@nx/foo' })
-      ).toBeUndefined();
-    });
-
-    it('resolves the docs file to a workspace-relative node_modules path', () => {
-      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
-      expect(
-        resolveMigrationDocsPath(tmpRoot, {
-          package: '@nx/foo',
-          docs: './src/migrations/update-1-0-0/do.md',
-        })
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './src/migrations/update-1-0-0/do.md'
+        )
       ).toBe(
         join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
       );
     });
 
-    it('returns undefined when the docs file is not present in the installed package', () => {
-      writeInstalledPackage('@nx/foo', null);
+    it('returns undefined when the documentation file does not exist', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      mkdirSync(migrationsDir, { recursive: true });
       expect(
-        resolveMigrationDocsPath(tmpRoot, {
-          package: '@nx/foo',
-          docs: './src/migrations/update-1-0-0/missing.md',
-        })
-      ).toBeUndefined();
-    });
-
-    it('returns undefined when the package cannot be resolved', () => {
-      expect(
-        resolveMigrationDocsPath(tmpRoot, {
-          package: '@nx/not-installed',
-          docs: './x.md',
-        })
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './missing.md'
+        )
       ).toBeUndefined();
     });
   });

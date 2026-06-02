@@ -8,7 +8,7 @@
       },
       "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
       "implementation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain",
-      "docs": "./dist/src/migrations/update-20-8-0/set-inject-document-domain.md"
+      "documentation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain.md"
     },
     "remove-experimental-fetch-polyfill": {
       "cli": "nx",
@@ -18,7 +18,7 @@
       },
       "description": "Removes the `experimentalFetchPolyfill` configuration option.",
       "implementation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill",
-      "docs": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill.md"
+      "documentation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill.md"
     },
     "replace-experimental-just-in-time-compile": {
       "cli": "nx",
@@ -28,7 +28,7 @@
       },
       "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
       "implementation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile",
-      "docs": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile.md"
+      "documentation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile.md"
     },
     "update-component-testing-mount-imports": {
       "cli": "nx",
@@ -38,13 +38,13 @@
       },
       "description": "Updates the module specifier for the Component Testing `mount` function.",
       "implementation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports",
-      "docs": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports.md"
+      "documentation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports.md"
     },
     "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
       "version": "21.0.0-beta.10",
       "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
       "implementation": "./dist/src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor",
-      "docs": "./dist/src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor.md"
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-tsconfig-and-copy-files-options-from-cypress-executor.md"
     },
     "rename-cy-exec-code-property": {
       "version": "22.1.0-beta.6",
@@ -53,7 +53,7 @@
       },
       "description": "Renames `cy.exec().its('code')` usages to the new `exitCode` property introduced in Cypress v15.",
       "implementation": "./dist/src/migrations/update-22-1-0/rename-cy-exec-code-property",
-      "docs": "./dist/src/migrations/update-22-1-0/rename-cy-exec-code-property.md"
+      "documentation": "./dist/src/migrations/update-22-1-0/rename-cy-exec-code-property.md"
     },
     "update-selector-playground-api": {
       "version": "22.1.0-beta.6",
@@ -62,7 +62,7 @@
       },
       "description": "Updates the deprecated `Cypress.SelectorPlayground` API to `Cypress.ElementSelector` and removes the unsupported `onElement` option.",
       "implementation": "./dist/src/migrations/update-22-1-0/update-selector-playground-api",
-      "docs": "./dist/src/migrations/update-22-1-0/update-selector-playground-api.md"
+      "documentation": "./dist/src/migrations/update-22-1-0/update-selector-playground-api.md"
     },
     "update-angular-component-testing-support": {
       "version": "22.1.0-beta.6",
@@ -71,7 +71,7 @@
       },
       "description": "For Angular component testing projects below v18, switches to the fallback `@cypress/angular` harness required by Cypress v15.",
       "implementation": "./dist/src/migrations/update-22-1-0/update-angular-component-testing-support",
-      "docs": "./dist/src/migrations/update-22-1-0/update-angular-component-testing-support.md"
+      "documentation": "./dist/src/migrations/update-22-1-0/update-angular-component-testing-support.md"
     },
     "remove-experimental-prompt-command": {
       "version": "23.0.0-beta.10",
@@ -80,7 +80,7 @@
       },
       "description": "Removes the `experimentalPromptCommand` flag from `cypress.config.{ts,js,mjs,cjs}`. The flag was removed in Cypress 15.13.0; `cy.prompt` is now in beta without configuration.",
       "implementation": "./dist/src/migrations/update-23-0-0/remove-experimental-prompt-command",
-      "docs": "./dist/src/migrations/update-23-0-0/remove-experimental-prompt-command.md"
+      "documentation": "./dist/src/migrations/update-23-0-0/remove-experimental-prompt-command.md"
     },
     "rewrite-internal-subpath-imports": {
       "version": "23.0.0-beta.19",

@@ -114,7 +114,7 @@ export interface MigrationsJsonEntry {
    * supplementary; never stands in for them. Under `--run-migrations
    * --agentic` the resolved path is passed to the agent as extra context.
    */
-  docs?: string;
+  documentation?: string;
 }
 
 export type MigrationDetailsWithId = GeneratedMigrationDetails & {
@@ -127,6 +127,7 @@ export interface GeneratedMigrationDetails {
   description: string;
   implementation?: string;
   prompt?: string;
+  documentation?: string;
 }
 
 export interface MigrationsJson {

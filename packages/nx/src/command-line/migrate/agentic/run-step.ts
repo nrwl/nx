@@ -50,11 +50,12 @@ export interface RunAgenticPromptStepInput {
     prompt?: string;
   };
   /**
-   * Workspace-relative path to the migration's docs file, resolved by the
-   * orchestrator; omitted when the migration declares no `docs` or it can't be
-   * resolved.
+   * Path to the migration's documentation file, resolved by the orchestrator -
+   * workspace-relative, or absolute when the file resolves outside the
+   * workspace. Omitted when the migration declares no `documentation` or it
+   * can't be resolved.
    */
-  docsPath?: string;
+  documentationPath?: string;
   agentic: EnabledResolvedAgentic;
   runDir: string;
   installDepsIfChanged: () => Promise<void>;
@@ -83,7 +84,7 @@ export async function runAgenticPromptStep(
     runDir,
     installDepsIfChanged,
     implContext,
-    docsPath,
+    documentationPath,
     mode = 'author',
   } = input;
 
@@ -117,7 +118,7 @@ export async function runAgenticPromptStep(
       version: migration.version,
       description: migration.description,
       handoffFileAbsolutePath: handoffFilePath,
-      docsPath,
+      documentationPath,
       impl: implContext,
     });
   } else {
@@ -128,7 +129,7 @@ export async function runAgenticPromptStep(
       description: migration.description,
       promptPath: migration.prompt!,
       handoffFileAbsolutePath: handoffFilePath,
-      docsPath,
+      documentationPath,
     };
     userPrompt = implContext
       ? buildHybridPromptUserPrompt({ ...promptCtx, impl: implContext })

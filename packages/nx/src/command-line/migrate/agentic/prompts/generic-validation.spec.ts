@@ -42,14 +42,19 @@ describe('buildGenericValidationUserPrompt', () => {
     expect(out).not.toContain('<precedence>');
   });
 
-  it('renders the <migration_docs> block when a docs path is provided, and omits it otherwise', () => {
-    const docsPath =
+  it('renders the <migration_documentation> block when a documentation path is provided, and omits it otherwise', () => {
+    const documentationPath =
       'node_modules/@nx/react/dist/src/migrations/update-21-1-0/rewrite-config.md';
-    const withDocs = buildGenericValidationUserPrompt({ ...baseCtx, docsPath });
-    expect(withDocs).toContain(docsPath);
-    expect(withDocs).toMatch(/<migration_docs[\s\S]*<\/migration_docs>/);
+    const withDocumentation = buildGenericValidationUserPrompt({
+      ...baseCtx,
+      documentationPath,
+    });
+    expect(withDocumentation).toContain(documentationPath);
+    expect(withDocumentation).toMatch(
+      /<migration_documentation[\s\S]*<\/migration_documentation>/
+    );
     expect(buildGenericValidationUserPrompt(baseCtx)).not.toContain(
-      '<migration_docs'
+      '<migration_documentation'
     );
   });
 

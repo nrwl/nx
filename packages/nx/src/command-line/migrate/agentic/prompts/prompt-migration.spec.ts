@@ -36,21 +36,23 @@ describe('buildPromptMigrationUserPrompt', () => {
     expect(buildPromptMigrationUserPrompt(base)).not.toContain('description:');
   });
 
-  it('renders the <migration_docs> block when a docs path is provided', () => {
+  it('renders the <migration_documentation> block when a documentation path is provided', () => {
     const result = buildPromptMigrationUserPrompt({
       ...base,
-      docsPath:
+      documentationPath:
         'node_modules/@nx/storybook/src/migrations/9-2-0/migrate-css-imports.md',
     });
     expect(result).toContain(
       'node_modules/@nx/storybook/src/migrations/9-2-0/migrate-css-imports.md'
     );
-    expect(result).toMatch(/<migration_docs[\s\S]*<\/migration_docs>/);
+    expect(result).toMatch(
+      /<migration_documentation[\s\S]*<\/migration_documentation>/
+    );
   });
 
-  it('omits the <migration_docs> block when no docs path is provided', () => {
+  it('omits the <migration_documentation> block when no documentation path is provided', () => {
     expect(buildPromptMigrationUserPrompt(base)).not.toContain(
-      '<migration_docs'
+      '<migration_documentation'
     );
   });
 
