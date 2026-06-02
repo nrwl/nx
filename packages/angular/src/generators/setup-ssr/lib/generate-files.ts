@@ -1,13 +1,8 @@
 import type { Tree } from '@nx/devkit';
-import {
-  generateFiles,
-  getDependencyVersionFromPackageJson,
-  joinPathFragments,
-  readProjectConfiguration,
-} from '@nx/devkit';
+import { generateFiles, readProjectConfiguration } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { join } from 'path';
-import { clean, coerce, gte } from 'semver';
+import { gte } from 'semver';
 import { getAppComponentInfo } from '../../utils/app-components-info';
 import {
   getComponentType,
@@ -31,36 +26,19 @@ export function generateSSRFiles(
     return;
   }
 
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  const baseFilesPath = join(__dirname, '..', 'files');
-  let pathToFiles: string;
-  if (angularMajorVersion >= 20) {
-    pathToFiles = join(
-      baseFilesPath,
-      'v20+',
-      options.isUsingApplicationBuilder
-        ? 'application-builder'
-        : 'server-builder',
-      options.standalone ? 'standalone-src' : 'ngmodule-src'
-    );
-  } else {
-    pathToFiles = join(
-      baseFilesPath,
-      'v19',
-      options.isUsingApplicationBuilder
-        ? 'application-builder'
-        : 'server-builder',
-      options.standalone ? 'standalone-src' : 'ngmodule-src'
-    );
-  }
+  const { version: angularVersion } = getInstalledAngularVersionInfo(tree);
+  const pathToFiles = join(
+    __dirname,
+    '..',
+    'files',
+    'v20+',
+    options.isUsingApplicationBuilder
+      ? 'application-builder'
+      : 'server-builder',
+    options.standalone ? 'standalone-src' : 'ngmodule-src'
+  );
 
   const sourceRoot = getProjectSourceRoot(project, tree);
-
-  const ssrVersion = getDependencyVersionFromPackageJson(tree, '@angular/ssr');
-  const cleanedSsrVersion = ssrVersion
-    ? (clean(ssrVersion) ?? coerce(ssrVersion).version)
-    : null;
 
   const componentType = getComponentType(tree);
   const appComponentInfo = getAppComponentInfo(
@@ -69,26 +47,15 @@ export function generateSSRFiles(
     project
   );
   const moduleTypeSeparator = getModuleTypeSeparator(tree);
-  const useBootstrapContext =
-    // https://github.com/angular/angular-cli/releases/tag/20.3.0
-    gte(angularVersion, '20.3.0') ||
-    // https://github.com/angular/angular-cli/releases/tag/19.2.16
-    (angularMajorVersion === 19 && gte(angularVersion, '19.2.16'));
+  // https://github.com/angular/angular-cli/releases/tag/20.3.0
+  const useBootstrapContext = gte(angularVersion, '20.3.0');
 
   generateFiles(tree, pathToFiles, sourceRoot, {
     ...options,
-    provideServerRoutingFn:
-      !cleanedSsrVersion || gte(cleanedSsrVersion, '19.2.0')
-        ? 'provideServerRouting'
-        : 'provideServerRoutesConfig',
     appFileName: appComponentInfo.extensionlessFileName,
     appSymbolName: appComponentInfo.symbolName,
     moduleTypeSeparator,
     useBootstrapContext,
     tpl: '',
   });
-
-  if (angularMajorVersion === 19 && !options.serverRouting) {
-    tree.delete(joinPathFragments(sourceRoot, 'app/app.routes.server.ts'));
-  }
 }
