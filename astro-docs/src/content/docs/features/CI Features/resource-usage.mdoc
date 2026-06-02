@@ -1,0 +1,141 @@
+---
+title: 'Resource Usage'
+description: 'Upload and view per-agent CPU and memory metrics for distributed task execution to find bottlenecks, debug out-of-memory errors, and right-size your agents.'
+keywords:
+  [
+    resource usage,
+    resource profiling,
+    CPU,
+    memory,
+    out of memory,
+    nx agents,
+    nx cloud,
+    add-on,
+  ]
+sidebar:
+  label: Resource usage
+  order: 14
+  badge: new!
+filter: 'type:Features'
+---
+
+The resource usage add-on records per-agent CPU and memory metrics during distributed task
+execution and surfaces them in Nx Cloud. Use this data to find resource bottlenecks, debug
+out-of-memory (OOM) errors, and pick the right agent size for your workload, all the way down to
+which task caused a spike.
+
+{% aside type="note" title="Nx Cloud add-on" %}
+Resource usage is a standalone Nx Cloud add-on. Enable it under **Settings > Add-ons** for your
+organization.
+{% /aside %}
+
+{% aside type="caution" title="Nx 22.1+ Required" %}
+Resource usage requires Nx 22.1 or later.
+{% /aside %}
+
+## Enabling resource usage
+
+Enable the add-on under **Settings > Add-ons**, or from the **Enable resource profiling** prompt on
+the **Analysis** tab of any CI pipeline execution.
+
+Once the add-on is active:
+
+- **With [Nx Agents](/docs/features/ci-features/distribute-task-execution)**, metrics are collected
+  and uploaded automatically for every agent and task. There's nothing else to configure.
+- **With [manual distributed task execution](/docs/guides/nx-cloud/manual-dte)** (your own CI
+  agents), add a single CLI step per agent job to upload metrics. See
+  [Manual DTE](#resource-metrics-with-manual-dte) below.
+
+When a CI pipeline execution doesn't yet have the add-on, Nx Cloud shows a preview with sample data
+and a prompt to enable it, including a note on the
+[Self-healing CI](/docs/features/ci-features/self-healing-ci) PR comment when a run hits memory or
+CPU issues.
+
+## Viewing resource usage
+
+Open any CI pipeline execution and go to the **Analysis** tab.
+
+### Agent resource usage summary
+
+The **Agent resource usage** table lists every agent in the run with its average and maximum CPU and
+memory, plus the machine specs (cores and RAM) of its resource class. It's the fastest way to spot an
+agent that ran hot.
+
+![Agent resource usage table showing per-agent average and maximum CPU and memory](../../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
+
+### Resource usage over time
+
+Click an agent to open its **Resource usage over time** view. Separate memory and CPU charts plot
+utilization across the agent's lifetime, with reference lines for the machine's capacity and peak
+usage. When a task exceeds available memory and is killed, the chart marks the out-of-memory point so
+you can trace the failure back to the task that caused it.
+
+![Resource usage over time showing memory and CPU charts by task](../../../../assets/guides/nx-cloud/resource-chart-details.png)
+
+The detail view has a few controls for digging in:
+
+- **View mode** - switch between **Individual** (each task or process plotted separately) and
+  **Stacked** (total usage at any point in time).
+
+  ![Stacked view showing total resource usage](../../../../assets/guides/nx-cloud/resource-stacked-chart-view.png)
+
+- **Reference lines** - toggle the capacity and peak-usage lines on or off.
+- **Snap to max** - zoom the axis to the peak memory or CPU value.
+- **Legend** - click items to focus on specific tasks or processes (for example a single
+  `nx build`, the Nx daemon, or CLI overhead).
+
+  ![Using the legend to focus on specific tasks](../../../../assets/guides/nx-cloud/resource-chart-legend.png)
+
+- **Timeline scrubber** - jump to a point in time or zoom in on a spike.
+
+  ![Timeline scrubber for navigating resource usage over time](../../../../assets/guides/nx-cloud/resource-chart-scrubber.jpg)
+
+- **Download CSV** - export the raw per-process data for deeper analysis.
+
+## Common use cases
+
+- **Find memory-hungry tasks** - figure out which project eats the most memory when running in
+  parallel, then lower its parallelism instead of slowing everything down.
+- **Debug OOM kills** - trace an out-of-memory failure to the exact task that caused it.
+- **Spot misconfigured tooling** - catch a bundler or build tool pulling in more files than it
+  should.
+- **Right-size agents** - pick the correct agent resource class when moving to Nx Agents from
+  GitHub Actions or another CI provider.
+- **Detect memory leaks** - look for tasks where memory keeps climbing over time.
+- **Compare before and after upgrades** - check whether a dependency upgrade spiked resource usage.
+
+## Resource metrics with manual DTE
+
+If you run your own CI agents instead of Nx Agents, Nx Cloud can still collect per-agent CPU and
+memory metrics. Opt in by adding a single CLI step to each agent job.
+
+### What to add
+
+At the end of each agent job, run `npx nx-cloud upload-agent-metrics`. Use your provider's
+always-run mechanism so the step runs even when the agent is killed mid-task, which is precisely the
+scenario where the metrics matter most.
+
+Here's the GitHub Actions step:
+
+```yaml
+- name: Upload agent metrics
+  if: always()
+  run: npx nx-cloud upload-agent-metrics
+  env:
+    NX_AGENT_NAME: ${{ matrix.agent }}
+```
+
+The `if: always()` condition is important: if an agent is OOM-killed mid-run, the normal step
+sequence stops, but the upload still needs to happen so you can see which task caused the kill.
+
+The [Manual DTE guide](/docs/guides/nx-cloud/manual-dte) shows the equivalent step for CircleCI,
+Azure Pipelines, Bitbucket Pipelines, GitLab CI, and Jenkins.
+
+## Configuration
+
+Metric collection is controlled by these environment variables:
+
+| Variable                              | Description                                                                      |
+| ------------------------------------- | -------------------------------------------------------------------------------- |
+| `NX_CLOUD_DISABLE_METRICS_COLLECTION` | Set to `true` to disable CPU and memory metric collection during task execution. |
+| `NX_CLOUD_METRICS_DIRECTORY`          | Directory where Nx writes resource metrics during task execution.                |
