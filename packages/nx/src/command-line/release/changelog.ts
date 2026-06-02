@@ -392,7 +392,8 @@ export function createAPI(
       preid: string | undefined,
       checkAllBranchesWhen: CheckAllBranchesWhen,
       requireSemver: boolean,
-      strictPreid: boolean
+      strictPreid: boolean,
+      projectRoot?: string
     ): Promise<string | null> => {
       if (fromSHACache.has(cacheKey)) {
         return fromSHACache.get(cacheKey);
@@ -408,6 +409,7 @@ export function createAPI(
         requireSemver,
         strictPreid,
         useAutomaticFromRef,
+        projectRoot,
       });
       fromSHACache.set(cacheKey, sha);
       return sha;
@@ -513,7 +515,8 @@ export function createAPI(
               projectsPreid[project.name],
               releaseGroup.releaseTag.checkAllBranchesWhen,
               releaseGroup.releaseTag.requireSemver,
-              releaseGroup.releaseTag.strictPreid
+              releaseGroup.releaseTag.strictPreid,
+              project.data.root
             );
 
             let commits: GitCommit[];
