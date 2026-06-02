@@ -9,7 +9,7 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { Minimatch, minimatch } from 'minimatch';
+import { minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -153,7 +153,7 @@ export async function createProjectConfigurationsWithPlugins(
       name: pluginName,
     },
   ] of allCreateNodesPlugins.entries()) {
-    const [pattern, createNodes] = createNodesTuple;
+    const [, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       allProjectFiles[index],
@@ -550,26 +550,11 @@ export function findMatchingConfigFiles(
   include: string[],
   exclude: string[]
 ): string[] {
-  const matchingConfigFiles: string[] = [];
-
   // projectFiles already comes from multiGlobWithWorkspaceContext for the
   // plugin's createNodes pattern, so only include/exclude filters remain here.
-  // Create matchers once, outside the loop
   // Empty include means include everything, empty exclude means exclude nothing
   const includes = createMatcher(include, true);
   const excludes = createMatcher(exclude, false);
 
-  for (const file of projectFiles) {
-    if (!includes(file)) {
-      continue;
-    }
-
-    if (excludes(file)) {
-      continue;
-    }
-
-    matchingConfigFiles.push(file);
-  }
-
-  return matchingConfigFiles;
+  return projectFiles.filter((file) => includes(file) && !excludes(file));
 }
