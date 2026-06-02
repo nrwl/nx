@@ -39,6 +39,12 @@
       ],
       "release/version-utils": [
         "dist/src/release/version-utils.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

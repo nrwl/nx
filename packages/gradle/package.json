@@ -30,6 +30,12 @@
     "*": {
       "plugin-v1": [
         "dist/plugin-v1.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

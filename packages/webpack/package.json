@@ -36,6 +36,12 @@
       ],
       "tsconfig-paths-plugin": [
         "dist/tsconfig-paths-plugin.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

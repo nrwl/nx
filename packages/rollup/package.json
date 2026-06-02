@@ -32,6 +32,12 @@
       ],
       "with-nx": [
         "dist/with-nx.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

@@ -42,6 +42,12 @@
       ],
       "config-utils": [
         "dist/config-utils.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

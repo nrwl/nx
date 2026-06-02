@@ -43,6 +43,39 @@
       ],
       "url-helpers": [
         "dist/url-helpers.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ],
+      "angular.js": [
+        "dist/angular.d.ts"
+      ],
+      "rspack.js": [
+        "dist/rspack.d.ts"
+      ],
+      "webpack.js": [
+        "dist/webpack.d.ts"
+      ],
+      "url-helpers.js": [
+        "dist/url-helpers.d.ts"
+      ],
+      "src/utils": [
+        "dist/src/utils/index.d.ts"
+      ],
+      "src/utils/models": [
+        "dist/src/utils/models/index.d.ts"
+      ],
+      "src/executors/utils": [
+        "dist/src/executors/utils/index.d.ts"
+      ],
+      "src/plugins/models": [
+        "dist/src/plugins/models/index.d.ts"
+      ],
+      "src/plugins/utils": [
+        "dist/src/plugins/utils/index.d.ts"
       ]
     }
   },

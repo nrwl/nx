@@ -36,6 +36,12 @@
       ],
       "presets/cypress": [
         "dist/presets/cypress.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },

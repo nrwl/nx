@@ -43,6 +43,12 @@
       ],
       "react-plugin": [
         "dist/react-plugin.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
       ]
     }
   },
