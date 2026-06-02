@@ -17,6 +17,7 @@ import {
   normalizeTargetDefaultsAgainstRootMaps,
   readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
 } from 'nx/src/devkit-internals';
+import { minimatch } from 'minimatch';
 import { major, valid } from 'semver';
 import { NX_VERSION } from '../utils/package-json';
 import {
@@ -293,6 +294,12 @@ export async function addE2eCiTargetDefaults(
   } = await import(e2ePlugin);
   const e2ePluginGlob =
     resolvedE2ePlugin.createNodesV2?.[0] ?? resolvedE2ePlugin.createNodes?.[0];
+  // The e2e config file must be one this plugin actually processes (its path
+  // matches the plugin's createNodes glob) before the registration's
+  // include/exclude filters are applied.
+  const e2eConfigMatchesPluginGlob =
+    !e2ePluginGlob ||
+    minimatch(pathToE2EConfigFile, e2ePluginGlob, { dot: true });
 
   let foundPluginForApplication: PluginConfiguration;
   for (let i = 0; i < e2ePluginRegistrations.length; i++) {
@@ -302,12 +309,13 @@ export async function addE2eCiTargetDefaults(
       break;
     }
 
-    const matchingConfigFiles = findMatchingConfigFiles(
-      [pathToE2EConfigFile],
-      e2ePluginGlob,
-      candidatePluginForApplication.include,
-      candidatePluginForApplication.exclude
-    );
+    const matchingConfigFiles = e2eConfigMatchesPluginGlob
+      ? findMatchingConfigFiles(
+          [pathToE2EConfigFile],
+          candidatePluginForApplication.include,
+          candidatePluginForApplication.exclude
+        )
+      : [];
 
     if (matchingConfigFiles.length) {
       foundPluginForApplication = candidatePluginForApplication;
