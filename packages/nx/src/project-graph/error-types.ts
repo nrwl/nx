@@ -88,7 +88,7 @@ export class ProjectGraphError extends Error {
   }
 
   /**
-   * This gets the partial project graph despite the errors which occured.
+   * This gets the partial project graph despite the errors which occurred.
    * This partial project graph may be missing nodes, properties of nodes, or dependencies.
    * This is useful mostly for visualization/debugging. It should not be used for running tasks.
    */
