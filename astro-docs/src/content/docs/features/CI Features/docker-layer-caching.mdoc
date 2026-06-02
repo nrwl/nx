@@ -63,12 +63,21 @@ docker build \
 - **`${NX_DOCKER_CACHE_REGISTRY}`** - provided by Nx Cloud. It points at the in-cluster cache
   registry, which is separate from your final image registry. Don't push your application images
   there.
-- **`/my-app:main`** - the reference and tag for the cached layers. Keep it stable and unique per
-  image so cache lookups hit. You can use a different tag per branch (for example `my-app:pr-123`)
-  if you want isolated caches.
+- **`/my-app:main`** - the cache reference and tag. Use the `main` tag so subsequent builds reuse
+  the cached layers.
 - **`--cache-to mode=max`** - exports all layers for maximum reuse. `mode=min` exports fewer layers;
   see the [Docker registry cache docs](https://docs.docker.com/build/cache/backends/registry).
 - **`--cache-from`** - imports cached layers when available.
+
+{% aside type="note" title="Use stable cache image " %}
+Use the stable tag `main` for `--cache-to` and `--cache-from`. Layers stored under the `main` tag are
+kept permanently. Other tags are removed once a week, so non-`main` tags won't persist as long-lived cache.
+
+Use distinct names per cache image (e.g. `my-app:main` and `my-api:main`) so different builds don't
+overwrite each other's layers.
+{% /aside %}
+
+See the [Docker registry cache docs](https://docs.docker.com/build/cache/backends/registry) for more details.
 
 ### 3. Verify it's working
 
@@ -76,4 +85,3 @@ After the cache is warm, subsequent builds should show:
 
 - `[CACHED]` markers in the `docker build` logs where layers were reused.
 - Shorter build times for unchanged layers.
-
