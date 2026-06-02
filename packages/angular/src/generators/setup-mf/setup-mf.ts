@@ -35,10 +35,8 @@ import {
   updateTsConfig,
 } from './lib';
 import type { Schema } from './schema';
-import { warnAngularSetupMfGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function setupMf(tree: Tree, rawOptions: Schema) {
-  warnAngularSetupMfGeneratorDeprecation();
   assertSupportedAngularVersion(tree);
   const options = normalizeOptions(tree, rawOptions);
   const projectConfig = readProjectConfiguration(tree, options.appName);

@@ -15,10 +15,8 @@ import {
   addRemote,
 } from './lib';
 import type { Schema } from './schema';
-import { warnAngularFederateModuleGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
-  warnAngularFederateModuleGeneratorDeprecation();
   assertSupportedAngularVersion(tree);
   if (!tree.exists(schema.path)) {
     throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.
