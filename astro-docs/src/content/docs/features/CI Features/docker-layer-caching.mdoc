@@ -71,7 +71,7 @@ docker build \
 
 {% aside type="note" title="Use stable cache image " %}
 Use the stable tag `main` for `--cache-to` and `--cache-from`. Layers stored under the `main` tag are
-kept permanently. Other tags are removed once a week, so non-`main` tags won't persist as long-lived cache.
+kept permanently. Other tags are removed periodically, so non-`main` tags won't persist as long-lived cache.
 
 Use distinct names per cache image (e.g. `my-app:main` and `my-api:main`) so different builds don't
 overwrite each other's layers.
