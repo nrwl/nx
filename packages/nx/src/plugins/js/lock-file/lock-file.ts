@@ -341,7 +341,7 @@ export function createLockFile(
         );
       }
       output.error({
-        title: 'An error occured while creating pruned lockfile',
+        title: 'An error occurred while creating pruned lockfile',
         bodyLines: errorBodyLines(e, additionalInfo),
       });
     }
