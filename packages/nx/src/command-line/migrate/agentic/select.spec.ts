@@ -14,16 +14,12 @@ jest.mock('../../../utils/output', () => ({
     error: jest.fn(),
   },
 }));
-jest.mock('../../../utils/fileutils', () => ({
-  ...jest.requireActual('../../../utils/fileutils'),
-  writeJsonFile: jest.fn(),
-  readJsonFile: jest.fn(() => ({})),
-}));
 
 import { isAiAgent } from '../../../native';
 import { prompt } from 'enquirer';
 import { output } from '../../../utils/output';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
+import { parseJson } from '../../../utils/json';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { detectInstalledAgents } from './detect-installed';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
@@ -34,8 +30,6 @@ const mockDetect = detectInstalledAgents as unknown as jest.Mock;
 const mockOutputLog = output.log as unknown as jest.Mock;
 const mockOutputError = output.error as unknown as jest.Mock;
 const mockOutputWarn = output.warn as unknown as jest.Mock;
-const mockReadJsonFile = readJsonFile as unknown as jest.Mock;
-const mockWriteJsonFile = writeJsonFile as unknown as jest.Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'
@@ -65,6 +59,8 @@ function setTty(enabled: boolean): void {
 }
 
 describe('resolveAgentic', () => {
+  let tempFs: TempFs;
+
   beforeEach(() => {
     mockIsAiAgent.mockReset();
     mockIsAiAgent.mockReturnValue(false);
@@ -73,13 +69,17 @@ describe('resolveAgentic', () => {
     mockOutputLog.mockReset();
     mockOutputError.mockReset();
     mockOutputWarn.mockReset();
-    mockReadJsonFile.mockReset();
-    mockReadJsonFile.mockReturnValue({});
-    mockWriteJsonFile.mockReset();
+    // Persisting writes to `<workspaceRoot>/nx.json`; TempFs redirects the
+    // workspace root so every fs op hits a throwaway dir, never the real repo.
+    tempFs = new TempFs('migrate-agentic-select');
     // Default to "no agents detected" — the few tests that exercise an enabled
     // flow override this with their own agent list.
     mockDetect.mockResolvedValue([]);
     setTty(true);
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
   });
 
   afterAll(() => {
@@ -168,6 +168,7 @@ describe('resolveAgentic', () => {
   });
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
+    tempFs.createFileSync('nx.json', '{}\n');
     mockPrompt.mockResolvedValueOnce({ choice: 'yes-once' });
     mockDetect.mockResolvedValue([detected('claude-code')]);
     const result = await resolveAgentic({
@@ -179,7 +180,7 @@ describe('resolveAgentic', () => {
       selectedAgent: { id: 'claude-code' },
     });
     // "just this time" persists nothing.
-    expect(mockWriteJsonFile).not.toHaveBeenCalled();
+    expect(await tempFs.readFile('nx.json')).toBe('{}\n');
   });
 
   it('renders the up-front prompt as a select with 4 folded choices when one agent is installed', async () => {
@@ -235,6 +236,7 @@ describe('resolveAgentic', () => {
 
   describe('persisting the up-front prompt decision to nx.json', () => {
     it('does not persist for "Yes, just this time" or "No, just this time"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
       mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
       const result = await resolveAgentic({
@@ -242,10 +244,11 @@ describe('resolveAgentic', () => {
         migrations: [{ prompt: 'x.md' }],
       });
       expect(result.kind).toBe('disabled');
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(await tempFs.readFile('nx.json')).toBe('{}\n');
     });
 
     it('persists `false` for "No, never"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
       mockPrompt.mockResolvedValueOnce({ choice: 'no-never' });
       const result = await resolveAgentic({
@@ -253,13 +256,13 @@ describe('resolveAgentic', () => {
         migrations: [{ prompt: 'x.md' }],
       });
       expect(result.kind).toBe('disabled');
-      expect(mockWriteJsonFile).toHaveBeenCalledTimes(1);
-      expect(mockWriteJsonFile.mock.calls[0][1]).toMatchObject({
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
         migrate: { agentic: false },
       });
     });
 
     it('persists `true` for "Yes, always" (flexible agent)', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
       mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
       const result = await resolveAgentic({
@@ -270,12 +273,13 @@ describe('resolveAgentic', () => {
         kind: 'enabled',
         selectedAgent: { id: 'claude-code' },
       });
-      expect(mockWriteJsonFile.mock.calls[0][1]).toMatchObject({
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
         migrate: { agentic: true },
       });
     });
 
     it('persists the selected agent id for "Yes, always with the same agent"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([
         detected('claude-code'),
         detected('codex'),
@@ -292,28 +296,38 @@ describe('resolveAgentic', () => {
         kind: 'enabled',
         selectedAgent: { id: 'codex' },
       });
-      expect(mockWriteJsonFile.mock.calls[0][1]).toMatchObject({
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
         migrate: { agentic: 'codex' },
       });
     });
 
-    it('preserves existing migrate config when persisting', async () => {
-      mockReadJsonFile.mockReturnValue({ migrate: { createCommits: true } });
+    it('preserves existing migrate config and comments when persisting', async () => {
+      tempFs.createFileSync(
+        'nx.json',
+        [
+          '{',
+          '  // keep me',
+          '  "migrate": { "createCommits": true }',
+          '}',
+          '',
+        ].join('\n')
+      );
       mockDetect.mockResolvedValue([detected('claude-code')]);
       mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
       await resolveAgentic({
         agentic: undefined,
         migrations: [{ prompt: 'x.md' }],
       });
-      expect(mockWriteJsonFile.mock.calls[0][1]).toMatchObject({
+      const written = await tempFs.readFile('nx.json');
+      expect(written).toContain('// keep me');
+      expect(parseJson(written)).toMatchObject({
         migrate: { createCommits: true, agentic: true },
       });
     });
 
     it('warns and continues when saving to nx.json fails', async () => {
-      mockWriteJsonFile.mockImplementation(() => {
-        throw new Error('disk full');
-      });
+      // A directory at the nx.json path makes the read/write throw.
+      tempFs.createDirSync('nx.json');
       mockDetect.mockResolvedValue([detected('claude-code')]);
       mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
       const result = await resolveAgentic({
@@ -327,12 +341,32 @@ describe('resolveAgentic', () => {
       });
       expect(
         mockOutputWarn.mock.calls.some((c) =>
-          /Could not save your agentic choice/i.test(c[0].title)
+          /Could not save your agentic choice to nx.json/i.test(c[0].title)
+        )
+      ).toBe(true);
+    });
+
+    it('warns when there is no nx.json to save to', async () => {
+      // TempFs starts empty, so the workspace root has no nx.json.
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'claude-code' },
+      });
+      expect(
+        mockOutputWarn.mock.calls.some((c) =>
+          /no nx.json found/i.test(c[0].title)
         )
       ).toBe(true);
     });
 
     it('does not persist when the agentic flow is requested explicitly via the flag', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
       mockDetect.mockResolvedValue([detected('claude-code')]);
       const result = await resolveAgentic({
         agentic: true,
@@ -340,7 +374,7 @@ describe('resolveAgentic', () => {
       });
       expect(result.kind).toBe('enabled');
       expect(mockPrompt).not.toHaveBeenCalled();
-      expect(mockWriteJsonFile).not.toHaveBeenCalled();
+      expect(await tempFs.readFile('nx.json')).toBe('{}\n');
     });
   });
 

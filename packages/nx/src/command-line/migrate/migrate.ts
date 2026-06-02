@@ -952,13 +952,19 @@ export async function resolveMode(
   context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
-  }
+  },
+  configuredMode?: MigrateMode
 ): Promise<MigrateMode> {
   if (mode) {
     return mode;
   }
   if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
     return 'all';
+  }
+  // nx.json `migrate.mode` pre-selects the value the interactive prompt would
+  // ask for; it applies only to Nx targets (non-Nx returned 'all' above).
+  if (configuredMode) {
+    return configuredMode;
   }
   if (!process.stdin.isTTY || isCI()) {
     return 'all';
@@ -1150,6 +1156,13 @@ export async function parseMigrationsOptions(options: {
   targetVersion = multiMajorResult.chosen;
 
   if (mode === 'third-party') {
+    // `mode` can resolve to third-party via nx.json, which bypasses the early
+    // CLI-only check above; re-assert against the resolved mode.
+    assertThirdPartyModeFlagCompatibility({
+      mode,
+      from: options.from,
+      excludeAppliedMigrations: options.excludeAppliedMigrations,
+    });
     assertThirdPartyTargetBounds({
       targetPackage,
       targetVersion,
@@ -1198,6 +1211,7 @@ async function resolveTargetAndMode(args: {
   from: Record<string, string>;
   options: {
     mode?: MigrateMode;
+    modeFromConfig?: MigrateMode;
     excludeAppliedMigrations?: boolean;
   };
 }): Promise<{
@@ -1227,7 +1241,8 @@ async function resolveTargetAndMode(args: {
     {
       hasFrom: Object.keys(from).length > 0,
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
-    }
+    },
+    options.modeFromConfig
   );
 
   let installedNxVersion: string | null | undefined;
@@ -3354,7 +3369,7 @@ export async function migrate(
           rawArgs,
           mergedArgs['verbose'],
           mergedArgs['createCommits'],
-          mergedArgs['commitPrefix'],
+          mergedArgs['commitPrefix'] ?? DEFAULT_MIGRATION_COMMIT_PREFIX,
           mergedArgs['skipInstall']
         );
       } catch (e) {

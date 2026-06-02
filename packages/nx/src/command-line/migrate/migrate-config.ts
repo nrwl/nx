@@ -1,9 +1,11 @@
 import type { NxMigrateConfiguration } from '../../config/nx-json';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
+import type { AgenticArg } from './agentic/select';
 import {
   customCommitPrefixHasNoEffect,
   DEFAULT_MIGRATION_COMMIT_PREFIX,
   MIGRATE_MODES,
+  type MigrateArgs,
   MULTI_MAJOR_MODES,
 } from './command-object';
 
@@ -19,12 +21,16 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * `commitPrefix`, `agentic`, `validate`) only when running migrations. This
  * mirrors where each option is consumed and avoids tripping the "cannot be
  * combined with --run-migrations" guards in `parseMigrationsOptions`.
+ *
+ * `mode` is carried as `modeFromConfig` rather than `mode` so it is never
+ * mistaken for an explicit `--mode`: `resolveMode` applies it only when the
+ * target is Nx itself, leaving `nx migrate <non-nx-pkg>` unaffected.
  */
 export function applyNxJsonMigrateDefaults(
-  args: { [k: string]: any },
+  args: MigrateArgs,
   migrateConfig: NxMigrateConfiguration | undefined,
   env: NodeJS.ProcessEnv = process.env
-): { [k: string]: any } {
+): MigrateArgs {
   if (!migrateConfig) {
     return args;
   }
@@ -39,6 +45,7 @@ export function applyNxJsonMigrateDefaults(
       merged.createCommits === undefined &&
       migrateConfig.createCommits !== undefined
     ) {
+      assertType(migrateConfig.createCommits, 'boolean', 'createCommits');
       merged.createCommits = migrateConfig.createCommits;
     }
     // `commitPrefix` carries a yargs default, so the default value is
@@ -49,19 +56,21 @@ export function applyNxJsonMigrateDefaults(
         merged.commitPrefix === DEFAULT_MIGRATION_COMMIT_PREFIX) &&
       migrateConfig.commitPrefix !== undefined
     ) {
+      assertType(migrateConfig.commitPrefix, 'string', 'commitPrefix');
       merged.commitPrefix = migrateConfig.commitPrefix;
     }
     if (merged.agentic === undefined && migrateConfig.agentic !== undefined) {
       assertValidAgentic(migrateConfig.agentic);
-      merged.agentic = coerceAgenticArg(migrateConfig.agentic);
+      merged.agentic = coerceAgenticArg(migrateConfig.agentic) as AgenticArg;
     }
     if (merged.validate === undefined && migrateConfig.validate !== undefined) {
+      assertType(migrateConfig.validate, 'boolean', 'validate');
       merged.validate = migrateConfig.validate;
     }
   } else {
     if (merged.mode === undefined && migrateConfig.mode !== undefined) {
       assertOneOf(migrateConfig.mode, MIGRATE_MODES, 'mode');
-      merged.mode = migrateConfig.mode;
+      merged.modeFromConfig = migrateConfig.mode;
     }
     // The NX_MULTI_MAJOR_MODE env var is an established per-invocation override,
     // so it takes precedence over nx.json (CLI flag > env > nx.json > default).
@@ -96,6 +105,20 @@ function assertOneOf(
   }
 }
 
+function assertType(
+  value: unknown,
+  type: 'boolean' | 'string',
+  field: string
+): void {
+  if (typeof value !== type) {
+    throw new Error(
+      `Error: Invalid nx.json migrate.${field} ${JSON.stringify(
+        value
+      )}. Expected a ${type}.`
+    );
+  }
+}
+
 function assertValidAgentic(agentic: unknown): void {
   if (typeof agentic === 'boolean') {
     return;
@@ -120,9 +143,7 @@ function assertValidAgentic(agentic: unknown): void {
  * `.check()` only fast-fails the unrescuable explicit `--no-create-commits`
  * case; everything else is decided here.
  */
-export function assertCommitPrefixHasCommits(merged: {
-  [k: string]: any;
-}): void {
+export function assertCommitPrefixHasCommits(merged: MigrateArgs): void {
   const { createCommits, commitPrefix, agentic } = merged;
   if (customCommitPrefixHasNoEffect({ createCommits, commitPrefix, agentic })) {
     throw new Error(

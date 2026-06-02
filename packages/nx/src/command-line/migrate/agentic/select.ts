@@ -1,8 +1,7 @@
-import { existsSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
 import { output } from '../../../utils/output';
-import type { NxJsonConfiguration } from '../../../config/nx-json';
-import { readJsonFile, writeJsonFile } from '../../../utils/fileutils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
@@ -157,30 +156,30 @@ async function firePromptForAgentic(
   const rememberHint = `Saved to nx.json so Nx won't ask again`;
 
   // The pin-vs-flexible distinction only matters when more than one agent is
-  // installed. With a single agent, "always" simply persists `true`.
-  const choices =
-    detected.length > 1
+  // installed. With a single agent, "always" simply persists `true` and the
+  // pin option is dropped.
+  const multipleAgents = detected.length > 1;
+  const choices = [
+    { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
+    {
+      name: 'yes-flex',
+      message: multipleAgents
+        ? "Yes, always (I'll pick the agent each run)"
+        : 'Yes, always',
+      hint: rememberHint,
+    },
+    ...(multipleAgents
       ? [
-          { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
-          {
-            name: 'yes-flex',
-            message: "Yes, always (I'll pick the agent each run)",
-            hint: rememberHint,
-          },
           {
             name: 'yes-pin',
             message: 'Yes, always with the same agent',
             hint: rememberHint,
           },
-          { name: 'no-once', message: 'No, just this time', hint: skipHint },
-          { name: 'no-never', message: 'No, never', hint: rememberHint },
         ]
-      : [
-          { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
-          { name: 'yes-flex', message: 'Yes, always', hint: rememberHint },
-          { name: 'no-once', message: 'No, just this time', hint: skipHint },
-          { name: 'no-never', message: 'No, never', hint: rememberHint },
-        ];
+      : []),
+    { name: 'no-once', message: 'No, just this time', hint: skipHint },
+    { name: 'no-never', message: 'No, never', hint: rememberHint },
+  ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
@@ -211,10 +210,11 @@ async function firePromptForAgentic(
 }
 
 // Persists the user's agentic choice to `nx.json` so the up-front prompt is
-// skipped on future runs. Reads and writes the raw `nx.json` file (not the
-// resolved config) so an `extends` preset isn't inlined back into the user's
-// file. JSONC comments are not preserved (writeJsonFile re-serializes). Never
-// throws - a failed write only costs the user the prompt again next time.
+// skipped on future runs. Edits the raw file in place via jsonc-parser, so it
+// touches only the `migrate.agentic` key and preserves comments, formatting,
+// and any `extends` preset (the prompt fires mid-migration, so a silent
+// reformat would be surprising). Never throws - a failed write only costs the
+// user the prompt again next time.
 function persistAgenticChoice(value: boolean | AgentId): void {
   const nxJsonPath = join(workspaceRoot, 'nx.json');
   if (!existsSync(nxJsonPath)) {
@@ -224,9 +224,11 @@ function persistAgenticChoice(value: boolean | AgentId): void {
     return;
   }
   try {
-    const nxJson = readJsonFile<NxJsonConfiguration>(nxJsonPath);
-    nxJson.migrate = { ...(nxJson.migrate ?? {}), agentic: value };
-    writeJsonFile(nxJsonPath, nxJson);
+    const content = readFileSync(nxJsonPath, 'utf-8');
+    const edits = modify(content, ['migrate', 'agentic'], value, {
+      formattingOptions: { insertSpaces: true, tabSize: 2 },
+    });
+    writeFileSync(nxJsonPath, applyEdits(content, edits));
     output.log({
       title: `Saved your choice to nx.json (migrate.agentic = ${JSON.stringify(
         value

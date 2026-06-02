@@ -197,18 +197,49 @@ describe('applyNxJsonMigrateDefaults', () => {
         /Invalid nx\.json migrate\.agentic/i
       );
     });
+
+    it('errors on a non-boolean config createCommits', () => {
+      const config = {
+        createCommits: 'false',
+      } as unknown as NxMigrateConfiguration;
+      expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
+        /Invalid nx\.json migrate\.createCommits .*Expected a boolean/i
+      );
+    });
+
+    it('errors on a non-string config commitPrefix', () => {
+      const config = {
+        createCommits: true,
+        commitPrefix: 123,
+      } as unknown as NxMigrateConfiguration;
+      expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
+        /Invalid nx\.json migrate\.commitPrefix .*Expected a string/i
+      );
+    });
+
+    it('errors on a non-boolean config validate', () => {
+      const config = {
+        validate: 'true',
+      } as unknown as NxMigrateConfiguration;
+      expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
+        /Invalid nx\.json migrate\.validate .*Expected a boolean/i
+      );
+    });
   });
 
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 
-    it('fills generate-only options from config when not provided on the CLI', () => {
+    it('carries config mode as modeFromConfig (not mode) and fills other generate-only options', () => {
       const config: NxMigrateConfiguration = {
         mode: 'first-party',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
-      expect(result.mode).toBe('first-party');
+      // Carried separately so it is never treated as an explicit `--mode`,
+      // which would hard-fail `nx migrate <non-nx-pkg>`.
+      expect(result.mode).toBeUndefined();
+      expect(result.modeFromConfig).toBe('first-party');
       expect(result.multiMajorMode).toBe('gradual');
     });
 
@@ -234,6 +265,7 @@ describe('applyNxJsonMigrateDefaults', () => {
       };
       const result = applyNxJsonMigrateDefaults(args, config, noEnv);
       expect(result.mode).toBe('all');
+      expect(result.modeFromConfig).toBeUndefined();
       expect(result.multiMajorMode).toBe('direct');
     });
 

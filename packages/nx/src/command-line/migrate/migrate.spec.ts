@@ -37,6 +37,7 @@ import {
   resolveCreateCommits,
   resolveMode,
 } from './migrate';
+import { applyNxJsonMigrateDefaults } from './migrate-config';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -2654,6 +2655,39 @@ describe('Migration', () => {
         child: { version: '2.0.0', addToPackageJson: false },
       });
     });
+
+    describe('nx.json migrate.mode overlay (integration)', () => {
+      it('does not treat nx.json migrate.mode as an explicit --mode for a non-Nx target', async () => {
+        // The original footgun: a workspace-wide migrate.mode default made
+        // `nx migrate <non-nx-pkg>` hard-fail with a `--mode` error the user
+        // never passed. The overlay must carry it as a default, not a flag.
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: '@angular/core' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: '@angular/core',
+          mode: 'all',
+        });
+      });
+
+      it('applies nx.json migrate.mode through the overlay for an Nx target', async () => {
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: 'nx@22.0.0' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          mode: 'first-party',
+        });
+      });
+    });
   });
 
   describe('resolveMode', () => {
@@ -2784,6 +2818,74 @@ describe('Migration', () => {
         'first-party',
         'all',
       ]);
+    });
+
+    it('uses the nx.json configured mode for an nx target without prompting', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('uses the nx.json configured mode for an nx target in CI', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'true';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('lets an explicit mode win over the nx.json configured mode', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        'all',
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('ignores the nx.json configured mode for a non-nx-equivalent target', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        '@nx/react',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
     });
   });
 

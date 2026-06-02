@@ -3,6 +3,7 @@ import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
+import type { AgenticArg } from './agentic/select';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -38,6 +39,30 @@ export type MigrateMode = (typeof MIGRATE_MODES)[number];
 /** Allowed values for `--multi-major-mode` / `migrate.multiMajorMode`. */
 export const MULTI_MAJOR_MODES = ['direct', 'gradual'] as const;
 export type MultiMajorMode = (typeof MULTI_MAJOR_MODES)[number];
+
+/**
+ * The `nx migrate` args bag. Types the keys the nx.json overlay and the
+ * commit-prefix invariant read/write; the index signature keeps the rest of
+ * the yargs args flowing through untouched.
+ */
+export interface MigrateArgs {
+  packageAndVersion?: string;
+  runMigrations?: string;
+  mode?: MigrateMode;
+  /**
+   * nx.json `migrate.mode` default. Consumed by `resolveMode` only when the
+   * target is Nx itself; kept separate from `mode` so it is never mistaken for
+   * an explicit `--mode` (which would hard-fail for non-Nx targets).
+   */
+  modeFromConfig?: MigrateMode;
+  multiMajorMode?: MultiMajorMode;
+  createCommits?: boolean;
+  commitPrefix?: string;
+  agentic?: AgenticArg;
+  validate?: boolean;
+  // The rest of the yargs args bag flows through untyped.
+  [key: string]: any;
+}
 
 /**
  * Whether a custom commit prefix would be silently ignored: commits aren't
