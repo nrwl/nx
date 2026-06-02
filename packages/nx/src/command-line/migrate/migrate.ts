@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
 import { migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
-import { dirname, join } from 'path';
+import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
 import { joinPathFragments } from '../../utils/path';
 import {
@@ -2393,6 +2393,7 @@ type ExecutableMigration = {
   implementation?: string;
   factory?: string;
   prompt?: string;
+  documentation?: string;
 };
 
 export { isPromptOnlyMigration, isHybridMigration };
@@ -2680,6 +2681,15 @@ export async function executeMigrations(
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
     try {
+      // Read this migration's collection once and derive everything from it:
+      // the implementation context (passed to runNxOrAngularMigration) and the
+      // documentation path (passed to the agent). Read fresh per iteration so a
+      // prior migration's reinstall is reflected.
+      const { resolvedCollection, documentationPath } = resolveMigrationForRun(
+        root,
+        m,
+        !!agenticRun
+      );
       let outcome: MigrationOutcomeKind;
       let commit: CommitState = { kind: 'none' };
       if (isPromptOnlyMigration(m)) {
@@ -2690,6 +2700,7 @@ export async function executeMigrations(
             agentic: agenticRun.agentic,
             runDir: agenticRun.runDir,
             installDepsIfChanged,
+            documentationPath,
           });
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
@@ -2712,7 +2723,8 @@ export async function executeMigrations(
             root,
             m,
             isVerbose,
-            /* captureGeneratorOutput: */ !!agenticRun
+            /* captureGeneratorOutput: */ !!agenticRun,
+            resolvedCollection
           );
         migrationEmittedNextSteps.push(...nextSteps);
 
@@ -2727,6 +2739,7 @@ export async function executeMigrations(
             agentic: agenticRun.agentic,
             runDir: agenticRun.runDir,
             installDepsIfChanged,
+            documentationPath,
             implContext: {
               logs,
               changes,
@@ -2786,7 +2799,8 @@ export async function executeMigrations(
             root,
             m,
             isVerbose,
-            /* captureGeneratorOutput: */ !!validationRun
+            /* captureGeneratorOutput: */ !!validationRun,
+            resolvedCollection
           );
         migrationEmittedNextSteps.push(...nextSteps);
         const canRunValidation = !!validationRun && changes.length > 0;
@@ -2801,6 +2815,7 @@ export async function executeMigrations(
             agentic: validationRun.agentic,
             runDir: validationRun.runDir,
             installDepsIfChanged,
+            documentationPath,
             implContext: {
               logs,
               changes,
@@ -2969,7 +2984,8 @@ export async function runNxOrAngularMigration(
     version: string;
   },
   isVerbose: boolean,
-  captureGeneratorOutput = false
+  captureGeneratorOutput = false,
+  resolvedCollection?: { collection: MigrationsJson; collectionPath: string }
 ): Promise<{
   changes: FileChange[];
   nextSteps: string[];
@@ -2977,10 +2993,8 @@ export async function runNxOrAngularMigration(
   logs: string;
   madeChanges: boolean;
 }> {
-  const { collection, collectionPath } = readMigrationCollection(
-    migration.package,
-    root
-  );
+  const { collection, collectionPath } =
+    resolvedCollection ?? readMigrationCollection(migration.package, root);
   let changes: FileChange[] = [];
   let nextSteps: string[] = [];
   let agentContext: string[] = [];
@@ -3478,6 +3492,90 @@ export function getImplementationPath(
   }
 
   return { path: implPath, fnSymbol };
+}
+
+/**
+ * Resolves a migration's collection once and derives everything the run loop
+ * needs from that single read: the implementation context (`collection` +
+ * `collectionPath`, handed to `runNxOrAngularMigration`) and, for agentic runs,
+ * the workspace-relative documentation path handed to the agent.
+ *
+ * Read fresh per migration (not cached across the loop) so a prior migration's
+ * reinstall is reflected, exactly as before. Error handling matches each field's
+ * role:
+ * - Migrations that run an implementation REQUIRE the collection; an unreadable
+ *   collection throws and aborts that migration (caught by the run loop).
+ * - Prompt-only migrations don't run an implementation, so the collection is
+ *   read only to resolve documentation - a failure there is non-fatal: the
+ *   prompt still runs and the supplementary doc is skipped with a warning.
+ */
+export function resolveMigrationForRun(
+  root: string,
+  migration: {
+    package: string;
+    name: string;
+    documentation?: string;
+    implementation?: string;
+    factory?: string;
+    prompt?: string;
+  },
+  resolveDocumentation: boolean
+): {
+  resolvedCollection?: { collection: MigrationsJson; collectionPath: string };
+  documentationPath?: string;
+} {
+  let resolvedCollection:
+    | { collection: MigrationsJson; collectionPath: string }
+    | undefined;
+  if (!isPromptOnlyMigration(migration)) {
+    resolvedCollection = readMigrationCollection(migration.package, root);
+  } else if (resolveDocumentation && migration.documentation) {
+    try {
+      resolvedCollection = readMigrationCollection(migration.package, root);
+    } catch {
+      // Non-fatal: documentation is supplementary; the warning below fires.
+    }
+  }
+
+  let documentationPath: string | undefined;
+  if (resolveDocumentation && migration.documentation) {
+    documentationPath = resolvedCollection
+      ? resolveDocumentationFileToWorkspacePath(
+          root,
+          dirname(resolvedCollection.collectionPath),
+          migration.documentation
+        )
+      : undefined;
+    if (!documentationPath) {
+      logger.warn(
+        `Could not resolve the "documentation" file "${migration.documentation}" declared for migration "${migration.package}: ${migration.name}". It will be skipped as additional context for the AI agent.`
+      );
+    }
+  }
+
+  return { resolvedCollection, documentationPath };
+}
+
+// Resolves a `documentation` path (relative to the package's migrations dir) to
+// a workspace-relative path - or the absolute path when it resolves outside the
+// workspace (unusual hoisted/symlinked layouts). The agent runs with cwd =
+// workspace root, so the workspace-relative form is preferred. Returns
+// undefined when the file can't be resolved.
+export function resolveDocumentationFileToWorkspacePath(
+  root: string,
+  migrationsDir: string,
+  documentation: string
+): string | undefined {
+  let documentationFile: string;
+  try {
+    documentationFile = require.resolve(documentation, {
+      paths: [migrationsDir],
+    });
+  } catch {
+    return undefined;
+  }
+  const relativePath = relative(root, documentationFile);
+  return relativePath.startsWith('..') ? documentationFile : relativePath;
 }
 
 class MigrationImplementationMissingError extends Error {

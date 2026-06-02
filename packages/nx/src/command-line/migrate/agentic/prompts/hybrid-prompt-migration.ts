@@ -8,6 +8,7 @@ import {
   renderGitInspectInstruction,
   renderHandoffPathFooter,
   renderMigrationBlock,
+  renderMigrationDocumentationBlock,
   stripAnsi,
 } from './shared-rendering';
 
@@ -20,6 +21,11 @@ export interface HybridPromptMigrationContext {
   promptPath: string;
   /** Absolute path the agent must write its handoff file to. */
   handoffFileAbsolutePath: string;
+  /**
+   * Path to the migration's documentation file, if any - workspace-relative,
+   * or absolute when it resolves outside the workspace.
+   */
+  documentationPath?: string;
   /** Context captured from the deterministic generator phase. */
   impl?: {
     /** Raw output from the generator (devkit logger + console). */
@@ -61,6 +67,8 @@ export function buildHybridPromptUserPrompt(
     `Complete the AI-driven step that follows the generator phase of a two-phase Nx migration. The deterministic generator phase has already run; the sections below summarize what it did. The step may apply additional changes, verify the generator's output, or both — follow the instructions file.`,
     ...renderMigrationBlock(ctx),
   ];
+
+  lines.push(...renderMigrationDocumentationBlock(ctx.documentationPath));
 
   const logs = escapeXmlBody(stripAnsi(ctx.impl?.logs ?? '').trim());
   const agentContext = filterNonEmptyStrings(ctx.impl?.agentContext ?? []);

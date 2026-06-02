@@ -39,6 +39,22 @@ describe('buildHybridPromptUserPrompt', () => {
     expect(out).not.toContain('<advisory_context');
   });
 
+  it('renders the <migration_documentation> block when a documentation path is provided, and omits it otherwise', () => {
+    const documentationPath =
+      'node_modules/@nx/react/dist/src/migrations/update-21-1-0/rewrite-config.md';
+    const withDocumentation = buildHybridPromptUserPrompt({
+      ...baseCtx,
+      documentationPath,
+    });
+    expect(withDocumentation).toContain(documentationPath);
+    expect(withDocumentation).toMatch(
+      /<migration_documentation[\s\S]*<\/migration_documentation>/
+    );
+    expect(buildHybridPromptUserPrompt(baseCtx)).not.toContain(
+      '<migration_documentation'
+    );
+  });
+
   it('renders logs inside a fenced <generator_output> block when provided', () => {
     const out = buildHybridPromptUserPrompt({
       ...baseCtx,
