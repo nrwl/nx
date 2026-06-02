@@ -110,6 +110,10 @@ import {
 } from './prompt-files';
 import type { AgenticArg } from './agentic/select';
 import { DEFAULT_MIGRATION_COMMIT_PREFIX } from './command-object';
+import {
+  applyNxJsonMigrateDefaults,
+  assertCommitPrefixHasCommits,
+} from './migrate-config';
 import type { EnabledResolvedAgentic, ResolvedAgentic } from './agentic/types';
 import {
   applyAgenticHandoffGitignoreFallback,
@@ -948,13 +952,19 @@ export async function resolveMode(
   context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
-  }
+  },
+  configuredMode?: MigrateMode
 ): Promise<MigrateMode> {
   if (mode) {
     return mode;
   }
   if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
     return 'all';
+  }
+  // nx.json `migrate.mode` pre-selects the value the interactive prompt would
+  // ask for; it applies only to Nx targets (non-Nx returned 'all' above).
+  if (configuredMode) {
+    return configuredMode;
   }
   if (!process.stdin.isTTY || isCI()) {
     return 'all';
@@ -1146,6 +1156,13 @@ export async function parseMigrationsOptions(options: {
   targetVersion = multiMajorResult.chosen;
 
   if (mode === 'third-party') {
+    // `mode` can resolve to third-party via nx.json, which bypasses the early
+    // CLI-only check above; re-assert against the resolved mode.
+    assertThirdPartyModeFlagCompatibility({
+      mode,
+      from: options.from,
+      excludeAppliedMigrations: options.excludeAppliedMigrations,
+    });
     assertThirdPartyTargetBounds({
       targetPackage,
       targetVersion,
@@ -1194,6 +1211,7 @@ async function resolveTargetAndMode(args: {
   from: Record<string, string>;
   options: {
     mode?: MigrateMode;
+    modeFromConfig?: MigrateMode;
     excludeAppliedMigrations?: boolean;
   };
 }): Promise<{
@@ -1223,7 +1241,8 @@ async function resolveTargetAndMode(args: {
     {
       hasFrom: Object.keys(from).length > 0,
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
-    }
+    },
+    options.modeFromConfig
   );
 
   let installedNxVersion: string | null | undefined;
@@ -2455,9 +2474,17 @@ export function resolveCreateCommits(args: {
     return { effective: true, agenticHasDiffContext: true };
   }
 
+  // Commits aren't enabled here. A custom prefix only reaches this path via
+  // nx.json (e.g. `migrate.commitPrefix` + `migrate.agentic` when the agentic
+  // flow resolves to disabled); surface that it has no effect rather than
+  // dropping it silently.
   return {
     effective: createCommits === true,
     agenticHasDiffContext: false,
+    warning:
+      commitPrefixIsCustom && createCommits !== true
+        ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
+        : undefined,
   };
 }
 
@@ -3329,7 +3356,9 @@ export async function migrate(
   await daemonClient.stop();
 
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
-    const opts = await parseMigrationsOptions(args);
+    const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
+    assertCommitPrefixHasCommits(mergedArgs);
+    const opts = await parseMigrationsOptions(mergedArgs);
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts);
     } else {
@@ -3338,10 +3367,10 @@ export async function migrate(
           root,
           opts,
           rawArgs,
-          args['verbose'],
-          args['createCommits'],
-          args['commitPrefix'],
-          args['skipInstall']
+          mergedArgs['verbose'],
+          mergedArgs['createCommits'],
+          mergedArgs['commitPrefix'] ?? DEFAULT_MIGRATION_COMMIT_PREFIX,
+          mergedArgs['skipInstall']
         );
       } catch (e) {
         // The remediation guidance is already logged by `runInstall`; swallow
