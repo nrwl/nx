@@ -44,7 +44,6 @@
   },
   "dependencies": {
     "tslib": "catalog:typescript",
-    "@nuxt/kit": "^3.10.0 || ^4.0.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
@@ -57,8 +56,20 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "nuxt": ">=3.10.0 <5.0.0",
-    "@nuxt/schema": "^3.10.0 || ^4.0.0"
+    "nuxt": ">=3.0.0 <5.0.0",
+    "@nuxt/schema": "^3.0.0 || ^4.0.0",
+    "@nuxt/kit": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "nuxt": {
+      "optional": true
+    },
+    "@nuxt/schema": {
+      "optional": true
+    },
+    "@nuxt/kit": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"
