@@ -18,7 +18,7 @@ import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 async function createOrchestrator(
   tasks: Task[],
   projectGraph: ProjectGraph,
-  taskGraphForHashing: TaskGraph,
+  fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle
 ) {
@@ -72,7 +72,7 @@ async function createOrchestrator(
     false,
     daemonClient,
     undefined,
-    taskGraphForHashing
+    fullTaskGraph
   );
 
   await orchestrator.init();
@@ -85,14 +85,14 @@ async function createOrchestrator(
 export async function runDiscreteTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
-  taskGraphForHashing: TaskGraph,
+  fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle
 ): Promise<Array<Promise<TaskResult[]>>> {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
-    taskGraphForHashing,
+    fullTaskGraph,
     nxJson,
     lifeCycle
   );
@@ -142,14 +142,14 @@ export async function runDiscreteTasks(
 export async function runContinuousTasks(
   tasks: Task[],
   projectGraph: ProjectGraph,
-  taskGraphForHashing: TaskGraph,
+  fullTaskGraph: TaskGraph,
   nxJson: NxJsonConfiguration,
   lifeCycle: LifeCycle
 ) {
   const orchestrator = await createOrchestrator(
     tasks,
     projectGraph,
-    taskGraphForHashing,
+    fullTaskGraph,
     nxJson,
     lifeCycle
   );

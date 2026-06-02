@@ -175,7 +175,7 @@ export class TaskOrchestrator {
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string,
-    private readonly taskGraphForHashing: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph
   ) {}
 
   async init() {
@@ -306,7 +306,7 @@ export class TaskOrchestrator {
           await hashTasks(
             this.hasher,
             this.projectGraph,
-            this.taskGraphForHashing,
+            this.fullTaskGraph,
             perTaskEnvs,
             this.taskDetails,
             unhashed
@@ -400,7 +400,7 @@ export class TaskOrchestrator {
       await hashTask(
         this.hasher,
         this.projectGraph,
-        this.taskGraphForHashing,
+        this.fullTaskGraph,
         task,
         taskSpecificEnv,
         this.taskDetails
@@ -677,7 +677,7 @@ export class TaskOrchestrator {
     await hashTasks(
       this.hasher,
       this.projectGraph,
-      this.taskGraphForHashing,
+      this.fullTaskGraph,
       perTaskEnvs,
       this.taskDetails,
       tasks
@@ -806,7 +806,7 @@ export class TaskOrchestrator {
         await this.forkedProcessTaskRunner.forkProcessForBatch(
           batch,
           this.projectGraph,
-          this.taskGraph,
+          this.fullTaskGraph,
           env
         );
 
