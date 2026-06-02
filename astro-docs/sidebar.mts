@@ -188,10 +188,6 @@ const learnGroups: SidebarItems = [
             link: 'features/ci-features/dynamic-agents',
           },
           {
-            label: 'CI resource usage',
-            link: 'guides/nx-cloud/ci-resource-usage',
-          },
-          {
             label: 'Optimize your TTG',
             link: 'guides/nx-cloud/optimize-your-ttg',
           },
@@ -204,16 +200,41 @@ const learnGroups: SidebarItems = [
             link: 'features/ci-features/github-integration',
           },
           {
-            label: 'Sandboxing',
-            link: 'features/ci-features/sandboxing',
-            badge: 'New',
-          },
-          {
             label: 'CIPE affected project graph',
             link: 'guides/nx-cloud/cipe-affected-project-graph',
           },
           { label: 'Encryption', link: 'guides/nx-cloud/encryption' },
           { label: 'Google auth', link: 'guides/nx-cloud/google-auth' },
+          {
+            label: 'Nx Cloud add-ons',
+            collapsed: true,
+            items: [
+              {
+                label: 'Resource usage',
+                link: 'features/ci-features/resource-usage',
+              },
+              {
+                label: 'Dedicated compute cluster',
+                link: 'features/ci-features/dedicated-compute-cluster',
+              },
+              {
+                label: 'Sandboxing',
+                link: 'features/ci-features/sandboxing',
+              },
+              {
+                label: 'Docker layer caching',
+                link: 'features/ci-features/docker-layer-caching',
+              },
+              {
+                label: 'Docker read-through cache',
+                link: 'features/ci-features/docker-read-through-cache',
+              },
+              {
+                label: 'NPM read-through cache',
+                link: 'features/ci-features/npm-read-through-cache',
+              },
+            ],
+          },
         ],
       },
       {
