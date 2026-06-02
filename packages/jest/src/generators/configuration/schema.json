@@ -14,12 +14,6 @@
       },
       "x-priority": "important"
     },
-    "skipSetupFile": {
-      "type": "boolean",
-      "description": "Skips the setup file required for angular.",
-      "default": false,
-      "x-deprecated": "Use the `setupFile` option instead. It will be removed in Nx v22."
-    },
     "setupFile": {
       "type": "string",
       "enum": ["none", "angular", "web-components"],
