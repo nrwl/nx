@@ -87,6 +87,212 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
   isTsEsmLoaderRegistered = true;
 }
 
+/**
+ * Source of a minimal ESM resolution hook that rewrites TypeScript NodeNext
+ * `.js`/`.mjs`/`.cjs` relative specifiers to their `.ts`/`.mts`/`.cts` sources.
+ * Inlined as a string so it can be registered as a self-contained `data:`
+ * module - it relies only on Node's default resolver (no ts-node/swc-node) and
+ * defers loading to Node's native TypeScript stripping. The ESM counterpart to
+ * the CJS `ensureCjsResolverPatched`.
+ *
+ * Only rewrites when the default resolution fails with ERR_MODULE_NOT_FOUND,
+ * the importing module is itself TypeScript, and the specifier is relative, so
+ * it never hijacks resolution that would otherwise succeed.
+ *
+ * Exported so the hook can be exercised directly in unit tests.
+ */
+export const NODENEXT_ESM_RESOLVER_SOURCE = `
+const EXT_FALLBACK = { '.js': ['.ts', '.tsx'], '.mjs': ['.mts'], '.cjs': ['.cts'] };
+const TS_PARENT_RE = /\\.(?:ts|tsx|mts|cts)(?:$|\\?)/;
+export async function resolve(specifier, context, nextResolve) {
+  try {
+    return await nextResolve(specifier, context);
+  } catch (err) {
+    if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
+    const parent = context.parentURL;
+    if (!parent || !TS_PARENT_RE.test(parent)) throw err;
+    if (!(specifier.startsWith('./') || specifier.startsWith('../') || specifier.startsWith('file:'))) throw err;
+    const m = specifier.match(/(\\.(?:js|mjs|cjs))($|\\?)/);
+    if (!m) throw err;
+    const fallbacks = EXT_FALLBACK[m[1]];
+    if (!fallbacks) throw err;
+    const base = specifier.slice(0, m.index);
+    const suffix = specifier.slice(m.index + m[1].length);
+    for (const ext of fallbacks) {
+      try { return await nextResolve(base + ext + suffix, context); } catch {}
+    }
+    throw err;
+  }
+}
+`;
+
+let nodeNextEsmResolverRegistered = false;
+
+/**
+ * Register a self-contained ESM resolution hook (via `Module.register`) that
+ * rewrites TypeScript NodeNext-style `.js`/`.mjs`/`.cjs` relative specifiers to
+ * their `.ts`/`.mts`/`.cts` sources. This is the ESM counterpart to
+ * `ensureCjsResolverPatched`: Node's native type stripping loads the `.ts`
+ * file, but neither native strip nor Node's ESM resolver rewrites the
+ * extension, so `import './foo.js'` from a `.ts` source where only `foo.ts`
+ * exists fails with ERR_MODULE_NOT_FOUND without it.
+ *
+ * The hook is inlined as a `data:` module (see `NODENEXT_ESM_RESOLVER_SOURCE`)
+ * and relies only on Node's default resolver, so it needs no ts-node/swc-node.
+ *
+ * Idempotent and best-effort: a no-op when `Module.register` is unavailable,
+ * when a TypeScript transpiler is already preloaded (see
+ * `isTsTranspilerPreloaded`), or if registration fails.
+ */
+export function ensureNodeNextEsmResolverRegistered(): void {
+  if (nodeNextEsmResolverRegistered) return;
+  nodeNextEsmResolverRegistered = true;
+
+  const module = require('node:module') as typeof import('node:module');
+  if (typeof module.register !== 'function') return;
+
+  // Skip when a transpiler was preloaded via `--require`/`--import` (e.g.
+  // `--require ts-node/register`, which Nx uses only when it runs from `.ts`
+  // source). `module.register()` spins up a loader-hook worker thread on which
+  // Node re-runs those preloads, resolved relative to the *current* working
+  // directory - and Nx plugin workers `chdir()` into the analyzed workspace
+  // first. If that workspace can't resolve the preloaded module, the loader
+  // worker throws and can leave module resolution in a bad state, so we must
+  // avoid the call entirely; catching it is not a clean recovery.
+  //
+  // Consequence: in that from-`.ts`-source invocation a `type: module` plugin
+  // using NodeNext `.js` specifiers won't get this resolver (a preloaded
+  // `ts-node` does NOT rewrite `.js` -> `.ts` for ESM). Published Nx is
+  // unaffected - its workers run compiled `.js` with no preload.
+  if (isTsTranspilerPreloaded()) return;
+
+  try {
+    module.register(
+      'data:text/javascript,' + encodeURIComponent(NODENEXT_ESM_RESOLVER_SOURCE)
+    );
+  } catch {
+    // Best-effort: leave Node's native handling in place for the
+    // dynamic-import path rather than failing the load.
+  }
+}
+
+/**
+ * Whether this process was started with a TypeScript transpiler preloaded via
+ * a `--require`/`--import`/`--loader` flag (e.g. `--require ts-node/register`),
+ * either directly in `process.execArgv` or through `NODE_OPTIONS`. Used to skip
+ * a redundant ESM loader registration that would otherwise crash a loader-hook
+ * worker re-running the preload from a `chdir()`'d cwd - see
+ * `ensureNodeNextEsmResolverRegistered`.
+ */
+function isTsTranspilerPreloaded(): boolean {
+  const PRELOAD_FLAGS = [
+    '-r',
+    '--require',
+    '--import',
+    '--loader',
+    '--experimental-loader',
+  ];
+  const TRANSPILER_RE = /(?:ts-node|@?swc-node)/;
+
+  // Flags passed directly (e.g. spawn(..., ['--require', 'ts-node/register'])).
+  const execArgv = process.execArgv ?? [];
+  for (let i = 0; i < execArgv.length; i++) {
+    const arg = execArgv[i];
+    const eqIdx = arg.indexOf('=');
+    if (eqIdx !== -1) {
+      if (
+        PRELOAD_FLAGS.includes(arg.slice(0, eqIdx)) &&
+        TRANSPILER_RE.test(arg.slice(eqIdx + 1))
+      ) {
+        return true;
+      }
+    } else if (
+      PRELOAD_FLAGS.includes(arg) &&
+      TRANSPILER_RE.test(execArgv[i + 1] ?? '')
+    ) {
+      return true;
+    }
+  }
+
+  // Preloads passed via NODE_OPTIONS don't surface in execArgv.
+  const nodeOptions = process.env.NODE_OPTIONS;
+  if (
+    nodeOptions &&
+    TRANSPILER_RE.test(nodeOptions) &&
+    PRELOAD_FLAGS.some((flag) => nodeOptions.includes(flag))
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+let cjsResolverPatched = false;
+
+/**
+ * Patches Node's CJS resolver to fall back from `.js`/`.mjs`/`.cjs` to the
+ * corresponding TypeScript source extension (`.ts`/`.tsx`, `.mts`, `.cts`)
+ * when the requesting file is itself a `.ts`/`.tsx`/`.mts`/`.cts` source.
+ *
+ * Required for TypeScript NodeNext-style relative imports: `import './foo.js'`
+ * inside a `.ts` file resolves to `./foo.ts` at compile time, but the `.js`
+ * specifier survives transpilation to CJS. Node's native CJS resolver doesn't
+ * rewrite extensions and there is no officially-supported Node API for this —
+ * Node's native strip-types deliberately doesn't either — so a resolver patch
+ * is the prevailing solution in the ecosystem (used by `tsx` and ts-node's
+ * `experimentalResolver`).
+ *
+ * Patches `Module._resolveFilename` (not `_findPath`, matching tsx's narrower
+ * surface). Gates on the requesting file being TS so vanilla `.js` code
+ * requesting missing `.js` files keeps failing — no silent hijack. Only fires
+ * the fallback on `MODULE_NOT_FOUND` so existing `.js` resolution is
+ * unaffected when both files exist. Idempotent on repeat calls.
+ */
+export function ensureCjsResolverPatched(): void {
+  if (cjsResolverPatched) return;
+  cjsResolverPatched = true;
+
+  const Module = require('node:module') as typeof import('node:module');
+  const original = (Module as any)._resolveFilename;
+  if (typeof original !== 'function') return;
+
+  const TS_PARENT_RE = /\.(?:ts|tsx|mts|cts)$/;
+  const EXT_FALLBACK: Record<string, string[]> = {
+    '.js': ['.ts', '.tsx'],
+    '.mjs': ['.mts'],
+    '.cjs': ['.cts'],
+  };
+
+  (Module as any)._resolveFilename = function (
+    this: unknown,
+    request: string,
+    parent: { filename?: string } | undefined,
+    ...rest: unknown[]
+  ): string {
+    try {
+      return original.call(this, request, parent, ...rest);
+    } catch (err: any) {
+      if (err?.code !== 'MODULE_NOT_FOUND') throw err;
+      if (!parent?.filename || !TS_PARENT_RE.test(parent.filename)) throw err;
+
+      const match = request.match(/(\.(?:js|mjs|cjs))$/);
+      if (!match) throw err;
+      const fallbacks = EXT_FALLBACK[match[1]];
+      if (!fallbacks) throw err;
+
+      const base = request.slice(0, -match[1].length);
+      for (const ext of fallbacks) {
+        try {
+          return original.call(this, base + ext, parent, ...rest);
+        } catch {
+          // try the next fallback
+        }
+      }
+      throw err;
+    }
+  };
+}
+
 function tryResolveLoader(specifier: string): string | null {
   try {
     return require.resolve(specifier);
@@ -207,6 +413,9 @@ export function registerTsProject(tsConfigPath: string): () => void {
   // files goes through a transpiler. No-op if no ESM loader package is
   // installed.
   ensureEsmLoaderRegistered({ required: false });
+  // CJS-side fallback so NodeNext `.js` specifiers in `.ts` sources resolve
+  // to the matching `.ts` file when require()'d.
+  ensureCjsResolverPatched();
 
   return () => {
     for (const fn of cleanupFunctions) {
