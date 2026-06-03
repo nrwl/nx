@@ -8,6 +8,7 @@ import { getProjectSourceRoot } from '@nx/js/internal';
 import { readNxJson } from 'nx/src/config/configuration';
 import { Configuration } from 'webpack';
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
+import { warnWebpackComposeHelpersDeprecation } from './deprecation';
 
 export const nxWebpackComposablePlugin = 'nxWebpackComposablePlugin';
 
@@ -34,6 +35,12 @@ export interface AsyncNxComposableWebpackPlugin {
   ): Configuration | Promise<Configuration>;
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
+ * `@nx/webpack/app-plugin` in a standard webpack config and run
+ * `nx g @nx/webpack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
+ */
 export function composePlugins(
   ...plugins: (
     | NxComposableWebpackPlugin
@@ -41,6 +48,7 @@ export function composePlugins(
     | Promise<NxComposableWebpackPlugin | AsyncNxComposableWebpackPlugin>
   )[]
 ) {
+  warnWebpackComposeHelpersDeprecation();
   return Object.assign(
     async function combined(
       config: Configuration,
@@ -68,7 +76,14 @@ export function composePlugins(
   );
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
+ * `@nx/webpack/app-plugin` in a standard webpack config and run
+ * `nx g @nx/webpack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
+ */
 export function composePluginsSync(...plugins: NxComposableWebpackPlugin[]) {
+  warnWebpackComposeHelpersDeprecation();
   return Object.assign(
     function combined(
       config: Configuration,
