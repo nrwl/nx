@@ -67,6 +67,11 @@ to = "/docs/getting-started/tutorials/:splat"
 from = "/docs/features/ci-features/self-healing"
 to = "/docs/features/ci-features/self-healing-ci"
 
+# DOC-513: Manual DTE guide renamed to Bring Your Own Compute
+[[redirects]]
+from = "/docs/guides/nx-cloud/manual-dte"
+to = "/docs/guides/nx-cloud/bring-your-own-compute"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
