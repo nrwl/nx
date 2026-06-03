@@ -1,0 +1,40 @@
+{
+  "migrations": [
+    {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": ">=3.0.0"
+      },
+      "description": "Migrate workspaces past breaking changes for Vitest 3.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-3",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-3.md",
+      "package": "@nx/vite",
+      "name": "migrate-to-vitest-3"
+    },
+    {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": ">=4.0.0"
+      },
+      "description": "Migrate workspaces past breaking changes for Vitest 4.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-4",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-4.md",
+      "package": "@nx/vite",
+      "name": "migrate-to-vitest-4"
+    },
+    {
+      "version": "23.0.0-beta.22",
+      "description": "Migrate the deprecated `setupFile` option of the `@nx/jest:jest` executor: push the file path into `setupFilesAfterEnv` in the project's Jest config and remove the option from `project.json` and `nx.json` target defaults.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-executor-setup-file",
+      "package": "@nx/jest",
+      "name": "migrate-jest-executor-setup-file"
+    },
+    {
+      "version": "23.0.0-beta.22",
+      "description": "Migrate the deprecated `skipSetupFile` option of the `@nx/jest:configuration` generator stored as a default in `nx.json` or per-project `project.json` to `setupFile: 'none'` (when `true`) or remove it (when `false`).",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-jest-configuration-skip-setup-file",
+      "package": "@nx/jest",
+      "name": "migrate-jest-configuration-skip-setup-file"
+    }
+  ]
+}
