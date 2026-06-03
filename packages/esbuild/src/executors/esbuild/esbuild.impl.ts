@@ -16,6 +16,7 @@ import {
   runTypeCheck as _runTypeCheck,
   TypeCheckOptions,
 } from '@nx/js';
+import { emitOxcDeclarations } from '@nx/js/src/utils/typescript/oxc-declaration-emitter';
 import * as esbuild from 'esbuild';
 import { normalizeOptions } from './lib/normalize';
 
@@ -136,6 +137,36 @@ export async function* esbuildExecutor(
                       setup(build: esbuild.PluginBuild) {
                         build.onEnd(async (result: esbuild.BuildResult) => {
                           if (
+                            options.useOxcDeclarations &&
+                            options.declaration
+                          ) {
+                            // Type-check without emitting if needed
+                            if (!options.skipTypeCheck) {
+                              const typeCheckOpts = getTypeCheckOptions(
+                                options,
+                                context
+                              );
+                              typeCheckOpts.mode = 'noEmit';
+                              const { errors, warnings } =
+                                await _runTypeCheck(typeCheckOpts);
+                              if (errors.length > 0 || warnings.length > 0) {
+                                await printDiagnostics(errors, warnings);
+                              }
+                              hasTypeErrors = errors.length > 0;
+                            }
+                            // Emit declarations with oxc
+                            const projectRoot =
+                              context.projectGraph.nodes[context.projectName]
+                                .data.root;
+                            const oxcResult = await emitOxcDeclarations({
+                              projectRoot: join(context.root, projectRoot),
+                              outDir: options.outputPath,
+                              rootDir:
+                                options.declarationRootDir ?? context.root,
+                            });
+                            hasTypeErrors =
+                              hasTypeErrors || oxcResult.errors.length > 0;
+                          } else if (
                             !options.skipTypeCheck ||
                             (options.isTsSolutionSetup && options.declaration)
                           ) {
@@ -191,8 +222,36 @@ export async function* esbuildExecutor(
       }
     );
   } else {
-    // Run type-checks first and bail if they don't pass.
-    if (
+    // Run type-checks and/or declaration emission.
+    if (options.useOxcDeclarations && options.declaration) {
+      // When using oxc for declarations, run type-check separately (noEmit mode)
+      // if needed, then emit declarations with oxc-transform.
+      if (!options.skipTypeCheck) {
+        const typeCheckOpts = getTypeCheckOptions(options, context);
+        // Override to noEmit since oxc handles declaration emission
+        typeCheckOpts.mode = 'noEmit';
+        const { errors, warnings } = await _runTypeCheck(typeCheckOpts);
+        if (errors.length > 0 || warnings.length > 0) {
+          await printDiagnostics(errors, warnings);
+        }
+        if (errors.length > 0) {
+          yield { success: false };
+          return;
+        }
+      }
+
+      const projectRoot =
+        context.projectGraph.nodes[context.projectName].data.root;
+      const { errors } = await emitOxcDeclarations({
+        projectRoot: join(context.root, projectRoot),
+        outDir: options.outputPath,
+        rootDir: options.declarationRootDir ?? context.root,
+      });
+      if (errors.length > 0) {
+        yield { success: false };
+        return;
+      }
+    } else if (
       !options.skipTypeCheck ||
       (options.isTsSolutionSetup && options.declaration)
     ) {

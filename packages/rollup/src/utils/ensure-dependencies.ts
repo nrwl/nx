@@ -3,38 +3,42 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { swcCoreVersion, swcHelpersVersion } from '@nx/js/internal';
+import {
+  oxcTransformVersion,
+  swcCoreVersion,
+  swcHelpersVersion,
+} from '@nx/js/internal';
 import { coreJsVersion, swcLoaderVersion, tsLibVersion } from './versions';
 
 export type EnsureDependenciesOptions = {
   compiler?: 'babel' | 'swc' | 'tsc';
+  useOxcDeclarations?: boolean;
 };
 
 export function ensureDependencies(
   tree: Tree,
   options: EnsureDependenciesOptions
 ): GeneratorCallback {
+  const devDependencies: Record<string, string> = {};
+
   switch (options.compiler) {
     case 'swc':
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          '@swc/helpers': swcHelpersVersion,
-          '@swc/core': swcCoreVersion,
-          'swc-loader': swcLoaderVersion,
-        }
-      );
+      devDependencies['@swc/helpers'] = swcHelpersVersion;
+      devDependencies['@swc/core'] = swcCoreVersion;
+      devDependencies['swc-loader'] = swcLoaderVersion;
+      break;
     case 'babel':
-      return addDependenciesToPackageJson(
-        tree,
-        {},
-        {
-          'core-js': coreJsVersion, // needed for preset-env to work
-          tslib: tsLibVersion,
-        }
-      );
+      devDependencies['core-js'] = coreJsVersion;
+      devDependencies['tslib'] = tsLibVersion;
+      break;
     default:
-      return addDependenciesToPackageJson(tree, {}, { tslib: tsLibVersion });
+      devDependencies['tslib'] = tsLibVersion;
+      break;
   }
+
+  if (options.useOxcDeclarations) {
+    devDependencies['oxc-transform'] = oxcTransformVersion;
+  }
+
+  return addDependenciesToPackageJson(tree, {}, devDependencies);
 }

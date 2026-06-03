@@ -256,6 +256,7 @@
     "open": "^8.4.0",
     "openai": "~4.3.1",
     "ora": "catalog:",
+    "oxc-transform": "^0.123.0",
     "parse-markdown-links": "^1.0.4",
     "parse5": "4.0.0",
     "picocolors": "catalog:",

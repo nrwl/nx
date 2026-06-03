@@ -152,10 +152,14 @@
   },
   "peerDependencies": {
     "@swc/cli": ">=0.6.0 <0.9.0",
+    "oxc-transform": "^0.123.0",
     "verdaccio": "^6.0.5"
   },
   "peerDependenciesMeta": {
     "@swc/cli": {
+      "optional": true
+    },
+    "oxc-transform": {
       "optional": true
     },
     "verdaccio": {

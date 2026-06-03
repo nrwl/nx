@@ -41,6 +41,7 @@
     "@rollup/plugin-typescript": "^12.1.0",
     "autoprefixer": "catalog:css",
     "concat-with-sourcemaps": "^1.1.0",
+    "oxc-transform": "^0.123.0",
     "picocolors": "catalog:",
     "picomatch": "catalog:",
     "postcss": "catalog:css",

@@ -156,6 +156,11 @@
     "sourceMap": {
       "description": "Output sourcemaps.",
       "type": "boolean"
+    },
+    "useOxcDeclarations": {
+      "type": "boolean",
+      "description": "Use oxc-transform for generating TypeScript declaration files (.d.ts) instead of the TypeScript compiler. Requires `isolatedDeclarations: true` in the project's tsconfig. Significantly faster and removes the need for TypeScript during builds when using a non-tsc compiler (swc, babel).",
+      "default": false
     }
   },
   "required": ["tsConfig", "main", "outputPath"],
