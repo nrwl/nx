@@ -96,7 +96,9 @@ export async function addLinting(
       const installTask = addDependenciesToPackageJson(
         host,
         {},
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

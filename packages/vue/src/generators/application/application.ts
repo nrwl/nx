@@ -21,6 +21,7 @@ import { addVite, addVitest } from './lib/add-vite';
 import { addRsbuild } from './lib/add-rsbuild';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
+import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
@@ -41,6 +42,8 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   _options: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedVueVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,

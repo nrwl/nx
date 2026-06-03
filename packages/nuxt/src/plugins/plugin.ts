@@ -4,7 +4,6 @@ import {
   calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
-import type { NuxtOptions } from '@nuxt/schema';
 import {
   AggregateCreateNodesError,
   CreateDependencies,
@@ -255,7 +254,12 @@ async function getInfoFromNuxtConfig(
 ): Promise<{
   buildDir: string;
 }> {
-  let config: NuxtOptions;
+  // Only `buildDir` is read below. Typing it to the full `@nuxt/schema`
+  // `NuxtOptions` couples to one schema version, which clashes when
+  // `loadNuxtConfig` returns the (possibly older) `@nuxt/schema` bundled by the
+  // installed `@nuxt/kit`. Type just what we read so it holds across the
+  // supported Nuxt 3.x–4.x range.
+  let config: { buildDir?: string };
   if (process.env.NX_ISOLATE_PLUGINS !== 'false') {
     config = await (
       await loadNuxtKitDynamicImport()

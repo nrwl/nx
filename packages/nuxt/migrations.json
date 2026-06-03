@@ -9,6 +9,9 @@
   "packageJsonUpdates": {
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "nuxt": ">=3.0.0 <4.0.0"
+      },
       "packages": {
         "nuxt": {
           "version": "^4.0.0",

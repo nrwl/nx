@@ -53,7 +53,7 @@ export async function addRsbuild(tree: Tree, options: NormalizedSchema) {
   }
 
   addHtmlTemplatePath(tree, pathToConfigFile, './index.html');
-  tasks.push(addDependenciesToPackageJson(tree, {}, deps));
+  tasks.push(addDependenciesToPackageJson(tree, {}, deps, undefined, true));
 
   return tasks;
 }

@@ -50,7 +50,11 @@
     "@nx/cypress": "workspace:*",
     "@nx/playwright": "workspace:*",
     "@nx/rsbuild": "workspace:*",
-    "@nx/storybook": "workspace:*"
+    "@nx/storybook": "workspace:*",
+    "vue": "^3.0.0",
+    "vue-router": "^4.0.0",
+    "vue-tsc": "^2.0.0",
+    "@vitejs/plugin-vue": "^5.0.0 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "@nx/cypress": {
@@ -63,6 +67,18 @@
       "optional": true
     },
     "@nx/storybook": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    },
+    "vue-router": {
+      "optional": true
+    },
+    "vue-tsc": {
+      "optional": true
+    },
+    "@vitejs/plugin-vue": {
       "optional": true
     }
   }
