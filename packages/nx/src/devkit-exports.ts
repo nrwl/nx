@@ -6,7 +6,8 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from './generators/tree';
+export type { Tree, FileChange, TreeWriteOptions } from './generators/tree';
+export { FsTree, flushChanges, printChanges } from './generators/tree';
 
 /**
  * @category Workspace
