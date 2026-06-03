@@ -243,9 +243,12 @@ describe('app', () => {
   it('should set up the nx next build builder', async () => {
     const name = uniq();
 
+    // addPlugin: false -> legacy @nx/next:build executor, which relies on
+    // withNx to redirect the build output to --outputPath.
     await applicationGenerator(tree, {
       directory: name,
       style: 'css',
+      addPlugin: false,
     });
 
     expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
@@ -260,7 +263,7 @@ describe('app', () => {
        **/
       const nextConfig = {
         // Use this to set Nx-specific options
-        // See: https://nx.dev/recipes/next/next-config-setup
+        // See: https://nx.dev/docs/technologies/react/next/Guides/next-config-setup
         nx: {},
       };
 
@@ -270,6 +273,30 @@ describe('app', () => {
       ];
 
       module.exports = composePlugins(...plugins)(nextConfig);
+      "
+    `);
+  });
+
+  it('should generate a plain next.config.js for the inferred plugin', async () => {
+    const name = uniq();
+
+    await applicationGenerator(tree, {
+      directory: name,
+      style: 'css',
+      addPlugin: true,
+    });
+
+    expect(tree.read(join(name, 'next.config.js'), 'utf-8'))
+      .toMatchInlineSnapshot(`
+      "//@ts-check
+
+      /** @type {import('next').NextConfig} */
+      const nextConfig = {
+        // Next.js options go here
+        // See: https://nextjs.org/docs/app/api-reference/config/next-config-js
+      };
+
+      module.exports = nextConfig;
       "
     `);
   });

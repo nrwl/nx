@@ -139,6 +139,16 @@ function withNx(
         workspaceRoot,
       } = require('@nx/devkit');
 
+      // Resolved from the workspace (not bundled) so the deprecation warning is
+      // not inlined into production builds. Reached only on the active Nx-task
+      // path; the production-server phase returns above.
+      const { warnWithNxDeprecation } = require(
+        require.resolve('@nx/next/src/utils/deprecation', {
+          paths: [workspaceRoot],
+        })
+      ) as typeof import('../src/utils/deprecation');
+      warnWithNxDeprecation();
+
       // Since this is invoked by an Nx task, the graph is already cached.
       const graph: ProjectGraph = readCachedProjectGraph();
 
