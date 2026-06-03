@@ -1,4 +1,5 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -130,6 +131,7 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
   warnReactRemoteGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeRemoteName(host, schema.name, schema);
@@ -286,7 +288,9 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

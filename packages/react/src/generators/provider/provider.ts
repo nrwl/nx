@@ -9,6 +9,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
   reactVersion,
@@ -39,6 +40,8 @@ export async function providerGenerator(
   tree: Tree,
   schema: ProviderGeneratorSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(tree);
+
   const opts = await normalizeScaffoldOptions(tree, {
     directory: schema.directory,
     surface: 'provider',
@@ -121,7 +124,9 @@ export async function providerGenerator(
   const installTask = addDependenciesToPackageJson(
     tree,
     deps.dependencies,
-    deps.devDependencies
+    deps.devDependencies,
+    undefined,
+    true
   );
 
   await formatFiles(tree);

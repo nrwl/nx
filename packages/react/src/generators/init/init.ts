@@ -12,9 +12,12 @@ import {
 import { nxVersion } from '../../utils/versions';
 import { InitSchema } from './schema';
 import { getReactDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { createNodes } from '../../plugins/router-plugin';
 
 export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
+  assertSupportedReactVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   if (!schema.skipPackageJson) {
@@ -31,7 +34,7 @@ export async function reactInitGenerator(tree: Tree, schema: InitSchema) {
           '@nx/react': nxVersion,
         },
         undefined,
-        schema.keepExistingVersions
+        schema.keepExistingVersions ?? true
       )
     );
   }

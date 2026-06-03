@@ -1,4 +1,5 @@
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   GeneratorCallback,
   Tree,
@@ -18,6 +19,7 @@ import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
 import { warnReactFederateModuleGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
+  assertSupportedReactVersion(tree);
   warnReactFederateModuleGeneratorDeprecation();
   // Check if the file exists
   if (!tree.exists(schema.path)) {

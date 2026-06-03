@@ -1,5 +1,7 @@
 export const nxVersion = require('../../package.json').version;
 
+export const minSupportedReactVersion = '18.0.0';
+
 export const reactVersion = '^19.0.0';
 export const reactV18Version = '18.3.1';
 export const reactDomVersion = '^19.0.0';
@@ -28,8 +30,10 @@ export const reactRouterIsBotVersion = '^4.4.0';
 export const testingLibraryReactVersion = '16.3.0';
 export const testingLibraryDomVersion = '10.4.0';
 
-export const reduxjsToolkitVersion = '1.9.3';
-export const reactReduxVersion = '8.0.5';
+// RTK 2 / react-redux 9 peer on react ^18 || ^19 — cover the full support window.
+// react-redux 8.0.5 / RTK 1.9.3 peer-cap at react ^18, breaking `nx g redux` on React 19.
+export const reduxjsToolkitVersion = '^2.5.0';
+export const reactReduxVersion = '^9.2.0';
 
 export const eslintPluginImportVersion = '2.31.0';
 export const eslintPluginJsxA11yVersion = '6.10.1';
