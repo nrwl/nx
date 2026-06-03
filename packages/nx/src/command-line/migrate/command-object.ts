@@ -144,7 +144,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('mode', {
       describe:
-        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
+        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. The 'first-party' and 'third-party' modes are only available on Nx v23+: 'third-party' requires the workspace to already be on v23+, and 'first-party' requires migrating from v22+ into a v23+ target. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
       choices: MIGRATE_MODES,
     })

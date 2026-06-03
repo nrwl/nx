@@ -223,8 +223,11 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     resolveLatestStableInMajor(targetPackage, installedMajor + 1),
   ]);
   // Only suggest the current-major latest when there's at least a minor
-  // delta — a same-minor patch bump isn't a meaningful incremental step.
+  // delta — a same-minor patch bump isn't a meaningful incremental step. Skip
+  // major 22 (last pre-v23) entirely: a 22.x step is the only sub-v23 option
+  // and conflicts with the mode gate already decided against the v23+ target.
   const showCurrent =
+    installedMajor !== 22 &&
     latestInCurrent &&
     gt(latestInCurrent, installed) &&
     minor(latestInCurrent) > minor(installed)
