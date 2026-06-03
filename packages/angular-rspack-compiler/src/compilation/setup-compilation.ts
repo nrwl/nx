@@ -126,6 +126,25 @@ export async function setupCompilation(
   };
 }
 
+/**
+ * Dispose the shared component stylesheet bundler and reset the singleton.
+ *
+ * `@angular/build` >= 21.2.14 backs `ComponentStylesheetBundler` with a
+ * persistent esbuild build context (it previously used a one-shot
+ * `esbuild.build()` for non-incremental bundling). That context keeps an
+ * esbuild service - a child process and its sockets - alive until disposed,
+ * which prevents a one-shot `rspack build` from exiting once the bundle is
+ * written. Angular's own application builder disposes it in a `finally` block;
+ * we must do the same since we drive the bundler directly.
+ */
+export async function disposeComponentStylesheetBundler(): Promise<void> {
+  if (COMPONENT_STYLESHEET_BUNDLER) {
+    const bundler = COMPONENT_STYLESHEET_BUNDLER;
+    COMPONENT_STYLESHEET_BUNDLER = undefined;
+    await bundler.dispose();
+  }
+}
+
 export function styleTransform(
   componentStylesheetBundler: ComponentStylesheetBundler
 ) {
