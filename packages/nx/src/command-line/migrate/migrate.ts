@@ -59,6 +59,7 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -1528,7 +1529,7 @@ function createInstalledPackageVersionsResolver(
 }
 
 // testing-fetch-start
-function createFetcher() {
+function createFetcher(pmc: PackageManagerCommands) {
   const migrationsCache: Record<
     string,
     Promise<ResolvedMigrationConfiguration>
@@ -1543,7 +1544,7 @@ function createFetcher() {
     if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      return getPackageMigrationsUsingInstall(packageName, packageVersion);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
     }
 
     const cacheKey = packageName + '-' + packageVersion;
@@ -1575,7 +1576,11 @@ function createFetcher() {
         );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
 
-        return getPackageMigrationsUsingInstall(packageName, packageVersion);
+        return getPackageMigrationsUsingInstall(
+          packageName,
+          packageVersion,
+          pmc
+        );
       });
   }
 
@@ -1783,16 +1788,18 @@ const installConcurrencyLimit = process.env.NX_MIGRATE_INSTALL_CONCURRENCY
 
 async function getPackageMigrationsUsingInstall(
   packageName: string,
-  packageVersion: string
+  packageVersion: string,
+  pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
   const run = () =>
-    getPackageMigrationsUsingInstallImpl(packageName, packageVersion);
+    getPackageMigrationsUsingInstallImpl(packageName, packageVersion, pmc);
   return installConcurrencyLimit ? installConcurrencyLimit(run) : run();
 }
 
 async function getPackageMigrationsUsingInstallImpl(
   packageName: string,
-  packageVersion: string
+  packageVersion: string,
+  pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
 
@@ -1803,8 +1810,6 @@ async function getPackageMigrationsUsingInstallImpl(
   }
 
   try {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
     await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
       cwd: dir,
       env: {
@@ -1839,8 +1844,6 @@ async function getPackageMigrationsUsingInstallImpl(
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
   } catch (e) {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
     throw new Error(
       [
         `Failed to fetch migrations for ${packageName}@${packageVersion}`,
@@ -2108,7 +2111,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
-    const fetch = createFetcher();
+    const fetch = createFetcher(pmc);
     let firstPartyPackages: ReadonlySet<string> | undefined;
     if (mode === 'first-party' || mode === 'third-party') {
       // `@nx/workspace` is version-synced with `nx` and declares an
