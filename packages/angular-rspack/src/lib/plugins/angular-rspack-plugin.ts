@@ -7,6 +7,7 @@ import {
 import {
   buildAndAnalyze,
   DiagnosticModes,
+  disposeComponentStylesheetBundler,
   JavaScriptTransformer,
   SourceFileCache,
   maxWorkers,
@@ -339,6 +340,28 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         process.exit(1);
       }
     });
+
+    // Dispose the shared component stylesheet bundler after a one-shot build so
+    // its esbuild service (a child process and sockets, with @angular/build >=
+    // 21.2.14) is released and `rspack build` can exit. Safe per-compiler: an
+    // SSR build runs the server compiler after the browser one
+    // (`dependencies: ['browser']`), never concurrently, and `setupCompilation`
+    // lazily recreates the singleton if a later compiler needs it again. Watch
+    // builds keep the bundler for incremental rebuilds and tear it down on
+    // process shutdown instead.
+    compiler.hooks.done.tapAsync(
+      `${PLUGIN_NAME}_cleanup`,
+      async (_stats, callback) => {
+        if (!watchRunInitialized) {
+          try {
+            await disposeComponentStylesheetBundler();
+          } catch {
+            // Best-effort cleanup - never fail an otherwise successful build.
+          }
+        }
+        callback();
+      }
+    );
 
     compiler.hooks.normalModuleFactory.tap(
       PLUGIN_NAME,
