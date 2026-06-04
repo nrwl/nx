@@ -14,7 +14,6 @@ export interface Schema {
   /** @deprecated use `swcJest` instead */
   babelJest?: boolean;
   js: boolean;
-  standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   addPlugin?: boolean;
   useProjectJson?: boolean;
