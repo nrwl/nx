@@ -127,7 +127,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('interactive', {
       describe:
-        'Enable prompts to confirm whether to collect optional package updates and migrations.',
+        "Enable prompts to confirm whether to collect optional package updates and migrations. Not supported when migrating to Nx v23 or later: use '--mode' to choose which packages to migrate.",
       type: 'boolean',
     })
     .option('excludeAppliedMigrations', {

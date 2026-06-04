@@ -2211,6 +2211,132 @@ describe('Migration', () => {
       });
     });
 
+    it('should reject --interactive when migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should reject --interactive for a bare invocation resolving to a v23+ target', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('23.1.0');
+      await expect(() =>
+        parseMigrationsOptions({ interactive: true })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should reject --interactive for a bare invocation when the registry is unavailable (assumed v23+)', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(new Error('registry down'));
+      await expect(() =>
+        parseMigrationsOptions({ interactive: true })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should reject --mode=first-party combined with --interactive', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          mode: 'first-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should reject --mode=third-party combined with --interactive', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ mode: 'third-party', interactive: true })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should reject the nx.json third-party mode combined with --interactive', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.5.0',
+          modeFromConfig: 'third-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should reject --interactive when the nx.json mode is first-party and migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          modeFromConfig: 'first-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should allow --interactive when migrating to a pre-v23 target', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@22.7.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.7.0',
+        interactive: true,
+        mode: 'all',
+      });
+    });
+
+    it('should allow --no-interactive when migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@23.0.0',
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        interactive: false,
+      });
+    });
+
+    it('should allow --interactive for non-nx-equivalent targets', async () => {
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'mypackage@2.0.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'mypackage',
+        targetVersion: '2.0.0',
+        interactive: true,
+        mode: 'all',
+      });
+    });
+
     it('should handle different variations of the target package', async () => {
       const packageRegistryViewSpy = jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -2986,6 +3112,65 @@ describe('Migration', () => {
         'first-party',
         'all',
       ]);
+    });
+
+    it('should reject --interactive when migrating to v23+', async () => {
+      await expect(() =>
+        resolveMode(undefined, 'nx', '23.0.0', {
+          ...v23Context,
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should reject --interactive combined with an explicit mode when migrating to v23+', async () => {
+      await expect(() =>
+        resolveMode('all', 'nx', '23.0.0', {
+          ...v23Context,
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      );
+    });
+
+    it('should allow --interactive when not migrating to v23+', async () => {
+      const result = await resolveMode(undefined, 'nx', '22.7.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 22,
+        isV23Plus: false,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should not apply the --interactive gate to non-nx-equivalent targets', async () => {
+      const result = await resolveMode(undefined, '@nx/react', '23.0.0', {
+        ...v23Context,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+    });
+
+    it('should not offer third-party nor prompt when --interactive is provided and only third-party would be available', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, 'nx', '22.7.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 23,
+        isV23Plus: false,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
     });
 
     it('uses the nx.json configured mode for an nx target without prompting', async () => {

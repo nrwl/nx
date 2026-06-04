@@ -955,6 +955,7 @@ export async function resolveMode(
     hasExcludeAppliedMigrations: boolean;
     installedMajor?: number | null;
     isV23Plus?: boolean;
+    interactive?: boolean;
   } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
@@ -971,6 +972,18 @@ export async function resolveMode(
     installedMajor >= 22 &&
     context.isV23Plus === true;
   const thirdPartyAvailable = installedMajor !== null && installedMajor >= 23;
+
+  // `--interactive` x-prompts let users skip optional third-party updates; the
+  // modes supersede that choice, so it is disallowed behind the same v23+ gate.
+  if (
+    context.interactive === true &&
+    context.isV23Plus === true &&
+    isNxEquivalentTarget(targetPackage, targetVersion)
+  ) {
+    throw new Error(
+      `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+    );
+  }
 
   if (mode) {
     if (isNxEquivalentTarget(targetPackage, targetVersion)) {
@@ -1030,7 +1043,8 @@ export async function resolveMode(
   if (
     thirdPartyAvailable &&
     !context.hasFrom &&
-    !context.hasExcludeAppliedMigrations
+    !context.hasExcludeAppliedMigrations &&
+    context.interactive !== true
   ) {
     choices.push({
       name: 'third-party',
@@ -1224,6 +1238,7 @@ export async function parseMigrationsOptions(options: {
       mode,
       from: options.from,
       excludeAppliedMigrations: options.excludeAppliedMigrations,
+      interactive: options.interactive,
     });
     assertThirdPartyTargetBounds({
       targetPackage,
@@ -1251,6 +1266,7 @@ function assertThirdPartyModeFlagCompatibility(options: {
   mode?: string;
   from?: string;
   excludeAppliedMigrations?: boolean;
+  interactive?: boolean;
 }): void {
   if (options.mode !== 'third-party') return;
   if (options.from) {
@@ -1261,6 +1277,11 @@ function assertThirdPartyModeFlagCompatibility(options: {
   if (options.excludeAppliedMigrations === true) {
     throw new Error(
       `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+    );
+  }
+  if (options.interactive === true) {
+    throw new Error(
+      `Error: '--mode=third-party' cannot be combined with '--interactive'.`
     );
   }
 }
@@ -1277,6 +1298,7 @@ async function resolveTargetAndMode(args: {
     mode?: MigrateMode;
     modeFromConfig?: MigrateMode;
     excludeAppliedMigrations?: boolean;
+    interactive?: boolean;
   };
 }): Promise<{
   targetPackage: string;
@@ -1352,6 +1374,7 @@ async function resolveTargetAndMode(args: {
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
       installedMajor,
       isV23Plus,
+      interactive: options.interactive,
     },
     options.modeFromConfig
   );
