@@ -554,6 +554,30 @@ The agent configuration and the `--parallel` flag both parallelize tasks, but in
 In the examples above, there will be 3 agents running tasks and each agent will try to run 2 tasks at once. If a particular CI run only has 2 tasks, only one agent will be used.
 {% /aside %}
 
+## Pinning agents to specific targets
+
+`nx-cloud start-agent` accepts a `--targets <csv>` flag that restricts which targets an agent will pick up. This is useful when your runners are memory-constrained and certain task families (for example `e2e`, builds, or component tests) consume so much memory that running them concurrently on the same machine would exhaust available RAM.
+
+By partitioning your matrix into pools, each agent only runs tasks from a known target class:
+
+```yaml
+agents:
+  strategy:
+    matrix:
+      include:
+        - { agent: 1, targets: e2e }
+        - { agent: 2, targets: e2e }
+        - { agent: 3, targets: build }
+        - { agent: 4, targets: component-test,storybook-test }
+        - { agent: 5, targets: test,lint,typecheck }
+  steps:
+    - run: npx nx-cloud start-agent --targets=${{ matrix.targets }}
+      env:
+        NX_AGENT_NAME: ${{ matrix.agent }}
+```
+
+Make sure every target dispatched by the main job is matched by at least one agent, otherwise unmatched tasks will never be picked up and the CI run will hang.
+
 ## Rerunning jobs with DTE
 
 Rerunning only failed jobs results in agent jobs not running, which causes the CI pipeline to hang and eventually timeout. This is a common pitfall when using a CI providers "rerun failed jobs", or equivalent, feature since agent jobs will always complete successfully.
