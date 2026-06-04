@@ -1,6 +1,5 @@
-import { migratePrompt } from './safe-prompt';
+import { canPrompt, migratePrompt } from './safe-prompt';
 import { gt, major, minor, valid } from 'semver';
-import { isCI } from '../../utils/is-ci';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
 import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
@@ -164,7 +163,7 @@ export type MultiMajorResult = {
 
 export async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: MigrateMode;
-  options: { multiMajorMode?: MultiMajorMode };
+  options: { multiMajorMode?: MultiMajorMode; interactive?: boolean };
   targetPackage: string;
   targetVersion: string;
 }): Promise<MultiMajorResult> {
@@ -210,9 +209,10 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     return { chosen: targetVersion };
   }
 
-  const interactive = !!process.stdin.isTTY && !isCI();
-  // Non-TTY without gradual opt-in stays on the warn-only path; avoid the
-  // registry round-trip used to look up incremental migration options.
+  const interactive = canPrompt(options.interactive);
+  // Non-interactive (non-TTY, CI, or --no-interactive) without gradual opt-in
+  // stays on the warn-only path; avoid the registry round-trip used to look
+  // up incremental migration options.
   if (!interactive && multiMajorMode !== 'gradual') {
     warnMultiMajorMigration(targetPackage, installed, targetVersion);
     return { chosen: targetVersion };
