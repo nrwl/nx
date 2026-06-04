@@ -115,11 +115,17 @@ export async function addLinting(
       await getEslintConfigNextDependenciesVersionsToInstall(host);
 
     tasks.push(
-      addDependenciesToPackageJson(host, extraEslintDependencies.dependencies, {
-        ...extraEslintDependencies.devDependencies,
-        'eslint-config-next': eslintConfigNextVersion,
-        '@next/eslint-plugin-next': eslintConfigNextVersion,
-      })
+      addDependenciesToPackageJson(
+        host,
+        extraEslintDependencies.dependencies,
+        {
+          ...extraEslintDependencies.devDependencies,
+          'eslint-config-next': eslintConfigNextVersion,
+          '@next/eslint-plugin-next': eslintConfigNextVersion,
+        },
+        undefined,
+        true
+      )
     );
   }
 

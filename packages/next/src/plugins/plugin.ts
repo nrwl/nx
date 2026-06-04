@@ -210,8 +210,10 @@ async function getBuildTargetConfig(
     outputs: [`${nextOutputPath}/!(cache)/**/*`, `${nextOutputPath}/!(cache)`],
   };
 
-  // TODO(ndcunningham): Update this to be consider different versions of next.js which is running
-  // This doesn't actually need to be tty, but next.js has a bug, https://github.com/vercel/next.js/issues/62906, where it exits 0 when SIGINT is sent.
+  // v14/v15/v16 all emit the same `next build` inferred target shape - no per-major branch needed.
+  // The tty=false is not version-specific: Next.js exits 0 on SIGINT regardless of major
+  // (https://github.com/vercel/next.js/issues/62906). Turbopack-default-on (v16+) and other
+  // bundler differences live at the executor / runtime layer, not here.
   targetConfig.options.tty = false;
 
   if (isTsSolutionSetup) {

@@ -434,8 +434,8 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '^15.2.4',
-            '@next/eslint-plugin-next': '^15.2.4',
+            'eslint-config-next': '^15.5.18',
+            '@next/eslint-plugin-next': '^15.5.18',
           },
         });
       });
@@ -461,8 +461,8 @@ describe('app', () => {
         const packageJson = readJson(tree, '/package.json');
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '~14.2.26',
-            '@next/eslint-plugin-next': '~14.2.26',
+            'eslint-config-next': '~14.2.35',
+            '@next/eslint-plugin-next': '~14.2.35',
           },
         });
       });

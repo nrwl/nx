@@ -15,6 +15,7 @@ import {
 } from '@nx/react/src/utils/versions';
 
 import { nextInitGenerator } from '../init/init';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateViteConfigForServerEntry } from './lib/update-vite-config';
@@ -36,6 +37,8 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
+  assertSupportedNextVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -79,7 +82,9 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       addDependenciesToPackageJson(
         host,
         { tslib: tsLibVersion },
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       )
     );
   }
