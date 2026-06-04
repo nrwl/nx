@@ -68,12 +68,7 @@ export function addProject(
       tags: project.tags?.length ? project.tags : undefined,
     };
   } else {
-    addProjectConfiguration(
-      tree,
-      options.name,
-      project,
-      options.standaloneConfig
-    );
+    addProjectConfiguration(tree, options.name, project);
   }
 
   if (!options.useProjectJson || options.isUsingTsSolutionConfig) {

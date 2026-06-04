@@ -73,7 +73,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -431,7 +430,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TypeScript Configuration files by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -446,7 +444,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.lib.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -464,7 +461,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
         });
         const tsconfigJson = readJson<TsConfig>(
@@ -503,7 +499,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -527,7 +522,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -544,7 +538,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TS config for project by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -829,7 +822,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-vite',
           addPlugin: true,
         });
@@ -946,7 +938,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1304,7 +1295,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TypeScript Configuration files by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1319,7 +1309,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.lib.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1337,7 +1326,6 @@ describe('@nx/storybook:configuration', () => {
       it('should update `tsconfig.json` file', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
         });
         const tsconfigJson = readJson<TsConfig>(
@@ -1376,7 +1364,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1400,7 +1387,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: 'test-ui-lib2',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-webpack5',
           addPlugin: true,
         });
@@ -1417,7 +1403,6 @@ describe('@nx/storybook:configuration', () => {
       it('should generate TS config for project by default', async () => {
         await configurationGenerator(tree, {
           project: 'test-ui-lib',
-          standaloneConfig: false,
           uiFramework: '@storybook/angular',
           addPlugin: true,
         });
@@ -1702,7 +1687,6 @@ describe('@nx/storybook:configuration', () => {
 
         await configurationGenerator(tree, {
           project: '@proj/mylib',
-          standaloneConfig: false,
           uiFramework: '@storybook/react-vite',
           addPlugin: true,
         });
