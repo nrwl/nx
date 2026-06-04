@@ -12,6 +12,7 @@ import {
 import { createNodesV2 } from '../../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
@@ -21,6 +22,8 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedExpoVersion(host);
+
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -96,7 +99,7 @@ export async function updateDependencies(host: Tree, schema: Schema) {
       'metro-resolver': versions.metro,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 

@@ -1,18 +1,27 @@
 {
   "generators": {
     "update-21-4-0-remove-deprecated-deps": {
+      "requires": {
+        "expo": ">= 53.0.0"
+      },
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",
       "factory": "./dist/src/migrations/update-21-4-0/remove-deprecated-deps"
     },
     "update-21-4-0-update-splash-screen-config": {
+      "requires": {
+        "expo": ">= 53.0.0"
+      },
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Update Expo splash screen configuration to use the new format",
       "factory": "./dist/src/migrations/update-21-4-0/update-splash-screen-config"
     },
     "update-21-4-0-add-jest-resolver": {
+      "requires": {
+        "expo": ">= 53.0.0 < 54.0.0"
+      },
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Add custom Jest resolver to handle Expo winter runtime issues",
@@ -25,6 +34,9 @@
       "prompt": "./dist/src/migrations/update-22-2-0/ai-instructions-for-expo-54.md"
     },
     "update-22-2-0-add-expo-system-ui": {
+      "requires": {
+        "expo": ">= 54.0.0"
+      },
       "version": "22.2.0-beta.3",
       "cli": "nx",
       "description": "Add expo-system-ui dependency for Expo SDK 54",
@@ -49,6 +61,9 @@
   "packageJsonUpdates": {
     "21.4.0": {
       "version": "21.4.0-beta.0",
+      "requires": {
+        "expo": ">=52.0.0 <53.0.0"
+      },
       "packages": {
         "expo": {
           "version": "~53.0.10",
@@ -123,7 +138,7 @@
     "22.2.0": {
       "version": "22.2.0-beta.3",
       "requires": {
-        "expo": ">= 53.0.0"
+        "expo": ">=53.0.0 <54.0.0"
       },
       "packages": {
         "expo": {

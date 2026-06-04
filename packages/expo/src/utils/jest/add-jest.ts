@@ -2,7 +2,7 @@ import { Tree, offsetFromRoot, generateFiles, ensurePackage } from '@nx/devkit';
 import { join } from 'path';
 import { updateTsConfigFiles } from '../update-tsconfig-files';
 import { nxVersion } from '../versions';
-import { isExpoV54 } from '../version-utils';
+import { isExpoV53 } from '../version-utils';
 
 export async function addJest(
   host: Tree,
@@ -34,8 +34,9 @@ export async function addJest(
     addPlugin,
   });
 
-  // Check if using Expo v54 to determine Jest configuration approach
-  const useExpoV54 = await isExpoV54(host);
+  // Expo SDK 54+ (including 55) use the winter-runtime ImportMetaRegistry mock;
+  // only SDK 53 needs the custom Jest resolver.
+  const useModernJestSetup = !(await isExpoV53(host));
 
   // Overwrite the jest.config.ts file because react native needs to have special transform property
   // use preset from https://github.com/expo/expo/blob/main/packages/jest-expo/jest-preset.js
@@ -43,7 +44,7 @@ export async function addJest(
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
 
   // For Expo v54, we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
-  const resolverLine = useExpoV54
+  const resolverLine = useModernJestSetup
     ? ''
     : "resolver: require.resolve('./jest.resolver.js'),\n  ";
 
@@ -74,7 +75,7 @@ module.exports = {
 };`;
   host.write(configPath, content);
 
-  if (useExpoV54) {
+  if (useModernJestSetup) {
     // For Expo v54, generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
     const testSetupPath = `${appProjectRoot}/src/test-setup.${
       js ? 'js' : 'ts'

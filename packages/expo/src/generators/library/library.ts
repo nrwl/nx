@@ -38,6 +38,7 @@ import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -54,6 +55,8 @@ export async function expoLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedExpoVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
