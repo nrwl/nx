@@ -18,6 +18,26 @@ import { dirname } from 'node:path';
  */
 export type RawTsconfigJsonCache = Map<string, unknown | null>;
 
+export interface WalkTsconfigExtendsChainOptions {
+  /**
+   * Optional shared cache of parsed tsconfig contents. When omitted, the
+   * walker uses a fresh internal cache.
+   */
+  jsonCache?: RawTsconfigJsonCache;
+  /**
+   * Invoked for every path the walk attempts to read, including files that
+   * fail to parse (`visit` only sees parseable files). The traversal outcome
+   * depends on the existence and content of each reported path, so callers
+   * deriving cache-invalidation inputs should track all of them.
+   */
+  onProbedPath?: (absolutePath: string) => void;
+  /**
+   * Invoked when an `extends` value cannot be resolved to a file. The
+   * traversal outcome may change if the target later becomes resolvable.
+   */
+  onUnresolvableExtends?: (extendsValue: string, fromDir: string) => void;
+}
+
 /**
  * Walks the `extends` chain of a tsconfig, invoking `visit` for each unique
  * reachable file (entry first, then recursively). Cycle-safe. Files that
@@ -32,26 +52,28 @@ export type RawTsconfigJsonCache = Map<string, unknown | null>;
  * @param entryAbsolutePath Absolute, canonical path of the tsconfig to
  *   start from. Pass through `path.resolve()` if unsure.
  * @param visit Invoked once per unique reachable tsconfig.
- * @param options.jsonCache Optional shared cache of parsed tsconfig
- *   contents. When omitted, the walker uses a fresh internal cache.
+ * @param options See {@link WalkTsconfigExtendsChainOptions}.
  */
 export function walkTsconfigExtendsChain(
   entryAbsolutePath: string,
   visit: (absolutePath: string, rawJson: unknown) => 'continue' | 'stop',
-  options?: { jsonCache?: RawTsconfigJsonCache }
+  options?: WalkTsconfigExtendsChainOptions
 ): void {
   const jsonCache: RawTsconfigJsonCache = options?.jsonCache ?? new Map();
-  walk(entryAbsolutePath, visit, jsonCache, new Set());
+  walk(entryAbsolutePath, visit, jsonCache, new Set(), options);
 }
 
 function walk(
   absolutePath: string,
   visit: (absolutePath: string, rawJson: unknown) => 'continue' | 'stop',
   jsonCache: RawTsconfigJsonCache,
-  visited: Set<string>
+  visited: Set<string>,
+  options?: WalkTsconfigExtendsChainOptions
 ): 'continue' | 'stop' {
   if (visited.has(absolutePath)) return 'continue';
   visited.add(absolutePath);
+
+  options?.onProbedPath?.(absolutePath);
 
   const json = readCachedJson(absolutePath, jsonCache);
   if (json === null) return 'continue';
@@ -71,8 +93,13 @@ function walk(
     const ext = extendsList[i];
     if (typeof ext !== 'string' || !ext) continue;
     const childPath = resolveExtendsPath(ext, fromDir);
-    if (childPath === null) continue;
-    if (walk(childPath, visit, jsonCache, visited) === 'stop') return 'stop';
+    if (childPath === null) {
+      options?.onUnresolvableExtends?.(ext, fromDir);
+      continue;
+    }
+    if (walk(childPath, visit, jsonCache, visited, options) === 'stop') {
+      return 'stop';
+    }
   }
 
   return 'continue';

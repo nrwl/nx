@@ -1,6 +1,8 @@
 import { CreateNodesContext } from '@nx/devkit';
+import * as configUtils from '@nx/devkit/internal';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { join } from 'path';
+import { setupWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { join, resolve } from 'path';
 import { createNodesV2 } from './plugin';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -1678,6 +1680,235 @@ describe('@nx/jest/plugin config file inputs', () => {
     );
     const inputs = getTestInputs(results);
     expect(inputs).toContainEqual('{projectRoot}/local-setup.js');
+  });
+});
+
+describe('@nx/jest/plugin caching', () => {
+  const createNodesFunction = createNodesV2[1];
+  const options = { targetName: 'test', disableJestRuntime: true };
+  let context: CreateNodesContext;
+  let tempFs: TempFs;
+  let cwd: string;
+  let loadConfigFileSpy: jest.SpyInstance;
+
+  beforeEach(() => {
+    tempFs = new TempFs('test-jest-cache');
+    cwd = process.cwd();
+    process.chdir(tempFs.tempDir);
+    context = {
+      nxJsonConfiguration: {
+        namedInputs: {
+          default: ['{projectRoot}/**/*'],
+          production: ['!{projectRoot}/**/*.spec.ts'],
+        },
+      },
+      workspaceRoot: tempFs.tempDir,
+    };
+    // Spy with call-through: the config still loads (from the virtual mock),
+    // we just count how many times a config is executed.
+    loadConfigFileSpy = jest.spyOn(configUtils, 'loadConfigFile');
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+    jest.resetModules();
+    tempFs.cleanup();
+    process.chdir(cwd);
+  });
+
+  // Absolute path as the plugin computes it (resolve(workspaceRoot, file)).
+  const abs = (file: string) => resolve(tempFs.tempDir, file);
+  // jest.mock wrapped in a runtime helper so the dynamic path isn't hoisted.
+  const mockConfigFile = (file: string, config: any) =>
+    jest.mock(abs(file), () => config, { virtual: true });
+  const loadedConfigPaths = () =>
+    loadConfigFileSpy.mock.calls.map((call) => call[0] as string);
+
+  it('should not execute any config on a warm cache when nothing changed', async () => {
+    mockConfigFile('proj/jest.config.js', {});
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'proj/jest.config.js': 'module.exports = {}',
+      'proj/project.json': '{}',
+      'proj/src/unit.spec.ts': '',
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    // Cold run populates the on-disk cache.
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+    expect(loadedConfigPaths()).toContain(abs('proj/jest.config.js'));
+
+    // Warm run: same preliminary key, same external content -> no load.
+    loadConfigFileSpy.mockClear();
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+    expect(loadConfigFileSpy).not.toHaveBeenCalled();
+  });
+
+  it('should reload only the config whose project changed', async () => {
+    mockConfigFile('proj-a/jest.config.js', {});
+    mockConfigFile('proj-b/jest.config.js', {});
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'proj-a/jest.config.js': 'module.exports = {}',
+      'proj-a/project.json': '{}',
+      'proj-a/src/unit.spec.ts': '',
+      'proj-b/jest.config.js': 'module.exports = {}',
+      'proj-b/project.json': '{}',
+      'proj-b/src/unit.spec.ts': '',
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    const configFiles = ['proj-a/jest.config.js', 'proj-b/jest.config.js'];
+    await createNodesFunction(configFiles, options, context);
+
+    // Change only proj-a's config bytes -> only its preliminary key moves.
+    loadConfigFileSpy.mockClear();
+    tempFs.writeFile(
+      'proj-a/jest.config.js',
+      'module.exports = {}; // changed'
+    );
+    setupWorkspaceContext(tempFs.tempDir);
+    await createNodesFunction(configFiles, options, context);
+
+    const reloaded = loadedConfigPaths();
+    expect(reloaded).toContain(abs('proj-a/jest.config.js'));
+    expect(reloaded).not.toContain(abs('proj-b/jest.config.js'));
+  });
+
+  it('should invalidate when an external preset changes', async () => {
+    mockConfigFile('proj/jest.config.js', { preset: '../jest.preset.js' });
+    mockConfigFile('jest.preset.js', {});
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'jest.preset.js': 'module.exports = {}',
+      'proj/jest.config.js': "module.exports = { preset: '../jest.preset.js' }",
+      'proj/project.json': '{}',
+      'proj/src/unit.spec.ts': '',
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+
+    // Project files unchanged (preliminary hit) but the external preset's
+    // content changed -> external-file hash differs -> reload.
+    loadConfigFileSpy.mockClear();
+    tempFs.writeFile('jest.preset.js', 'module.exports = { verbose: true }');
+    setupWorkspaceContext(tempFs.tempDir);
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+
+    expect(loadedConfigPaths()).toContain(abs('proj/jest.config.js'));
+  });
+
+  const dtsInput = { dependentTasksOutputFiles: '**/*.d.ts', transitive: true };
+
+  it('should reflect an ancestor tsconfig appearing outside the project root', async () => {
+    mockConfigFile('proj/jest.config.js', {
+      transform: { '^.+\\.ts$': 'ts-jest' },
+    });
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'proj/jest.config.js':
+        "module.exports = { transform: { '^.+\\.ts$': 'ts-jest' } }",
+      'proj/project.json': '{}',
+      'proj/src/unit.spec.ts': '',
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    // Cold: no tsconfig anywhere -> ts-jest defaults to non-isolated mode.
+    const cold = await createNodesFunction(
+      ['proj/jest.config.js'],
+      options,
+      context
+    );
+    expect(cold[0][1].projects['proj'].targets['test'].inputs).toContainEqual(
+      dtsInput
+    );
+
+    // A root tsconfig appears outside the project root: nearest-tsconfig
+    // discovery now resolves to it (a probed location flips from absent to
+    // present) -> reload -> isolatedModules drops the dts input.
+    tempFs.writeFile(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: { isolatedModules: true } })
+    );
+    setupWorkspaceContext(tempFs.tempDir);
+    const warm = await createNodesFunction(
+      ['proj/jest.config.js'],
+      options,
+      context
+    );
+    expect(
+      warm[0][1].projects['proj'].targets['test'].inputs
+    ).not.toContainEqual(dtsInput);
+  });
+
+  it('should reflect a closer ancestor tsconfig overriding the previous one', async () => {
+    mockConfigFile('libs/proj/jest.config.js', {
+      transform: { '^.+\\.ts$': 'ts-jest' },
+    });
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'tsconfig.json': JSON.stringify({
+        compilerOptions: { isolatedModules: true },
+      }),
+      'libs/proj/jest.config.js':
+        "module.exports = { transform: { '^.+\\.ts$': 'ts-jest' } }",
+      'libs/proj/project.json': '{}',
+      'libs/proj/src/unit.spec.ts': '',
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    // Cold: nearest tsconfig is the root one with isolatedModules: true.
+    const cold = await createNodesFunction(
+      ['libs/proj/jest.config.js'],
+      options,
+      context
+    );
+    expect(
+      cold[0][1].projects['libs/proj'].targets['test'].inputs
+    ).not.toContainEqual(dtsInput);
+
+    // A closer ancestor tsconfig appears with isolatedModules: false ->
+    // discovery now resolves to it -> the dts input must be added (missing
+    // it would mean incorrect task-cache hits).
+    tempFs.writeFile(
+      'libs/tsconfig.json',
+      JSON.stringify({ compilerOptions: { isolatedModules: false } })
+    );
+    setupWorkspaceContext(tempFs.tempDir);
+    const warm = await createNodesFunction(
+      ['libs/proj/jest.config.js'],
+      options,
+      context
+    );
+    expect(
+      warm[0][1].projects['libs/proj'].targets['test'].inputs
+    ).toContainEqual(dtsInput);
+  });
+
+  it('should always reload configs whose tsconfig chain has an unresolvable extends', async () => {
+    mockConfigFile('proj/jest.config.js', {
+      transform: {
+        '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }],
+      },
+    });
+    await tempFs.createFiles({
+      'package-lock.json': '{}',
+      'proj/jest.config.js':
+        "module.exports = { transform: { '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.spec.json' }] } }",
+      'proj/project.json': '{}',
+      'proj/src/unit.spec.ts': '',
+      'proj/tsconfig.spec.json': JSON.stringify({ extends: './missing.json' }),
+    });
+    setupWorkspaceContext(tempFs.tempDir);
+
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+
+    // The extends target can't be resolved, so the entry's dependencies
+    // can't be enumerated -> the cached entry must not be trusted.
+    loadConfigFileSpy.mockClear();
+    await createNodesFunction(['proj/jest.config.js'], options, context);
+    expect(loadedConfigPaths()).toContain(abs('proj/jest.config.js'));
   });
 });
 

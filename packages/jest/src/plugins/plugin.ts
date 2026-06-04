@@ -27,7 +27,11 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import { hashObject } from 'nx/src/devkit-internals';
+import {
+  hashObject,
+  hashMultiGlobWithWorkspaceContext,
+} from 'nx/src/devkit-internals';
+import { hashArray } from 'nx/src/devkit-exports';
 import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { combineGlobPatterns } from 'nx/src/utils/globs';
@@ -71,10 +75,34 @@ export interface JestPluginOptions {
 
 type IsolatedModulesResult = {
   value: boolean | undefined;
-  visitedFiles: ReadonlySet<string>;
+  /**
+   * Every path the tsconfig walk depends on: files it read plus locations it
+   * probed that were missing or unparseable. A change in the existence or
+   * content of any of them can change `value`.
+   */
+  dependencyPaths: ReadonlySet<string>;
+  /**
+   * True when an `extends` value could not be resolved to a file (excluding
+   * bare specifiers, which resolve into node_modules and are covered by the
+   * lockfile). The walk's dependencies can't be precisely enumerated then,
+   * so cached results derived from it must not be trusted.
+   */
+  hasUnresolvableExtends: boolean;
 };
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
+
+// Two-level cache entry: `targets`/`metadata` are the inferred output;
+// `externalFiles` + `externalFilesHash` let a load-free preliminary key hit
+// confirm that the external files the config's inference depends on (preset,
+// ts-jest tsconfig discovery) are unchanged - in content AND existence -
+// without executing the config. `forceReload` marks entries whose external
+// dependencies couldn't be precisely enumerated; they are always recomputed.
+type JestTargetsCacheEntry = JestTargets & {
+  externalFiles: string[];
+  externalFilesHash: string;
+  forceReload?: boolean;
+};
 
 const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
@@ -83,7 +111,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
-    const targetsCache = new PluginCache<JestTargets>(cachePath);
+    const targetsCache = new PluginCache<JestTargetsCacheEntry>(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
     // Cache tsconfig reads + isolatedModules resolution. Many projects share
@@ -129,18 +157,81 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
 
     const lockFilePattern = getLockFileName(packageManager);
 
-    // Load configs in parallel. `loadConfigFile` calls `registerTsProject`,
-    // whose transpiler dedup is refcounted: serial register/unregister cycles
-    // drop refCount to 0 between iterations and recreate a fresh ts-node
-    // service each time (ts-node has no cleanup — see
+    // Preliminary per-config key - computable WITHOUT loading any config. It
+    // is today's key minus `externalFiles` (the preset path and ts-jest
+    // tsconfig extends chain), which are only knowable after a config is
+    // executed. Their content moves to a second-level hash below, so a warm
+    // cache never has to execute a config just to build its key.
+    const hashes = await calculateHashesForCreateNodes(
+      projectRoots,
+      options,
+      context,
+      projectRoots.map(() => [lockFilePattern])
+    );
+
+    // Second cache level: hash of a config's external files - their content,
+    // and for probed-but-absent paths their (non-)existence. Memoized and
+    // batched so a preset / tsconfig.base.json shared by many projects is
+    // hashed once per run.
+    const externalFileHashCache = new Map<string, string>();
+    const primeExternalFileHashes = async (files: string[]): Promise<void> => {
+      const pending = [...new Set(files)].filter(
+        (file) => !externalFileHashCache.has(file)
+      );
+      if (!pending.length) {
+        return;
+      }
+      const fileHashes = await hashMultiGlobWithWorkspaceContext(
+        context.workspaceRoot,
+        pending.map((file) => [file])
+      );
+      pending.forEach((file, i) =>
+        externalFileHashCache.set(file, fileHashes[i])
+      );
+    };
+    const computeExternalFilesHash = (files: string[]): string =>
+      hashArray(
+        [...files]
+          .sort()
+          .map((file) => `${file}:${externalFileHashCache.get(file)}`)
+      );
+
+    // A preliminary hit still has to confirm its external-file content is
+    // unchanged; a miss or external-content mismatch is the only thing that
+    // executes a config.
+    const cachedEntries = hashes.map((hash) => targetsCache.get(hash));
+    await primeExternalFileHashes(
+      cachedEntries.flatMap((entry) => entry?.externalFiles ?? [])
+    );
+    const indicesToLoad: number[] = [];
+    for (let i = 0; i < validConfigFiles.length; i++) {
+      const entry = cachedEntries[i];
+      // An entry without `externalFiles` predates this cache shape (or is
+      // otherwise foreign) - treat it as a miss so it gets recomputed.
+      if (
+        !entry ||
+        !Array.isArray(entry.externalFiles) ||
+        entry.forceReload ||
+        computeExternalFilesHash(entry.externalFiles) !==
+          entry.externalFilesHash
+      ) {
+        indicesToLoad.push(i);
+      }
+    }
+
+    // Load only the misses. `loadConfigFile` calls `registerTsProject`, whose
+    // transpiler dedup is refcounted: serial register/unregister cycles drop
+    // refCount to 0 between iterations and recreate a fresh ts-node service
+    // each time (ts-node has no cleanup - see
     // packages/nx/src/plugins/js/utils/register.js), stacking N services in
-    // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel
-    // loads keep all registrations alive concurrently so the dedup holds and
-    // a single transpiler instance is shared.
+    // `require.extensions` and OOM'ing under NX_PREFER_TS_NODE. Parallel loads
+    // keep all registrations alive concurrently so the dedup holds and a
+    // single transpiler instance is shared.
     let requireCacheCleared = false;
-    const loadedConfigs = await Promise.all(
-      validConfigFiles.map(async (configFilePath, i) => {
-        const projectRoot = projectRoots[i];
+    const built = await Promise.all(
+      indicesToLoad.map(async (idx) => {
+        const configFilePath = validConfigFiles[idx];
+        const projectRoot = projectRoots[idx];
         const absConfigFilePath = resolve(
           context.workspaceRoot,
           configFilePath
@@ -155,7 +246,7 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
           'tsconfig.jest.json',
           'tsconfig.json',
         ]);
-        const { externalFiles, needsDtsInputs } =
+        const { externalFiles, needsDtsInputs, forceReload } =
           await collectExternalFileReferences(
             rawConfig,
             absConfigFilePath,
@@ -168,44 +259,46 @@ export const createNodes: CreateNodes<JestPluginOptions> = [
               isolatedModulesCache,
             }
           );
-        return { rawConfig, externalFiles, needsDtsInputs };
+        const { targets, metadata } = await buildJestTargets(
+          rawConfig,
+          needsDtsInputs,
+          configFilePath,
+          projectRoot,
+          options,
+          context,
+          presetCache,
+          pmc
+        );
+        return { idx, targets, metadata, externalFiles, forceReload };
       })
     );
 
-    const hashes = await calculateHashesForCreateNodes(
-      projectRoots,
-      options,
-      context,
-      loadedConfigs.map(({ externalFiles }) => [
-        lockFilePattern,
-        ...externalFiles,
-      ])
+    // Hash freshly-collected external files (deduped/batched with the hit set
+    // above) and store the widened entries.
+    await primeExternalFileHashes(
+      built.flatMap(({ externalFiles }) => externalFiles)
     );
+    for (const {
+      idx,
+      targets,
+      metadata,
+      externalFiles,
+      forceReload,
+    } of built) {
+      targetsCache.set(hashes[idx], {
+        targets,
+        metadata,
+        externalFiles,
+        externalFilesHash: computeExternalFilesHash(externalFiles),
+        ...(forceReload ? { forceReload } : {}),
+      });
+    }
 
     try {
       return await createNodesFromFiles(
-        async (configFilePath, options, context, idx) => {
+        (_configFilePath, _options, _context, idx) => {
           const projectRoot = projectRoots[idx];
-          const hash = hashes[idx];
-          const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
-
-          if (!targetsCache.has(hash)) {
-            targetsCache.set(
-              hash,
-              await buildJestTargets(
-                rawConfig,
-                needsDtsInputs,
-                configFilePath,
-                projectRoot,
-                options,
-                context,
-                presetCache,
-                pmc
-              )
-            );
-          }
-
-          const { targets, metadata } = targetsCache.get(hash);
+          const { targets, metadata } = targetsCache.get(hashes[idx]);
 
           return {
             projects: {
@@ -1023,19 +1116,23 @@ async function getTestPaths(
 }
 
 /**
- * Collects workspace-relative paths to files whose CONTENT the plugin reads
- * when computing inferred targets and that live OUTSIDE the project root.
- *
- * Only two kinds of files qualify:
+ * Collects workspace-relative paths OUTSIDE the project root whose content
+ * OR existence the plugin's inference depends on:
  *  - The jest preset (loaded to read its `transform`, etc.)
- *  - Tsconfig files in the extends chain referenced by ts-jest (read to
- *    determine `isolatedModules`); only walked when ts-jest is not already
- *    known to be in isolated mode.
+ *  - Tsconfig files consulted for ts-jest's `isolatedModules` resolution -
+ *    both the files read (extends chain) and the locations probed while
+ *    discovering the nearest tsconfig, so a file appearing at a probed
+ *    location still invalidates a cached entry. Only walked when ts-jest is
+ *    not already known to be in isolated mode.
  *
  * Other config references (setup files, custom resolvers, transformers,
  * etc.) are NOT collected — the plugin only resolves their paths and emits
  * them as task inputs; their content is not read by the plugin, so changes
  * to them don't influence inference.
+ *
+ * Returns `forceReload: true` when a dependency cannot be precisely
+ * enumerated (an unresolvable non-bare tsconfig `extends`); cached entries
+ * for such configs must always be recomputed.
  */
 async function collectExternalFileReferences(
   rawConfig: any,
@@ -1048,7 +1145,11 @@ async function collectExternalFileReferences(
     tsconfigExistsCache: Map<string, boolean>;
     isolatedModulesCache: Map<string, IsolatedModulesResult>;
   }
-): Promise<{ externalFiles: string[]; needsDtsInputs: boolean }> {
+): Promise<{
+  externalFiles: string[];
+  needsDtsInputs: boolean;
+  forceReload: boolean;
+}> {
   const {
     presetCache,
     tsconfigJsonCache,
@@ -1092,6 +1193,7 @@ async function collectExternalFileReferences(
     ...(rawConfig.transform ?? {}),
   };
   let needsDtsInputs = false;
+  let forceReload = false;
   for (const value of Object.values(transform)) {
     let transformPath: string;
     let transformOptions: Record<string, any> | undefined;
@@ -1113,24 +1215,37 @@ async function collectExternalFileReferences(
           rootDir,
           replaceRootDirInPath(rootDir, transformOptions.tsconfig)
         )
-      : findNearestTsconfig(rootDir, absWorkspaceRoot, tsconfigExistsCache);
+      : findNearestTsconfig(
+          rootDir,
+          absWorkspaceRoot,
+          tsconfigExistsCache,
+          // Track every probed location: a tsconfig.json appearing at one of
+          // them changes the discovery result without any project file (or
+          // already-known external file) changing.
+          addIfExternal
+        );
     if (!tsconfigAbsPath) {
       // No tsconfig found — ts-jest defaults to non-isolated mode
       needsDtsInputs = true;
       continue;
     }
-    const { value: isolatedValue, visitedFiles } = resolveIsolatedModules(
+    const {
+      value: isolatedValue,
+      dependencyPaths,
+      hasUnresolvableExtends,
+    } = resolveIsolatedModules(
       tsconfigAbsPath,
       tsconfigJsonCache,
       isolatedModulesCache
     );
-    for (const visitedFile of visitedFiles) {
-      addIfExternal(visitedFile);
+    for (const dependencyPath of dependencyPaths) {
+      addIfExternal(dependencyPath);
     }
+    if (hasUnresolvableExtends) forceReload = true;
     if (isolatedValue !== true) needsDtsInputs = true;
   }
 
-  return { externalFiles: [...externalFiles], needsDtsInputs };
+  return { externalFiles: [...externalFiles], needsDtsInputs, forceReload };
 }
 
 async function loadPresetConfig(
@@ -1295,11 +1410,15 @@ async function getConfigFileInputs(
 function findNearestTsconfig(
   startDir: string,
   stopDir: string,
-  existsCache: Map<string, boolean>
+  existsCache: Map<string, boolean>,
+  onProbe?: (candidatePath: string) => void
 ): string | null {
   let dir = startDir;
   while (true) {
     const candidate = join(dir, 'tsconfig.json');
+    // Report regardless of the exists-cache: the discovery result depends on
+    // this candidate even when its existence was checked for another config.
+    onProbe?.(candidate);
     let exists = existsCache.get(candidate);
     if (exists === undefined) {
       exists = existsSync(candidate);
@@ -1340,12 +1459,12 @@ function resolveIsolatedModules(
   if (cached) return cached;
 
   let value: boolean | undefined;
-  const visitedFiles = new Set<string>();
+  const dependencyPaths = new Set<string>();
+  let hasUnresolvableExtends = false;
 
   walkTsconfigExtendsChain(
     tsconfigPath,
     (absPath, rawJson) => {
-      visitedFiles.add(absPath);
       const opts = (rawJson as any)?.compilerOptions;
       if (opts?.isolatedModules !== undefined) {
         value = opts.isolatedModules === true;
@@ -1359,10 +1478,28 @@ function resolveIsolatedModules(
       }
       return 'continue';
     },
-    { jsonCache }
+    {
+      jsonCache,
+      // Superset of the visited files: also includes the entry when it is
+      // missing, and reachable files that fail to parse. Any of them
+      // appearing or changing can change the resolution.
+      onProbedPath: (absPath) => dependencyPaths.add(absPath),
+      onUnresolvableExtends: (extendsValue) => {
+        // Bare specifiers resolve into node_modules, which the lockfile
+        // already covers. Anything else points at a file that could appear
+        // later at locations we cannot precisely enumerate.
+        if (extendsValue.startsWith('.') || isAbsolute(extendsValue)) {
+          hasUnresolvableExtends = true;
+        }
+      },
+    }
   );
 
-  const result: IsolatedModulesResult = { value, visitedFiles };
+  const result: IsolatedModulesResult = {
+    value,
+    dependencyPaths,
+    hasUnresolvableExtends,
+  };
   resultCache.set(tsconfigPath, result);
   return result;
 }
