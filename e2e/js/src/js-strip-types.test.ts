@@ -119,6 +119,18 @@ describe('native Node.js TypeScript support', () => {
     // logging, which would make per-test assertions flaky based on
     // `uniq()`-randomized lib ordering. Each test does its own cleanup
     // between graph capture and assertions.
+    //
+    // Each test must also `nx reset` BEFORE writing its broken config:
+    // `runCLI` defaults to NX_DAEMON=true, so the generate call leaves a
+    // daemon watching. If the broken config is written while it's alive, the
+    // daemon recomputes the graph, executes the config in its (detached)
+    // plugin worker, and persists the plugin cache keyed on the broken
+    // content. Resetting after the write doesn't help: reset's daemon stop
+    // doesn't wait for the worker, so its cache write can land after the
+    // wipe. The daemon-less assert run then gets a warm cache hit, never
+    // executes the config, and the fallback log it asserts on is never
+    // emitted. Killing the daemon before the broken config exists makes the
+    // assert run the only process that ever executes it.
 
     it(
       'should fall back to swc/ts-node when a TS config uses an enum',
@@ -127,6 +139,9 @@ describe('native Node.js TypeScript support', () => {
         runCLI(
           `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
         );
+
+        // Kill the daemon before writing the broken config (see block comment).
+        runCLI('reset');
 
         // enum is not supported by Node native type stripping - must trigger fallback
         updateFile(
@@ -165,6 +180,9 @@ module.exports = { displayName: '${lib}', mode };
         runCLI(
           `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
         );
+
+        // Kill the daemon before writing the broken config (see block comment).
+        runCLI('reset');
 
         // `.cts` + `require()`: keeps the file valid CJS (no SyntaxError, so
         // `isCjsSyntaxError` doesn't short-circuit) but the CJS resolver
@@ -220,6 +238,9 @@ module.exports = { displayName };
           `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
         );
 
+        // Kill the daemon before writing the broken config (see block comment).
+        runCLI('reset');
+
         // .cts is forced CJS by Node's native loader, so top-level `export`
         // is a SyntaxError. Pre-v23 this worked because swc-node's hook
         // compiled ESM->CJS regardless of extension; the loader's
@@ -257,6 +278,9 @@ module.exports = { displayName };
         runCLI(
           `generate @nx/js:lib ${lib} --unitTestRunner=jest --no-interactive`
         );
+
+        // Kill the daemon before writing the broken config (see block comment).
+        runCLI('reset');
 
         // .mts with an enum: Node 22.12+ require()s sync ESM, native strip
         // throws ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX, loadTsFile registers
