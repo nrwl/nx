@@ -1,5 +1,7 @@
+import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
+  getTranspiler,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -8,6 +10,11 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
 } from './register';
+
+// Avoid a real swc registration side effect when exercising getTranspiler.
+jest.mock('@swc-node/register/register', () => ({
+  register: () => () => {},
+}));
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -99,6 +106,16 @@ describe('isNativeStripPreferred', () => {
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
     expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+});
+
+describe('getTranspiler', () => {
+  // The installed typescript is >= 6, so the suppression flag must be set to
+  // avoid TS6 hard-erroring on the deprecated options getTranspiler applies.
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
+    const compilerOptions: CompilerOptions = {};
+    getTranspiler(compilerOptions);
+    expect(compilerOptions.ignoreDeprecations).toEqual('6.0');
   });
 });
 

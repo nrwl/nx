@@ -1,9 +1,12 @@
 import {
   cleanupProject,
+  getPackageManagerCommand,
   newProject,
   readJson,
   runCLI,
+  runCommand,
   uniq,
+  updateJson,
 } from '@nx/e2e-utils';
 
 describe('Remix - TS solution setup', () => {
@@ -18,6 +21,19 @@ describe('Remix - TS solution setup', () => {
       ],
       preset: 'ts',
     });
+
+    // Remix supports TS < 6 only; the workspace default is now TS 6, so pin
+    // back to a 5.x version to keep the Remix generators usable.
+    updateJson('package.json', (json) => {
+      if (json.devDependencies?.typescript) {
+        json.devDependencies.typescript = '~5.9.2';
+      } else {
+        json.dependencies ??= {};
+        json.dependencies.typescript = '~5.9.2';
+      }
+      return json;
+    });
+    runCommand(getPackageManagerCommand().install);
   });
 
   afterEach(() => {
