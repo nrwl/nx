@@ -405,25 +405,26 @@ export function readModulePackageJson(
  * Prepares all necessary information for installing a package to a temporary directory.
  * This is used by both sync and async installation functions.
  */
-function preparePackageInstallation(pkg: string, requiredVersion: string) {
+function preparePackageInstallation(
+  pkg: string,
+  requiredVersion: string,
+  packageManager: PackageManager
+) {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
     cleanup: () => {},
   };
 
   console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager(workspaceRoot);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
+  // For pnpm, `addDev` is `pnpm add -Dw` when the workspace has a
+  // pnpm-workspace.yaml. `createTempNpmDirectory` copies a sanitized copy of
+  // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  let addCommand = pmCommands.addDev;
-  if (packageManager === 'pnpm') {
-    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
-  }
-
-  const installCommand = `${addCommand} ${pkg}@${requiredVersion} ${
+  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
 
@@ -450,13 +451,14 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
 
 export function installPackageToTmp(
   pkg: string,
-  requiredVersion: string
+  requiredVersion: string,
+  packageManager: PackageManager
 ): {
   tempDir: string;
   cleanup: () => void;
 } {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(pkg, requiredVersion, packageManager);
 
   if (preInstallCommand) {
     // ensure package.json and repo in tmp folder is set to a proper package manager state
@@ -473,13 +475,14 @@ export function installPackageToTmp(
 
 export async function installPackageToTmpAsync(
   pkg: string,
-  requiredVersion: string
+  requiredVersion: string,
+  packageManager: PackageManager
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
 }> {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(pkg, requiredVersion, packageManager);
 
   try {
     if (preInstallCommand) {
