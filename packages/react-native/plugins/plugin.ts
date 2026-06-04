@@ -17,7 +17,7 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -40,6 +40,17 @@ type ReactNativeTargets = Record<
   TargetConfiguration<ReactNativePluginOptions>
 >;
 
+// Keyed per (project hash, config file) so warm runs can reuse the filter
+// decision without executing the app config. `included` is only stored when
+// the decision derives from inputs covered by the cache key (app.json
+// content, sibling-file existence, or an expo dependency in the project's
+// package.json); decisions resting on executed JS/TS config content are
+// re-evaluated every run. `targets` is set lazily for included entries.
+interface ReactNativeCacheEntry {
+  included?: boolean;
+  targets?: ReactNativeTargets;
+}
+
 export const createNodes: CreateNodes<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
@@ -48,23 +59,31 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
       workspaceDataDirectory,
       `react-native-${optionsHash}.hash`
     );
-    const targetsCache = new PluginCache<ReactNativeTargets>(cachePath);
+    const cache = new PluginCache<ReactNativeCacheEntry>(cachePath);
     const lockFileName = getLockFileName(
       detectPackageManager(context.workspaceRoot)
     );
     const normalizedOptions = normalizeOptions(options);
 
     try {
-      const { entries, preErrors } = await filterReactNativeConfigs(
-        configFiles,
-        context
-      );
-
+      // Per-candidate keys computable without executing configs. Keyed per
+      // config file because two config files in the same root (app.json +
+      // app.config.js) can produce different filter outcomes.
       const projectHashes = await calculateHashesForCreateNodes(
-        entries.map((e) => e.projectRoot),
+        configFiles.map((configFile) => dirname(configFile)),
         normalizedOptions,
         context,
-        entries.map(() => [lockFileName])
+        configFiles.map(() => [lockFileName])
+      );
+      const cacheKeys = configFiles.map(
+        (configFile, idx) => `${projectHashes[idx]}|${configFile}`
+      );
+
+      const { entries, preErrors } = await filterReactNativeConfigs(
+        configFiles,
+        cacheKeys,
+        cache,
+        context
       );
 
       let results: CreateNodesResultV2 = [];
@@ -76,8 +95,8 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
               configFile,
               normalizedOptions,
               ctx,
-              targetsCache,
-              projectHashes[idx]
+              cache,
+              entries[idx].cacheKey
             ),
           entries.map((e) => e.configFile),
           options,
@@ -98,7 +117,7 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
       }
       return results;
     } finally {
-      targetsCache.writeToDisk();
+      cache.writeToDisk();
     }
   },
 ];
@@ -109,22 +128,21 @@ async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
   context: CreateNodesContext,
-  targetsCache: PluginCache<ReactNativeTargets>,
-  hash: string
+  cache: PluginCache<ReactNativeCacheEntry>,
+  cacheKey: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFile);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      buildReactNativeTargets(projectRoot, options, context)
-    );
+  const entry = cache.get(cacheKey) ?? {};
+  if (!entry.targets) {
+    entry.targets = buildReactNativeTargets(projectRoot, options, context);
+    cache.set(cacheKey, entry);
   }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache.get(hash),
+        targets: entry.targets,
       },
     },
   };
@@ -203,17 +221,25 @@ function getAppConfig(
 
 async function filterReactNativeConfigs(
   configFiles: readonly string[],
+  cacheKeys: readonly string[],
+  cache: PluginCache<ReactNativeCacheEntry>,
   context: CreateNodesContext
 ): Promise<{
-  entries: Array<{ configFile: string; projectRoot: string }>;
+  entries: Array<{ configFile: string; cacheKey: string }>;
   preErrors: Array<[string, Error]>;
 }> {
   const preErrors: Array<[string, Error]> = [];
   const candidates = await Promise.all(
     configFiles.map(
       async (
-        configFile
-      ): Promise<{ configFile: string; projectRoot: string } | null> => {
+        configFile,
+        idx
+      ): Promise<{ configFile: string; cacheKey: string } | null> => {
+        const cacheKey = cacheKeys[idx];
+        const cached = cache.get(cacheKey);
+        if (cached?.included !== undefined) {
+          return cached.included ? { configFile, cacheKey } : null;
+        }
         try {
           const projectRoot = dirname(configFile);
           const siblingFiles = readdirSync(
@@ -223,22 +249,28 @@ async function filterReactNativeConfigs(
             !siblingFiles.includes('package.json') ||
             !siblingFiles.includes('metro.config.js')
           ) {
+            cache.set(cacheKey, { ...cached, included: false });
             return null;
           }
           // Skip Expo projects; the @nx/expo plugin handles them.
           const packageJson = readJsonFile(
             join(context.workspaceRoot, projectRoot, 'package.json')
           );
-          const appConfig = await getAppConfig(configFile, context);
-          if (
-            appConfig.expo ||
+          const pkgHasExpo = !!(
             packageJson.dependencies?.['expo'] ||
             packageJson.devDependencies?.['expo']
-          ) {
-            return null;
+          );
+          const appConfig = await getAppConfig(configFile, context);
+          const included = !appConfig.expo && !pkgHasExpo;
+          // A decision resting on executed JS/TS config content can depend on
+          // inputs outside the cache key (imports, fs reads, env vars), so it
+          // is only cached when package.json pins it or the config is data.
+          if (pkgHasExpo || basename(configFile) === 'app.json') {
+            cache.set(cacheKey, { ...cached, included });
           }
-          return { configFile, projectRoot };
+          return included ? { configFile, cacheKey } : null;
         } catch (e) {
+          // Not cached: load errors must resurface on every run.
           preErrors.push([configFile, e as Error]);
           return null;
         }
@@ -275,15 +307,19 @@ function getOutputs(projectRoot: string, dir: string) {
 function normalizeOptions(
   options: ReactNativePluginOptions
 ): ReactNativePluginOptions {
-  options ??= {};
-  options.startTargetName ??= 'start';
-  options.podInstallTargetName ??= 'pod-install';
-  options.runIosTargetName ??= 'run-ios';
-  options.runAndroidTargetName ??= 'run-android';
-  options.buildIosTargetName ??= 'build-ios';
-  options.buildAndroidTargetName ??= 'build-android';
-  options.bundleTargetName ??= 'bundle';
-  options.syncDepsTargetName ??= 'sync-deps';
-  options.upgradeTargetName ??= 'upgrade';
-  return options;
+  // Do not mutate the input: the daemon passes the same options object on
+  // every invocation, and mutating it changes the option-derived hashes
+  // between the first and subsequent runs.
+  return {
+    ...options,
+    startTargetName: options?.startTargetName ?? 'start',
+    podInstallTargetName: options?.podInstallTargetName ?? 'pod-install',
+    runIosTargetName: options?.runIosTargetName ?? 'run-ios',
+    runAndroidTargetName: options?.runAndroidTargetName ?? 'run-android',
+    buildIosTargetName: options?.buildIosTargetName ?? 'build-ios',
+    buildAndroidTargetName: options?.buildAndroidTargetName ?? 'build-android',
+    bundleTargetName: options?.bundleTargetName ?? 'bundle',
+    syncDepsTargetName: options?.syncDepsTargetName ?? 'sync-deps',
+    upgradeTargetName: options?.upgradeTargetName ?? 'upgrade',
+  };
 }
