@@ -1,6 +1,9 @@
 {
   "generators": {
     "update-21-4-0-remove-deprecated-deps": {
+      "requires": {
+        "react-native": ">=0.76.0 <0.79.0"
+      },
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",

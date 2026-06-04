@@ -8,6 +8,7 @@ import { createNodesV2 } from '../../../plugins/plugin';
 import { postTargetTransformer } from './lib/post-target-transformer';
 import { processStartOptions } from './lib/process-start-options';
 import { createProcessOptions } from './lib/create-process-options';
+import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
 
 interface Schema {
   project?: string;
@@ -15,6 +16,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedReactNativeVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
   const migratedProjects = await migrateProjectExecutorsToPlugin(

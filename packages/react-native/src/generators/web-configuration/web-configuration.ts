@@ -19,6 +19,7 @@ import {
   reactNativeSvgWebVersion,
   typesReactDomVersion,
 } from '../../utils/versions';
+import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
   createBuildTarget,
@@ -40,6 +41,8 @@ export async function webConfigurationGenerator(
   tree: Tree,
   options: WebConfigurationGeneratorSchema
 ) {
+  assertSupportedReactNativeVersion(tree);
+
   const normalizedSchema = normalizeSchema(tree, options);
 
   const tasks: GeneratorCallback[] = [];
@@ -52,7 +55,9 @@ export async function webConfigurationGenerator(
       {
         'react-native-web': reactNativeWebVersion,
         'react-native-svg-web': reactNativeSvgWebVersion,
-      }
+      },
+      undefined,
+      true
     );
     tasks.push(installTask);
   }
@@ -91,7 +96,9 @@ export async function webConfigurationGenerator(
         {},
         {
           '@types/react-dom': typesReactDomVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }
