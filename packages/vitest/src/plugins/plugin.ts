@@ -363,8 +363,26 @@ async function testTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
+      // Vitest runs on Vite, which transforms a dependency's sources and
+      // resolves their TypeScript project references. When a dependency's root
+      // tsconfig references its tsconfig.spec.json / tsconfig.storybook.json,
+      // those files are read during resolution, yet the `production` named
+      // input excludes them (so `^production` does not cover them). When
+      // `production` is in use, declare them explicitly so the dependency's
+      // spec/storybook tsconfigs are tracked as inputs.
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? [
+            'default',
+            '^production',
+            {
+              fileset: '{projectRoot}/tsconfig.spec.json',
+              dependencies: true as const,
+            },
+            {
+              fileset: '{projectRoot}/tsconfig.storybook.json',
+              dependencies: true as const,
+            },
+          ]
         : ['default', '^default']),
       ...tsconfigInputs.map((f) => ({
         json: `{workspaceRoot}/${f}`,
