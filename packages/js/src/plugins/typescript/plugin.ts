@@ -24,6 +24,7 @@ import {
 import {
   basename,
   dirname,
+  isAbsolute,
   join,
   normalize,
   relative,
@@ -768,6 +769,14 @@ function getInputs(
     ts.Extension.Mjs,
   ];
 
+  // A spec is an implicit glob over a directory if its last component has no
+  // extension and no glob characters. TypeScript normalizes the path before
+  // checking its last component, so specs like "." and ".." resolve to a
+  // directory name first.
+  // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9577-L9585
+  const isImplicitGlobSpec = (spec: string): boolean =>
+    !/[.*?]/.test(basename(resolve(absoluteProjectRoot, spec)));
+
   const normalizeInput = (
     input: string,
     config: ParsedTsconfigData
@@ -779,13 +788,9 @@ function getInputs(
       extensions.push(ts.Extension.Json);
     }
 
-    const segments = input.split('/');
-    // An "includes" path "foo" is implicitly a glob "foo/**/*" if its last
-    // segment has no extension, and does not contain any glob characters
-    // itself.
-    // https://github.com/microsoft/TypeScript/blob/19b777260b26aac5707b1efd34202054164d4a9d/src/compiler/utilities.ts#L9577-L9585
-    if (!/[.*?]/.test(segments.at(-1))) {
-      return extensions.map((ext) => `${segments.join('/')}/**/*${ext}`);
+    // An "includes" path "foo" is implicitly a glob "foo/**/*"
+    if (isImplicitGlobSpec(input)) {
+      return extensions.map((ext) => `${input}/**/*${ext}`);
     }
 
     return [input];
@@ -829,6 +834,30 @@ function getInputs(
         }
       });
       const normalize = (p: string) => (p.startsWith('./') ? p.slice(2) : p);
+      // Static (non-glob) prefix of a spec, used for subtree coverage checks.
+      const staticPrefix = (p: string): string => {
+        const segments = normalize(p).split('/');
+        const firstGlobSegment = segments.findIndex((s) => /[*?]/.test(s));
+        return firstGlobSegment === -1
+          ? segments.join('/')
+          : segments.slice(0, firstGlobSegment).join('/');
+      };
+      // A non-glob include spec (an implicit directory glob like "." or "src",
+      // or a literal file path) covers an exclude spec if the exclude's static
+      // prefix falls within the include's subtree.
+      const includeCoversExclude = (
+        includePath: string,
+        excludePath: string
+      ): boolean => {
+        if (/[*?]/.test(includePath)) {
+          return false;
+        }
+        const rel = relative(
+          resolve(absoluteProjectRoot, normalize(includePath)),
+          resolve(absoluteProjectRoot, staticPrefix(excludePath))
+        );
+        return !rel.startsWith('..') && !isAbsolute(rel);
+      };
       tsconfig.raw.exclude.forEach((e: string) => {
         const excludePath = substituteConfigDir(e);
         const normalizedExclude = normalize(excludePath);
@@ -840,11 +869,18 @@ function getInputs(
             const includeMatcher = getOrCreateMatcher(normalizedInclude);
             return (
               excludeMatcher(normalizedInclude) ||
-              includeMatcher(normalizedExclude)
+              includeMatcher(normalizedExclude) ||
+              includeCoversExclude(includePath, excludePath)
             );
           })
         ) {
-          excludePaths.add(excludePath);
+          // TS treats an implicit-glob exclude like "dist" as excluding the
+          // whole subtree, so emit it as "dist/**/*".
+          excludePaths.add(
+            isImplicitGlobSpec(excludePath)
+              ? `${excludePath}/**/*`
+              : excludePath
+          );
         }
       });
     }
