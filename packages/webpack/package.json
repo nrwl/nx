@@ -61,12 +61,26 @@
     "ts-loader": "^9.3.1",
     "tsconfig-paths-webpack-plugin": "4.2.0",
     "tslib": "catalog:typescript",
-    "webpack": "catalog:",
-    "webpack-dev-server": "catalog:",
     "webpack-node-externals": "^3.0.0",
     "webpack-subresource-integrity": "^5.1.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*"
+  },
+  "peerDependencies": {
+    "webpack": "^5.0.0",
+    "webpack-cli": "^5.0.0 || ^6.0.0 || ^7.0.0",
+    "webpack-dev-server": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "webpack": {
+      "optional": true
+    },
+    "webpack-cli": {
+      "optional": true
+    },
+    "webpack-dev-server": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*"
