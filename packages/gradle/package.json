@@ -57,10 +57,6 @@
       "types": "./dist/plugin-v1.d.ts",
       "default": "./dist/plugin-v1.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./dist/src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./dist/src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",

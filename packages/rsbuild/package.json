@@ -81,10 +81,6 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./dist/src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./dist/src/generators/*/schema.d.ts",
     "./package.json": {
       "default": "./package.json"
     },

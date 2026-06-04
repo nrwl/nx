@@ -64,10 +64,6 @@
       "types": "./dist/src/release/version-utils.d.ts",
       "default": "./dist/src/release/version-utils.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./dist/src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./dist/src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
