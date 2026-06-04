@@ -1,4 +1,4 @@
-import * as rollup from 'rollup';
+import type * as Rollup from 'rollup';
 import { parse, resolve } from 'path';
 import { type ExecutorContext, logger } from '@nx/devkit';
 import { loadConfigFile, createAsyncIterable } from '@nx/devkit/internal';
@@ -18,6 +18,9 @@ export async function* rollupExecutor(
   context: ExecutorContext
 ) {
   warnRollupExecutorDeprecation();
+
+  // Lazy-loaded: `rollup` is an optional peer, absent at project-graph discovery time.
+  const rollup = require('rollup') as typeof import('rollup');
 
   process.env.NODE_ENV ??= 'production';
   const options = normalizeRollupExecutorOptions(rawOptions, context);
@@ -90,7 +93,7 @@ export async function* rollupExecutor(
 export async function createRollupOptions(
   options: NormalizedRollupExecutorOptions,
   context: ExecutorContext
-): Promise<rollup.RollupOptions | rollup.RollupOptions[]> {
+): Promise<Rollup.RollupOptions | Rollup.RollupOptions[]> {
   const { dependencies } = calculateProjectBuildableDependencies(
     context.taskGraph,
     context.projectGraph,
@@ -114,7 +117,7 @@ export async function createRollupOptions(
   const userDefinedRollupConfigs = options.rollupConfig.map((plugin) =>
     loadConfigFile(plugin)
   );
-  let finalConfig: rollup.RollupOptions = rollupConfig;
+  let finalConfig: Rollup.RollupOptions = rollupConfig;
   for (const _config of userDefinedRollupConfigs) {
     const config = await _config;
     if (typeof config === 'function') {

@@ -45,8 +45,15 @@
     "picomatch": "catalog:",
     "postcss": "catalog:css",
     "postcss-modules": "^6.0.1",
-    "rollup": "^4.14.0",
     "tslib": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "rollup": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "rollup": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*",
