@@ -3,7 +3,6 @@
   "assets": [
     { "glob": "**/files/**" },
     { "glob": "**/files/**/.gitkeep" },
-    { "glob": "@(executors|generators|migrations).json" },
     { "glob": "src/**/schema.d.ts" },
     "LICENSE"
   ]

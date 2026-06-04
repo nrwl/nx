@@ -2,9 +2,6 @@
   "outDir": "packages/gradle/dist",
   "assets": [
     { "glob": "**/files/**" },
-    { "glob": "executors.json" },
-    { "glob": "generators.json" },
-    { "glob": "migrations.json" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     { "glob": "src/migrations/**/*.md" },

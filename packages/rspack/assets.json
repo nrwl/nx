@@ -1,7 +1,6 @@
 {
   "outDir": "packages/rspack/dist",
   "assets": [
-    { "glob": "@(executors|generators|migrations).json" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
     { "glob": "src/**/*.md" },
