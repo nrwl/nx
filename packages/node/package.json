@@ -32,11 +32,8 @@
       "utils": [
         "dist/utils.d.ts"
       ],
-      "src/*": [
-        "dist/src/*.d.ts"
-      ],
-      "src/*.js": [
-        "dist/src/*.d.ts"
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -65,15 +62,10 @@
       "types": "./dist/utils.d.ts",
       "default": "./dist/utils.js"
     },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   },
   "dependencies": {
