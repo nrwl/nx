@@ -111,8 +111,13 @@ function releaseLock(port: number): void {
 export async function reservePort(start = RANGE_FLOOR): Promise<number> {
   // Randomise the scan origin so parallel e2e processes spread across the
   // range instead of all converging on — and fighting over — the low ports.
-  const first = start + Math.floor(Math.random() * SCAN_SPREAD);
-  for (let port = first; port < RANGE_CEILING; port++) {
+  // The scan wraps around so the whole [start, RANGE_CEILING) range is covered
+  // even when the origin lands high; otherwise the ports below it are skipped
+  // and we could throw spuriously while ports are still free.
+  const span = RANGE_CEILING - start;
+  const origin = Math.floor(Math.random() * Math.min(SCAN_SPREAD, span));
+  for (let i = 0; i < span; i++) {
+    const port = start + ((origin + i) % span);
     if (!claimLock(port)) continue;
     // Lock claimed; verify the OS port is actually free. Another e2e test on
     // the same agent may be using it via a generator default (i.e. without
@@ -137,11 +142,14 @@ export async function reservePorts(count: number): Promise<number[]> {
   if (count <= 1) {
     return count === 1 ? [await reservePort()] : [];
   }
-  // Randomise the scan origin (same rationale as reservePort), then look for
-  // the first window of `count` consecutive ports that are all claimable and
-  // actually free.
-  const first = RANGE_FLOOR + Math.floor(Math.random() * SCAN_SPREAD);
-  for (let start = first; start + count <= RANGE_CEILING; start++) {
+  // Randomise the scan origin (same rationale as reservePort) and wrap around
+  // so every valid window start is tried, then return the first window of
+  // `count` consecutive ports that are all claimable and actually free.
+  const lastStart = RANGE_CEILING - count;
+  const numStarts = lastStart - RANGE_FLOOR + 1;
+  const origin = Math.floor(Math.random() * Math.min(SCAN_SPREAD, numStarts));
+  for (let i = 0; i < numStarts; i++) {
+    const start = RANGE_FLOOR + ((origin + i) % numStarts);
     const claimed: number[] = [];
     for (let port = start; port < start + count; port++) {
       if (!claimLock(port)) break;
