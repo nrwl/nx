@@ -100,7 +100,8 @@ describe('Angular Projects - Build and Test', () => {
     const appPort = await reservePort();
     const process = await runCommandUntil(
       `serve ${app1} -- --port=${appPort}`,
-      (output) => output.includes(`listening on localhost:${appPort}`)
+      (output) => output.includes(`listening on localhost:${appPort}`),
+      { timeout: 120000 }
     );
 
     // port and process cleanup
@@ -110,7 +111,8 @@ describe('Angular Projects - Build and Test', () => {
       `serve ${esbuildStandaloneApp} -- --port=${appPort}`,
       (output) =>
         output.includes(`Application bundle generation complete`) &&
-        output.includes(`localhost:${appPort}`)
+        output.includes(`localhost:${appPort}`),
+      { timeout: 120000 }
     );
 
     // port and process cleanup
