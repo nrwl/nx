@@ -1,4 +1,4 @@
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { waitForPortOpen } from '@nx/web/internal';
 import { StaticRemoteConfig } from '../../utils';
 import { DevRemoteFindOptions } from '../models';
 

@@ -5,8 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { startRemoteIterators } from '@nx/module-federation/internal';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
 import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';

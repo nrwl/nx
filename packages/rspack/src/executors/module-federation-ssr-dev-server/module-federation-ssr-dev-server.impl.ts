@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { startRemoteIterators } from '@nx/module-federation/internal';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { waitForPortOpen } from '@nx/web/internal';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import ssrDevServerExecutor from '../ssr-dev-server/ssr-dev-server.impl';

@@ -17,8 +17,7 @@ import {
   parseStaticRemotesConfig,
   StaticRemotesConfig,
 } from '@nx/module-federation/internal';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
 import { warnReactMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 import { fork } from 'child_process';

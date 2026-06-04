@@ -33,6 +33,7 @@
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/react": "workspace:*",
+    "@nx/web": "workspace:*",
     "tslib": "catalog:typescript",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
