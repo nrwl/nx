@@ -74,6 +74,11 @@
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "nx": "workspace:*"
   },

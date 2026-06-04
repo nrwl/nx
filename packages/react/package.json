@@ -92,8 +92,14 @@
     "supportsOptionalUpdates": true
   },
   "peerDependencies": {
+    "babel-plugin-react-compiler": "^1.0.0",
     "react": ">=18.0.0 <20.0.0",
     "react-dom": ">=18.0.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "babel-plugin-react-compiler": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "catalog:typescript",
