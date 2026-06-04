@@ -385,14 +385,17 @@ describe('dependentsHaveBannedImport + findTransitiveExternalDependencies', () =
 });
 
 describe('is terminal run', () => {
-  const originalProcess = process;
+  const originalArgv = process.argv;
 
+  // Set only process.argv rather than reassigning the whole `process` object.
+  // Under Node >= 26 the jest sandbox global is a Proxy and reassigning the
+  // global `process` binding throws ReferenceError; mutating the property works.
   const mockProcessArgv = (argv: string[]) => {
-    process = Object.assign({}, process, { argv });
+    process.argv = argv;
   };
 
   afterEach(() => {
-    process = originalProcess;
+    process.argv = originalArgv;
   });
 
   it('is a terminal run when the command is started from the nx executor on Mac', () => {
