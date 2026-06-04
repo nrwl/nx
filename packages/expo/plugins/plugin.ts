@@ -17,7 +17,7 @@ import {
   readJsonFile,
   TargetConfiguration,
 } from '@nx/devkit';
-import { dirname, join } from 'path';
+import { basename, dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
@@ -40,28 +40,47 @@ export interface ExpoPluginOptions {
 
 type ExpoTargets = Record<string, TargetConfiguration<ExpoPluginOptions>>;
 
+// Keyed per (project hash, config file) so warm runs can reuse the filter
+// decision without executing the app config. `included` is only stored when
+// the decision derives from inputs covered by the cache key (app.json
+// content, sibling-file existence, or an expo dependency in the project's
+// package.json); decisions resting on executed JS/TS config content are
+// re-evaluated every run. `targets` is set lazily for included entries.
+interface ExpoCacheEntry {
+  included?: boolean;
+  targets?: ExpoTargets;
+}
+
 export const createNodes: CreateNodes<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = new PluginCache<ExpoTargets>(cachePath);
+    const cache = new PluginCache<ExpoCacheEntry>(cachePath);
     const packageManager = detectPackageManager(context.workspaceRoot);
     const pmc = getPackageManagerCommand(packageManager);
     const lockFileName = getLockFileName(packageManager);
     const normalizedOptions = normalizeOptions(options);
 
     try {
-      const { entries, preErrors } = await filterExpoConfigs(
-        configFiles,
-        context
-      );
-
+      // Per-candidate keys computable without executing configs. Keyed per
+      // config file because two config files in the same root (app.json +
+      // app.config.js) can produce different filter outcomes.
       const projectHashes = await calculateHashesForCreateNodes(
-        entries.map((e) => e.projectRoot),
+        configFiles.map((configFile) => dirname(configFile)),
         normalizedOptions,
         context,
-        entries.map(() => [lockFileName])
+        configFiles.map(() => [lockFileName])
+      );
+      const cacheKeys = configFiles.map(
+        (configFile, idx) => `${projectHashes[idx]}|${configFile}`
+      );
+
+      const { entries, preErrors } = await filterExpoConfigs(
+        configFiles,
+        cacheKeys,
+        cache,
+        context
       );
 
       let results: CreateNodesResultV2 = [];
@@ -73,9 +92,9 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
               configFile,
               normalizedOptions,
               ctx,
-              targetsCache,
+              cache,
               pmc,
-              projectHashes[idx]
+              entries[idx].cacheKey
             ),
           entries.map((e) => e.configFile),
           options,
@@ -96,7 +115,7 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
       }
       return results;
     } finally {
-      targetsCache.writeToDisk();
+      cache.writeToDisk();
     }
   },
 ];
@@ -107,23 +126,22 @@ async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
   context: CreateNodesContext,
-  targetsCache: PluginCache<ExpoTargets>,
+  cache: PluginCache<ExpoCacheEntry>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
-  hash: string
+  cacheKey: string
 ): Promise<CreateNodesResult> {
   const projectRoot = dirname(configFile);
 
-  if (!targetsCache.has(hash)) {
-    targetsCache.set(
-      hash,
-      buildExpoTargets(projectRoot, options, context, pmc)
-    );
+  const entry = cache.get(cacheKey) ?? {};
+  if (!entry.targets) {
+    entry.targets = buildExpoTargets(projectRoot, options, context, pmc);
+    cache.set(cacheKey, entry);
   }
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache.get(hash),
+        targets: entry.targets,
       },
     },
   };
@@ -202,17 +220,25 @@ function getAppConfig(
 
 async function filterExpoConfigs(
   configFiles: readonly string[],
+  cacheKeys: readonly string[],
+  cache: PluginCache<ExpoCacheEntry>,
   context: CreateNodesContext
 ): Promise<{
-  entries: Array<{ configFile: string; projectRoot: string }>;
+  entries: Array<{ configFile: string; cacheKey: string }>;
   preErrors: Array<[string, Error]>;
 }> {
   const preErrors: Array<[string, Error]> = [];
   const candidates = await Promise.all(
     configFiles.map(
       async (
-        configFile
-      ): Promise<{ configFile: string; projectRoot: string } | null> => {
+        configFile,
+        idx
+      ): Promise<{ configFile: string; cacheKey: string } | null> => {
+        const cacheKey = cacheKeys[idx];
+        const cached = cache.get(cacheKey);
+        if (cached?.included !== undefined) {
+          return cached.included ? { configFile, cacheKey } : null;
+        }
         try {
           const projectRoot = dirname(configFile);
           const siblingFiles = readdirSync(
@@ -222,21 +248,27 @@ async function filterExpoConfigs(
             !siblingFiles.includes('package.json') ||
             !siblingFiles.includes('metro.config.js')
           ) {
+            cache.set(cacheKey, { ...cached, included: false });
             return null;
           }
           const packageJson = readJsonFile(
             join(context.workspaceRoot, projectRoot, 'package.json')
           );
+          const pkgHasExpo = !!(
+            packageJson.dependencies?.['expo'] ||
+            packageJson.devDependencies?.['expo']
+          );
           const appConfig = await getAppConfig(configFile, context);
-          if (
-            !appConfig.expo &&
-            !packageJson.dependencies?.['expo'] &&
-            !packageJson.devDependencies?.['expo']
-          ) {
-            return null;
+          const included = !!appConfig.expo || pkgHasExpo;
+          // A decision resting on executed JS/TS config content can depend on
+          // inputs outside the cache key (imports, fs reads, env vars), so it
+          // is only cached when package.json pins it or the config is data.
+          if (pkgHasExpo || basename(configFile) === 'app.json') {
+            cache.set(cacheKey, { ...cached, included });
           }
-          return { configFile, projectRoot };
+          return included ? { configFile, cacheKey } : null;
         } catch (e) {
+          // Not cached: load errors must resurface on every run.
           preErrors.push([configFile, e as Error]);
           return null;
         }
@@ -271,15 +303,19 @@ function getOutputs(projectRoot: string, dir: string) {
 }
 
 function normalizeOptions(options: ExpoPluginOptions): ExpoPluginOptions {
-  options ??= {};
-  options.startTargetName ??= 'start';
-  options.serveTargetName ??= 'serve';
-  options.runIosTargetName ??= 'run-ios';
-  options.runAndroidTargetName ??= 'run-android';
-  options.exportTargetName ??= 'export';
-  options.prebuildTargetName ??= 'prebuild';
-  options.installTargetName ??= 'install';
-  options.buildTargetName ??= 'build';
-  options.submitTargetName ??= 'submit';
-  return options;
+  // Do not mutate the input: the daemon passes the same options object on
+  // every invocation, and mutating it changes the option-derived hashes
+  // between the first and subsequent runs.
+  return {
+    ...options,
+    startTargetName: options?.startTargetName ?? 'start',
+    serveTargetName: options?.serveTargetName ?? 'serve',
+    runIosTargetName: options?.runIosTargetName ?? 'run-ios',
+    runAndroidTargetName: options?.runAndroidTargetName ?? 'run-android',
+    exportTargetName: options?.exportTargetName ?? 'export',
+    prebuildTargetName: options?.prebuildTargetName ?? 'prebuild',
+    installTargetName: options?.installTargetName ?? 'install',
+    buildTargetName: options?.buildTargetName ?? 'build',
+    submitTargetName: options?.submitTargetName ?? 'submit',
+  };
 }
