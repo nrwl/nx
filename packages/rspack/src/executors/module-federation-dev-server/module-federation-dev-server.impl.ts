@@ -4,7 +4,7 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
+import { startRemoteIterators } from '@nx/module-federation/internal';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { existsSync } from 'fs';

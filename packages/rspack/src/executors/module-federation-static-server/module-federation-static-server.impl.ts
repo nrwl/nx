@@ -10,13 +10,13 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {
+  buildStaticRemotes,
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '@nx/module-federation/src/utils';
+} from '@nx/module-federation/internal';
 import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import { fork } from 'child_process';

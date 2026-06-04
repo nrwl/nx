@@ -4,7 +4,7 @@ import {
   createAsyncIterable,
 } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
+import { startRemoteIterators } from '@nx/module-federation/internal';
 import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
 import ssrDevServerExecutor from '@nx/webpack/src/executors/ssr-dev-server/ssr-dev-server.impl';
 import { existsSync } from 'fs';

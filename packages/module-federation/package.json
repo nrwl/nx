@@ -44,12 +44,6 @@
       "url-helpers": [
         "dist/url-helpers.d.ts"
       ],
-      "src/*": [
-        "dist/src/*.d.ts"
-      ],
-      "src/*.js": [
-        "dist/src/*.d.ts"
-      ],
       "angular.js": [
         "dist/angular.d.ts"
       ],
@@ -62,20 +56,8 @@
       "url-helpers.js": [
         "dist/url-helpers.d.ts"
       ],
-      "src/utils": [
-        "dist/src/utils/index.d.ts"
-      ],
-      "src/utils/models": [
-        "dist/src/utils/models/index.d.ts"
-      ],
-      "src/executors/utils": [
-        "dist/src/executors/utils/index.d.ts"
-      ],
-      "src/plugins/models": [
-        "dist/src/plugins/models/index.d.ts"
-      ],
-      "src/plugins/utils": [
-        "dist/src/plugins/utils/index.d.ts"
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -131,40 +113,10 @@
       "types": "./dist/url-helpers.d.ts",
       "default": "./dist/url-helpers.js"
     },
-    "./src/utils": {
-      "@nx/nx-source": "./src/utils/index.ts",
-      "types": "./dist/src/utils/index.d.ts",
-      "default": "./dist/src/utils/index.js"
-    },
-    "./src/utils/models": {
-      "@nx/nx-source": "./src/utils/models/index.ts",
-      "types": "./dist/src/utils/models/index.d.ts",
-      "default": "./dist/src/utils/models/index.js"
-    },
-    "./src/executors/utils": {
-      "@nx/nx-source": "./src/executors/utils/index.ts",
-      "types": "./dist/src/executors/utils/index.d.ts",
-      "default": "./dist/src/executors/utils/index.js"
-    },
-    "./src/plugins/models": {
-      "@nx/nx-source": "./src/plugins/models/index.ts",
-      "types": "./dist/src/plugins/models/index.d.ts",
-      "default": "./dist/src/plugins/models/index.js"
-    },
-    "./src/plugins/utils": {
-      "@nx/nx-source": "./src/plugins/utils/index.ts",
-      "types": "./dist/src/plugins/utils/index.d.ts",
-      "default": "./dist/src/plugins/utils/index.js"
-    },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   },
   "executors": "./executors.json",
