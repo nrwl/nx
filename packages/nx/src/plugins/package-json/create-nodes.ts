@@ -22,10 +22,7 @@ import {
 } from '../../utils/package-manager';
 import { joinPathFragments } from '../../utils/path';
 import { nxVersion } from '../../utils/versions';
-import {
-  createNodesFromFiles,
-  CreateNodesV2,
-} from '../../project-graph/plugins';
+import { createNodesFromFiles, CreateNodes } from '../../project-graph/plugins';
 import { basename } from 'path';
 import { hashObject } from '../../hasher/file-hasher';
 import {
@@ -40,7 +37,7 @@ const globPatterns = combineGlobPatterns(
   '**/project.json'
 );
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodes = [
   globPatterns,
   (configFiles, _, context) => {
     const { packageJsons, projectJsonRoots } = splitConfigFiles(configFiles);

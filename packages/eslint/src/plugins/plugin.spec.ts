@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { minimatch } from 'minimatch';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { createNodesV2, EslintPluginOptions } from './plugin';
@@ -20,7 +20,7 @@ jest.mock('../utils/resolve-eslint-class', () => ({
 }));
 
 describe('@nx/eslint/plugin', () => {
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let configFiles: string[] = [];
 
@@ -1149,7 +1149,7 @@ describe('@nx/eslint/plugin', () => {
   }
 
   async function invokeCreateNodesOnMatchingFiles(
-    context: CreateNodesContextV2,
+    context: CreateNodesContext,
     options?: EslintPluginOptions
   ) {
     const aggregateProjects: Record<string, any> = {};

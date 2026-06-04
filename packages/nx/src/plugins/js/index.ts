@@ -9,17 +9,17 @@ import { hashArray } from '../../hasher/file-hasher';
 import {
   CreateDependencies,
   CreateDependenciesContext,
-  CreateNodesContextV2,
+  CreateNodes,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
 } from '../../project-graph/plugins';
 import { RawProjectGraphDependency } from '../../project-graph/project-graph-builder';
 import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { combineGlobPatterns } from '../../utils/globs';
-import { detectPackageManager } from '../../utils/package-manager';
-import { nxVersion } from '../../utils/versions';
 import { logger } from '../../utils/logger';
+import { detectPackageManager } from '../../utils/package-manager';
 import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
+import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readBunLockFile } from './lock-file/bun-parser';
 import {
@@ -38,18 +38,14 @@ export const name = 'nx/js/dependencies-and-lockfile';
 let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
   (files, _, context) => {
     return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
 
-function internalCreateNodes(
-  lockFile: string,
-  _,
-  context: CreateNodesContextV2
-) {
+function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
   if (!pluginConfig.analyzeLockfile) {
     return {};

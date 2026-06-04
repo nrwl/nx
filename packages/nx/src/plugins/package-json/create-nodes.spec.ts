@@ -2,7 +2,7 @@ import '../../internal-testing-utils/mock-fs';
 
 import { join } from 'node:path';
 import { vol } from 'memfs';
-import { createNodeFromPackageJson, createNodesV2 } from './create-nodes';
+import { createNodeFromPackageJson, createNodes } from './create-nodes';
 import { workspaceDataDirectory } from '../../utils/cache-directory';
 import { PluginCache } from '../../utils/plugin-cache-utils';
 
@@ -284,16 +284,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the package.json "workspace" config
       expect(
-        await createNodesV2[1](['package.json'], undefined, context)
+        await createNodes[1](['package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the package.json "workspace" config
       expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
+        await createNodes[1](['packages/vite/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -335,12 +331,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the package.json "workspace" config
       expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+        await createNodes[1](['packages/fs/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the package.json "workspace" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/orm-browser-example/package.json'],
           undefined,
           context
@@ -349,7 +345,7 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the package.json "workspace" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/framework-examples/package.json'],
           undefined,
           context
@@ -387,16 +383,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        await createNodesV2[1](['package.json'], undefined, context)
+        await createNodes[1](['package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
+        await createNodes[1](['packages/vite/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -438,12 +430,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+        await createNodes[1](['packages/fs/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/orm-browser-example/package.json'],
           undefined,
           context
@@ -452,7 +444,7 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the pnpm-workspace.yaml "packages" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/framework-examples/package.json'],
           undefined,
           context
@@ -487,16 +479,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        await createNodesV2[1](['package.json'], undefined, context)
+        await createNodes[1](['package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // Matching project based on the lerna.json "packages" config
       expect(
-        await createNodesV2[1](
-          ['packages/vite/package.json'],
-          undefined,
-          context
-        )
+        await createNodes[1](['packages/vite/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -538,12 +526,12 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        await createNodesV2[1](['packages/fs/package.json'], undefined, context)
+        await createNodes[1](['packages/fs/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`[]`);
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/orm-browser-example/package.json'],
           undefined,
           context
@@ -552,7 +540,7 @@ describe('nx package.json workspaces plugin', () => {
 
       // No matching project based on the lerna.json "packages" config
       expect(
-        await createNodesV2[1](
+        await createNodes[1](
           ['packages/framework-examples/package.json'],
           undefined,
           context
@@ -580,7 +568,7 @@ describe('nx package.json workspaces plugin', () => {
       );
 
       expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+        await createNodes[1](['packages/a/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -664,7 +652,7 @@ describe('nx package.json workspaces plugin', () => {
       );
 
       expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+        await createNodes[1](['packages/a/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -755,7 +743,7 @@ describe('nx package.json workspaces plugin', () => {
       );
 
       expect(
-        await createNodesV2[1](['packages/a/package.json'], undefined, context)
+        await createNodes[1](['packages/a/package.json'], undefined, context)
       ).toMatchInlineSnapshot(`
         [
           [
@@ -940,7 +928,7 @@ describe('nx package.json workspaces plugin', () => {
     );
 
     expect(
-      await createNodesV2[1](
+      await createNodes[1](
         [
           'package.json',
           'packages/lib-a/package.json',

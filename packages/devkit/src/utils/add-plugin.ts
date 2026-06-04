@@ -4,7 +4,7 @@ import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-con
 import yargs from 'yargs-parser';
 
 import {
-  CreateNodesV2,
+  CreateNodes,
   ProjectConfiguration,
   ProjectGraph,
   readJson,
@@ -28,7 +28,7 @@ export async function addPlugin<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
-  createNodesTuple: CreateNodesV2<PluginOptions>,
+  createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,
@@ -42,7 +42,7 @@ export async function addPlugin<PluginOptions>(
       new LoadedNxPlugin(
         {
           name: pluginName,
-          createNodesV2: createNodesTuple,
+          createNodes: createNodesTuple,
         },
         {
           plugin: pluginName,
@@ -63,7 +63,7 @@ export async function addPluginV1<PluginOptions>(
   tree: Tree,
   graph: ProjectGraph,
   pluginName: string,
-  createNodesTuple: CreateNodesV2<PluginOptions>,
+  createNodesTuple: CreateNodes<PluginOptions>,
   options: Partial<
     Record<keyof PluginOptions, PluginOptions[keyof PluginOptions][]>
   >,

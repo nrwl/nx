@@ -1,12 +1,12 @@
 import { existsSync } from 'fs';
 import * as path from 'path';
-import { readJsonFile } from '../utils/fileutils';
 import { ProjectsConfigurations } from '../config/workspace-json-project-json';
-import { CreateNodesV2, NxPluginV2 } from '../project-graph/plugins';
+import { CreateNodes, NxPlugin } from '../project-graph/plugins';
+import { readJsonFile } from '../utils/fileutils';
 
 export const NX_ANGULAR_JSON_PLUGIN_NAME = 'nx-angular-json-plugin';
 
-const createNodes: CreateNodesV2 = [
+const createNodes: CreateNodes = [
   'angular.json',
   (f, _, ctx) => [
     [
@@ -18,10 +18,9 @@ const createNodes: CreateNodesV2 = [
   ],
 ];
 
-export const NxAngularJsonPlugin: NxPluginV2 = {
+export const NxAngularJsonPlugin: NxPlugin = {
   name: NX_ANGULAR_JSON_PLUGIN_NAME,
   createNodes,
-  createNodesV2: createNodes,
 };
 
 export default NxAngularJsonPlugin;

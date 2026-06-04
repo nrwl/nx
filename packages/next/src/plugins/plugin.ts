@@ -7,10 +7,10 @@ import {
 import {
   AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   NxJsonConfiguration,
@@ -49,7 +49,7 @@ export const createDependencies: CreateDependencies = () => {
   return [];
 };
 
-export const createNodes: CreateNodesV2<NextPluginOptions> = [
+export const createNodes: CreateNodes<NextPluginOptions> = [
   nextConfigBlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -117,7 +117,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NextPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<NextTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -153,7 +153,7 @@ async function buildNextTargets(
   nextConfigPath: string,
   projectRoot: string,
   options: NextPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
@@ -276,7 +276,7 @@ async function getOutputs(projectRoot, nextConfig) {
 
 function getNextConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -290,7 +290,7 @@ interface NextEntry {
 
 async function filterNextConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: NextEntry[];
   preErrors: Array<[string, Error]>;

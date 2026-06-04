@@ -6,11 +6,11 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
   CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   joinPathFragments,
   NxJsonConfiguration,
@@ -40,7 +40,7 @@ type ReactNativeTargets = Record<
   TargetConfiguration<ReactNativePluginOptions>
 >;
 
-export const createNodes: CreateNodesV2<ReactNativePluginOptions> = [
+export const createNodes: CreateNodes<ReactNativePluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -108,7 +108,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<ReactNativeTargets>,
   hash: string
 ): Promise<CreateNodesResult> {
@@ -133,7 +133,7 @@ async function createNodesInternal(
 function buildReactNativeTargets(
   projectRoot: string,
   options: ReactNativePluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
 
@@ -194,7 +194,7 @@ function buildReactNativeTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
@@ -203,7 +203,7 @@ function getAppConfig(
 
 async function filterReactNativeConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: Array<{ configFile: string; projectRoot: string }>;
   preErrors: Array<[string, Error]>;
