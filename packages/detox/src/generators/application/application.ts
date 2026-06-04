@@ -16,7 +16,7 @@ import {
   sortPackageJsonFields,
 } from '@nx/js/internal';
 import { isExpoV54OrAbove } from '../../utils/expo-version-utils';
-import { assertSupportedDetoxVersion } from '../../utils/assert-supported-detox-version';
+import { assertSupportedDetoxVersion } from '../../utils/versions';
 
 export async function detoxApplicationGenerator(host: Tree, schema: Schema) {
   return await detoxApplicationGeneratorInternal(host, {

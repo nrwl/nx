@@ -5,7 +5,7 @@ import applicationGenerator from '../application/application.impl';
 import setupGenerator from '../setup/setup.impl';
 import { normalizeOptions } from './lib/normalize-options';
 import { RemixGeneratorSchema } from './schema';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree, _options: RemixGeneratorSchema) {
   assertSupportedRemixVersion(tree);

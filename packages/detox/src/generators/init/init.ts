@@ -10,8 +10,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import { assertSupportedDetoxVersion } from '../../utils/assert-supported-detox-version';
-import { detoxVersion, nxVersion } from '../../utils/versions';
+import {
+  assertSupportedDetoxVersion,
+  detoxVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 export function detoxInitGenerator(host: Tree, schema: Schema) {

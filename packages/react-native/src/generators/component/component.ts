@@ -11,7 +11,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { ensureTypescript, getProjectType } from '@nx/js/internal';
 import { dirname, join, parse, relative } from 'path';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
+import { assertSupportedReactNativeVersion } from '../../utils/versions';
 export async function reactNativeComponentGenerator(
   host: Tree,
   schema: Schema

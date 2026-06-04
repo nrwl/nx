@@ -6,7 +6,7 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree) {
   assertSupportedRemixVersion(tree);

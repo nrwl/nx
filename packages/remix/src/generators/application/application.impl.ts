@@ -31,10 +31,10 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
+  assertSupportedRemixVersion,
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 import {
   addE2E,
   ignoreViteTempFiles,

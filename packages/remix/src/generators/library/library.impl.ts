@@ -16,7 +16,7 @@ import {
   sortPackageJsonFields,
 } from '@nx/js/internal';
 import { updateDependencies } from '../utils/update-dependencies';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export async function remixLibraryGenerator(
   tree: Tree,

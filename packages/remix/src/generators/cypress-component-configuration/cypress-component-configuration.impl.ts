@@ -8,7 +8,7 @@ import {
 import { join } from 'path';
 import { type CypressComponentConfigurationSchema } from './schema';
 import { cypressComponentConfigGenerator } from '@nx/react';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export function cypressComponentConfigurationGenerator(
   tree: Tree,

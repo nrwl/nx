@@ -8,7 +8,7 @@ import { createNodesV2 } from '../../../plugins/plugin';
 import { postTargetTransformer } from './lib/post-target-transformer';
 import { processStartOptions } from './lib/process-start-options';
 import { createProcessOptions } from './lib/create-process-options';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
+import { assertSupportedReactNativeVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;

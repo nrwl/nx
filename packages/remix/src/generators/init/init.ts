@@ -9,8 +9,11 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
-import { nxVersion, remixVersion } from '../../utils/versions';
+import {
+  assertSupportedRemixVersion,
+  nxVersion,
+  remixVersion,
+} from '../../utils/versions';
 import { type Schema } from './schema';
 
 export function remixInitGenerator(tree: Tree, options: Schema) {

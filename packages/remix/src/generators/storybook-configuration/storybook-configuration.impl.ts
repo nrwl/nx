@@ -9,7 +9,7 @@ import {
 import { join } from 'path';
 import type { StorybookConfigurationSchema } from './schema';
 import { storybookConfigurationGenerator } from '@nx/react';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export async function remixStorybookConfiguration(
   tree: Tree,

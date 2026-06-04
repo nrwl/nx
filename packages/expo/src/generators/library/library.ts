@@ -38,7 +38,7 @@ import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
-import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 export async function expoLibraryGenerator(
   host: Tree,

@@ -7,7 +7,7 @@ import {
   Tree,
 } from '@nx/devkit';
 import { RemixStyleSchema } from './schema';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 import { dirname, relative } from 'path';
 import { insertImport } from '../../utils/insert-import';

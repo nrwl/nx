@@ -18,8 +18,8 @@ import {
   reactNativeWebVersion,
   reactNativeSvgWebVersion,
   typesReactDomVersion,
+  assertSupportedReactNativeVersion,
 } from '../../utils/versions';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
 import { NormalizedSchema, normalizeSchema } from './lib/normalize-schema';
 import {
   createBuildTarget,

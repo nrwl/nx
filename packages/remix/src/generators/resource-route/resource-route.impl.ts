@@ -4,7 +4,7 @@ import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import actionGenerator from '../action/action.impl';
 import loaderGenerator from '../loader/loader.impl';
 import { RemixRouteSchema } from './schema';
-import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
   assertSupportedRemixVersion(tree);

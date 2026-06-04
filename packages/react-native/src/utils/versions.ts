@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { type Tree } from '@nx/devkit';
 import {
+  assertSupportedPackageVersion,
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
@@ -14,6 +15,14 @@ export const nxVersion = require(
 // End-of-Cycle, and 0.82 and below as Unsupported. The plugin supports the
 // 0.83–0.85 window; below 0.83 generators throw via assertSupportedReactNativeVersion.
 export const minSupportedReactNativeVersion = '0.83.0';
+
+export function assertSupportedReactNativeVersion(tree: Tree): void {
+  assertSupportedPackageVersion(
+    tree,
+    'react-native',
+    minSupportedReactNativeVersion
+  );
+}
 
 // Fresh-install constants point at the latest supported minor (0.85).
 export const reactNativeVersion = '~0.85.3';

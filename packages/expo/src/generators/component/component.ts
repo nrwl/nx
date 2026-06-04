@@ -12,7 +12,7 @@ import { NormalizedSchema, normalizeOptions } from './lib/normalize-options';
 import { addImport } from './lib/add-import';
 import { dirname, join, parse, relative } from 'path';
 import { getProjectType } from '@nx/js/internal';
-import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 export async function expoComponentGenerator(host: Tree, schema: Schema) {
   assertSupportedExpoVersion(host);

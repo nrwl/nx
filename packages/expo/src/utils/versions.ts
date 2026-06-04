@@ -1,4 +1,6 @@
 import { join } from 'path';
+import { type Tree } from '@nx/devkit';
+import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 
 export const nxVersion = require(join('@nx/expo', 'package.json')).version;
 
@@ -6,6 +8,10 @@ export const nxVersion = require(join('@nx/expo', 'package.json')).version;
 // assertSupportedExpoVersion. Expo Go only supports the latest SDK, but the
 // plugin keeps install lanes for the recent SDKs it has constants for (53–55).
 export const minSupportedExpoVersion = '53.0.0';
+
+export function assertSupportedExpoVersion(tree: Tree): void {
+  assertSupportedPackageVersion(tree, 'expo', minSupportedExpoVersion);
+}
 
 // Expo v55 versions (default for new projects) — RN 0.83, React 19.2
 export const expoV55Version = '~55.0.26';

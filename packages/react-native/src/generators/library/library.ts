@@ -42,8 +42,11 @@ import {
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { relative } from 'path';
-import { reactVersion, versions } from '../../utils/versions';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
+import {
+  reactVersion,
+  versions,
+  assertSupportedReactNativeVersion,
+} from '../../utils/versions';
 export async function reactNativeLibraryGenerator(
   host: Tree,
   schema: Schema

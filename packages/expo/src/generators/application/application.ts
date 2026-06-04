@@ -25,7 +25,7 @@ import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
-import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 export async function expoApplicationGenerator(
   host: Tree,
   schema: Schema

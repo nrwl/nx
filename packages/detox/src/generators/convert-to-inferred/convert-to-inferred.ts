@@ -11,7 +11,7 @@ import {
   updateNxJson,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import { assertSupportedDetoxVersion } from '../../utils/assert-supported-detox-version';
+import { assertSupportedDetoxVersion } from '../../utils/versions';
 import { processBuildOptions } from './lib/process-build-options';
 import { postTargetTransformer } from './lib/post-target-transformer';
 import { processTestOptions } from './lib/process-test-options';

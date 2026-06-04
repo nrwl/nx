@@ -23,7 +23,7 @@ import { createApplicationFiles } from './lib/create-application-files';
 import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
+import { assertSupportedReactNativeVersion } from '../../utils/versions';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
 import { PackageJson } from 'nx/src/utils/package-json';
 import {

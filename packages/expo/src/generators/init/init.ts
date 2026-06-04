@@ -10,9 +10,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../../plugins/plugin';
-import { nxVersion } from '../../utils/versions';
+import { assertSupportedExpoVersion, nxVersion } from '../../utils/versions';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
-import { assertSupportedExpoVersion } from '../../utils/assert-supported-expo-version';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';

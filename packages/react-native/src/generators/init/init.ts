@@ -15,8 +15,8 @@ import {
   reactDomVersion,
   reactVersion,
   versions,
+  assertSupportedReactNativeVersion,
 } from '../../utils/versions';
-import { assertSupportedReactNativeVersion } from '../../utils/assert-supported-react-native-version';
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
 import { Schema } from './schema';
 
