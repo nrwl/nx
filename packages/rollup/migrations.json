@@ -6,6 +6,11 @@
       "description": "Remove deprecated useLegacyTypescriptPlugin option from @nx/rollup:rollup",
       "implementation": "./dist/src/migrations/update-23-0-0/remove-use-legacy-typescript-plugin",
       "documentation": "./dist/src/migrations/update-23-0-0/remove-use-legacy-typescript-plugin.md"
+    },
+    "rewrite-rollup-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/rollup/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/rollup`'s exports map. Named imports/exports of public symbols are routed to `@nx/rollup` and the rest to the new `@nx/rollup/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/rollup/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {
