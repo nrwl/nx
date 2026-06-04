@@ -7,7 +7,6 @@ import {
   joinPathFragments,
   PackageManager,
   Tree,
-  logger,
 } from 'nx/src/devkit-exports';
 
 /**
@@ -46,7 +45,6 @@ export function installPackagesTask(
       stdio: process.env.NX_GENERATE_QUIET === 'true' ? 'ignore' : 'inherit',
       windowsHide: true,
     };
-    logger.info(`Running ${pmc.install}...`);
     // ensure local registry from process is not interfering with the install
     // when we start the process from temp folder the local registry would override the custom registry
     if (
@@ -57,9 +55,6 @@ export function installPackagesTask(
     ) {
       delete process.env.npm_config_registry;
     }
-    const startTime = Date.now();
     execSync(pmc.install, execSyncOptions);
-    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
-    logger.info(`Package installation completed in ${elapsed}s`);
   }
 }
