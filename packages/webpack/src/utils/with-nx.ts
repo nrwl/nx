@@ -3,18 +3,24 @@ import { NxComposableWebpackPlugin, NxWebpackExecutionContext } from './config';
 import { applyBaseConfig } from '../plugins/nx-webpack-plugin/lib/apply-base-config';
 import { NxAppWebpackPluginOptions } from '../plugins/nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { normalizeAssets } from '../plugins/nx-webpack-plugin/lib/normalize-options';
+import { warnWebpackComposeHelpersDeprecation } from './deprecation';
 
 const processed = new Set();
 
 export type WithNxOptions = Partial<NxAppWebpackPluginOptions>;
 
 /**
+ * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
+ * `@nx/webpack/app-plugin` in a standard webpack config and run
+ * `nx g @nx/webpack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
  * @param {WithNxOptions} pluginOptions
  * @returns {NxWebpackPlugin}
  */
 export function withNx(
   pluginOptions: WithNxOptions = {}
 ): NxComposableWebpackPlugin {
+  warnWebpackComposeHelpersDeprecation();
   return function configure(
     config: Configuration,
     { options, context }: NxWebpackExecutionContext
