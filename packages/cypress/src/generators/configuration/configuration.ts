@@ -29,6 +29,7 @@ import {
   normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
+  isTypescriptVersionAtLeast,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -121,12 +122,18 @@ export async function configurationGeneratorInternal(
       // Cypress uses commonjs, unless the project is also using commonjs (or does not set "module" i.e. uses default of commonjs),
       // then we need to set the moduleResolution to node10 or else Cypress will fail with TS5095 error.
       // See: https://github.com/cypress-io/cypress/issues/27731
+      // node10 is deprecated and errors on TS6, while bundler+commonjs errors on TS<6, so the value is version-conditional.
       if (
         (json.compilerOptions?.module ||
           json.compilerOptions?.module !== 'commonjs') &&
         json.compilerOptions?.moduleResolution
       ) {
-        json.compilerOptions.moduleResolution = 'node10';
+        json.compilerOptions.moduleResolution = isTypescriptVersionAtLeast(
+          tree,
+          '6.0.0'
+        )
+          ? 'bundler'
+          : 'node10';
       }
       return json;
     });

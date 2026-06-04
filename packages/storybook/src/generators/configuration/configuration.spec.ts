@@ -838,7 +838,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }
@@ -1703,7 +1703,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }

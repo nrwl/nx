@@ -30,6 +30,8 @@ export function updateDependencies(tree: Tree) {
       vite: viteVersion,
       '@nx/vite': nxVersion,
       '@nx/vitest': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
 }

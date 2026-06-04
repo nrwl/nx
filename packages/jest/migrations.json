@@ -236,6 +236,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.0.0-ts-jest": {
+      "version": "23.0.0-beta.23",
+      "requires": {
+        "ts-jest": ">=29.0.0 <29.4.7"
+      },
+      "packages": {
+        "ts-jest": {
+          "version": "^29.4.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

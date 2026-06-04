@@ -28,6 +28,14 @@
       "description": "Rename imports of `createNodesV2` from `@nx/js/typescript` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "23-0-0-add-ignore-deprecations-for-ts6": {
+      "version": "23.0.0-beta.23",
+      "description": "Adds `\"ignoreDeprecations\": \"6.0\"` to tsconfig files whose compilerOptions (or ts-node.compilerOptions) directly carry a TypeScript 6 deprecated option value (e.g. moduleResolution node/node10/classic, baseUrl, target es5, esModuleInterop false, outFile, module amd/umd/system), keeping the workspace compiling on TypeScript 6 without behavior changes.",
+      "requires": {
+        "typescript": ">=6.0.0"
+      },
+      "factory": "./dist/src/migrations/update-23-0-0/add-ignore-deprecations-for-ts6"
     }
   },
   "packageJsonUpdates": {
@@ -150,6 +158,21 @@
       "packages": {
         "@swc/cli": {
           "version": "~0.8.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-typescript": {
+      "version": "23.0.0-beta.23",
+      "incompatibleWith": {
+        "@remix-run/dev": "*"
+      },
+      "requires": {
+        "typescript": ">=5.9.0 <6.0.0"
+      },
+      "packages": {
+        "typescript": {
+          "version": "~6.0.3",
           "alwaysAddToPackageJson": false
         }
       }

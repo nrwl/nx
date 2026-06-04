@@ -1,5 +1,5 @@
 import { Tree, writeJson } from '@nx/devkit';
-import * as shared from '@nx/js';
+import { getTsConfigBaseOptions } from '@nx/js/internal';
 
 export function createTsConfig(
   host: Tree,
@@ -33,7 +33,7 @@ export function createTsConfig(
   if (options.rootProject) {
     json.compileOnSave = false;
     json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
+      ...getTsConfigBaseOptions(host),
       ...json.compilerOptions,
     };
     json.exclude = ['node_modules', 'tmp'];

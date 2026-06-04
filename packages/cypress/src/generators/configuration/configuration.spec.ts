@@ -67,7 +67,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [
@@ -134,7 +134,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [
@@ -284,7 +284,7 @@ describe('Cypress e2e configuration', () => {
         "compilerOptions": {
           "allowJs": true,
           "module": "commonjs",
-          "moduleResolution": "node10",
+          "moduleResolution": "bundler",
           "outDir": "../../dist/out-tsc",
           "sourceMap": false,
           "types": [

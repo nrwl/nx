@@ -47,8 +47,10 @@ export {
 
 // TypeScript helpers (resolvePathsBaseUrl, extractTsConfigBase,
 // tsConfigBaseOptions, addTsLibDependencies, resolveModuleByImport — all ship
-// via the public @nx/js entry)
+// via the public @nx/js entry; getTsConfigBaseOptions ships via internal only)
+export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config';
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
+export { isTypescriptVersionAtLeast } from './src/utils/is-typescript-version-at-least';
 export { getNeededCompilerOptionOverrides } from './src/utils/typescript/configuration';
 export {
   compileTypeScript,

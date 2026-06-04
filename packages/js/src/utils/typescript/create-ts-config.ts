@@ -1,5 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
+import { isTypescriptVersionAtLeast } from '../is-typescript-version-at-least';
 
 export const tsConfigBaseOptions = {
   rootDir: '.',
@@ -14,8 +15,22 @@ export const tsConfigBaseOptions = {
   lib: ['es2020', 'dom'],
   skipLibCheck: true,
   skipDefaultLibCheck: true,
+  // TS 6.0 flips the `strict` default to true; pin false to keep this base
+  // config's behavior identical on TS 5.8 and 6.0.
+  strict: false,
   paths: {},
 };
+
+// node-family moduleResolution errors on TS 6 (TS5107) and bundler+commonjs
+// errors on TS 5 (TS5095); resolve it per the declared TypeScript version.
+export function getTsConfigBaseOptions(tree: Tree) {
+  return {
+    ...tsConfigBaseOptions,
+    moduleResolution: isTypescriptVersionAtLeast(tree, '6.0.0')
+      ? 'bundler'
+      : 'node10',
+  };
+}
 
 export function extractTsConfigBase(host: Tree) {
   if (host.exists('tsconfig.base.json')) return;
