@@ -1,11 +1,14 @@
 import { formatFiles, type Tree } from '@nx/devkit';
 import { addV2ErrorBoundary, normalizeOptions } from './lib';
 import type { ErrorBoundarySchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export default async function errorBoundaryGenerator(
   tree: Tree,
   schema: ErrorBoundarySchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const options = await normalizeOptions(tree, schema);
 
   addV2ErrorBoundary(tree, options);

@@ -6,8 +6,11 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { initGenerator as jsInitGenerator } from '@nx/js';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export default async function (tree: Tree) {
+  assertSupportedRemixVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const jsInitTask = await jsInitGenerator(tree, {

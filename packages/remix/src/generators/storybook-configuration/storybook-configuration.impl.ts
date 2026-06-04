@@ -9,6 +9,7 @@ import {
 import { join } from 'path';
 import type { StorybookConfigurationSchema } from './schema';
 import { storybookConfigurationGenerator } from '@nx/react';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export async function remixStorybookConfiguration(
   tree: Tree,
@@ -30,6 +31,8 @@ export default async function remixStorybookConfigurationInternal(
   tree: Tree,
   schema: StorybookConfigurationSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

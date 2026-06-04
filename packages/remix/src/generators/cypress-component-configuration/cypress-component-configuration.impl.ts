@@ -8,6 +8,7 @@ import {
 import { join } from 'path';
 import { type CypressComponentConfigurationSchema } from './schema';
 import { cypressComponentConfigGenerator } from '@nx/react';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export function cypressComponentConfigurationGenerator(
   tree: Tree,
@@ -23,6 +24,8 @@ export async function cypressComponentConfigurationGeneratorInternal(
   tree: Tree,
   options: CypressComponentConfigurationSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const nxJson = readNxJson(tree);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&

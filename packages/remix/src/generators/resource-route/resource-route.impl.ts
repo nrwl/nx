@@ -4,8 +4,11 @@ import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import actionGenerator from '../action/action.impl';
 import loaderGenerator from '../loader/loader.impl';
 import { RemixRouteSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
+  assertSupportedRemixVersion(tree);
+
   const { filePath: routeFilePath } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       path: options.path.replace(/^\//, '').replace(/\/$/, ''),

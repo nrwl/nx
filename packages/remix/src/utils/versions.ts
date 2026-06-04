@@ -3,6 +3,10 @@ import { join } from 'path';
 
 export const nxVersion = require(join('@nx/remix', 'package.json')).version;
 
+// @nx/remix supports Remix v2 only. React Router v7 (the successor to Remix) is
+// handled by @nx/react. The floor rejects Remix v1; v2 is the only supported major.
+export const minSupportedRemixVersion = '2.0.0';
+
 export const remixVersion = '^2.17.3';
 export const isbotVersion = '^4.4.0';
 export const reactVersion = '^18.2.0';

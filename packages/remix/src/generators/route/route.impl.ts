@@ -7,8 +7,11 @@ import LoaderGenerator from '../loader/loader.impl';
 import MetaGenerator from '../meta/meta.impl';
 import StyleGenerator from '../style/style.impl';
 import { RemixRouteSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
+  assertSupportedRemixVersion(tree);
+
   const { artifactName: name, filePath: routeFilePath } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       path: options.path.replace(/^\//, '').replace(/\/$/, ''),

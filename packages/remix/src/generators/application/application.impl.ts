@@ -34,6 +34,7 @@ import {
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
+import { assertSupportedRemixVersion } from '../../utils/assert-supported-remix-version';
 import {
   addE2E,
   ignoreViteTempFiles,
@@ -62,6 +63,8 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
     _options.addPlugin,
