@@ -10,7 +10,7 @@ import {
 } from '@nx/devkit';
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { readNxJson } from 'nx/src/config/configuration';
 import { isNpmProject } from 'nx/src/project-graph/operators';

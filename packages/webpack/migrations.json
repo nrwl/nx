@@ -19,6 +19,11 @@
       "description": "Rewrites imports of NxTsconfigPathsWebpackPlugin from '@nx/webpack' to the sub-path '@nx/webpack/tsconfig-paths-plugin'.",
       "factory": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import",
       "documentation": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import.md"
+    },
+    "rewrite-webpack-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/webpack/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/webpack`'s exports map. Named imports/exports of public symbols are routed to `@nx/webpack` and the rest to the new `@nx/webpack/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/webpack/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {

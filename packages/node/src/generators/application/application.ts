@@ -149,7 +149,7 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
       // dynamic import, so it can't see the temp install.
       const {
         ensureDependencies,
-      }: typeof import('@nx/webpack/src/utils/ensure-dependencies') = require('@nx/webpack/src/utils/ensure-dependencies');
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(
         ensureDependencies(tree, {
           uiFramework: options.isNest ? 'none' : 'react',

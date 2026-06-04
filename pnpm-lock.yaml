@@ -3642,6 +3642,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
