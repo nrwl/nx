@@ -58,6 +58,7 @@ import { yargsSyncCheckCommand, yargsSyncCommand } from './sync/command-object';
 import { yargsWatchCommand } from './watch/command-object';
 import { yargsCompletionCommand } from './completion/command-object';
 import { isCompletionRequest } from './completion/trigger';
+import { yargsTipsCommand } from './tips/command-object';
 
 // Ensure that the output takes up the available width of the terminal.
 yargs.wrap(yargs.terminalWidth());
@@ -123,6 +124,7 @@ export const commandsObject = yargs
   .command(yargsDownloadCloudClientCommand)
   .command(yargsMcpCommand)
   .command(yargsCompletionCommand)
+  .command(yargsTipsCommand)
   .command(resolveConformanceCommandObject())
   .command(resolveConformanceCheckCommandObject())
   .scriptName('nx')

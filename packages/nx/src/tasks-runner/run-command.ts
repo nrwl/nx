@@ -27,6 +27,7 @@ import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
+import { maybePrintTip } from '../utils/tips/tips';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
 import { logger } from '../utils/logger';
 import {
@@ -564,6 +565,20 @@ export async function runCommandForTasks(
 
     if (printSummary) {
       printSummary();
+    }
+
+    // Post-run epilogue: one tip after the summary, unless a task failed
+    // (cancelled/continuous runs still show one). Tailored to what just ran.
+    // 'skipped' is treated like a failure here - a task is skipped when an
+    // upstream task failed, so the run did not cleanly succeed.
+    const anyTaskFailedOrSkipped = Object.values(taskResults).some(
+      (r) => r.status === 'failure' || r.status === 'skipped'
+    );
+    if (!anyTaskFailedOrSkipped) {
+      maybePrintTip({
+        runTargets: nxArgs.targets,
+        sampleProject: initiatingProject ?? projectNames[0],
+      });
     }
 
     await printConfigureAiAgentsDisclaimer();
