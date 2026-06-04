@@ -400,6 +400,29 @@ export function modifyYarnRcToFitNewDirectory(contents: string): string {
   return lines.join('\n');
 }
 
+/**
+ * We copy pnpm-workspace.yaml to the temporary directory so the workspace's
+ * registry, auth and release-age settings still apply, and so `pnpm add -w`
+ * recognizes the directory as a workspace root. `packages` (member globs) and
+ * `patchedDependencies` (relative patch paths) only resolve in the real
+ * workspace, so they are dropped.
+ *
+ * Exported for testing - not meant to be used outside of this file.
+ *
+ * @param contents The string contents of the pnpm-workspace.yaml file
+ * @returns Updated string contents of the pnpm-workspace.yaml file
+ */
+export function modifyPnpmWorkspaceYamlToFitNewDirectory(
+  contents: string
+): string {
+  const doc = parseDocument(contents);
+  if (doc.contents) {
+    doc.delete('packages');
+    doc.delete('patchedDependencies');
+  }
+  return doc.toString();
+}
+
 export function copyPackageManagerConfigurationFiles(
   root: string,
   destination: string
@@ -409,6 +432,7 @@ export function copyPackageManagerConfigurationFiles(
     '.yarnrc',
     '.yarnrc.yml',
     'bunfig.toml',
+    'pnpm-workspace.yaml',
   ]) {
     // f is an absolute path, including the {workspaceRoot}.
     const f = findFileInPackageJsonDirectory(packageManagerConfigFile, root);
@@ -436,6 +460,13 @@ export function copyPackageManagerConfigurationFiles(
         }
         case 'bunfig.toml': {
           copyFileSync(f, destinationPath);
+          break;
+        }
+        case 'pnpm-workspace.yaml': {
+          const updated = modifyPnpmWorkspaceYamlToFitNewDirectory(
+            readFileIfExisting(f)
+          );
+          writeFileSync(destinationPath, updated);
           break;
         }
       }
