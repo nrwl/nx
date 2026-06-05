@@ -3,8 +3,7 @@ import { machine } from './machine';
 
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
-// nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
+import type { MigrationsJsonMetadata } from '../../migration-shape';
 
 const makeMigration = (id: string): MigrationDetailsWithId => ({
   id,

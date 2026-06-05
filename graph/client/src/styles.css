@@ -18,6 +18,7 @@
 @source '../../ui-project-details/src';
 @source '../../ui-render-config/src';
 @source '../../shared/src';
+@source '../../migrate/src';
 @source '../../../node_modules/@nx/graph';
 
 @source not '../../**/*.{spec,test,stories}.*';
