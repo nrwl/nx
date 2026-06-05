@@ -32,6 +32,10 @@ export default [
             '@nx/playwright',
             '@nx/vite',
             '@nx/vitest',
+            // Declared as peers so workspaces get a compatible-range signal;
+            // installed by generators, not imported by the plugin's own source.
+            'nuxt',
+            '@nuxt/schema',
           ],
         },
       ],

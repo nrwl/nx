@@ -75,7 +75,11 @@ export async function initHandler(
   let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      'latest',
+      detectPackageManager(process.cwd())
+    );
     cleanup = packageInstallResults.cleanup;
 
     let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {

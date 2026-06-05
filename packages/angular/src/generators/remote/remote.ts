@@ -24,10 +24,8 @@ import { assertNotUsingTsSolutionSetup } from '../utils/validations';
 import { getInstalledAngularVersionInfo } from '../utils/version-utils';
 import { findNextAvailablePort, updateSsrSetup, validateOptions } from './lib';
 import type { Schema } from './schema';
-import { warnAngularRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function remote(tree: Tree, schema: Schema) {
-  warnAngularRemoteGeneratorDeprecation();
   assertSupportedAngularVersion(tree);
   assertNotUsingTsSolutionSetup(tree, 'remote');
   validateOptions(tree, schema);

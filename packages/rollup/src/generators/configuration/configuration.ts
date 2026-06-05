@@ -32,6 +32,7 @@ import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { hasPlugin } from '../../utils/has-plugin';
 import { warnRollupExecutorGenerating } from '../../utils/deprecation';
+import { assertSupportedRollupVersion } from '../../utils/versions';
 import { rollupInitGenerator } from '../init/init';
 import { RollupProjectSchema } from './schema';
 
@@ -41,6 +42,8 @@ export async function configurationGenerator(
   tree: Tree,
   options: RollupProjectSchema
 ) {
+  assertSupportedRollupVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
   const nxJson = readNxJson(tree);
   const addPluginDefault =

@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
-import { migratePrompt } from './safe-prompt';
+import { canPrompt, migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
@@ -59,6 +59,7 @@ import {
   createTempNpmDirectory,
   detectPackageManager,
   getPackageManagerCommand,
+  PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
   resolvePackageVersionUsingRegistry,
@@ -949,37 +950,112 @@ export async function resolveMode(
   mode: MigrateMode | undefined,
   targetPackage: string,
   targetVersion: string,
-  context: { hasFrom: boolean; hasExcludeAppliedMigrations: boolean } = {
+  context: {
+    hasFrom: boolean;
+    hasExcludeAppliedMigrations: boolean;
+    installedMajor?: number | null;
+    isV23Plus?: boolean;
+    interactive?: boolean;
+  } = {
     hasFrom: false,
     hasExcludeAppliedMigrations: false,
   },
   configuredMode?: MigrateMode
 ): Promise<MigrateMode> {
+  // The first-party/third-party split relies on migration metadata that only
+  // exists in Nx v23+. `first-party` needs a v22+ install migrating into a v23+
+  // target; `third-party` catches up deps a prior first-party migration
+  // deferred, so it needs the workspace already on v23+.
+  const installedMajor = context.installedMajor ?? null;
+  const firstPartyAvailable =
+    installedMajor !== null &&
+    installedMajor >= 22 &&
+    context.isV23Plus === true;
+  const thirdPartyAvailable = installedMajor !== null && installedMajor >= 23;
+
+  // `--interactive` x-prompts let users skip optional third-party updates; the
+  // modes supersede that choice, so it is disallowed behind the same v23+ gate.
+  if (
+    context.interactive === true &&
+    context.isV23Plus === true &&
+    isNxEquivalentTarget(targetPackage, targetVersion)
+  ) {
+    throw new Error(
+      `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+    );
+  }
+
   if (mode) {
+    if (isNxEquivalentTarget(targetPackage, targetVersion)) {
+      if (mode === 'first-party' && !firstPartyAvailable) {
+        if (context.isV23Plus !== true) {
+          throw new Error(
+            `Error: '--mode=first-party' requires migrating to Nx v23 or later.`
+          );
+        }
+        throw new Error(
+          `Error: '--mode=first-party' requires the workspace to be on Nx v22 or later. Migrate to the latest Nx v22 first, then to v23 or later.`
+        );
+      }
+      // When the installed version is unknown, defer to the downstream
+      // "requires nx to be installed" check rather than the v23 gate.
+      if (
+        mode === 'third-party' &&
+        installedMajor !== null &&
+        !thirdPartyAvailable
+      ) {
+        throw new Error(
+          `Error: '--mode=third-party' requires the workspace to be on Nx v23 or later.`
+        );
+      }
+    }
     return mode;
   }
   if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
     return 'all';
   }
-  // nx.json `migrate.mode` pre-selects the value the interactive prompt would
-  // ask for; it applies only to Nx targets (non-Nx returned 'all' above).
+  // nx.json `migrate.mode` pre-selects the prompt answer (Nx targets only; non-Nx
+  // returned 'all' above). Honor it only when the v23+ gate makes that mode
+  // available; otherwise warn and fall back to the always-valid 'all'.
   if (configuredMode) {
-    return configuredMode;
-  }
-  if (!process.stdin.isTTY || isCI()) {
+    const configuredAvailable =
+      configuredMode === 'all' ||
+      (configuredMode === 'first-party' && firstPartyAvailable) ||
+      (configuredMode === 'third-party' && thirdPartyAvailable);
+    if (configuredAvailable) {
+      return configuredMode;
+    }
+    output.warn({
+      title: `The configured nx.json migrate.mode '${configuredMode}' is not available for this migration; falling back to 'all'.`,
+      bodyLines: [
+        `The 'first-party' and 'third-party' modes require Nx v23 or later.`,
+      ],
+    });
     return 'all';
   }
-  const choices: { name: string; message: string }[] = [
-    {
+  const choices: { name: string; message: string }[] = [];
+  if (firstPartyAvailable) {
+    choices.push({
       name: 'first-party',
       message: 'First-party only (Nx and its official packages)',
-    },
-  ];
-  if (!context.hasFrom && !context.hasExcludeAppliedMigrations) {
+    });
+  }
+  if (
+    thirdPartyAvailable &&
+    !context.hasFrom &&
+    !context.hasExcludeAppliedMigrations &&
+    context.interactive !== true
+  ) {
     choices.push({
       name: 'third-party',
       message: 'Third-party only (deps managed by Nx)',
     });
+  }
+  if (!choices.length) {
+    return 'all';
+  }
+  if (!canPrompt(context.interactive)) {
+    return 'all';
   }
   choices.push({
     name: 'all',
@@ -1099,6 +1175,7 @@ type RunMigrations = {
   ifExists: boolean;
   agentic: AgenticArg;
   validate?: boolean;
+  interactive?: boolean;
 };
 
 export async function parseMigrationsOptions(options: {
@@ -1126,6 +1203,7 @@ export async function parseMigrationsOptions(options: {
       ifExists: options.ifExists as boolean,
       agentic: options.agentic as AgenticArg,
       validate: options.validate as boolean | undefined,
+      interactive: options.interactive as boolean | undefined,
     };
   }
 
@@ -1162,6 +1240,7 @@ export async function parseMigrationsOptions(options: {
       mode,
       from: options.from,
       excludeAppliedMigrations: options.excludeAppliedMigrations,
+      interactive: options.interactive,
     });
     assertThirdPartyTargetBounds({
       targetPackage,
@@ -1189,6 +1268,7 @@ function assertThirdPartyModeFlagCompatibility(options: {
   mode?: string;
   from?: string;
   excludeAppliedMigrations?: boolean;
+  interactive?: boolean;
 }): void {
   if (options.mode !== 'third-party') return;
   if (options.from) {
@@ -1201,11 +1281,18 @@ function assertThirdPartyModeFlagCompatibility(options: {
       `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
     );
   }
+  if (options.interactive === true) {
+    throw new Error(
+      `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+    );
+  }
 }
 
-// Defaults target package/version mode-aware (third-party → installed
-// canonical, otherwise nx@latest) and enforces the era gate when --mode
-// is explicit.
+// Resolves the target package/version up front (third-party → installed
+// canonical; otherwise resolves dist-tags so the v23 mode gate reads a concrete
+// major), then resolves the mode and enforces the era gate when --mode is
+// explicit. Bare invocations on a pre-v22 install throw rather than defaulting
+// to `latest` across the major gap into the v23 era.
 async function resolveTargetAndMode(args: {
   positional: string | undefined;
   from: Record<string, string>;
@@ -1213,6 +1300,7 @@ async function resolveTargetAndMode(args: {
     mode?: MigrateMode;
     modeFromConfig?: MigrateMode;
     excludeAppliedMigrations?: boolean;
+    interactive?: boolean;
   };
 }): Promise<{
   targetPackage: string;
@@ -1229,11 +1317,56 @@ async function resolveTargetAndMode(args: {
     targetVersion = parsed.targetVersion;
   }
 
-  // Resolve mode before defaulting target so the default can depend on the
-  // resolved mode (third-party defaults to nx@<installed>; otherwise nx@latest).
-  // For bare invocation, `targetPackage='nx'` and `targetVersion='latest'` are
-  // safe sentinels: `isNxEquivalentTarget` treats the literal `'latest'` as
-  // modern era (semver `lt('latest', '14.0.0-beta.0')` is false).
+  const installed = resolveInstalledCanonical();
+  const installedMajor =
+    installed && valid(installed.version) ? major(installed.version) : null;
+
+  // `--mode=third-party` anchors the target to the installed version below, so
+  // it never needs a target or dist-tag resolved up front.
+  const isExplicitThirdParty = options.mode === 'third-party';
+
+  // Bare invocation: restore the requirement to specify a target when on a
+  // pre-v23 install. We can't safely default to `latest` across the major gap
+  // into the new era, and the first-party/third-party functionality isn't
+  // available there anyway.
+  if (!positional && !isExplicitThirdParty) {
+    if (installedMajor === null || installedMajor < 22) {
+      throw new Error(
+        `Provide the package and version to migrate to. E.g., \`nx migrate nx@<version>\`.`
+      );
+    }
+    targetPackage = 'nx';
+    targetVersion = 'latest';
+  }
+
+  // Explicit dist-tags arrive already resolved from
+  // `parseTargetPackageAndVersion`; only bare invocations and bare package
+  // names (`nx migrate nx`) reach here unresolved.
+  let isV23Plus = false;
+  if (
+    !isExplicitThirdParty &&
+    isNxEquivalentTarget(targetPackage!, targetVersion!)
+  ) {
+    if (targetVersion && valid(targetVersion)) {
+      isV23Plus = major(targetVersion) >= 23;
+    } else {
+      // Resolving the dist-tag here (rather than only in the multi-major check
+      // as before) just moves the single registry round-trip earlier — the
+      // multi-major check short-circuits on the now-concrete version.
+      const tag = targetVersion!;
+      try {
+        targetVersion = await normalizeVersionWithTagCheck(targetPackage!, tag);
+        isV23Plus = valid(targetVersion) ? major(targetVersion) >= 23 : true;
+      } catch {
+        // Registry unavailable: assume dist-tags resolve to >= v23 (true once
+        // v23 is released) so the gate stays sensible. The retained sentinel
+        // still degrades gracefully downstream (multi-major and the cascade).
+        targetVersion = tag;
+        isV23Plus = true;
+      }
+    }
+  }
+
   const mode = await resolveMode(
     options.mode,
     targetPackage ?? 'nx',
@@ -1241,6 +1374,9 @@ async function resolveTargetAndMode(args: {
     {
       hasFrom: Object.keys(from).length > 0,
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
+      installedMajor,
+      isV23Plus,
+      interactive: options.interactive,
     },
     options.modeFromConfig
   );
@@ -1253,7 +1389,6 @@ async function resolveTargetAndMode(args: {
   // the literal `'latest'` that `parseTargetPackageAndVersion` emits for bare
   // package names.
   if (mode === 'third-party' && (!positional || !valid(targetVersion!))) {
-    const installed = resolveInstalledCanonical();
     if (!installed) {
       throw new Error(
         `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
@@ -1262,14 +1397,6 @@ async function resolveTargetAndMode(args: {
     installedNxVersion = installed.version;
     targetPackage = installed.canonical;
     targetVersion = installed.version;
-  } else if (!positional) {
-    // Bare invocation: default to `nx@latest` as a literal sentinel rather
-    // than resolving via the registry here. Multi-major resolves the dist-tag
-    // when needed (and bails gracefully on registry failure), and the cascade
-    // resolves it for the walk (honouring `NX_MIGRATE_SKIP_REGISTRY_FETCH`).
-    // This matches the resilience of `nx migrate nx`.
-    targetPackage = 'nx';
-    targetVersion = 'latest';
   }
 
   if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
@@ -1427,7 +1554,7 @@ function createInstalledPackageVersionsResolver(
 }
 
 // testing-fetch-start
-function createFetcher() {
+function createFetcher(pmc: PackageManagerCommands) {
   const migrationsCache: Record<
     string,
     Promise<ResolvedMigrationConfiguration>
@@ -1442,7 +1569,7 @@ function createFetcher() {
     if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      return getPackageMigrationsUsingInstall(packageName, packageVersion);
+      return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
     }
 
     const cacheKey = packageName + '-' + packageVersion;
@@ -1474,7 +1601,11 @@ function createFetcher() {
         );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
 
-        return getPackageMigrationsUsingInstall(packageName, packageVersion);
+        return getPackageMigrationsUsingInstall(
+          packageName,
+          packageVersion,
+          pmc
+        );
       });
   }
 
@@ -1682,16 +1813,18 @@ const installConcurrencyLimit = process.env.NX_MIGRATE_INSTALL_CONCURRENCY
 
 async function getPackageMigrationsUsingInstall(
   packageName: string,
-  packageVersion: string
+  packageVersion: string,
+  pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
   const run = () =>
-    getPackageMigrationsUsingInstallImpl(packageName, packageVersion);
+    getPackageMigrationsUsingInstallImpl(packageName, packageVersion, pmc);
   return installConcurrencyLimit ? installConcurrencyLimit(run) : run();
 }
 
 async function getPackageMigrationsUsingInstallImpl(
   packageName: string,
-  packageVersion: string
+  packageVersion: string,
+  pmc: PackageManagerCommands
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
 
@@ -1702,15 +1835,22 @@ async function getPackageMigrationsUsingInstallImpl(
   }
 
   try {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
-    await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
-      cwd: dir,
-      env: {
-        ...process.env,
-        npm_config_legacy_peer_deps: 'true',
-      },
-    });
+    const addCommand = `${pmc.add} ${packageName}@${packageVersion}`;
+    try {
+      await execAsync(addCommand, {
+        cwd: dir,
+        env: {
+          ...process.env,
+          npm_config_legacy_peer_deps: 'true',
+        },
+      });
+    } catch (e) {
+      // Only the install command failed; format it as a command failure so the
+      // user sees the package manager's stderr. Errors from the later steps
+      // (reading/validating migrations, resolving prompt files) are surfaced
+      // as-is by the outer catch instead of being mislabeled as install failures.
+      throw new Error(formatCommandFailure(addCommand, e as CommandFailure));
+    }
 
     const {
       migrations: migrationsFilePath,
@@ -1738,15 +1878,10 @@ async function getPackageMigrationsUsingInstallImpl(
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
   } catch (e) {
-    const pmc = getPackageManagerCommand(detectPackageManager(dir), dir);
-
     throw new Error(
       [
         `Failed to fetch migrations for ${packageName}@${packageVersion}`,
-        formatCommandFailure(
-          `${pmc.add} ${packageName}@${packageVersion}`,
-          e as CommandFailure
-        ),
+        e instanceof Error ? e.message : String(e),
       ].join('\n')
     );
   } finally {
@@ -2007,7 +2142,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
-    const fetch = createFetcher();
+    const fetch = createFetcher(pmc);
     let firstPartyPackages: ReadonlySet<string> | undefined;
     if (mode === 'first-party' || mode === 'third-party') {
       // `@nx/workspace` is version-synced with `nx` and declares an
@@ -3068,6 +3203,7 @@ async function runMigrations(
     ifExists: boolean;
     agentic: AgenticArg;
     validate?: boolean;
+    interactive?: boolean;
   },
   args: string[],
   isVerbose: boolean,
@@ -3120,6 +3256,7 @@ async function runMigrations(
   const agentic = await resolveAgentic({
     agentic: opts.agentic,
     migrations,
+    interactive: opts.interactive,
   });
 
   const {

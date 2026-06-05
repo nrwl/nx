@@ -7,11 +7,14 @@ import {
 import { join } from 'path';
 import { addExportsToBarrel, normalizeOptions } from './lib/utils';
 import { NormalizedSchema, ComponentGeneratorSchema } from './schema';
+import { assertSupportedVueVersion } from '../../utils/assert-supported-vue-version';
 
 export async function componentGenerator(
   host: Tree,
   schema: ComponentGeneratorSchema
 ) {
+  assertSupportedVueVersion(host);
+
   const options = await normalizeOptions(host, schema);
 
   createComponentFiles(host, options);

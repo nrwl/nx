@@ -53,6 +53,8 @@ function addSwcDependencies(tree: Tree) {
       '@swc-node/register': swcNodeVersion,
       '@swc/cli': swcCliVersion,
       '@swc/core': swcCoreVersion,
-    }
+    },
+    undefined,
+    true
   );
 }

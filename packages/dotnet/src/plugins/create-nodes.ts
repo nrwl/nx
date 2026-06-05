@@ -1,5 +1,5 @@
 import {
-  CreateNodesV2,
+  CreateNodes,
   logger,
   ProjectConfiguration,
   TargetConfiguration,
@@ -175,7 +175,7 @@ function mergeUserTargetConfigurations(
   };
 }
 
-export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
+export const createNodes: CreateNodes<DotNetPluginOptions> = [
   dotnetProjectGlob,
   async (configFilePaths, options, context) => {
     // Analyze all projects - the C# analyzer builds the complete Nx structure
@@ -253,3 +253,8 @@ export const createNodesV2: CreateNodesV2<DotNetPluginOptions> = [
     }
   },
 ];
+
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;

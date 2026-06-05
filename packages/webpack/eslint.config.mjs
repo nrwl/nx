@@ -36,6 +36,10 @@ export default [
             'nx',
             'typescript',
             'eslint',
+            // Declared as an optional peer because the inferred plugin emits
+            // targets that run the `webpack-cli` binary; it is never imported,
+            // so the dependency check can't detect the usage statically.
+            'webpack-cli',
             '@babel/core',
             'css-loader',
             'less',

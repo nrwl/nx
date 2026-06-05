@@ -1,5 +1,11 @@
-import { offsetFromRoot, Tree, updateJson, workspaceRoot } from '@nx/devkit';
-import { existsSync, readFileSync } from 'fs';
+import {
+  offsetFromRoot,
+  readJsonFile,
+  Tree,
+  updateJson,
+  workspaceRoot,
+} from '@nx/devkit';
+import { existsSync } from 'fs';
 import { dirname, isAbsolute, join, resolve } from 'path';
 import type * as ts from 'typescript';
 import { ensureTypescript } from './ensure-typescript';
@@ -126,7 +132,7 @@ export function resolvePathsBaseUrl(tsconfigPath: string): string {
     const absolute = resolve(queue.shift()!);
     const dir = dirname(absolute);
     try {
-      const raw = JSON.parse(readFileSync(absolute, 'utf-8'));
+      const raw = readJsonFile(absolute);
       chain.push({ dir, raw });
       const exts: string[] = raw.extends
         ? Array.isArray(raw.extends)

@@ -4,14 +4,13 @@ import {
   calculateHashesForCreateNodes,
   PluginCache,
 } from '@nx/devkit/internal';
-import type { NuxtOptions } from '@nuxt/schema';
 import {
   AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -39,7 +38,7 @@ export interface NuxtPluginOptions {
   watchDepsTargetName?: string;
 }
 
-export const createNodes: CreateNodesV2<NuxtPluginOptions> = [
+export const createNodes: CreateNodes<NuxtPluginOptions> = [
   '**/nuxt.config.{js,ts,mjs,mts,cjs,cts}',
   async (files, options, context) => {
     const packageManager = detectPackageManager(context.workspaceRoot);
@@ -98,7 +97,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   hash: string
 ) {
@@ -124,7 +123,7 @@ async function buildNuxtTargets(
   configFilePath: string,
   projectRoot: string,
   options: NuxtPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const nuxtConfig: {
@@ -250,12 +249,17 @@ function buildStaticTarget(
 
 async function getInfoFromNuxtConfig(
   configFilePath: string,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   projectRoot: string
 ): Promise<{
   buildDir: string;
 }> {
-  let config: NuxtOptions;
+  // Only `buildDir` is read below. Typing it to the full `@nuxt/schema`
+  // `NuxtOptions` couples to one schema version, which clashes when
+  // `loadNuxtConfig` returns the (possibly older) `@nuxt/schema` bundled by the
+  // installed `@nuxt/kit`. Type just what we read so it holds across the
+  // supported Nuxt 3.x–4.x range.
+  let config: { buildDir?: string };
   if (process.env.NX_ISOLATE_PLUGINS !== 'false') {
     config = await (
       await loadNuxtKitDynamicImport()
@@ -320,7 +324,7 @@ interface NuxtEntry {
 
 async function filterNuxtConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: NuxtEntry[];
   preErrors: Array<[string, Error]>;

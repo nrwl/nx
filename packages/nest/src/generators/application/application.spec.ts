@@ -40,18 +40,18 @@ describe('application generator', () => {
           "build": {
             "configurations": {
               "development": {
-                "args": [
-                  "--node-env=development",
-                ],
+                "env": {
+                  "NODE_ENV": "development",
+                },
               },
             },
             "executor": "nx:run-commands",
             "options": {
-              "args": [
-                "--node-env=production",
-              ],
               "command": "webpack-cli build",
               "cwd": "my-node-app",
+              "env": {
+                "NODE_ENV": "production",
+              },
             },
           },
           "copy-workspace-modules": {
@@ -288,18 +288,18 @@ describe('application generator', () => {
               "build": {
                 "configurations": {
                   "development": {
-                    "args": [
-                      "--node-env=development",
-                    ],
+                    "env": {
+                      "NODE_ENV": "development",
+                    },
                   },
                 },
                 "executor": "nx:run-commands",
                 "options": {
-                  "args": [
-                    "--node-env=production",
-                  ],
                   "command": "webpack-cli build",
                   "cwd": "myapp",
+                  "env": {
+                    "NODE_ENV": "production",
+                  },
                 },
               },
               "copy-workspace-modules": {
@@ -493,18 +493,18 @@ describe('application generator', () => {
             "build": {
               "configurations": {
                 "development": {
-                  "args": [
-                    "--node-env=development",
-                  ],
+                  "env": {
+                    "NODE_ENV": "development",
+                  },
                 },
               },
               "executor": "nx:run-commands",
               "options": {
-                "args": [
-                  "--node-env=production",
-                ],
                 "command": "webpack-cli build",
                 "cwd": "myapp",
+                "env": {
+                  "NODE_ENV": "production",
+                },
               },
             },
             "copy-workspace-modules": {

@@ -8,6 +8,7 @@ import {
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
 import { composePluginsSync } from '@nx/webpack/src/utils/config';
+import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/src/utils/deprecation';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import {
@@ -17,6 +18,7 @@ import {
   WebpackPluginInstance,
 } from 'webpack';
 import { withReact } from '../with-react';
+import { suppressReactComposeHelperWarnings } from '../../src/utils/deprecation';
 import { mergePlugins } from './merge-plugins';
 
 // This is shamelessly taken from CRA and modified for NX use
@@ -198,15 +200,21 @@ export const webpack = async (
 
   // ESM build for modern browsers.
   let baseWebpackConfig: Configuration = {};
-  const configure = composePluginsSync(
-    withNx({ target: 'web', skipTypeChecking: true }),
-    withReact()
+  // Nx composes these helpers internally for the storybook preset; suppress
+  // their deprecation warning so it fires only for user-authored configs.
+  const finalConfig = suppressWebpackComposeHelperWarnings(() =>
+    suppressReactComposeHelperWarnings(() => {
+      const configure = composePluginsSync(
+        withNx({ target: 'web', skipTypeChecking: true }),
+        withReact()
+      );
+      return configure(baseWebpackConfig, {
+        options: builderOptions,
+        // TODO(JamesHenry): replace as any type assertion with as ExecutorContext once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
+        context: { root: workspaceRoot } as any, // The context is not used here.
+      });
+    })
   );
-  const finalConfig = configure(baseWebpackConfig, {
-    options: builderOptions,
-    // TODO(JamesHenry): replace as any type assertion with as ExecutorContext once the nx repo is updated to use https://github.com/nrwl/nx/pull/33095
-    context: { root: workspaceRoot } as any, // The context is not used here.
-  });
 
   return {
     ...storybookWebpackConfig,

@@ -402,6 +402,8 @@ export function createOrEditViteConfig(
   }
 
   if (!isTsSolutionSetup) {
+    // TODO(v24): drop this branch; emit `tsconfigPaths()` from
+    // `vite-tsconfig-paths` instead of the deprecated nx helpers.
     imports.push(
       `import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin'`,
       `import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin'`

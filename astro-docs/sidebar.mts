@@ -299,6 +299,10 @@ const learnGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
+            label: 'Automate updating dependencies',
+            link: 'features/automate-updating-dependencies',
+          },
+          {
             label: 'Nx Console migration assistance',
             link: 'guides/nx-console/console-migrate-ui',
           },
@@ -828,7 +832,10 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Personal access tokens',
             link: 'guides/nx-cloud/personal-access-tokens',
           },
-          { label: 'Manual DTE', link: 'guides/nx-cloud/manual-dte' },
+          {
+            label: 'Bring Your Own Compute',
+            link: 'guides/nx-cloud/bring-your-own-compute',
+          },
           {
             label: 'Source control integration',
             link: 'guides/nx-cloud/source-control-integration',

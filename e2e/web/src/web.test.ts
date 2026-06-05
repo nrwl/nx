@@ -333,7 +333,7 @@ describe('CLI - Environment Variables', () => {
       'optimization',
       false
     );
-    runCLI(`run-many --target build --node-env=test`);
+    runCLI(`run-many --target build --config-node-env=test`);
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );

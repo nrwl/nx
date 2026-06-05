@@ -49,7 +49,6 @@ export function toNodeApplicationGeneratorOptions(
     linter: options.linter,
     skipFormat: true,
     skipPackageJson: options.skipPackageJson,
-    standaloneConfig: options.standaloneConfig,
     tags: options.tags,
     unitTestRunner: options.unitTestRunner,
     e2eTestRunner: options.e2eTestRunner,

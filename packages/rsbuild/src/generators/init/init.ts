@@ -9,7 +9,7 @@ import {
   runTasksInSerial,
 } from '@nx/devkit';
 import { InitGeneratorSchema } from './schema';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodes } from '../../plugins/plugin';
 import { nxVersion } from '../../utils/versions';
 import { getRsbuildVersionsForInstalledMajor } from '../../utils/version-utils';
 import { assertSupportedRsbuildVersion } from '../../utils/assert-supported-rsbuild-version';
@@ -50,7 +50,7 @@ export async function initGeneratorInternal(
       tree,
       await createProjectGraphAsync(),
       '@nx/rsbuild',
-      createNodesV2,
+      createNodes,
       {
         buildTargetName: ['build', 'rsbuild:build', 'rsbuild-build'],
         devTargetName: ['dev', 'rsbuild:dev', 'rsbuild-dev'],

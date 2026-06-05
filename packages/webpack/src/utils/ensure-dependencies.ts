@@ -42,7 +42,9 @@ export function ensureDependencies(
     devDependencies['react-refresh'] = reactRefreshVersion;
   }
 
-  tasks.push(addDependenciesToPackageJson(tree, {}, devDependencies));
+  tasks.push(
+    addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
+  );
 
   return runTasksInSerial(...tasks);
 }

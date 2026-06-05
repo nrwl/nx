@@ -97,9 +97,6 @@
   },
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "catalog:",
-    "@module-federation/node": "^2.7.21",
-    "@module-federation/sdk": "^2.1.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
@@ -109,6 +106,18 @@
     "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "webpack": "catalog:"
+  },
+  "peerDependencies": {
+    "@module-federation/enhanced": "^2.0.0",
+    "@module-federation/node": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/enhanced": {
+      "optional": true
+    },
+    "@module-federation/node": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*"

@@ -63,7 +63,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       const installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       const addSwcTask = addSwcDependencies(host);
       tasks.push(installTask, addSwcTask);

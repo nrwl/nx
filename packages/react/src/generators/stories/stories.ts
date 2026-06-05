@@ -19,6 +19,7 @@ import {
 } from '../../utils/ast-utils';
 import { getUiFramework } from '../../utils/framework';
 import componentStoryGenerator from '../component-story/component-story';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 
 let tsModule: typeof import('typescript');
 
@@ -142,6 +143,8 @@ export async function storiesGenerator(
   host: Tree,
   schema: StorybookStoriesSchema
 ) {
+  assertSupportedReactVersion(host);
+
   const projects = getProjects(host);
   const projectConfiguration = projects.get(schema.project);
   schema.interactionTests = schema.interactionTests ?? true;

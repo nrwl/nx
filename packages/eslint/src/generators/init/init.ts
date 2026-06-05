@@ -21,7 +21,7 @@ import {
   determineEslintConfigFormat,
   findEslintFile,
 } from '../utils/eslint-file';
-import { createNodesV2 } from '../../plugins/plugin';
+import { createNodes } from '../../plugins/plugin';
 import { hasEslintPlugin } from '../utils/plugin';
 import { extname } from 'path';
 
@@ -132,7 +132,7 @@ export async function initEsLint(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodesV2,
+      createNodes,
       {
         targetName: lintTargetNames,
       },
@@ -155,7 +155,7 @@ export async function initEsLint(
       tree,
       graph,
       '@nx/eslint/plugin',
-      createNodesV2,
+      createNodes,
       {
         targetName: lintTargetNames,
       },

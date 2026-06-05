@@ -1,4 +1,4 @@
-import { CreateNodesResultV2, CreateNodesV2, hashArray } from '@nx/devkit';
+import { CreateNodesResultArray, CreateNodes, hashArray } from '@nx/devkit';
 import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import { dirname, relative } from 'path';
 import { DEFAULT_OPTIONS, MavenPluginOptions } from './types';
@@ -14,9 +14,9 @@ import { hashObject } from 'nx/src/devkit-internals';
 /**
  * Maven plugin that analyzes Maven projects and returns configurations
  */
-export const createNodes: CreateNodesV2<MavenPluginOptions> = [
+export const createNodes: CreateNodes<MavenPluginOptions> = [
   '**/pom.xml',
-  async (configFiles, options, context): Promise<CreateNodesResultV2> => {
+  async (configFiles, options, context): Promise<CreateNodesResultArray> => {
     const opts: MavenPluginOptions = {
       ...DEFAULT_OPTIONS,
       ...options,

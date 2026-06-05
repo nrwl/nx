@@ -1,11 +1,11 @@
-import { createNodesV2, type DotNetPluginOptions } from './create-nodes';
+import { createNodes, type DotNetPluginOptions } from './create-nodes';
 import { createDependencies } from './create-dependencies';
 import { NxPlugin } from '@nx/devkit';
 
 const regularPlugin: NxPlugin<DotNetPluginOptions> = {
   name: '@nx/dotnet',
-  createNodes: createNodesV2,
-  createNodesV2,
+  createNodes,
+  createNodesV2: createNodes,
   createDependencies,
 };
 

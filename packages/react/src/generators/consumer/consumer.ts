@@ -9,6 +9,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import { typescriptVersion } from '@nx/js/src/utils/versions';
 import {
   reactVersion,
@@ -44,6 +45,8 @@ export async function consumerGenerator(
   tree: Tree,
   schema: ConsumerGeneratorSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(tree);
+
   const opts = await normalizeScaffoldOptions(tree, {
     directory: schema.directory,
     surface: 'consumer',
@@ -171,7 +174,13 @@ export async function consumerGenerator(
   // resolve when nx invokes the generated run-commands serve target.
   const deps = getConsumerDeps(opts.bundler);
   tasks.push(
-    addDependenciesToPackageJson(tree, deps.dependencies, deps.devDependencies)
+    addDependenciesToPackageJson(
+      tree,
+      deps.dependencies,
+      deps.devDependencies,
+      undefined,
+      true
+    )
   );
 
   await formatFiles(tree);

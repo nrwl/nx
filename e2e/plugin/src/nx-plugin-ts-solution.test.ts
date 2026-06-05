@@ -316,6 +316,124 @@ describe('Nx Plugin (TS solution)', () => {
     expect(configuration.tags).toContain('cypress-tag');
   });
 
+  // Regression: a subpath plugin whose TS source uses NodeNext `.js` relative
+  // imports (TS resolves them to the sibling `.ts` at compile time) needs
+  // `.js -> .ts` rewriting on whichever resolver layer applies:
+  //   - type: module   -> loads as ESM; native type stripping loads the `.ts`
+  //     and Nx's self-contained ESM resolve hook rewrites the specifier (no
+  //     ts-node/swc-node required).
+  //   - type: commonjs -> native strip can't run ESM `import` syntax in a CJS
+  //     module, so Nx falls back to swc/ts-node to transpile, then the
+  //     `Module._resolveFilename` patch rewrites the emitted `require('./x.js')`.
+  // Both shapes must load correctly.
+  for (const moduleType of ['module', 'commonjs'] as const) {
+    it(`should load local plugin subpath imports whose TS sources use NodeNext-style .js import specifiers (type: ${moduleType})`, async () => {
+      const plugin = uniq('plugin');
+      runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+      const sourceCondition =
+        readJson('tsconfig.base.json').compilerOptions.customConditions[0];
+      expect(sourceCondition).not.toBe('development');
+
+      // Plugin entry imports a sibling helper via NodeNext `.js` specifier
+      // (which TS resolves to the sibling `.ts` file at compile time).
+      updateFile(
+        `packages/${plugin}/src/plugins/docker/index.ts`,
+        `import { dockerCreateNodes, dockerCreateMetadata } from './nodes.js';
+import type { CreateNodesV2, CreateMetadata } from '@nx/devkit';
+type PluginOptions = { inferredTags: string[] };
+export const createNodesV2: CreateNodesV2<PluginOptions> = [
+  '**/my-project-file',
+  dockerCreateNodes,
+];
+export const createMetadata: CreateMetadata = dockerCreateMetadata;
+`
+      );
+      updateFile(
+        `packages/${plugin}/src/plugins/docker/nodes.ts`,
+        `import { basename, dirname } from 'path';
+import type { CreateMetadata, ProjectsMetadata } from '@nx/devkit';
+
+type PluginOptions = { inferredTags: string[] };
+
+export const dockerCreateMetadata: CreateMetadata = (graph) => {
+  const metadata: ProjectsMetadata = {};
+  for (const projectNode of Object.values(graph.nodes)) {
+    metadata[projectNode.name] = {
+      metadata: { technologies: ['my-plugin'] },
+    };
+  }
+  return metadata;
+};
+
+export const dockerCreateNodes = (files: string[], options: PluginOptions) => {
+  const results: any[] = [];
+  for (const f of files) {
+    const root = dirname(f);
+    const name = basename(root);
+    results.push([
+      f,
+      {
+        projects: {
+          [root]: {
+            root,
+            name,
+            targets: {
+              build: {
+                executor: 'nx:run-commands',
+                options: { command: "echo 'custom registered target'" },
+              },
+            },
+            tags: options.inferredTags,
+          },
+        },
+      },
+    ]);
+  }
+  return results;
+};
+`
+      );
+
+      updateJson(`packages/${plugin}/package.json`, (pkg) => {
+        pkg.type = moduleType;
+        pkg.exports = {
+          ...pkg.exports,
+          './docker': {
+            [sourceCondition]: './src/plugins/docker/index.ts',
+            types: './dist/plugins/docker/index.d.ts',
+            import: './dist/plugins/docker/index.js',
+            default: './dist/plugins/docker/index.js',
+          },
+        };
+        return pkg;
+      });
+
+      updateJson(`nx.json`, (nxJson) => {
+        nxJson.plugins ??= [];
+        nxJson.plugins.push({
+          plugin: `@${workspaceName}/${plugin}/docker`,
+          options: { inferredTags: ['docker-tag'] },
+        });
+        return nxJson;
+      });
+
+      const inferredProject = uniq('docker-inferred');
+      createFile(
+        `packages/${inferredProject}/package.json`,
+        JSON.stringify({ name: inferredProject, version: '0.0.1' })
+      );
+      createFile(`packages/${inferredProject}/my-project-file`);
+
+      expect(runCLI(`build ${inferredProject}`)).toContain(
+        'custom registered target'
+      );
+      const configuration = JSON.parse(
+        runCLI(`show project ${inferredProject} --json`)
+      );
+      expect(configuration.tags).toContain('docker-tag');
+    });
+  }
+
   it('should load local plugin subpath imports from dist when no source condition is declared', async () => {
     const plugin = uniq('plugin');
     runCLI(`generate @nx/plugin:plugin packages/${plugin}`);

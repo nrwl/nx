@@ -25,6 +25,10 @@ public static partial class TargetBuilder
         };
 
         var packageOutputPath = GetPackageOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
+        // `dotnet pack` writes intermediate state into the intermediate (obj)
+        // directory, so it must be declared as an output alongside the package
+        // output, mirroring the build target.
+        var intermediatePath = GetIntermediateOutputPath(releaseProperties, projectName, projectDirectory, workspaceRoot);
 
         var buildReleaseTarget = $"{options.BuildTargetName}:release";
         targets[options.PackTargetName] = new Target
@@ -57,9 +61,13 @@ public static partial class TargetBuilder
                 new { dependentTasksOutputFiles = "**/*" },
                 .. directoryBuildInputs
             ],
-            Outputs = packageOutputPath is null
-                ? []
-                : [$"{packageOutputPath.TrimEnd('/')}/*.nupkg"],
+            Outputs = new[]
+                {
+                    packageOutputPath is null ? null : $"{packageOutputPath.TrimEnd('/')}/*.nupkg",
+                    intermediatePath
+                }
+                .Where(p => p is not null)
+                .ToArray()!,
             Metadata = new TargetMetadata
             {
                 Description = "Create NuGet package",
