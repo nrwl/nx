@@ -1,19 +1,17 @@
-import { createNodes, type DotNetPluginOptions } from './create-nodes';
-import { createDependencies } from './create-dependencies';
-import { NxPlugin } from '@nx/devkit';
+import { createNodes as createDotNetNodes } from './create-nodes';
+import { createDependencies as createDotNetDependencies } from './create-dependencies';
 
-const regularPlugin: NxPlugin<DotNetPluginOptions> = {
-  name: '@nx/dotnet',
-  createNodes,
-  createNodesV2: createNodes,
-  createDependencies,
-};
+// The plugin can be fully disabled (e.g. to debug graph issues) via the
+// NX_DOTNET_DISABLE environment variable. When disabled, no nodes or
+// dependencies are created so Nx effectively ignores .NET projects.
+const disabled = process.env.NX_DOTNET_DISABLE === 'true';
 
-const noopPlugin: NxPlugin = {
-  name: '@nx/dotnet [disabled]',
-};
+export const name = disabled ? '@nx/dotnet [disabled]' : '@nx/dotnet';
 
-const plugin: NxPlugin<DotNetPluginOptions> =
-  process.env.NX_DOTNET_DISABLE === 'true' ? noopPlugin : regularPlugin;
+export const createNodes = disabled ? undefined : createDotNetNodes;
 
-export = plugin;
+export const createNodesV2 = disabled ? undefined : createDotNetNodes;
+
+export const createDependencies = disabled
+  ? undefined
+  : createDotNetDependencies;
