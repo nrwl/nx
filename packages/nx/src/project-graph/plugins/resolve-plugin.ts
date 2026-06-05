@@ -15,7 +15,10 @@ import {
   findProjectForPath,
   ProjectRootMappings,
 } from '../utils/find-project-for-path';
-import { retrieveProjectConfigurationsWithoutPluginInference } from '../utils/retrieve-workspace-files';
+import {
+  clearProjectsWithoutPluginInferenceCache,
+  retrieveProjectConfigurationsWithoutPluginInference,
+} from '../utils/retrieve-workspace-files';
 
 import type { ProjectConfiguration } from '../../config/workspace-json-project-json';
 
@@ -380,4 +383,19 @@ function readTsConfigPaths(root: string = workspaceRoot) {
     tsconfigPaths = compilerOptions?.paths;
   }
   return tsconfigPaths ?? {};
+}
+
+/**
+ * Drops the cached workspace-layout snapshot local-plugin resolution relies on
+ * (project configs, tsconfig paths, package entry points). Kept for the life
+ * of the process, it goes stale when a new local plugin is added — the plugin
+ * then resolves to the workspace root (a directory) and fails to import.
+ */
+export function resetResolvePluginCache(): void {
+  projectsWithoutInference = undefined;
+  projectsWithoutInferencePromise = null;
+  packageEntryPointsToProjectMap = undefined;
+  wildcardEntryPointsToProjectMap = undefined;
+  tsconfigPaths = undefined;
+  clearProjectsWithoutPluginInferenceCache();
 }
