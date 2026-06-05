@@ -110,10 +110,10 @@ export function buildGenericValidationUserPrompt(
     firstStep,
     `2. Pick the smallest relevant subset of available targets to verify the change. Prefer \`nx affected -t <target>\` (or \`nx run <project>:<target>\` for a single project). When many small projects are affected, you may use \`nx run-many -t <target> -p <project1>,<project2>\` with the project list derived from the changed files. Unscoped \`nx run-many\` (no \`-p\`) is forbidden.`,
     `3. If a verification surfaces an issue the migration should have produced cleanly (e.g. a missing import, a type annotation the generator's template missed), you may apply a minor in-scope fix. The boundary is "what this migration intended to accomplish" — do not refactor, do not modify functionality unrelated to the migration, do not extend the migration's scope, do not touch code the migration was not concerned with. If you are unsure whether a fix is in scope, report it in \`summary\` instead of applying.`,
-    `4. Apply every fix you can within scope, then write your handoff. On \`status: "success"\`, summarize what you verified and any fixes you applied. On \`status: "failed"\`, enumerate the unresolved findings in \`summary\` so the user can address them; no commit will be created from a failed run, so the generator's changes and your partial fixes will sit uncommitted in the working tree for the user to review.`,
+    `4. Apply every fix you can within scope, then end the step per the handoff contract. If everything is resolved, write your handoff with \`status: "success"\`, summarizing what you verified and any fixes you applied. If unresolved findings remain, report them to the user and ask how to proceed before writing any handoff; on a \`status: "failed"\` handoff, enumerate the findings in \`summary\` so the user can address them — no commit will be created from a failed run, so the generator's changes and your partial fixes will sit uncommitted in the working tree for the user to review.`,
     `</validation_instructions>`,
     ``,
-    `Once you finish, write your handoff JSON to:`,
+    `When you end the step per the handoff contract, your handoff path is:`,
     ...renderHandoffPathFooter(ctx.handoffFileAbsolutePath)
   );
 

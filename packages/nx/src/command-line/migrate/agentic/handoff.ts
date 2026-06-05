@@ -2,9 +2,16 @@ import { mkdirSync, readFileSync, rmSync } from 'fs';
 import { join } from 'path';
 import { HandoffFile } from './types';
 
+/**
+ * Workspace-relative directory holding all migrate-run scratch (handoff
+ * files). Shared with the agent permission rules in `definitions.ts` so the
+ * pre-authorized write scope can't drift from the actual layout.
+ */
+export const MIGRATE_RUNS_RELATIVE_DIR = '.nx/migrate-runs';
+
 /** Returns the run directory for a given workspace + run id (target version). */
 export function runDirPath(workspaceRoot: string, runId: string): string {
-  return join(workspaceRoot, '.nx', 'migrate-runs', runId);
+  return join(workspaceRoot, MIGRATE_RUNS_RELATIVE_DIR, runId);
 }
 
 /**
