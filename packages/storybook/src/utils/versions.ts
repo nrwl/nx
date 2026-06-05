@@ -2,7 +2,7 @@ import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
 import { coerce, major } from 'semver';
 import { join } from 'path';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/storybook', 'package.json')).version;
 export const litVersion = '^2.6.1';
 export const tsNodeVersion = '10.9.1';
 export const tsLibVersion = '^2.3.0';

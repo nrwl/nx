@@ -8,7 +8,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
 

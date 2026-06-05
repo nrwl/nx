@@ -12,6 +12,7 @@ import { initGenerator } from '@nx/js';
 import { createNodes } from '../../../plugin';
 import {
   lessLoaderVersion,
+  nxVersion,
   reactRefreshVersion,
   sassEmbeddedVersion,
   sassLoaderVersion,
@@ -106,10 +107,9 @@ export async function rspackInitGenerator(
       : {}),
   };
 
-  const version = require('../../../package.json').version;
-  if (version !== '0.0.1') {
+  if (nxVersion !== '0.0.1') {
     // Ignored for local dev / e2e tests.
-    devDependencies['@nx/rspack'] = version;
+    devDependencies['@nx/rspack'] = nxVersion;
   }
 
   if (schema.style === 'less') {

@@ -48,6 +48,61 @@ const packagesToVerify = [
     outputFile: 'packages/vitest/dist/index.js',
   },
   {
+    name: 'webpack',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/webpack/dist/index.js',
+  },
+  {
+    name: 'rollup',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/rollup/dist/index.js',
+  },
+  {
+    name: 'docker',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/docker/dist/index.js',
+  },
+  {
+    name: 'gradle',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/gradle/dist/index.js',
+  },
+  {
+    name: 'rsbuild',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/rsbuild/dist/index.js',
+  },
+  {
+    name: 'web',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/web/dist/index.js',
+  },
+  {
+    name: 'node',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/node/dist/index.js',
+  },
+  {
+    name: 'nest',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/nest/dist/index.js',
+  },
+  {
+    name: 'module-federation',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/module-federation/dist/index.js',
+  },
+  {
+    name: 'rspack',
+    sourceFile: 'src/index.ts',
+    outputFile: 'packages/rspack/dist/src/index.js',
+  },
+  {
+    name: 'storybook',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/storybook/dist/index.js',
+  },
+  {
     name: 'create-nx-workspace',
     sourceFile: 'index.ts',
     outputFile: 'dist/packages/create-nx-workspace/index.js',

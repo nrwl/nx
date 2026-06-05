@@ -13,7 +13,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { applicationGenerator as nodeApplicationGenerator } from '@nx/node';
-import { tslibVersion } from '@nx/node/src/utils/versions';
+import { tslibVersion } from '@nx/node/internal';
 import { join } from 'path';
 import { assertSupportedExpressVersion } from '../../utils/assert-supported-express-version';
 import { nxVersion } from '../../utils/versions';

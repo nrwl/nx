@@ -4,21 +4,26 @@
       "cli": "nx",
       "version": "21.0.0-beta.11",
       "description": "Remove isolatedConfig option for @nx/webpack:webpack",
-      "implementation": "./src/migrations/update-21-0-0/remove-isolated-config",
-      "documentation": "./src/migrations/update-21-0-0/remove-isolated-config.md"
+      "implementation": "./dist/src/migrations/update-21-0-0/remove-isolated-config",
+      "documentation": "./dist/src/migrations/update-21-0-0/remove-isolated-config.md"
     },
     "update-22-0-0-remove-deprecated-options": {
       "cli": "nx",
       "version": "22.0.0-beta.0",
       "description": "Remove deprecated deleteOutputPath and sassImplementation options from @nx/webpack:webpack",
-      "implementation": "./src/migrations/update-22-0-0/remove-deprecated-options"
+      "implementation": "./dist/src/migrations/update-22-0-0/remove-deprecated-options"
     },
     "update-23-0-0-remove-nx-tsconfig-paths-webpack-plugin-import": {
       "cli": "nx",
       "version": "23.0.0-beta.10",
       "description": "Rewrites imports of NxTsconfigPathsWebpackPlugin from '@nx/webpack' to the sub-path '@nx/webpack/tsconfig-paths-plugin'.",
-      "factory": "./src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import",
-      "documentation": "./src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import.md"
+      "factory": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import",
+      "documentation": "./dist/src/migrations/update-23-0-0/remove-nx-tsconfig-paths-webpack-plugin-import.md"
+    },
+    "rewrite-webpack-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/webpack/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/webpack`'s exports map. Named imports/exports of public symbols are routed to `@nx/webpack` and the rest to the new `@nx/webpack/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/webpack/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/docker/spec",
+    "outDir": "dist/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
     "composite": true

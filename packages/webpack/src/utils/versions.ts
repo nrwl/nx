@@ -1,7 +1,8 @@
+import { join } from 'path';
 import { type Tree } from '@nx/devkit';
 import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/webpack', 'package.json')).version;
 
 export const swcLoaderVersion = '0.1.15';
 export const tsLibVersion = '^2.3.0';

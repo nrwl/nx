@@ -10,6 +10,9 @@
   "include": ["**/*.ts"],
   "references": [
     {
+      "path": "../webpack/tsconfig.lib.json"
+    },
+    {
       "path": "../react/tsconfig.lib.json"
     },
     {
@@ -22,13 +25,13 @@
       "path": "../devkit/tsconfig.lib.json"
     },
     {
-      "path": "../detox/tsconfig.lib.json"
+      "path": "../nx/tsconfig.lib.json"
     },
     {
       "path": "../rollup/tsconfig.lib.json"
     },
     {
-      "path": "../nx/tsconfig.lib.json"
+      "path": "../detox/tsconfig.lib.json"
     }
   ]
 }

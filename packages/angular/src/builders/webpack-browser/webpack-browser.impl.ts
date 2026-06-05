@@ -6,7 +6,7 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';

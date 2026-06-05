@@ -3295,6 +3295,9 @@ importers:
         specifier: catalog:typescript
         version: 2.8.1
     devDependencies:
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       nx:
         specifier: workspace:*
         version: link:../nx
@@ -3639,6 +3642,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/webpack':
+        specifier: workspace:*
+        version: link:../webpack
       ajv:
         specifier: 'catalog:'
         version: 8.18.0
@@ -3689,6 +3695,9 @@ importers:
       '@nx/react':
         specifier: workspace:*
         version: link:../react
+      '@nx/web':
+        specifier: workspace:*
+        version: link:../web
       '@phenomnomnominal/tsquery':
         specifier: catalog:typescript
         version: 6.2.0(typescript@5.9.2)

@@ -144,6 +144,17 @@ packages/vitest/README.md
 packages/cypress/README.md
 packages/playwright/README.md
 packages/vite/README.md
+packages/webpack/README.md
+packages/rollup/README.md
+packages/docker/README.md
+packages/gradle/README.md
+packages/rsbuild/README.md
+packages/web/README.md
+packages/node/README.md
+packages/module-federation/README.md
+packages/nest/README.md
+packages/rspack/README.md
+packages/storybook/README.md
 
 test-output
 test-results
