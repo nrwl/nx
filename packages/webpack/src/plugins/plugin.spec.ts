@@ -130,10 +130,10 @@ describe('@nx/webpack/plugin', () => {
                       ],
                     },
                     "options": {
-                      "args": [
-                        "--node-env=production",
-                      ],
                       "cwd": "my-app",
+                      "env": {
+                        "NODE_ENV": "production",
+                      },
                     },
                     "outputs": [
                       "{projectRoot}/dist/foo",
@@ -160,10 +160,10 @@ describe('@nx/webpack/plugin', () => {
                       ],
                     },
                     "options": {
-                      "args": [
-                        "--node-env=development",
-                      ],
                       "cwd": "my-app",
+                      "env": {
+                        "NODE_ENV": "development",
+                      },
                     },
                   },
                   "preview-site": {
@@ -187,10 +187,10 @@ describe('@nx/webpack/plugin', () => {
                       ],
                     },
                     "options": {
-                      "args": [
-                        "--node-env=production",
-                      ],
                       "cwd": "my-app",
+                      "env": {
+                        "NODE_ENV": "production",
+                      },
                     },
                   },
                   "serve-static": {

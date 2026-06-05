@@ -65,6 +65,7 @@
     "smol-toml": "1.6.1",
     "@module-federation/runtime": "2.3.3",
     "@module-federation/enhanced": "catalog:",
+    "@module-federation/node": "^2.7.21",
     "@module-federation/sdk": "^2.1.0",
     "@monodon/rust": "3.0.0",
     "@napi-rs/cli": "3.5.1",
