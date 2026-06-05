@@ -41,14 +41,9 @@ export function logSuccess(title: string, body?: string) {
 }
 
 /**
- * The Nx daemon log is mostly per-file watcher events and per-message
- * bookkeeping — thousands of lines that bury the handful that explain a
- * failure. Keep only the lines useful for diagnosing daemon/plugin issues
- * (daemon restarts, plugin loads, stale-graph discards, errors) plus the
- * tail, and mark where runs of noise were removed so the gaps are visible.
- *
- * Use when dumping `daemon.log` from an e2e test so CI output stays small
- * while a failing run is still debuggable.
+ * Trims a daemon.log to the lines useful for diagnosing daemon/plugin issues
+ * (restarts, plugin loads, stale-graph discards, errors) plus the tail,
+ * marking where noise was dropped. Keeps e2e CI output small but debuggable.
  */
 export function trimDaemonLog(contents: string, tailLines = 30): string {
   const signal =

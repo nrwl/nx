@@ -154,17 +154,10 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
     });
   });
 
-  // The daemon-crash regression: scheduleProjectGraphRecomputation calls
-  // kickOffRecompute() fire-and-forget, so nothing awaits the promise it
-  // stores. When the recompute prologue (readNxJson / getPluginsSeparated)
-  // rejected, that orphaned rejection was unhandled and took the whole
-  // daemon process down. The fix wraps the IIFE body so it always resolves
-  // to an errorResult instead.
-  //
-  // A requester's own try/catch in getCachedSerializedProjectGraphPromise
-  // masks the difference, so the ONLY observable that distinguishes fixed
-  // from broken is whether the orphaned promise rejects unhandled — hence
-  // the process listener rather than an awaited assertion.
+  // kickOffRecompute() runs fire-and-forget, so a rejecting prologue used to
+  // crash the daemon with an unhandled rejection. A requester's own try/catch
+  // hides that, so the only observable distinguishing fixed from broken is
+  // whether the orphaned promise rejects unhandled — hence the process listener.
   it('keeps the daemon alive when a recompute plugin load rejects', async () => {
     fs.createFilesSync({
       'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
@@ -196,19 +189,15 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       process.on('unhandledRejection', onUnhandled);
 
       try {
-        // Watcher-driven, fire-and-forget kickoff — nobody awaits the
-        // promise kickOffRecompute stores.
+        // Fire-and-forget kickoff — nobody awaits the stored promise.
         scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
 
-        // Let the IIFE run its prologue, reject in getPluginsSeparated,
-        // and give Node room to flag an unhandled rejection before any
-        // requester attaches a handler.
+        // Let the IIFE reject and give Node room to flag an unhandled rejection.
         await new Promise((r) => setImmediate(r));
         await new Promise((r) => setImmediate(r));
         await new Promise((r) => setImmediate(r));
 
-        // The smoking gun: without the fix the orphaned recompute promise
-        // rejects unhandled here, which is what crashed the daemon.
+        // Without the fix this orphaned rejection is unhandled — the crash.
         expect(
           unhandled.filter(
             (r) =>
@@ -217,15 +206,12 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
           )
         ).toEqual([]);
 
-        // A requester surfaces the failure as an errorResult (null graph,
-        // error set) rather than throwing.
+        // A requester gets an errorResult, not a throw.
         const result = await getCachedSerializedProjectGraphPromise();
         expect(result.projectGraph).toBeNull();
         expect(result.error).toBeDefined();
 
-        // The errored result clears the cached promise, so the next
-        // request retries the recompute instead of serving the error
-        // forever.
+        // Errored result clears the cache, so the next request retries.
         const callsBeforeRetry = pluginsCallCount;
         await getCachedSerializedProjectGraphPromise();
         expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);

@@ -26,10 +26,8 @@ describe('Spread Token Merging', () => {
     existingNxJson = readJson('nx.json');
   });
   afterEach(() => {
-    // Print the daemon log into the test's stdout BEFORE reset (which
-    // stops the daemon and may rotate the file). CI captures stdout
-    // per test so the [watcher] lines end up alongside the failure
-    // assertion in the build output.
+    // Dump the daemon log to stdout BEFORE reset (which stops the daemon and
+    // may rotate the file), so CI shows it next to the failing assertion.
     try {
       const daemonLog = join(
         tmpProjPath(),
@@ -39,8 +37,7 @@ describe('Spread Token Merging', () => {
         'daemon.log'
       );
       if (existsSync(daemonLog)) {
-        // Trimmed to the diagnostic lines — see trimDaemonLog. The raw log
-        // is thousands of watcher/message lines per test.
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
         const contents = trimDaemonLog(readFileSync(daemonLog, 'utf-8'));
         console.log(
           `\n========== daemon.log (trimmed) for "${
@@ -959,20 +956,11 @@ describe('Spread Token Merging', () => {
   });
 
   /**
-   * Race-condition stress.
-   *
-   * These tests deliberately mutate nx.json (and tools/*) in tight loops
-   * with no settle time between the write and the `show project` query,
-   * and without a `reset` in between — so the long-lived daemon must pick
-   * up every change through its file watcher before it serves the graph.
-   *
-   * If the daemon answers from a stale cached graph (the watcher event
-   * for the latest nx.json write has not landed yet), the resolved
-   * build.inputs will not match the expectation and the test fails.
-   * Each loop iteration is a fresh chance to hit that window, so a flake
-   * that shows up ~1-in-20 in a single-shot test shows up far more often
-   * here. The restored daemon.log dump (afterEach) captures the
-   * [watcher]/recompute lines so a failure is diagnosable on CI.
+   * Race-condition stress. Each test mutates nx.json (and tools/*) in tight
+   * loops with no settle time and no `reset`, so the long-lived daemon must
+   * pick up every change via its watcher before serving the graph. A stale
+   * cached graph surfaces as the wrong build.inputs; looping multiplies the
+   * odds of hitting the window a single-shot test flakes on ~1-in-20.
    */
   describe('rapid reconfiguration (race-condition stress)', () => {
     it('reflects the latest specified plugin after rapid nx.json swaps', () => {
@@ -1104,12 +1092,10 @@ describe('Spread Token Merging', () => {
     });
 
     /**
-     * Mirrors the shape of the flaky single-shot test
-     * ("...with target defaults overriding"): per iteration a plugin
-     * file, nx.json (plugins + targetDefaults) and project.json all
-     * change together, then a single `show project` query. A stale
-     * daemon graph here surfaces as build being undefined entirely —
-     * the plugin set the graph was built against never ran.
+     * Mirrors the flaky single-shot test ("...with target defaults
+     * overriding"): per iteration a plugin file, nx.json and project.json
+     * all change together, then one `show project`. A stale graph surfaces
+     * as build being undefined — the plugin set it was built against never ran.
      */
     it('reflects a plugin + nx.json + project.json change applied together, repeatedly', () => {
       for (let i = 0; i < 4; i++) {

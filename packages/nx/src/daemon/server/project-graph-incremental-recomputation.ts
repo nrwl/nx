@@ -107,12 +107,9 @@ let cacheHasBeenPersisted = false;
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    // The whole body must resolve, never reject: scheduleProjectGraphRecomputation
-    // calls kickOffRecompute() fire-and-forget, so a rejected myPromise has no
-    // awaiter and crashes the daemon with an unhandled rejection. The prologue
-    // (readNxJson / getPluginsSeparated) can throw — e.g. a plugin fails to
-    // load — so a failure here is turned into an errorResult the next requester
-    // surfaces, same as processFilesAndCreateAndSerializeProjectGraph already does.
+    // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
+    // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
+    // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
     try {
       // Single read shared with getPluginsSeparated below. This collapses
       // what would otherwise be two independent nx.json reads (our snap +

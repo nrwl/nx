@@ -28,16 +28,11 @@ let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
 
-// In-flight separated-plugins load, tagged with the hash it is loading.
-// Serves two roles: (1) a concurrent caller asking for the same plugin set
-// shares this one load instead of starting a second that races the
-// module-level cache state, and (2) it is the commit gate — a load writes
-// cachedSeparatedPlugins / currentPluginsConfigurationHash only if it is
-// still the registered load when it finishes. Two recomputes can run at once
-// (a daemon restart fires an initial recompute and a watcher recompute
-// together); without the gate a slower load for an older nx.json could
-// overwrite a newer one's cache, leaving the hash key and the cached plugin
-// set describing different plugin sets.
+// In-flight separated-plugins load, tagged with its hash. Two roles: a
+// concurrent caller for the same set shares this load instead of racing a
+// second one, and it gates the cache commit — a load writes the cache only if
+// it's still the registered load when it finishes, so a slow older load can't
+// clobber a newer one's result (two recomputes can overlap).
 let pendingSeparatedPlugins:
   | { hash: string; promise: Promise<SeparatedPlugins> }
   | undefined;
@@ -142,10 +137,8 @@ export async function getPluginsSeparated(
       defaultPlugins,
     };
 
-    // Commit the cache only if a newer request has not superseded us — i.e.
-    // we are still the registered in-flight load. currentPluginsConfigurationHash
-    // and cachedSeparatedPlugins are then always written together, by the same
-    // call, and describe the same plugin set.
+    // Commit only if we're still the registered load — so the hash and the
+    // cached set are always written together and describe the same plugins.
     if (pendingSeparatedPlugins?.promise === loadPromise) {
       cachedSeparatedPlugins = separatedPlugins;
       currentPluginsConfigurationHash = pluginsConfigurationHash;
@@ -215,10 +208,8 @@ export function cleanupPlugins() {
   pendingPluginsPromise = undefined;
   pendingDefaultPluginPromise = undefined;
   cachedSeparatedPlugins = undefined;
-  // Drop the in-flight load too — the workers it would commit have just been
-  // torn down, so it must not populate the cache once it resolves. Clearing
-  // the marker also flips its commit gate (pendingSeparatedPlugins?.promise
-  // === loadPromise) to false, so a load resolving after teardown is a no-op.
+  // Drop the in-flight load too: clearing the marker flips its commit gate to
+  // false, so a load resolving after teardown can't repopulate the torn-down cache.
   pendingSeparatedPlugins = undefined;
 }
 
@@ -313,13 +304,9 @@ async function loadSpecifiedNxPlugins(
 
   pluginsConfigurations ??= [];
 
-  // Local plugin paths are resolved against a snapshot of the workspace's
-  // project layout that is cached for the life of the process. In a
-  // long-lived daemon that snapshot can predate a newly added local plugin,
-  // resolving it to the workspace root instead of its source. Drop the
-  // snapshot here — this runs only when the plugin set changed, which is
-  // exactly when a new local plugin may have appeared — so resolution below
-  // sees the current state of disk.
+  // Drop the cached workspace-layout snapshot local-plugin resolution uses:
+  // in a long-lived daemon it can predate a newly added local plugin and
+  // resolve it to the workspace root. Runs only when the plugin set changed.
   resetResolvePluginCache();
 
   const cleanupFunctions: Array<() => void> = [];

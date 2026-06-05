@@ -33,10 +33,8 @@ describe('Nx Plugin', () => {
   });
 
   afterAll(() => {
-    // The whole suite shares one long-lived daemon (no `reset` between
-    // tests), so dump its log once before teardown. CI captures it, so a
-    // failure — e.g. a daemon crash on plugin load — is diagnosable;
-    // locate a given test by its `Run Command` / [REQUEST] lines.
+    // The suite shares one long-lived daemon (no `reset`), so dump its log
+    // once before teardown — CI shows it for a daemon crash on plugin load.
     try {
       const daemonLog = join(
         tmpProjPath(),
@@ -46,8 +44,7 @@ describe('Nx Plugin', () => {
         'daemon.log'
       );
       if (existsSync(daemonLog)) {
-        // Trimmed to the diagnostic lines — see trimDaemonLog. The raw log
-        // is thousands of watcher/message lines that bury a plugin crash.
+        // Trimmed — see trimDaemonLog; the raw log is thousands of lines.
         console.log(
           `\n========== daemon.log (trimmed) ==========\n${trimDaemonLog(
             readFileSync(daemonLog, 'utf-8')
