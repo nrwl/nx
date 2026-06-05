@@ -117,6 +117,10 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./runtime-library-control-plugin": {
+      "@nx/nx-source": "./src/utils/plugins/runtime-library-control.plugin.ts",
+      "default": "./dist/src/utils/plugins/runtime-library-control.plugin.js"
     }
   },
   "executors": "./executors.json",
