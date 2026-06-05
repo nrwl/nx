@@ -80,6 +80,7 @@ describe('app', () => {
         '**/*.jsx',
         `../${name}/.next/types/**/*.ts`,
         `../dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
       expect(tree.exists(`${name}/src/pages/styles.css`)).toBeFalsy();
@@ -108,6 +109,7 @@ describe('app', () => {
         'src/**/*.jsx',
         '.next/types/**/*.ts',
         `dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
     });
@@ -626,6 +628,7 @@ describe('app', () => {
           'src/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -650,6 +653,7 @@ describe('app', () => {
           'app/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -671,6 +675,7 @@ describe('app', () => {
           'pages/**/*.tsx',
           'pages/**/*.js',
           'pages/**/*.jsx',
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -840,6 +845,7 @@ describe('app', () => {
             "src/**/*.jsx",
             "../myapp/.next/types/**/*.ts",
             "../dist/myapp/.next/types/**/*.ts",
+            "index.d.ts",
             "next-env.d.ts",
           ],
         }
@@ -882,6 +888,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/cypress",
+            "rootDir": ".",
             "sourceMap": false,
             "types": [
               "cypress",

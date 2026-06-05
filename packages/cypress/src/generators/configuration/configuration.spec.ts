@@ -725,6 +725,7 @@ export default defineConfig({
         "{
           "extends": "../../../tsconfig.base.json",
           "compilerOptions": {
+            "rootDir": "..",
             "outDir": "out-tsc/cypress",
             "allowJs": true,
             "types": ["cypress", "node"],
