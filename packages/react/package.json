@@ -32,6 +32,10 @@
     "requirements": {},
     "migrations": "./migrations.json"
   },
+  "peerDependencies": {
+    "react": ">=18.0.0 <20.0.0",
+    "react-dom": ">=18.0.0 <20.0.0"
+  },
   "dependencies": {
     "@phenomnomnominal/tsquery": "catalog:typescript",
     "@svgr/webpack": "catalog:",

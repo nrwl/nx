@@ -1,4 +1,5 @@
 import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -28,6 +29,8 @@ import { NormalizedSchema, Schema } from './schema';
 let tsModule: typeof import('typescript');
 
 export async function reduxGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const options = await normalizeOptions(host, schema);
   generateReduxFiles(host, options);
   addExportsToBarrel(host, options);
@@ -59,7 +62,9 @@ function addReduxPackageDependencies(host: Tree) {
       '@reduxjs/toolkit': reduxjsToolkitVersion,
       'react-redux': reactReduxVersion,
     },
-    {}
+    {},
+    undefined,
+    true
   );
 }
 

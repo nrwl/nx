@@ -56,6 +56,7 @@ export default [
             'prettier',
             'typescript',
             'react',
+            'react-dom',
             '@nx/cypress',
             '@nx/playwright',
             '@nx/jest',

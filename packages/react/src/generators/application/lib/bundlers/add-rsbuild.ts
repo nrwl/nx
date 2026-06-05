@@ -83,5 +83,5 @@ export async function setupRsbuildConfiguration(
   addHtmlTemplatePath(tree, pathToConfigFile, './src/index.html');
   addCopyAssets(tree, pathToConfigFile, './src/assets');
   addCopyAssets(tree, pathToConfigFile, './src/favicon.ico');
-  tasks.push(addDependenciesToPackageJson(tree, {}, deps));
+  tasks.push(addDependenciesToPackageJson(tree, {}, deps, undefined, true));
 }

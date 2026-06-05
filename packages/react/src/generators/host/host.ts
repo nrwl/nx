@@ -1,4 +1,5 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   detectPackageManager,
@@ -40,6 +41,7 @@ export async function hostGenerator(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(host);
   warnReactHostGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeHostName(host, schema.directory, schema.name);
@@ -178,7 +180,9 @@ export async function hostGenerator(
     {
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 
