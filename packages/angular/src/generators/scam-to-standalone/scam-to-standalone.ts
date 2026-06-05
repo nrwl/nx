@@ -12,6 +12,9 @@ import {
   verifyModuleIsScam,
 } from './lib';
 
+/**
+ * @deprecated SCAMs are superseded by Angular standalone components. Convert any remaining SCAMs before upgrading. It will be removed in Nx v24.
+ */
 export async function scamToStandalone(
   tree: Tree,
   { component, project: projectName, skipFormat }: Schema

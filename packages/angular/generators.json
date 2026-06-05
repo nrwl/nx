@@ -122,22 +122,26 @@
     "scam-to-standalone": {
       "factory": "./src/generators/scam-to-standalone/scam-to-standalone",
       "schema": "./src/generators/scam-to-standalone/schema.json",
-      "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component."
+      "description": "Convert an existing Single Component Angular Module (SCAM) to a Standalone Component.",
+      "x-deprecated": "SCAMs are superseded by Angular standalone components. Convert any remaining SCAMs before upgrading. It will be removed in Nx v24."
     },
     "scam": {
       "factory": "./src/generators/scam/scam",
       "schema": "./src/generators/scam/schema.json",
-      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM)."
+      "description": "Generate a component with an accompanying Single Component Angular Module (SCAM).",
+      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:component` generator instead. It will be removed in Nx v24."
     },
     "scam-directive": {
       "factory": "./src/generators/scam-directive/scam-directive",
       "schema": "./src/generators/scam-directive/schema.json",
-      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM)."
+      "description": "Generate a directive with an accompanying Single Component Angular Module (SCAM).",
+      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:directive` generator instead. It will be removed in Nx v24."
     },
     "scam-pipe": {
       "factory": "./src/generators/scam-pipe/scam-pipe",
       "schema": "./src/generators/scam-pipe/schema.json",
-      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM)."
+      "description": "Generate a pipe with an accompanying Single Component Angular Module (SCAM).",
+      "x-deprecated": "SCAMs are superseded by Angular standalone components. Use the `@nx/angular:pipe` generator instead. It will be removed in Nx v24."
     },
     "setup-mf": {
       "factory": "./src/generators/setup-mf/setup-mf",
