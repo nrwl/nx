@@ -153,4 +153,85 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       expect(pluginsCallCount).toBeGreaterThanOrEqual(2);
     });
   });
+
+  // The daemon-crash regression: scheduleProjectGraphRecomputation calls
+  // kickOffRecompute() fire-and-forget, so nothing awaits the promise it
+  // stores. When the recompute prologue (readNxJson / getPluginsSeparated)
+  // rejected, that orphaned rejection was unhandled and took the whole
+  // daemon process down. The fix wraps the IIFE body so it always resolves
+  // to an errorResult instead.
+  //
+  // A requester's own try/catch in getCachedSerializedProjectGraphPromise
+  // masks the difference, so the ONLY observable that distinguishes fixed
+  // from broken is whether the orphaned promise rejects unhandled — hence
+  // the process listener rather than an awaited assertion.
+  it('keeps the daemon alive when a recompute plugin load rejects', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({ plugins: ['./tools/plugin-a'] }),
+      'package.json': JSON.stringify({ name: 'root' }),
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const pluginLoadError = new Error('plugin boom');
+      let pluginsCallCount = 0;
+      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+        __esModule: true,
+        getPlugins: jest.fn(async () => []),
+        getPluginsSeparated: jest.fn(async () => {
+          pluginsCallCount++;
+          throw pluginLoadError;
+        }),
+      }));
+
+      const {
+        scheduleProjectGraphRecomputation,
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+
+      const unhandled: unknown[] = [];
+      const onUnhandled = (reason: unknown) => unhandled.push(reason);
+      process.on('unhandledRejection', onUnhandled);
+
+      try {
+        // Watcher-driven, fire-and-forget kickoff — nobody awaits the
+        // promise kickOffRecompute stores.
+        scheduleProjectGraphRecomputation([], ['__trigger.txt'], []);
+
+        // Let the IIFE run its prologue, reject in getPluginsSeparated,
+        // and give Node room to flag an unhandled rejection before any
+        // requester attaches a handler.
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+        await new Promise((r) => setImmediate(r));
+
+        // The smoking gun: without the fix the orphaned recompute promise
+        // rejects unhandled here, which is what crashed the daemon.
+        expect(
+          unhandled.filter(
+            (r) =>
+              r === pluginLoadError ||
+              (r instanceof Error && r.message.includes('plugin boom'))
+          )
+        ).toEqual([]);
+
+        // A requester surfaces the failure as an errorResult (null graph,
+        // error set) rather than throwing.
+        const result = await getCachedSerializedProjectGraphPromise();
+        expect(result.projectGraph).toBeNull();
+        expect(result.error).toBeDefined();
+
+        // The errored result clears the cached promise, so the next
+        // request retries the recompute instead of serving the error
+        // forever.
+        const callsBeforeRetry = pluginsCallCount;
+        await getCachedSerializedProjectGraphPromise();
+        expect(pluginsCallCount).toBeGreaterThan(callsBeforeRetry);
+      } finally {
+        process.removeListener('unhandledRejection', onUnhandled);
+      }
+    });
+  });
 });
