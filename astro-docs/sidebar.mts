@@ -299,6 +299,10 @@ const learnGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
+            label: 'Automate updating dependencies',
+            link: 'features/automate-updating-dependencies',
+          },
+          {
             label: 'Nx Console migration assistance',
             link: 'guides/nx-console/console-migrate-ui',
           },
