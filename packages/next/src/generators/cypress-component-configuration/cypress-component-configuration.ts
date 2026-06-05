@@ -15,6 +15,7 @@ import { componentTestGenerator } from '@nx/react';
 import { isComponent } from '@nx/react/src/utils/ct-utils';
 import { relative } from 'path';
 import { nxVersion } from '../../utils/versions';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { CypressComponentConfigurationGeneratorSchema } from './schema';
 
 export function cypressComponentConfiguration(
@@ -31,6 +32,8 @@ export async function cypressComponentConfigurationInternal(
   tree: Tree,
   options: CypressComponentConfigurationGeneratorSchema
 ) {
+  assertSupportedNextVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const { componentConfigurationGenerator: baseCyCtConfig } = ensurePackage<
