@@ -2,7 +2,6 @@ import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getInstalledExpoVersion,
-  getInstalledExpoMajorVersion,
   isExpoV53,
   isExpoV54,
   isExpoV55,
@@ -83,57 +82,6 @@ describe('version-utils', () => {
       );
       const version = getInstalledExpoVersion(tree);
       expect(version).toBeNull();
-    });
-  });
-
-  describe('getInstalledExpoMajorVersion', () => {
-    it('should return undefined when expo is not installed', () => {
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBeUndefined();
-    });
-
-    it('should return 53 for v53', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~53.0.10' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(53);
-    });
-
-    it('should return 54 for v54', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~54.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(54);
-    });
-
-    it('should return 55 for v55', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~55.0.26' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(55);
-    });
-
-    it('should return undefined for unsupported versions', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~52.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBeUndefined();
     });
   });
 

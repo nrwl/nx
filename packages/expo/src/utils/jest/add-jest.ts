@@ -43,7 +43,7 @@ export async function addJest(
   // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
 
-  // For Expo v54, we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
+  // For SDK 54+ (modern setup), we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
   const resolverLine = useModernJestSetup
     ? ''
     : "resolver: require.resolve('./jest.resolver.js'),\n  ";
@@ -76,7 +76,7 @@ module.exports = {
   host.write(configPath, content);
 
   if (useModernJestSetup) {
-    // For Expo v54, generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
+    // For SDK 54+ (modern setup), generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
     const testSetupPath = `${appProjectRoot}/src/test-setup.${
       js ? 'js' : 'ts'
     }`;
