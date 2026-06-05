@@ -178,7 +178,7 @@ export function MigrationTimeline({
         {/* Timeline lines */}
         {/* Solid line for visible migrations */}
         <div
-          className="absolute top-0 left-10 w-0.5 bg-slate-200"
+          className="absolute top-0 left-10 w-0.5 -translate-x-1/2 bg-slate-200"
           style={{
             height: hasFutureMigrationsHidden ? 'calc(100% - 15%)' : '100%',
           }}
@@ -187,7 +187,7 @@ export function MigrationTimeline({
         {/* Dashed line for the section after the last visible migration */}
         {hasFutureMigrationsHidden && (
           <div
-            className="absolute bottom-0 left-10 w-0.5 border-l-2 border-dashed border-slate-200"
+            className="absolute bottom-0 left-10 w-0.5 -translate-x-1/2 border-l-2 border-dashed border-slate-200"
             style={{
               height: '15%',
             }}
