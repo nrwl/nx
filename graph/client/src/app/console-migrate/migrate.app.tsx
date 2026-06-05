@@ -118,6 +118,13 @@ export function MigrateApp({
     });
   };
 
+  const onViewPrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'view-prompt',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -132,6 +139,7 @@ export function MigrateApp({
       onAcknowledgePrompt={onAcknowledgePrompt}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
+      onViewPrompt={onViewPrompt}
       onStopMigration={onStopMigration}
     ></MigrateUI>
   );

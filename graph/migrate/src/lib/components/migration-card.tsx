@@ -88,6 +88,7 @@ export const MigrationCard = forwardRef<
     onFileClick: (file: Omit<FileChange, 'content'>) => void;
     onViewImplementation: () => void;
     onViewDocumentation: () => void;
+    onViewPrompt: () => void;
     isExpanded?: boolean;
   }
 >(function MigrationCard(
@@ -101,6 +102,7 @@ export const MigrationCard = forwardRef<
     onFileClick,
     onViewImplementation,
     onViewDocumentation,
+    onViewPrompt,
     isExpanded: isExpandedProp,
   },
   ref
@@ -141,6 +143,11 @@ export const MigrationCard = forwardRef<
   // card top-right already conveys the outcome — stay out of the way.
   const showPromptStatusRow =
     isPromptBearing && (!migrationResult || isSuccessful);
+  // The prompt-path reminder lives in the next-steps section for every
+  // prompt-bearing phase where running the prompt is (or was) actionable:
+  // prompt-only from the start, hybrid only once the generator succeeded.
+  const showPromptNextStep =
+    showPromptStatusRow && (isPromptOnly || isSuccessful) && !!migration.prompt;
 
   const isSucceeded = useSelector(
     actor,
@@ -229,21 +236,6 @@ export const MigrationCard = forwardRef<
                 acknowledgedPrompt={acknowledgedPrompt}
               />
             )}
-            {/* Show the prompt path inline for prompt-only-pending so the user
-                can find what to run before clicking Mark as Run. Hybrid
-                migrations already get the path via the auto-injected next-step
-                in the bottom section. */}
-            {isPromptOnly && !isSuccessful && migration.prompt && (
-              <div className="mt-2 text-xs text-slate-600 dark:text-slate-400">
-                Run this prompt:{' '}
-                <code
-                  className="cursor-pointer underline-offset-2 hover:underline"
-                  onClick={() => onViewImplementation()}
-                >
-                  {migration.prompt}
-                </code>
-              </div>
-            )}
           </div>
         </div>
 
@@ -315,7 +307,7 @@ export const MigrationCard = forwardRef<
           )}
         </div>
       </div>
-      {isSucceeded && nextSteps?.length ? (
+      {(isSucceeded && nextSteps?.length) || showPromptNextStep ? (
         <div className="pt-2">
           <div className="my-2 border-t border-slate-200 dark:border-slate-700/60" />
           <span className="pb-2 text-sm font-bold">
@@ -327,6 +319,18 @@ export const MigrationCard = forwardRef<
                 {convertUrlsToLinks(step)}
               </li>
             ))}
+            {showPromptNextStep && (
+              <li className="text-sm">
+                Run the AI prompt at{' '}
+                <code
+                  className="cursor-pointer text-sky-500 underline-offset-2 hover:underline dark:text-sky-300"
+                  onClick={() => onViewPrompt()}
+                >
+                  {migration.prompt}
+                </code>{' '}
+                to complete this migration.
+              </li>
+            )}
           </ul>
           <p></p>
         </div>

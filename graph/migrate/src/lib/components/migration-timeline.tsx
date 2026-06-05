@@ -62,6 +62,7 @@ export interface MigrationTimelineProps {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
   onCancel?: () => void;
   onReviewMigration: (migrationId: string) => void;
 }
@@ -82,6 +83,7 @@ export function MigrationTimeline({
   onFileClick,
   onViewImplementation,
   onViewDocumentation,
+  onViewPrompt,
   onCancel,
   onReviewMigration,
 }: MigrationTimelineProps) {
@@ -294,6 +296,7 @@ export function MigrationTimeline({
                         onViewDocumentation={() =>
                           onViewDocumentation(migration)
                         }
+                        onViewPrompt={() => onViewPrompt(migration)}
                       />
                     </Collapsible>
                   </div>
@@ -333,6 +336,7 @@ export function MigrationTimeline({
                 actor={actor}
                 migration={migrations[currentMigrationIndex]}
                 nxConsoleMetadata={nxConsoleMetadata}
+                isCurrent
                 needsAttention={
                   currentMigrationHasChanges &&
                   !expandedMigrations[currentMigration.id]
@@ -456,6 +460,7 @@ export function MigrationTimeline({
                     onViewDocumentation={() =>
                       onViewDocumentation(currentMigration)
                     }
+                    onViewPrompt={() => onViewPrompt(currentMigration)}
                   />
                 </Collapsible>
               </div>
@@ -536,6 +541,7 @@ export function MigrationTimeline({
                         onViewDocumentation={() =>
                           onViewDocumentation(migration)
                         }
+                        onViewPrompt={() => onViewPrompt(migration)}
                       />
                     </Collapsible>
                   </div>
@@ -621,6 +627,7 @@ interface MigrationStateCircleProps {
   >;
   migration: MigrationDetailsWithId;
   nxConsoleMetadata: MigrationsJsonMetadata;
+  isCurrent?: boolean;
   needsAttention?: boolean;
   onClick: () => void;
 }
@@ -629,6 +636,7 @@ function MigrationStateCircle({
   actor,
   migration,
   nxConsoleMetadata,
+  isCurrent,
   needsAttention,
   onClick,
 }: MigrationStateCircleProps) {
@@ -684,9 +692,10 @@ function MigrationStateCircle({
     bgClassName = 'bg-green-500';
     textColor = 'text-white';
     Icon = CheckCircleIcon;
-  } else if (isPromptOnlyShape(migration)) {
+  } else if (isCurrent && isPromptOnlyShape(migration)) {
     // Prompt-only pending: AI-blue circle with white clock until the user
-    // marks it complete (which flips it to the success branch above).
+    // marks it complete (which flips it to the success branch above). Only
+    // for the current migration — future ones get the uniform gray dot.
     bgClassName = 'bg-sky-400';
     textColor = 'text-white';
     Icon = ClockIcon;

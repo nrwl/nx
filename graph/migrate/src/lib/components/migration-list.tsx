@@ -31,6 +31,7 @@ export function MigrationList(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
 }) {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
@@ -168,6 +169,9 @@ export function MigrationList(props: {
             }}
             onViewDocumentation={() => {
               props.onViewDocumentation(migration);
+            }}
+            onViewPrompt={() => {
+              props.onViewPrompt(migration);
             }}
             onFileClick={(file) => {
               props.onFileClick(migration, file);

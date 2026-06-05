@@ -29,6 +29,7 @@ export function AutomaticMigration(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
   actor: Interpreter<
     AutomaticMigrationState,
     any,
@@ -96,6 +97,7 @@ export function AutomaticMigration(props: {
       onFileClick={props.onFileClick}
       onViewImplementation={props.onViewImplementation}
       onViewDocumentation={props.onViewDocumentation}
+      onViewPrompt={props.onViewPrompt}
       onReviewMigration={handleReviewMigration}
     />
   );

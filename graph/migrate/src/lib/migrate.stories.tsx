@@ -230,6 +230,9 @@ export const AllCompleted: Story = {
     onViewImplementation: (migration) => {
       console.log('view implementation', migration);
     },
+    onViewPrompt: (migration) => {
+      console.log('view prompt', migration);
+    },
     onViewDocumentation: (migration) => {
       console.log('view documentation', migration);
     },
@@ -311,6 +314,9 @@ export const PendingApproval: Story = {
     onViewImplementation: (migration) => {
       console.log('view implementation', migration);
     },
+    onViewPrompt: (migration) => {
+      console.log('view prompt', migration);
+    },
     onViewDocumentation: (migration) => {
       console.log('view documentation', migration);
     },
@@ -370,13 +376,16 @@ export const PromptBearing: Story = {
     ],
     nxConsoleMetadata: {
       completedMigrations: {
+        // The prompt-path next step is rendered by the card from
+        // `migration.prompt` — recorded nextSteps only carry what the
+        // generator itself returned.
         'hybrid-pending-ack': {
           name: 'update-jsx-runtime',
           type: 'successful',
           changedFiles: [{ path: 'tsconfig.json', type: 'UPDATE' }],
           ref: 'abc',
           nextSteps: [
-            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/jsx-refactor.md to complete this migration.',
+            'Review the updated JSX runtime configuration in tsconfig.json.',
           ],
         },
         'hybrid-completed': {
@@ -384,9 +393,7 @@ export const PromptBearing: Story = {
           type: 'successful',
           changedFiles: [{ path: 'src/app.tsx', type: 'UPDATE' }],
           ref: 'def',
-          nextSteps: [
-            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/import-cleanup.md to complete this migration.',
-          ],
+          nextSteps: [],
           acknowledgedPrompt: true,
         },
         'prompt-only-completed': {
@@ -394,9 +401,7 @@ export const PromptBearing: Story = {
           type: 'successful',
           changedFiles: [],
           ref: 'ghi',
-          nextSteps: [
-            'Run the AI prompt at tools/ai-migrations/@nx/react/19.0.0/new-router.md to complete this migration.',
-          ],
+          nextSteps: [],
         },
       },
       targetVersion: '19.0.0',
@@ -424,9 +429,7 @@ export const PromptBearing: Story = {
                 name: migration.id,
                 changedFiles: [],
                 ref: 'simulated',
-                nextSteps: [
-                  `Run the AI prompt at ${migration.prompt} to complete this migration.`,
-                ],
+                nextSteps: [],
               },
             },
           };
@@ -466,6 +469,7 @@ export const PromptBearing: Story = {
         onViewImplementation={(migration) =>
           console.log('view implementation', migration)
         }
+        onViewPrompt={(migration) => console.log('view prompt', migration)}
         onViewDocumentation={(migration) =>
           console.log('view documentation', migration)
         }
@@ -542,6 +546,9 @@ export const MigrationStopped: Story = {
     },
     onViewImplementation: (migration) => {
       console.log('view implementation', migration);
+    },
+    onViewPrompt: (migration) => {
+      console.log('view prompt', migration);
     },
     onViewDocumentation: (migration) => {
       console.log('view documentation', migration);

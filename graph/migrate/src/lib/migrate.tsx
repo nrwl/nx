@@ -46,6 +46,7 @@ export interface MigrateUIProps {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
 }
 
 export enum PrimaryAction {
@@ -210,6 +211,7 @@ export function MigrateUI(props: MigrateUIProps) {
           onAcknowledgePrompt={props.onAcknowledgePrompt}
           onViewImplementation={props.onViewImplementation}
           onViewDocumentation={props.onViewDocumentation}
+          onViewPrompt={props.onViewPrompt}
           onFileClick={props.onFileClick}
         />
       </div>
