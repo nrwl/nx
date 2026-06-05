@@ -11,6 +11,12 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/rollup/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/rollup`'s exports map. Named imports/exports of public symbols are routed to `@nx/rollup` and the rest to the new `@nx/rollup/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/rollup/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/rollup/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

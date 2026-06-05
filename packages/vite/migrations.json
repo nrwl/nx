@@ -89,6 +89,12 @@
       "description": "Migrate workspaces past breaking changes for Vitest 4.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-4",
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-4.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/vite/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

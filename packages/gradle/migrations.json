@@ -160,6 +160,12 @@
       "description": "Change dev.nx.gradle.project-graph to version 0.1.21 in build file",
       "factory": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-21",
       "documentation": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-21.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/gradle` and `@nx/gradle/plugin-v1` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {}

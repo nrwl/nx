@@ -47,6 +47,12 @@
       "description": "Rewrites imports of NxReactWebpackPlugin from '@nx/react' to the sub-path '@nx/react/webpack-plugin'.",
       "factory": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import",
       "documentation": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/react/router-plugin` to the canonical `createNodes` export.",
+      "implementation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

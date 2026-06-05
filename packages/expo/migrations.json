@@ -38,6 +38,12 @@
       "cli": "nx",
       "description": "Update Jest configuration for Expo SDK 54",
       "factory": "./src/migrations/update-22-2-0/update-jest-for-expo-54"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/expo/plugin` to the canonical `createNodes` export.",
+      "implementation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

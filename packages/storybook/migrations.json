@@ -27,6 +27,12 @@
       "description": "Update workspace to use Storybook v10",
       "implementation": "./dist/src/migrations/update-22-1-0/migrate-to-storybook-10",
       "prompt": "./dist/src/generators/migrate-10/files/ai-instructions-for-cjs-esm.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.5",
+      "description": "Rename imports of `createNodesV2` from `@nx/storybook/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
