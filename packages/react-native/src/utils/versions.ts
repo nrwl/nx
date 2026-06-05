@@ -11,9 +11,11 @@ export const nxVersion = require(
   join('@nx/react-native', 'package.json')
 ).version;
 
-// React Native's tiered support policy lists 0.85 and 0.84 as Active, 0.83 as
-// End-of-Cycle, and 0.82 and below as Unsupported. The plugin supports the
-// 0.83–0.85 window; below 0.83 generators throw via assertSupportedReactNativeVersion.
+// React Native's tiered support policy lists 0.85 and 0.84 as Active and 0.83 as
+// End-of-Cycle. The plugin supports the 0.83–0.84 window for now (0.85 is a
+// follow-up — it relocated its Jest preset to @react-native/jest-preset, which
+// needs a separate generator change). Below 0.83 generators throw via
+// assertSupportedReactNativeVersion.
 export const minSupportedReactNativeVersion = '0.83.0';
 
 export function assertSupportedReactNativeVersion(tree: Tree): void {
@@ -24,16 +26,16 @@ export function assertSupportedReactNativeVersion(tree: Tree): void {
   );
 }
 
-// Fresh-install constants point at the latest supported minor (0.85).
-export const reactNativeVersion = '~0.85.3';
-export const reactNativeBabelPresetVersion = '~0.85.3';
-export const reactNativeMetroConfigVersion = '~0.85.3';
-export const metroVersion = '~0.84.0';
+// Fresh-install constants point at the latest supported minor (0.84, Active line).
+export const reactNativeVersion = '~0.84.1';
+export const reactNativeBabelPresetVersion = '~0.84.1';
+export const reactNativeMetroConfigVersion = '~0.84.1';
+export const metroVersion = '~0.83.0';
 export const reactNativeCommunityCliVersion = '~20.1.0';
 export const reactNativeCommunityCliPlatformAndroidVersion = '~20.1.0';
 export const reactNativeCommunityCliPlatformIosVersion = '~20.1.0';
 
-// Stable across the supported RN minors (0.83–0.85 all ship React 19.2).
+// Stable across the supported RN minors (0.83 and 0.84 both ship React 19.2).
 export const typesNodeVersion = '^22.0.0';
 export const reactNativeWebVersion = '~0.21.0';
 export const reactVersion = '^19.2.0';
@@ -71,7 +73,8 @@ const latestVersions: ReactNativeVersions = {
 };
 
 // Keyed by React Native MINOR — RN is on the 0.x line, so the major is always 0.
-type CompatMinors = 83 | 84;
+// 0.84 is the default (latestVersions); 0.83 is the one older supported lane.
+type CompatMinors = 83;
 const versionMap: Record<CompatMinors, ReactNativeVersions> = {
   83: {
     reactNativeVersion: '~0.83.9',
@@ -81,15 +84,6 @@ const versionMap: Record<CompatMinors, ReactNativeVersions> = {
     reactNativeCommunityCliVersion: '~20.0.0',
     reactNativeCommunityCliPlatformAndroidVersion: '~20.0.0',
     reactNativeCommunityCliPlatformIosVersion: '~20.0.0',
-  },
-  84: {
-    reactNativeVersion: '~0.84.1',
-    reactNativeBabelPresetVersion: '~0.84.1',
-    reactNativeMetroConfigVersion: '~0.84.1',
-    metroVersion: '~0.83.0',
-    reactNativeCommunityCliVersion: '~20.1.0',
-    reactNativeCommunityCliPlatformAndroidVersion: '~20.1.0',
-    reactNativeCommunityCliPlatformIosVersion: '~20.1.0',
   },
 };
 
