@@ -74,8 +74,7 @@ const latestVersions: ReactNativeVersions = {
 
 // Keyed by React Native MINOR — RN is on the 0.x line, so the major is always 0.
 // 0.84 is the default (latestVersions); 0.83 is the one older supported lane.
-type CompatMinors = 83;
-const versionMap: Record<CompatMinors, ReactNativeVersions> = {
+const versionMap: Partial<Record<number, ReactNativeVersions>> = {
   83: {
     reactNativeVersion: '~0.83.9',
     reactNativeBabelPresetVersion: '~0.83.9',
@@ -101,8 +100,5 @@ export function versions(tree?: Tree): ReactNativeVersions {
   if (!installedReactNativeVersion) {
     return latestVersions;
   }
-  return (
-    versionMap[minor(installedReactNativeVersion) as CompatMinors] ??
-    latestVersions
-  );
+  return versionMap[minor(installedReactNativeVersion)] ?? latestVersions;
 }
