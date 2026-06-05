@@ -40,14 +40,20 @@ describe('claudeCodeDefinition', () => {
     expect(claudeCodeDefinition.wellKnownPaths()).toEqual([]);
   });
 
-  it('builds the interactive spec with --system-prompt and the user prompt', () => {
+  it('builds the interactive spec with pre-authorized handoff writes, --system-prompt, and the user prompt', () => {
     const spec = claudeCodeDefinition.buildInteractive({
       systemContext: 'system text',
       userPrompt: 'user text',
       workspaceRoot: '/workspace',
     });
     expect(spec).toEqual({
-      args: ['--system-prompt', 'system text', 'user text'],
+      args: [
+        '--allowedTools',
+        'Write(.nx/migrate-runs/**),Edit(.nx/migrate-runs/**)',
+        '--system-prompt',
+        'system text',
+        'user text',
+      ],
       cwd: '/workspace',
     });
   });

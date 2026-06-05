@@ -17,7 +17,7 @@ describe('buildSystemPrompt', () => {
   it('renders the handoff path on its own line between the tags', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toContain(
-      '   <handoff_path>\n   /abs/workspace/.nx/migrate-runs/23.0.0/step-1.json\n   </handoff_path>'
+      '<handoff_path>\n/abs/workspace/.nx/migrate-runs/23.0.0/step-1.json\n</handoff_path>'
     );
   });
 
@@ -64,25 +64,41 @@ describe('buildSystemPrompt', () => {
     );
   });
 
-  it('instructs the agent to summarize for the user, write the handoff, and tells it nx closes the session', () => {
+  it('tells the agent to write the success handoff in the same turn without pausing for confirmation', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toMatch(
-      /1\. Summarize what you did or why you couldn't in one or two sentences/
+      /state a one-or-two-sentence summary of what you did and, in the same turn, write the handoff file with `status: "success"`/
     );
     expect(prompt).toMatch(
-      /writing the handoff file next will close this session/
+      /Do not pause for confirmation before the write — it is pre-authorized\./
     );
-    expect(prompt).toMatch(/2\. Write a JSON file at:/);
-    expect(prompt).toMatch(/3\. You're done\./);
     expect(prompt).toMatch(/nx closes this session automatically/);
   });
 
-  it('offers a pause for follow-ups with a silence bailout so the agent does not deadlock', () => {
+  it('tells the agent to ask the user instead of writing a handoff when it needs direction', () => {
     const prompt = buildSystemPrompt(ctx);
     expect(prompt).toMatch(
-      /Offer the user a chance to ask follow-up questions or redirect before you write/
+      /You need direction — .* do not write the handoff file\. Ask the user and continue based on their answer\./
     );
-    expect(prompt).toMatch(/if they have none, proceed with the write/);
+  });
+
+  it('gates the failed handoff behind the user confirming to give up', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(
+      /Report what you found and what you tried, then ask the user how to proceed\./
+    );
+    expect(prompt).toMatch(
+      /Write the handoff with `status: "failed"` only when the user tells you to give up/
+    );
+    expect(prompt).toMatch(/do not loop silently/);
+  });
+
+  it('steers the handoff write to the file-write tool so the pre-authorization applies', () => {
+    const prompt = buildSystemPrompt(ctx);
+    expect(prompt).toMatch(
+      /Write it with your file-write tool — writes to this path are pre-authorized for that tool\./
+    );
+    expect(prompt).toMatch(/Do not use shell commands to write it/);
   });
 
   describe('hostile-path containment', () => {
