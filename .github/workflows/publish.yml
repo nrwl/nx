@@ -21,7 +21,7 @@ env:
   DEBUG: napi:*
   NX_RUN_GROUP: ${{ github.run_id }}-${{ github.run_attempt }}
   CYPRESS_INSTALL_BINARY: 0
-  NODE_VERSION: 22.16.0
+  NODE_VERSION: 26.3.0
   PNPM_VERSION: 11.2.2 # Aligned with root package.json (pnpm/action-setup will helpfully error if out of sync)
   NX_GRADLE_PROJECT_GRAPH_TIMEOUT: 600
 
@@ -190,9 +190,9 @@ jobs:
                 dotnet --version
 
                 # Node.js musl build from unofficial-builds.nodejs.org
-                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
-                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                mv node-v\${NODE_VERSION}-linux-x64-musl /usr/local/node
                 export PATH=\"/usr/local/node/bin:\$PATH\"
                 node --version
 
@@ -290,9 +290,9 @@ jobs:
                 # Node.js musl build from unofficial-builds.nodejs.org. Container is x64;
                 # rust cross-compiles to aarch64-unknown-linux-musl, so the host node binary
                 # is x64-musl regardless of the build target.
-                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v22.16.0/node-v22.16.0-linux-x64-musl.tar.xz -o node.tar.xz
+                curl -fsSL https://unofficial-builds.nodejs.org/download/release/v\${NODE_VERSION}/node-v\${NODE_VERSION}-linux-x64-musl.tar.xz -o node.tar.xz
                 tar -xJf node.tar.xz
-                mv node-v22.16.0-linux-x64-musl /usr/local/node
+                mv node-v\${NODE_VERSION}-linux-x64-musl /usr/local/node
                 export PATH=\"/usr/local/node/bin:\$PATH\"
                 node --version
 
@@ -321,7 +321,7 @@ jobs:
               export PATH="$JAVA_HOME\bin:$PATH"
               java -version
               pnpm nx run-many --target=build-native -- --target=aarch64-pc-windows-msvc
-    name: stable - ${{ matrix.settings.target }} - node@22.16.0
+    name: stable - ${{ matrix.settings.target }} - node@26.3.0
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -435,7 +435,7 @@ jobs:
           RUSTUP_IO_THREADS: 1
           NX_PREFER_TS_NODE: true
           PLAYWRIGHT_BROWSERS_PATH: 0
-          NODE_VERSION: 22.16.0
+          NODE_VERSION: 26.3.0
           NX_GRADLE_DISABLE: 'true'
           NX_DOTNET_DISABLE: 'true'
           NODE_OPTIONS: '--max-old-space-size=4096'
