@@ -243,11 +243,11 @@ export async function applySuppressions(
     await suppressions.prune(results);
   }
 
-  if (context.isEslintV10) {
+  const loaded = await suppressions.load();
+
+  if (context.isEslintV10 && !shouldWriteSuppressions) {
     // v10 already applied suppressions during lintFiles(), so we only need the
     // unused suppressions data for the passOnUnprunedSuppressions check.
-    // We discard suppressionResults.results and keep the original results.
-    const loaded = await suppressions.load();
     if (Object.keys(loaded).length > 0) {
       const { unused } = suppressions.applySuppressions(results, loaded);
       return { results, unusedSuppressions: unused };
