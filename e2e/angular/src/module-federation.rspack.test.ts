@@ -20,7 +20,9 @@ describe('Angular Module Federation', () => {
   let oldVerboseLoggingValue: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: ['@nx/angular', '@nx/rspack', '@nx/vitest', '@nx/playwright'],
+    });
     oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });

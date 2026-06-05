@@ -12,7 +12,7 @@ describe('file-server', () => {
   beforeAll(() => {
     newProject({
       name: uniq('fileserver'),
-      packages: ['@nx/web', '@nx/angular', '@nx/react'],
+      packages: ['@nx/web', '@nx/angular', '@nx/react', '@nx/vite'],
     });
   });
 

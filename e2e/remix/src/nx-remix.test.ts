@@ -14,7 +14,13 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (npm)', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/remix', '@nx/react'],
+        packages: [
+          '@nx/remix',
+          '@nx/react',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/eslint',
+        ],
         packageManager: 'npm',
       });
     });
@@ -36,7 +42,15 @@ describe('Remix E2E Tests', () => {
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
       newProject({
-        packages: ['@nx/remix', '@nx/react', '@nx/js'],
+        packages: [
+          '@nx/remix',
+          '@nx/react',
+          '@nx/js',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/jest',
+          '@nx/eslint',
+        ],
         packageManager: 'yarn',
       });
     });

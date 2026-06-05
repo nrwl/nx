@@ -33,7 +33,7 @@ describe('Vite Plugin', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
     proj = newProject({
-      packages: ['@nx/react', '@nx/web'],
+      packages: ['@nx/react', '@nx/web', '@nx/vite', '@nx/vitest', '@nx/js'],
     });
   });
 
@@ -291,7 +291,7 @@ export default async function render(_url: string, document: string) {
     beforeAll(() => {
       proj = newProject({
         name: uniq('vite-incr-build'),
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest', '@nx/js'],
       });
       runCLI(
         `generate @nx/react:app ${app} --bundler=vite --unitTestRunner=vitest --no-interactive  --directory=${app}`
@@ -389,7 +389,10 @@ export default App;
     describe('using default project configuration', () => {
       const lib = uniq('my-default-lib');
       beforeAll(() => {
-        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+        proj = newProject({
+          name: uniq('vite-proj'),
+          packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
+        });
         runCLI(
           `generate @nx/react:lib ${lib} --directory=libs/${lib} --unitTestRunner=vitest`
         );
@@ -429,7 +432,10 @@ export default App;
     describe('using custom project configuration', () => {
       const lib = uniq('my-custom-lib');
       beforeEach(() => {
-        proj = newProject({ name: uniq('vite-proj'), packages: ['@nx/react'] });
+        proj = newProject({
+          name: uniq('vite-proj'),
+          packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
+        });
       });
 
       it('should be able to run tests', async () => {
@@ -588,7 +594,7 @@ export default defineConfig({
   describe('ESM-only apps', () => {
     beforeAll(() => {
       newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite'],
       });
     });
 
