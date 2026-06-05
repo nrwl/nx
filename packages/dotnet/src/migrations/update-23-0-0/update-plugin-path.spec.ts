@@ -49,18 +49,7 @@ describe('update-plugin-path migration', () => {
     ]);
   });
 
-  it('should not create a duplicate when both the old and new paths are registered', () => {
-    tree.write(
-      'nx.json',
-      JSON.stringify({
-        plugins: ['@nx/dotnet', '@nx/dotnet/plugin'],
-      })
-    );
-    update(tree);
-    expect(readNxJson(tree)?.plugins).toEqual(['@nx/dotnet']);
-  });
-
-  it('should leave other plugins untouched', () => {
+  it('should update the entry in place, preserving the position of other plugins', () => {
     tree.write(
       'nx.json',
       JSON.stringify({

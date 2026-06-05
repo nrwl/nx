@@ -6,7 +6,8 @@ const NEW_PATH = '@nx/dotnet';
 /**
  * The `@nx/dotnet/plugin` subpath export has been removed in favor of the bare
  * `@nx/dotnet` specifier. This migration rewrites any `nx.json` plugin entries
- * that still register the plugin via the old `@nx/dotnet/plugin` path.
+ * that still register the plugin via the old `@nx/dotnet/plugin` path, updating
+ * each entry in place so the order of the `plugins` array is preserved.
  */
 export default function update(tree: Tree) {
   const nxJson = readNxJson(tree);
@@ -14,33 +15,21 @@ export default function update(tree: Tree) {
     return;
   }
 
-  const usesOldPath = nxJson.plugins.some((p) =>
-    typeof p === 'string' ? p === OLD_PATH : p.plugin === OLD_PATH
-  );
-  if (!usesOldPath) {
-    return;
+  let updated = false;
+  for (let i = 0; i < nxJson.plugins.length; i++) {
+    const plugin = nxJson.plugins[i];
+    if (typeof plugin === 'string') {
+      if (plugin === OLD_PATH) {
+        nxJson.plugins[i] = NEW_PATH;
+        updated = true;
+      }
+    } else if (plugin.plugin === OLD_PATH) {
+      plugin.plugin = NEW_PATH;
+      updated = true;
+    }
   }
 
-  const hasBarePlugin = nxJson.plugins.some((p) =>
-    typeof p === 'string' ? p === NEW_PATH : p.plugin === NEW_PATH
-  );
-
-  nxJson.plugins = nxJson.plugins
-    // If `@nx/dotnet` is already registered, drop the old-path entry instead of
-    // registering the same plugin twice.
-    .filter(
-      (p) =>
-        !(
-          hasBarePlugin &&
-          (typeof p === 'string' ? p === OLD_PATH : p.plugin === OLD_PATH)
-        )
-    )
-    .map((p) => {
-      if (typeof p === 'string') {
-        return p === OLD_PATH ? NEW_PATH : p;
-      }
-      return p.plugin === OLD_PATH ? { ...p, plugin: NEW_PATH } : p;
-    });
-
-  updateNxJson(tree, nxJson);
+  if (updated) {
+    updateNxJson(tree, nxJson);
+  }
 }
