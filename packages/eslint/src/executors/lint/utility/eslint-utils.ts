@@ -255,10 +255,7 @@ export async function applySuppressions(
     return { results, unusedSuppressions: {} };
   }
 
-  const suppressionResults = suppressions.applySuppressions(
-    results,
-    await suppressions.load()
-  );
+  const suppressionResults = suppressions.applySuppressions(results, loaded);
 
   return {
     results: suppressionResults.results,
