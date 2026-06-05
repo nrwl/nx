@@ -224,6 +224,15 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
   // - ESLint v10+: applySuppressions is set on the constructor, so lintFiles() already applied suppressions.
   //   We only need post-lint handling for writing (suppressAll/suppressRule) and pruning.
   // - ESLint v9.x: The programmatic API silently ignores suppression options, so we handle everything post-lint.
+  const hasUserSuppressionOptions =
+    !!normalizedOptions.suppressAll ||
+    (normalizedOptions.suppressRule &&
+      normalizedOptions.suppressRule.length > 0) ||
+    !!normalizedOptions.pruneSuppressions;
+
+  // For v9.x, check if there's an existing suppressions file to apply.
+  // For v10+, suppressions are already applied by lintFiles() — we only need
+  // post-lint handling for write/prune operations.
   const eslintVersion = ESLint.version;
   const supportsSuppressions =
     !isEslintV10 &&
@@ -231,48 +240,40 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
     !!valid(eslintVersion) &&
     gte(eslintVersion, '9.24.0');
 
-  const needsPostLintSuppressions =
-    normalizedOptions.suppressAll ||
-    (normalizedOptions.suppressRule &&
-      normalizedOptions.suppressRule.length > 0) ||
-    normalizedOptions.pruneSuppressions ||
-    supportsSuppressions;
+  let suppressionsFileExists = false;
+  let suppressionsFilePath: string | undefined;
 
-  if (needsPostLintSuppressions) {
-    const suppressionsFilePath = getSuppressionsFilePath(
+  if (hasUserSuppressionOptions || supportsSuppressions) {
+    suppressionsFilePath = getSuppressionsFilePath(
       normalizedOptions.suppressionsLocation,
       systemRoot
     );
-    const suppressionsFileExists = existsSync(suppressionsFilePath);
+    suppressionsFileExists = existsSync(suppressionsFilePath);
+  }
 
-    const shouldWrite =
-      !!normalizedOptions.suppressAll ||
-      (normalizedOptions.suppressRule &&
-        normalizedOptions.suppressRule.length > 0);
-    const shouldPrune = !!normalizedOptions.pruneSuppressions;
+  if (hasUserSuppressionOptions || suppressionsFileExists) {
+    const { results: suppressedResults, unusedSuppressions } =
+      await applySuppressions(lintResults, {
+        suppressAll: !!normalizedOptions.suppressAll,
+        suppressRule: normalizedOptions.suppressRule,
+        suppressionsLocation: normalizedOptions.suppressionsLocation,
+        pruneSuppressions: !!normalizedOptions.pruneSuppressions,
+        passOnUnprunedSuppressions:
+          !!normalizedOptions.passOnUnprunedSuppressions,
+        cwd: systemRoot,
+        isEslintV10,
+      });
+    lintResults = suppressedResults;
 
-    // Only process if we need to write/prune OR a suppressions file exists
-    if (shouldWrite || shouldPrune || suppressionsFileExists) {
-      const { results: suppressedResults, unusedSuppressions } =
-        await applySuppressions(lintResults, {
-          suppressAll: !!normalizedOptions.suppressAll,
-          suppressRule: normalizedOptions.suppressRule,
-          suppressionsLocation: normalizedOptions.suppressionsLocation,
-          pruneSuppressions: !!normalizedOptions.pruneSuppressions,
-          passOnUnprunedSuppressions:
-            !!normalizedOptions.passOnUnprunedSuppressions,
-          cwd: systemRoot,
-          isEslintV10,
-        });
-      lintResults = suppressedResults;
-
-      if (
-        Object.keys(unusedSuppressions).length > 0 &&
-        normalizedOptions.passOnUnprunedSuppressions &&
-        !normalizedOptions.force
-      ) {
-        return { success: false };
-      }
+    // When passOnUnprunedSuppressions is set, unused suppressions cause a failure
+    // unless force is also set (matching ESLint's --force behavior where force
+    // overrides strict failure modes).
+    if (
+      Object.keys(unusedSuppressions).length > 0 &&
+      normalizedOptions.passOnUnprunedSuppressions &&
+      !normalizedOptions.force
+    ) {
+      return { success: false };
     }
   }
 

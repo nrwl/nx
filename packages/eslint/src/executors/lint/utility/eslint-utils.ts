@@ -46,26 +46,6 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
-  // Validate version requirements early, before doing any other work.
-  // Fail early with a clear error message if the user is using suppression features
-  // with an ESLint version that doesn't support them.
-  const hasSuppressionOptions =
-    options.suppressAll ||
-    (options.suppressRule && options.suppressRule.length > 0) ||
-    options.suppressionsLocation ||
-    options.pruneSuppressions;
-
-  if (
-    hasSuppressionOptions &&
-    ESLint.version &&
-    !gte(ESLint.version, '9.24.0')
-  ) {
-    throw new Error(
-      'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation, pruneSuppressions) require ESLint v9.24.0 or higher. Current version: ' +
-        (ESLint.version || 'unknown')
-    );
-  }
-
   const eslintVersion = ESLint?.version;
   const isEslintV10 = eslintVersion && gte(eslintVersion, '10.0.0');
 

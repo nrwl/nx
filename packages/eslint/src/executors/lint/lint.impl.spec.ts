@@ -1129,6 +1129,30 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
       );
     });
 
+    it('should not call applySuppressions for ESLint v9.x when no suppression options and no suppressions file', async () => {
+      setupMocks();
+      MockESLint.version = '9.24.0';
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/tmp/eslint-suppressions.json') return false;
+        return realFs.existsSync(p);
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          lintFilePatterns: ['includedFile1'],
+        }),
+        mockContext
+      );
+
+      // v9.24.0 supports suppressions, but no file exists and no options set,
+      // so getSuppressionsFilePath is called but applySuppressions is not.
+      expect(mockGetSuppressionsFilePath).toHaveBeenCalled();
+      expect(mockApplySuppressions).not.toHaveBeenCalled();
+    });
+
     it('should call applySuppressions with suppressAll when suppressAll is true', async () => {
       setupMocks();
       MockESLint.version = '9.24.0';
@@ -1220,7 +1244,7 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
       expect(result.success).toBe(false);
     });
 
-    it('should not call applySuppressions for ESLint v10 when no write/prune options are set', async () => {
+    it('should not call applySuppressions or getSuppressionsFilePath for ESLint v10 when no write/prune options are set', async () => {
       setupMocks();
       MockESLint.version = '10.0.0';
       mockResolveAndInstantiateESLint.mockReturnValue(
@@ -1230,13 +1254,6 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
           isEslintV10: true,
         })
       );
-      mockGetSuppressionsFilePath.mockReturnValue(
-        '/tmp/eslint-suppressions.json'
-      );
-      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
-        if (p === '/tmp/eslint-suppressions.json') return true;
-        return realFs.existsSync(p);
-      });
 
       await lintExecutor(
         createValidRunBuilderOptions({
@@ -1245,8 +1262,11 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
         mockContext
       );
 
-      // For v10 with no write/prune options, applySuppressions should not be called
-      // because v10 handles it internally via applySuppressions: true
+      // For v10 with no write/prune options, getSuppressionsFilePath should not
+      // be called because v10 handles suppression application internally via
+      // applySuppressions: true in the constructor, and the post-lint path is
+      // only entered when the user explicitly sets suppression options.
+      expect(mockGetSuppressionsFilePath).not.toHaveBeenCalled();
       expect(mockApplySuppressions).not.toHaveBeenCalled();
     });
 
