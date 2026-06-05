@@ -1833,13 +1833,22 @@ async function getPackageMigrationsUsingInstallImpl(
   }
 
   try {
-    await execAsync(`${pmc.add} ${packageName}@${packageVersion}`, {
-      cwd: dir,
-      env: {
-        ...process.env,
-        npm_config_legacy_peer_deps: 'true',
-      },
-    });
+    const addCommand = `${pmc.add} ${packageName}@${packageVersion}`;
+    try {
+      await execAsync(addCommand, {
+        cwd: dir,
+        env: {
+          ...process.env,
+          npm_config_legacy_peer_deps: 'true',
+        },
+      });
+    } catch (e) {
+      // Only the install command failed; format it as a command failure so the
+      // user sees the package manager's stderr. Errors from the later steps
+      // (reading/validating migrations, resolving prompt files) are surfaced
+      // as-is by the outer catch instead of being mislabeled as install failures.
+      throw new Error(formatCommandFailure(addCommand, e as CommandFailure));
+    }
 
     const {
       migrations: migrationsFilePath,
@@ -1870,10 +1879,7 @@ async function getPackageMigrationsUsingInstallImpl(
     throw new Error(
       [
         `Failed to fetch migrations for ${packageName}@${packageVersion}`,
-        formatCommandFailure(
-          `${pmc.add} ${packageName}@${packageVersion}`,
-          e as CommandFailure
-        ),
+        e instanceof Error ? e.message : String(e),
       ].join('\n')
     );
   } finally {
