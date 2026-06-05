@@ -1,6 +1,6 @@
 import * as pc from 'picocolors';
 import { exec, execSync, spawn, type StdioOptions } from 'child_process';
-import { migratePrompt } from './safe-prompt';
+import { canPrompt, migratePrompt } from './safe-prompt';
 import { handleImport } from '../../utils/handle-import';
 import { dirname, join, relative } from 'path';
 import { createRequire } from 'module';
@@ -981,7 +981,7 @@ export async function resolveMode(
     isNxEquivalentTarget(targetPackage, targetVersion)
   ) {
     throw new Error(
-      `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+      `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
     );
   }
 
@@ -1054,7 +1054,7 @@ export async function resolveMode(
   if (!choices.length) {
     return 'all';
   }
-  if (!process.stdin.isTTY || isCI()) {
+  if (!canPrompt(context.interactive)) {
     return 'all';
   }
   choices.push({
@@ -1175,6 +1175,7 @@ type RunMigrations = {
   ifExists: boolean;
   agentic: AgenticArg;
   validate?: boolean;
+  interactive?: boolean;
 };
 
 export async function parseMigrationsOptions(options: {
@@ -1202,6 +1203,7 @@ export async function parseMigrationsOptions(options: {
       ifExists: options.ifExists as boolean,
       agentic: options.agentic as AgenticArg,
       validate: options.validate as boolean | undefined,
+      interactive: options.interactive as boolean | undefined,
     };
   }
 
@@ -3201,6 +3203,7 @@ async function runMigrations(
     ifExists: boolean;
     agentic: AgenticArg;
     validate?: boolean;
+    interactive?: boolean;
   },
   args: string[],
   isVerbose: boolean,
@@ -3253,6 +3256,7 @@ async function runMigrations(
   const agentic = await resolveAgentic({
     agentic: opts.agentic,
     migrations,
+    interactive: opts.interactive,
   });
 
   const {

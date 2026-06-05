@@ -1,5 +1,14 @@
 import { prompt as enquirerPrompt } from 'enquirer';
+import { isCI } from '../../utils/is-ci';
 import { output } from '../../utils/output';
+
+/**
+ * Whether `nx migrate` may show interactive prompts: requires a TTY on stdin,
+ * not running in CI, and the user not having passed `--no-interactive`.
+ */
+export function canPrompt(interactive: boolean | undefined): boolean {
+  return !!process.stdin.isTTY && !isCI() && interactive !== false;
+}
 
 /**
  * Drop-in replacement for enquirer's `prompt()` that hardens cancel

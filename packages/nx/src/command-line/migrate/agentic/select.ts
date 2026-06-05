@@ -20,6 +20,8 @@ const INSTALL_SUPPORTED_AGENTS_HINT = [
 export interface ResolveAgenticInput {
   agentic: AgenticArg;
   migrations: ReadonlyArray<{ prompt?: string }>;
+  /** The `--interactive` flag; `false` (`--no-interactive`) disables all prompting. */
+  interactive?: boolean;
 }
 
 /**
@@ -39,7 +41,10 @@ export async function resolveAgentic(
     return { kind: 'inside-agent' };
   }
 
-  const isInteractive = !!process.stdin.isTTY && !!process.stdout.isTTY;
+  const isInteractive =
+    !!process.stdin.isTTY &&
+    !!process.stdout.isTTY &&
+    input.interactive !== false;
 
   // Skip detection for the one case where the result is unused: explicit
   // `--agentic=false`. For every other path (explicit enable, explicit id, or
@@ -134,7 +139,7 @@ function requireInteractiveOrAbort(isInteractive: boolean): void {
 function warnAgenticInteractiveOnly(): void {
   output.warn({
     title:
-      'Skipping the agentic flow: it is interactive-only in this release and this is a non-interactive terminal.',
+      'Skipping the agentic flow: it is interactive-only in this release and this run is non-interactive.',
     bodyLines: [
       'Continuing the migration without the agentic flow. Re-run in an interactive terminal to use it.',
     ],

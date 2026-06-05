@@ -2104,6 +2104,18 @@ describe('Migration', () => {
       });
     });
 
+    it('should propagate the interactive value when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        interactive: false,
+      });
+    });
+
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -2219,7 +2231,7 @@ describe('Migration', () => {
           interactive: true,
         })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -2231,7 +2243,7 @@ describe('Migration', () => {
       await expect(() =>
         parseMigrationsOptions({ interactive: true })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -2243,7 +2255,7 @@ describe('Migration', () => {
       await expect(() =>
         parseMigrationsOptions({ interactive: true })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -2256,7 +2268,7 @@ describe('Migration', () => {
           interactive: true,
         })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -2290,7 +2302,7 @@ describe('Migration', () => {
           interactive: true,
         })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -2994,6 +3006,20 @@ describe('Migration', () => {
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
+    it('should default to "all" without prompting when --no-interactive is passed in a TTY', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, 'nx', '23.0.0', {
+        ...v23Context,
+        interactive: false,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
     it('should default to "all" without prompting for non-nx-equivalent target', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
@@ -3121,7 +3147,7 @@ describe('Migration', () => {
           interactive: true,
         })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -3132,7 +3158,7 @@ describe('Migration', () => {
           interactive: true,
         })
       ).rejects.toThrow(
-        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate.`
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
       );
     });
 
@@ -3747,6 +3773,22 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions({
         packageAndVersion: 'latest',
         mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should warn (not prompt) when --no-interactive is passed in a TTY', async () => {
+      setTty(true);
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        interactive: false,
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();

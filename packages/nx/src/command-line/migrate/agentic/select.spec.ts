@@ -515,4 +515,36 @@ describe('resolveAgentic', () => {
     expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();
   });
+
+  it.each([
+    ['--agentic=true', true],
+    ['--agentic=<id>', 'claude-code'],
+  ])(
+    'warns and runs without the agentic flow when %s is combined with --no-interactive in a TTY',
+    async (_label, agentic) => {
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      const result = await resolveAgentic({
+        agentic,
+        migrations: [{ prompt: 'x.md' }],
+        interactive: false,
+      });
+      expect(result).toEqual({ kind: 'disabled' });
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockOutputWarn).toHaveBeenCalled();
+      expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+        /interactive-only/i
+      );
+    }
+  );
+
+  it('skips the up-front prompt when --no-interactive is passed in a TTY', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+      interactive: false,
+    });
+    expect(result.kind).toBe('disabled');
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
 });
