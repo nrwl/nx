@@ -3,6 +3,7 @@ import {
   formatFiles,
   generateFiles,
   joinPathFragments,
+  offsetFromRoot,
   readJson,
   readProjectConfiguration,
   updateJson,
@@ -11,7 +12,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { PackageJson, readNxMigrateConfig } from 'nx/src/utils/package-json';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';
@@ -84,7 +85,11 @@ function updateMigrationsJson(host: Tree, options: NormalizedSchema) {
   );
   const migrations = host.exists(migrationsPath)
     ? readJson(host, migrationsPath)
-    : {};
+    : {
+        $schema: `${offsetFromRoot(
+          dirname(migrationsPath)
+        )}node_modules/nx/schemas/migrations-schema.json`,
+      };
 
   const generators = migrations.generators ?? {};
 

@@ -1,6 +1,11 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { readJson, readProjectConfiguration, Tree } from '@nx/devkit';
+import {
+  readJson,
+  readProjectConfiguration,
+  Tree,
+  writeJson,
+} from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { migrationGenerator } from './migration';
 import { pluginGenerator } from '../plugin/plugin';
@@ -127,6 +132,34 @@ describe('NxPlugin migration generator', () => {
     expect(migrationsJson.generators['my-migration'].description).toEqual(
       'Migration for v1.0.0'
     );
+  });
+
+  it('should add a $schema reference when creating migrations.json', async () => {
+    await migrationGenerator(tree, {
+      name: 'my-migration',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0',
+      packageVersion: '1.0.0',
+    });
+
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+
+    expect(migrationsJson.$schema).toEqual(
+      '../../node_modules/nx/schemas/migrations-schema.json'
+    );
+  });
+
+  it('should not add a $schema reference to an existing migrations.json', async () => {
+    writeJson(tree, 'packages/my-plugin/migrations.json', { generators: {} });
+
+    await migrationGenerator(tree, {
+      name: 'my-migration',
+      path: 'packages/my-plugin/src/migrations/update-1.0.0/update-1.0.0',
+      packageVersion: '1.0.0',
+    });
+
+    const migrationsJson = readJson(tree, 'packages/my-plugin/migrations.json');
+
+    expect(migrationsJson.$schema).toBeUndefined();
   });
 
   it('should generate files with package.json updates', async () => {
