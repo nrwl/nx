@@ -170,7 +170,7 @@
     },
     "passOnUnprunedSuppressions": {
       "type": "boolean",
-      "description": "When set to true, causes the task to fail if there are unused suppression entries. This is equivalent to the `--pass-on-unpruned-suppressions` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
+      "description": "When set to true, causes the task to fail if there are unused suppression entries. Must be used together with pruneSuppressions. This is equivalent to the `--pass-on-unpruned-suppressions` flag on the ESLint CLI. Requires ESLint v9.24.0 or higher.",
       "default": false
     }
   },

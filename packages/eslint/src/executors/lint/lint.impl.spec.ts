@@ -29,7 +29,7 @@ const mockLoadFormatter = jest.fn().mockReturnValue(mockFormatter);
 const mockIsPathIgnored = jest.fn().mockReturnValue(Promise.resolve(false));
 const mockOutputFixes = jest.fn();
 
-const VALID_ESLINT_VERSION = '8.0';
+const VALID_ESLINT_VERSION = '8.0.0';
 
 let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
 const mockLintFiles = jest.fn().mockImplementation(() => mockReports);
@@ -61,6 +61,12 @@ const mockApplySuppressions = jest.fn().mockResolvedValue({
 
 const mockGetSuppressionsFilePath = jest.fn().mockReturnValue(null);
 
+const mockValidateSuppressionOptions = jest
+  .fn()
+  .mockImplementation(
+    jest.requireActual('./utility/eslint-utils').validateSuppressionOptions
+  );
+
 jest.mock('./utility/eslint-utils', () => {
   return {
     resolveAndInstantiateESLint: (...args: any[]) =>
@@ -68,7 +74,8 @@ jest.mock('./utility/eslint-utils', () => {
     applySuppressions: (...args: any[]) => mockApplySuppressions(...args),
     getSuppressionsFilePath: (...args: any[]) =>
       mockGetSuppressionsFilePath(...args),
-    validateSuppressionOptions: jest.fn(),
+    validateSuppressionOptions: (...args: any[]) =>
+      mockValidateSuppressionOptions(...args),
   };
 });
 import lintExecutor from './lint.impl';
@@ -127,6 +134,9 @@ function setupMocks() {
     unusedSuppressions: {},
   });
   mockGetSuppressionsFilePath.mockReturnValue(null);
+  mockValidateSuppressionOptions.mockImplementation(
+    jest.requireActual('./utility/eslint-utils').validateSuppressionOptions
+  );
   mockResolveAndInstantiateESLint.mockReturnValue(
     Promise.resolve({
       ESLint: MockESLint,
@@ -1270,13 +1280,104 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
         mockContext
       );
 
-      // Even for v10, we need to call applySuppressions for writing new suppressions
       expect(mockApplySuppressions).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
           suppressAll: true,
+          isEslintV10: true,
         })
       );
+    });
+
+    it('should throw when passOnUnprunedSuppressions is used without pruneSuppressions', async () => {
+      setupMocks();
+      MockESLint.version = '9.24.0';
+
+      await expect(
+        lintExecutor(
+          createValidRunBuilderOptions({
+            passOnUnprunedSuppressions: true,
+            pruneSuppressions: false,
+            lintFilePatterns: ['includedFile1'],
+          }),
+          mockContext
+        )
+      ).rejects.toThrow(
+        'The passOnUnprunedSuppressions option requires pruneSuppressions to be enabled.'
+      );
+    });
+
+    it('should call applySuppressions for ESLint v10 when pruneSuppressions is true', async () => {
+      setupMocks();
+      MockESLint.version = '10.0.0';
+      mockResolveAndInstantiateESLint.mockReturnValue(
+        Promise.resolve({
+          ESLint: MockESLint,
+          eslint: new MockESLint(),
+          isEslintV10: true,
+        })
+      );
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/tmp/eslint-suppressions.json') return true;
+        return realFs.existsSync(p);
+      });
+      mockApplySuppressions.mockResolvedValue({
+        results: [],
+        unusedSuppressions: {},
+      });
+
+      await lintExecutor(
+        createValidRunBuilderOptions({
+          pruneSuppressions: true,
+          lintFilePatterns: ['includedFile1'],
+        }),
+        mockContext
+      );
+
+      expect(mockApplySuppressions).toHaveBeenCalledWith(
+        expect.any(Array),
+        expect.objectContaining({
+          pruneSuppressions: true,
+          isEslintV10: true,
+        })
+      );
+    });
+
+    it('should fail for ESLint v10 when passOnUnprunedSuppressions is true and there are unused suppressions', async () => {
+      setupMocks();
+      MockESLint.version = '10.0.0';
+      mockResolveAndInstantiateESLint.mockReturnValue(
+        Promise.resolve({
+          ESLint: MockESLint,
+          eslint: new MockESLint(),
+          isEslintV10: true,
+        })
+      );
+      mockGetSuppressionsFilePath.mockReturnValue(
+        '/tmp/eslint-suppressions.json'
+      );
+      (fs.existsSync as jest.Mock).mockImplementation((p: string) => {
+        if (p === '/tmp/eslint-suppressions.json') return true;
+        return realFs.existsSync(p);
+      });
+      mockApplySuppressions.mockResolvedValue({
+        results: [],
+        unusedSuppressions: { 'some-file.js': { 'some-rule': { count: 1 } } },
+      });
+
+      const result = await lintExecutor(
+        createValidRunBuilderOptions({
+          pruneSuppressions: true,
+          passOnUnprunedSuppressions: true,
+          lintFilePatterns: ['includedFile1'],
+        }),
+        mockContext
+      );
+
+      expect(result.success).toBe(false);
     });
   });
 });

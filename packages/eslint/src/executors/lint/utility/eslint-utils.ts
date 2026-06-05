@@ -10,7 +10,9 @@ export interface SuppressionsContext {
   suppressRule: string[] | undefined;
   suppressionsLocation: string | undefined;
   pruneSuppressions: boolean;
+  passOnUnprunedSuppressions: boolean;
   cwd: string;
+  isEslintV10?: boolean;
 }
 
 export interface SuppressionsResult {
@@ -214,8 +216,6 @@ export async function applySuppressions(
 ): Promise<SuppressionsResult> {
   const path = await import('path');
 
-  validateSuppressionOptions(context);
-
   const SuppressionsService = resolveSuppressionsService(path);
 
   const suppressionsFilePath = getSuppressionsFilePath(
@@ -263,6 +263,18 @@ export async function applySuppressions(
     await suppressions.prune(results);
   }
 
+  if (context.isEslintV10) {
+    // v10 already applied suppressions during lintFiles(), so we only need the
+    // unused suppressions data for the passOnUnprunedSuppressions check.
+    // We discard suppressionResults.results and keep the original results.
+    const loaded = await suppressions.load();
+    if (Object.keys(loaded).length > 0) {
+      const { unused } = suppressions.applySuppressions(results, loaded);
+      return { results, unusedSuppressions: unused };
+    }
+    return { results, unusedSuppressions: {} };
+  }
+
   const suppressionResults = suppressions.applySuppressions(
     results,
     await suppressions.load()
@@ -300,6 +312,11 @@ export function validateSuppressionOptions(context: SuppressionsContext): void {
   ) {
     throw new Error(
       'The suppressRule option and the pruneSuppressions option cannot be used together.'
+    );
+  }
+  if (context.passOnUnprunedSuppressions && !context.pruneSuppressions) {
+    throw new Error(
+      'The passOnUnprunedSuppressions option requires pruneSuppressions to be enabled.'
     );
   }
 }

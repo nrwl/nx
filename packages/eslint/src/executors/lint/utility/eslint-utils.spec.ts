@@ -294,6 +294,7 @@ describe('eslint-utils', () => {
         suppressRule: undefined,
         suppressionsLocation: undefined,
         pruneSuppressions: false,
+        passOnUnprunedSuppressions: false,
         cwd: '/root',
         ...overrides,
       };
@@ -360,6 +361,30 @@ describe('eslint-utils', () => {
       ).toThrow(
         'The suppressRule option and the pruneSuppressions option cannot be used together.'
       );
+    });
+
+    it('should throw when passOnUnprunedSuppressions is true but pruneSuppressions is false', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            passOnUnprunedSuppressions: true,
+            pruneSuppressions: false,
+          })
+        )
+      ).toThrow(
+        'The passOnUnprunedSuppressions option requires pruneSuppressions to be enabled.'
+      );
+    });
+
+    it('should not throw when passOnUnprunedSuppressions and pruneSuppressions are both true', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            passOnUnprunedSuppressions: true,
+            pruneSuppressions: true,
+          })
+        )
+      ).not.toThrow();
     });
   });
 

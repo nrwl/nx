@@ -7,7 +7,7 @@ import type { ESLint } from 'eslint';
 import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
-import { gte, major } from 'semver';
+import { gte, major, valid } from 'semver';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import {
   warnEslintExecutorDeprecation,
@@ -60,13 +60,16 @@ export default async function run(
     normalizedOptions.suppressAll ||
     (normalizedOptions.suppressRule &&
       normalizedOptions.suppressRule.length > 0) ||
-    normalizedOptions.pruneSuppressions
+    normalizedOptions.pruneSuppressions ||
+    normalizedOptions.passOnUnprunedSuppressions
   ) {
     validateSuppressionOptions({
       suppressAll: !!normalizedOptions.suppressAll,
       suppressRule: normalizedOptions.suppressRule,
       suppressionsLocation: normalizedOptions.suppressionsLocation,
       pruneSuppressions: !!normalizedOptions.pruneSuppressions,
+      passOnUnprunedSuppressions:
+        !!normalizedOptions.passOnUnprunedSuppressions,
       cwd: systemRoot,
     });
   }
@@ -222,20 +225,18 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
   //   We only need post-lint handling for writing (suppressAll/suppressRule) and pruning.
   // - ESLint v9.x: The programmatic API silently ignores suppression options, so we handle everything post-lint.
   const eslintVersion = ESLint.version;
-  let supportsSuppressions = false;
-  try {
-    supportsSuppressions =
-      !isEslintV10 && !!eslintVersion && gte(eslintVersion, '9.24.0');
-  } catch {
-    // Invalid semver (e.g., test mocks) - suppressions not supported
-  }
+  const supportsSuppressions =
+    !isEslintV10 &&
+    !!eslintVersion &&
+    !!valid(eslintVersion) &&
+    gte(eslintVersion, '9.24.0');
 
   const needsPostLintSuppressions =
     normalizedOptions.suppressAll ||
     (normalizedOptions.suppressRule &&
       normalizedOptions.suppressRule.length > 0) ||
     normalizedOptions.pruneSuppressions ||
-    supportsSuppressions; // Only apply file-based suppressions for v9.x (v10 handles it internally)
+    supportsSuppressions;
 
   if (needsPostLintSuppressions) {
     const suppressionsFilePath = getSuppressionsFilePath(
@@ -258,7 +259,10 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
           suppressRule: normalizedOptions.suppressRule,
           suppressionsLocation: normalizedOptions.suppressionsLocation,
           pruneSuppressions: !!normalizedOptions.pruneSuppressions,
+          passOnUnprunedSuppressions:
+            !!normalizedOptions.passOnUnprunedSuppressions,
           cwd: systemRoot,
+          isEslintV10,
         });
       lintResults = suppressedResults;
 
