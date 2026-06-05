@@ -7,7 +7,7 @@
       "documentation": "./dist/src/migrations/update-23-0-0/update-deep-imports.md"
     },
     "update-23-0-0-rename-create-nodes-v2-types": {
-      "version": "23.0.0-beta.5",
+      "version": "23.0.0-beta.24",
       "description": "Rename deprecated CreateNodes `V2` type imports (CreateNodesV2, CreateNodesContextV2, CreateNodesResultV2, CreateNodesFunctionV2, NxPluginV2) from `@nx/devkit` to their canonical names.",
       "implementation": "./dist/src/migrations/update-23-0-0/rename-create-nodes-v2-types",
       "documentation": "./dist/src/migrations/update-23-0-0/rename-create-nodes-v2-types.md"
