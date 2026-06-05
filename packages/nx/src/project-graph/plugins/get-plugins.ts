@@ -28,19 +28,16 @@ let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
 
-// Hash of the plugin set the most recent getPluginsSeparated call asked
-// for. The cache commit is gated on it: a load writes cachedSeparatedPlugins
-// and currentPluginsConfigurationHash only if its hash is still the latest
-// requested when it finishes. Two recomputes can run at once — a daemon
-// restart fires an initial recompute and a watcher recompute together — and
-// without this gate a slower load for an older nx.json could overwrite the
-// cache of a newer one, leaving the hash key and the cached plugin set
-// describing different plugin sets (so a later cache hit serves the wrong
-// plugins).
-let latestRequestedPluginsHash: string | undefined;
-// In-flight separated-plugins load, tagged with the hash it is loading, so
-// concurrent callers asking for the same plugin set share one load instead
-// of starting a second that races the module-level cache state.
+// In-flight separated-plugins load, tagged with the hash it is loading.
+// Serves two roles: (1) a concurrent caller asking for the same plugin set
+// shares this one load instead of starting a second that races the
+// module-level cache state, and (2) it is the commit gate — a load writes
+// cachedSeparatedPlugins / currentPluginsConfigurationHash only if it is
+// still the registered load when it finishes. Two recomputes can run at once
+// (a daemon restart fires an initial recompute and a watcher recompute
+// together); without the gate a slower load for an older nx.json could
+// overwrite a newer one's cache, leaving the hash key and the cached plugin
+// set describing different plugin sets.
 let pendingSeparatedPlugins:
   | { hash: string; promise: Promise<SeparatedPlugins> }
   | undefined;
@@ -106,11 +103,6 @@ export async function getPluginsSeparated(
     return pendingSeparatedPlugins.promise;
   }
 
-  // This call now owns the most recent plugin configuration. The commit at
-  // the end of the load checks this, so an older load that finishes later
-  // cannot clobber a newer one's cache.
-  latestRequestedPluginsHash = pluginsConfigurationHash;
-
   // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
   // cached SeparatedPlugins is invalidated by the early-return above, but
   // pendingPluginsPromise — the in-flight load — would otherwise be reused
@@ -150,10 +142,11 @@ export async function getPluginsSeparated(
       defaultPlugins,
     };
 
-    // Commit the cache only if a newer request has not superseded us, so
-    // currentPluginsConfigurationHash and cachedSeparatedPlugins are always
-    // written together, by the same call, and describe the same plugin set.
-    if (latestRequestedPluginsHash === pluginsConfigurationHash) {
+    // Commit the cache only if a newer request has not superseded us — i.e.
+    // we are still the registered in-flight load. currentPluginsConfigurationHash
+    // and cachedSeparatedPlugins are then always written together, by the same
+    // call, and describe the same plugin set.
+    if (pendingSeparatedPlugins?.promise === loadPromise) {
       cachedSeparatedPlugins = separatedPlugins;
       currentPluginsConfigurationHash = pluginsConfigurationHash;
       loadedPlugins = specifiedPlugins.concat(defaultPlugins);
@@ -222,10 +215,10 @@ export function cleanupPlugins() {
   pendingPluginsPromise = undefined;
   pendingDefaultPluginPromise = undefined;
   cachedSeparatedPlugins = undefined;
-  // Drop the in-flight load and the latest-requested marker too — the
-  // workers it would commit have just been torn down, so it must not
-  // populate the cache once it resolves.
-  latestRequestedPluginsHash = undefined;
+  // Drop the in-flight load too — the workers it would commit have just been
+  // torn down, so it must not populate the cache once it resolves. Clearing
+  // the marker also flips its commit gate (pendingSeparatedPlugins?.promise
+  // === loadPromise) to false, so a load resolving after teardown is a no-op.
   pendingSeparatedPlugins = undefined;
 }
 
