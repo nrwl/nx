@@ -10,7 +10,7 @@ import { join } from 'path';
 import type { StorybookConfigurationSchema } from './schema';
 import { storybookConfigurationGenerator } from '@nx/react';
 
-export function remixStorybookConfiguration(
+export async function remixStorybookConfiguration(
   tree: Tree,
   schema: StorybookConfigurationSchema
 ) {

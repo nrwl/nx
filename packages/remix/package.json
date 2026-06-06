@@ -21,9 +21,45 @@
     "url": "https://github.com/nrwl/nx/issues"
   },
   "homepage": "https://nx.dev",
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/component-testing": [
+        "dist/plugins/component-testing/index.d.ts"
+      ],
+      "executors/*/schema": [
+        "dist/src/executors/*/schema.d.ts"
+      ],
+      "generators/*/schema": [
+        "dist/src/generators/*/schema.d.ts"
+      ],
+      "plugins/*": [
+        "dist/plugins/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
@@ -50,19 +86,61 @@
   },
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./generators": "./generators.js",
-    "./plugin": "./plugin.js",
-    "./plugins/component-testing": "./plugins/component-testing/index.js"
+    "./generators": {
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
+    },
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./plugins/component-testing": {
+      "@nx/nx-source": "./plugins/component-testing/index.ts",
+      "types": "./dist/plugins/component-testing/index.d.ts",
+      "default": "./dist/plugins/component-testing/index.js"
+    },
+    "./executors/*/schema.json": {
+      "@nx/nx-source": "./src/executors/*/schema.json",
+      "default": "./dist/src/executors/*/schema.json"
+    },
+    "./executors/*/schema": {
+      "@nx/nx-source": "./src/executors/*/schema.d.ts",
+      "types": "./dist/src/executors/*/schema.d.ts",
+      "default": "./dist/src/executors/*/schema.d.ts"
+    },
+    "./generators/*/schema.json": {
+      "@nx/nx-source": "./src/generators/*/schema.json",
+      "default": "./dist/src/generators/*/schema.json"
+    },
+    "./generators/*/schema": {
+      "@nx/nx-source": "./src/generators/*/schema.d.ts",
+      "types": "./dist/src/generators/*/schema.d.ts",
+      "default": "./dist/src/generators/*/schema.d.ts"
+    },
+    "./plugins/*": {
+      "@nx/nx-source": "./plugins/*.ts",
+      "types": "./dist/plugins/*.d.ts",
+      "default": "./dist/plugins/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
   }
 }
