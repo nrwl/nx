@@ -15,9 +15,32 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "generators/*/schema": [
+        "dist/src/generators/*/schema.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -25,19 +48,39 @@
   },
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
-  "executors": "./executors.json",
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
-    "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./plugin": "./plugin.js"
+    "./generators.json": "./generators.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./generators/*/schema.json": {
+      "@nx/nx-source": "./src/generators/*/schema.json",
+      "default": "./dist/src/generators/*/schema.json"
+    },
+    "./generators/*/schema": {
+      "@nx/nx-source": "./src/generators/*/schema.d.ts",
+      "types": "./dist/src/generators/*/schema.d.ts",
+      "default": "./dist/src/generators/*/schema.d.ts"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
   },
   "nx-migrations": {
     "migrations": "./migrations.json"

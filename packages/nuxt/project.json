@@ -3,11 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/nuxt",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/nuxt/README.md"],
-      "command": "node ./scripts/copy-readme.js nuxt",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js nuxt packages/nuxt/readme-template.md packages/nuxt/README.md",
       "inputs": ["copyReadme"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   },
   "implicitDependencies": ["cypress", "playwright"]
