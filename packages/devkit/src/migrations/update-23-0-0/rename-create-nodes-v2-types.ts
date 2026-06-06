@@ -2,10 +2,12 @@ import { logger, type Tree } from 'nx/src/devkit-exports';
 import type {
   ExportDeclaration,
   ExportSpecifier,
+  Identifier,
   ImportDeclaration,
   ImportSpecifier,
   NamedExports,
   NamedImports,
+  Node,
   SourceFile,
 } from 'typescript';
 import { formatFiles } from '../../generators/format-files';
@@ -85,12 +87,21 @@ export function rewriteCreateNodesV2Types(source: string): string {
   );
 
   const changes: StringChange[] = [];
+  // Local bindings whose name changes as a result of rewriting a non-aliased
+  // import specifier (e.g. `import { CreateNodesV2 }` -> `import { CreateNodes }`).
+  // Every in-body reference to such a binding must be renamed too, otherwise the
+  // rewritten import leaves a dangling reference to the old name.
+  const localRenames = new Map<string, string>();
   for (const stmt of sourceFile.statements) {
     if (ts.isImportDeclaration(stmt)) {
-      collectImportRewrite(sourceFile, stmt, changes);
+      collectImportRewrite(sourceFile, stmt, changes, localRenames);
     } else if (ts.isExportDeclaration(stmt)) {
       collectExportRewrite(sourceFile, stmt, changes);
     }
+  }
+
+  if (localRenames.size > 0) {
+    collectUsageRewrites(sourceFile, localRenames, changes);
   }
 
   return changes.length > 0 ? applyChangesToString(source, changes) : source;
@@ -105,7 +116,8 @@ function isDevkitSpecifier(
 function collectImportRewrite(
   sourceFile: SourceFile,
   stmt: ImportDeclaration,
-  changes: StringChange[]
+  changes: StringChange[],
+  localRenames: Map<string, string>
 ): void {
   if (!isDevkitSpecifier(stmt.moduleSpecifier)) {
     return;
@@ -114,7 +126,72 @@ function collectImportRewrite(
   if (!namedBindings || !ts!.isNamedImports(namedBindings)) {
     return;
   }
+  // A non-aliased specifier (`{ CreateNodesV2 }`) renames the local binding, so
+  // its in-body references must be rewritten as well. An aliased specifier
+  // (`{ CreateNodesV2 as Foo }`) keeps the local name `Foo`, so it does not.
+  for (const el of namedBindings.elements) {
+    if (el.propertyName) {
+      continue;
+    }
+    const canonical = CREATE_NODES_V2_TYPE_RENAMES.get(el.name.text);
+    if (canonical) {
+      localRenames.set(el.name.text, canonical);
+    }
+  }
   rewriteNamedBindings(sourceFile, namedBindings, changes);
+}
+
+/**
+ * Renames in-body references (type annotations, value usages) of bindings that
+ * were renamed by an import rewrite. References inside import/export
+ * declarations are left to the binding rewrite, and member positions
+ * (`foo.CreateNodesV2`, `NS.CreateNodesV2`) are not standalone references to the
+ * imported binding, so they are skipped.
+ */
+function collectUsageRewrites(
+  sourceFile: SourceFile,
+  localRenames: Map<string, string>,
+  changes: StringChange[]
+): void {
+  const visit = (node: Node): void => {
+    if (
+      ts!.isIdentifier(node) &&
+      localRenames.has(node.text) &&
+      isRenameableReference(node)
+    ) {
+      const start = node.getStart(sourceFile);
+      changes.push(
+        { type: ChangeType.Delete, start, length: node.getEnd() - start },
+        {
+          type: ChangeType.Insert,
+          index: start,
+          text: localRenames.get(node.text)!,
+        }
+      );
+    }
+    ts!.forEachChild(node, visit);
+  };
+  ts!.forEachChild(sourceFile, visit);
+}
+
+function isRenameableReference(id: Identifier): boolean {
+  const parent = id.parent;
+  // `foo.CreateNodesV2` — the member name is not the imported binding.
+  if (ts!.isPropertyAccessExpression(parent) && parent.name === id) {
+    return false;
+  }
+  // `NS.CreateNodesV2` in a type position — same reasoning.
+  if (ts!.isQualifiedName(parent) && parent.right === id) {
+    return false;
+  }
+  // Anything inside an import/export declaration is handled by the binding
+  // rewrite; skip it here to avoid touching the specifier twice.
+  for (let n: Node | undefined = id; n; n = n.parent) {
+    if (ts!.isImportDeclaration(n) || ts!.isExportDeclaration(n)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 function collectExportRewrite(
