@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { join } from 'path';
 import * as pc from 'picocolors';
 import enquirer = require('enquirer');
 import yargs = require('yargs');
@@ -37,7 +38,7 @@ export const yargsDecorator = {
   'aliases:': `${pc.blue(`aliases`)}:`,
 };
 
-const nxVersion = require('../package.json').version;
+const nxVersion = require(join('create-nx-plugin', 'package.json')).version;
 
 async function determinePluginName(
   parsedArgs: CreateNxPluginArguments
@@ -111,7 +112,7 @@ export const commandsObject: yargs.Argv<CreateNxPluginArguments> = yargs
       ),
     async (argv: yargs.ArgumentsCamelCase<CreateNxPluginArguments>) => {
       await main(argv).catch((error) => {
-        const { version } = require('../package.json');
+        const { version } = require(join('create-nx-plugin', 'package.json'));
         output.error({
           title: `Something went wrong! v${version}`,
         });
