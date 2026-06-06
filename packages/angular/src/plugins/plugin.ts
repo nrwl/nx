@@ -8,7 +8,7 @@ import {
   type CreateNodesContext,
   createNodesFromFiles,
   type CreateNodesResult,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
@@ -110,7 +110,7 @@ export const createNodes: CreateNodes<AngularPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(

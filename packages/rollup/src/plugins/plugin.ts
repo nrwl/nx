@@ -11,7 +11,7 @@ import {
   type CreateDependencies,
   CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
@@ -71,7 +71,7 @@ export const createNodes: CreateNodes<RollupPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
