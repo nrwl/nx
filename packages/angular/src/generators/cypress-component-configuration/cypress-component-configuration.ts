@@ -65,7 +65,9 @@ export async function cypressComponentConfiguration(
   }
 
   if (isZoneless) {
-    const { getInstalledCypressVersion } = await import('@nx/cypress/internal');
+    const {
+      getInstalledCypressVersion,
+    }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
     const installedCypressVersion = getInstalledCypressVersion(tree);
     // Zoneless support was introduced in Cypress 15.8.0
     // If Cypress is not yet installed, we'll install the latest version, which will have zoneless support

@@ -3,6 +3,13 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/angular",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": false,
+      "manifestRootsToUpdate": ["packages/{projectName}/dist"]
+    }
+  },
   "targets": {
     "build-ng": {
       "dependsOn": ["build-base", "typecheck"],
@@ -11,14 +18,20 @@
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["{workspaceRoot}/dist/packages/angular"]
+      "outputs": ["{projectRoot}/dist"]
     },
 
     "build": {
       "dependsOn": ["^build", "build-ng", "typecheck", "build-base"],
-      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
-      "command": "node ./scripts/copy-readme.js angular",
+      "outputs": ["{projectRoot}/dist/README.md"],
+      "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/dist/README.md",
       "inputs": ["copyReadme"]
+    },
+
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/angular/dist"
+      }
     }
   },
   "implicitDependencies": ["vite", "storybook", "playwright", "jest"]
