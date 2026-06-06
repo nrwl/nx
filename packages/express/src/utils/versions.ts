@@ -4,8 +4,9 @@ import {
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { major } from 'semver';
+import { join } from 'path';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/express', 'package.json')).version;
 
 export const minSupportedExpressVersion = '4.0.0';
 
