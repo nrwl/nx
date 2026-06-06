@@ -65,7 +65,9 @@ export async function nextInitGeneratorInternal(
 
   schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    const { createNodesV2 } = await import('../../plugins/plugin');
+    const {
+      createNodesV2,
+    }: typeof import('../../plugins/plugin') = require('../../plugins/plugin');
     await addPlugin(
       host,
       await createProjectGraphAsync(),

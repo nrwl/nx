@@ -59,7 +59,9 @@ export async function cypressComponentConfigurationInternal(
       addPlugin: options.addPlugin,
     })
   );
-  const { ensureDependencies } = await import('@nx/webpack/internal');
+  const {
+    ensureDependencies,
+  }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
   tasks.push(
     ensureDependencies(tree, { compiler: 'swc', uiFramework: 'react' })
   );
