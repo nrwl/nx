@@ -3,11 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/vue",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/vue/README.md"],
-      "command": "node ./scripts/copy-readme.js vue",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js vue packages/vue/readme-template.md packages/vue/README.md",
       "inputs": ["copyReadme"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   }
 }
