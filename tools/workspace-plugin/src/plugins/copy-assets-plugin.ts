@@ -1,5 +1,5 @@
 import { createNodesFromFiles, readJsonFile } from '@nx/devkit';
-import type { CreateNodesV2, TargetConfiguration } from '@nx/devkit';
+import type { CreateNodes, TargetConfiguration } from '@nx/devkit';
 import {
   getAssetOutputPath,
   normalizeAssets,

@@ -8,7 +8,7 @@ import {
   type CreateNodesContext,
   createNodesFromFiles,
   type CreateNodesResult,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,

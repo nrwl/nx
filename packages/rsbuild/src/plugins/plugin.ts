@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type ProjectConfiguration,
   type TargetConfiguration,
   CreateNodes,

@@ -7,7 +7,7 @@ import {
   AggregateCreateNodesError,
   createNodesFromFiles,
   type CreateNodesContext,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,

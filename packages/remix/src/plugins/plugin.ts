@@ -11,7 +11,7 @@ import {
   type CreateDependencies,
   type CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,

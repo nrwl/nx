@@ -9,7 +9,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
