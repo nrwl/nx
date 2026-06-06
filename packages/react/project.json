@@ -3,12 +3,19 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/react",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
       "dependsOn": ["build-base"],
-      "command": "node ./scripts/copy-readme.js react",
+      "command": "node ./scripts/copy-readme.js react packages/react/readme-template.md packages/react/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+      "outputs": ["{projectRoot}/README.md"]
     },
     "build-base": {
       "dependsOn": [
@@ -41,7 +48,10 @@
       ]
     },
     "nx-release-publish": {
-      "dependsOn": []
+      "dependsOn": [],
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   },
   "implicitDependencies": ["rspack"]
