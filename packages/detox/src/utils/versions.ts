@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/detox', 'package.json')).version;
 
 export const detoxVersion = '~20.43.0';
 export const testingLibraryJestDom = '~6.9.1';

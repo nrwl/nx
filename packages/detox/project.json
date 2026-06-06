@@ -3,11 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/detox/src",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
-      "command": "node ./scripts/copy-readme.js detox",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js detox packages/detox/readme-template.md packages/detox/README.md",
       "inputs": ["copyReadme"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   }
 }
