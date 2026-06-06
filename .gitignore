@@ -167,6 +167,8 @@ packages/remix/README.md
 packages/detox/README.md
 packages/expo/README.md
 packages/nuxt/README.md
+packages/create-nx-workspace/README.md
+packages/create-nx-plugin/README.md
 
 test-output
 test-results

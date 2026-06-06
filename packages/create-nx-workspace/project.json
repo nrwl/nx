@@ -3,23 +3,30 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/create-nx-workspace",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
       "executor": "nx:run-commands",
       "outputs": [
-        "{workspaceRoot}/dist/packages/create-nx-workspace/bin/create-nx-workspace.js",
-        "{workspaceRoot}/dist/packages/create-nx-workspace/README.md"
+        "{projectRoot}/dist/bin/create-nx-workspace.js",
+        "{projectRoot}/README.md"
       ],
       "options": {
         "commands": [
           {
-            "command": "node ./scripts/chmod dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/chmod packages/create-nx-workspace/dist/bin/create-nx-workspace.js"
           },
           {
-            "command": "node ./scripts/copy-readme.js create-nx-workspace"
+            "command": "node ./scripts/copy-readme.js create-nx-workspace packages/create-nx-workspace/readme-template.md packages/create-nx-workspace/README.md"
           },
           {
-            "command": "node ./scripts/replace-versions.js dist/packages/create-nx-workspace/bin/create-nx-workspace.js"
+            "command": "node ./scripts/replace-versions.js packages/create-nx-workspace/dist/bin/create-nx-workspace.js"
           }
         ],
         "parallel": false
@@ -30,6 +37,11 @@
         "{workspaceRoot}/scripts/replace-versions.js",
         "{workspaceRoot}/scripts/chmod.js"
       ]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   },
   "implicitDependencies": [
