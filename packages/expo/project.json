@@ -3,11 +3,23 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/expo/src",
   "projectType": "library",
+  "release": {
+    "version": {
+      "generator": "@nx/js:release-version",
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
+    }
+  },
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/expo/README.md"],
-      "command": "node ./scripts/copy-readme.js expo",
-      "inputs": ["copyReadme"]
+      "command": "node ./scripts/copy-readme.js expo packages/expo/readme-template.md packages/expo/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"]
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "packages/{projectName}"
+      }
     }
   },
   "implicitDependencies": ["cypress", "jest", "playwright", "web"],
