@@ -8,10 +8,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    // The package is `type: module`; align the build with ESM and enable
-    // verbatimModuleSyntax so a type imported as a value (which Node's native
-    // type stripping can't erase, breaking plugin loads on e.g. FreeBSD) fails
-    // the build instead of only at runtime.
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "verbatimModuleSyntax": true
