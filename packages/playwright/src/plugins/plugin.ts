@@ -70,7 +70,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
