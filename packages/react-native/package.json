@@ -23,9 +23,36 @@
   },
   "license": "MIT",
   "author": "Victor Savkin",
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/*": [
+        "dist/plugins/*.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ],
+      "typings/*.d.ts": [
+        "dist/typings/*.d.ts"
+      ]
+    }
+  },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
@@ -59,5 +86,41 @@
   "generators": "./generators.json",
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./plugins/*": {
+      "@nx/nx-source": "./plugins/*.ts",
+      "types": "./dist/plugins/*.d.ts",
+      "default": "./dist/plugins/*.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "types": "./dist/typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
+    }
   }
 }
