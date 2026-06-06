@@ -100,6 +100,62 @@ describe('rename-create-nodes-v2-types migration', () => {
       expect(rewriteCreateNodesV2Types(input)).toBe(input);
     });
 
+    it('renames in-body usages of a renamed non-aliased import', () => {
+      const input =
+        `import type { CreateNodesV2 } from '@nx/devkit';\n` +
+        `export const createNodesV2: CreateNodesV2 = ['**/x', () => ({})];\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import type { CreateNodes } from '@nx/devkit';\n` +
+          `export const createNodesV2: CreateNodes = ['**/x', () => ({})];\n`
+      );
+    });
+
+    it('renames every in-body usage of a renamed type', () => {
+      const input =
+        `import type { CreateNodesV2 } from '@nx/devkit';\n` +
+        `let a: CreateNodesV2;\n` +
+        `let b: Array<CreateNodesV2>;\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import type { CreateNodes } from '@nx/devkit';\n` +
+          `let a: CreateNodes;\n` +
+          `let b: Array<CreateNodes>;\n`
+      );
+    });
+
+    it('renames generic type usages and parameter annotations (php plugin shape)', () => {
+      const input =
+        `import { CreateNodesV2, CreateNodesContextV2 } from '@nx/devkit';\n` +
+        `export const createNodesV2: CreateNodesV2<ComposerPluginOptions> = ['x', () => ({})];\n` +
+        `async function fn(context: CreateNodesContextV2) {}\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import { CreateNodes, CreateNodesContext } from '@nx/devkit';\n` +
+          `export const createNodesV2: CreateNodes<ComposerPluginOptions> = ['x', () => ({})];\n` +
+          `async function fn(context: CreateNodesContext) {}\n`
+      );
+    });
+
+    it('does not rename in-body usages when the local binding is aliased', () => {
+      const input =
+        `import type { CreateNodesV2 as CN } from '@nx/devkit';\n` +
+        `let a: CN;\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import type { CreateNodes as CN } from '@nx/devkit';\n` +
+          `let a: CN;\n`
+      );
+    });
+
+    it('does not rename member positions that merely share the name', () => {
+      const input =
+        `import type { NxPluginV2 } from '@nx/devkit';\n` +
+        `let a: NxPluginV2;\n` +
+        `const x = foo.NxPluginV2;\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import type { NxPlugin } from '@nx/devkit';\n` +
+          `let a: NxPlugin;\n` +
+          `const x = foo.NxPluginV2;\n`
+      );
+    });
+
     it('leaves the V2 names in strings and comments alone', () => {
       const input =
         `// import { CreateNodesV2 } from '@nx/devkit';\n` +
