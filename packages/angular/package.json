@@ -24,10 +24,7 @@
     "./executors": "./executors.js",
     "./plugin": "./plugin.js",
     "./tailwind": "./tailwind.js",
-    "./src/utils": "./src/utils/index.js",
     "./plugins/component-testing": "./plugins/component-testing.js",
-    "./src/generators/utils": "./src/generators/utils/index.js",
-    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
     "./src/builders/*/schema.json": "./src/builders/*/schema.json",
     "./src/builders/*.impl": "./src/builders/*.impl.js",
     "./src/builders/*/schema": "./src/builders/*/schema.d.ts",
@@ -35,7 +32,8 @@
     "./src/executors/*.impl": "./src/executors/*.impl.js",
     "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
     "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/generators/*/schema": "./src/generators/*/schema.d.ts"
+    "./src/generators/*/schema": "./src/generators/*/schema.d.ts",
+    "./internal": "./internal.js"
   },
   "author": "Victor Savkin",
   "license": "MIT",

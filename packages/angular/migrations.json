@@ -316,6 +316,11 @@
       "description": "Rename imports of `createNodesV2` from `@nx/angular/plugin` to the canonical `createNodes` export.",
       "implementation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "rewrite-angular-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites the now-removed deep `@nx/angular/src/utils`, `@nx/angular/src/generators/utils` and `@nx/angular/src/generators/move/move-impl` subpath imports to the new `@nx/angular/internal` entry. The executor/builder/generator schema and impl subpaths remain available and are left untouched.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {
