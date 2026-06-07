@@ -36,6 +36,9 @@
       "types": "./dist/types/nx-angular-mf.d.ts",
       "default": "./dist/fesm2022/nx-angular-mf.mjs"
     },
+    "./package.json": {
+      "default": "./package.json"
+    },
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
