@@ -11,7 +11,7 @@ import {
 import {
   getReactDependenciesVersionsToInstall,
   isReact18,
-} from '@nx/react/src/utils/version-utils';
+} from '@nx/react/internal';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nxVersion } from '../../utils/versions';
 import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';

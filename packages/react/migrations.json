@@ -53,6 +53,11 @@
       "description": "Rename imports of `createNodesV2` from `@nx/react/router-plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "rewrite-react-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/react/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/react`'s exports map. Named imports/exports of public symbols are routed to `@nx/react` and the rest to the new `@nx/react/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/react/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {

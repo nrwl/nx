@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react/src/utils/lint';
+import { extraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,

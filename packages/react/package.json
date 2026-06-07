@@ -69,53 +69,11 @@
       "plugins/with-react": [
         "dist/plugins/with-react.d.ts"
       ],
-      "src/utils": [
-        "dist/src/utils/index.d.ts"
-      ],
-      "src/generators/utils": [
-        "dist/src/generators/utils/index.d.ts"
-      ],
-      "src/generators/*/lib/*": [
-        "dist/src/generators/*/lib/*.d.ts"
-      ],
-      "src/generators/*/*": [
-        "dist/src/generators/*/*.d.ts"
-      ],
-      "src/generators/*": [
-        "dist/src/generators/*.d.ts"
-      ],
-      "src/executors/*.impl": [
-        "dist/src/executors/*.impl.d.ts"
-      ],
-      "src/executors/*/lib/*": [
-        "dist/src/executors/*/lib/*.d.ts"
-      ],
-      "src/executors/*": [
-        "dist/src/executors/*.d.ts"
-      ],
-      "src/utils/*": [
-        "dist/src/utils/*.d.ts"
-      ],
-      "src/module-federation/*": [
-        "dist/src/module-federation/*.d.ts"
-      ],
-      "src/plugins/*": [
-        "dist/src/plugins/*.d.ts"
-      ],
-      "src/rules/*": [
-        "dist/src/rules/*.d.ts"
-      ],
-      "src/*": [
-        "dist/src/*.d.ts"
-      ],
-      "plugins/*": [
-        "dist/plugins/*.d.ts"
-      ],
-      "mf/*": [
-        "dist/mf/*.d.ts"
-      ],
       "typings/*.d.ts": [
         "dist/typings/*.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -241,93 +199,15 @@
       "types": "./dist/plugins/with-react.d.ts",
       "default": "./dist/plugins/with-react.js"
     },
-    "./src/utils": {
-      "@nx/nx-source": "./src/utils/index.ts",
-      "types": "./dist/src/utils/index.d.ts",
-      "default": "./dist/src/utils/index.js"
-    },
-    "./src/generators/utils": {
-      "@nx/nx-source": "./src/generators/utils/index.ts",
-      "types": "./dist/src/generators/utils/index.d.ts",
-      "default": "./dist/src/generators/utils/index.js"
-    },
-    "./src/generators/*/schema.json": {
-      "@nx/nx-source": "./src/generators/*/schema.json",
-      "default": "./dist/src/generators/*/schema.json"
-    },
-    "./src/executors/*/schema.json": {
-      "@nx/nx-source": "./src/executors/*/schema.json",
-      "default": "./dist/src/executors/*/schema.json"
-    },
-    "./src/generators/*/lib/*": {
-      "@nx/nx-source": "./src/generators/*/lib/*.ts",
-      "types": "./dist/src/generators/*/lib/*.d.ts",
-      "default": "./dist/src/generators/*/lib/*.js"
-    },
-    "./src/generators/*/*": {
-      "@nx/nx-source": "./src/generators/*/*.ts",
-      "types": "./dist/src/generators/*/*.d.ts",
-      "default": "./dist/src/generators/*/*.js"
-    },
-    "./src/generators/*": {
-      "@nx/nx-source": "./src/generators/*.ts",
-      "types": "./dist/src/generators/*.d.ts",
-      "default": "./dist/src/generators/*.js"
-    },
-    "./src/executors/*.impl": {
-      "@nx/nx-source": "./src/executors/*.impl.ts",
-      "types": "./dist/src/executors/*.impl.d.ts",
-      "default": "./dist/src/executors/*.impl.js"
-    },
-    "./src/executors/*/lib/*": {
-      "@nx/nx-source": "./src/executors/*/lib/*.ts",
-      "types": "./dist/src/executors/*/lib/*.d.ts",
-      "default": "./dist/src/executors/*/lib/*.js"
-    },
-    "./src/executors/*": {
-      "@nx/nx-source": "./src/executors/*.ts",
-      "types": "./dist/src/executors/*.d.ts",
-      "default": "./dist/src/executors/*.js"
-    },
-    "./src/utils/*": {
-      "@nx/nx-source": "./src/utils/*.ts",
-      "types": "./dist/src/utils/*.d.ts",
-      "default": "./dist/src/utils/*.js"
-    },
-    "./src/module-federation/*": {
-      "@nx/nx-source": "./src/module-federation/*.ts",
-      "types": "./dist/src/module-federation/*.d.ts",
-      "default": "./dist/src/module-federation/*.js"
-    },
-    "./src/plugins/*": {
-      "@nx/nx-source": "./src/plugins/*.ts",
-      "types": "./dist/src/plugins/*.d.ts",
-      "default": "./dist/src/plugins/*.js"
-    },
-    "./src/rules/*": {
-      "@nx/nx-source": "./src/rules/*.ts",
-      "types": "./dist/src/rules/*.d.ts",
-      "default": "./dist/src/rules/*.js"
-    },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./plugins/*": {
-      "@nx/nx-source": "./plugins/*.ts",
-      "types": "./dist/plugins/*.d.ts",
-      "default": "./dist/plugins/*.js"
-    },
-    "./mf/*": {
-      "@nx/nx-source": "./mf/*.ts",
-      "types": "./dist/mf/*.d.ts",
-      "default": "./dist/mf/*.js"
-    },
     "./typings/*.d.ts": {
       "@nx/nx-source": "./typings/*.d.ts",
       "types": "./dist/typings/*.d.ts",
       "default": "./dist/typings/*.d.ts"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   }
 }
