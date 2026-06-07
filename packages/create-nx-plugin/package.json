@@ -52,16 +52,6 @@
       "types": "./dist/bin/create-nx-plugin.d.ts",
       "default": "./dist/bin/create-nx-plugin.js"
     },
-    "./package.json": "./package.json",
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    }
+    "./package.json": "./package.json"
   }
 }
