@@ -7,7 +7,7 @@
         "@angular-eslint/eslint-plugin": ">=18.0.0"
       },
       "description": "Installs the '@typescript-eslint/utils' package when having installed '@angular-eslint/eslint-plugin' or '@angular-eslint/eslint-plugin-template' with version >=18.0.0.",
-      "factory": "./src/migrations/update-19-2-1/add-typescript-eslint-utils"
+      "factory": "./dist/src/migrations/update-19-2-1/add-typescript-eslint-utils"
     },
     "update-angular-cli-version-18-1-0": {
       "cli": "nx",
@@ -16,13 +16,13 @@
         "@angular/core": ">=18.1.0"
       },
       "description": "Update the @angular/cli package version to ~18.1.0.",
-      "factory": "./src/migrations/update-19-5-0/update-angular-cli"
+      "factory": "./dist/src/migrations/update-19-5-0/update-angular-cli"
     },
     "update-19-6-0": {
       "cli": "nx",
       "version": "19.6.0-beta.4",
       "description": "Ensure Module Federation DTS is turned off by default.",
-      "factory": "./src/migrations/update-19-6-0/turn-off-dts-by-default"
+      "factory": "./dist/src/migrations/update-19-6-0/turn-off-dts-by-default"
     },
     "update-angular-cli-version-18-2-0": {
       "cli": "nx",
@@ -31,27 +31,27 @@
         "@angular/core": ">=18.2.0"
       },
       "description": "Update the @angular/cli package version to ~18.2.0.",
-      "factory": "./src/migrations/update-19-6-0/update-angular-cli"
+      "factory": "./dist/src/migrations/update-19-6-0/update-angular-cli"
     },
     "update-19-6-1-ensure-module-federation-target-defaults": {
       "cli": "nx",
       "version": "19.6.1-beta.0",
       "description": "Ensure Target Defaults are set correctly for Module Federation.",
-      "factory": "./src/migrations/update-19-6-1/ensure-depends-on-for-mf"
+      "factory": "./dist/src/migrations/update-19-6-1/ensure-depends-on-for-mf"
     },
     "update-20-2-0-update-module-federation-config-import": {
       "cli": "nx",
       "version": "20.2.0-beta.2",
       "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
-      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
-      "documentation": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package.md"
+      "factory": "./dist/src/migrations/update-20-2-0/migrate-mf-imports-to-new-package",
+      "documentation": "./dist/src/migrations/update-20-2-0/migrate-mf-imports-to-new-package.md"
     },
     "update-20-2-0-update-with-module-federation-import": {
       "cli": "nx",
       "version": "20.2.0-beta.2",
       "description": "Update the withModuleFederation import use @nx/module-federation/angular.",
-      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package",
-      "documentation": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package.md"
+      "factory": "./dist/src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package",
+      "documentation": "./dist/src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package.md"
     },
     "update-angular-cli-version-19-0-0": {
       "cli": "nx",
@@ -60,8 +60,8 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Update the @angular/cli package version to ~19.0.0.",
-      "factory": "./src/migrations/update-20-2-0/update-angular-cli",
-      "documentation": "./src/migrations/update-20-2-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-20-2-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-20-2-0/update-angular-cli.md"
     },
     "add-localize-polyfill-to-targets": {
       "cli": "nx",
@@ -70,8 +70,8 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Add the '@angular/localize/init' polyfill to the 'polyfills' option of targets using esbuild-based executors.",
-      "factory": "./src/migrations/update-20-2-0/add-localize-polyfill-to-targets",
-      "documentation": "./src/migrations/update-20-2-0/add-localize-polyfill-to-targets.md"
+      "factory": "./dist/src/migrations/update-20-2-0/add-localize-polyfill-to-targets",
+      "documentation": "./dist/src/migrations/update-20-2-0/add-localize-polyfill-to-targets.md"
     },
     "update-angular-ssr-imports-to-use-node-entry-point": {
       "cli": "nx",
@@ -80,8 +80,8 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Update '@angular/ssr' import paths to use the new '/node' entry point when 'CommonEngine' is detected.",
-      "factory": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point",
-      "documentation": "./src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point.md"
+      "factory": "./dist/src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point",
+      "documentation": "./dist/src/migrations/update-20-2-0/update-angular-ssr-imports-to-use-node-entry-point.md"
     },
     "disable-angular-eslint-prefer-standalone": {
       "cli": "nx",
@@ -90,8 +90,8 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Disable the Angular ESLint prefer-standalone rule if not set.",
-      "factory": "./src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone",
-      "documentation": "./src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone.md"
+      "factory": "./dist/src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone",
+      "documentation": "./dist/src/migrations/update-20-2-0/disable-angular-eslint-prefer-standalone.md"
     },
     "remove-angular-eslint-rules": {
       "cli": "nx",
@@ -100,8 +100,8 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Remove Angular ESLint rules that were removed in v19.0.0.",
-      "factory": "./src/migrations/update-20-2-0/remove-angular-eslint-rules",
-      "documentation": "./src/migrations/update-20-2-0/remove-angular-eslint-rules.md"
+      "factory": "./dist/src/migrations/update-20-2-0/remove-angular-eslint-rules",
+      "documentation": "./dist/src/migrations/update-20-2-0/remove-angular-eslint-rules.md"
     },
     "remove-tailwind-config-from-ng-packagr-executors": {
       "cli": "nx",
@@ -110,15 +110,15 @@
         "@angular/core": ">=19.0.0"
       },
       "description": "Remove the deprecated 'tailwindConfig' option from ng-packagr executors. Tailwind CSS configurations located at the project or workspace root will be picked up automatically.",
-      "factory": "./src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors",
-      "documentation": "./src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors.md"
+      "factory": "./dist/src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors",
+      "documentation": "./dist/src/migrations/update-20-2-0/remove-tailwind-config-from-ng-packagr-executors.md"
     },
     "ensure-nx-module-federation-package": {
       "cli": "nx",
       "version": "20.3.0-beta.2",
       "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
-      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package",
-      "documentation": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package.md"
+      "factory": "./dist/src/migrations/update-20-3-0/ensure-nx-module-federation-package",
+      "documentation": "./dist/src/migrations/update-20-3-0/ensure-nx-module-federation-package.md"
     },
     "update-angular-cli-version-19-1-0": {
       "cli": "nx",
@@ -127,8 +127,8 @@
         "@angular/core": ">=19.1.0"
       },
       "description": "Update the @angular/cli package version to ~19.1.0.",
-      "factory": "./src/migrations/update-20-4-0/update-angular-cli",
-      "documentation": "./src/migrations/update-20-4-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-20-4-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-20-4-0/update-angular-cli.md"
     },
     "update-angular-cli-version-19-2-0": {
       "cli": "nx",
@@ -137,15 +137,15 @@
         "@angular/core": ">=19.2.0"
       },
       "description": "Update the @angular/cli package version to ~19.2.0.",
-      "factory": "./src/migrations/update-20-5-0/update-angular-cli",
-      "documentation": "./src/migrations/update-20-5-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-20-5-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-20-5-0/update-angular-cli.md"
     },
     "set-continuous-option": {
       "cli": "nx",
       "version": "21.0.0-beta.3",
       "description": "Set the `continuous` option to `true` for continuous tasks.",
-      "factory": "./src/migrations/update-21-0-0/set-continuous-option",
-      "documentation": "./src/migrations/update-21-0-0/set-continuous-option.md"
+      "factory": "./dist/src/migrations/update-21-0-0/set-continuous-option",
+      "documentation": "./dist/src/migrations/update-21-0-0/set-continuous-option.md"
     },
     "change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence": {
       "cli": "nx",
@@ -154,8 +154,8 @@
         "@ngrx/store": ">=16.0.0"
       },
       "description": "Change the data persistence operator imports to '@ngrx/router-store/data-persistence'.",
-      "factory": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
-      "documentation": "./src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.md"
+      "factory": "./dist/src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence",
+      "documentation": "./dist/src/migrations/update-21-0-0/change-data-persistence-operators-imports-to-ngrx-router-store-data-persistence.md"
     },
     "update-angular-cli-version-20-0-0": {
       "cli": "nx",
@@ -164,8 +164,8 @@
         "@angular/core": ">=20.0.0"
       },
       "description": "Update the @angular/cli package version to ~20.0.0.",
-      "factory": "./src/migrations/update-21-2-0/update-angular-cli",
-      "documentation": "./src/migrations/update-21-2-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-21-2-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-21-2-0/update-angular-cli.md"
     },
     "migrate-provide-server-rendering-import": {
       "version": "21.2.0-beta.3",
@@ -173,8 +173,8 @@
         "@angular/core": ">=20.0.0"
       },
       "description": "Migrate imports of `provideServerRendering` from `@angular/platform-server` to `@angular/ssr`.",
-      "factory": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import",
-      "documentation": "./src/migrations/update-21-2-0/migrate-provide-server-rendering-import.md"
+      "factory": "./dist/src/migrations/update-21-2-0/migrate-provide-server-rendering-import",
+      "documentation": "./dist/src/migrations/update-21-2-0/migrate-provide-server-rendering-import.md"
     },
     "replace-provide-server-routing": {
       "version": "21.2.0-beta.3",
@@ -182,8 +182,8 @@
         "@angular/core": ">=20.0.0"
       },
       "description": "Replace `provideServerRouting` and `provideServerRoutesConfig` with `provideServerRendering` using `withRoutes`.",
-      "factory": "./src/migrations/update-21-2-0/replace-provide-server-routing",
-      "documentation": "./src/migrations/update-21-2-0/replace-provide-server-routing.md"
+      "factory": "./dist/src/migrations/update-21-2-0/replace-provide-server-routing",
+      "documentation": "./dist/src/migrations/update-21-2-0/replace-provide-server-routing.md"
     },
     "set-generator-defaults-for-previous-style-guide": {
       "version": "21.2.0-beta.3",
@@ -191,8 +191,8 @@
         "@angular/core": ">=20.0.0"
       },
       "description": "Update the generator defaults to maintain the previous style guide behavior.",
-      "factory": "./src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide",
-      "documentation": "./src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide.md"
+      "factory": "./dist/src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide",
+      "documentation": "./dist/src/migrations/update-21-2-0/set-generator-defaults-for-previous-style-guide.md"
     },
     "update-module-resolution": {
       "version": "21.2.0-beta.3",
@@ -200,8 +200,8 @@
         "@angular/core": ">=20.0.0"
       },
       "description": "Update 'moduleResolution' to 'bundler' in TypeScript configurations. You can read more about this here: https://www.typescriptlang.org/tsconfig/#moduleResolution.",
-      "factory": "./src/migrations/update-21-2-0/update-module-resolution",
-      "documentation": "./src/migrations/update-21-2-0/update-module-resolution.md"
+      "factory": "./dist/src/migrations/update-21-2-0/update-module-resolution",
+      "documentation": "./dist/src/migrations/update-21-2-0/update-module-resolution.md"
     },
     "update-angular-cli-version-20-1-0": {
       "cli": "nx",
@@ -210,14 +210,14 @@
         "@angular/core": ">=20.1.0"
       },
       "description": "Update the @angular/cli package version to ~20.1.0.",
-      "factory": "./src/migrations/update-21-3-0/update-angular-cli",
-      "documentation": "./src/migrations/update-21-3-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-21-3-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-21-3-0/update-angular-cli.md"
     },
     "set-tsconfig-option": {
       "version": "21.5.0-beta.0",
       "description": "Set the 'tsConfig' option to build and test targets to help with Angular migration issues.",
-      "factory": "./src/migrations/update-21-5-0/set-tsconfig-option",
-      "documentation": "./src/migrations/update-21-5-0/set-tsconfig-option.md"
+      "factory": "./dist/src/migrations/update-21-5-0/set-tsconfig-option",
+      "documentation": "./dist/src/migrations/update-21-5-0/set-tsconfig-option.md"
     },
     "update-angular-cli-version-20-2-0": {
       "cli": "nx",
@@ -226,8 +226,8 @@
         "@angular/core": ">=20.2.0"
       },
       "description": "Update the @angular/cli package version to ~20.2.0.",
-      "factory": "./src/migrations/update-21-5-0/update-angular-cli",
-      "documentation": "./src/migrations/update-21-5-0/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-21-5-0/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-21-5-0/update-angular-cli.md"
     },
     "remove-default-karma-configuration-files": {
       "version": "21.5.0-beta.2",
@@ -235,8 +235,8 @@
         "@angular/core": ">=20.2.0"
       },
       "description": "Remove any Karma configuration files that only contain the default content. The default configuration is automatically available without a specific project configurationfile.",
-      "factory": "./src/migrations/update-21-5-0/remove-default-karma-configuration-files",
-      "documentation": "./src/migrations/update-21-5-0/remove-default-karma-configuration-files.md"
+      "factory": "./dist/src/migrations/update-21-5-0/remove-default-karma-configuration-files",
+      "documentation": "./dist/src/migrations/update-21-5-0/remove-default-karma-configuration-files.md"
     },
     "update-angular-cli-version-20-3-0": {
       "cli": "nx",
@@ -245,8 +245,8 @@
         "@angular/core": ">=20.3.0"
       },
       "description": "Update the @angular/cli package version to ~20.3.0.",
-      "factory": "./src/migrations/update-21-6-1/update-angular-cli",
-      "documentation": "./src/migrations/update-21-6-1/update-angular-cli.md"
+      "factory": "./dist/src/migrations/update-21-6-1/update-angular-cli",
+      "documentation": "./dist/src/migrations/update-21-6-1/update-angular-cli.md"
     },
     "update-ssr-webpack-config-22-2-0": {
       "version": "22.3.0-beta.0",
@@ -254,8 +254,8 @@
         "@angular/core": ">=21.0.0"
       },
       "description": "Updates webpack-based SSR configuration to use preserve module format and bundler module resolution.",
-      "factory": "./src/migrations/update-22-3-0/update-ssr-webpack-config",
-      "documentation": "./src/migrations/update-22-3-0/update-ssr-webpack-config.md"
+      "factory": "./dist/src/migrations/update-22-3-0/update-ssr-webpack-config",
+      "documentation": "./dist/src/migrations/update-22-3-0/update-ssr-webpack-config.md"
     },
     "update-module-resolution-22-2-0": {
       "version": "22.3.0-beta.0",
@@ -263,8 +263,8 @@
         "@angular/core": ">=21.0.0-rc.3"
       },
       "description": "Update 'module' to 'preserve' and 'moduleResolution' to 'bundler' in TypeScript configurations for Angular projects.",
-      "factory": "./src/migrations/update-22-3-0/update-module-resolution",
-      "documentation": "./src/migrations/update-22-3-0/update-module-resolution.md"
+      "factory": "./dist/src/migrations/update-22-3-0/update-module-resolution",
+      "documentation": "./dist/src/migrations/update-22-3-0/update-module-resolution.md"
     },
     "update-typescript-lib-22-2-0": {
       "version": "22.3.0-beta.0",
@@ -272,14 +272,14 @@
         "@angular/core": ">=21.0.0"
       },
       "description": "Updates the 'lib' property in tsconfig files to use 'es2022' or a more modern version.",
-      "factory": "./src/migrations/update-22-3-0/update-typescript-lib",
-      "documentation": "./src/migrations/update-22-3-0/update-typescript-lib.md"
+      "factory": "./dist/src/migrations/update-22-3-0/update-typescript-lib",
+      "documentation": "./dist/src/migrations/update-22-3-0/update-typescript-lib.md"
     },
     "update-unit-test-runner-option": {
       "version": "22.3.0-beta.0",
       "description": "Update 'vitest' unit test runner option to 'vitest-analog' in generator defaults.",
-      "factory": "./src/migrations/update-22-3-0/update-unit-test-runner-option",
-      "documentation": "./src/migrations/update-22-3-0/update-unit-test-runner-option.md"
+      "factory": "./dist/src/migrations/update-22-3-0/update-unit-test-runner-option",
+      "documentation": "./dist/src/migrations/update-22-3-0/update-unit-test-runner-option.md"
     },
     "set-isolated-modules-22-3-0": {
       "version": "22.3.0-beta.3",
@@ -287,8 +287,8 @@
         "@angular/core": ">=21.0.0"
       },
       "description": "Set 'isolatedModules' to 'true' in TypeScript test configurations for Angular projects.",
-      "factory": "./src/migrations/update-22-3-0/set-isolated-modules",
-      "documentation": "./src/migrations/update-22-3-0/set-isolated-modules.md"
+      "factory": "./dist/src/migrations/update-22-3-0/set-isolated-modules",
+      "documentation": "./dist/src/migrations/update-22-3-0/set-isolated-modules.md"
     },
     "update-jest-preset-angular-setup": {
       "version": "22.3.0-beta.3",
@@ -296,26 +296,26 @@
         "@angular/core": ">=21.0.0"
       },
       "description": "Replace 'jest-preset-angular/setup-jest' imports with the new 'setupZoneTestEnv' function.",
-      "factory": "./src/migrations/update-22-3-0/update-jest-preset-angular-setup",
-      "documentation": "./src/migrations/update-22-3-0/update-jest-preset-angular-setup.md"
+      "factory": "./dist/src/migrations/update-22-3-0/update-jest-preset-angular-setup",
+      "documentation": "./dist/src/migrations/update-22-3-0/update-jest-preset-angular-setup.md"
     },
     "update-23-0-0-update-with-module-federation-import": {
       "version": "23.0.0-beta.0",
       "description": "Update the @nx/angular/module-federation import to use @nx/module-federation/angular.",
-      "factory": "./src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package",
-      "documentation": "./src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package.md"
+      "factory": "./dist/src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-with-mf-import-to-new-package.md"
     },
     "update-23-0-0-migrate-ngrx-generator-defaults": {
       "version": "23.0.0-beta.7",
       "description": "Split @nx/angular:ngrx generator defaults in nx.json across the @nx/angular:ngrx-root-store and @nx/angular:ngrx-feature-store generators.",
-      "factory": "./src/migrations/update-23-0-0/migrate-ngrx-generator-defaults",
-      "documentation": "./src/migrations/update-23-0-0/migrate-ngrx-generator-defaults.md"
+      "factory": "./dist/src/migrations/update-23-0-0/migrate-ngrx-generator-defaults",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-ngrx-generator-defaults.md"
     },
     "update-23-0-0-migrate-create-nodes-v2-import": {
       "version": "23.0.0-beta.24",
       "description": "Rename imports of `createNodesV2` from `@nx/angular/plugin` to the canonical `createNodes` export.",
-      "implementation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
-      "documentation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     },
     "rewrite-angular-internal-subpath-imports": {
       "version": "23.0.0-beta.25",

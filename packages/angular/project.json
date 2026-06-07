@@ -6,8 +6,8 @@
   "release": {
     "version": {
       "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": false,
-      "manifestRootsToUpdate": ["packages/{projectName}/dist"]
+      "preserveLocalDependencyProtocols": true,
+      "manifestRootsToUpdate": ["packages/{projectName}"]
     }
   },
   "targets": {
@@ -20,17 +20,15 @@
       },
       "outputs": ["{projectRoot}/dist"]
     },
-
     "build": {
       "dependsOn": ["^build", "build-ng", "typecheck", "build-base"],
-      "outputs": ["{projectRoot}/dist/README.md"],
-      "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/dist/README.md",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md",
       "inputs": ["copyReadme"]
     },
-
     "nx-release-publish": {
       "options": {
-        "packageRoot": "packages/angular/dist"
+        "packageRoot": "packages/{projectName}"
       }
     }
   },
