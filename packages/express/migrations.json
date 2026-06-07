@@ -1,4 +1,10 @@
 {
-  "generators": {},
+  "generators": {
+    "rewrite-express-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/express/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/express`'s exports map. Named imports/exports of public symbols are routed to `@nx/express` and the rest to the new `@nx/express/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/express/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    }
+  },
   "packageJsonUpdates": {}
 }
