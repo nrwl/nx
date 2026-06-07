@@ -41,17 +41,20 @@
       "plugin": [
         "dist/plugin.d.ts"
       ],
-      "plugins/*": [
-        "dist/plugins/*.d.ts"
+      "plugins/with-nx-metro": [
+        "dist/plugins/with-nx-metro.d.ts"
       ],
-      "src/*": [
-        "dist/src/*.d.ts"
+      "plugins/metro-resolver": [
+        "dist/plugins/metro-resolver.d.ts"
       ],
-      "src/*.js": [
-        "dist/src/*.d.ts"
+      "plugins/jest/svg-mock": [
+        "dist/plugins/jest/svg-mock.d.ts"
       ],
       "typings/*.d.ts": [
         "dist/typings/*.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -101,25 +104,30 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
-    "./plugins/*": {
-      "@nx/nx-source": "./plugins/*.ts",
-      "types": "./dist/plugins/*.d.ts",
-      "default": "./dist/plugins/*.js"
+    "./plugins/with-nx-metro": {
+      "@nx/nx-source": "./plugins/with-nx-metro.ts",
+      "types": "./dist/plugins/with-nx-metro.d.ts",
+      "default": "./dist/plugins/with-nx-metro.js"
     },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./plugins/metro-resolver": {
+      "@nx/nx-source": "./plugins/metro-resolver.ts",
+      "types": "./dist/plugins/metro-resolver.d.ts",
+      "default": "./dist/plugins/metro-resolver.js"
     },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./plugins/jest/svg-mock": {
+      "@nx/nx-source": "./plugins/jest/svg-mock.ts",
+      "types": "./dist/plugins/jest/svg-mock.d.ts",
+      "default": "./dist/plugins/jest/svg-mock.js"
     },
     "./typings/*.d.ts": {
       "@nx/nx-source": "./typings/*.d.ts",
       "types": "./dist/typings/*.d.ts",
       "default": "./dist/typings/*.d.ts"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   }
 }
