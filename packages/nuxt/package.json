@@ -30,14 +30,8 @@
       "plugin": [
         "dist/plugin.d.ts"
       ],
-      "generators/*/schema": [
-        "dist/src/generators/*/schema.d.ts"
-      ],
-      "src/*": [
-        "dist/src/*.d.ts"
-      ],
-      "src/*.js": [
-        "dist/src/*.d.ts"
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -62,24 +56,10 @@
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
     },
-    "./generators/*/schema.json": {
-      "@nx/nx-source": "./src/generators/*/schema.json",
-      "default": "./dist/src/generators/*/schema.json"
-    },
-    "./generators/*/schema": {
-      "@nx/nx-source": "./src/generators/*/schema.d.ts",
-      "types": "./dist/src/generators/*/schema.d.ts",
-      "default": "./dist/src/generators/*/schema.d.ts"
-    },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   },
   "nx-migrations": {
