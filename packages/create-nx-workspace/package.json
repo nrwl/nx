@@ -58,15 +58,17 @@
       "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "internal": [
+        "dist/internal.d.ts"
+      ]
     }
   }
 }
