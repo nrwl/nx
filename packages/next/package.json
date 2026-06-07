@@ -48,6 +48,12 @@
       ],
       "internal": [
         "dist/internal.d.ts"
+      ],
+      "src/utils/deprecation": [
+        "dist/src/utils/deprecation.d.ts"
+      ],
+      "src/utils/config": [
+        "dist/src/utils/config.d.ts"
       ]
     }
   },
@@ -129,6 +135,16 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./src/utils/deprecation": {
+      "@nx/nx-source": "./src/utils/deprecation.ts",
+      "types": "./dist/src/utils/deprecation.d.ts",
+      "default": "./dist/src/utils/deprecation.js"
+    },
+    "./src/utils/config": {
+      "@nx/nx-source": "./src/utils/config.ts",
+      "types": "./dist/src/utils/config.d.ts",
+      "default": "./dist/src/utils/config.js"
     }
   }
 }
