@@ -25,7 +25,7 @@ const packagesToVerify = [
   {
     name: 'react',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/react/index.js',
+    outputFile: 'packages/react/dist/index.js',
   },
   {
     name: 'playwright',
@@ -105,7 +105,7 @@ const packagesToVerify = [
   {
     name: 'create-nx-workspace',
     sourceFile: 'index.ts',
-    outputFile: 'dist/packages/create-nx-workspace/index.js',
+    outputFile: 'packages/create-nx-workspace/dist/index.js',
   },
 ];
 
