@@ -43,20 +43,11 @@
       "plugins/component-testing": [
         "dist/plugins/component-testing/index.d.ts"
       ],
-      "executors/*/schema": [
-        "dist/src/executors/*/schema.d.ts"
-      ],
-      "generators/*/schema": [
-        "dist/src/generators/*/schema.d.ts"
-      ],
       "plugins/*": [
         "dist/plugins/*.d.ts"
       ],
-      "src/*.js": [
-        "dist/src/*.d.ts"
-      ],
-      "src/*": [
-        "dist/src/*.d.ts"
+      "internal": [
+        "dist/internal.d.ts"
       ]
     }
   },
@@ -109,38 +100,15 @@
       "types": "./dist/plugins/component-testing/index.d.ts",
       "default": "./dist/plugins/component-testing/index.js"
     },
-    "./executors/*/schema.json": {
-      "@nx/nx-source": "./src/executors/*/schema.json",
-      "default": "./dist/src/executors/*/schema.json"
-    },
-    "./executors/*/schema": {
-      "@nx/nx-source": "./src/executors/*/schema.d.ts",
-      "types": "./dist/src/executors/*/schema.d.ts",
-      "default": "./dist/src/executors/*/schema.d.ts"
-    },
-    "./generators/*/schema.json": {
-      "@nx/nx-source": "./src/generators/*/schema.json",
-      "default": "./dist/src/generators/*/schema.json"
-    },
-    "./generators/*/schema": {
-      "@nx/nx-source": "./src/generators/*/schema.d.ts",
-      "types": "./dist/src/generators/*/schema.d.ts",
-      "default": "./dist/src/generators/*/schema.d.ts"
-    },
     "./plugins/*": {
       "@nx/nx-source": "./plugins/*.ts",
       "types": "./dist/plugins/*.d.ts",
       "default": "./dist/plugins/*.js"
     },
-    "./src/*.js": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
-    },
-    "./src/*": {
-      "@nx/nx-source": "./src/*.ts",
-      "types": "./dist/src/*.d.ts",
-      "default": "./dist/src/*.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     }
   }
 }
