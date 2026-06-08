@@ -10,6 +10,7 @@ import * as childProcess from 'child_process';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs';
 import { homedir, tmpdir } from 'os';
 import { join } from 'path';
+import { satisfies } from 'semver';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy } from '../policy';
@@ -654,5 +655,3 @@ describe('yarn min-release-age behavior', () => {
     });
   });
 });
-
-import { satisfies } from 'semver';

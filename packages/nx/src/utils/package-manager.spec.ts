@@ -397,6 +397,22 @@ describe('package-manager', () => {
     });
   });
 
+  describe('modifyYarnRcToFitNewDirectory', () => {
+    it('should update paths properly', () => {
+      expect(modifyYarnRcToFitNewDirectory('yarn-path ./bin/yarn.js')).toEqual(
+        ''
+      );
+    });
+
+    it('should not update other options', () => {
+      expect(
+        modifyYarnRcToFitNewDirectory(
+          ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n')
+        )
+      ).toEqual('enableProgressBars false');
+    });
+  });
+
   describe('modifyPnpmWorkspaceYamlToFitNewDirectory', () => {
     it('should drop workspace packages but keep settings', () => {
       const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
@@ -427,22 +443,6 @@ describe('package-manager', () => {
 
     it('should not throw on an empty file', () => {
       expect(() => modifyPnpmWorkspaceYamlToFitNewDirectory('')).not.toThrow();
-    });
-  });
-
-  describe('modifyYarnRcToFitNewDirectory', () => {
-    it('should update paths properly', () => {
-      expect(modifyYarnRcToFitNewDirectory('yarn-path ./bin/yarn.js')).toEqual(
-        ''
-      );
-    });
-
-    it('should not update other options', () => {
-      expect(
-        modifyYarnRcToFitNewDirectory(
-          ['yarn-path ./bin/yarn.js', 'enableProgressBars false'].join('\n')
-        )
-      ).toEqual('enableProgressBars false');
     });
   });
 

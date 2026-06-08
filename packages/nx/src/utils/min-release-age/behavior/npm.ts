@@ -1,10 +1,10 @@
 import { execSync } from 'child_process';
-import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
 import { gte, rcompare, satisfies } from 'semver';
 import { MS_PER_DAY } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
+import { readNpmrcEntries } from '../npmrc';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
@@ -32,11 +32,6 @@ const RANK_UNKNOWN: NpmConfigRank = 0; // global/builtin/default - not detectabl
 const RANK_USER: NpmConfigRank = 1;
 const RANK_PROJECT: NpmConfigRank = 2;
 const RANK_ENV: NpmConfigRank = 3;
-
-interface KeyPresence {
-  // highest precedence source that sets the key, or undefined if unset
-  rank?: NpmConfigRank;
-}
 
 /**
  * Reads npm's merged effective config (project + user + global + builtin npmrc
@@ -114,8 +109,8 @@ function resolveBothKeys(
 
   // Highest detected rank per key; the merged values already reflect npm's
   // per-key precedence, so we only need to know which key's source wins.
-  const mraRank = surfaces.minReleaseAge.rank ?? RANK_UNKNOWN;
-  const beforeRank = surfaces.before.rank ?? RANK_UNKNOWN;
+  const mraRank = surfaces.minReleaseAge ?? RANK_UNKNOWN;
+  const beforeRank = surfaces.before ?? RANK_UNKNOWN;
 
   // Same source carries both keys -> before wins there (hasOwn guard). When the
   // before source ranks at least as high as the min-release-age source, before
@@ -128,8 +123,9 @@ function resolveBothKeys(
 }
 
 interface DetectedSurfaces {
-  minReleaseAge: KeyPresence;
-  before: KeyPresence;
+  // highest-precedence source rank that sets each key, or undefined if unset
+  minReleaseAge?: NpmConfigRank;
+  before?: NpmConfigRank;
 }
 
 // Detects which config surface(s) set each cooldown key, ranked by npm's
@@ -139,12 +135,12 @@ function detectSurfaces(
   root: string,
   env: NodeJS.ProcessEnv
 ): DetectedSurfaces {
-  const result: DetectedSurfaces = { minReleaseAge: {}, before: {} };
+  const result: DetectedSurfaces = {};
 
   const note = (key: keyof DetectedSurfaces, rank: NpmConfigRank): void => {
-    const current = result[key].rank;
+    const current = result[key];
     if (current === undefined || rank > current) {
-      result[key].rank = rank;
+      result[key] = rank;
     }
   };
 
@@ -179,27 +175,8 @@ function readNpmrcKeys(
   override: string | undefined,
   fallback: string
 ): NpmrcCooldownKeys {
-  const path = override ?? fallback;
   const present: NpmrcCooldownKeys = { minReleaseAge: false, before: false };
-  if (!existsSync(path)) {
-    return present;
-  }
-  let raw: string;
-  try {
-    raw = readFileSync(path, 'utf-8');
-  } catch {
-    return present;
-  }
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
-      continue;
-    }
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) {
-      continue;
-    }
-    const key = trimmed.slice(0, eq).trim();
+  for (const { key } of readNpmrcEntries(override ?? fallback) ?? []) {
     if (key === 'min-release-age') {
       present.minReleaseAge = true;
     } else if (key === 'before') {

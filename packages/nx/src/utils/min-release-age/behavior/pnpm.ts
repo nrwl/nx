@@ -1,14 +1,24 @@
 import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { join } from 'path';
-import { gte, maxSatisfying, minSatisfying, rcompare, valid } from 'semver';
+import {
+  gte,
+  maxSatisfying,
+  minSatisfying,
+  prerelease,
+  rcompare,
+  satisfies,
+  valid,
+} from 'semver';
 import { MS_PER_DAY, MS_PER_MINUTE } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
+import { readNpmrcEntries } from '../npmrc';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
   classifySpec,
   newestInRange,
+  splitPackageDescriptor,
   type PickOutcome,
   type VersionSpecType,
 } from '../pick';
@@ -134,6 +144,23 @@ interface WindowResolution {
 interface InvalidWindow {
   kind: 'invalid';
   reason: string;
+}
+
+// Builds a resolved cooldown window, tagging it with the surface label used in
+// messaging. windowExplicit is false only for the invisible built-in default.
+function okWindow(
+  windowMinutes: number,
+  excludes: string[],
+  source: string,
+  windowExplicit = true
+): WindowResolution {
+  return {
+    kind: 'ok',
+    windowMinutes,
+    excludes,
+    sourceDescription: `pnpm minimumReleaseAge (${windowMinutes} min, ${source})`,
+    windowExplicit,
+  };
 }
 
 /**
@@ -316,39 +343,25 @@ function readV11Surfaces(
   // and fall through to lower surfaces.
   if (envWindow !== undefined && envWindow !== 'invalid') {
     return {
-      window: {
-        kind: 'ok',
-        windowMinutes: envWindow,
-        excludes,
-        sourceDescription: `pnpm minimumReleaseAge (${envWindow} min, env)`,
-        windowExplicit: true,
-      },
+      window: okWindow(envWindow, excludes, 'env'),
       strictExplicit,
       ignoreMissingTime,
     };
   }
   if (wsYaml && wsYaml.windowMinutes !== undefined) {
     return {
-      window: {
-        kind: 'ok',
-        windowMinutes: wsYaml.windowMinutes,
-        excludes,
-        sourceDescription: `pnpm minimumReleaseAge (${wsYaml.windowMinutes} min, pnpm-workspace.yaml)`,
-        windowExplicit: true,
-      },
+      window: okWindow(wsYaml.windowMinutes, excludes, 'pnpm-workspace.yaml'),
       strictExplicit,
       ignoreMissingTime,
     };
   }
   if (globalYaml && globalYaml.windowMinutes !== undefined) {
     return {
-      window: {
-        kind: 'ok',
-        windowMinutes: globalYaml.windowMinutes,
+      window: okWindow(
+        globalYaml.windowMinutes,
         excludes,
-        sourceDescription: `pnpm minimumReleaseAge (${globalYaml.windowMinutes} min, global config.yaml)`,
-        windowExplicit: true,
-      },
+        'global config.yaml'
+      ),
       strictExplicit,
       ignoreMissingTime,
     };
@@ -357,13 +370,7 @@ function readV11Surfaces(
   // Built-in 1440-minute (1 day) default, injected programmatically and
   // invisible to `pnpm config get`. Loose unless some surface set strict.
   return {
-    window: {
-      kind: 'ok',
-      windowMinutes: 1440,
-      excludes,
-      sourceDescription: 'pnpm minimumReleaseAge (1440 min, default)',
-      windowExplicit: false,
-    },
+    window: okWindow(1440, excludes, 'default', false),
     strictExplicit,
     ignoreMissingTime,
   };
@@ -402,32 +409,14 @@ function readV10Surfaces(
     [];
 
   if (wsYaml && wsYaml.windowMinutes !== undefined) {
-    return {
-      kind: 'ok',
-      windowMinutes: wsYaml.windowMinutes,
-      excludes,
-      sourceDescription: `pnpm minimumReleaseAge (${wsYaml.windowMinutes} min, pnpm-workspace.yaml)`,
-      windowExplicit: true,
-    };
+    return okWindow(wsYaml.windowMinutes, excludes, 'pnpm-workspace.yaml');
   }
   if (envWindow !== undefined) {
-    return {
-      kind: 'ok',
-      windowMinutes: envWindow,
-      excludes,
-      sourceDescription: `pnpm minimumReleaseAge (${envWindow} min, env)`,
-      windowExplicit: true,
-    };
+    return okWindow(envWindow, excludes, 'env');
   }
   for (const npmrc of [projectNpmrc, userNpmrc]) {
     if (npmrc && npmrc.windowMinutes !== undefined) {
-      return {
-        kind: 'ok',
-        windowMinutes: npmrc.windowMinutes,
-        excludes,
-        sourceDescription: `pnpm minimumReleaseAge (${npmrc.windowMinutes} min, .npmrc)`,
-        windowExplicit: true,
-      };
+      return okWindow(npmrc.windowMinutes, excludes, '.npmrc');
     }
   }
 
@@ -493,30 +482,16 @@ function readYamlWindow(path: string): YamlWindow | InvalidWindow | null {
 function readNpmrcSurface(
   path: string
 ): { windowMinutes?: number; excludes?: string[] } | null {
-  if (!existsSync(path)) {
-    return null;
-  }
-  let raw: string;
-  try {
-    raw = readFileSync(path, 'utf-8');
-  } catch {
+  const entries = readNpmrcEntries(path);
+  if (entries === null) {
     return null;
   }
   // v10 reads the kebab-case keys via npm-conf; camelCase in .npmrc is never
   // honored. Only the two cooldown keys are relevant here.
   let windowMinutes: number | undefined;
   let excludes: string[] | undefined;
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
-      continue;
-    }
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) {
-      continue;
-    }
-    const key = trimmed.slice(0, eq).trim();
-    const value = stripQuotes(trimmed.slice(eq + 1).trim());
+  for (const { key, value: rawValue } of entries) {
+    const value = stripQuotes(rawValue);
     if (key === 'minimum-release-age') {
       const num = toNumber(value);
       if (num !== null) {
@@ -686,12 +661,9 @@ function readArrayKey(
 }
 
 function readBooleanKey(
-  doc: Record<string, unknown> | null,
+  doc: Record<string, unknown>,
   key: string
 ): boolean | undefined {
-  if (!doc) {
-    return undefined;
-  }
   const value = doc[key];
   if (typeof value === 'boolean') {
     return value;
@@ -768,18 +740,14 @@ interface ParsedRule {
 // Mirrors @pnpm/config.version-policy parseVersionPolicyRule. Returns null for
 // invalid entries (invalid version union / name pattern with version union).
 function parseVersionPolicyRule(pattern: string): ParsedRule | null {
-  const isScoped = pattern.startsWith('@');
-  const atIndex = isScoped ? pattern.indexOf('@', 1) : pattern.indexOf('@');
+  const { name: packageName, versionPart } = splitPackageDescriptor(pattern);
 
-  if (atIndex === -1) {
-    return { packageName: pattern, exactVersions: [] };
+  if (versionPart === null) {
+    return { packageName, exactVersions: [] };
   }
 
-  const packageName = pattern.slice(0, atIndex);
-  const versionsPart = pattern.slice(atIndex + 1);
-
   const exactVersions: string[] = [];
-  for (const versionRaw of versionsPart.split('||')) {
+  for (const versionRaw of versionPart.split('||')) {
     const version = valid(versionRaw);
     if (version === null) {
       // ERR_PNPM_INVALID_VERSION_UNION.
@@ -941,7 +909,7 @@ function pickRange(
     }
   }
   const blocked = metadata.versions
-    .filter((v) => inRange(v, spec))
+    .filter((v) => satisfies(v, spec, { includePrerelease: false }))
     .sort(rcompare);
   throw violation(metadata, policy, spec, 'range', blocked);
 }
@@ -963,10 +931,13 @@ function degradeTag(
     '10.19.0'
   );
   const targetMajor = majorOf(target);
-  const targetIsPre = isPrerelease(target);
+  const targetIsPre = prerelease(target) !== null;
   const targetMajorPrefix = `${targetMajor}.`;
   const candidates = matureVersions(metadata, policy, behavior).filter((v) => {
-    if (filtersPrereleaseAndDeprecation && isPrerelease(v) !== targetIsPre) {
+    if (
+      filtersPrereleaseAndDeprecation &&
+      (prerelease(v) !== null) !== targetIsPre
+    ) {
       return false;
     }
     if (anyMajor) {
@@ -1034,16 +1005,8 @@ function mature(
   return Date.parse(time) <= policy.cutoffMs;
 }
 
-function inRange(version: string, range: string): boolean {
-  return maxSatisfying([version], range, { includePrerelease: false }) !== null;
-}
-
 function majorOf(version: string): number {
   return Number(version.split('.')[0].replace(/[^0-9].*$/, '')) || 0;
-}
-
-function isPrerelease(version: string): boolean {
-  return version.includes('-');
 }
 
 // --- errors -----------------------------------------------------------------

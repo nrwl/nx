@@ -15,7 +15,7 @@ const SEVEN_DAYS_MS = 7 * MS_PER_DAY;
 
 interface BunInstallConfig {
   minimumReleaseAge?: unknown;
-  minimumReleaseAgeExcludes?: unknown;
+  minimumReleaseAgeExcludes?: string[];
 }
 
 /**
@@ -76,10 +76,9 @@ export async function readBunPolicy(
     return { outcome: 'inactive' };
   }
 
-  const excludes = normalizeExcludes(excludesRaw);
+  const excludes = new Set(excludesRaw ?? []);
   const windowMs = ageRaw * MS_PER_SECOND;
   const cutoffMs = Date.now() - windowMs;
-  const seconds = ageRaw;
   return {
     outcome: 'active',
     policy: {
@@ -87,8 +86,8 @@ export async function readBunPolicy(
       packageManagerVersion: pmVersion,
       cutoffMs,
       windowMs,
-      sourceDescription: `bun minimumReleaseAge (${seconds} second${
-        seconds === 1 ? '' : 's'
+      sourceDescription: `bun minimumReleaseAge (${ageRaw} second${
+        ageRaw === 1 ? '' : 's'
       })`,
       // Exact, case-sensitive byte equality on the package name only.
       isExcluded: (packageName) => excludes.has(packageName),
@@ -147,15 +146,6 @@ function readBunInstall(path: string): BunInstallConfig | 'error' {
   }
   // The singular `minimumReleaseAgeExclude` key is never read by bun; ignore it.
   return result;
-}
-
-function normalizeExcludes(raw: unknown): Set<string> {
-  if (!Array.isArray(raw)) {
-    return new Set();
-  }
-  return new Set(
-    raw.filter((entry): entry is string => typeof entry === 'string')
-  );
 }
 
 /**

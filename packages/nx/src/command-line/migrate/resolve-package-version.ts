@@ -195,16 +195,13 @@ async function resolveWithPolicy(
 
     return outcome.version;
   } catch (e) {
-    if (e instanceof MinReleaseAgeViolationError) {
-      // A side-effect-free probe treats the violation as "unavailable" rather
-      // than prompting/writing for a version the user has not selected.
-      if (!applySideEffects) {
-        throw e;
-      }
-      return handleViolation(packageName, e, policy);
-    }
+    // A side-effect-free probe never installs/prompts/writes, so any failure -
+    // a violation or an unknown error - just means the version is unavailable.
     if (!applySideEffects) {
       throw e;
+    }
+    if (e instanceof MinReleaseAgeViolationError) {
+      return handleViolation(packageName, e, policy);
     }
     // Unknown failure (registry hiccup, parse error): try a real install, but
     // surface the original error if that also fails.

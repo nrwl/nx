@@ -3,15 +3,15 @@ import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join } from 'path';
 import { minimatch } from 'minimatch';
-import { lt, rsort, satisfies, valid, validRange } from 'semver';
+import { lt, prerelease, rcompare, rsort, satisfies, validRange } from 'semver';
 import { MS_PER_MINUTE } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
   classifySpec,
-  isVersionMature,
   newestInRange,
+  splitPackageDescriptor,
   type PickOutcome,
 } from '../pick';
 import type {
@@ -259,12 +259,8 @@ function splitDescriptor(entry: string): {
   name: string;
   range: string | null;
 } {
-  const scoped = entry.startsWith('@');
-  const at = entry.indexOf('@', scoped ? 1 : 0);
-  if (at === -1) {
-    return { name: entry, range: null };
-  }
-  return { name: entry.slice(0, at), range: entry.slice(at + 1) || null };
+  const { name, versionPart } = splitPackageDescriptor(entry);
+  return { name, range: versionPart || null };
 }
 
 /**
@@ -342,13 +338,13 @@ function walkDownFromLatest(
   // 4.11+ tolerates prereleases in the fallback only when latest is itself a
   // prerelease; earlier versions may pick any lower approved version.
   const pre4_11 = lt(policy.packageManagerVersion, '4.11.0');
-  const tolerate = pre4_11 || isPrerelease(latest);
+  const tolerate = pre4_11 || prerelease(latest) !== null;
   const sorted = rsort([...metadata.versions]);
   for (const candidate of sorted) {
     if (!lt(candidate, latest)) {
       continue;
     }
-    if (!tolerate && isPrerelease(candidate)) {
+    if (!tolerate && prerelease(candidate) !== null) {
       continue;
     }
     if (isApproved(metadata, policy, candidate)) {
@@ -366,7 +362,7 @@ function pickRange(
 ): PickOutcome {
   const inRange = metadata.versions
     .filter((v) => satisfies(v, spec, { includePrerelease: false }))
-    .sort((a, b) => (lt(a, b) ? 1 : -1));
+    .sort(rcompare);
   const approved = inRange.filter((v) => isApproved(metadata, policy, v));
   if (approved.length > 0) {
     return {
@@ -393,18 +389,13 @@ function isApproved(
   }
   const behavior = policy.behavior;
   if (behavior.packageManager !== 'yarn') {
-    return isVersionMature(metadata.name, version, metadata, policy);
+    throw new Error('isApproved received a non-yarn policy.');
   }
   const hasTime = !!metadata.time && metadata.time[version] !== undefined;
   if (!hasTime) {
     return behavior.missingVersionTime === 'pass';
   }
   return Date.parse(metadata.time![version]) <= policy.cutoffMs;
-}
-
-function isPrerelease(version: string): boolean {
-  const parsed = valid(version);
-  return parsed ? parsed.includes('-') : version.includes('-');
 }
 
 function quarantined(

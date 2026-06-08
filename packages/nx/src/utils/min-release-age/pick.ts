@@ -33,6 +33,24 @@ export function classifySpec(spec: string): VersionSpecType {
 }
 
 /**
+ * Splits an npm package descriptor into its name and the raw version part after
+ * the separating `@`, honoring scoped names where the leading `@` is part of the
+ * name. `versionPart` is null when there is no separator (bare name) and an
+ * empty string for a trailing `@`; callers interpret the version part.
+ */
+export function splitPackageDescriptor(entry: string): {
+  name: string;
+  versionPart: string | null;
+} {
+  const scoped = entry.startsWith('@');
+  const at = entry.indexOf('@', scoped ? 1 : 0);
+  if (at === -1) {
+    return { name: entry, versionPart: null };
+  }
+  return { name: entry.slice(0, at), versionPart: entry.slice(at + 1) };
+}
+
+/**
  * Shared maturity test: a version passes when its publish time is at or before
  * the cutoff (inclusive), or when it is explicitly excluded.
  */
