@@ -155,6 +155,20 @@ packages/module-federation/README.md
 packages/nest/README.md
 packages/rspack/README.md
 packages/storybook/README.md
+packages/react/README.md
+packages/vue/README.md
+packages/esbuild/README.md
+packages/angular/README.md
+packages/express/README.md
+packages/plugin/README.md
+packages/react-native/README.md
+packages/next/README.md
+packages/remix/README.md
+packages/detox/README.md
+packages/expo/README.md
+packages/nuxt/README.md
+packages/create-nx-workspace/README.md
+packages/create-nx-plugin/README.md
 
 test-output
 test-results

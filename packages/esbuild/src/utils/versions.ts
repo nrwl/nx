@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/esbuild', 'package.json')).version;
 
 export const tsLibVersion = '^2.3.0';
 

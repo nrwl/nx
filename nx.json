@@ -99,9 +99,9 @@
         "tag": false
       },
       "currentVersionResolver": "registry",
-      "preserveLocalDependencyProtocols": false,
+      "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -113,12 +113,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
-      }
-    },
-    {
-      "target": "nx-release-publish",
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
       }
     },
     {

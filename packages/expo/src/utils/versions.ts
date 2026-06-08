@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/expo', 'package.json')).version;
 
 // Expo v54 versions (default for new projects)
 export const expoV54Version = '~54.0.0';

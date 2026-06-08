@@ -11,13 +11,12 @@
         "project": "packages/angular/ng-package.json",
         "tsConfig": "packages/angular/tsconfig.lib.runtime.json"
       },
-      "outputs": ["{workspaceRoot}/dist/packages/angular"]
+      "outputs": ["{projectRoot}/dist"]
     },
-
     "build": {
       "dependsOn": ["^build", "build-ng", "typecheck", "build-base"],
-      "outputs": ["{workspaceRoot}/dist/packages/angular/README.md"],
-      "command": "node ./scripts/copy-readme.js angular",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md",
       "inputs": ["copyReadme"]
     }
   },

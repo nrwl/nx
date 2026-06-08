@@ -1,4 +1,4 @@
-import { addE2e as addE2eReact } from '@nx/react/src/generators/application/lib/add-e2e';
+import { addE2e as addE2eReact } from '@nx/react/internal';
 import { GeneratorCallback, Tree, ensurePackage, names } from '@nx/devkit';
 
 import { nxVersion } from '../../../utils/versions';

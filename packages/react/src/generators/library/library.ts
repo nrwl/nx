@@ -206,7 +206,9 @@ export async function libraryGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(host, {
       uiFramework: 'react',
       project: options.name,

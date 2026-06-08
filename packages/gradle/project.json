@@ -3,21 +3,7 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/gradle/src",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
-    }
-  },
   "targets": {
-    "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish"],
-      "executor": "@nx/js:release-publish",
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
-    },
     "build": {
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js gradle packages/gradle/readme-template.md packages/gradle/README.md",
