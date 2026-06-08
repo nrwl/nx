@@ -70,7 +70,7 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
-    "react-native": ">=0.83.0",
+    "react-native": ">=0.83.0 <0.85.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
