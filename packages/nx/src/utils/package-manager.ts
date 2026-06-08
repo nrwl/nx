@@ -16,7 +16,7 @@ import {
 } from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager } from './catalog';
+import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -518,20 +518,10 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    let resolvedVersion = version;
-    const manager = getCatalogManager(workspaceRoot);
-    if (manager?.isCatalogReference(version)) {
-      resolvedVersion = manager.resolveCatalogReference(
-        workspaceRoot,
-        packageName,
-        version
-      );
-      if (!resolvedVersion) {
-        throw new Error(
-          `Unable to resolve catalog reference ${packageName}@${version}.`
-        );
-      }
-    }
+    const resolvedVersion = resolveCatalogReferenceIfNeeded(
+      packageName,
+      version
+    );
 
     const result = await packageRegistryView(
       packageName,
@@ -613,10 +603,14 @@ export async function resolvePackageVersionUsingInstallation(
 export async function packageRegistryView(
   pkg: string,
   version: string,
-  args: string
+  args: string,
+  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
+  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
+  // collapses to the single highest match (breaks per-version field queries).
+  options?: { forceNpm?: boolean }
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
+  if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
@@ -630,7 +624,11 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+  // An empty version means we want the full packument; omit the trailing `@`.
+  // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
+  // redirections.
+  const spec = version ? `${pkg}@${version}` : pkg;
+  const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
   });
   return stdout.toString().trim();
