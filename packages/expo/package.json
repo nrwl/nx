@@ -43,6 +43,14 @@
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
+  "peerDependenciesMeta": {
+    "metro-config": {
+      "optional": true
+    },
+    "metro-resolver": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "nx": "workspace:*"
   },

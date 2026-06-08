@@ -2,16 +2,16 @@
   "name": "<%= projectName %>",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {
-    "@expo/metro-config": "*",
+  "dependencies": {<% if (!usesExpoMetro) { %>
+    "@expo/metro-config": "*",<% } %>
     "@testing-library/react-native": "*",
     "expo": "*",
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
     "expo-system-ui": "*",
-    "jest-expo": "*",
+    "jest-expo": "*",<% if (!usesExpoMetro) { %>
     "metro-config": "*",
-    "metro-resolver": "*",
+    "metro-resolver": "*",<% } %>
     "react": "*",
     "react-native": "*",
     "react-native-svg": "*",

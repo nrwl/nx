@@ -4,6 +4,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import { getExpoDependenciesVersionsToInstall } from './version-utils';
 
 export async function ensureDependencies(
@@ -11,6 +12,11 @@ export async function ensureDependencies(
   unitTestRunner: 'jest' | 'none'
 ): Promise<GeneratorCallback> {
   const versions = await getExpoDependenciesVersionsToInstall(host);
+
+  // Expo SDK 55+ exposes Metro config via the `expo/metro-config` sub-export,
+  // so `@expo/metro-config` should not be installed directly (expo-doctor flags
+  // it). Older SDKs (53/54) still require the direct dependency.
+  const usesExpoMetro = major(coerce(versions.expo) ?? '0.0.0') >= 55;
 
   const devDependencies: Record<string, string> = {
     '@types/react': versions.typesReact,
@@ -36,7 +42,9 @@ export async function ensureDependencies(
       'expo-status-bar': versions.expoStatusBar,
       'expo-system-ui': versions.expoSystemUi,
       'react-native-web': versions.reactNativeWeb,
-      '@expo/metro-config': versions.expoMetroConfig,
+      ...(usesExpoMetro
+        ? {}
+        : { '@expo/metro-config': versions.expoMetroConfig }),
       '@expo/metro-runtime': versions.expoMetroRuntime,
       'react-native-svg-transformer': versions.reactNativeSvgTransformer,
       'react-native-svg': versions.reactNativeSvg,
