@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
+import * as pc from 'picocolors';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { migratePrompt } from '../safe-prompt';
@@ -165,38 +166,45 @@ async function firePromptForAgentic(
   // pin option is dropped.
   const multipleAgents = detected.length > 1;
   const choices = [
-    { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
+    {
+      name: 'yes-once',
+      message: 'Yes, just this time',
+      description: applyHint,
+    },
     {
       name: 'yes-flex',
       message: multipleAgents
         ? "Yes, always (I'll pick the agent each run)"
         : 'Yes, always',
-      hint: rememberHint,
+      description: rememberHint,
     },
     ...(multipleAgents
       ? [
           {
             name: 'yes-pin',
             message: 'Yes, always with the same agent',
-            hint: rememberHint,
+            description: rememberHint,
           },
         ]
       : []),
-    { name: 'no-once', message: 'No, just this time', hint: skipHint },
-    { name: 'no-never', message: 'No, never', hint: rememberHint },
+    { name: 'no-once', message: 'No, just this time', description: skipHint },
+    { name: 'no-never', message: 'No, never', description: rememberHint },
   ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
-  // `as any` because enquirer's TS types lag the runtime (per-choice `hint`
-  // is supported but not in the .d.ts).
+  // `as any`: `footer` and per-choice `description` aren't in enquirer's .d.ts.
   const response = await migratePrompt<{ choice: string }>({
     name: 'choice',
     type: 'select',
     message: 'Enable the agentic flow?',
     choices,
     initial: 0,
+    footer: function () {
+      const focused = this.focused as { description?: string };
+      return focused?.description ? pc.dim(`  ${focused.description}`) : '';
+    },
   } as any);
 
   switch (response.choice) {
