@@ -435,7 +435,13 @@ export class Migrator {
         targetVersion
       );
     } catch (e) {
-      if (e?.message?.includes('No matching version')) {
+      // A cooldown violation must keep its type so the top-level handler can
+      // surface its remediation; only a generic "no matching version" earns the
+      // --to hint.
+      if (
+        !(e instanceof MinReleaseAgeViolationError) &&
+        e?.message?.includes('No matching version')
+      ) {
         throw new Error(
           `${e.message}\nRun migrate with --to="package1@version1,package2@version2"`
         );
@@ -1558,7 +1564,7 @@ function createInstalledPackageVersionsResolver(
 }
 
 // testing-fetch-start
-function createFetcher(pmc: PackageManagerCommands) {
+export function createFetcher(pmc: PackageManagerCommands) {
   const migrationsCache: Record<
     string,
     Promise<ResolvedMigrationConfiguration>
