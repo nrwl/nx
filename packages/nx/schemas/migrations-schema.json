@@ -117,7 +117,7 @@
         "x-prompt": {
           "type": "string",
           "description": "Message shown to users to confirm whether to apply the updates when running `nx migrate --interactive`. When not set, the updates are applied without confirmation.",
-          "deprecated": "No longer used when migrating to Nx v23 or later. The `--interactive` flag of `nx migrate` only applies when migrating to earlier versions."
+          "deprecated": "Surfaced via `nx migrate --interactive`; this confirmation behavior will be removed in Nx v24. Use `--mode` to choose which packages to migrate."
         },
         "requires": {
           "type": "object",

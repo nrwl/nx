@@ -727,10 +727,10 @@ export interface NxMigrateConfiguration {
   commitPrefix?: string;
 
   /**
-   * Restricts which packages to migrate when migrating Nx itself. Equivalent to
-   * the `--mode` flag.
-   * - `first-party`: only Nx and its plugins.
-   * - `third-party`: only the third-party dependencies referenced by Nx.
+   * Restricts which packages to migrate. Only applies to target packages that
+   * support migration modes. Equivalent to the `--mode` flag.
+   * - `first-party`: the target package and the related first-party packages it ships with.
+   * - `third-party`: the third-party dependencies those packages manage.
    * - `all`: everything (default).
    */
   mode?: MigrateMode;

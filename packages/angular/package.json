@@ -67,7 +67,8 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsModes": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

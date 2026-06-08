@@ -8,7 +8,6 @@ import {
   DIST_TAGS,
   type DistTag,
   isLegacyEra,
-  isNxEquivalentTarget,
   normalizeVersionWithTagCheck,
 } from './version-utils';
 
@@ -165,6 +164,15 @@ export type MultiMajorResult = {
   gradual?: boolean;
 };
 
+// Whether the target is the canonical Nx package for its era (`@nrwl/workspace`
+// for legacy `< 14`, `nx`/`@nx/workspace` otherwise).
+function isNxTarget(targetPackage: string, targetVersion: string): boolean {
+  if (isLegacyEra(targetVersion)) {
+    return targetPackage === '@nrwl/workspace';
+  }
+  return targetPackage === 'nx' || targetPackage === '@nx/workspace';
+}
+
 export async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: MigrateMode;
   options: { multiMajorMode?: MultiMajorMode; interactive?: boolean };
@@ -176,7 +184,9 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   if (mode === 'third-party') return { chosen: targetVersion };
   const multiMajorMode = resolveMultiMajorMode(options);
   if (multiMajorMode === 'direct') return { chosen: targetVersion };
-  if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
+  // The multi-major catch-up only applies to Nx's own versioned cascade, so it
+  // keys off the canonical Nx package identity, not `--mode` eligibility.
+  if (!isNxTarget(targetPackage, targetVersion)) {
     return { chosen: targetVersion };
   }
   // Bare-package-name positionals (e.g. `nx migrate nx`, `nx migrate
@@ -228,8 +238,8 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   ]);
   // Only suggest the current-major latest when there's at least a minor
   // delta — a same-minor patch bump isn't a meaningful incremental step. Skip
-  // major 22 (last pre-v23) entirely: a 22.x step is the only sub-v23 option
-  // and conflicts with the mode gate already decided against the v23+ target.
+  // major 22 (the last release before the v23 era): a within-22 step doesn't
+  // advance toward a v23+ target, so suggest the next major instead.
   const showCurrent =
     installedMajor !== 22 &&
     latestInCurrent &&

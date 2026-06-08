@@ -72,7 +72,8 @@
     }
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsModes": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

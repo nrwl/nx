@@ -159,7 +159,8 @@
         "package": "@nrwl/nx-cloud",
         "version": "latest"
       }
-    ]
+    ],
+    "supportsModes": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",

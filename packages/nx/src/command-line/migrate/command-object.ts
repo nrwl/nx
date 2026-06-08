@@ -51,8 +51,9 @@ export interface MigrateArgs {
   mode?: MigrateMode;
   /**
    * nx.json `migrate.mode` default. Consumed by `resolveMode` only when the
-   * target is Nx itself; kept separate from `mode` so it is never mistaken for
-   * an explicit `--mode` (which would hard-fail for non-Nx targets).
+   * resolved target supports modes; kept separate from `mode` so it is never
+   * mistaken for an explicit `--mode` (which hard-fails when the target does
+   * not support modes).
    */
   modeFromConfig?: MigrateMode;
   multiMajorMode?: MultiMajorMode;
@@ -127,7 +128,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('interactive', {
       describe:
-        "Enable prompts to confirm whether to collect optional package updates and migrations. Not supported when migrating to Nx v23 or later: use '--mode' to choose which packages to migrate.",
+        "Enable confirmation prompts for collecting optional package updates and migrations. Deprecated and slated for removal in Nx v24 - use '--mode' instead. The flag stays valid for other interactive prompts.",
       type: 'boolean',
     })
     .option('excludeAppliedMigrations', {
@@ -144,7 +145,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('mode', {
       describe:
-        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. The 'first-party' and 'third-party' modes are only available on Nx v23+: 'third-party' requires the workspace to already be on v23+, and 'first-party' requires migrating from v22+ into a v23+ target. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
+        "Restrict which packages to migrate. Only applies when the target package supports migration modes. 'first-party' processes only the target package and the related first-party packages it ships with; 'third-party' processes only the third-party dependencies those packages manage, catching up on any updates that may have been skipped previously; 'all' processes everything. When the target supports modes in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
       choices: MIGRATE_MODES,
     })

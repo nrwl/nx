@@ -83,8 +83,9 @@ import {
 } from '../../utils/installation-directory';
 import {
   getInstalledLegacyNrwlWorkspaceVersion,
-  getInstalledNxPackageGroup,
   getInstalledNxVersion,
+  getInstalledPackageGroup,
+  getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
 import { runNxSync } from '../../utils/child-process';
@@ -147,7 +148,6 @@ import {
   DIST_TAGS,
   type DistTag,
   isLegacyEra,
-  isNxEquivalentTarget,
   normalizeVersion,
   normalizeVersionWithTagCheck,
 } from './version-utils';
@@ -156,6 +156,8 @@ export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
+  /** Mirrors the package's `nx-migrations`/`ng-update` `supportsModes` flag. */
+  supportsModes?: boolean;
   /** Prompt file contents keyed by the `prompt` value as it appears on the migration entry. */
   resolvedPromptFiles?: Record<string, string>;
 }
@@ -947,8 +949,6 @@ function resolveFirstPartyPackages(
  * The canonical Nx package for a given target version: `@nrwl/workspace` for
  * legacy (`< 14.0.0-beta.0`), `nx` otherwise. Non-semver inputs (e.g. the
  * literal `'latest'` sentinel before tag resolution) resolve to modern era.
- * Used by `--mode=third-party` to silently swap `@nx/workspace` → `nx` when
- * walking the cascade.
  */
 export function resolveCanonicalNxPackage(
   targetVersion: string
@@ -956,113 +956,63 @@ export function resolveCanonicalNxPackage(
   return isLegacyEra(targetVersion) ? '@nrwl/workspace' : 'nx';
 }
 
+/**
+ * `@nx/workspace` is version-synced with `nx` but declares an intentionally
+ * narrow `packageGroup`; resolve eligibility, bounds, and the third-party walk
+ * against `nx`'s full closure so they match what the cascade actually walks.
+ */
+function toNxClosurePackage(packageName: string): string {
+  return packageName === '@nx/workspace' ? 'nx' : packageName;
+}
+
 export async function resolveMode(
   mode: MigrateMode | undefined,
-  targetPackage: string,
-  targetVersion: string,
   context: {
     hasFrom: boolean;
     hasExcludeAppliedMigrations: boolean;
-    installedMajor?: number | null;
-    isV23Plus?: boolean;
     interactive?: boolean;
-  } = {
-    hasFrom: false,
-    hasExcludeAppliedMigrations: false,
+    targetSupportsModes: boolean;
   },
   configuredMode?: MigrateMode
 ): Promise<MigrateMode> {
-  // The first-party/third-party split relies on migration metadata that only
-  // exists in Nx v23+. `first-party` needs a v22+ install migrating into a v23+
-  // target; `third-party` catches up deps a prior first-party migration
-  // deferred, so it needs the workspace already on v23+.
-  const installedMajor = context.installedMajor ?? null;
-  const firstPartyAvailable =
-    installedMajor !== null &&
-    installedMajor >= 22 &&
-    context.isV23Plus === true;
-  const thirdPartyAvailable = installedMajor !== null && installedMajor >= 23;
-
-  // `--interactive` x-prompts let users skip optional third-party updates; the
-  // modes supersede that choice, so it is disallowed behind the same v23+ gate.
-  if (
-    context.interactive === true &&
-    context.isV23Plus === true &&
-    isNxEquivalentTarget(targetPackage, targetVersion)
-  ) {
-    throw new Error(
-      `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
-    );
-  }
-
+  // An explicit `--mode` is validated against the target's `supportsModes` in
+  // `resolveTargetAndMode`, so honor it directly here.
   if (mode) {
-    if (isNxEquivalentTarget(targetPackage, targetVersion)) {
-      if (mode === 'first-party' && !firstPartyAvailable) {
-        if (context.isV23Plus !== true) {
-          throw new Error(
-            `Error: '--mode=first-party' requires migrating to Nx v23 or later.`
-          );
-        }
-        throw new Error(
-          `Error: '--mode=first-party' requires the workspace to be on Nx v22 or later. Migrate to the latest Nx v22 first, then to v23 or later.`
-        );
-      }
-      // When the installed version is unknown, defer to the downstream
-      // "requires nx to be installed" check rather than the v23 gate.
-      if (
-        mode === 'third-party' &&
-        installedMajor !== null &&
-        !thirdPartyAvailable
-      ) {
-        throw new Error(
-          `Error: '--mode=third-party' requires the workspace to be on Nx v23 or later.`
-        );
-      }
-    }
     return mode;
   }
-  if (!isNxEquivalentTarget(targetPackage, targetVersion)) {
-    return 'all';
-  }
-  // nx.json `migrate.mode` pre-selects the prompt answer (Nx targets only; non-Nx
-  // returned 'all' above). Honor it only when the v23+ gate makes that mode
-  // available; otherwise warn and fall back to the always-valid 'all'.
-  if (configuredMode) {
-    const configuredAvailable =
-      configuredMode === 'all' ||
-      (configuredMode === 'first-party' && firstPartyAvailable) ||
-      (configuredMode === 'third-party' && thirdPartyAvailable);
-    if (configuredAvailable) {
-      return configuredMode;
+  // Targets that don't declare `supportsModes` only ever run the full
+  // migration; there is nothing to pick between.
+  if (!context.targetSupportsModes) {
+    if (configuredMode && configuredMode !== 'all') {
+      output.warn({
+        title: `The configured nx.json migrate.mode '${configuredMode}' is not available for this migration; falling back to 'all'.`,
+        bodyLines: [`The target package does not support migration modes.`],
+      });
     }
-    output.warn({
-      title: `The configured nx.json migrate.mode '${configuredMode}' is not available for this migration; falling back to 'all'.`,
-      bodyLines: [
-        `The 'first-party' and 'third-party' modes require Nx v23 or later.`,
-      ],
-    });
     return 'all';
   }
-  const choices: { name: string; message: string }[] = [];
-  if (firstPartyAvailable) {
-    choices.push({
-      name: 'first-party',
-      message: 'First-party only (Nx and its official packages)',
-    });
+  // nx.json `migrate.mode` pre-selects the answer the prompt would ask for.
+  if (configuredMode) {
+    return configuredMode;
   }
+  const choices: { name: string; message: string }[] = [
+    {
+      name: 'first-party',
+      message:
+        'First-party only (the target package and the packages it ships with)',
+    },
+  ];
+  // `--interactive` keeps the legacy x-prompt flow, which third-party
+  // supersedes and is incompatible with, so omit it when interactive.
   if (
-    thirdPartyAvailable &&
     !context.hasFrom &&
     !context.hasExcludeAppliedMigrations &&
     context.interactive !== true
   ) {
     choices.push({
       name: 'third-party',
-      message: 'Third-party only (deps managed by Nx)',
+      message: 'Third-party only (the dependencies those packages manage)',
     });
-  }
-  if (!choices.length) {
-    return 'all';
   }
   if (!canPrompt(context.interactive)) {
     return 'all';
@@ -1188,9 +1138,12 @@ type RunMigrations = {
   interactive?: boolean;
 };
 
-export async function parseMigrationsOptions(options: {
-  [k: string]: any;
-}): Promise<GenerateMigrations | RunMigrations> {
+export async function parseMigrationsOptions(
+  options: {
+    [k: string]: any;
+  },
+  fetch?: MigratorOptions['fetch']
+): Promise<GenerateMigrations | RunMigrations> {
   if (options.runMigrations === '') {
     options.runMigrations = 'migrations.json';
   }
@@ -1228,9 +1181,19 @@ export async function parseMigrationsOptions(options: {
       : Promise.resolve({} as Record<string, string>),
   ]);
 
+  // The gate reads `supportsModes` through this fetcher (registry-first, install
+  // fallback) so private registries don't fail closed. In production the caller
+  // shares its fetcher; standalone callers (tests) get a fresh one.
+  const resolvedFetch = fetch ?? createFetcher(getPackageManagerCommand());
+
   const positional = options['packageAndVersion'] as string | undefined;
-  const resolved = await resolveTargetAndMode({ positional, from, options });
-  const { mode, installedNxVersion } = resolved;
+  const resolved = await resolveTargetAndMode({
+    positional,
+    from,
+    options,
+    fetch: resolvedFetch,
+  });
+  const { mode, installedTargetVersion } = resolved;
   let { targetPackage, targetVersion } = resolved;
 
   // Crossing more than one major can silently skip migrations: each
@@ -1256,7 +1219,9 @@ export async function parseMigrationsOptions(options: {
       targetPackage,
       targetVersion,
       to,
-      installedNxVersion,
+      // `resolveTargetAndMode` always resolves the installed bounds version for
+      // third-party (or throws), so it is present here.
+      installedTargetVersion: installedTargetVersion!,
     });
   }
 
@@ -1298,11 +1263,11 @@ function assertThirdPartyModeFlagCompatibility(options: {
   }
 }
 
-// Resolves the target package/version up front (third-party → installed
-// canonical; otherwise resolves dist-tags so the v23 mode gate reads a concrete
-// major), then resolves the mode and enforces the era gate when --mode is
-// explicit. Bare invocations on a pre-v22 install throw rather than defaulting
-// to `latest` across the major gap into the v23 era.
+// Resolves the target package/version up front (third-party anchors to the
+// installed target; otherwise dist-tags resolve to a concrete version), then
+// resolves the mode and rejects `--mode` when the target doesn't support it.
+// Bare invocations require an explicit target on older installs rather than
+// defaulting to `latest` across a large major gap.
 async function resolveTargetAndMode(args: {
   positional: string | undefined;
   from: Record<string, string>;
@@ -1312,13 +1277,14 @@ async function resolveTargetAndMode(args: {
     excludeAppliedMigrations?: boolean;
     interactive?: boolean;
   };
+  fetch: MigratorOptions['fetch'];
 }): Promise<{
   targetPackage: string;
   targetVersion: string;
   mode: MigrateMode;
-  installedNxVersion: string | null | undefined;
+  installedTargetVersion: string | null | undefined;
 }> {
-  const { positional, from, options } = args;
+  const { positional, from, options, fetch } = args;
   let targetPackage: string | undefined;
   let targetVersion: string | undefined;
   if (positional) {
@@ -1335,10 +1301,9 @@ async function resolveTargetAndMode(args: {
   // it never needs a target or dist-tag resolved up front.
   const isExplicitThirdParty = options.mode === 'third-party';
 
-  // Bare invocation: restore the requirement to specify a target when on a
-  // pre-v23 install. We can't safely default to `latest` across the major gap
-  // into the new era, and the first-party/third-party functionality isn't
-  // available there anyway.
+  // Bare `nx migrate` defaults to `nx@latest`. Only do so from a recent-enough
+  // install (v22+); an unknown or far-behind version would otherwise silently
+  // run a large multi-major jump, so require an explicit target there instead.
   if (!positional && !isExplicitThirdParty) {
     if (installedMajor === null || installedMajor < 22) {
       throw new Error(
@@ -1349,74 +1314,113 @@ async function resolveTargetAndMode(args: {
     targetVersion = 'latest';
   }
 
-  // Explicit dist-tags arrive already resolved from
-  // `parseTargetPackageAndVersion`; only bare invocations and bare package
-  // names (`nx migrate nx`) reach here unresolved.
-  let isV23Plus = false;
+  // Resolve dist-tags to a concrete version so the `supportsModes` gate and the
+  // downstream cascade read a real semver. Explicit dist-tags arrive already
+  // resolved from `parseTargetPackageAndVersion`; only bare invocations and
+  // bare package names (`nx migrate nx`) reach here unresolved.
   if (
     !isExplicitThirdParty &&
-    isNxEquivalentTarget(targetPackage!, targetVersion!)
+    targetPackage &&
+    targetVersion &&
+    !valid(targetVersion)
   ) {
-    if (targetVersion && valid(targetVersion)) {
-      isV23Plus = major(targetVersion) >= 23;
-    } else {
-      // Resolving the dist-tag here (rather than only in the multi-major check
-      // as before) just moves the single registry round-trip earlier — the
-      // multi-major check short-circuits on the now-concrete version.
-      const tag = targetVersion!;
-      try {
-        targetVersion = await normalizeVersionWithTagCheck(targetPackage!, tag);
-        isV23Plus = valid(targetVersion) ? major(targetVersion) >= 23 : true;
-      } catch {
-        // Registry unavailable: assume dist-tags resolve to >= v23 (true once
-        // v23 is released) so the gate stays sensible. The retained sentinel
-        // still degrades gracefully downstream (multi-major and the cascade).
-        targetVersion = tag;
-        isV23Plus = true;
-      }
+    try {
+      targetVersion = await normalizeVersionWithTagCheck(
+        targetPackage,
+        targetVersion
+      );
+    } catch {
+      // Registry unavailable: keep the tag. The sentinel degrades gracefully
+      // downstream (multi-major and the cascade tolerate it).
     }
+  }
+
+  // `--mode` is only available for targets that opt in via `supportsModes`.
+  // first-party/all/prompt/nx.json read the flag at the version being migrated
+  // to. Skipped when the mode can't depend on it (no `--mode`, no nx.json
+  // default, no interactive prompt) and for explicit third-party, which anchors
+  // to the installed target and reads at that version below.
+  let targetSupportsModes = false;
+  // The package/version whose `supportsModes` flag the gate actually read,
+  // surfaced verbatim in the rejection message below.
+  let eligibilityPackage = targetPackage;
+  let eligibilityVersion = targetVersion;
+  if (
+    !isExplicitThirdParty &&
+    targetPackage &&
+    (options.mode || options.modeFromConfig || canPrompt(options.interactive))
+  ) {
+    // Read at the canonical closure package so the gate shares the cascade's
+    // cached fetch (the walk normalizes `@nx/workspace` -> `nx` too).
+    eligibilityPackage = toNxClosurePackage(targetPackage);
+    targetSupportsModes = await fetchSupportsModes(
+      fetch,
+      eligibilityPackage,
+      targetVersion!
+    );
   }
 
   const mode = await resolveMode(
     options.mode,
-    targetPackage ?? 'nx',
-    targetVersion ?? 'latest',
     {
       hasFrom: Object.keys(from).length > 0,
       hasExcludeAppliedMigrations: options.excludeAppliedMigrations === true,
-      installedMajor,
-      isV23Plus,
       interactive: options.interactive,
+      targetSupportsModes,
     },
     options.modeFromConfig
   );
 
-  let installedNxVersion: string | null | undefined;
-  // For third-party, anchor `targetPackage`/`targetVersion` to the installed
-  // canonical when the positional was either omitted or a bare package name
-  // (no semver). This keeps the era gate accepting legacy workspaces, the
-  // upper-bound gate meaningful, and downstream semver comparisons safe from
-  // the literal `'latest'` that `parseTargetPackageAndVersion` emits for bare
-  // package names.
-  if (mode === 'third-party' && (!positional || !valid(targetVersion!))) {
-    if (!installed) {
-      throw new Error(
-        `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
+  let installedTargetVersion: string | null | undefined;
+  // Third-party catches up the deps the target manages for the version you are
+  // already on, capped at the installed version. `@nx/workspace` is
+  // version-synced with `nx` but declares a narrower group, so resolve the
+  // installed bounds against `nx`'s full closure.
+  if (mode === 'third-party') {
+    if (!positional) {
+      // Bare `--mode=third-party`: catch up the deps Nx manages for installed Nx.
+      if (!installed) {
+        throw new Error(
+          `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
+        );
+      }
+      targetPackage = installed.canonical;
+      installedTargetVersion = installed.version;
+      targetVersion = installedTargetVersion;
+    } else {
+      const boundsPackage = toNxClosurePackage(targetPackage!);
+      installedTargetVersion = getInstalledVersion(boundsPackage);
+      if (!installedTargetVersion) {
+        throw new Error(
+          `Error: '--mode=third-party' requires '${boundsPackage}' to be installed in your workspace. Install dependencies first, then re-run.`
+        );
+      }
+      // A bare package name (no semver, surfaced as the literal `'latest'`)
+      // anchors the catch-up walk to installed; an explicit version is kept and
+      // bounded against installed downstream.
+      if (!valid(targetVersion!)) {
+        targetVersion = installedTargetVersion;
+      }
+    }
+
+    // An explicit `--mode=third-party` is gated on the INSTALLED version's flag:
+    // you catch up the deps you already have, so eligibility follows the
+    // installed package, not the (possibly older) explicit target. Config /
+    // prompt-derived third-party was already vetted via the to-target read.
+    if (options.mode === 'third-party') {
+      eligibilityPackage = toNxClosurePackage(targetPackage!);
+      eligibilityVersion = installedTargetVersion;
+      targetSupportsModes = await fetchSupportsModes(
+        fetch,
+        eligibilityPackage,
+        installedTargetVersion
       );
     }
-    installedNxVersion = installed.version;
-    targetPackage = installed.canonical;
-    targetVersion = installed.version;
   }
 
-  if (options.mode && !isNxEquivalentTarget(targetPackage!, targetVersion!)) {
-    const isLegacy = isLegacyEra(targetVersion!);
-    const validTargets = isLegacy
-      ? `'@nrwl/workspace'`
-      : `'nx' or '@nx/workspace'`;
-    const eraNote = isLegacy ? ' for Nx <14.0.0' : '';
+  if (options.mode && !targetSupportsModes) {
     throw new Error(
-      `Error: '--mode' requires the target to be ${validTargets}${eraNote}. Got '${targetPackage}@${targetVersion}'.`
+      `Error: '--mode' requires the target package to support migration modes, but '${eligibilityPackage}@${eligibilityVersion}' does not.`
     );
   }
 
@@ -1424,54 +1428,57 @@ async function resolveTargetAndMode(args: {
     targetPackage: targetPackage!,
     targetVersion: targetVersion!,
     mode,
-    installedNxVersion,
+    installedTargetVersion,
   };
 }
 
-// `--mode=third-party` upper-bound gate. The third-party walk follows nx's
-// `packageGroup`; a target or `--to` above the installed version would
-// expand the walk past it and surface third-party bumps that only exist in
-// the newer plugin's history. The first-party set is sourced from the
-// installed nx package's declared `packageGroup` (authoritative for the
-// user's current Nx universe). Legacy era falls back to the hardcoded
-// `LEGACY_NRWL_PACKAGE_GROUP`.
+// `--mode` is opt-in per package via `supportsModes` in the target's
+// `nx-migrations`/`ng-update` config. Read it through the shared fetcher
+// (registry-first, install fallback) so registries that can't serve metadata
+// via `npm view` resolve it from an install rather than failing the gate.
+async function fetchSupportsModes(
+  fetch: MigratorOptions['fetch'],
+  packageName: string,
+  packageVersion: string
+): Promise<boolean> {
+  const config = await fetch(packageName, packageVersion);
+  return config.supportsModes === true;
+}
+
+// `--mode=third-party` upper-bound gate. The third-party walk catches up from
+// zero, so a target or `--to` above the installed version would surface
+// third-party bumps that only exist in the newer package's history. The
+// first-party set is the target package's declared `packageGroup`; the legacy
+// era falls back to the hardcoded `LEGACY_NRWL_PACKAGE_GROUP`. `installed` is
+// the installed bounds version already resolved by `resolveTargetAndMode`.
 function assertThirdPartyTargetBounds(args: {
   targetPackage: string;
   targetVersion: string;
   to: Record<string, string>;
-  installedNxVersion: string | null | undefined;
+  installedTargetVersion: string;
 }): void {
-  const { targetPackage, targetVersion, to, installedNxVersion } = args;
-  const canonical = resolveCanonicalNxPackage(targetVersion);
-  const isLegacy = canonical === '@nrwl/workspace';
-  // Reuse the resolved installed version from `resolveTargetAndMode` when
-  // present (it's already era-aware via `resolveInstalledCanonical`).
-  // Otherwise fall back to the era-specific reader.
-  const installed =
-    installedNxVersion ??
-    (isLegacy
-      ? getInstalledLegacyNrwlWorkspaceVersion()
-      : getInstalledNxVersion());
-  if (!installed) {
-    throw new Error(
-      `Error: '--mode=third-party' requires '${canonical}' to be installed in your workspace. Install dependencies first, then re-run.`
-    );
-  }
+  const {
+    targetPackage,
+    targetVersion,
+    to,
+    installedTargetVersion: installed,
+  } = args;
+  const boundsPackage = toNxClosurePackage(targetPackage);
   if (gt(targetVersion, installed)) {
     throw new Error(
-      `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${canonical}@${installed}'). Either drop '--mode=third-party' or lower the target.`
+      `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${boundsPackage}@${installed}'). Either drop '--mode=third-party' or lower the target.`
     );
   }
-  const firstPartySet = isLegacy
+  const firstPartySet = isLegacyEra(targetVersion)
     ? new Set<string>([
-        '@nrwl/workspace',
+        boundsPackage,
         ...LEGACY_NRWL_PACKAGE_GROUP.map((p) => p.package),
       ])
-    : getInstalledNxPackageGroup();
+    : getInstalledPackageGroup(boundsPackage);
   for (const [pkg, version] of Object.entries(to)) {
     if (firstPartySet.has(pkg) && gt(version, installed)) {
       throw new Error(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${canonical}@${installed}'). Either drop '--mode=third-party' or lower the '--to' value.`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${boundsPackage}@${installed}'). Either drop '--mode=third-party' or lower the '--to' value.`
       );
     }
   }
@@ -1685,6 +1692,7 @@ async function getPackageMigrationsUsingRegistry(
       name: packageName,
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
+      supportsModes: migrationsConfig.supportsModes,
     };
   }
 
@@ -1740,6 +1748,7 @@ async function downloadPackageMigrationsFromRegistry(
   {
     migrations: migrationsFilePath,
     packageGroup,
+    supportsModes,
   }: NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup }
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
@@ -1782,6 +1791,7 @@ async function downloadPackageMigrationsFromRegistry(
     result = {
       ...migrations,
       packageGroup,
+      supportsModes,
       version: packageVersion,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1871,6 +1881,7 @@ async function getPackageMigrationsUsingInstallImpl(
     const {
       migrations: migrationsFilePath,
       packageGroup,
+      supportsModes,
       packageJson,
     } = readPackageMigrationConfig(packageName, dir);
 
@@ -1890,6 +1901,7 @@ async function getPackageMigrationsUsingInstallImpl(
     result = {
       ...migrations,
       packageGroup,
+      supportsModes,
       version: packageJson.version,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1936,12 +1948,14 @@ function readPackageMigrationConfig(
       packageJson: json,
       migrations: migrationFile,
       packageGroup: config.packageGroup,
+      supportsModes: config.supportsModes,
     };
   } catch {
     return {
       packageJson: json,
       migrations: null,
       packageGroup: config.packageGroup,
+      supportsModes: config.supportsModes,
     };
   }
 }
@@ -2130,7 +2144,8 @@ function readNxVersion(packageJson: PackageJson, root: string) {
 
 async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
-  opts: GenerateMigrations
+  opts: GenerateMigrations,
+  fetch?: MigratorOptions['fetch']
 ) {
   const pmc = getPackageManagerCommand();
   try {
@@ -2149,28 +2164,28 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let fromOverrides = opts.from;
     let excludeApplied = opts.excludeAppliedMigrations;
     if (mode === 'third-party') {
-      // For third-party, walk the canonical Nx target so cross-plugin
-      // third-party dependencies (e.g. typescript managed by @nx/js but
-      // used by @nx/angular) stay consistent.
-      const canonical = resolveCanonicalNxPackage(opts.targetVersion);
-      walkedTargetPackage = canonical;
-      fromOverrides = { [canonical]: '0.0.0' };
+      // Third-party catches up the deps the target manages, so walk the target
+      // from zero, against `nx`'s full managed-deps closure.
+      walkedTargetPackage = toNxClosurePackage(opts.targetPackage);
+      fromOverrides = { [walkedTargetPackage]: '0.0.0' };
       excludeApplied = true;
     }
 
     logger.info(`Fetching meta data about packages.`);
     logger.info(`It may take a few minutes.`);
 
-    const fetch = createFetcher(pmc);
+    const resolvedFetch = fetch ?? createFetcher(pmc);
     let firstPartyPackages: ReadonlySet<string> | undefined;
     if (mode === 'first-party' || mode === 'third-party') {
-      // `@nx/workspace` is version-synced with `nx` and declares an
-      // intentionally narrow `packageGroup` ({ nx, nx-cloud }) via its
-      // `ng-update` field, whereas `nx` declares the full @nx/* plugin
-      // fan-out. Their transitive first-party closures are equivalent.
-      const sourcePackage =
-        walkedTargetPackage === '@nx/workspace' ? 'nx' : walkedTargetPackage;
-      const rootMetadata = await fetch(sourcePackage, opts.targetVersion);
+      // `@nx/workspace` declares an intentionally narrow `packageGroup`
+      // ({ nx, nx-cloud }) in its migrations config, whereas `nx` declares the
+      // full @nx/* plugin fan-out. Their transitive first-party closures are
+      // equivalent, so resolve the closure against `nx`.
+      const sourcePackage = toNxClosurePackage(walkedTargetPackage);
+      const rootMetadata = await resolvedFetch(
+        sourcePackage,
+        opts.targetVersion
+      );
       // Legacy `@nrwl/workspace<14` doesn't ship a complete `packageGroup`
       // in its metadata; the Migrator's cascade injects
       // `LEGACY_NRWL_PACKAGE_GROUP` for that case, and the post-build
@@ -2193,7 +2208,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       packageJson: originalPackageJson,
       nxInstallation: originalNxJson.installation,
       getInstalledPackageVersion: installedPackageVersions,
-      fetch,
+      fetch: resolvedFetch,
       from: fromOverrides,
       to: opts.to,
       interactive: opts.interactive && !isCI(),
@@ -2244,9 +2259,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const modeLine =
       mode === 'first-party'
-        ? `- Processed Nx first-party packages only (skipped third-party dependency bumps).`
+        ? `- Processed first-party packages only (skipped third-party dependency bumps).`
         : mode === 'third-party'
-          ? `- Processed third-party dependencies only (skipped Nx first-party package updates).`
+          ? `- Processed third-party dependencies only (skipped first-party package updates).`
           : null;
 
     const noChanges =
@@ -2258,7 +2273,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         bodyLines: [
           ...(modeLine ? [modeLine] : []),
           mode === 'third-party'
-            ? `- No third-party dependency bumps were found for the installed Nx version. Either your dependencies are already up to date, or this workspace doesn't manage them in a place 'nx migrate' writes to (e.g. non-JS workspaces only track Nx and its plugins).`
+            ? `- No third-party dependency bumps were found for the installed version. Either your dependencies are already up to date, or this workspace doesn't manage them in a place 'nx migrate' writes to (e.g. non-JS workspaces).`
             : `- No package updates or migrations were found.`,
         ],
       });
@@ -3528,9 +3543,13 @@ export async function migrate(
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
     const mergedArgs = applyNxJsonMigrateDefaults(args, readNxJson().migrate);
     assertCommitPrefixHasCommits(mergedArgs);
-    const opts = await parseMigrationsOptions(mergedArgs);
+    // One fetcher (registry-first, install fallback) shared by the `--mode`
+    // eligibility gate and the migration cascade so package metadata is fetched
+    // at most once per package/version.
+    const fetch = createFetcher(getPackageManagerCommand());
+    const opts = await parseMigrationsOptions(mergedArgs, fetch);
     if (opts.type === 'generateMigrations') {
-      await generateMigrationsJsonAndUpdatePackageJson(root, opts);
+      await generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch);
     } else {
       try {
         return await runMigrations(

@@ -436,7 +436,7 @@
         "mode": {
           "type": "string",
           "enum": ["first-party", "third-party", "all"],
-          "description": "Restricts which packages to migrate when migrating Nx itself. Equivalent to the `--mode` flag. Defaults to `all`."
+          "description": "Restricts which packages to migrate, for target packages that support migration modes: `first-party` (the target package and the related first-party packages it ships with), `third-party` (the third-party dependencies those packages manage), or `all`. Equivalent to the `--mode` flag. Defaults to `all`."
         },
         "multiMajorMode": {
           "type": "string",

@@ -59,13 +59,3 @@ export async function normalizeVersionWithTagCheck(
   }
   return normalizeVersion(version);
 }
-
-export function isNxEquivalentTarget(
-  targetPackage: string,
-  targetVersion: string
-): boolean {
-  if (isLegacyEra(targetVersion)) {
-    return targetPackage === '@nrwl/workspace';
-  }
-  return targetPackage === 'nx' || targetPackage === '@nx/workspace';
-}

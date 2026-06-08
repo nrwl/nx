@@ -151,7 +151,8 @@
     "nx": "workspace:*"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsModes": true
   },
   "publishConfig": {
     "access": "public"
