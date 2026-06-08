@@ -1,5 +1,11 @@
 {
   "generators": {
+    "update-23-0-0-create-ai-instructions-for-expo-56": {
+      "version": "23.0.0-beta.25",
+      "cli": "nx",
+      "description": "Create AI migration instructions for Expo SDK 56 upgrade",
+      "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-expo-56.md"
+    },
     "update-21-4-0-remove-deprecated-deps": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
