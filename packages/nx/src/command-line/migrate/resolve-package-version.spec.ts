@@ -85,14 +85,20 @@ function violation(blocked: { version: string; publishedAt: string }[]) {
 
 describe('isRegistryResolutionEnabled', () => {
   const originalEnv = { ...process.env };
+  let warnSpy: jest.SpyInstance;
 
   beforeEach(() => {
+    resetResolvePackageVersionState();
+    warnSpy = jest
+      .spyOn(require('../../utils/output').output, 'warn')
+      .mockImplementation(() => {});
     delete process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION;
     delete process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH;
     mockReadNxJson.mockReturnValue({});
   });
 
   afterEach(() => {
+    warnSpy.mockRestore();
     process.env = { ...originalEnv };
   });
 
@@ -128,6 +134,37 @@ describe('isRegistryResolutionEnabled', () => {
     process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
     process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'false';
     expect(isRegistryResolutionEnabled()).toBe(false);
+  });
+
+  it('warns once when the legacy env var is set, pointing to the replacement', () => {
+    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
+
+    isRegistryResolutionEnabled();
+    isRegistryResolutionEnabled();
+
+    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(warnSpy.mock.calls[0][0].title).toContain(
+      'NX_MIGRATE_SKIP_REGISTRY_FETCH is deprecated'
+    );
+    expect(warnSpy.mock.calls[0][0].bodyLines.join(' ')).toContain(
+      'NX_MIGRATE_USE_REGISTRY_RESOLUTION'
+    );
+  });
+
+  it('does not warn when the legacy env var is unset', () => {
+    isRegistryResolutionEnabled();
+    expect(warnSpy).not.toHaveBeenCalled();
+  });
+
+  it('notes the override when the new env var is also set', () => {
+    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH = 'true';
+    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
+
+    isRegistryResolutionEnabled();
+
+    expect(warnSpy.mock.calls[0][0].bodyLines.join(' ')).toContain(
+      'being overridden by NX_MIGRATE_USE_REGISTRY_RESOLUTION'
+    );
   });
 });
 

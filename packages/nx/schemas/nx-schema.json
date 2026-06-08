@@ -445,7 +445,7 @@
         },
         "useRegistryResolution": {
           "type": "boolean",
-          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and legacy NX_MIGRATE_SKIP_REGISTRY_FETCH env vars take precedence over this.",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
           "default": true
         },
         "agentic": {

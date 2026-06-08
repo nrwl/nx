@@ -23,13 +23,16 @@ import { migratePrompt } from './safe-prompt';
  * than via a real package-manager install. Precedence, highest first:
  *
  * 1. `NX_MIGRATE_USE_REGISTRY_RESOLUTION` ('true' -> enabled, 'false' -> disabled)
- * 2. legacy `NX_MIGRATE_SKIP_REGISTRY_FETCH` ('true' -> disabled, 'false' -> enabled)
+ * 2. legacy `NX_MIGRATE_SKIP_REGISTRY_FETCH` (deprecated, removed in Nx 24;
+ *    'true' -> disabled, 'false' -> enabled)
  * 3. nx.json `migrate.useRegistryResolution`
  * 4. default: enabled
  */
 export function isRegistryResolutionEnabled(
   root: string = workspaceRoot
 ): boolean {
+  warnIfLegacyRegistryEnvVarSet();
+
   const explicit = parseBooleanFlag(
     process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION
   );
@@ -50,18 +53,50 @@ function parseBooleanFlag(value: string | undefined): boolean | undefined {
   return value === 'true' ? true : value === 'false' ? false : undefined;
 }
 
+// NX_MIGRATE_SKIP_REGISTRY_FETCH is the inverted, legacy predecessor of
+// NX_MIGRATE_USE_REGISTRY_RESOLUTION: deprecated in Nx 23, removed in Nx 24.
+// Warn once whenever it is present (even when the new var overrides it) so users
+// migrate off it and clean up configs where it lingers - a dormant value would
+// silently re-activate if the new var were later removed.
+function warnIfLegacyRegistryEnvVarSet(): void {
+  if (
+    legacyRegistryEnvVarDeprecationWarned ||
+    process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === undefined
+  ) {
+    return;
+  }
+  legacyRegistryEnvVarDeprecationWarned = true;
+
+  const bodyLines = [
+    'Use NX_MIGRATE_USE_REGISTRY_RESOLUTION (or migrate.useRegistryResolution in nx.json) instead, then remove NX_MIGRATE_SKIP_REGISTRY_FETCH from your environment.',
+  ];
+  if (process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION !== undefined) {
+    bodyLines.push(
+      'It is currently being overridden by NX_MIGRATE_USE_REGISTRY_RESOLUTION.'
+    );
+  }
+  output.warn({
+    title:
+      'NX_MIGRATE_SKIP_REGISTRY_FETCH is deprecated and will be removed in Nx 24.',
+    bodyLines,
+  });
+}
+
 // The cooldown policy is constant for a migrate run; read it once.
 let cachedPolicyPromise: Promise<MinReleaseAgePolicyReadResult> | undefined;
 // Dedup the "resolved X instead of Y" notice across repeated specs.
 const reportedChangedOutcomes = new Set<string>();
 // Strict-mode approval is a once-per-run decision (mirrors pnpm prompting once).
 let strictApprovalGranted = false;
+// The deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH heads-up is shown once per run.
+let legacyRegistryEnvVarDeprecationWarned = false;
 
 /** Test-only: clear the module-level caches between cases. */
 export function resetResolvePackageVersionState(): void {
   cachedPolicyPromise = undefined;
   reportedChangedOutcomes.clear();
   strictApprovalGranted = false;
+  legacyRegistryEnvVarDeprecationWarned = false;
 }
 
 function getPolicy(): Promise<MinReleaseAgePolicyReadResult> {
