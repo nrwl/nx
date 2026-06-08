@@ -729,8 +729,8 @@ export interface NxMigrateConfiguration {
   /**
    * Restricts which packages to migrate. Only applies to target packages that
    * support migration modes. Equivalent to the `--mode` flag.
-   * - `first-party`: the target package and the related first-party packages it ships with.
-   * - `third-party`: the third-party dependencies those packages manage.
+   * - `required`: the target package and the related packages it ships with.
+   * - `optional`: the optional dependency updates those packages recommend.
    * - `all`: everything (default).
    */
   mode?: MigrateMode;

@@ -181,7 +181,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
 }): Promise<MultiMajorResult> {
   const { mode, options, targetPackage } = args;
   let { targetVersion } = args;
-  if (mode === 'third-party') return { chosen: targetVersion };
+  if (mode === 'optional') return { chosen: targetVersion };
   const multiMajorMode = resolveMultiMajorMode(options);
   if (multiMajorMode === 'direct') return { chosen: targetVersion };
   // The multi-major catch-up only applies to Nx's own versioned cascade, so it

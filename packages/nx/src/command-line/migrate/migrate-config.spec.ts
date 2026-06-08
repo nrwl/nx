@@ -94,7 +94,7 @@ describe('applyNxJsonMigrateDefaults', () => {
 
     it('does not apply generate-only options in run-migrations mode', () => {
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        mode: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
@@ -105,7 +105,7 @@ describe('applyNxJsonMigrateDefaults', () => {
     it('detects run-migrations mode even when the value is an empty string', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,
-        mode: 'first-party',
+        mode: 'required',
       };
       const result = applyNxJsonMigrateDefaults(
         { runMigrations: '' },
@@ -232,14 +232,14 @@ describe('applyNxJsonMigrateDefaults', () => {
 
     it('carries config mode as modeFromConfig (not mode) and fills other generate-only options', () => {
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        mode: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
       // Carried separately so it is never treated as an explicit `--mode`,
       // which would hard-fail `nx migrate <non-nx-pkg>`.
       expect(result.mode).toBeUndefined();
-      expect(result.modeFromConfig).toBe('first-party');
+      expect(result.modeFromConfig).toBe('required');
       expect(result.multiMajorMode).toBe('gradual');
     });
 
@@ -260,7 +260,7 @@ describe('applyNxJsonMigrateDefaults', () => {
     it('lets the CLI flag win over config', () => {
       const args = { ...base, mode: 'all', multiMajorMode: 'direct' };
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        mode: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(args, config, noEnv);

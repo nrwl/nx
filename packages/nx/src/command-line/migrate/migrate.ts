@@ -223,7 +223,7 @@ function normalizeSlashes(packageName: string): string {
   return packageName.replace(/\\/g, '/');
 }
 
-export type MigrateMode = 'first-party' | 'third-party' | 'all';
+export type MigrateMode = 'required' | 'optional' | 'all';
 
 export interface MigratorOptions {
   packageJson?: PackageJson;
@@ -242,8 +242,8 @@ export interface MigratorOptions {
   excludeAppliedMigrations?: boolean;
   /**
    * Restricts `packageJsonUpdates` filtering based on the value:
-   * - 'first-party' keeps only packages in `firstPartyPackages`
-   * - 'third-party' keeps only packages NOT in `firstPartyPackages`
+   * - 'required' keeps only packages in `firstPartyPackages`
+   * - 'optional' keeps only packages NOT in `firstPartyPackages`
    * - 'all' / undefined keeps all packages (no filtering)
    */
   mode?: MigrateMode;
@@ -269,7 +269,7 @@ export class Migrator {
 
   constructor(opts: MigratorOptions) {
     if (
-      (opts.mode === 'first-party' || opts.mode === 'third-party') &&
+      (opts.mode === 'required' || opts.mode === 'optional') &&
       !opts.firstPartyPackages
     ) {
       throw new Error(
@@ -676,14 +676,14 @@ export class Migrator {
     if (!this.firstPartyPackages) {
       return false;
     }
-    if (this.mode === 'first-party') {
+    if (this.mode === 'required') {
       return !this.firstPartyPackages.has(packageName);
     }
     return false;
   }
 
   private applyModeFilter(): void {
-    if (this.mode !== 'third-party') {
+    if (this.mode !== 'optional') {
       return;
     }
     // Cascade walks through first-party packages so cross-plugin third-party
@@ -997,12 +997,12 @@ export async function resolveMode(
   }
   const choices: { name: string; message: string }[] = [
     {
-      name: 'first-party',
+      name: 'required',
       message:
-        'First-party only (the target package and the packages it ships with)',
+        'Required only (the target package and the packages it ships with)',
     },
   ];
-  // `--interactive` keeps the legacy x-prompt flow, which third-party
+  // `--interactive` keeps the legacy x-prompt flow, which the optional mode
   // supersedes and is incompatible with, so omit it when interactive.
   if (
     !context.hasFrom &&
@@ -1010,8 +1010,9 @@ export async function resolveMode(
     context.interactive !== true
   ) {
     choices.push({
-      name: 'third-party',
-      message: 'Third-party only (the dependencies those packages manage)',
+      name: 'optional',
+      message:
+        'Optional only (the dependency updates those packages recommend)',
     });
   }
   if (!canPrompt(context.interactive)) {
@@ -1019,7 +1020,7 @@ export async function resolveMode(
   }
   choices.push({
     name: 'all',
-    message: 'All (first-party and third-party)',
+    message: 'All (required and optional)',
   });
   const { mode: selected } = await migratePrompt<{
     mode: MigrateMode;
@@ -1170,7 +1171,7 @@ export async function parseMigrationsOptions(
     };
   }
 
-  assertThirdPartyModeFlagCompatibility(options);
+  assertOptionalModeFlagCompatibility(options);
 
   const [from, to] = await Promise.all([
     options.from
@@ -1206,21 +1207,21 @@ export async function parseMigrationsOptions(
   });
   targetVersion = multiMajorResult.chosen;
 
-  if (mode === 'third-party') {
-    // `mode` can resolve to third-party via nx.json, which bypasses the early
+  if (mode === 'optional') {
+    // `mode` can resolve to optional via nx.json, which bypasses the early
     // CLI-only check above; re-assert against the resolved mode.
-    assertThirdPartyModeFlagCompatibility({
+    assertOptionalModeFlagCompatibility({
       mode,
       from: options.from,
       excludeAppliedMigrations: options.excludeAppliedMigrations,
       interactive: options.interactive,
     });
-    assertThirdPartyTargetBounds({
+    assertOptionalTargetBounds({
       targetPackage,
       targetVersion,
       to,
       // `resolveTargetAndMode` always resolves the installed bounds version for
-      // third-party (or throws), so it is present here.
+      // the optional mode (or throws), so it is present here.
       installedTargetVersion: installedTargetVersion!,
     });
   }
@@ -1239,32 +1240,32 @@ export async function parseMigrationsOptions(
   };
 }
 
-function assertThirdPartyModeFlagCompatibility(options: {
+function assertOptionalModeFlagCompatibility(options: {
   mode?: string;
   from?: string;
   excludeAppliedMigrations?: boolean;
   interactive?: boolean;
 }): void {
-  if (options.mode !== 'third-party') return;
+  if (options.mode !== 'optional') return;
   if (options.from) {
     throw new Error(
-      `Error: '--mode=third-party' cannot be combined with '--from'.`
+      `Error: '--mode=optional' cannot be combined with '--from'.`
     );
   }
   if (options.excludeAppliedMigrations === true) {
     throw new Error(
-      `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+      `Error: '--mode=optional' cannot be combined with '--exclude-applied-migrations'.`
     );
   }
   if (options.interactive === true) {
     throw new Error(
-      `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+      `Error: '--mode=optional' cannot be combined with '--interactive'.`
     );
   }
 }
 
-// Resolves the target package/version up front (third-party anchors to the
-// installed target; otherwise dist-tags resolve to a concrete version), then
+// Resolves the target package/version up front (the optional mode anchors to
+// the installed target; otherwise dist-tags resolve to a concrete version), then
 // resolves the mode and rejects `--mode` when the target doesn't support it.
 // Bare invocations require an explicit target on older installs rather than
 // defaulting to `latest` across a large major gap.
@@ -1297,14 +1298,14 @@ async function resolveTargetAndMode(args: {
   const installedMajor =
     installed && valid(installed.version) ? major(installed.version) : null;
 
-  // `--mode=third-party` anchors the target to the installed version below, so
+  // `--mode=optional` anchors the target to the installed version below, so
   // it never needs a target or dist-tag resolved up front.
-  const isExplicitThirdParty = options.mode === 'third-party';
+  const isExplicitOptional = options.mode === 'optional';
 
   // Bare `nx migrate` defaults to `nx@latest`. Only do so from a recent-enough
   // install (v22+); an unknown or far-behind version would otherwise silently
   // run a large multi-major jump, so require an explicit target there instead.
-  if (!positional && !isExplicitThirdParty) {
+  if (!positional && !isExplicitOptional) {
     if (installedMajor === null || installedMajor < 22) {
       throw new Error(
         `Provide the package and version to migrate to. E.g., \`nx migrate nx@<version>\`.`
@@ -1319,7 +1320,7 @@ async function resolveTargetAndMode(args: {
   // resolved from `parseTargetPackageAndVersion`; only bare invocations and
   // bare package names (`nx migrate nx`) reach here unresolved.
   if (
-    !isExplicitThirdParty &&
+    !isExplicitOptional &&
     targetPackage &&
     targetVersion &&
     !valid(targetVersion)
@@ -1336,17 +1337,17 @@ async function resolveTargetAndMode(args: {
   }
 
   // `--mode` is only available for targets that opt in via `supportsModes`.
-  // first-party/all/prompt/nx.json read the flag at the version being migrated
+  // required/all/prompt/nx.json read the flag at the version being migrated
   // to. Skipped when the mode can't depend on it (no `--mode`, no nx.json
-  // default, no interactive prompt) and for explicit third-party, which anchors
-  // to the installed target and reads at that version below.
+  // default, no interactive prompt) and for the explicit optional mode, which
+  // anchors to the installed target and reads at that version below.
   let targetSupportsModes = false;
   // The package/version whose `supportsModes` flag the gate actually read,
   // surfaced verbatim in the rejection message below.
   let eligibilityPackage = targetPackage;
   let eligibilityVersion = targetVersion;
   if (
-    !isExplicitThirdParty &&
+    !isExplicitOptional &&
     targetPackage &&
     (options.mode || options.modeFromConfig || canPrompt(options.interactive))
   ) {
@@ -1372,16 +1373,16 @@ async function resolveTargetAndMode(args: {
   );
 
   let installedTargetVersion: string | null | undefined;
-  // Third-party catches up the deps the target manages for the version you are
-  // already on, capped at the installed version. `@nx/workspace` is
+  // The optional mode catches up the deps the target manages for the version
+  // you are already on, capped at the installed version. `@nx/workspace` is
   // version-synced with `nx` but declares a narrower group, so resolve the
   // installed bounds against `nx`'s full closure.
-  if (mode === 'third-party') {
+  if (mode === 'optional') {
     if (!positional) {
-      // Bare `--mode=third-party`: catch up the deps Nx manages for installed Nx.
+      // Bare `--mode=optional`: catch up the deps Nx manages for installed Nx.
       if (!installed) {
         throw new Error(
-          `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
+          `Error: '--mode=optional' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace. Install dependencies first, then re-run.`
         );
       }
       targetPackage = installed.canonical;
@@ -1392,7 +1393,7 @@ async function resolveTargetAndMode(args: {
       installedTargetVersion = getInstalledVersion(boundsPackage);
       if (!installedTargetVersion) {
         throw new Error(
-          `Error: '--mode=third-party' requires '${boundsPackage}' to be installed in your workspace. Install dependencies first, then re-run.`
+          `Error: '--mode=optional' requires '${boundsPackage}' to be installed in your workspace. Install dependencies first, then re-run.`
         );
       }
       // A bare package name (no semver, surfaced as the literal `'latest'`)
@@ -1403,11 +1404,11 @@ async function resolveTargetAndMode(args: {
       }
     }
 
-    // An explicit `--mode=third-party` is gated on the INSTALLED version's flag:
+    // An explicit `--mode=optional` is gated on the INSTALLED version's flag:
     // you catch up the deps you already have, so eligibility follows the
     // installed package, not the (possibly older) explicit target. Config /
-    // prompt-derived third-party was already vetted via the to-target read.
-    if (options.mode === 'third-party') {
+    // prompt-derived optional mode was already vetted via the to-target read.
+    if (options.mode === 'optional') {
       eligibilityPackage = toNxClosurePackage(targetPackage!);
       eligibilityVersion = installedTargetVersion;
       targetSupportsModes = await fetchSupportsModes(
@@ -1445,13 +1446,13 @@ async function fetchSupportsModes(
   return config.supportsModes === true;
 }
 
-// `--mode=third-party` upper-bound gate. The third-party walk catches up from
+// `--mode=optional` upper-bound gate. The third-party walk catches up from
 // zero, so a target or `--to` above the installed version would surface
 // third-party bumps that only exist in the newer package's history. The
 // first-party set is the target package's declared `packageGroup`; the legacy
 // era falls back to the hardcoded `LEGACY_NRWL_PACKAGE_GROUP`. `installed` is
 // the installed bounds version already resolved by `resolveTargetAndMode`.
-function assertThirdPartyTargetBounds(args: {
+function assertOptionalTargetBounds(args: {
   targetPackage: string;
   targetVersion: string;
   to: Record<string, string>;
@@ -1466,7 +1467,7 @@ function assertThirdPartyTargetBounds(args: {
   const boundsPackage = toNxClosurePackage(targetPackage);
   if (gt(targetVersion, installed)) {
     throw new Error(
-      `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${boundsPackage}@${installed}'). Either drop '--mode=third-party' or lower the target.`
+      `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${boundsPackage}@${installed}'). Either drop '--mode=optional' or lower the target.`
     );
   }
   const firstPartySet = isLegacyEra(targetVersion)
@@ -1478,14 +1479,14 @@ function assertThirdPartyTargetBounds(args: {
   for (const [pkg, version] of Object.entries(to)) {
     if (firstPartySet.has(pkg) && gt(version, installed)) {
       throw new Error(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${boundsPackage}@${installed}'). Either drop '--mode=third-party' or lower the '--to' value.`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${boundsPackage}@${installed}'). Either drop '--mode=optional' or lower the '--to' value.`
       );
     }
   }
 }
 
 /**
- * Pick the canonical Nx package + version for `--mode=third-party` when the
+ * Pick the canonical Nx package + version for `--mode=optional` when the
  * user didn't supply an explicit version. Returns `'nx'` for modern era,
  * falls back to `'@nrwl/workspace'` (legacy era) when only that is installed
  * or when the installed `nx` itself is `<14`.
@@ -2163,9 +2164,9 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     let walkedTargetPackage = opts.targetPackage;
     let fromOverrides = opts.from;
     let excludeApplied = opts.excludeAppliedMigrations;
-    if (mode === 'third-party') {
-      // Third-party catches up the deps the target manages, so walk the target
-      // from zero, against `nx`'s full managed-deps closure.
+    if (mode === 'optional') {
+      // The optional mode catches up the deps the target manages, so walk the
+      // target from zero, against `nx`'s full managed-deps closure.
       walkedTargetPackage = toNxClosurePackage(opts.targetPackage);
       fromOverrides = { [walkedTargetPackage]: '0.0.0' };
       excludeApplied = true;
@@ -2176,7 +2177,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const resolvedFetch = fetch ?? createFetcher(pmc);
     let firstPartyPackages: ReadonlySet<string> | undefined;
-    if (mode === 'first-party' || mode === 'third-party') {
+    if (mode === 'required' || mode === 'optional') {
       // `@nx/workspace` declares an intentionally narrow `packageGroup`
       // ({ nx, nx-cloud }) in its migrations config, whereas `nx` declares the
       // full @nx/* plugin fan-out. Their transitive first-party closures are
@@ -2227,7 +2228,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // The cascade collects packageJsonUpdates entries against the cascade
     // root's installed version, but inner per-package pins are only gated
     // against the in-flight cascade tally — not against each inner package's
-    // installed version. A from-zero walk (e.g. `--mode=third-party`) can
+    // installed version. A from-zero walk (e.g. `--mode=optional`) can
     // surface a stale historical pin that would write a lower version than
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
@@ -2258,10 +2259,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     }
 
     const modeLine =
-      mode === 'first-party'
-        ? `- Processed first-party packages only (skipped third-party dependency bumps).`
-        : mode === 'third-party'
-          ? `- Processed third-party dependencies only (skipped first-party package updates).`
+      mode === 'required'
+        ? `- Processed required updates only (skipped optional dependency bumps).`
+        : mode === 'optional'
+          ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
     const noChanges =
@@ -2272,8 +2273,8 @@ async function generateMigrationsJsonAndUpdatePackageJson(
         title: `No updates were applied.`,
         bodyLines: [
           ...(modeLine ? [modeLine] : []),
-          mode === 'third-party'
-            ? `- No third-party dependency bumps were found for the installed version. Either your dependencies are already up to date, or this workspace doesn't manage them in a place 'nx migrate' writes to (e.g. non-JS workspaces).`
+          mode === 'optional'
+            ? `- No optional dependency updates were found for the installed version. Either your dependencies are already up to date, or this workspace doesn't manage them in a place 'nx migrate' writes to (e.g. non-JS workspaces).`
             : `- No package updates or migrations were found.`,
         ],
       });

@@ -1127,7 +1127,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'first-party',
+          mode: 'required',
           firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
         });
 
@@ -1171,7 +1171,7 @@ describe('Migration', () => {
           from: {},
           to: {},
           interactive: true,
-          mode: 'first-party',
+          mode: 'required',
           firstPartyPackages: new Set(['mypackage']),
         });
 
@@ -1216,7 +1216,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'first-party',
+          mode: 'required',
           firstPartyPackages: new Set(['nx', 'not-in-nx-package-group']),
         });
 
@@ -1232,7 +1232,7 @@ describe('Migration', () => {
         expect(result.packageUpdates['@nx/react']).toBeUndefined();
       });
 
-      it('should drop first-party packages and keep third-party in mixed entries when mode is third-party', async () => {
+      it('should drop first-party packages and keep third-party in mixed entries when mode is optional', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
@@ -1262,7 +1262,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'third-party',
+          mode: 'optional',
           firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
         });
 
@@ -1275,7 +1275,7 @@ describe('Migration', () => {
         expect(result.packageUpdates.firstPartyChild).toBeUndefined();
       });
 
-      it.each(['first-party', 'third-party'] as const)(
+      it.each(['required', 'optional'] as const)(
         'should throw when constructed with mode=%s but no firstPartyPackages',
         (mode) => {
           // Other required callbacks are unused — constructor rejects before any
@@ -2220,12 +2220,12 @@ describe('Migration', () => {
       });
     });
 
-    it('should accept --mode=first-party for a target that supports modes', async () => {
+    it('should accept --mode=required for a target that supports modes', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'first-party',
+          mode: 'required',
         },
         modeGateFetch()
       );
@@ -2233,15 +2233,15 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'first-party',
+        mode: 'required',
       });
     });
 
-    it('should accept --mode=first-party for a non-nx target that supports modes', async () => {
+    it('should accept --mode=required for a non-nx target that supports modes', async () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/react@23.0.0',
-          mode: 'first-party',
+          mode: 'required',
         },
         modeGateFetch()
       );
@@ -2249,7 +2249,7 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: '@nx/react',
         targetVersion: '23.0.0',
-        mode: 'first-party',
+        mode: 'required',
       });
     });
 
@@ -2258,7 +2258,7 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/react@22.0.0',
-            mode: 'first-party',
+            mode: 'required',
           },
           modeGateFetch(false)
         )
@@ -2271,7 +2271,7 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'first-party',
+          mode: 'required',
           interactive: true,
         },
         modeGateFetch()
@@ -2280,32 +2280,32 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'first-party',
+        mode: 'required',
         interactive: true,
       });
     });
 
-    it('should reject --mode=third-party combined with --interactive', async () => {
+    it('should reject --mode=optional combined with --interactive', async () => {
       await expect(() =>
-        parseMigrationsOptions({ mode: 'third-party', interactive: true })
+        parseMigrationsOptions({ mode: 'optional', interactive: true })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+        `Error: '--mode=optional' cannot be combined with '--interactive'.`
       );
     });
 
-    it('should reject the nx.json third-party mode combined with --interactive', async () => {
+    it('should reject the nx.json optional mode combined with --interactive', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@22.5.0',
-            modeFromConfig: 'third-party',
+            modeFromConfig: 'optional',
             interactive: true,
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+        `Error: '--mode=optional' cannot be combined with '--interactive'.`
       );
     });
 
@@ -2505,7 +2505,7 @@ describe('Migration', () => {
       await expect(() =>
         parseMigrationsOptions({
           runMigrations: 'migrations.json',
-          mode: 'first-party',
+          mode: 'required',
         })
       ).rejects.toThrow(
         `Error: '--mode' cannot be combined with '--run-migrations'.`
@@ -2517,7 +2517,7 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/react@22.0.0',
-            mode: 'first-party',
+            mode: 'required',
           },
           modeGateFetch(false)
         )
@@ -2531,7 +2531,7 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@13.0.0',
-            mode: 'first-party',
+            mode: 'required',
           },
           modeGateFetch(false)
         )
@@ -2540,27 +2540,27 @@ describe('Migration', () => {
       );
     });
 
-    it('should reject --mode=third-party combined with --from', async () => {
+    it('should reject --mode=optional combined with --from', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
+          mode: 'optional',
           from: 'nx@21.0.0',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--from'.`
+        `Error: '--mode=optional' cannot be combined with '--from'.`
       );
     });
 
-    it('should reject --mode=third-party combined with --exclude-applied-migrations', async () => {
+    it('should reject --mode=optional combined with --exclude-applied-migrations', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
+          mode: 'optional',
           excludeAppliedMigrations: true,
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+        `Error: '--mode=optional' cannot be combined with '--exclude-applied-migrations'.`
       );
     });
 
@@ -2580,7 +2580,7 @@ describe('Migration', () => {
         expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
     ])(
-      'should anchor --mode=third-party to installed canonical: $desc',
+      'should anchor --mode=optional to installed canonical: $desc',
       async ({ positional, installedNx, installedLegacy, expected }) => {
         mockGetInstalledNxVersion.mockReturnValue(installedNx);
         mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
@@ -2589,48 +2589,48 @@ describe('Migration', () => {
         const r = await parseMigrationsOptions(
           {
             ...(positional ? { packageAndVersion: positional } : {}),
-            mode: 'third-party',
+            mode: 'optional',
           },
           modeGateFetch()
         );
         expect(r).toMatchObject({
           type: 'generateMigrations',
-          mode: 'third-party',
+          mode: 'optional',
           ...expected,
         });
       }
     );
 
-    it('should reject --mode=third-party when nx is not installed', async () => {
+    it('should reject --mode=optional when nx is not installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue(null);
       await expect(() =>
-        parseMigrationsOptions({ mode: 'third-party' })
+        parseMigrationsOptions({ mode: 'optional' })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
+        `Error: '--mode=optional' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
       );
     });
 
-    it('should reject --mode=third-party when target is higher than installed', async () => {
+    it('should reject --mode=optional when target is higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@24.0.0',
-            mode: 'third-party',
+            mode: 'optional',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should accept --mode=third-party when target is lower than installed', async () => {
+    it('should accept --mode=optional when target is lower than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.5.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'third-party',
+          mode: 'optional',
         },
         modeGateFetch()
       );
@@ -2638,11 +2638,11 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'third-party',
+        mode: 'optional',
       });
     });
 
-    it('should gate --mode=third-party on the installed version, not the older explicit target', async () => {
+    it('should gate --mode=optional on the installed version, not the older explicit target', async () => {
       // Catch-up reads `supportsModes` at the INSTALLED version (what you
       // have), not the older explicit target. The stub only marks 23.0.0 as
       // supporting modes, so eligibility proves the gate read installed 23,
@@ -2651,7 +2651,7 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
+          mode: 'optional',
         },
         modeGateFetch((_pkg, version) => version === '23.0.0')
       );
@@ -2659,7 +2659,7 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '22.0.0',
-        mode: 'third-party',
+        mode: 'optional',
       });
     });
 
@@ -2674,14 +2674,14 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'first-party',
+            mode: 'required',
           },
           failingFetch as any
         )
       ).rejects.toThrow('registry and install both failed');
     });
 
-    it('should accept --mode=third-party with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
+    it('should accept --mode=optional with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
       // `parseMigrationsOptions` preserves the typed target verbatim; the
       // silent `@nx/workspace` → `nx` swap happens later in
       // `generateMigrationsJsonAndUpdatePackageJson` via
@@ -2690,7 +2690,7 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/workspace@23.0.0',
-          mode: 'third-party',
+          mode: 'optional',
         },
         modeGateFetch()
       );
@@ -2698,7 +2698,7 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
         targetVersion: '23.0.0',
-        mode: 'third-party',
+        mode: 'optional',
       });
       expect(
         resolveCanonicalNxPackage(
@@ -2707,7 +2707,7 @@ describe('Migration', () => {
       ).toBe('nx');
     });
 
-    it('should anchor @nx/workspace --mode=third-party to installed nx when only nx is installed', async () => {
+    it('should anchor @nx/workspace --mode=optional to installed nx when only nx is installed', async () => {
       // #2 regression: the installed lookup must normalize `@nx/workspace` ->
       // `nx`. With @nx/workspace absent but nx present, it resolves against nx
       // instead of failing "requires @nx/workspace to be installed".
@@ -2718,7 +2718,7 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/workspace',
-          mode: 'third-party',
+          mode: 'optional',
         },
         modeGateFetch()
       );
@@ -2726,71 +2726,71 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
         targetVersion: '23.0.0',
-        mode: 'third-party',
+        mode: 'optional',
       });
     });
 
-    it('should reject --mode=third-party with --to canonical higher than installed', async () => {
+    it('should reject --mode=optional with --to canonical higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'third-party',
+            mode: 'optional',
             to: 'nx@24.0.0',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=third-party with --to for first-party plugins higher than installed', async () => {
+    it('should reject --mode=optional with --to for first-party plugins higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'third-party',
+            mode: 'optional',
             to: '@nx/js@23.6.4',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=third-party with --to create-nx-workspace higher than installed', async () => {
+    it('should reject --mode=optional with --to create-nx-workspace higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'third-party',
+            mode: 'optional',
             to: 'create-nx-workspace@23.6.4',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=third-party with --to @nx/workspace higher than installed', async () => {
+    it('should reject --mode=optional with --to @nx/workspace higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'third-party',
+            mode: 'optional',
             to: '@nx/workspace@24.0.0',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
@@ -2807,29 +2807,29 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/workspace',
-            mode: 'third-party',
+            mode: 'optional',
             to: '@nx/jest@24.0.0',
           },
           modeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/jest@24.0.0', installed 'nx@22.0.0').`
+        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/jest@24.0.0', installed 'nx@22.0.0').`
       );
     });
 
-    it('should accept --mode=third-party with --to for non-canonical packages', async () => {
+    it('should accept --mode=optional with --to for non-canonical packages', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'third-party',
+          mode: 'optional',
           to: 'react@18.0.0',
         },
         modeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
-        mode: 'third-party',
+        mode: 'optional',
         to: { react: '18.0.0' },
       });
     });
@@ -2970,7 +2970,7 @@ describe('Migration', () => {
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
             { packageAndVersion: '@angular/core@18.0.0' },
-            { mode: 'first-party' }
+            { mode: 'required' }
           ),
           modeGateFetch(false)
         );
@@ -2982,7 +2982,7 @@ describe('Migration', () => {
         expect(warnSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             title: expect.stringContaining(
-              "The configured nx.json migrate.mode 'first-party' is not available"
+              "The configured nx.json migrate.mode 'required' is not available"
             ),
           })
         );
@@ -2992,14 +2992,14 @@ describe('Migration', () => {
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
             { packageAndVersion: 'nx@23.0.0' },
-            { mode: 'first-party' }
+            { mode: 'required' }
           ),
           modeGateFetch()
         );
         expect(result).toMatchObject({
           type: 'generateMigrations',
           targetPackage: 'nx',
-          mode: 'first-party',
+          mode: 'required',
         });
       });
     });
@@ -3039,20 +3039,20 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('first-party', supportsModesContext);
-      expect(result).toBe('first-party');
+      const result = await resolveMode('required', supportsModesContext);
+      expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
     it('should return the provided mode even when the target does not support modes', async () => {
       // The `supportsModes` gate is enforced in `resolveTargetAndMode`;
       // `resolveMode` honors an explicit mode as-is.
-      const result = await resolveMode('first-party', {
+      const result = await resolveMode('required', {
         hasFrom: false,
         hasExcludeAppliedMigrations: false,
         targetSupportsModes: false,
       });
-      expect(result).toBe('first-party');
+      expect(result).toBe('required');
     });
 
     it('should default to "all" without prompting in non-TTY environments', async () => {
@@ -3112,13 +3112,13 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'first-party' }));
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'required' }));
       const result = await resolveMode(undefined, supportsModesContext);
-      expect(result).toBe('first-party');
+      expect(result).toBe('required');
       expect(mockPrompt).toHaveBeenCalled();
     });
 
-    it('should include third-party in prompt choices by default', async () => {
+    it('should include optional in prompt choices by default', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
@@ -3128,13 +3128,13 @@ describe('Migration', () => {
       await resolveMode(undefined, supportsModesContext);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
-        'third-party',
+        'required',
+        'optional',
         'all',
       ]);
     });
 
-    it('should hide third-party from prompt choices when --from is provided', async () => {
+    it('should hide optional from prompt choices when --from is provided', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
@@ -3148,12 +3148,12 @@ describe('Migration', () => {
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
+        'required',
         'all',
       ]);
     });
 
-    it('should hide third-party from prompt choices when --exclude-applied-migrations is provided', async () => {
+    it('should hide optional from prompt choices when --exclude-applied-migrations is provided', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
@@ -3167,12 +3167,12 @@ describe('Migration', () => {
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
+        'required',
         'all',
       ]);
     });
 
-    it('should hide third-party from prompt choices when --interactive is provided', async () => {
+    it('should hide optional from prompt choices when --interactive is provided', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
@@ -3185,7 +3185,7 @@ describe('Migration', () => {
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
+        'required',
         'all',
       ]);
     });
@@ -3199,9 +3199,9 @@ describe('Migration', () => {
       const result = await resolveMode(
         undefined,
         supportsModesContext,
-        'first-party'
+        'required'
       );
-      expect(result).toBe('first-party');
+      expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
@@ -3214,9 +3214,9 @@ describe('Migration', () => {
       const result = await resolveMode(
         undefined,
         supportsModesContext,
-        'first-party'
+        'required'
       );
-      expect(result).toBe('first-party');
+      expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
@@ -3226,11 +3226,7 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(
-        'all',
-        supportsModesContext,
-        'first-party'
-      );
+      const result = await resolveMode('all', supportsModesContext, 'required');
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -3248,7 +3244,7 @@ describe('Migration', () => {
           hasExcludeAppliedMigrations: false,
           targetSupportsModes: false,
         },
-        'first-party'
+        'required'
       );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3709,9 +3705,9 @@ describe('Migration', () => {
       expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
     });
 
-    it('should keep --mode=first-party valid when multi-major redirects to the next major (v22 install)', async () => {
+    it('should keep --mode=required valid when multi-major redirects to the next major (v22 install)', async () => {
       // Mode is resolved before multi-major; suppressing the v22 step guarantees
-      // every multi-major option stays >= v23, so a first-party selection can't
+      // every multi-major option stays >= v23, so a required selection can't
       // be invalidated by the redirect.
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
@@ -3724,12 +3720,12 @@ describe('Migration', () => {
 
       const r = await parseWithModes({
         packageAndVersion: 'nx@24.0.0',
-        mode: 'first-party',
+        mode: 'required',
       });
 
       expect(r).toMatchObject({
         type: 'generateMigrations',
-        mode: 'first-party',
+        mode: 'required',
         targetVersion: '23.5.3',
       });
     });
@@ -3920,12 +3916,12 @@ describe('Migration', () => {
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should bypass --multi-major-mode=gradual when --mode=third-party', async () => {
+    it('should bypass --multi-major-mode=gradual when --mode=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
-      // third-party anchors at the installed canonical (here 23.0.0) and
+      // the optional mode anchors at the installed canonical (here 23.0.0) and
       // must not be redirected to an incremental target. `maybePromptOrWarn…`
-      // early-returns on `mode === 'third-party'` before consulting gradual,
+      // early-returns on `mode === 'optional'` before consulting gradual,
       // so the flag is accepted but is a no-op.
       mockRegistry({
         latest: '25.1.0',
@@ -3936,7 +3932,7 @@ describe('Migration', () => {
 
       const r = await parseWithModes({
         packageAndVersion: 'nx@23.0.0',
-        mode: 'third-party',
+        mode: 'optional',
         multiMajorMode: 'gradual',
       });
 
@@ -3976,16 +3972,16 @@ describe('Migration', () => {
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should not prompt or warn for --mode=third-party', async () => {
+    it('should not prompt or warn for --mode=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({ mode: 'third-party' });
+      const r = await parseWithModes({ mode: 'optional' });
 
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(r).toMatchObject({ mode: 'third-party' });
+      expect(r).toMatchObject({ mode: 'optional' });
     });
 
     it.each(['nx', '@nx/workspace'])(
