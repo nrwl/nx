@@ -303,10 +303,6 @@ const learnGroups: SidebarItems = [
             link: 'features/automate-updating-dependencies',
           },
           {
-            label: 'Nx Console migration assistance',
-            link: 'guides/nx-console/console-migrate-ui',
-          },
-          {
             label: 'Advanced update process',
             link: 'guides/tips-n-tricks/advanced-update',
           },
@@ -710,7 +706,7 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Installation',
+        label: 'Installation and updates',
         collapsed: true,
         items: [
           {
@@ -720,6 +716,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Update global installation',
             link: 'guides/installation/update-global-installation',
+          },
+          {
+            label: 'Nx Console migration assistance',
+            link: 'guides/nx-console/console-migrate-ui',
           },
         ],
       },
