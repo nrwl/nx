@@ -3,9 +3,7 @@ import * as migrationsSchema from '../../../schemas/migrations-schema.json';
 import * as nxMigrations from '../../../migrations.json';
 
 describe('migrations-schema.json', () => {
-  // `strict: false` so the schema's custom annotation keywords (`x-prompt`,
-  // `x-repair-skip`, `deprecated`) don't trip ajv's strict-mode checks.
-  const ajv = new Ajv({ strict: false });
+  const ajv = new Ajv();
   const validate = ajv.compile(migrationsSchema);
 
   it('compiles as a valid JSON schema', () => {
