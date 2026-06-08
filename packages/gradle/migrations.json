@@ -1,12 +1,5 @@
 {
   "generators": {
-    "add-include-subprojects-tasks": {
-      "version": "20.2.0-beta.4",
-      "cli": "nx",
-      "description": "Add includeSubprojectsTasks to build.gradle file",
-      "factory": "./dist/src/migrations/20-2-0/add-include-subprojects-tasks",
-      "documentation": "./dist/src/migrations/20-2-0/add-include-subprojects-tasks.md"
-    },
     "change-plugin-to-v1": {
       "version": "21.0.0-beta.5",
       "cli": "nx",
