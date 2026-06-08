@@ -87,13 +87,15 @@ export async function resolvePackageVersionRespectingMinReleaseAge(
   // writes pnpm excludes, or triggers a real install.
   const applySideEffects = options?.applySideEffects ?? true;
 
+  // A probe can never install, so the registry-resolution opt-out (which only
+  // picks install vs. registry for the real resolution) does not apply to it: it
+  // is always registry-based. Resolve read-only while still reproducing an active
+  // cooldown so the probe predicts the same version a real install would accept.
+  if (!applySideEffects) {
+    return resolveProbe(packageName, version);
+  }
+
   if (!isRegistryResolutionEnabled()) {
-    if (!applySideEffects) {
-      // Probe: never install just to populate a prompt choice. A read-only
-      // registry view yields the latest-in-range; the real resolution still
-      // honors the opted-out install path when the user picks this version.
-      return resolvePackageVersionUsingRegistry(packageName, version);
-    }
     return resolvePackageVersionUsingInstallation(packageName, version);
   }
 
@@ -104,21 +106,32 @@ export async function resolvePackageVersionRespectingMinReleaseAge(
   }
 
   if (result.outcome === 'ambiguous') {
-    if (!applySideEffects) {
-      return resolvePackageVersionUsingRegistry(packageName, version);
-    }
     logger.verbose(
       `Cannot determine the minimum-release-age policy (${result.reason}); falling back to a package-manager install to resolve ${packageName}@${version}.`
     );
     return resolvePackageVersionUsingInstallation(packageName, version);
   }
 
-  return resolveWithPolicy(
-    packageName,
-    version,
-    result.policy,
-    applySideEffects
-  );
+  return resolveWithPolicy(packageName, version, result.policy, true);
+}
+
+/**
+ * Read-only resolution for speculative lookups (never installs, never prompts,
+ * never writes excludes). Reproduces an active cooldown policy off the registry
+ * so the probe's pick matches what a real install would accept. Degrades to the
+ * raw latest-in-range when there is no policy to reproduce (inactive) or it
+ * cannot be reasoned about (ambiguous) - the same read-only answer the real
+ * resolution would refine via a package-manager install.
+ */
+async function resolveProbe(
+  packageName: string,
+  version: string
+): Promise<string> {
+  const result = await getPolicy();
+  if (result.outcome !== 'active') {
+    return resolvePackageVersionUsingRegistry(packageName, version);
+  }
+  return resolveWithPolicy(packageName, version, result.policy, false);
 }
 
 async function resolveWithPolicy(

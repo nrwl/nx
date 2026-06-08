@@ -332,14 +332,34 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     expect(mockWriteExcludes).not.toHaveBeenCalled();
   });
 
-  it('side-effect-free resolution uses a registry view (not an install) when registry resolution is opted out', async () => {
+  it('side-effect-free resolution uses a raw registry view (not an install) when there is no active cooldown, even with registry resolution opted out', async () => {
     process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
+    mockReadPolicy.mockResolvedValue({ outcome: 'inactive' });
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-a',
       '^2.0.0',
       { applySideEffects: false }
     );
     expect(result).toBe('registry-resolved');
+    expect(mockUsingInstall).not.toHaveBeenCalled();
+  });
+
+  it('side-effect-free resolution still reproduces an active cooldown when registry resolution is opted out', async () => {
+    // A probe can never install, so opting out of registry resolution (which only
+    // chooses install vs. registry for the real resolution) must not bypass the
+    // cooldown - otherwise the multi-major probe pre-selects a too-new version
+    // the real install then rejects.
+    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
+    mockReadPolicy.mockResolvedValue(pnpmPolicy());
+    mockResolve.mockResolvedValue({ version: '1.2.0', unconstrained: '1.5.0' });
+
+    const result = await resolvePackageVersionRespectingMinReleaseAge(
+      'pkg-a',
+      '^1.0.0',
+      { applySideEffects: false }
+    );
+    expect(result).toBe('1.2.0');
+    expect(mockUsingRegistry).not.toHaveBeenCalled();
     expect(mockUsingInstall).not.toHaveBeenCalled();
   });
 
