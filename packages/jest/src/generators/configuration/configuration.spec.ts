@@ -129,6 +129,36 @@ describe('jestProject', () => {
     });
   });
 
+  it('should set moduleResolution to node10 in tsconfig.spec.json when typescript is below 6', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~5.9.2' };
+      return json;
+    });
+
+    await configurationGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+    } as JestProjectSchema);
+
+    const tsConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node10');
+  });
+
+  it('should set moduleResolution to bundler in tsconfig.spec.json when typescript is 6 or above', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await configurationGenerator(tree, {
+      ...defaultOptions,
+      project: 'lib1',
+    } as JestProjectSchema);
+
+    const tsConfig = readJson(tree, 'libs/lib1/tsconfig.spec.json');
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('bundler');
+  });
+
   describe('--setup-file', () => {
     it('should generate src/test-setup.ts', async () => {
       await configurationGenerator(tree, {

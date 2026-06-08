@@ -61,7 +61,7 @@ exports[`@nx/react:provider generates a provider for the rsbuild bundler: rsbuil
     "@rsbuild/plugin-react": "^1.3.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~6.0.3"
   }
 }
 ",
@@ -234,7 +234,7 @@ exports[`@nx/react:provider generates a provider for the rspack bundler: rspack 
     "@rspack/dev-server": "2.0.1",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "typescript": "~5.9.2"
+    "typescript": "~6.0.3"
   }
 }
 ",
@@ -453,7 +453,7 @@ exports[`@nx/react:provider generates a provider for the vite bundler: vite tree
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.2",
-    "typescript": "~5.9.2",
+    "typescript": "~6.0.3",
     "vite": "^8.0.13"
   }
 }

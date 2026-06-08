@@ -24,6 +24,9 @@ describe('runTypeCheck', () => {
             incremental: false,
             module: 'esnext',
             moduleResolution: 'node',
+            // TS6 reports deprecated options (target es5, moduleResolution node)
+            // as errors; silence them so the test isolates the type errors.
+            ignoreDeprecations: '6.0',
           },
         },
         null,

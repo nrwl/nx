@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc",
+    "rootDir": "src",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "types": ["node"],

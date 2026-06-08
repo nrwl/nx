@@ -1,7 +1,10 @@
 import { Tree } from 'nx/src/generators/tree';
 import * as shared from '@nx/js';
 import { updateJson, writeJson } from 'nx/src/generators/utils/json';
-import { isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  getTsConfigBaseOptions,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 
 export function createTsConfig(
   host: Tree,
@@ -74,7 +77,7 @@ function createTsConfigForTsSolution(
   if (options.rootProject) {
     json.compileOnSave = false;
     json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
+      ...getTsConfigBaseOptions(host),
       ...json.compilerOptions,
     };
     json.exclude = ['node_modules', 'tmp'];
@@ -119,7 +122,6 @@ function createTsConfigForNonTsSolution(
     compilerOptions: {
       jsx: 'react-jsx',
       allowJs: false,
-      esModuleInterop: false,
       allowSyntheticDefaultImports: true,
       strict: options.strict,
     },
@@ -143,7 +145,7 @@ function createTsConfigForNonTsSolution(
   if (options.rootProject) {
     json.compileOnSave = false;
     json.compilerOptions = {
-      ...shared.tsConfigBaseOptions,
+      ...getTsConfigBaseOptions(host),
       ...json.compilerOptions,
     };
     json.exclude = ['node_modules', 'tmp'];

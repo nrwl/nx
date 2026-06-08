@@ -15,6 +15,7 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
+import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import { updateDependencies } from '../utils/update-dependencies';
 import { assertSupportedRemixVersion } from '../../utils/versions';
 
@@ -36,6 +37,8 @@ export async function remixLibraryGeneratorInternal(
   assertSupportedRemixVersion(tree);
 
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(assertAndPinRemixTypescript(tree));
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
   const installTask = updateDependencies(tree);

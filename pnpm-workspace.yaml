@@ -125,7 +125,7 @@ catalogs:
     jest-resolve: '^30.0.2'
     jest-runtime: '^30.0.2'
     jest-util: '^30.0.2'
-    ts-jest: '^29.4.0'
+    ts-jest: '^29.4.7'
     '@swc/jest': '0.2.39'
     '@swc-contrib/mut-cjs-exports': '^14.3.0'
   react:
@@ -142,11 +142,11 @@ catalogs:
   typescript:
     '@phenomnomnominal/tsquery': '~6.2.0'
     '@types/node': '^24.11.0'
-    ts-morph: '^27.0.2'
+    ts-morph: '^28.0.0'
     ts-node: '10.9.1'
     tsconfig-paths: '^4.1.2'
     tslib: '^2.3.0'
-    typescript: '~5.9.2'
+    typescript: '~6.0.3'
   swc:
     '@swc/core': '^1.15.8'
     '@swc/helpers': '0.5.18'

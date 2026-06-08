@@ -70,6 +70,16 @@ describe('@nx/vite:configuration', () => {
       expect(tsconfigJson.compilerOptions.jsx).toBe('react-jsx');
     });
 
+    it('should remove esModuleInterop from tsconfig compilerOptions for react', () => {
+      // editTsConfig replaces compilerOptions entirely for react, so any
+      // pre-existing esModuleInterop (set by the webpack scaffold) must be gone.
+      const tsconfigJson = readJson(
+        tree,
+        'apps/my-test-react-app/tsconfig.json'
+      );
+      expect(tsconfigJson.compilerOptions.esModuleInterop).toBeUndefined();
+    });
+
     it('should create vite.config file at the root of the app', () => {
       expect(tree.exists('apps/my-test-react-app/vite.config.mts')).toBe(true);
       expect(

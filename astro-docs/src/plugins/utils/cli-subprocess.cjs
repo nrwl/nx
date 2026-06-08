@@ -13,6 +13,8 @@ require('ts-node').register({
   transpileOnly: true,
   compilerOptions: {
     module: 'commonjs',
+    // TS6 requires an explicit rootDir when it cannot infer the layout (TS5011)
+    rootDir: workspaceRoot,
   },
 });
 

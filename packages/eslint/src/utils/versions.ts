@@ -16,7 +16,7 @@ export const jsoncEslintParserVersion = '^2.1.0';
 export const eslintCompat = '^1.1.1';
 
 export const eslintVersion = '^9.8.0';
-export const typescriptESLintVersion = '^8.40.0';
+export const typescriptESLintVersion = '^8.58.0';
 
 type EslintVersions = {
   eslintVersion: string;
