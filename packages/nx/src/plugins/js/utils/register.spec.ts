@@ -1,5 +1,7 @@
+import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
+  getTranspiler,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -8,6 +10,11 @@ import {
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
 } from './register';
+
+// Avoid a real swc registration side effect when exercising getTranspiler.
+jest.mock('@swc-node/register/register', () => ({
+  register: () => () => {},
+}));
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -99,6 +106,40 @@ describe('isNativeStripPreferred', () => {
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
     expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+});
+
+describe('getTranspiler', () => {
+  // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '6.0',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toEqual('6.0');
+    });
+    jest.unmock('typescript');
+  });
+
+  // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
+  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '5.9',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toBeUndefined();
+    });
+    jest.unmock('typescript');
   });
 });
 

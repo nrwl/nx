@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "../../dist/out-tsc",
+    "rootDir": ".",
     "types": ["jest", "node"],
     "isolatedModules": true
   },

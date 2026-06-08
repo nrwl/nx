@@ -9,6 +9,7 @@ import {
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
+import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import { nxVersion, remixVersion } from '../../utils/versions';
 import { type Schema } from './schema';
 
@@ -18,6 +19,8 @@ export function remixInitGenerator(tree: Tree, options: Schema) {
 
 export async function remixInitGeneratorInternal(tree: Tree, options: Schema) {
   const tasks: GeneratorCallback[] = [];
+
+  tasks.push(assertAndPinRemixTypescript(tree));
 
   if (!options.skipPackageJson) {
     const installTask = addDependenciesToPackageJson(
