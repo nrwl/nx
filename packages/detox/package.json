@@ -48,7 +48,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "detox": "^20.9.0"
+    "detox": "^20.0.0"
   },
   "peerDependenciesMeta": {
     "detox": {
