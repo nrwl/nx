@@ -242,13 +242,13 @@ export interface MigratorOptions {
   excludeAppliedMigrations?: boolean;
   /**
    * Restricts `packageJsonUpdates` filtering based on the value:
-   * - 'required' keeps only packages in `firstPartyPackages`
-   * - 'optional' keeps only packages NOT in `firstPartyPackages`
+   * - 'required' keeps only packages in `requiredPackages`
+   * - 'optional' keeps only packages NOT in `requiredPackages`
    * - 'all' / undefined keeps all packages (no filtering)
    */
   mode?: MigrateMode;
-  /** First-party package names used by `mode` for filtering. */
-  firstPartyPackages?: ReadonlySet<string>;
+  /** Packages in the `required` partition; `mode` filters against this set. */
+  requiredPackages?: ReadonlySet<string>;
 }
 
 export class Migrator {
@@ -260,7 +260,7 @@ export class Migrator {
   private readonly interactive: MigratorOptions['interactive'];
   private readonly excludeAppliedMigrations: MigratorOptions['excludeAppliedMigrations'];
   private readonly mode: MigratorOptions['mode'];
-  private readonly firstPartyPackages: MigratorOptions['firstPartyPackages'];
+  private readonly requiredPackages: MigratorOptions['requiredPackages'];
   private readonly packageUpdates: Record<string, PackageUpdate> = {};
   private readonly collectedVersions: Record<string, string> = {};
   private readonly promptAnswers: Record<string, boolean> = {};
@@ -270,10 +270,10 @@ export class Migrator {
   constructor(opts: MigratorOptions) {
     if (
       (opts.mode === 'required' || opts.mode === 'optional') &&
-      !opts.firstPartyPackages
+      !opts.requiredPackages
     ) {
       throw new Error(
-        `Error: 'firstPartyPackages' is required when 'mode' is '${opts.mode}'.`
+        `Error: 'requiredPackages' is required when 'mode' is '${opts.mode}'.`
       );
     }
     this.packageJson = opts.packageJson;
@@ -285,7 +285,7 @@ export class Migrator {
     this.interactive = opts.interactive;
     this.excludeAppliedMigrations = opts.excludeAppliedMigrations;
     this.mode = opts.mode;
-    this.firstPartyPackages = opts.firstPartyPackages;
+    this.requiredPackages = opts.requiredPackages;
   }
 
   private async fetchMigrationConfig(
@@ -673,11 +673,11 @@ export class Migrator {
   }
 
   private shouldExcludePackage(packageName: string): boolean {
-    if (!this.firstPartyPackages) {
+    if (!this.requiredPackages) {
       return false;
     }
     if (this.mode === 'required') {
-      return !this.firstPartyPackages.has(packageName);
+      return !this.requiredPackages.has(packageName);
     }
     return false;
   }
@@ -686,12 +686,12 @@ export class Migrator {
     if (this.mode !== 'optional') {
       return;
     }
-    // Cascade walks through first-party packages so cross-plugin third-party
+    // Cascade walks through the required packages so cross-plugin optional
     // deps (e.g. typescript managed by @nx/js but used by @nx/angular) get
-    // surfaced. Drop the first-party set from the final result here so only
-    // third-party updates land in package.json.
+    // surfaced. Drop the required set from the final result here so only
+    // optional updates land in package.json.
     for (const name of Object.keys(this.packageUpdates)) {
-      if (this.firstPartyPackages!.has(name)) {
+      if (this.requiredPackages!.has(name)) {
         delete this.packageUpdates[name];
       }
     }
@@ -934,7 +934,7 @@ const LEGACY_NRWL_PACKAGE_GROUP: ArrayPackageGroup = [
   { package: '@nrwl/tao', version: '*' },
 ];
 
-function resolveFirstPartyPackages(
+function resolveRequiredPackages(
   targetPackage: string,
   packageGroup: ArrayPackageGroup | undefined
 ): ReadonlySet<string> {
@@ -958,7 +958,7 @@ export function resolveCanonicalNxPackage(
 
 /**
  * `@nx/workspace` is version-synced with `nx` but declares an intentionally
- * narrow `packageGroup`; resolve eligibility, bounds, and the third-party walk
+ * narrow `packageGroup`; resolve eligibility, bounds, and the optional walk
  * against `nx`'s full closure so they match what the cascade actually walks.
  */
 function toNxClosurePackage(packageName: string): string {
@@ -1446,10 +1446,10 @@ async function fetchSupportsModes(
   return config.supportsModes === true;
 }
 
-// `--mode=optional` upper-bound gate. The third-party walk catches up from
+// `--mode=optional` upper-bound gate. The optional walk catches up from
 // zero, so a target or `--to` above the installed version would surface
-// third-party bumps that only exist in the newer package's history. The
-// first-party set is the target package's declared `packageGroup`; the legacy
+// optional bumps that only exist in the newer package's history. The
+// required set is the target package's declared `packageGroup`; the legacy
 // era falls back to the hardcoded `LEGACY_NRWL_PACKAGE_GROUP`. `installed` is
 // the installed bounds version already resolved by `resolveTargetAndMode`.
 function assertOptionalTargetBounds(args: {
@@ -1470,14 +1470,14 @@ function assertOptionalTargetBounds(args: {
       `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '${targetPackage}@${targetVersion}', installed '${boundsPackage}@${installed}'). Either drop '--mode=optional' or lower the target.`
     );
   }
-  const firstPartySet = isLegacyEra(targetVersion)
+  const requiredSet = isLegacyEra(targetVersion)
     ? new Set<string>([
         boundsPackage,
         ...LEGACY_NRWL_PACKAGE_GROUP.map((p) => p.package),
       ])
     : getInstalledPackageGroup(boundsPackage);
   for (const [pkg, version] of Object.entries(to)) {
-    if (firstPartySet.has(pkg) && gt(version, installed)) {
+    if (requiredSet.has(pkg) && gt(version, installed)) {
       throw new Error(
         `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to ${pkg}@${version}', installed '${boundsPackage}@${installed}'). Either drop '--mode=optional' or lower the '--to' value.`
       );
@@ -2176,11 +2176,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     logger.info(`It may take a few minutes.`);
 
     const resolvedFetch = fetch ?? createFetcher(pmc);
-    let firstPartyPackages: ReadonlySet<string> | undefined;
+    let requiredPackages: ReadonlySet<string> | undefined;
     if (mode === 'required' || mode === 'optional') {
       // `@nx/workspace` declares an intentionally narrow `packageGroup`
       // ({ nx, nx-cloud }) in its migrations config, whereas `nx` declares the
-      // full @nx/* plugin fan-out. Their transitive first-party closures are
+      // full @nx/* plugin fan-out. Their transitive required closures are
       // equivalent, so resolve the closure against `nx`.
       const sourcePackage = toNxClosurePackage(walkedTargetPackage);
       const rootMetadata = await resolvedFetch(
@@ -2190,16 +2190,13 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       // Legacy `@nrwl/workspace<14` doesn't ship a complete `packageGroup`
       // in its metadata; the Migrator's cascade injects
       // `LEGACY_NRWL_PACKAGE_GROUP` for that case, and the post-build
-      // third-party filter must mirror that set or first-party `@nrwl/*`
+      // optional filter must mirror that set or required `@nrwl/*`
       // plugins slip past it.
       const packageGroup =
         sourcePackage === '@nrwl/workspace' && isLegacyEra(opts.targetVersion)
           ? LEGACY_NRWL_PACKAGE_GROUP
           : rootMetadata.packageGroup;
-      firstPartyPackages = resolveFirstPartyPackages(
-        sourcePackage,
-        packageGroup
-      );
+      requiredPackages = resolveRequiredPackages(sourcePackage, packageGroup);
     }
 
     const installedPackageVersions =
@@ -2215,7 +2212,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       interactive: opts.interactive && !isCI(),
       excludeAppliedMigrations: excludeApplied,
       mode,
-      firstPartyPackages,
+      requiredPackages,
     });
 
     const {

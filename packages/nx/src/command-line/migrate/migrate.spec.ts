@@ -1097,12 +1097,12 @@ describe('Migration', () => {
         jest.clearAllMocks();
       });
 
-      it('should keep first-party packages and drop third-party in mixed entries', async () => {
+      it('should keep required packages and drop optional ones when mode is required', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              firstPartyChild: '1.0.0',
-              thirdPartyChild: '1.0.0',
+              requiredChild: '1.0.0',
+              optionalChild: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1114,13 +1114,13 @@ describe('Migration', () => {
                   mixed: {
                     version: '2.0.0',
                     packages: {
-                      firstPartyChild: { version: '3.0.0' },
-                      thirdPartyChild: { version: '3.0.0' },
+                      requiredChild: { version: '3.0.0' },
+                      optionalChild: { version: '3.0.0' },
                     },
                   },
                 },
               });
-            } else if (p === 'firstPartyChild') {
+            } else if (p === 'requiredChild') {
               return Promise.resolve({ version: '3.0.0' });
             }
             return Promise.resolve(null);
@@ -1128,25 +1128,25 @@ describe('Migration', () => {
           from: {},
           to: {},
           mode: 'required',
-          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+          requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result.packageUpdates).toEqual({
           mypackage: { version: '2.0.0', addToPackageJson: false },
-          firstPartyChild: { version: '3.0.0', addToPackageJson: false },
+          requiredChild: { version: '3.0.0', addToPackageJson: false },
         });
-        expect(result.packageUpdates.thirdPartyChild).toBeUndefined();
+        expect(result.packageUpdates.optionalChild).toBeUndefined();
       });
 
-      it('should drop entries that contain only third-party packages without firing their x-prompt', async () => {
+      it('should drop entries that contain only optional packages without firing their x-prompt', async () => {
         mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              thirdPartyA: '1.0.0',
-              thirdPartyB: '1.0.0',
+              optionalA: '1.0.0',
+              optionalB: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1155,12 +1155,12 @@ describe('Migration', () => {
               return Promise.resolve({
                 version: '2.0.0',
                 packageJsonUpdates: {
-                  thirdPartyOnly: {
+                  optionalOnly: {
                     version: '2.0.0',
-                    'x-prompt': 'Update third-party packages?',
+                    'x-prompt': 'Update optional packages?',
                     packages: {
-                      thirdPartyA: { version: '3.0.0' },
-                      thirdPartyB: { version: '3.0.0' },
+                      optionalA: { version: '3.0.0' },
+                      optionalB: { version: '3.0.0' },
                     },
                   },
                 },
@@ -1172,7 +1172,7 @@ describe('Migration', () => {
           to: {},
           interactive: true,
           mode: 'required',
-          firstPartyPackages: new Set(['mypackage']),
+          requiredPackages: new Set(['mypackage']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
@@ -1183,9 +1183,9 @@ describe('Migration', () => {
         expect(mockPrompt).not.toHaveBeenCalled();
       });
 
-      it('should source first-party gate from the provided set, not getNxPackageGroup', async () => {
+      it('should source required gate from the provided set, not getNxPackageGroup', async () => {
         // Sanity: a name commonly returned by getNxPackageGroup() that we
-        // deliberately exclude from the first-party set should be filtered out,
+        // deliberately exclude from the required set should be filtered out,
         // and an arbitrary unrelated name that we include should be kept.
         const migrator = new Migrator({
           packageJson: createPackageJson({
@@ -1217,7 +1217,7 @@ describe('Migration', () => {
           from: {},
           to: {},
           mode: 'required',
-          firstPartyPackages: new Set(['nx', 'not-in-nx-package-group']),
+          requiredPackages: new Set(['nx', 'not-in-nx-package-group']),
         });
 
         const result = await migrator.migrate('nx', '2.0.0');
@@ -1232,12 +1232,12 @@ describe('Migration', () => {
         expect(result.packageUpdates['@nx/react']).toBeUndefined();
       });
 
-      it('should drop first-party packages and keep third-party in mixed entries when mode is optional', async () => {
+      it('should drop required packages and keep optional ones when mode is optional', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              firstPartyChild: '1.0.0',
-              thirdPartyChild: '1.0.0',
+              requiredChild: '1.0.0',
+              optionalChild: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1249,13 +1249,13 @@ describe('Migration', () => {
                   mixed: {
                     version: '2.0.0',
                     packages: {
-                      firstPartyChild: { version: '3.0.0' },
-                      thirdPartyChild: { version: '3.0.0' },
+                      requiredChild: { version: '3.0.0' },
+                      optionalChild: { version: '3.0.0' },
                     },
                   },
                 },
               });
-            } else if (p === 'firstPartyChild' || p === 'thirdPartyChild') {
+            } else if (p === 'requiredChild' || p === 'optionalChild') {
               return Promise.resolve({ version: '3.0.0' });
             }
             return Promise.resolve(null);
@@ -1263,20 +1263,20 @@ describe('Migration', () => {
           from: {},
           to: {},
           mode: 'optional',
-          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+          requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result.packageUpdates).toEqual({
-          thirdPartyChild: { version: '3.0.0', addToPackageJson: false },
+          optionalChild: { version: '3.0.0', addToPackageJson: false },
         });
         expect(result.packageUpdates.mypackage).toBeUndefined();
-        expect(result.packageUpdates.firstPartyChild).toBeUndefined();
+        expect(result.packageUpdates.requiredChild).toBeUndefined();
       });
 
       it.each(['required', 'optional'] as const)(
-        'should throw when constructed with mode=%s but no firstPartyPackages',
+        'should throw when constructed with mode=%s but no requiredPackages',
         (mode) => {
           // Other required callbacks are unused — constructor rejects before any
           // method runs — so stub them with the simplest valid shape.
@@ -1291,7 +1291,7 @@ describe('Migration', () => {
                 mode,
               })
           ).toThrow(
-            `Error: 'firstPartyPackages' is required when 'mode' is '${mode}'.`
+            `Error: 'requiredPackages' is required when 'mode' is '${mode}'.`
           );
         }
       );
@@ -2076,7 +2076,7 @@ describe('Migration', () => {
     beforeEach(() => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       // `getInstalledVersion(pkg)` mirrors the installed nx version for the
-      // canonical packages so third-party bound checks read the same value.
+      // canonical packages so optional bound checks read the same value.
       mockGetInstalledVersion.mockImplementation((pkg: string) =>
         pkg === 'nx' || pkg === '@nx/workspace'
           ? mockGetInstalledNxVersion()
@@ -2746,7 +2746,7 @@ describe('Migration', () => {
       );
     });
 
-    it('should reject --mode=optional with --to for first-party plugins higher than installed', async () => {
+    it('should reject --mode=optional with --to for required packages higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
@@ -2794,7 +2794,7 @@ describe('Migration', () => {
       );
     });
 
-    it('should cap --to against nx full group when migrating @nx/workspace third-party', async () => {
+    it('should cap --to against nx full group when migrating @nx/workspace in optional mode', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       // `@nx/workspace` declares a narrow group; the bound check must use nx's
       // full closure (which includes `@nx/jest`) to mirror the walk.
