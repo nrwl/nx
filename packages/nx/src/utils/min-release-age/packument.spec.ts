@@ -77,18 +77,48 @@ describe('fetchRegistryMetadata', () => {
 describe('fetchDeprecations', () => {
   afterEach(() => jest.clearAllMocks());
 
-  it('returns the deprecation map', async () => {
+  it('queries the per-version map via a ranged version+deprecated projection', async () => {
+    viewMock.mockResolvedValue('[]');
+    await fetchDeprecations('pkg-a');
+    expect(viewMock).toHaveBeenCalledWith(
+      'pkg-a',
+      '>=0.0.0',
+      'version deprecated --json'
+    );
+  });
+
+  it('maps an array of mixed version/deprecated entries', async () => {
     viewMock.mockResolvedValue(
-      JSON.stringify({ '1.0.0': 'deprecated', '1.1.0': true })
+      JSON.stringify([
+        { version: '1.0.0', deprecated: 'do not use' },
+        { version: '1.1.0' },
+        { version: '1.2.0', deprecated: 'gone' },
+      ])
     );
     await expect(fetchDeprecations('pkg-a')).resolves.toEqual({
-      '1.0.0': 'deprecated',
-      '1.1.0': true,
+      '1.0.0': 'do not use',
+      '1.2.0': 'gone',
+    });
+  });
+
+  it('returns an empty map when no version is deprecated (array of strings)', async () => {
+    viewMock.mockResolvedValue(JSON.stringify(['1.0.0', '1.1.0']));
+    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
+  });
+
+  it('maps a single-object response', async () => {
+    viewMock.mockResolvedValue(
+      JSON.stringify({ version: '1.0.0', deprecated: 'do not use' })
+    );
+    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({
+      '1.0.0': 'do not use',
     });
   });
 
   it('returns an empty object for a scalar/empty response', async () => {
     viewMock.mockResolvedValue('');
+    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
+    viewMock.mockResolvedValue(JSON.stringify('1.0.0'));
     await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
   });
 });

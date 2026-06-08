@@ -26,9 +26,13 @@ async function resolveLatestStableInMajor(
   majorVersion: number
 ): Promise<string | null> {
   try {
+    // Probe only: this resolves prompt choices the user may never pick, so it
+    // must not prompt or write pnpm excludes. The chosen version is resolved
+    // again (with side effects) when migrations actually run.
     const resolved = await resolvePackageVersionRespectingMinReleaseAge(
       packageName,
-      `^${majorVersion}.0.0`
+      `^${majorVersion}.0.0`,
+      { applySideEffects: false }
     );
     return valid(resolved) ? resolved : null;
   } catch {

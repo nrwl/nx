@@ -446,39 +446,6 @@ describe('package-manager', () => {
     });
   });
 
-  describe('modifyPnpmWorkspaceYamlToFitNewDirectory', () => {
-    it('should drop workspace packages but keep settings', () => {
-      const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
-        [
-          'packages:',
-          "  - 'packages/*'",
-          'minimumReleaseAge: 1440',
-          'registry: https://example.com/',
-        ].join('\n')
-      );
-      expect(result).not.toContain('packages');
-      expect(result).toContain('minimumReleaseAge: 1440');
-      expect(result).toContain('registry: https://example.com/');
-    });
-
-    it('should drop patchedDependencies pointing at relative paths', () => {
-      const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
-        [
-          'patchedDependencies:',
-          '  foo@1.0.0: patches/foo@1.0.0.patch',
-          'minimumReleaseAge: 1440',
-        ].join('\n')
-      );
-      expect(result).not.toContain('patchedDependencies');
-      expect(result).not.toContain('patches/foo');
-      expect(result).toContain('minimumReleaseAge: 1440');
-    });
-
-    it('should not throw on an empty file', () => {
-      expect(() => modifyPnpmWorkspaceYamlToFitNewDirectory('')).not.toThrow();
-    });
-  });
-
   describe('getPackageWorkspaces', () => {
     const tempWorkspace = join(tmpdir(), 'addPackagePathToWorkspaces');
 

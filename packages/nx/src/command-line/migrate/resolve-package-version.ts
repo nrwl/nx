@@ -79,8 +79,14 @@ function getPolicy(): Promise<MinReleaseAgePolicyReadResult> {
  */
 export async function resolvePackageVersionRespectingMinReleaseAge(
   packageName: string,
-  version: string
+  version: string,
+  options?: { applySideEffects?: boolean }
 ): Promise<string> {
+  // A speculative lookup (e.g. populating multi-major prompt choices) sets this
+  // to false so resolving a version the user has not chosen yet never prompts,
+  // writes pnpm excludes, or triggers a real install.
+  const applySideEffects = options?.applySideEffects ?? true;
+
   if (!isRegistryResolutionEnabled()) {
     return resolvePackageVersionUsingInstallation(packageName, version);
   }
@@ -98,19 +104,25 @@ export async function resolvePackageVersionRespectingMinReleaseAge(
     return resolvePackageVersionUsingInstallation(packageName, version);
   }
 
-  return resolveWithPolicy(packageName, version, result.policy);
+  return resolveWithPolicy(
+    packageName,
+    version,
+    result.policy,
+    applySideEffects
+  );
 }
 
 async function resolveWithPolicy(
   packageName: string,
   version: string,
-  policy: MinReleaseAgePolicy
+  policy: MinReleaseAgePolicy,
+  applySideEffects: boolean
 ): Promise<string> {
   try {
     const spec = resolveCatalogReferenceIfNeeded(packageName, version);
     const outcome = await resolveCompliantVersion(packageName, spec, policy);
 
-    if (outcome.version !== outcome.unconstrained) {
+    if (applySideEffects && outcome.version !== outcome.unconstrained) {
       reportChangedOutcome(
         packageName,
         spec,
@@ -120,14 +132,22 @@ async function resolveWithPolicy(
       );
     }
 
-    if (outcome.immature) {
+    if (outcome.immature && applySideEffects) {
       handleImmaturePick(packageName, outcome.version, policy);
     }
 
     return outcome.version;
   } catch (e) {
     if (e instanceof MinReleaseAgeViolationError) {
+      // A side-effect-free probe treats the violation as "unavailable" rather
+      // than prompting/writing for a version the user has not selected.
+      if (!applySideEffects) {
+        throw e;
+      }
       return handleViolation(packageName, e, policy);
+    }
+    if (!applySideEffects) {
+      throw e;
     }
     // Unknown failure (registry hiccup, parse error): try a real install, but
     // surface the original error if that also fails.
@@ -208,14 +228,14 @@ async function handleViolation(
     throw error;
   }
 
-  const blockedList = error.blocked
-    .map(
-      (b) =>
-        `  ${packageName}@${b.version} (published ${formatPublishAge(
-          b.publishedAt
-        )})`
-    )
-    .join('\n');
+  // pnpm's loose resolver picks the lowest in-range version (a single exact/tag
+  // target otherwise); strict fails on exactly that pick. error.blocked is
+  // sorted newest-first, so the resolver's pick is the last entry. Mirror the
+  // loose path: prompt for, exclude, and return that one version.
+  const resolved = error.blocked[error.blocked.length - 1];
+  const blockedLine = `  ${packageName}@${resolved.version} (published ${formatPublishAge(
+    resolved.publishedAt
+  )})`;
 
   // pnpm prompts once for the whole run; remember an approval for later picks.
   if (!strictApprovalGranted) {
@@ -224,7 +244,7 @@ async function handleViolation(
         name: 'approved',
         type: 'confirm',
         initial: false,
-        message: `The following version(s) do not meet the ${policy.sourceDescription} constraint:\n${blockedList}\nInstall anyway and add them to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
+        message: `The following version does not meet the ${policy.sourceDescription} constraint:\n${blockedLine}\nInstall anyway and add it to minimumReleaseAgeExclude in pnpm-workspace.yaml?`,
       },
     ]);
 
@@ -247,13 +267,11 @@ async function handleViolation(
     strictApprovalGranted = true;
   }
 
-  appendMinimumReleaseAgeExcludes(
-    workspaceRoot,
-    error.blocked.map((b) => `${packageName}@${b.version}`)
-  );
+  appendMinimumReleaseAgeExcludes(workspaceRoot, [
+    `${packageName}@${resolved.version}`,
+  ]);
 
-  // The newest blocked candidate is what the gate would otherwise have picked.
-  return error.blocked[0].version;
+  return resolved.version;
 }
 
 // Renders a registry ISO publish timestamp as a human age for the strict prompt

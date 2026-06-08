@@ -300,6 +300,38 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     ).rejects.toBeInstanceOf(MinReleaseAgeViolationError);
   });
 
+  it('side-effect-free resolution returns an immature pick without writing excludes', async () => {
+    mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: true }));
+    mockResolve.mockResolvedValue({
+      version: '1.0.1',
+      unconstrained: '1.0.1',
+      immature: true,
+    });
+
+    const result = await resolvePackageVersionRespectingMinReleaseAge(
+      'pkg-b',
+      '^1.0.0',
+      { applySideEffects: false }
+    );
+    expect(result).toBe('1.0.1');
+    expect(mockWriteExcludes).not.toHaveBeenCalled();
+  });
+
+  it('side-effect-free resolution rethrows a strict violation without prompting', async () => {
+    mockReadPolicy.mockResolvedValue(pnpmPolicy({ strict: true }));
+    mockResolve.mockRejectedValue(
+      violation([{ version: '2.0.0', publishedAt: '6h ago' }])
+    );
+
+    await expect(
+      resolvePackageVersionRespectingMinReleaseAge('pkg-a', '^2.0.0', {
+        applySideEffects: false,
+      })
+    ).rejects.toBeInstanceOf(MinReleaseAgeViolationError);
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockWriteExcludes).not.toHaveBeenCalled();
+  });
+
   it('pnpm strict violation rethrows in non-TTY/CI without prompting', async () => {
     Object.defineProperty(process.stdin, 'isTTY', {
       value: false,
@@ -319,6 +351,27 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     mockReadPolicy.mockResolvedValue(pnpmPolicy({ strict: true }));
     mockResolve.mockRejectedValue(
       violation([{ version: '2.0.0', publishedAt: '6h ago' }])
+    );
+    mockPrompt.mockResolvedValue({ approved: true });
+
+    const result = await resolvePackageVersionRespectingMinReleaseAge(
+      'pkg-a',
+      '^2.0.0'
+    );
+    expect(result).toBe('2.0.0');
+    expect(mockWriteExcludes).toHaveBeenCalledWith(expect.any(String), [
+      'pkg-a@2.0.0',
+    ]);
+  });
+
+  it('pnpm strict violation: approve returns and excludes the lowest in-range version only', async () => {
+    mockReadPolicy.mockResolvedValue(pnpmPolicy({ strict: true }));
+    // blocked is sorted newest-first; the loose resolver would pick the lowest.
+    mockResolve.mockRejectedValue(
+      violation([
+        { version: '2.1.0', publishedAt: '4h ago' },
+        { version: '2.0.0', publishedAt: '6h ago' },
+      ])
     );
     mockPrompt.mockResolvedValue({ approved: true });
 

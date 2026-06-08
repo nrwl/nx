@@ -621,8 +621,10 @@ export async function packageRegistryView(
   }
 
   // An empty version means we want the full packument; omit the trailing `@`.
+  // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
+  // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
-  const { stdout } = await execAsync(`${pm} view ${spec} ${args}`, {
+  const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
   });
   return stdout.toString().trim();
