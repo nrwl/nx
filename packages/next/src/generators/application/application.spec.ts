@@ -92,6 +92,19 @@ describe('app', () => {
       expect(tree.exists(`${name}/public/favicon.ico`)).toBeTruthy();
     });
 
+    it('should include the @nx/next style reference in the generated index.d.ts', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+      });
+
+      const content = tree.read(`${name}/index.d.ts`, 'utf-8');
+      expect(content).toContain(
+        '/// <reference types="@nx/next/typings/style.d.ts" />'
+      );
+    });
+
     it('should add layout types correctly for standalone apps', async () => {
       const name = uniq();
       await applicationGenerator(tree, {

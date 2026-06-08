@@ -33,7 +33,6 @@ import {
   viteVersion,
 } from '../../utils/versions';
 import initGenerator from '../init/init';
-import { assertAndPinRemixTypescript } from '../../utils/assert-and-pin-remix-typescript';
 import { updateDependencies } from '../utils/update-dependencies';
 import {
   addE2E,
@@ -68,10 +67,8 @@ export async function remixApplicationGeneratorInternal(
     _options.addPlugin,
     _options.useTsSolution
   );
-  // Pin TS to 5.x before jsInit can install a newer default, and hard-error in
-  // a TS6 workspace - Remix has no TS6-capable release.
+  // initGenerator enforces the TS pin and hard-errors on TS6.
   const tasks: GeneratorCallback[] = [
-    assertAndPinRemixTypescript(tree),
     await initGenerator(tree, {
       skipFormat: true,
       addPlugin: true,

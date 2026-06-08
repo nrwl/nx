@@ -1,8 +1,8 @@
 // TS 6.0 enables `noUncheckedSideEffectImports`, which errors on plain
-// `import './x.css'` unless the module is declared. TS matches wildcard
-// ambient modules by prefix length only, so a bare '*.css' pattern here can
-// shadow next's own typed '*.module.css'; the typed default export keeps
-// CSS-module property access working when that happens.
+// `import './x.css'` unless the module is declared. Equally-specific wildcard
+// patterns resolve by registration order, so this bare '*.css' can shadow
+// next's own typed '*.module.css'; the class-map default export keeps
+// CSS-module property access working even when it shadows.
 declare module '*.css' {
   const classes: { readonly [key: string]: string };
   export default classes;

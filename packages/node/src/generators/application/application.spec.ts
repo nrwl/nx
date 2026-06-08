@@ -1172,10 +1172,10 @@ describe('app', () => {
       // default tree has no declared typescript -> assumes the >=6 default
       expect(compilerOptions.moduleResolution).toBe('bundler');
       expect(compilerOptions.strict).toBe(false);
-      // identifying values from the inlined base options
+      // module and target come from the inlined base options
       expect(compilerOptions.module).toBe('esnext');
       expect(compilerOptions.target).toBe('es2015');
-      // explicit override applied on top of the base options
+      // esModuleInterop is an explicit override on top of the base options
       expect(compilerOptions.esModuleInterop).toBe(true);
     });
 

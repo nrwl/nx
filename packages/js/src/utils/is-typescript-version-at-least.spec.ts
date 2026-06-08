@@ -6,14 +6,21 @@ import { typescriptVersion } from './versions';
 
 describe('isTypescriptVersionAtLeast', () => {
   it.each`
-    declared          | version    | expected
-    ${'~5.9.2'}       | ${'6.0.0'} | ${false}
-    ${'~6.0.3'}       | ${'6.0.0'} | ${true}
-    ${'^5.8.0'}       | ${'5.8.0'} | ${true}
-    ${'>=5.8 <6.0'}   | ${'6.0.0'} | ${false}
-    ${'6.0.0-beta.1'} | ${'6.0.0'} | ${true}
-    ${'latest'}       | ${'6.0.0'} | ${true}
-    ${'next'}         | ${'6.0.0'} | ${true}
+    declared            | version    | expected
+    ${'~5.9.2'}         | ${'6.0.0'} | ${false}
+    ${'~6.0.3'}         | ${'6.0.0'} | ${true}
+    ${'^5.8.0'}         | ${'5.8.0'} | ${true}
+    ${'>=5.8 <6.0'}     | ${'6.0.0'} | ${false}
+    ${'6.0.0-beta.1'}   | ${'6.0.0'} | ${true}
+    ${'latest'}         | ${'6.0.0'} | ${true}
+    ${'next'}           | ${'6.0.0'} | ${true}
+    ${'<6.0.0'}         | ${'6.0.0'} | ${false}
+    ${'<6'}             | ${'6.0.0'} | ${false}
+    ${'>=5.9.0 <6.0.0'} | ${'6.0.0'} | ${false}
+    ${'>=5.9.0 <6.0.0'} | ${'5.9.0'} | ${true}
+    ${'^5 || ^6'}       | ${'6.0.0'} | ${false}
+    ${'*'}              | ${'6.0.0'} | ${false}
+    ${'>=6.0.0-beta.1'} | ${'6.0.0'} | ${true}
   `(
     'returns $expected for declared "$declared" against "$version"',
     ({ declared, version, expected }) => {

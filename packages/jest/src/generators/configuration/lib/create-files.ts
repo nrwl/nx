@@ -82,11 +82,14 @@ export function createFiles(
       !options.isTsSolutionSetup || transformer === 'ts-jest'
         ? 'commonjs'
         : undefined,
-    // commonjs spec context: `node10` is a deprecation error on TS6, `bundler`
-    // is invalid on TS5.8; emit the value valid for the workspace's TS range.
-    moduleResolution: isTypescriptVersionAtLeast(tree, '6.0.0')
-      ? 'bundler'
-      : 'node10',
+    // commonjs only: `node10` is a deprecation error on TS6, `bundler` is
+    // invalid on TS5.8; emit the value valid for the workspace's TS range.
+    moduleResolution:
+      !options.isTsSolutionSetup || transformer === 'ts-jest'
+        ? isTypescriptVersionAtLeast(tree, '6.0.0')
+          ? 'bundler'
+          : 'node10'
+        : undefined,
   });
 
   if (options.setupFile !== 'angular') {

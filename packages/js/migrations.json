@@ -29,13 +29,14 @@
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     },
-    "23-0-0-add-ignore-deprecations-for-ts6": {
-      "version": "23.0.0-beta.23",
-      "description": "Adds `\"ignoreDeprecations\": \"6.0\"` to tsconfig files whose compilerOptions (or ts-node.compilerOptions) directly carry a TypeScript 6 deprecated option value (e.g. moduleResolution node/node10/classic, baseUrl, target es5, esModuleInterop false, outFile, module amd/umd/system), keeping the workspace compiling on TypeScript 6 without behavior changes.",
+    "23-1-0-add-ignore-deprecations-for-ts6": {
+      "version": "23.1.0-beta.0",
+      "description": "Adds `\"ignoreDeprecations\": \"6.0\"` to tsconfig files whose compilerOptions (or ts-node.compilerOptions) directly carry a TypeScript 6 deprecated option value (e.g. moduleResolution node/node10/classic, baseUrl, target es5, esModuleInterop false, outFile, module amd/umd/system/none, alwaysStrict false, allowSyntheticDefaultImports false, downlevelIteration set). Also pins `\"strict\": false` and `\"noUncheckedSideEffectImports\": false` in chain-root tsconfigs (no \"extends\") that lack each key, preserving pre-TS6 behavior where their defaults were less strict.",
       "requires": {
         "typescript": ">=6.0.0"
       },
-      "factory": "./dist/src/migrations/update-23-0-0/add-ignore-deprecations-for-ts6"
+      "factory": "./dist/src/migrations/update-23-1-0/add-ignore-deprecations-for-ts6",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-ignore-deprecations-for-ts6.md"
     }
   },
   "packageJsonUpdates": {
@@ -162,8 +163,8 @@
         }
       }
     },
-    "23.0.0-typescript": {
-      "version": "23.0.0-beta.23",
+    "23.1.0-typescript": {
+      "version": "23.1.0-beta.0",
       "incompatibleWith": {
         "@remix-run/dev": "*"
       },

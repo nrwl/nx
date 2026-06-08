@@ -236,8 +236,8 @@
         }
       }
     },
-    "23.0.0-typescript-eslint": {
-      "version": "23.0.0-beta.23",
+    "23.1.0-typescript-eslint": {
+      "version": "23.1.0-beta.0",
       "requires": {
         "typescript-eslint": ">8.0.0 <8.58.0"
       },
@@ -268,8 +268,8 @@
         }
       }
     },
-    "23.0.0-@typescript-eslint": {
-      "version": "23.0.0-beta.23",
+    "23.1.0-@typescript-eslint": {
+      "version": "23.1.0-beta.0",
       "requires": {
         "@typescript-eslint/eslint-plugin": ">8.0.0 <8.58.0"
       },

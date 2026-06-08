@@ -10,7 +10,7 @@ describe('assertAndPinRemixTypescript', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it.each(['~6.0.3', '^6.0.0'])(
+  it.each(['~6.0.3', '^6.0.0', '>=6.0.0'])(
     'should throw when typescript is declared as %s',
     (version) => {
       addDependenciesToPackageJson(tree, {}, { typescript: version });
@@ -20,6 +20,15 @@ describe('assertAndPinRemixTypescript', () => {
       );
     }
   );
+
+  it('should not throw when typescript is declared as <6 and should not overwrite the declaration', () => {
+    addDependenciesToPackageJson(tree, {}, { typescript: '<6' });
+
+    expect(() => assertAndPinRemixTypescript(tree)).not.toThrow();
+
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies.typescript).toBe('<6');
+  });
 
   it('should pin typescript to the Remix version when typescript is absent', () => {
     expect(() => assertAndPinRemixTypescript(tree)).not.toThrow();

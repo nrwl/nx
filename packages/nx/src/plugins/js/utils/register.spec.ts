@@ -117,6 +117,22 @@ describe('getTranspiler', () => {
     getTranspiler(compilerOptions);
     expect(compilerOptions.ignoreDeprecations).toEqual('6.0');
   });
+
+  // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
+  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '5.9',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toBeUndefined();
+    });
+    jest.unmock('typescript');
+  });
 });
 
 describe('isNativeTypeStripError', () => {

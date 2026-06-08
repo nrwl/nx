@@ -577,7 +577,7 @@ export function getTranspiler(
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
   // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
-  // the suppression flag is itself invalid before TS 6, so gate it on the major.
+  // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
   if (parseInt(ts.versionMajorMinor, 10) >= 6) {
     compilerOptions.ignoreDeprecations = '6.0';
   }

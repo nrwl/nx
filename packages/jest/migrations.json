@@ -237,8 +237,8 @@
         }
       }
     },
-    "23.0.0-ts-jest": {
-      "version": "23.0.0-beta.23",
+    "23.1.0-ts-jest": {
+      "version": "23.1.0-beta.0",
       "requires": {
         "ts-jest": ">=29.0.0 <29.4.7"
       },

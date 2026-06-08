@@ -635,6 +635,22 @@ export default defineConfig({
     `);
   });
 
+  it('should use node10 moduleResolution in cypress tsconfig on TypeScript < 6', async () => {
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+    }));
+    addProject(tree, { name: 'my-app', type: 'apps' });
+
+    await cypressE2EConfigurationGenerator(tree, {
+      project: 'my-app',
+      addPlugin: true,
+    });
+
+    const tsconfig = readJson(tree, 'apps/my-app/tsconfig.json');
+    expect(tsconfig.compilerOptions.moduleResolution).toEqual('node10');
+  });
+
   describe('TS Solution Setup', () => {
     beforeEach(() => {
       tree.write(
