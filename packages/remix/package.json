@@ -70,6 +70,11 @@
   "peerDependencies": {
     "@remix-run/dev": "^2.0.0"
   },
+  "peerDependenciesMeta": {
+    "@remix-run/dev": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   },
