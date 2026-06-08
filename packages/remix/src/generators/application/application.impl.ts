@@ -70,6 +70,7 @@ export async function remixApplicationGeneratorInternal(
     _options.addPlugin,
     _options.useTsSolution
   );
+  // initGenerator enforces the TS pin and hard-errors on TS6.
   const tasks: GeneratorCallback[] = [
     await initGenerator(tree, {
       skipFormat: true,

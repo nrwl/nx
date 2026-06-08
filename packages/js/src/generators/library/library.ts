@@ -38,7 +38,7 @@ import { getUpdatedPackageJsonContent } from '../../utils/package-json/update-pa
 import { addSwcConfig } from '../../utils/swc/add-swc-config';
 import { getSwcDependencies } from '../../utils/swc/add-swc-dependencies';
 import { getNeededCompilerOptionOverrides } from '../../utils/typescript/configuration';
-import { tsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
+import { getTsConfigBaseOptions } from '../../utils/typescript/create-ts-config';
 import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 import { ensureProjectIsIncludedInPluginRegistrations } from '../../utils/typescript/plugin';
 import {
@@ -1103,7 +1103,7 @@ function createProjectTsConfigs(
       ? undefined
       : getRelativePathToRootTsConfig(tree, options.projectRoot),
     compilerOptions: {
-      ...(options.rootProject ? tsConfigBaseOptions : {}),
+      ...(options.rootProject ? getTsConfigBaseOptions(tree) : {}),
       ...compilerOptionOverrides,
     },
     files: [],
