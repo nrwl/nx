@@ -68,7 +68,7 @@
     "@nx/vitest": "workspace:*"
   },
   "peerDependencies": {
-    "@remix-run/dev": "^2.17.3"
+    "@remix-run/dev": "^2.0.0"
   },
   "publishConfig": {
     "access": "public"
