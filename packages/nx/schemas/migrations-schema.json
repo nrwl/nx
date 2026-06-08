@@ -59,7 +59,7 @@
         },
         "prompt": {
           "type": "string",
-          "description": "Path to a markdown prompt file with instructions for an AI agent to perform the migration, relative to `migrations.json`. The path must stay within the directory containing `migrations.json` and point at an existing file. The prompt runs under `nx migrate --agentic`."
+          "description": "Path to a markdown prompt file with instructions for an AI agent to perform the migration, relative to `migrations.json`. The path must stay within the directory containing `migrations.json` and point at an existing file. The prompt is handed to the agent when migrations are applied with the agentic flow enabled (e.g. `nx migrate --run-migrations --agentic`)."
         },
         "schema": {
           "type": "string",
