@@ -62,11 +62,7 @@
     "access": "public"
   },
   "typesVersions": {
-    "*": {
-      "internal": [
-        "dist/internal.d.ts"
-      ]
-    }
+    "*": {}
   },
   "exports": {
     ".": {
@@ -77,11 +73,6 @@
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
-    }
+    "./executors.json": "./executors.json"
   }
 }

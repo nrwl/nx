@@ -46,9 +46,6 @@
       "typings/*.d.ts": [
         "dist/typings/*.d.ts"
       ],
-      "internal": [
-        "dist/internal.d.ts"
-      ],
       "src/utils/deprecation": [
         "dist/src/utils/deprecation.d.ts"
       ],
@@ -130,11 +127,6 @@
       "@nx/nx-source": "./typings/*.d.ts",
       "types": "./dist/typings/*.d.ts",
       "default": "./dist/typings/*.d.ts"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
     },
     "./src/utils/deprecation": {
       "@nx/nx-source": "./src/utils/deprecation.ts",

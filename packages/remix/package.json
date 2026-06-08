@@ -45,9 +45,6 @@
       ],
       "plugins/*": [
         "dist/plugins/*.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
       ]
     }
   },
@@ -104,11 +101,6 @@
       "@nx/nx-source": "./plugins/*.ts",
       "types": "./dist/plugins/*.d.ts",
       "default": "./dist/plugins/*.js"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
     }
   }
 }

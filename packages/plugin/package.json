@@ -54,9 +54,6 @@
       ],
       "testing": [
         "dist/testing.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
       ]
     }
   },
@@ -78,11 +75,6 @@
       "@nx/nx-source": "./testing.ts",
       "types": "./dist/testing.d.ts",
       "default": "./dist/testing.js"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
     }
   }
 }

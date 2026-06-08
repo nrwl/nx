@@ -64,18 +64,9 @@
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
-    "./generators.json": "./generators.json",
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
-    }
+    "./generators.json": "./generators.json"
   },
   "typesVersions": {
-    "*": {
-      "internal": [
-        "dist/internal.d.ts"
-      ]
-    }
+    "*": {}
   }
 }

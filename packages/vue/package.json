@@ -30,9 +30,6 @@
     "*": {
       "tailwind": [
         "dist/tailwind.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
       ]
     }
   },
@@ -61,11 +58,6 @@
       "@nx/nx-source": "./tailwind.ts",
       "types": "./dist/tailwind.d.ts",
       "default": "./dist/tailwind.js"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
     }
   },
   "dependencies": {

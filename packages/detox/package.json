@@ -63,9 +63,6 @@
     "*": {
       "plugin": [
         "dist/plugin.d.ts"
-      ],
-      "internal": [
-        "dist/internal.d.ts"
       ]
     }
   },
@@ -83,11 +80,6 @@
       "@nx/nx-source": "./plugin.ts",
       "types": "./dist/plugin.d.ts",
       "default": "./dist/plugin.js"
-    },
-    "./internal": {
-      "@nx/nx-source": "./internal.ts",
-      "types": "./dist/internal.d.ts",
-      "default": "./dist/internal.js"
     }
   }
 }

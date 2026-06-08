@@ -10,11 +10,6 @@
       "description": "Rename imports of `createNodesV2` from `@nx/nuxt/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
-    },
-    "rewrite-nuxt-internal-subpath-imports": {
-      "version": "23.0.0-beta.25",
-      "description": "Rewrite deep `@nx/nuxt/src/*` imports to the public `@nx/nuxt` entry (for public API) or the new `@nx/nuxt/internal` entry (for internals).",
-      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {

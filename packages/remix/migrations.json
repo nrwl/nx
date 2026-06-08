@@ -5,11 +5,6 @@
       "description": "Rename imports of `createNodesV2` from `@nx/remix/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
-    },
-    "rewrite-remix-internal-subpath-imports": {
-      "version": "23.0.0-beta.25",
-      "description": "Rewrites `@nx/remix/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/remix`'s exports map. Named imports/exports of public symbols are routed to `@nx/remix` and the rest to the new `@nx/remix/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/remix/internal`.",
-      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {
