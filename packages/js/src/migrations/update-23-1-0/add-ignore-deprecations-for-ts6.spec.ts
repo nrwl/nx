@@ -68,6 +68,19 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     expect(json.compilerOptions).toBeUndefined();
   });
 
+  it('leaves a non-object compilerOptions untouched without crashing', async () => {
+    // A present-but-non-object compilerOptions previously crashed the pin pass
+    // (modify() throws), aborting the whole migration.
+    tree.write(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: [] }, null, 2)
+    );
+
+    await update(tree);
+
+    expect(readJson(tree, 'tsconfig.json').compilerOptions).toEqual([]);
+  });
+
   it('upgrades a stale ignoreDeprecations value to "6.0"', async () => {
     tree.write(
       'tsconfig.json',
@@ -224,6 +237,20 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
     const json = readJson(tree, 'tsconfig.json');
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
+  });
+
+  it('applies all three pins on a chain root carrying a deprecated option', async () => {
+    tree.write(
+      'tsconfig.json',
+      JSON.stringify({ compilerOptions: { moduleResolution: 'node' } }, null, 2)
+    );
+
+    await update(tree);
+
+    const json = readJson(tree, 'tsconfig.json');
+    expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
+    expect(json.compilerOptions.strict).toBe(false);
+    expect(json.compilerOptions.noUncheckedSideEffectImports).toBe(false);
   });
 
   describe('strict-pin pass', () => {

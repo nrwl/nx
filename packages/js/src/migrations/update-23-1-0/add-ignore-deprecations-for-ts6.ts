@@ -216,10 +216,14 @@ function pinPreTs6Defaults(tree: Tree, tsconfigPath: string): boolean {
   }
 
   const compilerOptionsNode = findNodeAtLocation(root, ['compilerOptions']);
-  const compilerOptions =
-    compilerOptionsNode?.type === 'object'
-      ? (getNodeValue(compilerOptionsNode) as CompilerOptions)
-      : {};
+  // A present-but-non-object compilerOptions can't receive pinned keys; bailing
+  // avoids modify() throwing and aborting the whole migration.
+  if (compilerOptionsNode && compilerOptionsNode.type !== 'object') {
+    return false;
+  }
+  const compilerOptions = compilerOptionsNode
+    ? (getNodeValue(compilerOptionsNode) as CompilerOptions)
+    : {};
 
   let contents = original;
   let changed = false;
