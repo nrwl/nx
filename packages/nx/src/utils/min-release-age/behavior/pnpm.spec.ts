@@ -640,6 +640,20 @@ describe('pnpm min-release-age behavior', () => {
         .mockImplementation(() => require('@zkochan/js-yaml').dump(doc ?? {}));
     }
 
+    // Workspace yaml present but unparseable (unterminated flow collection).
+    function mockCorruptWorkspaceYaml() {
+      jest.resetModules();
+      const fs = require('fs');
+      jest
+        .spyOn(fs, 'existsSync')
+        .mockImplementation(
+          (p: any) => typeof p === 'string' && p.endsWith('pnpm-workspace.yaml')
+        );
+      jest
+        .spyOn(fs, 'readFileSync')
+        .mockReturnValue('minimumReleaseAge: [1, 2');
+    }
+
     it('versions below 10.16.0 -> inactive', async () => {
       const result = await readPnpmPolicy('/root', '10.15.1');
       expect(result.outcome).toBe('inactive');
@@ -687,6 +701,18 @@ describe('pnpm min-release-age behavior', () => {
     it('v10 invalid window -> ambiguous (window-invalid)', async () => {
       mockYaml({ minimumReleaseAge: 'abc' });
       const result = await readPnpmPolicy('/root', '10.16.0');
+      expect(result.outcome).toBe('ambiguous');
+    });
+
+    it('v10 unparseable workspace yaml -> ambiguous (defer to install)', async () => {
+      mockCorruptWorkspaceYaml();
+      const result = await readPnpmPolicy('/root', '10.16.0');
+      expect(result.outcome).toBe('ambiguous');
+    });
+
+    it('v11 unparseable workspace yaml -> ambiguous (defer to install)', async () => {
+      mockCorruptWorkspaceYaml();
+      const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('ambiguous');
     });
 

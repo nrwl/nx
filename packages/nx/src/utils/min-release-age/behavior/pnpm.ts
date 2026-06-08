@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
-import { join } from 'path';
+import { basename, join } from 'path';
 import {
   gte,
   maxSatisfying,
@@ -435,7 +435,7 @@ interface YamlWindow {
   ignoreMissingTime?: boolean;
 }
 
-function readYamlRaw(path: string): Record<string, unknown> | null {
+function readYamlRaw(path: string): Record<string, unknown> | 'invalid' | null {
   if (!existsSync(path)) {
     return null;
   }
@@ -443,12 +443,18 @@ function readYamlRaw(path: string): Record<string, unknown> | null {
     const { load } = require('@zkochan/js-yaml');
     return (load(readFileSync(path, 'utf-8')) as Record<string, unknown>) ?? {};
   } catch {
-    return null;
+    // The file exists but is unparseable. An absent file falls through to lower
+    // surfaces; a corrupt one can't be reasoned about, so signal it and let the
+    // caller defer to a real install (matching npm/yarn/bun on a read failure).
+    return 'invalid';
   }
 }
 
 function readYamlWindow(path: string): YamlWindow | InvalidWindow | null {
   const doc = readYamlRaw(path);
+  if (doc === 'invalid') {
+    return { kind: 'invalid', reason: `Unable to parse ${basename(path)}.` };
+  }
   if (!doc) {
     return null;
   }
