@@ -35,8 +35,7 @@
     "@nx/react": "workspace:*",
     "@nx/web": "workspace:*",
     "tslib": "catalog:typescript",
-    "@phenomnomnominal/tsquery": "catalog:typescript",
-    "semver": "catalog:"
+    "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "devDependencies": {
     "@nx/eslint": "workspace:*",
