@@ -110,12 +110,20 @@ describe('isNativeStripPreferred', () => {
 });
 
 describe('getTranspiler', () => {
-  // The installed typescript is >= 6, so the suppression flag must be set to
-  // avoid TS6 hard-erroring on the deprecated options getTranspiler applies.
+  // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
   it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
-    const compilerOptions: CompilerOptions = {};
-    getTranspiler(compilerOptions);
-    expect(compilerOptions.ignoreDeprecations).toEqual('6.0');
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '6.0',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toEqual('6.0');
+    });
+    jest.unmock('typescript');
   });
 
   // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.

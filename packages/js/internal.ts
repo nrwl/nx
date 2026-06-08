@@ -52,6 +52,7 @@ export { getTsConfigBaseOptions } from './src/utils/typescript/create-ts-config'
 export { ensureTypescript } from './src/utils/typescript/ensure-typescript';
 export {
   getRangeMinimum,
+  getTsConfigModuleResolution,
   isTypescriptVersionAtLeast,
 } from './src/utils/is-typescript-version-at-least';
 export { getNeededCompilerOptionOverrides } from './src/utils/typescript/configuration';

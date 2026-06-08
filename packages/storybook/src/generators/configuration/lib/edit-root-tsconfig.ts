@@ -1,6 +1,6 @@
 import { readJson, updateJson, type Tree } from '@nx/devkit';
 import { getRootTsConfigFileName } from '@nx/js';
-import { isTypescriptVersionAtLeast } from '@nx/js/internal';
+import { getTsConfigModuleResolution } from '@nx/js/internal';
 import { storybookMajorVersion } from '../../../utils/utilities';
 
 /**
@@ -23,9 +23,8 @@ export function editRootTsConfig(tree: Tree) {
     json['ts-node'] ??= {};
     json['ts-node'].compilerOptions ??= {};
     json['ts-node'].compilerOptions.module = 'commonjs';
-    // 'node10' is a deprecation error on TS6; 'bundler' pairs with commonjs only on TS6
     json['ts-node'].compilerOptions.moduleResolution =
-      isTypescriptVersionAtLeast(tree, '6.0.0') ? 'bundler' : 'node10';
+      getTsConfigModuleResolution(tree);
 
     if (json.compilerOptions?.customConditions) {
       json['ts-node'].compilerOptions.customConditions = null;

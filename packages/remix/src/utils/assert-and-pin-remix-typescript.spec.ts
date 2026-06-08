@@ -54,4 +54,41 @@ describe('assertAndPinRemixTypescript', () => {
     const { devDependencies } = readJson(tree, 'package.json');
     expect(devDependencies.typescript).toBe('latest');
   });
+
+  describe('with an installed typescript', () => {
+    function installTypescript(version: string) {
+      tree.write(
+        'node_modules/typescript/package.json',
+        JSON.stringify({ name: 'typescript', version })
+      );
+    }
+
+    it('should throw when an open range is satisfied by an installed TS6', () => {
+      addDependenciesToPackageJson(tree, {}, { typescript: '>=5.9.0' });
+      installTypescript('6.0.3');
+
+      expect(() => assertAndPinRemixTypescript(tree)).toThrow(
+        /Remix does not support TypeScript 6/
+      );
+    });
+
+    it('should not throw when an open range is satisfied by an installed TS5', () => {
+      addDependenciesToPackageJson(tree, {}, { typescript: '>=5.9.0' });
+      installTypescript('5.9.2');
+
+      expect(() => assertAndPinRemixTypescript(tree)).not.toThrow();
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies.typescript).toBe('>=5.9.0');
+    });
+
+    it('should pin 5.x when TS6 is only present transitively (no direct declaration)', () => {
+      installTypescript('6.0.3');
+
+      expect(() => assertAndPinRemixTypescript(tree)).not.toThrow();
+
+      const { devDependencies } = readJson(tree, 'package.json');
+      expect(devDependencies.typescript).toBe(typescriptVersion);
+    });
+  });
 });

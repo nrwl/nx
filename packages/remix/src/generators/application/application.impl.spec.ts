@@ -22,6 +22,18 @@ describe('Remix Application', () => {
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
   });
 
+  it('throws when the workspace declares TypeScript 6', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await expect(
+      applicationGenerator(tree, { directory: 'test', addPlugin: true })
+    ).rejects.toThrow(/does not support TypeScript 6/);
+  });
+
   describe('Standalone Project Repo', () => {
     it('should create the application correctly', async () => {
       // ARRANGE

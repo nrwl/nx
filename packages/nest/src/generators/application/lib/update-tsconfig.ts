@@ -2,7 +2,7 @@ import type { Tree } from '@nx/devkit';
 import { joinPathFragments, updateJson } from '@nx/devkit';
 import type { NormalizedOptions } from '../schema';
 import {
-  isTypescriptVersionAtLeast,
+  getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 
@@ -15,16 +15,11 @@ export function updateTsConfig(tree: Tree, options: NormalizedOptions): void {
       json.compilerOptions.emitDecoratorMetadata = true;
       json.compilerOptions.target = 'es2021';
 
-      // Only set this when not using TS solution setup, as TS solution setup uses 'nodenext'.
-      // This is a commonjs context, so 'bundler' is invalid on TS<6 (TS5095) and 'node' is a
-      // deprecation error on TS>=6 (TS5107); branch to a valid value for the declared TS version.
+      // TS solution setup uses 'nodenext'; otherwise pin a version-appropriate
+      // node-family/bundler resolution for this commonjs context.
       if (!isUsingTsSolutionSetup(tree)) {
-        json.compilerOptions.moduleResolution = isTypescriptVersionAtLeast(
-          tree,
-          '6.0.0'
-        )
-          ? 'bundler'
-          : 'node10';
+        json.compilerOptions.moduleResolution =
+          getTsConfigModuleResolution(tree);
       }
       if (options.strict) {
         json.compilerOptions = {

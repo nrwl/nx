@@ -1,6 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
-import { isTypescriptVersionAtLeast } from '../is-typescript-version-at-least';
+import { getTsConfigModuleResolution } from '../is-typescript-version-at-least';
 
 export const tsConfigBaseOptions = {
   rootDir: '.',
@@ -21,14 +21,10 @@ export const tsConfigBaseOptions = {
   paths: {},
 };
 
-// node-family moduleResolution errors on TS 6 (TS5107) and bundler+commonjs
-// errors on TS 5 (TS5095); resolve it per the declared TypeScript version.
 export function getTsConfigBaseOptions(tree: Tree) {
   return {
     ...tsConfigBaseOptions,
-    moduleResolution: isTypescriptVersionAtLeast(tree, '6.0.0')
-      ? 'bundler'
-      : 'node10',
+    moduleResolution: getTsConfigModuleResolution(tree),
   };
 }
 

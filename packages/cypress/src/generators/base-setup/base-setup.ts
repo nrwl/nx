@@ -10,8 +10,8 @@ import {
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
 import {
+  getTsConfigModuleResolution,
   isEsmProject,
-  isTypescriptVersionAtLeast,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { join } from 'path';
@@ -62,10 +62,7 @@ export function addBaseCypressSetup(
           : getRelativePathToRootTsConfig(tree, projectConfig.root),
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
-    // node10 is deprecated and errors on TS6, while bundler+commonjs errors on TS<6, so the value is version-conditional.
-    moduleResolution: isTypescriptVersionAtLeast(tree, '6.0.0')
-      ? 'bundler'
-      : 'node10',
+    moduleResolution: getTsConfigModuleResolution(tree),
   };
 
   generateFiles(
