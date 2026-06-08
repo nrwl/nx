@@ -330,9 +330,10 @@ export function pickNpmVersion(
   if (type === 'exact') {
     const unconstrained = spec;
     // npm-pick-manifest resolves `mani = versions[ver]` -> undefined for an
-    // unpublished pin and throws ETARGET; a missing time alone does not pass it.
-    const exists =
-      metadata.versions.includes(spec) || metadata.time?.[spec] !== undefined;
+    // unpublished pin and throws ETARGET. `versions` is the sole source of
+    // truth: an unpublished version lingers in the `time` map but is gone from
+    // `versions`, so a `time` entry alone must not make it resolvable.
+    const exists = metadata.versions.includes(spec);
     if (exists && isVersionMature(metadata.name, spec, metadata, policy)) {
       return { version: spec, unconstrained };
     }

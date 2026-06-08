@@ -88,7 +88,6 @@ export const allowedWorkspaceExtensions = [
   'maxCacheSize',
   'tui',
   'owners',
-  'migrate',
 ] as const;
 
 if (!patched) {

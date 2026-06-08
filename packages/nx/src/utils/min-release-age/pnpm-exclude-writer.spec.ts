@@ -122,4 +122,14 @@ describe('appendMinimumReleaseAgeExcludes', () => {
     expect(added).toEqual(['pkg-a@2.0.0']);
     expect(readExcludes()).toEqual(['pkg-a@2.0.0']);
   });
+
+  it('does not overwrite a present non-mapping file', () => {
+    // A bare sequence/scalar root is malformed for pnpm; the writer must bail
+    // rather than clobber the user's content with just the exclude key.
+    const malformed = `- packages/*\n- apps/*\n`;
+    writeFileSync(workspacePath(), malformed);
+    const added = appendMinimumReleaseAgeExcludes(root, ['pkg-a@2.0.0']);
+    expect(added).toEqual([]);
+    expect(readFileSync(workspacePath(), 'utf-8')).toBe(malformed);
+  });
 });

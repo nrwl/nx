@@ -126,6 +126,24 @@ describe('npm min-release-age behavior', () => {
       }
     });
 
+    it('exact pin present only in the time map -> ETARGET (unpublished)', () => {
+      // An unpublished version lingers in `time` but is gone from `versions`;
+      // `versions` is the source of truth, so a `time` entry alone must not
+      // make it resolvable even when it is mature by age.
+      const meta: RegistryMetadata = {
+        name: 'pkg-a',
+        versions: ['1.0.0'],
+        time: {
+          '1.0.0': new Date(NOW - 9600 * HOUR).toISOString(),
+          '2.0.0': new Date(NOW - 9600 * HOUR).toISOString(),
+        },
+        distTags: { latest: '1.0.0' },
+      };
+      expect(() => pickNpmVersion('2.0.0', meta, policy)).toThrow(
+        MinReleaseAgeViolationError
+      );
+    });
+
     it('range with mature survivors but none in range -> ETARGET violation', () => {
       // ^5.0.0 has no matching version (pkg-a tops out at 3.x); mature 1.x
       // survivors exist, so this is the inRange-empty ETARGET path, not ENOVERSIONS.

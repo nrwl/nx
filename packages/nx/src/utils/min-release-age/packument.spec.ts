@@ -77,14 +77,20 @@ describe('fetchRegistryMetadata', () => {
 describe('fetchDeprecations', () => {
   afterEach(() => jest.clearAllMocks());
 
-  it('queries the per-version map via a ranged version+deprecated projection', async () => {
+  it('queries the per-version map via npm with a ranged version+deprecated projection', async () => {
     viewMock.mockResolvedValue('[]');
     await fetchDeprecations('pkg-a');
     expect(viewMock).toHaveBeenCalledWith(
       'pkg-a',
       '>=0.0.0',
-      'version deprecated --json'
+      'version deprecated --json',
+      { forceNpm: true }
     );
+  });
+
+  it('returns an empty map when the lookup throws (e.g. npm unavailable)', async () => {
+    viewMock.mockRejectedValue(new Error('npm not found'));
+    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
   });
 
   it('maps an array of mixed version/deprecated entries', async () => {

@@ -26,9 +26,14 @@ export function appendMinimumReleaseAgeExcludes(
 
   const path = join(root, 'pnpm-workspace.yaml');
   const raw = existsSync(path) ? readFileSync(path, 'utf-8') : '';
-  // An empty/whitespace-only or non-mapping file gives null contents; reset to a
-  // fresh mapping document so the exclude key has somewhere to land.
   const parsed = parseDocument(raw);
+  // A present root that isn't a mapping (a bare scalar or sequence) is malformed
+  // for pnpm; bail rather than overwrite the file with just the exclude key and
+  // drop the user's content. Empty/comments-only files have null contents and
+  // fall through to a fresh mapping document below.
+  if (parsed.contents != null && !(parsed.contents instanceof YAMLMap)) {
+    return [];
+  }
   const doc =
     parsed.contents instanceof YAMLMap ? parsed : new Document(new YAMLMap());
 

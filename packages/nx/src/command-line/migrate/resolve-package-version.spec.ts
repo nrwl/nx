@@ -332,6 +332,43 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     expect(mockWriteExcludes).not.toHaveBeenCalled();
   });
 
+  it('side-effect-free resolution uses a registry view (not an install) when registry resolution is opted out', async () => {
+    process.env.NX_MIGRATE_USE_REGISTRY_RESOLUTION = 'false';
+    const result = await resolvePackageVersionRespectingMinReleaseAge(
+      'pkg-a',
+      '^2.0.0',
+      { applySideEffects: false }
+    );
+    expect(result).toBe('registry-resolved');
+    expect(mockUsingInstall).not.toHaveBeenCalled();
+  });
+
+  it('side-effect-free resolution uses a registry view (not an install) for an ambiguous policy', async () => {
+    mockReadPolicy.mockResolvedValue({
+      outcome: 'ambiguous',
+      reason: 'unknown pnpm major',
+    });
+    const result = await resolvePackageVersionRespectingMinReleaseAge(
+      'pkg-a',
+      '^2.0.0',
+      { applySideEffects: false }
+    );
+    expect(result).toBe('registry-resolved');
+    expect(mockUsingInstall).not.toHaveBeenCalled();
+  });
+
+  it('pnpm strict violation with no blocked candidates rethrows without prompting', async () => {
+    mockReadPolicy.mockResolvedValue(pnpmPolicy({ strict: true }));
+    // An unknown tag produces a violation carrying no blocked versions.
+    mockResolve.mockRejectedValue(violation([]));
+
+    await expect(
+      resolvePackageVersionRespectingMinReleaseAge('pkg-a', 'bogus-tag')
+    ).rejects.toBeInstanceOf(MinReleaseAgeViolationError);
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(mockWriteExcludes).not.toHaveBeenCalled();
+  });
+
   it('pnpm strict violation rethrows in non-TTY/CI without prompting', async () => {
     Object.defineProperty(process.stdin, 'isTTY', {
       value: false,

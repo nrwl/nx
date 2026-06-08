@@ -88,6 +88,12 @@ export async function resolvePackageVersionRespectingMinReleaseAge(
   const applySideEffects = options?.applySideEffects ?? true;
 
   if (!isRegistryResolutionEnabled()) {
+    if (!applySideEffects) {
+      // Probe: never install just to populate a prompt choice. A read-only
+      // registry view yields the latest-in-range; the real resolution still
+      // honors the opted-out install path when the user picks this version.
+      return resolvePackageVersionUsingRegistry(packageName, version);
+    }
     return resolvePackageVersionUsingInstallation(packageName, version);
   }
 
@@ -98,6 +104,9 @@ export async function resolvePackageVersionRespectingMinReleaseAge(
   }
 
   if (result.outcome === 'ambiguous') {
+    if (!applySideEffects) {
+      return resolvePackageVersionUsingRegistry(packageName, version);
+    }
     logger.verbose(
       `Cannot determine the minimum-release-age policy (${result.reason}); falling back to a package-manager install to resolve ${packageName}@${version}.`
     );
@@ -218,6 +227,13 @@ async function handleViolation(
     policy.behavior.writesExcludes;
 
   if (!isPnpmStrict) {
+    throw error;
+  }
+
+  // An unknown tag yields a violation with no blocked candidates (nothing to
+  // approve); surface the original no-matching-version error rather than
+  // prompting over an empty list.
+  if (error.blocked.length === 0) {
     throw error;
   }
 

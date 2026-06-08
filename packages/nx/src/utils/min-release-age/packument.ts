@@ -61,15 +61,27 @@ export async function fetchRegistryMetadata(
  * range. The result shape varies: an array of `{ version, deprecated? }` (mixed
  * deprecations), an array of bare version strings (none deprecated), a single
  * object (one match), or a scalar - all normalized to the per-version map.
+ *
+ * Forced through npm: `pnpm view <pkg>@<range>` collapses to the single highest
+ * match, so it cannot produce a per-version map. A failed lookup (e.g. npm
+ * unavailable) degrades to an empty map - the same as no deprecations.
  */
 export async function fetchDeprecations(
   pkg: string
 ): Promise<Record<string, string | true>> {
-  const raw = await packageRegistryView(
-    pkg,
-    '>=0.0.0',
-    'version deprecated --json'
-  );
+  let raw: string;
+  try {
+    raw = await packageRegistryView(
+      pkg,
+      '>=0.0.0',
+      'version deprecated --json',
+      {
+        forceNpm: true,
+      }
+    );
+  } catch {
+    return {};
+  }
   if (!raw) {
     return {};
   }

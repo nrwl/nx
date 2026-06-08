@@ -603,10 +603,14 @@ export async function resolvePackageVersionUsingInstallation(
 export async function packageRegistryView(
   pkg: string,
   version: string,
-  args: string
+  args: string,
+  // `forceNpm` runs the view through npm even in a pnpm workspace: npm projects
+  // a field across every matched version, whereas `pnpm view <pkg>@<range>`
+  // collapses to the single highest match (breaks per-version field queries).
+  options?: { forceNpm?: boolean }
 ): Promise<string> {
   let pm = detectPackageManager();
-  if (pm === 'yarn' || pm === 'bun') {
+  if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
      * which makes it's usage unreliable
