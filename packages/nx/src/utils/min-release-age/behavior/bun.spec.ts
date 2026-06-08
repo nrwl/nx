@@ -68,7 +68,6 @@ const pkgEdge = metadataFromAges(
 function policyWithWindow(windowHours: number): MinReleaseAgePolicy {
   const windowMs = windowHours * HOUR;
   return {
-    packageManager: 'bun',
     packageManagerVersion: '1.3.0',
     cutoffMs: NOW - windowMs,
     windowMs,
@@ -398,7 +397,7 @@ describe('bun min-release-age behavior', () => {
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(86400 * 1000);
-        expect(result.policy.packageManager).toBe('bun');
+        expect(result.policy.behavior.packageManager).toBe('bun');
         expect(result.policy.sourceDescription).toContain('86400 seconds');
       }
     });

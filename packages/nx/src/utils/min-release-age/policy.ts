@@ -19,7 +19,6 @@ export type MinReleaseAgePolicyReadResult =
   | { outcome: 'ambiguous'; reason: string };
 
 export interface MinReleaseAgePolicy {
-  packageManager: PackageManager;
   packageManagerVersion: string;
   // epoch ms; a version with time[v] <= cutoffMs passes
   cutoffMs: number;

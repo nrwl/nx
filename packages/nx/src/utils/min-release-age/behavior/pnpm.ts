@@ -254,7 +254,6 @@ export async function readPnpmPolicy(
   return {
     outcome: 'active',
     policy: {
-      packageManager: 'pnpm',
       packageManagerVersion: pmVersion,
       cutoffMs,
       windowMs,

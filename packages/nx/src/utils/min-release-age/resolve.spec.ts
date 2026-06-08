@@ -26,7 +26,6 @@ function pnpmPolicy(
   packageManagerVersion = '11.5.2'
 ): MinReleaseAgePolicy {
   return {
-    packageManager: 'pnpm',
     packageManagerVersion,
     cutoffMs: 0,
     windowMs: 0,
@@ -45,7 +44,6 @@ function pnpmPolicy(
 
 function npmPolicy(): MinReleaseAgePolicy {
   return {
-    packageManager: 'npm',
     packageManagerVersion: '11.16.0',
     cutoffMs: 0,
     windowMs: 0,

@@ -75,7 +75,6 @@ export async function readYarnPolicy(
   return {
     outcome: 'active',
     policy: {
-      packageManager: 'yarn',
       packageManagerVersion: pmVersion,
       cutoffMs,
       windowMs,

@@ -71,7 +71,6 @@ const pkgEdge = metadataFromAges(
 function policyWithWindow(windowHours: number): MinReleaseAgePolicy {
   const windowMs = windowHours * HOUR;
   return {
-    packageManager: 'npm',
     packageManagerVersion: '11.16.0',
     cutoffMs: NOW - windowMs,
     windowMs,
@@ -363,7 +362,7 @@ describe('npm min-release-age behavior', () => {
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(1.5 * 86_400_000);
-        expect(result.policy.packageManager).toBe('npm');
+        expect(result.policy.behavior.packageManager).toBe('npm');
         expect(result.policy.isExcluded('any', '1.0.0')).toBe(false);
       }
     });

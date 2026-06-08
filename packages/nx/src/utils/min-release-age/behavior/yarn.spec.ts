@@ -85,7 +85,6 @@ function policy(
 ): MinReleaseAgePolicy {
   const windowMs = windowHours * HOUR;
   return {
-    packageManager: 'yarn',
     packageManagerVersion: opts.pmVersion ?? '4.16.0',
     cutoffMs: NOW - windowMs,
     windowMs,

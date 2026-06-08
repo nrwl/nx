@@ -81,7 +81,6 @@ function basePolicy(
 ): MinReleaseAgePolicy {
   const windowMs = windowHours * HOUR;
   return {
-    packageManager: 'pnpm',
     packageManagerVersion: '11.5.2',
     cutoffMs: NOW - windowMs,
     windowMs,

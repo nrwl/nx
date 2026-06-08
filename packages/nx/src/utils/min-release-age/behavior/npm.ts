@@ -277,7 +277,6 @@ function createNpmPolicy(opts: {
   sourceDescription: string;
 }): MinReleaseAgePolicy {
   return {
-    packageManager: 'npm',
     packageManagerVersion: opts.pmVersion,
     cutoffMs: opts.cutoffMs,
     windowMs: opts.windowMs,

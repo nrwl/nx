@@ -82,7 +82,6 @@ export async function readBunPolicy(
   return {
     outcome: 'active',
     policy: {
-      packageManager: 'bun',
       packageManagerVersion: pmVersion,
       cutoffMs,
       windowMs,
