@@ -1,4 +1,16 @@
 {
   "name": "linux-x64-gnu",
-  "$schema": "../../../../node_modules/nx/schemas/project-schema.json"
+  "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
+  "release": {
+    "version": {
+      "manifestRootsToUpdate": ["dist/packages/{projectName}"]
+    }
+  },
+  "targets": {
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/packages/{projectName}"
+      }
+    }
+  }
 }

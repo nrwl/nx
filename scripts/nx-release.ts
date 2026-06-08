@@ -228,7 +228,10 @@ const VALID_AUTHORS_FOR_LATEST = [
         if (proj.data.targets?.['nx-release-publish']) {
           const packageJsonPath = join(
             workspaceRoot,
-            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+            // Mirror the @nx/js:release-publish executor default: when packageRoot
+            // is not set explicitly, it falls back to the project root.
+            proj.data.targets?.['nx-release-publish']?.options?.packageRoot ??
+              proj.data.root,
             'package.json'
           );
           try {

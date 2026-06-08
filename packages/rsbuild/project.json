@@ -3,23 +3,11 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/rsbuild",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
-    }
-  },
   "targets": {
     "build": {
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js rsbuild packages/rsbuild/readme-template.md packages/rsbuild/README.md",
       "inputs": ["copyReadme"]
-    },
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
     }
   }
 }

@@ -3,13 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/react",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
-    }
-  },
   "targets": {
     "build": {
       "dependsOn": ["build-base"],
@@ -48,10 +41,7 @@
       ]
     },
     "nx-release-publish": {
-      "dependsOn": [],
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
+      "dependsOn": []
     }
   },
   "implicitDependencies": ["rspack"]

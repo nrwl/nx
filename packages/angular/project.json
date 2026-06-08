@@ -3,13 +3,6 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "packages/angular",
   "projectType": "library",
-  "release": {
-    "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
-    }
-  },
   "targets": {
     "build-ng": {
       "dependsOn": ["build-base", "typecheck"],
@@ -25,11 +18,6 @@
       "outputs": ["{projectRoot}/README.md"],
       "command": "node ./scripts/copy-readme.js angular packages/angular/readme-template.md packages/angular/README.md",
       "inputs": ["copyReadme"]
-    },
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
     }
   },
   "implicitDependencies": ["vite", "storybook", "playwright", "jest"]
