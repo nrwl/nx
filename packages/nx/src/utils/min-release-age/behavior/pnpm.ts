@@ -914,11 +914,13 @@ function pickRange(
   throw violation(metadata, policy, spec, 'range', blocked);
 }
 
-// Mirrors filterMetaByPublishedDate dist-tag repopulation: highest mature
-// candidate with (unless any-major) the same major as the original target.
-// 10.16-10.18 matched the major by string prefix with no prerelease filter and
-// no deprecation tie-break; 10.19.0 switched to numeric-major comparison and
-// added both (registry/pkg-metadata-filter).
+// Mirrors pnpm's filterPkgMetadataByPublishDate dist-tag repopulation: highest
+// mature candidate with (unless any-major) the same major as the original
+// target. pnpm 10.16 matched the major by string prefix with no prerelease
+// filter and no deprecation tie-break; 10.17 switched to numeric-major matching
+// and added the prerelease-flag filter; 10.18 added the deprecation tie-break.
+// All three apply to same-major degrades; any-major for `latest` arrived in
+// 10.20 (npm-resolver -> registry/pkg-metadata-filter).
 function degradeTag(
   metadata: RegistryMetadata,
   policy: MinReleaseAgePolicy,
@@ -926,16 +928,15 @@ function degradeTag(
   target: string,
   anyMajor: boolean
 ): string | undefined {
-  const filtersPrereleaseAndDeprecation = gte(
-    policy.packageManagerVersion,
-    '10.19.0'
-  );
+  const pmVersion = policy.packageManagerVersion;
+  const filtersNumericAndPrerelease = gte(pmVersion, '10.17.0');
+  const prefersNonDeprecated = gte(pmVersion, '10.18.0');
   const targetMajor = majorOf(target);
   const targetIsPre = prerelease(target) !== null;
   const targetMajorPrefix = `${targetMajor}.`;
   const candidates = matureVersions(metadata, policy, behavior).filter((v) => {
     if (
-      filtersPrereleaseAndDeprecation &&
+      filtersNumericAndPrerelease &&
       (prerelease(v) !== null) !== targetIsPre
     ) {
       return false;
@@ -943,7 +944,7 @@ function degradeTag(
     if (anyMajor) {
       return true;
     }
-    return filtersPrereleaseAndDeprecation
+    return filtersNumericAndPrerelease
       ? majorOf(v) === targetMajor
       : v.startsWith(targetMajorPrefix);
   });
@@ -953,7 +954,7 @@ function degradeTag(
   return pickPreferringNonDeprecated(
     candidates,
     metadata,
-    filtersPrereleaseAndDeprecation
+    prefersNonDeprecated
   );
 }
 
@@ -965,7 +966,7 @@ function pickPreferringNonDeprecated(
   const sorted = [...candidates].sort(rcompare);
   // Deprecations are fetched lazily by the migrate layer when needed; the
   // synchronous pick prefers highest and lets the deprecation map (if attached
-  // to metadata) break ties. 10.16-10.18 never had the tie-break.
+  // to metadata) break ties. 10.16-10.17 never had the tie-break.
   const deprecated = preferNonDeprecated ? metadata.deprecations : undefined;
   if (!deprecated) {
     return sorted[0];

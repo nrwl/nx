@@ -445,12 +445,12 @@ describe('pnpm min-release-age behavior', () => {
     });
   });
 
-  // 10.16-10.18 matched the degrade same-major by string prefix with NO
-  // prerelease filter (filterMetaByPublishedDate); 10.19.0 switched to a
-  // numeric-major comparison plus a prerelease-flag filter
-  // (registry/pkg-metadata-filter). A same-major mature prerelease therefore
-  // wins the degrade on 10.16-10.18 but is excluded on 10.19+.
-  describe('10.16-10.18 string-prefix same-major degrade (no prerelease filter)', () => {
+  // pnpm 10.16 matched the degrade same-major by string prefix with NO
+  // prerelease filter; 10.17 switched to a numeric-major comparison plus a
+  // prerelease-flag filter (npm-resolver -> registry/pkg-metadata-filter). A
+  // same-major mature prerelease therefore wins the degrade on 10.16 but is
+  // excluded on 10.17+.
+  describe('same-major degrade prerelease filter (10.16 vs 10.17+)', () => {
     // latest -> 1.5.0 (stable, too new). Same major has a mature stable 1.2.0
     // and a mature prerelease 1.9.0-beta.1.
     const meta = metadataFromAges(
@@ -466,12 +466,12 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('10.19 filters the prerelease out and degrades to the stable 1.2.0', () => {
+    it('10.17 filters the prerelease out and degrades to the stable 1.2.0', () => {
       expect(
         pickPnpmVersion(
           'latest',
           meta,
-          v10Policy(24, { packageManagerVersion: '10.19.0' })
+          v10Policy(24, { packageManagerVersion: '10.17.0' })
         )
       ).toEqual({
         version: '1.2.0',
@@ -480,8 +480,8 @@ describe('pnpm min-release-age behavior', () => {
     });
   });
 
-  describe('latest any-major prefers non-deprecated', () => {
-    it('skips a deprecated higher candidate when a non-deprecated lower one is mature', () => {
+  describe('deprecation tie-break (10.18+) prefers non-deprecated', () => {
+    it('any-major skips a deprecated higher candidate when a non-deprecated lower one is mature', () => {
       const meta: RegistryMetadata & {
         deprecations?: Record<string, string | true>;
       } = {
@@ -496,6 +496,39 @@ describe('pnpm min-release-age behavior', () => {
         version: '1.1.0',
         unconstrained: '2.0.0',
       });
+    });
+
+    // pnpm applies the tie-break to same-major degrades too (since 10.18), not
+    // only the any-major latest path.
+    const sameMajorMeta: RegistryMetadata & {
+      deprecations?: Record<string, string | true>;
+    } = {
+      ...metadataFromAges(
+        'pkg-dep-same',
+        { '1.1.0': 100, '1.2.0': 80, '1.5.0': 6 },
+        { latest: '1.5.0' }
+      ),
+      deprecations: { '1.2.0': 'do not use' },
+    };
+
+    it('10.18 same-major skips the deprecated higher candidate (-> 1.1.0)', () => {
+      expect(
+        pickPnpmVersion(
+          'latest',
+          sameMajorMeta,
+          v10Policy(24, { packageManagerVersion: '10.18.0' })
+        )
+      ).toEqual({ version: '1.1.0', unconstrained: '1.5.0' });
+    });
+
+    it('10.17 has no tie-break and keeps the deprecated higher candidate (-> 1.2.0)', () => {
+      expect(
+        pickPnpmVersion(
+          'latest',
+          sameMajorMeta,
+          v10Policy(24, { packageManagerVersion: '10.17.0' })
+        )
+      ).toEqual({ version: '1.2.0', unconstrained: '1.5.0' });
     });
   });
 
