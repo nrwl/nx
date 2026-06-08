@@ -62,8 +62,12 @@ import {
   PackageManagerCommands,
   packageRegistryPack,
   packageRegistryView,
-  resolvePackageVersionUsingRegistry,
 } from '../../utils/package-manager';
+import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
+import {
+  isRegistryResolutionEnabled,
+  resolvePackageVersionRespectingMinReleaseAge,
+} from './resolve-package-version';
 import { handleErrors } from '../../utils/handle-errors';
 import {
   connectToNxCloudWithPrompt,
@@ -1566,7 +1570,7 @@ function createFetcher(pmc: PackageManagerCommands) {
     packageVersion,
     setCache: (packageName: string, packageVersion: string) => void
   ): Promise<ResolvedMigrationConfiguration> {
-    if (process.env.NX_MIGRATE_SKIP_REGISTRY_FETCH === 'true') {
+    if (!isRegistryResolutionEnabled()) {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
       return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
@@ -1579,10 +1583,11 @@ function createFetcher(pmc: PackageManagerCommands) {
           return cachedResolvedVersion;
         }
 
-        resolvedVersionCache[cacheKey] = resolvePackageVersionUsingRegistry(
-          packageName,
-          packageVersion
-        );
+        resolvedVersionCache[cacheKey] =
+          resolvePackageVersionRespectingMinReleaseAge(
+            packageName,
+            packageVersion
+          );
         return resolvedVersionCache[cacheKey];
       })
       .then((resolvedVersion) => {
@@ -1596,6 +1601,11 @@ function createFetcher(pmc: PackageManagerCommands) {
         return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
       })
       .catch((e) => {
+        // A cooldown violation would fail an install identically (only slower),
+        // so surface it instead of retrying through the package manager.
+        if (e instanceof MinReleaseAgeViolationError) {
+          throw e;
+        }
         logger.verbose(
           `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
         );
@@ -2071,7 +2081,10 @@ async function updateInstallationDetails(
       if (update) {
         const newVersion = valid(update.version)
           ? update.version
-          : await resolvePackageVersionUsingRegistry(dep, update.version);
+          : await resolvePackageVersionRespectingMinReleaseAge(
+              dep,
+              update.version
+            );
         if (nxJson.installation.plugins[dep] !== newVersion) {
           nxJson.installation.plugins[dep] = newVersion;
           modified = true;
@@ -2093,10 +2106,10 @@ async function isMigratingToNewMajor(from: string, to: string) {
   from = normalizeVersion(from);
   to = ['latest', 'next', 'canary'].includes(to) ? to : normalizeVersion(to);
   if (!valid(from)) {
-    from = await resolvePackageVersionUsingRegistry('nx', from);
+    from = await resolvePackageVersionRespectingMinReleaseAge('nx', from);
   }
   if (!valid(to)) {
-    to = await resolvePackageVersionUsingRegistry('nx', to);
+    to = await resolvePackageVersionRespectingMinReleaseAge('nx', to);
   }
   return major(from) < major(to);
 }

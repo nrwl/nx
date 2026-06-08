@@ -16,7 +16,7 @@ import {
 } from 'yaml';
 import { readNxJson } from '../config/configuration';
 import { readPackageJson } from '../project-graph/file-utils';
-import { getCatalogManager } from './catalog';
+import { getCatalogManager, resolveCatalogReferenceIfNeeded } from './catalog';
 import {
   readFileIfExisting,
   readJsonFile,
@@ -518,20 +518,10 @@ export async function resolvePackageVersionUsingRegistry(
   version: string
 ): Promise<string> {
   try {
-    let resolvedVersion = version;
-    const manager = getCatalogManager(workspaceRoot);
-    if (manager?.isCatalogReference(version)) {
-      resolvedVersion = manager.resolveCatalogReference(
-        workspaceRoot,
-        packageName,
-        version
-      );
-      if (!resolvedVersion) {
-        throw new Error(
-          `Unable to resolve catalog reference ${packageName}@${version}.`
-        );
-      }
-    }
+    const resolvedVersion = resolveCatalogReferenceIfNeeded(
+      packageName,
+      version
+    );
 
     const result = await packageRegistryView(
       packageName,
@@ -630,7 +620,9 @@ export async function packageRegistryView(
     pm = 'npm';
   }
 
-  const { stdout } = await execAsync(`${pm} view ${pkg}@${version} ${args}`, {
+  // An empty version means we want the full packument; omit the trailing `@`.
+  const spec = version ? `${pkg}@${version}` : pkg;
+  const { stdout } = await execAsync(`${pm} view ${spec} ${args}`, {
     windowsHide: true,
   });
   return stdout.toString().trim();

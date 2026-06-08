@@ -18,6 +18,20 @@ jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledLegacyNrwlWorkspaceVersion: () =>
     mocks.getInstalledLegacyNrwlWorkspaceVersion(),
 }));
+// These tests exercise the migrate logic, not the cooldown wrapper: delegate the
+// policy-aware resolver to the legacy registry resolution so the existing
+// `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
+jest.mock('./resolve-package-version', () => ({
+  isRegistryResolutionEnabled: () => true,
+  resolvePackageVersionRespectingMinReleaseAge: (
+    packageName: string,
+    version: string
+  ) =>
+    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
+      packageName,
+      version
+    ),
+}));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 

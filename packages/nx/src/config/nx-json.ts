@@ -745,6 +745,15 @@ export interface NxMigrateConfiguration {
   multiMajorMode?: MultiMajorMode;
 
   /**
+   * Whether `nx migrate` resolves package versions via the npm registry
+   * (faster) instead of a package-manager install. The
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
+   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * Defaults to `true`.
+   */
+  useRegistryResolution?: boolean;
+
+  /**
    * Default for the agentic flow used by `nx migrate --run-migrations`.
    * Equivalent to the `--agentic` flag.
    * - `false`: never use the agentic flow.
