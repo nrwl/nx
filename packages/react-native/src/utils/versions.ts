@@ -3,7 +3,6 @@ import { type Tree } from '@nx/devkit';
 import {
   assertSupportedPackageVersion,
   getDeclaredPackageVersion,
-  getInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { minor } from 'semver';
 
@@ -86,17 +85,13 @@ const versionMap: Partial<Record<number, ReactNativeVersions>> = {
   },
 };
 
-export function getInstalledReactNativeVersion(tree?: Tree): string | null {
-  if (!tree) {
-    return getInstalledPackageVersion('react-native');
-  }
-  return getDeclaredPackageVersion(tree, 'react-native');
-}
-
 // Returns the install constants for the detected RN minor. Above the highest
 // known minor (or when RN isn't installed) falls through to latest — no throw.
-export function versions(tree?: Tree): ReactNativeVersions {
-  const installedReactNativeVersion = getInstalledReactNativeVersion(tree);
+export function versions(tree: Tree): ReactNativeVersions {
+  const installedReactNativeVersion = getDeclaredPackageVersion(
+    tree,
+    'react-native'
+  );
   if (!installedReactNativeVersion) {
     return latestVersions;
   }
