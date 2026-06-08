@@ -69,7 +69,10 @@
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
     },
-    "./typings/*.d.ts": "./typings/*.d.ts"
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
+    }
   },
   "dependencies": {
     "detect-port": "^2.1.0",
