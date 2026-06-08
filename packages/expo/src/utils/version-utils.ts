@@ -184,26 +184,11 @@ async function getInstalledExpoMajor(tree: Tree): Promise<number | null> {
 }
 
 /**
- * Check if the workspace is using Expo v53.
+ * Check if the workspace is using Expo v53 — the only SDK that still needs the
+ * legacy Jest resolver. SDK 54+ use the winter-runtime mock instead.
  */
 export async function isExpoV53(tree: Tree): Promise<boolean> {
   return (await getInstalledExpoMajor(tree)) === 53;
-}
-
-/**
- * Check if the workspace is using Expo v54.
- */
-export async function isExpoV54(tree: Tree): Promise<boolean> {
-  return (await getInstalledExpoMajor(tree)) === 54;
-}
-
-/**
- * Check if the workspace is using Expo v55. Defaults to true when Expo isn't
- * installed — new projects get the latest lane.
- */
-export async function isExpoV55(tree: Tree): Promise<boolean> {
-  const installedMajor = await getInstalledExpoMajor(tree);
-  return installedMajor === null || installedMajor === 55;
 }
 
 /**
