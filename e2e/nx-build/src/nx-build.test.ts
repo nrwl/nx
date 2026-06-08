@@ -107,6 +107,69 @@ const packagesToVerify = [
     sourceFile: 'index.ts',
     outputFile: 'packages/create-nx-workspace/dist/index.js',
   },
+  {
+    name: 'esbuild',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/esbuild/dist/index.js',
+  },
+  {
+    name: 'express',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/express/dist/index.js',
+  },
+  {
+    name: 'vue',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/vue/dist/index.js',
+  },
+  {
+    name: 'plugin',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/plugin/dist/index.js',
+  },
+  {
+    name: 'react-native',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/react-native/dist/index.js',
+  },
+  {
+    name: 'next',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/next/dist/index.js',
+  },
+  {
+    name: 'remix',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/remix/dist/index.js',
+  },
+  {
+    name: 'detox',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/detox/dist/index.js',
+  },
+  {
+    name: 'expo',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/expo/dist/index.js',
+  },
+  {
+    name: 'nuxt',
+    sourceFile: 'index.ts',
+    outputFile: 'packages/nuxt/dist/index.js',
+  },
+  {
+    name: 'create-nx-plugin',
+    sourceFile: 'bin/create-nx-plugin.ts',
+    outputFile: 'packages/create-nx-plugin/dist/bin/create-nx-plugin.js',
+  },
+  {
+    // angular publishes via ng-packagr, but internal.ts is a build-base (tsc)
+    // entry that compiles straight to dist/internal.js, so an appended source
+    // marker survives verbatim (the fesm bundle would mangle it).
+    name: 'angular',
+    sourceFile: 'internal.ts',
+    outputFile: 'packages/angular/dist/internal.js',
+  },
 ];
 
 describe('Nx Build Verification', () => {
