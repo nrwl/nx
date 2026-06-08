@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "<%= outDir %>",<% if (module) { %>
     "module": "<%= module %>",<% } if (module === 'commonjs') { %>
-    "moduleResolution": "node10",<% } if (supportTsx) { %>
+    "moduleResolution": "<%= moduleResolution %>",<% } if (supportTsx) { %>
     "jsx": "react-jsx",<% } %>"types": ["jest", "node"]
   },<% if(setupFile !== 'none') { %>
   "files": ["src/test-setup.ts"],<% } %>

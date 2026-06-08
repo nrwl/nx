@@ -29,6 +29,7 @@ import {
   normalizeLinterOption,
   getProjectPackageManagerWorkspaceState,
   getProjectPackageManagerWorkspaceStateWarningTask,
+  getTsConfigModuleResolution,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
@@ -118,15 +119,16 @@ export async function configurationGeneratorInternal(
   );
   if (tree.exists(projectTsConfigPath)) {
     updateJson(tree, projectTsConfigPath, (json) => {
-      // Cypress uses commonjs, unless the project is also using commonjs (or does not set "module" i.e. uses default of commonjs),
-      // then we need to set the moduleResolution to node10 or else Cypress will fail with TS5095 error.
+      // Cypress uses commonjs, so when the project sets a moduleResolution we
+      // pin a node-family value to avoid Cypress failing with TS5095.
       // See: https://github.com/cypress-io/cypress/issues/27731
       if (
         (json.compilerOptions?.module ||
           json.compilerOptions?.module !== 'commonjs') &&
         json.compilerOptions?.moduleResolution
       ) {
-        json.compilerOptions.moduleResolution = 'node10';
+        json.compilerOptions.moduleResolution =
+          getTsConfigModuleResolution(tree);
       }
       return json;
     });

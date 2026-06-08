@@ -17,6 +17,10 @@
     "composite": true,
     "declarationMap": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    // TS6 stopgap: suppress deprecated-option errors (moduleResolution node, baseUrl)
+    // and pin the pre-TS6 strict default; real option migration deferred to TS7 prep
+    "ignoreDeprecations": "6.0",
+    "strict": false
   }
 }

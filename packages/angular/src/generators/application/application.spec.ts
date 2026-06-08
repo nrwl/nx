@@ -284,6 +284,17 @@ describe('app', () => {
       const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await generateApp(appTree);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
+    });
   });
 
   describe('nested', () => {

@@ -5,7 +5,7 @@ import { join } from 'path';
 // (local-dist) contexts.
 export const nxVersion = require(join('@nx/workspace', 'package.json')).version;
 
-export const typescriptVersion = '~5.9.2';
+export const typescriptVersion = '~6.0.3';
 
 // TODO: remove when preset generation is reworked and
 // deps are not installed from workspace
