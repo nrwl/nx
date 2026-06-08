@@ -68,7 +68,8 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
-    }
+    },
+    "./typings/*.d.ts": "./typings/*.d.ts"
   },
   "dependencies": {
     "detect-port": "^2.1.0",
