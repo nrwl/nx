@@ -56,7 +56,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "tslib": "catalog:typescript",

@@ -156,8 +156,8 @@ export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
-  /** Mirrors the package's `nx-migrations`/`ng-update` `supportsOptionalUpdates` flag. */
-  supportsOptionalUpdates?: boolean;
+  /** Mirrors the package's `nx-migrations`/`ng-update` `supportsOptionalMigrations` flag. */
+  supportsOptionalMigrations?: boolean;
   /** Prompt file contents keyed by the `prompt` value as it appears on the migration entry. */
   resolvedPromptFiles?: Record<string, string>;
 }
@@ -975,12 +975,12 @@ export async function resolveInclude(
   },
   configuredInclude?: MigrateInclude
 ): Promise<MigrateInclude> {
-  // An explicit `--include` is validated against the target's `supportsOptionalUpdates` in
+  // An explicit `--include` is validated against the target's `supportsOptionalMigrations` in
   // `resolveTargetAndInclude`, so honor it directly here.
   if (include) {
     return include;
   }
-  // Targets that don't declare `supportsOptionalUpdates` only ever run the full
+  // Targets that don't declare `supportsOptionalMigrations` only ever run the full
   // migration; there is nothing to pick between.
   if (!context.targetSupportsOptionalUpdates) {
     if (configuredInclude && configuredInclude !== 'all') {
@@ -1182,7 +1182,7 @@ export async function parseMigrationsOptions(
       : Promise.resolve({} as Record<string, string>),
   ]);
 
-  // The gate reads `supportsOptionalUpdates` through this fetcher (registry-first, install
+  // The gate reads `supportsOptionalMigrations` through this fetcher (registry-first, install
   // fallback) so private registries don't fail closed. In production the caller
   // shares its fetcher; standalone callers (tests) get a fresh one.
   const resolvedFetch = fetch ?? createFetcher(getPackageManagerCommand());
@@ -1315,7 +1315,7 @@ async function resolveTargetAndInclude(args: {
     targetVersion = 'latest';
   }
 
-  // Resolve dist-tags to a concrete version so the `supportsOptionalUpdates` gate and the
+  // Resolve dist-tags to a concrete version so the `supportsOptionalMigrations` gate and the
   // downstream cascade read a real semver. Explicit dist-tags arrive already
   // resolved from `parseTargetPackageAndVersion`; only bare invocations and
   // bare package names (`nx migrate nx`) reach here unresolved.
@@ -1336,13 +1336,13 @@ async function resolveTargetAndInclude(args: {
     }
   }
 
-  // `--include` is only available for targets that opt in via `supportsOptionalUpdates`.
+  // `--include` is only available for targets that opt in via `supportsOptionalMigrations`.
   // required/all/prompt/nx.json read the flag at the version being migrated
   // to. Skipped when the include value can't depend on it (no `--include`, no nx.json
   // default, no interactive prompt) and for the explicit `optional` value, which
   // anchors to the installed target and reads at that version below.
   let targetSupportsOptionalUpdates = false;
-  // The package/version whose `supportsOptionalUpdates` flag the gate actually read,
+  // The package/version whose `supportsOptionalMigrations` flag the gate actually read,
   // surfaced verbatim in the rejection message below.
   let eligibilityPackage = targetPackage;
   let eligibilityVersion = targetVersion;
@@ -1435,7 +1435,7 @@ async function resolveTargetAndInclude(args: {
   };
 }
 
-// `--include` is opt-in per package via `supportsOptionalUpdates` in the target's
+// `--include` is opt-in per package via `supportsOptionalMigrations` in the target's
 // `nx-migrations`/`ng-update` config. Read it through the shared fetcher
 // (registry-first, install fallback) so registries that can't serve metadata
 // via `npm view` resolve it from an install rather than failing the gate.
@@ -1445,7 +1445,7 @@ async function fetchSupportsOptionalUpdates(
   packageVersion: string
 ): Promise<boolean> {
   const config = await fetch(packageName, packageVersion);
-  return config.supportsOptionalUpdates === true;
+  return config.supportsOptionalMigrations === true;
 }
 
 // `--include=optional` upper-bound gate. The optional walk catches up from
@@ -1695,7 +1695,7 @@ async function getPackageMigrationsUsingRegistry(
       name: packageName,
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
-      supportsOptionalUpdates: migrationsConfig.supportsOptionalUpdates,
+      supportsOptionalMigrations: migrationsConfig.supportsOptionalMigrations,
     };
   }
 
@@ -1751,7 +1751,7 @@ async function downloadPackageMigrationsFromRegistry(
   {
     migrations: migrationsFilePath,
     packageGroup,
-    supportsOptionalUpdates,
+    supportsOptionalMigrations,
   }: NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup }
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
@@ -1794,7 +1794,7 @@ async function downloadPackageMigrationsFromRegistry(
     result = {
       ...migrations,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       version: packageVersion,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1884,7 +1884,7 @@ async function getPackageMigrationsUsingInstallImpl(
     const {
       migrations: migrationsFilePath,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       packageJson,
     } = readPackageMigrationConfig(packageName, dir);
 
@@ -1904,7 +1904,7 @@ async function getPackageMigrationsUsingInstallImpl(
     result = {
       ...migrations,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       version: packageJson.version,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1951,14 +1951,14 @@ function readPackageMigrationConfig(
       packageJson: json,
       migrations: migrationFile,
       packageGroup: config.packageGroup,
-      supportsOptionalUpdates: config.supportsOptionalUpdates,
+      supportsOptionalMigrations: config.supportsOptionalMigrations,
     };
   } catch {
     return {
       packageJson: json,
       migrations: null,
       packageGroup: config.packageGroup,
-      supportsOptionalUpdates: config.supportsOptionalUpdates,
+      supportsOptionalMigrations: config.supportsOptionalMigrations,
     };
   }
 }

@@ -886,50 +886,50 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
-  it('should carry supportsOptionalUpdates from the nx-migrations config', () => {
+  it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: true,
+        supportsOptionalMigrations: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsOptionalUpdates: true,
+      supportsOptionalMigrations: true,
     });
   });
 
-  it('should carry supportsOptionalUpdates from the ng-update config', () => {
+  it('should carry supportsOptionalMigrations from the ng-update config', () => {
     const config = readNxMigrateConfig({
       'ng-update': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: true,
+        supportsOptionalMigrations: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsOptionalUpdates: true,
+      supportsOptionalMigrations: true,
     });
   });
 
-  it('should not set supportsOptionalUpdates when the config omits it', () => {
+  it('should not set supportsOptionalMigrations when the config omits it', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': { migrations: './migrations.json' },
     });
 
-    expect(config.supportsOptionalUpdates).toBeUndefined();
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 
-  it('should not set supportsOptionalUpdates when the config sets it to false', () => {
+  it('should not set supportsOptionalMigrations when the config sets it to false', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: false,
+        supportsOptionalMigrations: false,
       },
     });
 
-    expect(config.supportsOptionalUpdates).toBeUndefined();
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 });
