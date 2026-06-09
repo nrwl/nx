@@ -2,6 +2,7 @@ exclude-reads:
   - packages/nx/src/native/*.node
   - packages/nx/dist/src/native/*.node
   - 'dist/target/**'
+  - 'packages/dotnet/**/*.assets.cache'
 exclude-writes:
   - '**/.swc/**'
   - 'dist/target/**'
