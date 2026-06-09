@@ -2663,6 +2663,24 @@ describe('Migration', () => {
       });
     });
 
+    it('should reject --mode=optional when the installed version does not support modes, naming the installed version', async () => {
+      // Reject mirror of the gate above: eligibility reads the INSTALLED
+      // version, so the rejection names installed 22 - not the older explicit
+      // target 21. The stub marks only 23.0.0 as supporting modes.
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@21.0.0',
+            mode: 'optional',
+          },
+          modeGateFetch((_pkg, version) => version === '23.0.0')
+        )
+      ).rejects.toThrow(
+        `Error: '--mode' requires the target package to support migration modes, but 'nx@22.0.0' does not.`
+      );
+    });
+
     it('should surface a fetch failure instead of reporting the target as unsupported', async () => {
       // The gate resolves `supportsModes` through the shared fetcher (registry,
       // then install). A genuine fetch failure must surface as-is, not be
