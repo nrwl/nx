@@ -13,6 +13,7 @@ import {
 import { getStylesConfig } from './style-config-utils';
 import { getCrossOriginLoading } from './helpers';
 import { configureSourceMap } from './sourcemap-utils';
+import { isServeMode } from '../../utils/rspack-serve-env';
 import { StatsJsonPlugin } from '../../plugins/stats-json-plugin';
 import { WatchFilesLogsPlugin } from '../../plugins/watch-file-logs-plugin';
 import { getIndexInputFile } from '../../utils/index-file/get-index-input-file';
@@ -24,7 +25,7 @@ export async function getCommonConfig(
   i18nHash: string | (() => void),
   hashFormat: HashFormat
 ) {
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const crossOriginLoading = getCrossOriginLoading(normalizedOptions);
   const sourceMapOptions = configureSourceMap(normalizedOptions.sourceMap);
   const stylesConfig = await getStylesConfig(

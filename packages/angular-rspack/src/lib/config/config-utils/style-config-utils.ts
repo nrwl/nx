@@ -11,6 +11,7 @@ import { createRequire } from 'node:module';
 import { basename, dirname, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import type { FileImporter } from 'sass';
+import { isServeMode } from '../../utils/rspack-serve-env';
 import type {
   HashFormat,
   NormalizedAngularRspackPluginOptions,
@@ -33,7 +34,7 @@ export async function getStylesConfig(
   loaderRules: RuleSetRules;
   plugins: Plugins;
 }> {
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const extraPlugins: Plugins = [];
 
   extraPlugins.push(new AnyComponentStyleBudgetChecker(buildOptions.budgets));
@@ -270,13 +271,6 @@ export async function getStylesConfig(
     },
   ];
 
-  // Each language gets an outer `oneOf` so every branch has its own
-  // matcher (`resourceQuery` for the two tagged paths, no-matcher
-  // fallthrough for the bare `use`). This shape satisfies v2's tightened
-  // `RuleSetRule` type without a cast. The language loaders (`use`, e.g.
-  // sass-loader) are concatenated into every branch so tagged files are
-  // still preprocessed — `oneOf` picks a single branch, so they cannot be
-  // left as an always-applied sibling rule.
   return {
     loaderRules: styleLanguages.map(({ extensions, use }) => ({
       test: new RegExp(`\\.(?:${extensions.join('|')})$`, 'i'),

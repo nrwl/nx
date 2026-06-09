@@ -12,6 +12,7 @@ import type {
   NormalizedAngularRspackPluginOptions,
 } from '../models';
 import { loadEsmModule } from '../utils/misc-helpers';
+import { isServeMode } from '../utils/rspack-serve-env';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
@@ -38,7 +39,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
 
   apply(compiler: Compiler) {
     const root = this.pluginOptions.root;
-    const isDevServer = process.env['WEBPACK_SERVE'];
+    const isDevServer = isServeMode();
 
     if (this.isPlatformServer && isDevServer) {
       if (

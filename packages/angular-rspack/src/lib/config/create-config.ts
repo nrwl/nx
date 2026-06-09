@@ -14,6 +14,7 @@ import {
   parseConfigurationMode,
 } from './config-utils/user-defined-config-helpers';
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
+import { bridgeRspackServeEnv, isServeMode } from '../utils/rspack-serve-env';
 
 export async function createConfig(
   defaultOptions: {
@@ -29,25 +30,10 @@ export async function createConfig(
   > = {},
   configEnvVar = 'NGRS_CONFIG'
 ): Promise<Configuration[]> {
-  // @rspack/dev-server v2 no longer sets process.env.WEBPACK_SERVE — v1
-  // inherited it at module load from the webpack-dev-server it wrapped.
-  // Detect serve mode from the rspack CLI command (argv[2]) and bridge so
-  // the WEBPACK_SERVE checks across angular-rspack and the module-federation
-  // dev-server plugin keep working on rspack 2.
-  const rspackCliCommand = process.argv[2];
-  if (
-    !process.env['WEBPACK_SERVE'] &&
-    (rspackCliCommand === 'serve' ||
-      rspackCliCommand === 'server' ||
-      rspackCliCommand === 's' ||
-      rspackCliCommand === 'dev')
-  ) {
-    process.env['WEBPACK_SERVE'] = 'true';
-  }
+  bridgeRspackServeEnv();
 
   const configurationMode =
-    process.env[configEnvVar] ??
-    (process.env['WEBPACK_SERVE'] ? 'development' : 'production');
+    process.env[configEnvVar] ?? (isServeMode() ? 'development' : 'production');
   const configurationModes = parseConfigurationMode(configurationMode);
 
   const { mergedConfigurationBuildOptions, mergedRspackConfigOverrides } =
