@@ -1,8 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/graph/client",
-    "tsBuildInfoFile": "../../dist/graph/client/tsconfig.app.tsbuildinfo",
+    "outDir": "out-tsc",
+    "tsBuildInfoFile": "out-tsc/tsconfig.app.tsbuildinfo",
     "declaration": true,
     "composite": true,
     "types": ["node"],

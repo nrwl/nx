@@ -27,6 +27,10 @@
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
   "typings": "./dist/lib/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.lib.tsbuildinfo"
+  ],
   "exports": {
     ".": {
       "@nx/nx-source": "./src/lib/index.ts",

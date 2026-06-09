@@ -21,7 +21,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "!dist/package.json",
     "migrations.json",
     "executors.json",

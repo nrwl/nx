@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-markdoc",
+    "outDir": "dist",
     "lib": ["DOM", "ES2022"],
     "composite": true,
     "declaration": true,

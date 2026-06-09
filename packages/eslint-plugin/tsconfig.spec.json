@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/spec",
+    "outDir": "out-tsc/spec",
     "module": "commonjs",
     "composite": true,
     "isolatedModules": true,
