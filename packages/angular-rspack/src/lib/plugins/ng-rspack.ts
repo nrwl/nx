@@ -163,8 +163,6 @@ export class NgRspackPlugin implements RspackPluginInstance {
               ? 'localhost'
               : this.pluginOptions.devServer.host;
           const port = this.pluginOptions.devServer.port;
-          // `compiler.options.devServer` is `boolean | DevServer | undefined`;
-          // narrow to the object form before reading `devMiddleware`.
           const devServerOpts = compiler.options.devServer;
           const publicPath =
             typeof devServerOpts === 'object'

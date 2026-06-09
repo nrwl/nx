@@ -64,10 +64,7 @@ export async function getBrowserConfig(
             workerChunkLoading: 'import',
           }),
     },
-    // `experiments.outputModule` was removed in @rspack/core@2 (folded
-    // into top-level `output.module`, which we set above). It is only set
-    // on v1, where it still gates module output; on v2 it is omitted
-    // entirely. The cast launders the v1-only literal past the v2 typings.
+    // v2 folded experiments.outputModule into top-level output.module.
     experiments:
       isDevServer || isRspackV2()
         ? {}

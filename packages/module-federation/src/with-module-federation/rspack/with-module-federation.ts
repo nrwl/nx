@@ -30,8 +30,6 @@ export async function withModuleFederation(
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     getModuleFederationConfig(options);
   const isGlobal = isVarOrWindow(options.library?.type);
-  // CLI-only path (called from user's rspack.config.ts). Plain require
-  // works on Node 22.12+ via require(esm).
   const { DefinePlugin } =
     require('@rspack/core') as typeof import('@rspack/core');
 

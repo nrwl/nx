@@ -2,27 +2,10 @@ import { type Tree, formatFiles, visitNotIgnoredFiles } from '@nx/devkit';
 import { ast } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 
-/**
- * Rewrite user-authored `rspack.config.{js,ts,mjs,cjs}` files for
- * @rspack/core@2 compatibility (per
- * rspack.rs/guide/migration/rspack_1.x).
- *
- * Two transformations:
- *
- * 1. `output.libraryTarget: '<value>'` → `output.library: { type: '<value>' }`
- *    (Library options were restructured; v2 removed the legacy shortcut.)
- *
- * 2. `experiments.css: true` is dropped (CSS is enabled by default in
- *    v2). `experiments.css: false` is replaced with an explanatory
- *    comment so the user can decide how to opt out — v2 removed the
- *    experiment entirely and there's no direct equivalent.
- *
- * Both transforms are AST-based: they walk the TypeScript parse tree
- * and patch source ranges, so quoted property keys, spreads,
- * conditional initializers, and comments inside the literal are all
- * handled correctly. Configs whose target property is a variable
- * reference (not a literal) are skipped rather than mangled.
- */
+// Rewrite rspack.config.{js,ts,mjs,cjs} for @rspack/core@2:
+// - output.libraryTarget → output.library.type
+// - experiments.css: true dropped (default in v2); :false replaced with a comment
+// See rspack.rs/guide/migration/rspack_1.x.
 export default async function migrateRspackConfigToV2(tree: Tree) {
   const configFiles: string[] = [];
   visitNotIgnoredFiles(tree, '.', (filePath) => {
@@ -85,12 +68,6 @@ function isInsideObjectKeyed(
   return getPropertyName(containingProp) === parentKey;
 }
 
-/**
- * Exported for unit testing. Rewrites `output.libraryTarget: 'value'` into
- * `output.library: { type: 'value' }`. AST-anchored to `output:` so an
- * unrelated `libraryTarget` token elsewhere in the config isn't touched.
- * Skips non-literal initializers (variable form, template expressions).
- */
 export function rewriteLibraryTarget(source: string): string {
   if (!source.includes('libraryTarget')) return source;
 
@@ -124,21 +101,8 @@ function isStringLikeInitializer(
   return ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node);
 }
 
-/**
- * Exported for unit testing. Deletes `experiments.css: false` — v2's
- * "native CSS handling is per-rule, not a global toggle" semantics
- * means the opt-out is a no-op (you already aren't enabling it unless
- * `module.rules` declares a CSS rule).
- *
- * `experiments.css: true` is intentionally left alone here. The
- * promotion to default-on requires injecting a `module.rules` entry
- * with `type: 'css/auto'` (or `css` / `css/module`) — a workspace-
- * specific decision that's handled by the companion AI-prompt
- * migration `rewrite-experiments-css-to-module-rules`.
- *
- * AST-anchored to the `experiments:` parent so unrelated `css` keys
- * elsewhere (loader options, DefinePlugin payloads) are not touched.
- */
+// `experiments.css: true` is left for the companion AI-prompt migration
+// `rewrite-experiments-css-to-module-rules` to handle.
 export function rewriteExperimentsCss(source: string): string {
   if (!/\bcss\s*:/.test(source)) return source;
 

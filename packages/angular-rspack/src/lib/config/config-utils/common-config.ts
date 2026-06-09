@@ -45,9 +45,6 @@ export async function getCommonConfig(
     },
   };
 
-  // `profile` was removed as a top-level RspackOptions field in
-  // @rspack/core@2 — Rsdoctor replaces it. Keep the value (so the v1
-  // path still picks it up) by attaching after the typed object literal.
   const defaultConfig: Configuration = {
     context: normalizedOptions.root,
     mode:
@@ -197,13 +194,8 @@ export async function getCommonConfig(
       ...stylesConfig.plugins,
     ],
   };
-  // Top-level `profile` was removed in @rspack/core@2 — not just from the
-  // type, but from the runtime. On v1 we set the flag so `stats.json`
-  // includes build-timing data; v2 has no equivalent (Rsdoctor covers
-  // build performance analysis). `statsJson` still emits `stats.json` on
-  // both majors, so this only affects the timing enrichment.
-  // TODO: remove this branch once @rspack/core v1 is dropped from the
-  // supported version window — `statsJson` itself stays.
+  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (normalizedOptions.statsJson && !isRspackV2()) {
     (defaultConfig as { profile?: boolean }).profile = true;
   }

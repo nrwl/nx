@@ -40,8 +40,6 @@ module.exports = {
   });
 
   it('skips non-string libraryTarget values', () => {
-    // Variable-form libraryTarget is rare; leave it alone rather than
-    // silently produce broken output.
     const input = `module.exports = { output: { libraryTarget: someVar } };`;
     expect(rewriteLibraryTarget(input)).toBe(input);
   });

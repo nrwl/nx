@@ -58,11 +58,8 @@ export function applyBaseConfig(
   options.progress ??= true;
   options.outputHashing ??= 'all';
 
-  // Prefer compiler.rspack when available (sync, no Jest constraint).
-  // Otherwise lazy-require @rspack/core — works on Node 22.12+ via
-  // require(esm) since Nx 23's minimum is documented as Node 22.12+, and
-  // the inline require avoids loading rspack at module-load time so Jest
-  // can still parse this file.
+  // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module
+  // parse time, so Jest can still load this file.
   const rspackCore: typeof import('@rspack/core') = compiler
     ? (compiler.rspack as unknown as typeof import('@rspack/core'))
     : require('@rspack/core');
@@ -126,25 +123,15 @@ function applyNxIndependentConfig(
       ? existingOutputConfig?.library?.type
       : undefined;
 
-  // What type the library output should be set to, expressed as a string.
-  // `undefined` means "no Nx-provided default", but a user-provided
-  // library.type already on the config is still respected.
   const computedLibraryType: string | undefined = (() => {
-    // If user is using modern library.type, don't override
     if (existingLibraryType !== undefined) return undefined;
-    // If user has set libraryTarget explicitly, use it
     if (existingLibraryTarget !== undefined) return existingLibraryTarget;
-    // Defaults based on target when user hasn't configured anything
     if (options.target === 'node') return 'commonjs';
     if (options.target === 'async-node') return 'commonjs-module';
     return undefined;
   })();
 
-  // v1 supports both `output.libraryTarget` and `output.library.type`;
-  // v2 removed the legacy `libraryTarget` field. On v2, always clear any
-  // existing `libraryTarget` (whether from the spread of `config.output`
-  // or the user's own input) so it doesn't survive into the merged
-  // output — rspack v2 rejects it outright.
+  // @rspack/core@2 removed output.libraryTarget; emit library.type instead.
   const installedRspackMajor = getRspackCoreMajorVersion(rspackCore);
   const existingLibrary =
     typeof config.output?.library === 'object' ? config.output.library : {};
@@ -157,9 +144,6 @@ function applyNxIndependentConfig(
             libraryTarget: undefined,
           }
         : { libraryTarget: computedLibraryType };
-  // When the user has set `library.type`, the legacy `libraryTarget` field
-  // is ambiguous and v1 picks the modern form anyway; v2 rejects it
-  // outright. Clear it in either case.
   if (existingLibraryType !== undefined) {
     libraryOutput.libraryTarget = undefined;
   }
@@ -194,13 +178,8 @@ function applyNxIndependentConfig(
     poll: options.poll,
   };
 
-  // Top-level `profile` was removed in @rspack/core@2 — it no longer
-  // controls anything at runtime. On v1 it adds per-module timing data to
-  // the emitted stats.json; v2 has no equivalent (Rsdoctor covers build
-  // performance analysis). The structural stats.json is still emitted by
-  // StatsJsonPlugin regardless.
-  // TODO: remove this branch once @rspack/core v1 is dropped from the
-  // supported version window — `statsJson` itself stays.
+  // TODO(v24): drop once @rspack/core v1 is out of the support window.
+  // v2 removed top-level `profile`; Rsdoctor replaces it.
   if (options.statsJson && installedRspackMajor < 2) {
     config.profile = true;
   }

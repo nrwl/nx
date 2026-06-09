@@ -22,13 +22,8 @@ import {
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
-/**
- * Lazily resolve a `NormalModuleReplacementPlugin` constructor for the
- * chosen bundler. Deferred to call time so `share.ts` itself stays
- * loadable in Jest's CJS Runtime — a top-level import of `@rspack/core`
- * would crash test-file loads even when the test doesn't exercise this
- * code path.
- */
+// Deferred so a top-level import of @rspack/core (pure ESM in v2) doesn't
+// crash Jest's CJS loading of any test that imports this module.
 function loadNormalModuleReplacementPlugin(
   bundler: 'rspack' | 'webpack'
 ): new (...args: any[]) => any {

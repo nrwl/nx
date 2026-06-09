@@ -55,10 +55,8 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
       };
       compiler.options.output.library.type = 'commonjs-module';
     } else {
-      // Ensure ESM output is enabled when using library type 'module'.
-      // Without this, remoteEntry.js emits `export` statements but the
-      // runtime loads it as a classic script ("Unexpected token 'export'").
-      // v2 dropped experiments.outputModule and folded it into output.module.
+      // Required so remoteEntry.js loads as a module, not a classic script.
+      // v2 folded experiments.outputModule into output.module.
       compiler.options.output.module = true;
       if (!isRspackV2(compiler)) {
         compiler.options.experiments ??= {};
