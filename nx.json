@@ -410,7 +410,7 @@
   "conformance": {
     "rules": [
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/project-package-json",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/project-package-json",
         "projects": [
           "!.",
           "!create-nx-*",
@@ -444,7 +444,7 @@
         ]
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/migration-groups",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/migration-groups",
         "options": {
           "versionRange": ">= 19.8",
           "groups": [
@@ -496,19 +496,19 @@
         }
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/no-ignored-tracked-files"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/no-ignored-tracked-files"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/codeblock-language"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/codeblock-language"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/relative-image-imports"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/relative-image-imports"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/types-versions-exports-sync"
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/types-versions-exports-sync"
       },
       {
-        "rule": "./dist/workspace-plugin/src/conformance-rules/env-vars-documented",
+        "rule": "./tools/workspace-plugin/dist/src/conformance-rules/env-vars-documented",
         "options": {
           "ignore": [
             "NX_ANALYTICS_SESSION_ID",
