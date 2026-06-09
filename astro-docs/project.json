@@ -25,7 +25,13 @@
             "devkit",
             "create-nx-workspace",
             "dotnet",
-            "maven"
+            "maven",
+            "esbuild",
+            "gradle",
+            "nuxt",
+            "plugin",
+            "react-native",
+            "remix"
           ],
           "target": "build"
         }
@@ -44,7 +50,13 @@
             "devkit",
             "create-nx-workspace",
             "dotnet",
-            "maven"
+            "maven",
+            "esbuild",
+            "gradle",
+            "nuxt",
+            "plugin",
+            "react-native",
+            "remix"
           ],
           "target": "build"
         }
