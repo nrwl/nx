@@ -253,7 +253,8 @@
         "typecheck": true,
         "build": {
           "targetName": "build-base"
-        }
+        },
+        "compiler": "tsgo"
       }
     },
     {

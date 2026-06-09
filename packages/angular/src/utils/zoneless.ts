@@ -1,7 +1,7 @@
 import type {
   ProjectConfiguration,
   TargetConfiguration,
-} from 'packages/devkit';
+} from '@nx/devkit';
 
 export function isZonelessApp(project: ProjectConfiguration): boolean {
   const buildTarget = findBuildTarget(project);
