@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "emitDecoratorMetadata": true,
-    "outDir": "../../dist/graph/ui-code-block/storybook",
+    "outDir": "dist/storybook",
     "composite": false,
     "moduleResolution": "node16",
     "module": "esnext"
