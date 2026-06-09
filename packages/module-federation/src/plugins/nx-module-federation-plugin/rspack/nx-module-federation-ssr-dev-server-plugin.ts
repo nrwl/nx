@@ -1,5 +1,5 @@
 import type { Compilation, Compiler, RspackPluginInstance } from '@rspack/core';
-import { bridgeRspackServeEnv } from '../../../utils/bridge-rspack-serve-env';
+import { isServeMode } from '../../../utils/is-serve-mode';
 import * as pc from 'picocolors';
 import {
   logger,
@@ -42,9 +42,7 @@ export class NxModuleFederationSSRDevServerPlugin
   }
 
   apply(compiler: Compiler) {
-    bridgeRspackServeEnv();
-    const isDevServer = process.env['WEBPACK_SERVE'];
-    if (!isDevServer) {
+    if (!isServeMode()) {
       return;
     }
     compiler.hooks.watchRun.tapAsync(

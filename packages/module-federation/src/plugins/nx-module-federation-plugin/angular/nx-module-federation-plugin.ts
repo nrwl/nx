@@ -6,6 +6,7 @@ import {
 import { getModuleFederationConfigSync } from '../../../with-module-federation/angular/utils';
 import { normalizeProjectName } from '../../../utils';
 import { isRspackV2 } from '../../../utils/rspack-version';
+import { isServeMode } from '../../../utils/is-serve-mode';
 import { workspaceRoot } from '@nx/devkit';
 
 export class NxModuleFederationPlugin implements RspackPluginInstance {
@@ -25,7 +26,7 @@ export class NxModuleFederationPlugin implements RspackPluginInstance {
     // This is required to ensure Module Federation will build the project correctly
     compiler.options.optimization ??= {};
     compiler.options.optimization.runtimeChunk =
-      process.env['WEBPACK_SERVE'] && !this._options.config.exposes
+      isServeMode() && !this._options.config.exposes
         ? (compiler.options.optimization?.runtimeChunk ?? undefined)
         : false;
 

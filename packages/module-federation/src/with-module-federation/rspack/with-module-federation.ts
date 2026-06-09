@@ -7,6 +7,7 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 const isVarOrWindow = (libType?: string) =>
   libType === 'var' || libType === 'window';
@@ -24,7 +25,7 @@ export async function withModuleFederation(
       return config;
     };
   }
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedDependencies, sharedLibraries, mappedRemotes } =
     getModuleFederationConfig(options);
