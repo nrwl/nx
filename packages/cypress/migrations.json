@@ -1,45 +1,5 @@
 {
   "generators": {
-    "set-inject-document-domain": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Replaces the `experimentalSkipDomainInjection` configuration option with the new `injectDocumentDomain` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain",
-      "documentation": "./dist/src/migrations/update-20-8-0/set-inject-document-domain.md"
-    },
-    "remove-experimental-fetch-polyfill": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Removes the `experimentalFetchPolyfill` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill",
-      "documentation": "./dist/src/migrations/update-20-8-0/remove-experimental-fetch-polyfill.md"
-    },
-    "replace-experimental-just-in-time-compile": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Replaces the `experimentalJustInTimeCompile` configuration option with the new `justInTimeCompile` configuration option.",
-      "implementation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile",
-      "documentation": "./dist/src/migrations/update-20-8-0/replace-experimental-just-in-time-compile.md"
-    },
-    "update-component-testing-mount-imports": {
-      "cli": "nx",
-      "version": "20.8.0-beta.0",
-      "requires": {
-        "cypress": ">=14.0.0"
-      },
-      "description": "Updates the module specifier for the Component Testing `mount` function.",
-      "implementation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports",
-      "documentation": "./dist/src/migrations/update-20-8-0/update-component-testing-mount-imports.md"
-    },
     "remove-tsconfig-and-copy-files-options-from-cypress-executor": {
       "version": "21.0.0-beta.10",
       "description": "Removes the `tsConfig` and `copyFiles` options from the `@nx/cypress:cypress` executor.",
@@ -95,27 +55,6 @@
     }
   },
   "packageJsonUpdates": {
-    "20.8.0": {
-      "version": "20.8.0-beta.0",
-      "x-prompt": "Do you want to update the Cypress version to v14?",
-      "requires": {
-        "cypress": ">=13.0.0 <14.0.0"
-      },
-      "packages": {
-        "cypress": {
-          "version": "^14.2.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/vite-dev-server": {
-          "version": "^6.0.3",
-          "alwaysAddToPackageJson": false
-        },
-        "@cypress/webpack-dev-server": {
-          "version": "^4.0.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "22.1.0": {
       "version": "22.1.0-beta.6",
       "x-prompt": "Do you want to update the Cypress version to v15?",
