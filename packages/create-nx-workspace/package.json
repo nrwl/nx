@@ -28,8 +28,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec"
+    "!dist/tsconfig.tsbuildinfo"
   ],
   "author": "Victor Savkin",
   "license": "MIT",
