@@ -88,12 +88,12 @@ describe('nx wrapper / .nx installation', () => {
 
     expect(
       installedPluginLines.some((x) => x.includes(`${styleText('bold', 'nx')}`))
-    );
+    ).toBe(true);
     expect(
       installedPluginLines.some((x) =>
         x.includes(`${styleText('bold', '@nx/js')}`)
       )
-    );
+    ).toBe(true);
 
     output = runNxWrapper('list @nx/js');
     expect(output).toContain('Capabilities in @nx/js');
