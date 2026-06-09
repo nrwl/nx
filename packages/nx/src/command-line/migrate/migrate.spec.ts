@@ -56,7 +56,7 @@ import {
   resolveCreateCommits,
   resolveDocumentationFileToWorkspacePath,
   resolveMigrationForRun,
-  resolveMode,
+  resolveInclude,
 } from './migrate';
 import { applyNxJsonMigrateDefaults } from './migrate-config';
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
@@ -86,12 +86,14 @@ const createPackageJson = (
   ...overrides,
 });
 
-// Stub fetcher driving the `--mode` supportsModes gate without the
-// registry/install round-trip. `supportsModes` defaults to true; pass a
+// Stub fetcher driving the `--include` supportsOptionalUpdates gate without the
+// registry/install round-trip. `supportsOptionalUpdates` defaults to true; pass a
 // predicate to mark specific (package, version) targets unsupported.
-const modeGateFetch =
+const includeGateFetch =
   (
-    supportsModes: boolean | ((pkg: string, version: string) => boolean) = true
+    supportsOptionalUpdates:
+      | boolean
+      | ((pkg: string, version: string) => boolean) = true
   ): ((
     pkg: string,
     version: string
@@ -100,10 +102,10 @@ const modeGateFetch =
     Promise.resolve({
       name: pkg,
       version,
-      supportsModes:
-        typeof supportsModes === 'function'
-          ? supportsModes(pkg, version)
-          : supportsModes,
+      supportsOptionalUpdates:
+        typeof supportsOptionalUpdates === 'function'
+          ? supportsOptionalUpdates(pkg, version)
+          : supportsOptionalUpdates,
     });
 
 describe('Migration', () => {
@@ -1092,12 +1094,12 @@ describe('Migration', () => {
       });
     });
 
-    describe('--mode', () => {
+    describe('--include', () => {
       beforeEach(() => {
         jest.clearAllMocks();
       });
 
-      it('should keep required packages and drop optional ones when mode is required', async () => {
+      it('should keep required packages and drop optional ones when include is required', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
@@ -1127,7 +1129,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'required',
+          include: 'required',
           requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
@@ -1171,7 +1173,7 @@ describe('Migration', () => {
           from: {},
           to: {},
           interactive: true,
-          mode: 'required',
+          include: 'required',
           requiredPackages: new Set(['mypackage']),
         });
 
@@ -1216,7 +1218,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'required',
+          include: 'required',
           requiredPackages: new Set(['nx', 'not-in-nx-package-group']),
         });
 
@@ -1232,7 +1234,7 @@ describe('Migration', () => {
         expect(result.packageUpdates['@nx/react']).toBeUndefined();
       });
 
-      it('should drop required packages and keep optional ones when mode is optional', async () => {
+      it('should drop required packages and keep optional ones when include is optional', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
@@ -1262,7 +1264,7 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'optional',
+          include: 'optional',
           requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
@@ -1276,8 +1278,8 @@ describe('Migration', () => {
       });
 
       it.each(['required', 'optional'] as const)(
-        'should throw when constructed with mode=%s but no requiredPackages',
-        (mode) => {
+        'should throw when constructed with include=%s but no requiredPackages',
+        (include) => {
           // Other required callbacks are unused — constructor rejects before any
           // method runs — so stub them with the simplest valid shape.
           expect(
@@ -1288,10 +1290,10 @@ describe('Migration', () => {
                 fetch: () => Promise.resolve({ version: '0.0.0' }),
                 from: {},
                 to: {},
-                mode,
+                include,
               })
           ).toThrow(
-            `Error: 'requiredPackages' is required when 'mode' is '${mode}'.`
+            `Error: 'requiredPackages' is required when 'include' is '${include}'.`
           );
         }
       );
@@ -2220,96 +2222,96 @@ describe('Migration', () => {
       });
     });
 
-    it('should accept --mode=required for a target that supports modes', async () => {
+    it('should accept --include=required for a target that supports optional updates', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'required',
+          include: 'required',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'required',
+        include: 'required',
       });
     });
 
-    it('should accept --mode=required for a non-nx target that supports modes', async () => {
+    it('should accept --include=required for a non-nx target that supports optional updates', async () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/react@23.0.0',
-          mode: 'required',
+          include: 'required',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/react',
         targetVersion: '23.0.0',
-        mode: 'required',
+        include: 'required',
       });
     });
 
-    it('should reject --mode for a target that does not support modes', async () => {
+    it('should reject --include for a target that does not support optional updates', async () => {
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/react@22.0.0',
-            mode: 'required',
+            include: 'required',
           },
-          modeGateFetch(false)
+          includeGateFetch(false)
         )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target package to support migration modes, but '@nx/react@22.0.0' does not.`
+        `Error: '--include' requires the target package to support optional updates, but '@nx/react@22.0.0' does not.`
       );
     });
 
-    it('should accept --mode combined with --interactive for a target that supports modes', async () => {
+    it('should accept --include combined with --interactive for a target that supports optional updates', async () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'required',
+          include: 'required',
           interactive: true,
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'required',
+        include: 'required',
         interactive: true,
       });
     });
 
-    it('should reject --mode=optional combined with --interactive', async () => {
+    it('should reject --include=optional combined with --interactive', async () => {
       await expect(() =>
-        parseMigrationsOptions({ mode: 'optional', interactive: true })
+        parseMigrationsOptions({ include: 'optional', interactive: true })
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot be combined with '--interactive'.`
+        `Error: '--include=optional' cannot be combined with '--interactive'.`
       );
     });
 
-    it('should reject the nx.json optional mode combined with --interactive', async () => {
+    it('should reject the nx.json `optional` value combined with --interactive', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@22.5.0',
-            modeFromConfig: 'optional',
+            includeFromConfig: 'optional',
             interactive: true,
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot be combined with '--interactive'.`
+        `Error: '--include=optional' cannot be combined with '--interactive'.`
       );
     });
 
-    it('should allow --interactive for a target that supports modes (resolves to "all" in non-TTY)', async () => {
+    it('should allow --interactive for a target that supports optional updates (resolves to "all" in non-TTY)', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       const r = await parseMigrationsOptions({
         packageAndVersion: 'nx@22.7.0',
@@ -2320,7 +2322,7 @@ describe('Migration', () => {
         targetPackage: 'nx',
         targetVersion: '22.7.0',
         interactive: true,
-        mode: 'all',
+        include: 'all',
       });
     });
 
@@ -2348,7 +2350,7 @@ describe('Migration', () => {
         targetPackage: 'mypackage',
         targetVersion: '2.0.0',
         interactive: true,
-        mode: 'all',
+        include: 'all',
       });
     });
 
@@ -2501,66 +2503,66 @@ describe('Migration', () => {
       ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
     });
 
-    it('should reject --mode combined with --run-migrations', async () => {
+    it('should reject --include combined with --run-migrations', async () => {
       await expect(() =>
         parseMigrationsOptions({
           runMigrations: 'migrations.json',
-          mode: 'required',
+          include: 'required',
         })
       ).rejects.toThrow(
-        `Error: '--mode' cannot be combined with '--run-migrations'.`
+        `Error: '--include' cannot be combined with '--run-migrations'.`
       );
     });
 
-    it('should reject --mode for a modern target that does not support modes', async () => {
+    it('should reject --include for a modern target that does not support optional updates', async () => {
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/react@22.0.0',
-            mode: 'required',
+            include: 'required',
           },
-          modeGateFetch(false)
+          includeGateFetch(false)
         )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target package to support migration modes, but '@nx/react@22.0.0' does not.`
+        `Error: '--include' requires the target package to support optional updates, but '@nx/react@22.0.0' does not.`
       );
     });
 
-    it('should reject --mode for a legacy target that does not support modes', async () => {
+    it('should reject --include for a legacy target that does not support optional updates', async () => {
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@13.0.0',
-            mode: 'required',
+            include: 'required',
           },
-          modeGateFetch(false)
+          includeGateFetch(false)
         )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target package to support migration modes, but 'nx@13.0.0' does not.`
+        `Error: '--include' requires the target package to support optional updates, but 'nx@13.0.0' does not.`
       );
     });
 
-    it('should reject --mode=optional combined with --from', async () => {
+    it('should reject --include=optional combined with --from', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'optional',
+          include: 'optional',
           from: 'nx@21.0.0',
         })
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot be combined with '--from'.`
+        `Error: '--include=optional' cannot be combined with '--from'.`
       );
     });
 
-    it('should reject --mode=optional combined with --exclude-applied-migrations', async () => {
+    it('should reject --include=optional combined with --exclude-applied-migrations', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'optional',
+          include: 'optional',
           excludeAppliedMigrations: true,
         })
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot be combined with '--exclude-applied-migrations'.`
+        `Error: '--include=optional' cannot be combined with '--exclude-applied-migrations'.`
       );
     });
 
@@ -2580,7 +2582,7 @@ describe('Migration', () => {
         expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
     ])(
-      'should anchor --mode=optional to installed canonical: $desc',
+      'should anchor --include=optional to installed canonical: $desc',
       async ({ positional, installedNx, installedLegacy, expected }) => {
         mockGetInstalledNxVersion.mockReturnValue(installedNx);
         mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
@@ -2589,102 +2591,102 @@ describe('Migration', () => {
         const r = await parseMigrationsOptions(
           {
             ...(positional ? { packageAndVersion: positional } : {}),
-            mode: 'optional',
+            include: 'optional',
           },
-          modeGateFetch()
+          includeGateFetch()
         );
         expect(r).toMatchObject({
           type: 'generateMigrations',
-          mode: 'optional',
+          include: 'optional',
           ...expected,
         });
       }
     );
 
-    it('should reject --mode=optional when nx is not installed', async () => {
+    it('should reject --include=optional when nx is not installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue(null);
       await expect(() =>
-        parseMigrationsOptions({ mode: 'optional' })
+        parseMigrationsOptions({ include: 'optional' })
       ).rejects.toThrow(
-        `Error: '--mode=optional' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
+        `Error: '--include=optional' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
       );
     });
 
-    it('should reject --mode=optional when target is higher than installed', async () => {
+    it('should reject --include=optional when target is higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@24.0.0',
-            mode: 'optional',
+            include: 'optional',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should accept --mode=optional when target is lower than installed', async () => {
+    it('should accept --include=optional when target is lower than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.5.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'optional',
+          include: 'optional',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '23.0.0',
-        mode: 'optional',
+        include: 'optional',
       });
     });
 
-    it('should gate --mode=optional on the installed version, not the older explicit target', async () => {
-      // Catch-up reads `supportsModes` at the INSTALLED version (what you
+    it('should gate --include=optional on the installed version, not the older explicit target', async () => {
+      // Catch-up reads `supportsOptionalUpdates` at the INSTALLED version (what you
       // have), not the older explicit target. The stub only marks 23.0.0 as
-      // supporting modes, so eligibility proves the gate read installed 23,
+      // supporting optional updates, so eligibility proves the gate read installed 23,
       // even though the target 22 predates the flag.
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@22.0.0',
-          mode: 'optional',
+          include: 'optional',
         },
-        modeGateFetch((_pkg, version) => version === '23.0.0')
+        includeGateFetch((_pkg, version) => version === '23.0.0')
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '22.0.0',
-        mode: 'optional',
+        include: 'optional',
       });
     });
 
-    it('should reject --mode=optional when the installed version does not support modes, naming the installed version', async () => {
+    it('should reject --include=optional when the installed version does not support optional updates, naming the installed version', async () => {
       // Reject mirror of the gate above: eligibility reads the INSTALLED
       // version, so the rejection names installed 22 - not the older explicit
-      // target 21. The stub marks only 23.0.0 as supporting modes.
+      // target 21. The stub marks only 23.0.0 as supporting optional updates.
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@21.0.0',
-            mode: 'optional',
+            include: 'optional',
           },
-          modeGateFetch((_pkg, version) => version === '23.0.0')
+          includeGateFetch((_pkg, version) => version === '23.0.0')
         )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target package to support migration modes, but 'nx@22.0.0' does not.`
+        `Error: '--include' requires the target package to support optional updates, but 'nx@22.0.0' does not.`
       );
     });
 
     it('should surface a fetch failure instead of reporting the target as unsupported', async () => {
-      // The gate resolves `supportsModes` through the shared fetcher (registry,
+      // The gate resolves `supportsOptionalUpdates` through the shared fetcher (registry,
       // then install). A genuine fetch failure must surface as-is, not be
-      // swallowed into a misleading "does not support modes" rejection.
+      // swallowed into a misleading "does not support optional updates" rejection.
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const failingFetch = () =>
         Promise.reject(new Error('registry and install both failed'));
@@ -2692,14 +2694,14 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'required',
+            include: 'required',
           },
           failingFetch as any
         )
       ).rejects.toThrow('registry and install both failed');
     });
 
-    it('should accept --mode=optional with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
+    it('should accept --include=optional with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
       // `parseMigrationsOptions` preserves the typed target verbatim; the
       // silent `@nx/workspace` → `nx` swap happens later in
       // `generateMigrationsJsonAndUpdatePackageJson` via
@@ -2708,15 +2710,15 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/workspace@23.0.0',
-          mode: 'optional',
+          include: 'optional',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
         targetVersion: '23.0.0',
-        mode: 'optional',
+        include: 'optional',
       });
       expect(
         resolveCanonicalNxPackage(
@@ -2725,7 +2727,7 @@ describe('Migration', () => {
       ).toBe('nx');
     });
 
-    it('should anchor @nx/workspace --mode=optional to installed nx when only nx is installed', async () => {
+    it('should anchor @nx/workspace --include=optional to installed nx when only nx is installed', async () => {
       // #2 regression: the installed lookup must normalize `@nx/workspace` ->
       // `nx`. With @nx/workspace absent but nx present, it resolves against nx
       // instead of failing "requires @nx/workspace to be installed".
@@ -2736,83 +2738,83 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: '@nx/workspace',
-          mode: 'optional',
+          include: 'optional',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
         targetVersion: '23.0.0',
-        mode: 'optional',
+        include: 'optional',
       });
     });
 
-    it('should reject --mode=optional with --to canonical higher than installed', async () => {
+    it('should reject --include=optional with --to canonical higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'optional',
+            include: 'optional',
             to: 'nx@24.0.0',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=optional with --to for required packages higher than installed', async () => {
+    it('should reject --include=optional with --to for required packages higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'optional',
+            include: 'optional',
             to: '@nx/js@23.6.4',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=optional with --to create-nx-workspace higher than installed', async () => {
+    it('should reject --include=optional with --to create-nx-workspace higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'optional',
+            include: 'optional',
             to: 'create-nx-workspace@23.6.4',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
-    it('should reject --mode=optional with --to @nx/workspace higher than installed', async () => {
+    it('should reject --include=optional with --to @nx/workspace higher than installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions(
           {
             packageAndVersion: 'nx@23.0.0',
-            mode: 'optional',
+            include: 'optional',
             to: '@nx/workspace@24.0.0',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should cap --to against nx full group when migrating @nx/workspace in optional mode', async () => {
+    it('should cap --to against nx full group when migrating @nx/workspace in `optional` value', async () => {
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       // `@nx/workspace` declares a narrow group; the bound check must use nx's
       // full closure (which includes `@nx/jest`) to mirror the walk.
@@ -2825,29 +2827,29 @@ describe('Migration', () => {
         parseMigrationsOptions(
           {
             packageAndVersion: '@nx/workspace',
-            mode: 'optional',
+            include: 'optional',
             to: '@nx/jest@24.0.0',
           },
-          modeGateFetch()
+          includeGateFetch()
         )
       ).rejects.toThrow(
-        `Error: '--mode=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/jest@24.0.0', installed 'nx@22.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/jest@24.0.0', installed 'nx@22.0.0').`
       );
     });
 
-    it('should accept --mode=optional with --to for non-canonical packages', async () => {
+    it('should accept --include=optional with --to for non-canonical packages', async () => {
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const r = await parseMigrationsOptions(
         {
           packageAndVersion: 'nx@23.0.0',
-          mode: 'optional',
+          include: 'optional',
           to: 'react@18.0.0',
         },
-        modeGateFetch()
+        includeGateFetch()
       );
       expect(r).toMatchObject({
         type: 'generateMigrations',
-        mode: 'optional',
+        include: 'optional',
         to: { react: '18.0.0' },
       });
     });
@@ -2976,54 +2978,54 @@ describe('Migration', () => {
       });
     });
 
-    describe('nx.json migrate.mode overlay (integration)', () => {
-      it('does not treat nx.json migrate.mode as an explicit --mode for a target that does not support modes', async () => {
-        // The original footgun: a workspace-wide migrate.mode default made
-        // `nx migrate <pkg>` hard-fail with a `--mode` error the user never
+    describe('nx.json migrate.include overlay (integration)', () => {
+      it('does not treat nx.json migrate.include as an explicit --include for a target that does not support optional updates', async () => {
+        // The original footgun: a workspace-wide migrate.include default made
+        // `nx migrate <pkg>` hard-fail with a `--include` error the user never
         // passed. The overlay must carry it as a default, not a flag, and a
-        // target that doesn't support modes must fall back to 'all' with a warning.
+        // target that doesn't support optional updates must fall back to 'all' with a warning.
         const warnSpy = jest
           .spyOn(require('../../utils/output').output, 'warn')
           .mockImplementation(() => {});
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
             { packageAndVersion: '@angular/core@18.0.0' },
-            { mode: 'required' }
+            { include: 'required' }
           ),
-          modeGateFetch(false)
+          includeGateFetch(false)
         );
         expect(result).toMatchObject({
           type: 'generateMigrations',
           targetPackage: '@angular/core',
-          mode: 'all',
+          include: 'all',
         });
         expect(warnSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             title: expect.stringContaining(
-              "The configured nx.json migrate.mode 'required' is not available"
+              "The configured nx.json migrate.include 'required' is not available"
             ),
           })
         );
       });
 
-      it('applies nx.json migrate.mode through the overlay for a target that supports modes', async () => {
+      it('applies nx.json migrate.include through the overlay for a target that supports optional updates', async () => {
         const result = await parseMigrationsOptions(
           applyNxJsonMigrateDefaults(
             { packageAndVersion: 'nx@23.0.0' },
-            { mode: 'required' }
+            { include: 'required' }
           ),
-          modeGateFetch()
+          includeGateFetch()
         );
         expect(result).toMatchObject({
           type: 'generateMigrations',
           targetPackage: 'nx',
-          mode: 'required',
+          include: 'required',
         });
       });
     });
   });
 
-  describe('resolveMode', () => {
+  describe('resolveInclude', () => {
     let originalCi: string | undefined;
     let originalTty: boolean | undefined;
 
@@ -3045,30 +3047,33 @@ describe('Migration', () => {
       });
     });
 
-    const supportsModesContext = {
+    const supportsOptionalUpdatesContext = {
       hasFrom: false,
       hasExcludeAppliedMigrations: false,
-      targetSupportsModes: true,
+      targetSupportsOptionalUpdates: true,
     };
 
-    it('should return the provided mode without prompting', async () => {
+    it('should return the provided include without prompting', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('required', supportsModesContext);
+      const result = await resolveInclude(
+        'required',
+        supportsOptionalUpdatesContext
+      );
       expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('should return the provided mode even when the target does not support modes', async () => {
-      // The `supportsModes` gate is enforced in `resolveTargetAndMode`;
-      // `resolveMode` honors an explicit mode as-is.
-      const result = await resolveMode('required', {
+    it('should return the provided include even when the target does not support optional updates', async () => {
+      // The `supportsOptionalUpdates` gate is enforced in `resolveTargetAndInclude`;
+      // `resolveInclude` honors an explicit include as-is.
+      const result = await resolveInclude('required', {
         hasFrom: false,
         hasExcludeAppliedMigrations: false,
-        targetSupportsModes: false,
+        targetSupportsOptionalUpdates: false,
       });
       expect(result).toBe('required');
     });
@@ -3079,7 +3084,10 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, supportsModesContext);
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalUpdatesContext
+      );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -3090,7 +3098,10 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'true';
-      const result = await resolveMode(undefined, supportsModesContext);
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalUpdatesContext
+      );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -3101,24 +3112,24 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, {
-        ...supportsModesContext,
+      const result = await resolveInclude(undefined, {
+        ...supportsOptionalUpdatesContext,
         interactive: false,
       });
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('should default to "all" without prompting when the target does not support modes', async () => {
+    it('should default to "all" without prompting when the target does not support optional updates', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, {
+      const result = await resolveInclude(undefined, {
         hasFrom: false,
         hasExcludeAppliedMigrations: false,
-        targetSupportsModes: false,
+        targetSupportsOptionalUpdates: false,
       });
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3130,8 +3141,11 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'required' }));
-      const result = await resolveMode(undefined, supportsModesContext);
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalUpdatesContext
+      );
       expect(result).toBe('required');
       expect(mockPrompt).toHaveBeenCalled();
     });
@@ -3142,8 +3156,8 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, supportsModesContext);
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, supportsOptionalUpdatesContext);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
         'required',
@@ -3158,11 +3172,11 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, {
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
         hasFrom: true,
         hasExcludeAppliedMigrations: false,
-        targetSupportsModes: true,
+        targetSupportsOptionalUpdates: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
@@ -3177,11 +3191,11 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, {
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
         hasFrom: false,
         hasExcludeAppliedMigrations: true,
-        targetSupportsModes: true,
+        targetSupportsOptionalUpdates: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
@@ -3196,9 +3210,9 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, {
-        ...supportsModesContext,
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
+        ...supportsOptionalUpdatesContext,
         interactive: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
@@ -3208,59 +3222,63 @@ describe('Migration', () => {
       ]);
     });
 
-    it('uses the nx.json configured mode for a supportsModes target without prompting', async () => {
+    it('uses the nx.json configured include for a target that supports optional updates without prompting', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(
+      const result = await resolveInclude(
         undefined,
-        supportsModesContext,
+        supportsOptionalUpdatesContext,
         'required'
       );
       expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('uses the nx.json configured mode for a supportsModes target in CI', async () => {
+    it('uses the nx.json configured include for a target that supports optional updates in CI', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'true';
-      const result = await resolveMode(
+      const result = await resolveInclude(
         undefined,
-        supportsModesContext,
+        supportsOptionalUpdatesContext,
         'required'
       );
       expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('lets an explicit mode win over the nx.json configured mode', async () => {
+    it('lets an explicit include win over the nx.json configured include', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('all', supportsModesContext, 'required');
+      const result = await resolveInclude(
+        'all',
+        supportsOptionalUpdatesContext,
+        'required'
+      );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('ignores the nx.json configured mode when the target does not support modes', async () => {
+    it('ignores the nx.json configured include when the target does not support optional updates', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(
+      const result = await resolveInclude(
         undefined,
         {
           hasFrom: false,
           hasExcludeAppliedMigrations: false,
-          targetSupportsModes: false,
+          targetSupportsOptionalUpdates: false,
         },
         'required'
       );
@@ -3623,10 +3641,10 @@ describe('Migration', () => {
         .mockImplementation(() => {});
     }
 
-    // Every scenario here migrates a mode-supporting target; the stub satisfies
-    // the `--mode` gate so the tests exercise multi-major resolution alone.
-    const parseWithModes = (options: { [k: string]: any }) =>
-      parseMigrationsOptions(options, modeGateFetch());
+    // Every scenario here migrates a target that supports optional updates; the stub satisfies
+    // the `--include` gate so the tests exercise multi-major resolution alone.
+    const parseWithIncludes = (options: { [k: string]: any }) =>
+      parseMigrationsOptions(options, includeGateFetch());
 
     it('should prompt and replace targetVersion with the chosen value (inferred target, TTY)', async () => {
       setTty(true);
@@ -3639,9 +3657,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'next',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).toHaveBeenCalledWith(
@@ -3672,9 +3690,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      await parseWithModes({
+      await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
@@ -3692,9 +3710,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      await parseWithModes({
+      await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
@@ -3712,9 +3730,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
 
-      await parseWithModes({
+      await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
@@ -3723,8 +3741,8 @@ describe('Migration', () => {
       expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
     });
 
-    it('should keep --mode=required valid when multi-major redirects to the next major (v22 install)', async () => {
-      // Mode is resolved before multi-major; suppressing the v22 step guarantees
+    it('should keep --include=required valid when multi-major redirects to the next major (v22 install)', async () => {
+      // Include is resolved before multi-major; suppressing the v22 step guarantees
       // every multi-major option stays >= v23, so a required selection can't
       // be invalidated by the redirect.
       setTty(true);
@@ -3736,14 +3754,14 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'nx@24.0.0',
-        mode: 'required',
+        include: 'required',
       });
 
       expect(r).toMatchObject({
         type: 'generateMigrations',
-        mode: 'required',
+        include: 'required',
         targetVersion: '23.5.3',
       });
     });
@@ -3757,9 +3775,9 @@ describe('Migration', () => {
       mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.1.0',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).toHaveBeenCalled();
@@ -3772,9 +3790,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3787,9 +3805,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         interactive: false,
       });
 
@@ -3803,9 +3821,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
@@ -3820,9 +3838,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3839,9 +3857,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3860,9 +3878,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3879,9 +3897,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3906,9 +3924,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3925,21 +3943,21 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should bypass --multi-major-mode=gradual when --mode=optional', async () => {
+    it('should bypass --multi-major-mode=gradual when --include=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
-      // the optional mode anchors at the installed canonical (here 23.0.0) and
+      // the `optional` value anchors at the installed canonical (here 23.0.0) and
       // must not be redirected to an incremental target. `maybePromptOrWarn…`
-      // early-returns on `mode === 'optional'` before consulting gradual,
+      // early-returns on `include === 'optional'` before consulting gradual,
       // so the flag is accepted but is a no-op.
       mockRegistry({
         latest: '25.1.0',
@@ -3948,9 +3966,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.0.0',
-        mode: 'optional',
+        include: 'optional',
         multiMajorMode: 'gradual',
       });
 
@@ -3964,9 +3982,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '22.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3980,9 +3998,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3990,16 +4008,16 @@ describe('Migration', () => {
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should not prompt or warn for --mode=optional', async () => {
+    it('should not prompt or warn for --include=optional', async () => {
       setTty(true);
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({ mode: 'optional' });
+      const r = await parseWithIncludes({ include: 'optional' });
 
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(r).toMatchObject({ mode: 'optional' });
+      expect(r).toMatchObject({ include: 'optional' });
     });
 
     it.each(['nx', '@nx/workspace'])(
@@ -4017,9 +4035,9 @@ describe('Migration', () => {
         });
         mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
 
-        const r = await parseWithModes({
+        const r = await parseWithIncludes({
           packageAndVersion: positional,
-          mode: 'all',
+          include: 'all',
         });
 
         expect(mockPrompt).toHaveBeenCalled();
@@ -4039,9 +4057,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -4057,9 +4075,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -4078,9 +4096,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({
@@ -4098,9 +4116,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
@@ -4117,9 +4135,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
@@ -4138,15 +4156,15 @@ describe('Migration', () => {
       mockGetInstalledNxVersion.mockReturnValue('22.5.3');
       mockRegistry({ latest: '22.5.3' });
 
-      const bare = await parseWithModes({ mode: 'all' });
+      const bare = await parseWithIncludes({ include: 'all' });
       expect(bare).toMatchObject({ targetVersion: '22.5.3' });
       expect(
         (bare as { originalTargetVersion?: string }).originalTargetVersion
       ).toBeUndefined();
 
-      const barePkg = await parseWithModes({
+      const barePkg = await parseWithIncludes({
         packageAndVersion: 'nx',
-        mode: 'all',
+        include: 'all',
       });
       expect(barePkg).toMatchObject({ targetVersion: '22.5.3' });
       expect(
@@ -4162,9 +4180,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -4184,9 +4202,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      const r = await parseWithModes({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({

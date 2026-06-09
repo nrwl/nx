@@ -53,7 +53,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

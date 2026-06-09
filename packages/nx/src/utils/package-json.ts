@@ -53,8 +53,8 @@ export type PackageJsonDependencySection =
 export interface NxMigrationsConfiguration {
   migrations?: string;
   packageGroup?: PackageGroup;
-  /** Signals the package supports `nx migrate --mode`. */
-  supportsModes?: boolean;
+  /** Signals the package supports `nx migrate --include`. */
+  supportsOptionalUpdates?: boolean;
 }
 
 type PackageOverride = { [key: string]: string | PackageOverride };
@@ -132,7 +132,7 @@ export interface NxPackageJson extends PackageJson {
   'nx-migrations'?: {
     migrations?: string;
     packageGroup?: (string | { package: string; version: string })[];
-    supportsModes?: boolean;
+    supportsOptionalUpdates?: boolean;
   };
 }
 
@@ -167,7 +167,9 @@ export function readNxMigrateConfig(
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
         : {}),
-      ...(fromJson.supportsModes ? { supportsModes: true } : {}),
+      ...(fromJson.supportsOptionalUpdates
+        ? { supportsOptionalUpdates: true }
+        : {}),
     };
   };
 

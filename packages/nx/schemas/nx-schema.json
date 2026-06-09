@@ -433,10 +433,10 @@
           "type": "string",
           "description": "Commit message prefix applied to each migration commit when commits are enabled. Equivalent to the `--commit-prefix` flag. Defaults to `\"chore: [nx migration] \"`."
         },
-        "mode": {
+        "include": {
           "type": "string",
           "enum": ["required", "optional", "all"],
-          "description": "Restricts which packages to migrate, for target packages that support migration modes: `required` (the target package and the related packages it ships with), `optional` (the optional dependency updates those packages recommend), or `all`. Equivalent to the `--mode` flag. Defaults to `all`."
+          "description": "Restricts which packages to migrate, for target packages that support optional updates: `required` (the target package and the related packages it ships with), `optional` (the optional dependency updates those packages recommend), or `all`. Equivalent to the `--include` flag. Defaults to `all`."
         },
         "multiMajorMode": {
           "type": "string",

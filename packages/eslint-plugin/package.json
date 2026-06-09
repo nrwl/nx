@@ -49,7 +49,7 @@
   "homepage": "https://nx.dev",
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

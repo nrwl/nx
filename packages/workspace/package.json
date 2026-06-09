@@ -52,7 +52,7 @@
       "nx-cloud": "latest",
       "nx": "*"
     },
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

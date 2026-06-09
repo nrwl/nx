@@ -3,7 +3,7 @@ import { gt, major, minor, valid } from 'semver';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
 import { resolvePackageVersionRespectingMinReleaseAge } from './resolve-package-version';
-import type { MigrateMode } from './migrate';
+import type { MigrateInclude } from './migrate';
 import {
   DIST_TAGS,
   type DistTag,
@@ -174,18 +174,18 @@ function isNxTarget(targetPackage: string, targetVersion: string): boolean {
 }
 
 export async function maybePromptOrWarnMultiMajorMigration(args: {
-  mode: MigrateMode;
+  include: MigrateInclude;
   options: { multiMajorMode?: MultiMajorMode; interactive?: boolean };
   targetPackage: string;
   targetVersion: string;
 }): Promise<MultiMajorResult> {
-  const { mode, options, targetPackage } = args;
+  const { include, options, targetPackage } = args;
   let { targetVersion } = args;
-  if (mode === 'optional') return { chosen: targetVersion };
+  if (include === 'optional') return { chosen: targetVersion };
   const multiMajorMode = resolveMultiMajorMode(options);
   if (multiMajorMode === 'direct') return { chosen: targetVersion };
   // The multi-major catch-up only applies to Nx's own versioned cascade, so it
-  // keys off the canonical Nx package identity, not `--mode` eligibility.
+  // keys off the canonical Nx package identity, not `--include` eligibility.
   if (!isNxTarget(targetPackage, targetVersion)) {
     return { chosen: targetVersion };
   }

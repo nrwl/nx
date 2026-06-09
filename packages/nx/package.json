@@ -160,7 +160,7 @@
         "version": "latest"
       }
     ],
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",

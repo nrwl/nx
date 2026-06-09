@@ -5,7 +5,7 @@ import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
 import type { AgentId } from '../command-line/migrate/agentic/cli-args';
 import type {
-  MigrateMode,
+  MigrateInclude,
   MultiMajorMode,
 } from '../command-line/migrate/command-object';
 import { readJsonFile } from '../utils/fileutils';
@@ -728,12 +728,12 @@ export interface NxMigrateConfiguration {
 
   /**
    * Restricts which packages to migrate. Only applies to target packages that
-   * support migration modes. Equivalent to the `--mode` flag.
+   * support optional updates. Equivalent to the `--include` flag.
    * - `required`: the target package and the related packages it ships with.
    * - `optional`: the optional dependency updates those packages recommend.
    * - `all`: everything (default).
    */
-  mode?: MigrateMode;
+  include?: MigrateInclude;
 
   /**
    * How to handle a migration that crosses more than one major version.

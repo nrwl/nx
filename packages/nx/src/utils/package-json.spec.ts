@@ -886,50 +886,50 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
-  it('should carry supportsModes from the nx-migrations config', () => {
+  it('should carry supportsOptionalUpdates from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsModes: true,
+        supportsOptionalUpdates: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsModes: true,
+      supportsOptionalUpdates: true,
     });
   });
 
-  it('should carry supportsModes from the ng-update config', () => {
+  it('should carry supportsOptionalUpdates from the ng-update config', () => {
     const config = readNxMigrateConfig({
       'ng-update': {
         migrations: './migrations.json',
-        supportsModes: true,
+        supportsOptionalUpdates: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsModes: true,
+      supportsOptionalUpdates: true,
     });
   });
 
-  it('should not set supportsModes when the config omits it', () => {
+  it('should not set supportsOptionalUpdates when the config omits it', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': { migrations: './migrations.json' },
     });
 
-    expect(config.supportsModes).toBeUndefined();
+    expect(config.supportsOptionalUpdates).toBeUndefined();
   });
 
-  it('should not set supportsModes when the config sets it to false', () => {
+  it('should not set supportsOptionalUpdates when the config sets it to false', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsModes: false,
+        supportsOptionalUpdates: false,
       },
     });
 
-    expect(config.supportsModes).toBeUndefined();
+    expect(config.supportsOptionalUpdates).toBeUndefined();
   });
 });

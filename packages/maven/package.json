@@ -29,7 +29,7 @@
   "executors": "./executors.json",
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "files": [
     "dist",

@@ -55,7 +55,7 @@ export function getInstalledNxVersion(): string | null {
 
 /**
  * Resolve the workspace's installed `@nrwl/workspace` version (legacy-era
- * fallback for `nx migrate --mode=optional` targeting `< 14.0.0-beta.0`),
+ * fallback for `nx migrate --include=optional` targeting `< 14.0.0-beta.0`),
  * or `null` if it cannot be resolved from the workspace require paths.
  */
 export function getInstalledLegacyNrwlWorkspaceVersion(): string | null {

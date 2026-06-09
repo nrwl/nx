@@ -152,7 +152,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "publishConfig": {
     "access": "public"

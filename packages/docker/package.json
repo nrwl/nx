@@ -81,7 +81,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "executors": "./executors.json",
   "generators": "./generators.json",

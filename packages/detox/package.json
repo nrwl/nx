@@ -54,7 +54,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsModes": true
+    "supportsOptionalUpdates": true
   },
   "generators": "./generators.json",
   "publishConfig": {
