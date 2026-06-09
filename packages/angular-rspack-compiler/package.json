@@ -32,6 +32,7 @@
   "module": "./dist/index.js",
   "exports": {
     ".": {
+      "@nx/nx-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
