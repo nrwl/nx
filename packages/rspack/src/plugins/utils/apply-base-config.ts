@@ -20,6 +20,7 @@ import nodeExternals = require('webpack-node-externals');
 import { NormalizedNxAppRspackPluginOptions } from './models';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './get-non-buildable-libs';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 const IGNORED_RSPACK_WARNINGS = [
   /The comment file/i,
@@ -80,7 +81,7 @@ function applyNxIndependentConfig(
   const { SwcJsMinimizerRspackPlugin } = rspackCore;
   const isProd =
     process.env.NODE_ENV === 'production' || options.mode === 'production';
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target as 'async-node' | 'node' | 'web';
@@ -318,8 +319,7 @@ function applyNxDependentConfig(
 
   // New TS Solution already has a typecheck target but allow it to run during serve
   const shouldTypeCheck =
-    typeCheckOptions !== false &&
-    (!isUsingTsSolution || process.env['WEBPACK_SERVE']);
+    typeCheckOptions !== false && (!isUsingTsSolution || isServeMode());
 
   if (shouldTypeCheck) {
     const { TsCheckerRspackPlugin } = require('ts-checker-rspack-plugin');
