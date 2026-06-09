@@ -10,7 +10,7 @@
       "defaultConfiguration": "production",
       "options": {
         "platform": "node",
-        "outputPath": "dist/tools/documentation/create-embeddings",
+        "outputPath": "tools/documentation/create-embeddings/dist",
         "format": ["esm"],
         "bundle": true,
         "main": "tools/documentation/create-embeddings/src/main.mts",
