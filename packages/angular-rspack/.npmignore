@@ -1,5 +1,6 @@
 !dist
 dist/tsconfig.lib.tsbuildinfo
+out-tsc
 .eslintrc.json
 project.json
 tsconfig.json
