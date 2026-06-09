@@ -66,11 +66,6 @@
       "x-completion-type": "file",
       "x-completion-glob": "tsconfig.*.json"
     },
-    "setupFile": {
-      "description": "The name of a setup file used by Jest.",
-      "type": "string",
-      "x-deprecated": "Use the `setupFilesAfterEnv` option in the Jest configuration file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array. It will be removed in Nx v22."
-    },
     "bail": {
       "alias": "b",
       "description": "Exit the test suite immediately after `n` number of failing tests. (https://jestjs.io/docs/cli#--bail)",

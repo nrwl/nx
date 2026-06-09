@@ -1,9 +1,8 @@
-import { migratePrompt } from './safe-prompt';
+import { canPrompt, migratePrompt } from './safe-prompt';
 import { gt, major, minor, valid } from 'semver';
-import { isCI } from '../../utils/is-ci';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
-import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import { resolvePackageVersionRespectingMinReleaseAge } from './resolve-package-version';
 import type { MigrateMode } from './migrate';
 import {
   DIST_TAGS,
@@ -20,16 +19,20 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
 
 export type MultiMajorMode = 'direct' | 'gradual';
 
-// Caret-major (`^X.0.0`) excludes prereleases per semver, so
-// `resolvePackageVersionUsingRegistry` returns the highest stable in major X.
+// Caret-major (`^X.0.0`) excludes prereleases per semver, so the registry
+// resolution returns the highest stable in major X.
 async function resolveLatestStableInMajor(
   packageName: string,
   majorVersion: number
 ): Promise<string | null> {
   try {
-    const resolved = await resolvePackageVersionUsingRegistry(
+    // Probe only: this resolves prompt choices the user may never pick, so it
+    // must not prompt or write pnpm excludes. The chosen version is resolved
+    // again (with side effects) when migrations actually run.
+    const resolved = await resolvePackageVersionRespectingMinReleaseAge(
       packageName,
-      `^${majorVersion}.0.0`
+      `^${majorVersion}.0.0`,
+      { applySideEffects: false }
     );
     return valid(resolved) ? resolved : null;
   } catch {
@@ -164,7 +167,7 @@ export type MultiMajorResult = {
 
 export async function maybePromptOrWarnMultiMajorMigration(args: {
   mode: MigrateMode;
-  options: { multiMajorMode?: MultiMajorMode };
+  options: { multiMajorMode?: MultiMajorMode; interactive?: boolean };
   targetPackage: string;
   targetVersion: string;
 }): Promise<MultiMajorResult> {
@@ -210,9 +213,10 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     return { chosen: targetVersion };
   }
 
-  const interactive = !!process.stdin.isTTY && !isCI();
-  // Non-TTY without gradual opt-in stays on the warn-only path; avoid the
-  // registry round-trip used to look up incremental migration options.
+  const interactive = canPrompt(options.interactive);
+  // Non-interactive (non-TTY, CI, or --no-interactive) without gradual opt-in
+  // stays on the warn-only path; avoid the registry round-trip used to look
+  // up incremental migration options.
   if (!interactive && multiMajorMode !== 'gradual') {
     warnMultiMajorMigration(targetPackage, installed, targetVersion);
     return { chosen: targetVersion };
@@ -223,8 +227,11 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     resolveLatestStableInMajor(targetPackage, installedMajor + 1),
   ]);
   // Only suggest the current-major latest when there's at least a minor
-  // delta — a same-minor patch bump isn't a meaningful incremental step.
+  // delta — a same-minor patch bump isn't a meaningful incremental step. Skip
+  // major 22 (last pre-v23) entirely: a 22.x step is the only sub-v23 option
+  // and conflicts with the mode gate already decided against the v23+ target.
   const showCurrent =
+    installedMajor !== 22 &&
     latestInCurrent &&
     gt(latestInCurrent, installed) &&
     minor(latestInCurrent) > minor(installed)

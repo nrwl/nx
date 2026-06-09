@@ -2,6 +2,7 @@ import {
   determineArtifactNameAndDirectoryOptions,
   type FileExtensionType,
 } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 // TODO(jack): Remove inline renderHook function when RTL releases with its own version
 import {
   applyChangesToString,
@@ -29,6 +30,8 @@ interface NormalizedSchema extends Omit<Schema, 'js'> {
 }
 
 export async function hookGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const options = await normalizeOptions(host, schema);
 
   createFiles(host, options);

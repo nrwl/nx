@@ -18,10 +18,25 @@ jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledLegacyNrwlWorkspaceVersion: () =>
     mocks.getInstalledLegacyNrwlWorkspaceVersion(),
 }));
+// These tests exercise the migrate logic, not the cooldown wrapper: delegate the
+// policy-aware resolver to the legacy registry resolution so the existing
+// `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
+jest.mock('./resolve-package-version', () => ({
+  isRegistryResolutionEnabled: () => true,
+  resolvePackageVersionRespectingMinReleaseAge: (
+    packageName: string,
+    version: string
+  ) =>
+    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
+      packageName,
+      version
+    ),
+}));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
   formatSkippedPromptsNextStep,
@@ -35,8 +50,12 @@ import {
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
   resolveCreateCommits,
+  resolveDocumentationFileToWorkspacePath,
+  resolveMigrationForRun,
   resolveMode,
 } from './migrate';
+import { applyNxJsonMigrateDefaults } from './migrate-config';
+import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -47,11 +66,13 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { logger } from '../../utils/logger';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -2099,6 +2120,18 @@ describe('Migration', () => {
       });
     });
 
+    it('should propagate the interactive value when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        interactive: false,
+      });
+    });
+
     it('should default to nx@latest when no packageAndVersion is provided', async () => {
       jest
         .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
@@ -2108,6 +2141,227 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: 'latest',
+      });
+    });
+
+    it.each([
+      {
+        desc: 'pre-v22 modern install',
+        installedNx: '21.3.0',
+        installedLegacy: null,
+      },
+      {
+        desc: 'legacy nx (<14) install',
+        installedNx: '13.5.0',
+        installedLegacy: null,
+      },
+      {
+        desc: 'legacy @nrwl/workspace install',
+        installedNx: null,
+        installedLegacy: '13.5.0',
+      },
+      { desc: 'nx not installed', installedNx: null, installedLegacy: null },
+    ])(
+      'should throw for a bare invocation on a pre-v22 install: $desc',
+      async ({ installedNx, installedLegacy }) => {
+        mockGetInstalledNxVersion.mockReturnValue(installedNx);
+        mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
+          installedLegacy
+        );
+        await expect(() => parseMigrationsOptions({})).rejects.toThrow(
+          'Provide the package and version to migrate to. E.g., `nx migrate nx@<version>`.'
+        );
+      }
+    );
+
+    it('should resolve the latest dist-tag up front for a bare invocation on v22+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('23.1.0');
+      const r = await parseMigrationsOptions({});
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.1.0',
+      });
+    });
+
+    it('should reject --mode=first-party when the target is below v23', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.7.0',
+          mode: 'first-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=first-party' requires migrating to Nx v23 or later.`
+      );
+    });
+
+    it('should accept --mode=first-party when migrating from v22 into v23', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@23.0.0',
+        mode: 'first-party',
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        mode: 'first-party',
+      });
+    });
+
+    it('should reject --mode=first-party when the install is more than one major below v23', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('21.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          mode: 'first-party',
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=first-party' requires the workspace to be on Nx v22 or later. Migrate to the latest Nx v22 first, then to v23 or later.`
+      );
+    });
+
+    it('should assume v23+ for a bare --mode=first-party run when the registry is unavailable', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(new Error('registry down'));
+      const r = await parseMigrationsOptions({ mode: 'first-party' });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: 'latest',
+        mode: 'first-party',
+      });
+    });
+
+    it('should reject --interactive when migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should reject --interactive for a bare invocation resolving to a v23+ target', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('23.1.0');
+      await expect(() =>
+        parseMigrationsOptions({ interactive: true })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should reject --interactive for a bare invocation when the registry is unavailable (assumed v23+)', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(new Error('registry down'));
+      await expect(() =>
+        parseMigrationsOptions({ interactive: true })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should reject --mode=first-party combined with --interactive', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          mode: 'first-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should reject --mode=third-party combined with --interactive', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ mode: 'third-party', interactive: true })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should reject the nx.json third-party mode combined with --interactive', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@22.5.0',
+          modeFromConfig: 'third-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should reject --interactive when the nx.json mode is first-party and migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions({
+          packageAndVersion: 'nx@23.0.0',
+          modeFromConfig: 'first-party',
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should allow --interactive when migrating to a pre-v23 target', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@22.7.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.7.0',
+        interactive: true,
+        mode: 'all',
+      });
+    });
+
+    it('should allow --no-interactive when migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@23.0.0',
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        interactive: false,
+      });
+    });
+
+    it('should allow --interactive for non-nx-equivalent targets', async () => {
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'mypackage@2.0.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'mypackage',
+        targetVersion: '2.0.0',
+        interactive: true,
+        mode: 'all',
       });
     });
 
@@ -2321,46 +2575,16 @@ describe('Migration', () => {
       {
         desc: 'bare invocation, modern nx installed',
         positional: undefined,
-        installedNx: '22.5.0',
+        installedNx: '23.5.0',
         installedLegacy: null,
-        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
-      },
-      {
-        desc: 'bare invocation, only legacy @nrwl/workspace installed',
-        positional: undefined,
-        installedNx: null,
-        installedLegacy: '13.5.0',
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
-      },
-      {
-        desc: 'bare invocation, installed nx is legacy (<14)',
-        positional: undefined,
-        installedNx: '13.5.0',
-        installedLegacy: null,
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
+        expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
       {
         desc: 'bare-package-name positional `nx`, modern nx installed',
         positional: 'nx',
-        installedNx: '22.5.0',
+        installedNx: '23.5.0',
         installedLegacy: null,
-        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
-      },
-      {
-        desc: 'bare-package-name positional `nx`, installed nx is legacy (<14)',
-        positional: 'nx',
-        installedNx: '13.5.0',
-        installedLegacy: null,
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
+        expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
     ])(
       'should anchor --mode=third-party to installed canonical: $desc',
@@ -2381,6 +2605,37 @@ describe('Migration', () => {
       }
     );
 
+    it.each([
+      {
+        desc: 'pre-v23 modern install',
+        installedNx: '22.5.0',
+        installedLegacy: null,
+      },
+      {
+        desc: 'legacy @nrwl/workspace install',
+        installedNx: null,
+        installedLegacy: '13.5.0',
+      },
+      {
+        desc: 'legacy nx (<14) install',
+        installedNx: '13.5.0',
+        installedLegacy: null,
+      },
+    ])(
+      'should reject --mode=third-party on a pre-v23 install: $desc',
+      async ({ installedNx, installedLegacy }) => {
+        mockGetInstalledNxVersion.mockReturnValue(installedNx);
+        mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
+          installedLegacy
+        );
+        await expect(() =>
+          parseMigrationsOptions({ mode: 'third-party' })
+        ).rejects.toThrow(
+          `Error: '--mode=third-party' requires the workspace to be on Nx v23 or later.`
+        );
+      }
+    );
+
     it('should reject --mode=third-party when nx is not installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue(null);
       await expect(() =>
@@ -2391,27 +2646,27 @@ describe('Migration', () => {
     });
 
     it('should reject --mode=third-party when target is higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions({
-          packageAndVersion: 'nx@23.0.0',
+          packageAndVersion: 'nx@24.0.0',
           mode: 'third-party',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got 'nx@23.0.0', installed 'nx@22.0.0').`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
     it('should accept --mode=third-party when target is lower than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.5.0');
       const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@22.0.0',
+        packageAndVersion: 'nx@23.0.0',
         mode: 'third-party',
       });
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
-        targetVersion: '22.0.0',
+        targetVersion: '23.0.0',
         mode: 'third-party',
       });
     });
@@ -2421,15 +2676,15 @@ describe('Migration', () => {
       // silent `@nx/workspace` → `nx` swap happens later in
       // `generateMigrationsJsonAndUpdatePackageJson` via
       // `resolveCanonicalNxPackage`.
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const r = await parseMigrationsOptions({
-        packageAndVersion: '@nx/workspace@22.0.0',
+        packageAndVersion: '@nx/workspace@23.0.0',
         mode: 'third-party',
       });
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
-        targetVersion: '22.0.0',
+        targetVersion: '23.0.0',
         mode: 'third-party',
       });
       expect(
@@ -2440,61 +2695,61 @@ describe('Migration', () => {
     });
 
     it('should reject --mode=third-party with --to canonical higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
+          packageAndVersion: 'nx@23.0.0',
           mode: 'third-party',
-          to: 'nx@23.0.0',
+          to: 'nx@24.0.0',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to nx@23.0.0', installed 'nx@22.0.0').`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
     it('should reject --mode=third-party with --to for first-party plugins higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
+          packageAndVersion: 'nx@23.0.0',
           mode: 'third-party',
-          to: '@nx/js@22.6.4',
+          to: '@nx/js@23.6.4',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@22.6.4', installed 'nx@22.0.0').`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
     it('should reject --mode=third-party with --to create-nx-workspace higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
+          packageAndVersion: 'nx@23.0.0',
           mode: 'third-party',
-          to: 'create-nx-workspace@22.6.4',
+          to: 'create-nx-workspace@23.6.4',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@22.6.4', installed 'nx@22.0.0').`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
       );
     });
 
     it('should reject --mode=third-party with --to @nx/workspace higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
         parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
+          packageAndVersion: 'nx@23.0.0',
           mode: 'third-party',
-          to: '@nx/workspace@23.0.0',
+          to: '@nx/workspace@24.0.0',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@23.0.0', installed 'nx@22.0.0').`
+        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
     it('should accept --mode=third-party with --to for non-canonical packages', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@22.0.0',
+        packageAndVersion: 'nx@23.0.0',
         mode: 'third-party',
         to: 'react@18.0.0',
       });
@@ -2502,32 +2757,6 @@ describe('Migration', () => {
         type: 'generateMigrations',
         mode: 'third-party',
         to: { react: '18.0.0' },
-      });
-    });
-
-    it('should reject --mode=third-party for legacy target when @nrwl/workspace is not installed', async () => {
-      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: '@nrwl/workspace@13.0.0',
-          mode: 'third-party',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' requires '@nrwl/workspace' to be installed in your workspace.`
-      );
-    });
-
-    it('should accept --mode=third-party for legacy target when @nrwl/workspace is installed', async () => {
-      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue('13.5.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: '@nrwl/workspace@13.0.0',
-        mode: 'third-party',
-      });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
-        targetVersion: '13.0.0',
-        mode: 'third-party',
       });
     });
 
@@ -2654,6 +2883,39 @@ describe('Migration', () => {
         child: { version: '2.0.0', addToPackageJson: false },
       });
     });
+
+    describe('nx.json migrate.mode overlay (integration)', () => {
+      it('does not treat nx.json migrate.mode as an explicit --mode for a non-Nx target', async () => {
+        // The original footgun: a workspace-wide migrate.mode default made
+        // `nx migrate <non-nx-pkg>` hard-fail with a `--mode` error the user
+        // never passed. The overlay must carry it as a default, not a flag.
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: '@angular/core' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: '@angular/core',
+          mode: 'all',
+        });
+      });
+
+      it('applies nx.json migrate.mode through the overlay for an Nx target', async () => {
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: 'nx@23.0.0' },
+            { mode: 'first-party' }
+          )
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          mode: 'first-party',
+        });
+      });
+    });
   });
 
   describe('resolveMode', () => {
@@ -2678,15 +2940,64 @@ describe('Migration', () => {
       });
     });
 
+    const v23Context = {
+      hasFrom: false,
+      hasExcludeAppliedMigrations: false,
+      installedMajor: 23,
+      isV23Plus: true,
+    };
+
     it('should return the provided mode without prompting', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('first-party', 'nx', '22.0.0');
+      const result = await resolveMode(
+        'first-party',
+        'nx',
+        '23.0.0',
+        v23Context
+      );
       expect(result).toBe('first-party');
       expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should reject --mode=first-party when not migrating to v23+', async () => {
+      await expect(() =>
+        resolveMode('first-party', 'nx', '22.7.0', {
+          hasFrom: false,
+          hasExcludeAppliedMigrations: false,
+          installedMajor: 22,
+          isV23Plus: false,
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=first-party' requires migrating to Nx v23 or later.`
+      );
+    });
+
+    it('should reject --mode=third-party when the workspace is below v23', async () => {
+      await expect(() =>
+        resolveMode('third-party', 'nx', '22.0.0', {
+          hasFrom: false,
+          hasExcludeAppliedMigrations: false,
+          installedMajor: 22,
+          isV23Plus: false,
+        })
+      ).rejects.toThrow(
+        `Error: '--mode=third-party' requires the workspace to be on Nx v23 or later.`
+      );
+    });
+
+    it('should not apply the v23 gate to --mode=third-party when the installed version is unknown', async () => {
+      // The downstream "requires nx to be installed" check handles this case.
+      const result = await resolveMode('third-party', 'nx', 'latest', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: null,
+        isV23Plus: false,
+      });
+      expect(result).toBe('third-party');
     });
 
     it('should default to "all" without prompting in non-TTY environments', async () => {
@@ -2695,7 +3006,7 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      const result = await resolveMode(undefined, 'nx', '23.0.0', v23Context);
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2706,7 +3017,21 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'true';
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      const result = await resolveMode(undefined, 'nx', '23.0.0', v23Context);
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting when --no-interactive is passed in a TTY', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, 'nx', '23.0.0', {
+        ...v23Context,
+        interactive: false,
+      });
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2717,7 +3042,28 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, '@nx/react', '22.0.0');
+      const result = await resolveMode(
+        undefined,
+        '@nx/react',
+        '23.0.0',
+        v23Context
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting when the v23 functionality is unavailable', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, 'nx', '22.7.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 22,
+        isV23Plus: false,
+      });
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2729,7 +3075,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'first-party' }));
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      const result = await resolveMode(undefined, 'nx', '23.0.0', v23Context);
       expect(result).toBe('first-party');
       expect(mockPrompt).toHaveBeenCalled();
     });
@@ -2741,11 +3087,31 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0');
+      await resolveMode(undefined, 'nx', '23.0.0', v23Context);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
         'first-party',
         'third-party',
+        'all',
+      ]);
+    });
+
+    it('should omit third-party from prompt choices when the workspace is on v22', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
+      await resolveMode(undefined, 'nx', '23.0.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 22,
+        isV23Plus: true,
+      });
+      const choices = mockPrompt.mock.calls[0][0].choices;
+      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+        'first-party',
         'all',
       ]);
     });
@@ -2757,9 +3123,11 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0', {
+      await resolveMode(undefined, 'nx', '23.0.0', {
         hasFrom: true,
         hasExcludeAppliedMigrations: false,
+        installedMajor: 23,
+        isV23Plus: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
@@ -2775,15 +3143,197 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0', {
+      await resolveMode(undefined, 'nx', '23.0.0', {
         hasFrom: false,
         hasExcludeAppliedMigrations: true,
+        installedMajor: 23,
+        isV23Plus: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
         'first-party',
         'all',
       ]);
+    });
+
+    it('should reject --interactive when migrating to v23+', async () => {
+      await expect(() =>
+        resolveMode(undefined, 'nx', '23.0.0', {
+          ...v23Context,
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should reject --interactive combined with an explicit mode when migrating to v23+', async () => {
+      await expect(() =>
+        resolveMode('all', 'nx', '23.0.0', {
+          ...v23Context,
+          interactive: true,
+        })
+      ).rejects.toThrow(
+        `Error: '--interactive' is not supported when migrating to Nx v23 or later. Use '--mode' to choose which packages to migrate: 'first-party' migrates only Nx and its plugins, 'third-party' migrates only the third-party dependencies referenced by Nx, 'all' migrates everything.`
+      );
+    });
+
+    it('should allow --interactive when not migrating to v23+', async () => {
+      const result = await resolveMode(undefined, 'nx', '22.7.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 22,
+        isV23Plus: false,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should not apply the --interactive gate to non-nx-equivalent targets', async () => {
+      const result = await resolveMode(undefined, '@nx/react', '23.0.0', {
+        ...v23Context,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+    });
+
+    it('should not offer third-party nor prompt when --interactive is provided and only third-party would be available', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(undefined, 'nx', '22.7.0', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        installedMajor: 23,
+        isV23Plus: false,
+        interactive: true,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('uses the nx.json configured mode for an nx target without prompting', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '23.0.0',
+        v23Context,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('uses the nx.json configured mode for an nx target in CI', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'true';
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '23.0.0',
+        v23Context,
+        'first-party'
+      );
+      expect(result).toBe('first-party');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('falls back to "all" and warns when the configured mode is unavailable', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const warnSpy = jest
+        .spyOn(require('../../utils/output').output, 'warn')
+        .mockImplementation(() => {});
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.7.0',
+        {
+          hasFrom: false,
+          hasExcludeAppliedMigrations: false,
+          installedMajor: 22,
+          isV23Plus: false,
+        },
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.stringContaining(
+            `nx.json migrate.mode 'first-party' is not available`
+          ),
+        })
+      );
+    });
+
+    it('honors a configured "all" even when first-party/third-party are unavailable', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const warnSpy = jest
+        .spyOn(require('../../utils/output').output, 'warn')
+        .mockImplementation(() => {});
+      const result = await resolveMode(
+        undefined,
+        'nx',
+        '22.0.0',
+        undefined,
+        'all'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('lets an explicit mode win over the nx.json configured mode', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        'all',
+        'nx',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('ignores the nx.json configured mode for a non-nx-equivalent target', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveMode(
+        undefined,
+        '@nx/react',
+        '22.0.0',
+        undefined,
+        'first-party'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
     });
   });
 
@@ -3023,6 +3573,49 @@ describe('Migration', () => {
     });
   });
 
+  describe('minimum-release-age violation propagation', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    function violation() {
+      return new MinReleaseAgeViolationError({
+        packageManager: 'npm',
+        packageName: 'mypackage',
+        spec: 'latest',
+        // npm's headline contains "No matching version", which the Migrator
+        // catch would otherwise rewrap into a plain Error and lose the type.
+        pmShapedDetail:
+          'No matching version found for mypackage@latest with a date before 2020.',
+        blocked: [],
+        remediation: [
+          'Wait until a matching version is older than the window.',
+        ],
+      });
+    }
+
+    it('the Migrator rethrows a cooldown violation without rewrapping it', async () => {
+      const err = violation();
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () => Promise.reject(err),
+        from: {},
+        to: {},
+      });
+      await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toBe(err);
+    });
+
+    it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
+      const err = violation();
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
+    });
+  });
+
   describe('multi-major migration prompt', () => {
     let originalCi: string | undefined;
     const originalTtyDescriptor = Object.getOwnPropertyDescriptor(
@@ -3166,6 +3759,52 @@ describe('Migration', () => {
       expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
     });
 
+    it('should omit the current-major (v22) step from the multi-major prompt', async () => {
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockRegistry({
+        latest: '24.1.0',
+        '22': '22.5.3',
+        '23': '23.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+
+      await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+      });
+
+      const promptArgs = mockPrompt.mock.calls[0][0];
+      const choices = promptArgs.choices as { name: string }[];
+      // The 22.x current-major step is suppressed; only next-major and direct.
+      expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
+    });
+
+    it('should keep --mode=first-party valid when multi-major redirects to the next major (v22 install)', async () => {
+      // Mode is resolved before multi-major; suppressing the v22 step guarantees
+      // every multi-major option stays >= v23, so a first-party selection can't
+      // be invalidated by the redirect.
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockRegistry({
+        latest: '24.1.0',
+        '22': '22.5.3',
+        '23': '23.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@24.0.0',
+        mode: 'first-party',
+      });
+
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        mode: 'first-party',
+        targetVersion: '23.5.3',
+      });
+    });
+
     it('should prompt (not warn) when target was explicitly typed as numeric semver', async () => {
       setTty(true);
       mockRegistry({
@@ -3193,6 +3832,22 @@ describe('Migration', () => {
       const r = await parseMigrationsOptions({
         packageAndVersion: 'latest',
         mode: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should warn (not prompt) when --no-interactive is passed in a TTY', async () => {
+      setTty(true);
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'latest',
+        mode: 'all',
+        interactive: false,
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3338,26 +3993,27 @@ describe('Migration', () => {
 
     it('should bypass --multi-major-mode=gradual when --mode=third-party', async () => {
       setTty(true);
-      // third-party anchors at the installed canonical (here 21.0.0) and
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      // third-party anchors at the installed canonical (here 23.0.0) and
       // must not be redirected to an incremental target. `maybePromptOrWarn…`
       // early-returns on `mode === 'third-party'` before consulting gradual,
       // so the flag is accepted but is a no-op.
       mockRegistry({
-        latest: '23.1.0',
-        '21': '21.5.3',
-        '22': '22.5.3',
+        latest: '25.1.0',
+        '23': '23.5.3',
+        '24': '24.5.3',
       });
       const warnSpy = spyWarn();
 
       const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@21.0.0',
+        packageAndVersion: 'nx@23.0.0',
         mode: 'third-party',
         multiMajorMode: 'gradual',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(r).toMatchObject({ targetVersion: '21.0.0' });
+      expect(r).toMatchObject({ targetVersion: '23.0.0' });
     });
 
     it('should not prompt or warn when delta is exactly 1 major', async () => {
@@ -3393,6 +4049,7 @@ describe('Migration', () => {
 
     it('should not prompt or warn for --mode=third-party', async () => {
       setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const warnSpy = spyWarn();
 
       const r = await parseMigrationsOptions({ mode: 'third-party' });
@@ -3634,6 +4291,38 @@ describe('Migration', () => {
       ]);
       expect(result.promptContents).toEqual({
         '@nx/expo::./files/ai-instructions.md': 'PROMPT BODY',
+      });
+    });
+
+    // Regression guard: `documentation` rides through `createMigrateJson`'s
+    // spread untyped (GeneratedMigrationDetails treats it as optional and the
+    // generated migrations.json is written via an `as any` cast), so a future
+    // refactor could silently drop it from the generated file with no type
+    // error. This test fails if that happens.
+    it('should preserve the documentation field on migration entries', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              documented: {
+                version: '2.0.0',
+                description: 'documented migration',
+                implementation: './migrations/documented',
+                documentation: './src/migrations/update-2-0-0/documented.md',
+              },
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result.migrations[0]).toMatchObject({
+        name: 'documented',
+        documentation: './src/migrations/update-2-0-0/documented.md',
       });
     });
 
@@ -4174,6 +4863,39 @@ describe('Migration', () => {
         });
         expect(result.warning).not.toMatch(/--commit-prefix/);
       });
+
+      it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/no effect/);
+        expect(result.warning).toMatch(/createCommits/);
+      });
+
+      it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).toBeUndefined();
+      });
+
+      it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(true);
+        expect(result.warning).toBeUndefined();
+      });
     });
 
     describe('parseMigrationReturn', () => {
@@ -4234,6 +4956,186 @@ describe('Migration', () => {
             '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
         );
       });
+    });
+  });
+
+  describe('resolveMigrationForRun', () => {
+    let tmpRoot: string;
+    let warnSpy: jest.SpyInstance;
+
+    const writeInstalledPackage = (
+      pkgName: string,
+      documentationRelToMigrationsDir: string | null
+    ) => {
+      const pkgDir = join(tmpRoot, 'node_modules', pkgName);
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: pkgName,
+          version: '1.0.0',
+          'nx-migrations': './migrations.json',
+        })
+      );
+      writeFileSync(
+        join(pkgDir, 'migrations.json'),
+        JSON.stringify({ generators: {} })
+      );
+      if (documentationRelToMigrationsDir) {
+        const docAbs = join(pkgDir, documentationRelToMigrationsDir);
+        mkdirSync(dirname(docAbs), { recursive: true });
+        writeFileSync(docAbs, '# doc');
+      }
+    };
+
+    beforeEach(() => {
+      // realpath so the workspace-relative assertion isn't defeated by the
+      // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
+      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves the documentation file to a workspace-relative node_modules path', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        true
+      );
+      expect(documentationPath).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns no documentation path (and does not warn) when none is declared', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not resolve documentation for non-agentic runs', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        false
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns and skips when a declared documentation file is not present', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/missing.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        './src/migrations/update-1-0-0/missing.md'
+      );
+    });
+
+    it('throws when an implementation migration package cannot be resolved', () => {
+      expect(() =>
+        resolveMigrationForRun(
+          tmpRoot,
+          {
+            package: '@nx/not-installed',
+            name: 'update-1-0-0',
+            implementation: './x',
+            documentation: './x.md',
+          },
+          true
+        )
+      ).toThrow();
+    });
+
+    it('is non-fatal for prompt-only migrations when the package cannot be resolved', () => {
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/not-installed',
+          name: 'update-1-0-0',
+          prompt: './x.md',
+          documentation: './x.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resolveDocumentationFileToWorkspacePath', () => {
+    let tmpRoot: string;
+
+    beforeEach(() => {
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-doc-resolve-')));
+    });
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves a package-relative documentation path to a workspace-relative path', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      const docAbs = join(migrationsDir, 'src/migrations/update-1-0-0/do.md');
+      mkdirSync(dirname(docAbs), { recursive: true });
+      writeFileSync(docAbs, '# doc');
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './src/migrations/update-1-0-0/do.md'
+        )
+      ).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+    });
+
+    it('returns undefined when the documentation file does not exist', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      mkdirSync(migrationsDir, { recursive: true });
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './missing.md'
+        )
+      ).toBeUndefined();
     });
   });
 });

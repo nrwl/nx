@@ -7,14 +7,15 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
-import { libraryGenerator as reactLibraryGenerator } from '@nx/react/src/generators/library/library';
+import { libraryGenerator as reactLibraryGenerator } from '@nx/react';
 import { addTsConfigPath, initGenerator as jsInitGenerator } from '@nx/js';
 import {
   testingLibraryDomVersion,
   testingLibraryReactVersion,
-} from '@nx/react/src/utils/versions';
+} from '@nx/react/internal';
 
 import { nextInitGenerator } from '../init/init';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import { Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
 import { updateViteConfigForServerEntry } from './lib/update-vite-config';
@@ -36,6 +37,8 @@ export async function libraryGenerator(host: Tree, rawOptions: Schema) {
 }
 
 export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
+  assertSupportedNextVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -79,7 +82,9 @@ export async function libraryGeneratorInternal(host: Tree, rawOptions: Schema) {
       addDependenciesToPackageJson(
         host,
         { tslib: tsLibVersion },
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       )
     );
   }

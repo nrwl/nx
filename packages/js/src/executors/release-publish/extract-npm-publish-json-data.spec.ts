@@ -263,6 +263,123 @@ prepublishOnly from package-a
       expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
     });
 
+    it('should extract and unwrap the JSON data when npm >= 11.16 nests the summary under the package name', () => {
+      // npm >= 11.16 (bundled with Node 26) nests the publish summary under the
+      // package name instead of printing it as a flat object.
+      const commandOutput = `{
+  "@scope/package-a": {
+    "id": "@scope/package-a@1.0.0",
+    "name": "@scope/package-a",
+    "version": "1.0.0",
+    "size": 251,
+    "unpackedSize": 233,
+    "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+    "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+    "filename": "scope-package-a-1.0.0.tgz",
+    "files": [
+      {
+        "path": "package.json",
+        "size": 233,
+        "mode": 420
+      }
+    ],
+    "entryCount": 1,
+    "bundled": []
+  }
+}`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      // The wrapper braces must not leak into beforeJsonData/afterJsonData.
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`""`);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "scope-package-a-1.0.0.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "package.json",
+              "size": 233,
+            },
+          ],
+          "id": "@scope/package-a@1.0.0",
+          "integrity": "sha512-Qra/YIkAxVavs3tumB/svugHLY5CISujdeUcMd2FfvtVkjEEsVAEYbqZTq0ixnkvjVrLr27mAvH94GjjMKWzIg==",
+          "name": "@scope/package-a",
+          "shasum": "cf4a6657f230ddf5375102bafc8f5184002a620a",
+          "size": 251,
+          "unpackedSize": 233,
+          "version": "1.0.0",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`""`);
+    });
+
+    it('should extract and unwrap nested JSON data alongside lifecycle script outputs', () => {
+      const commandOutput = `
+> @scope/package-a@1.0.0 prepublishOnly
+> echo 'prepublishOnly from package-a'
+
+prepublishOnly from package-a
+{
+  "@scope/package-a": {
+    "id": "@scope/package-a@1.0.0",
+    "name": "@scope/package-a",
+    "version": "1.0.0",
+    "size": 206,
+    "unpackedSize": 179,
+    "shasum": "f01c6f5c8d72ed33e70c1c1b1258f46c92360e57",
+    "integrity": "sha512-24/pgfxiTiNB/dw7ZbBZ+I1vidq09KU6n/QgXCtx1y4+ezYpEBSncdrEpDxuMD6YaP8twg3H8zQBLoG8xwygcA==",
+    "filename": "scope-package-a-1.0.0.tgz",
+    "files": [
+      {
+        "path": "package.json",
+        "size": 179,
+        "mode": 420
+      }
+    ],
+    "entryCount": 1,
+    "bundled": []
+  }
+}
+`;
+      const res = extractNpmPublishJsonData(commandOutput);
+
+      expect(res.beforeJsonData).toMatchInlineSnapshot(`
+        "
+        > @scope/package-a@1.0.0 prepublishOnly
+        > echo 'prepublishOnly from package-a'
+
+        prepublishOnly from package-a
+        "
+      `);
+      expect(res.jsonData).toMatchInlineSnapshot(`
+        {
+          "bundled": [],
+          "entryCount": 1,
+          "filename": "scope-package-a-1.0.0.tgz",
+          "files": [
+            {
+              "mode": 420,
+              "path": "package.json",
+              "size": 179,
+            },
+          ],
+          "id": "@scope/package-a@1.0.0",
+          "integrity": "sha512-24/pgfxiTiNB/dw7ZbBZ+I1vidq09KU6n/QgXCtx1y4+ezYpEBSncdrEpDxuMD6YaP8twg3H8zQBLoG8xwygcA==",
+          "name": "@scope/package-a",
+          "shasum": "f01c6f5c8d72ed33e70c1c1b1258f46c92360e57",
+          "size": 206,
+          "unpackedSize": 179,
+          "version": "1.0.0",
+        }
+      `);
+      expect(res.afterJsonData).toMatchInlineSnapshot(`
+        "
+        "
+      `);
+    });
+
     it('should extract the relevant JSON data when formatted JSON data is present alongside the expected npm publish JSON data', () => {
       const exampleCommandOutputWithFormattedJSON = `
       {

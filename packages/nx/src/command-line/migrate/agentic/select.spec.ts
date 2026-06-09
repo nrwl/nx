@@ -18,6 +18,8 @@ jest.mock('../../../utils/output', () => ({
 import { isAiAgent } from '../../../native';
 import { prompt } from 'enquirer';
 import { output } from '../../../utils/output';
+import { parseJson } from '../../../utils/json';
+import { TempFs } from '../../../internal-testing-utils/temp-fs';
 import { detectInstalledAgents } from './detect-installed';
 import { resolveAgentic } from './select';
 import { DetectedInstalledAgent } from './types';
@@ -27,6 +29,7 @@ const mockPrompt = prompt as unknown as jest.Mock;
 const mockDetect = detectInstalledAgents as unknown as jest.Mock;
 const mockOutputLog = output.log as unknown as jest.Mock;
 const mockOutputError = output.error as unknown as jest.Mock;
+const mockOutputWarn = output.warn as unknown as jest.Mock;
 
 function detected(
   id: 'claude-code' | 'codex' | 'opencode'
@@ -56,6 +59,8 @@ function setTty(enabled: boolean): void {
 }
 
 describe('resolveAgentic', () => {
+  let tempFs: TempFs;
+
   beforeEach(() => {
     mockIsAiAgent.mockReset();
     mockIsAiAgent.mockReturnValue(false);
@@ -63,10 +68,18 @@ describe('resolveAgentic', () => {
     mockDetect.mockReset();
     mockOutputLog.mockReset();
     mockOutputError.mockReset();
+    mockOutputWarn.mockReset();
+    // Persisting writes to `<workspaceRoot>/nx.json`; TempFs redirects the
+    // workspace root so every fs op hits a throwaway dir, never the real repo.
+    tempFs = new TempFs('migrate-agentic-select');
     // Default to "no agents detected" — the few tests that exercise an enabled
     // flow override this with their own agent list.
     mockDetect.mockResolvedValue([]);
     setTty(true);
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
   });
 
   afterAll(() => {
@@ -135,7 +148,7 @@ describe('resolveAgentic', () => {
 
   it('fires the up-front prompt when --agentic is undefined and prompt migrations are queued', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
+    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
     const result = await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
@@ -155,7 +168,8 @@ describe('resolveAgentic', () => {
   });
 
   it('enables the agentic flow when the up-front prompt is accepted', async () => {
-    mockPrompt.mockResolvedValueOnce({ enable: 'yes' });
+    tempFs.createFileSync('nx.json', '{}\n');
+    mockPrompt.mockResolvedValueOnce({ choice: 'yes-once' });
     mockDetect.mockResolvedValue([detected('claude-code')]);
     const result = await resolveAgentic({
       agentic: undefined,
@@ -165,38 +179,51 @@ describe('resolveAgentic', () => {
       kind: 'enabled',
       selectedAgent: { id: 'claude-code' },
     });
+    // "just this time" persists nothing.
+    expect(await tempFs.readFile('nx.json')).toBe('{}\n');
   });
 
-  it('renders the up-front prompt as an autocomplete with Yes/No choices and per-choice hints', async () => {
+  it('renders the up-front prompt as a select with 4 folded choices when one agent is installed', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
+    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'a.md' }, { prompt: 'b.md' }, {}],
     });
-    expect(mockPrompt).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: 'autocomplete',
-        message: 'Enable the agentic flow?',
-        choices: [
-          {
-            name: 'yes',
-            message: 'Yes',
-            hint: 'Apply 2 prompt migrations and validate generator output with an AI agent',
-          },
-          {
-            name: 'no',
-            message: 'No',
-            hint: 'Skip prompts and run generators without AI validation',
-          },
-        ],
-      })
+    const call = mockPrompt.mock.calls[0][0];
+    expect(call.type).toBe('select');
+    expect(call.message).toBe('Enable the agentic flow?');
+    expect(call.choices.map((c: any) => c.name)).toEqual([
+      'yes-once',
+      'yes-flex',
+      'no-once',
+      'no-never',
+    ]);
+    expect(call.choices[0].hint).toBe(
+      'Apply 2 prompt migrations and validate generator output with an AI agent'
     );
   });
 
-  it('singularizes the "Yes" hint when only one prompt migration is queued', async () => {
+  it('adds the "pin the agent" choice when multiple agents are installed', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
+    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'a.md' }],
+    });
+    const call = mockPrompt.mock.calls[0][0];
+    expect(call.choices.map((c: any) => c.name)).toEqual([
+      'yes-once',
+      'yes-flex',
+      'yes-pin',
+      'no-once',
+      'no-never',
+    ]);
+  });
+
+  it('singularizes the apply hint when only one prompt migration is queued', async () => {
     mockDetect.mockResolvedValue([detected('claude-code')]);
-    mockPrompt.mockResolvedValueOnce({ enable: 'no' });
+    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
     await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'only.md' }],
@@ -205,6 +232,150 @@ describe('resolveAgentic', () => {
     expect(call.choices[0].hint).toBe(
       'Apply 1 prompt migration and validate generator output with an AI agent'
     );
+  });
+
+  describe('persisting the up-front prompt decision to nx.json', () => {
+    it('does not persist for "Yes, just this time" or "No, just this time"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result.kind).toBe('disabled');
+      expect(await tempFs.readFile('nx.json')).toBe('{}\n');
+    });
+
+    it('persists `false` for "No, never"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'no-never' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result.kind).toBe('disabled');
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
+        migrate: { agentic: false },
+      });
+    });
+
+    it('persists `true` for "Yes, always" (flexible agent)', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'claude-code' },
+      });
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
+        migrate: { agentic: true },
+      });
+    });
+
+    it('persists the selected agent id for "Yes, always with the same agent"', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([
+        detected('claude-code'),
+        detected('codex'),
+      ]);
+      // First prompt: the folded enable choice. Second: the agent picker.
+      mockPrompt
+        .mockResolvedValueOnce({ choice: 'yes-pin' })
+        .mockResolvedValueOnce({ id: 'codex' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'codex' },
+      });
+      expect(parseJson(await tempFs.readFile('nx.json'))).toMatchObject({
+        migrate: { agentic: 'codex' },
+      });
+    });
+
+    it('preserves existing migrate config and comments when persisting', async () => {
+      tempFs.createFileSync(
+        'nx.json',
+        [
+          '{',
+          '  // keep me',
+          '  "migrate": { "createCommits": true }',
+          '}',
+          '',
+        ].join('\n')
+      );
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      const written = await tempFs.readFile('nx.json');
+      expect(written).toContain('// keep me');
+      expect(parseJson(written)).toMatchObject({
+        migrate: { createCommits: true, agentic: true },
+      });
+    });
+
+    it('warns and continues when saving to nx.json fails', async () => {
+      // A directory at the nx.json path makes the read/write throw.
+      tempFs.createDirSync('nx.json');
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      // The migration still proceeds; the failed save only warns.
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'claude-code' },
+      });
+      expect(
+        mockOutputWarn.mock.calls.some((c) =>
+          /Could not save your agentic choice to nx.json/i.test(c[0].title)
+        )
+      ).toBe(true);
+    });
+
+    it('warns when there is no nx.json to save to', async () => {
+      // TempFs starts empty, so the workspace root has no nx.json.
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      mockPrompt.mockResolvedValueOnce({ choice: 'yes-flex' });
+      const result = await resolveAgentic({
+        agentic: undefined,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toMatchObject({
+        kind: 'enabled',
+        selectedAgent: { id: 'claude-code' },
+      });
+      expect(
+        mockOutputWarn.mock.calls.some((c) =>
+          /no nx.json found/i.test(c[0].title)
+        )
+      ).toBe(true);
+    });
+
+    it('does not persist when the agentic flow is requested explicitly via the flag', async () => {
+      tempFs.createFileSync('nx.json', '{}\n');
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      const result = await resolveAgentic({
+        agentic: true,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result.kind).toBe('enabled');
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(await tempFs.readFile('nx.json')).toBe('{}\n');
+    });
   });
 
   it('uses the single detected agent without firing a picker', async () => {
@@ -250,40 +421,55 @@ describe('resolveAgentic', () => {
     expect(mockPrompt).not.toHaveBeenCalled();
   });
 
-  it('aborts with an actionable list when --agentic=<id> is set but that agent is not among the other detected agents', async () => {
+  it('warns and falls back to the picker when --agentic=<id> is set but that agent is not installed (others present)', async () => {
     mockDetect.mockResolvedValue([detected('claude-code'), detected('codex')]);
-    await expect(
-      resolveAgentic({
-        agentic: 'opencode',
-        migrations: [{ prompt: 'x.md' }],
-      })
-    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
-    expect(mockPrompt).not.toHaveBeenCalled();
-    const errArg = mockOutputError.mock.calls[0][0];
-    expect(errArg.title).toMatch(/is not installed\./);
-    // The remediation must offer the "drop the explicit flag" path when
-    // there ARE other agents to fall back to.
-    expect(errArg.bodyLines.join('\n')).toMatch(
-      /pass --agentic without an explicit agent/
+    mockPrompt.mockResolvedValueOnce({ id: 'codex' });
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    // The picker fires over the installed agents instead of aborting.
+    expect(mockPrompt).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'codex' },
+    });
+    expect(mockOutputError).not.toHaveBeenCalled();
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+      /requested agent "opencode" is not installed/i
     );
   });
 
-  it('aborts without offering the "drop the explicit flag" remediation when --agentic=<id> is set and NO agents are installed', async () => {
+  it('warns and auto-uses the only installed agent when --agentic=<id> is set but that agent is not installed', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: 'opencode',
+      migrations: [{ prompt: 'x.md' }],
+    });
+    expect(mockPrompt).not.toHaveBeenCalled();
+    expect(result).toMatchObject({
+      kind: 'enabled',
+      selectedAgent: { id: 'claude-code' },
+    });
+    expect(mockOutputError).not.toHaveBeenCalled();
+    expect(mockOutputWarn).toHaveBeenCalled();
+    expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+      /requested agent "opencode" is not installed/i
+    );
+  });
+
+  it('errors when --agentic=<id> is set and NO agents are installed', async () => {
     mockDetect.mockResolvedValue([]);
     await expect(
       resolveAgentic({
         agentic: 'opencode',
         migrations: [{ prompt: 'x.md' }],
       })
-    ).rejects.toThrow(/requested agent "opencode" is not installed/i);
+    ).rejects.toThrow(/No installed AI agent/);
     expect(mockPrompt).not.toHaveBeenCalled();
     const errArg = mockOutputError.mock.calls[0][0];
     expect(errArg.title).toMatch(/no supported AI agent is installed/i);
-    // The circular "pass --agentic without an explicit agent" remediation
-    // must not appear when there's nothing to fall back to.
-    expect(errArg.bodyLines.join('\n')).not.toMatch(
-      /pass --agentic without an explicit agent/
-    );
     expect(errArg.bodyLines.join('\n')).toMatch(
       /install one of the supported agents/i
     );
@@ -303,15 +489,20 @@ describe('resolveAgentic', () => {
     ['--agentic=true', true],
     ['--agentic=<id>', 'claude-code'],
   ])(
-    'aborts when %s is passed in a non-TTY environment',
+    'warns and runs without the agentic flow when %s is passed in a non-TTY environment',
     async (_label, agentic) => {
       setTty(false);
-      await expect(
-        resolveAgentic({
-          agentic,
-          migrations: [{ prompt: 'x.md' }],
-        })
-      ).rejects.toThrow(/interactive terminal/);
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      const result = await resolveAgentic({
+        agentic,
+        migrations: [{ prompt: 'x.md' }],
+      });
+      expect(result).toEqual({ kind: 'disabled' });
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockOutputWarn).toHaveBeenCalled();
+      expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+        /interactive-only/i
+      );
     }
   );
 
@@ -320,6 +511,38 @@ describe('resolveAgentic', () => {
     const result = await resolveAgentic({
       agentic: undefined,
       migrations: [{ prompt: 'x.md' }],
+    });
+    expect(result.kind).toBe('disabled');
+    expect(mockPrompt).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['--agentic=true', true],
+    ['--agentic=<id>', 'claude-code'],
+  ])(
+    'warns and runs without the agentic flow when %s is combined with --no-interactive in a TTY',
+    async (_label, agentic) => {
+      mockDetect.mockResolvedValue([detected('claude-code')]);
+      const result = await resolveAgentic({
+        agentic,
+        migrations: [{ prompt: 'x.md' }],
+        interactive: false,
+      });
+      expect(result).toEqual({ kind: 'disabled' });
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(mockOutputWarn).toHaveBeenCalled();
+      expect(mockOutputWarn.mock.calls[0][0].title).toMatch(
+        /interactive-only/i
+      );
+    }
+  );
+
+  it('skips the up-front prompt when --no-interactive is passed in a TTY', async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    const result = await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'x.md' }],
+      interactive: false,
     });
     expect(result.kind).toBe('disabled');
     expect(mockPrompt).not.toHaveBeenCalled();

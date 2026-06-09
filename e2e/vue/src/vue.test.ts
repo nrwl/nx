@@ -14,7 +14,13 @@ describe('Vue Plugin', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/vue'],
+      packages: [
+        '@nx/vue',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/rsbuild',
+        '@nx/playwright',
+      ],
     });
   });
 

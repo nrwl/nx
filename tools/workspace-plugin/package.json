@@ -6,15 +6,15 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nx/conformance": "5.0.4",
-    "@nx/devkit": "23.0.0-beta.4",
-    "@nx/js": "23.0.0-beta.4",
+    "@nx/devkit": "23.0.0-beta.22",
+    "@nx/js": "23.0.0-beta.22",
     "@xmldom/xmldom": "^0.8.10",
     "semver": "catalog:",
     "shiki": "^4.0.2",
     "tinyglobby": "catalog:",
     "tslib": "catalog:typescript"
   },
-  "type": "commonjs",
+  "type": "module",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",
   "devDependencies": {}

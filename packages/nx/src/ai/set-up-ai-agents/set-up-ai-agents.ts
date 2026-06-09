@@ -17,6 +17,7 @@ import {
   CLINoteMessageConfig,
 } from '../../utils/output';
 import { installPackageToTmp } from '../../utils/package-json';
+import { detectPackageManager } from '../../utils/package-manager';
 import { addEntryToGitIgnore } from '../../utils/ignore';
 import { ensurePackageHasProvenance } from '../../utils/provenance';
 import { workspaceRoot } from '../../utils/workspace-root';
@@ -88,7 +89,8 @@ export async function setupAiAgentsGenerator(
 
     const { tempDir, cleanup } = installPackageToTmp(
       'nx',
-      normalizedOptions.packageVersion
+      normalizedOptions.packageVersion,
+      detectPackageManager(tree.root)
     );
 
     let modulePath = join(

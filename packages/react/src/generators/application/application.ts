@@ -2,6 +2,7 @@ import {
   logShowProjectCommand,
   promptWhenInteractive,
 } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   formatFiles,
   GeneratorCallback,
@@ -60,6 +61,8 @@ export async function applicationGeneratorInternal(
   tree: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactVersion(tree);
+
   const tasks = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(

@@ -4,10 +4,7 @@ import {
   GeneratorCallback,
   Tree,
 } from '@nx/devkit';
-import {
-  babelCoreVersion,
-  babelPresetReactVersion,
-} from '@nx/react/src/utils/versions';
+import { babelCoreVersion, babelPresetReactVersion } from '@nx/react/internal';
 import {
   babelRuntimeVersion,
   reactNativeBabelPresetVersion,

@@ -8,7 +8,6 @@ export interface StorybookConfigureSchema {
   js?: boolean;
   interactionTests?: boolean;
   tsConfiguration?: boolean;
-  standaloneConfig?: boolean;
   configureStaticServe?: boolean;
   skipFormat?: boolean;
   addPlugin?: boolean;

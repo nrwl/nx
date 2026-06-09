@@ -1,4 +1,4 @@
-import type { CreateNodesResultV2 } from '@nx/devkit';
+import type { CreateNodesResultArray } from '@nx/devkit';
 import type { RawProjectGraphDependency } from 'nx/src/project-graph/project-graph-builder';
 
 export interface MavenPluginOptions {
@@ -12,7 +12,7 @@ export const DEFAULT_OPTIONS: MavenPluginOptions = {};
 // TypeScript only needs the final Nx format using official @nx/devkit types
 
 export interface MavenAnalysisData {
-  createNodesResults: CreateNodesResultV2;
+  createNodesResults: CreateNodesResultArray;
   createDependenciesResults: RawProjectGraphDependency[];
   generatedAt?: number;
   workspaceRoot?: string;

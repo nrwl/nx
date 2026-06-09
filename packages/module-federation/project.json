@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/module-federation/README.md"],
-      "command": "node ./scripts/copy-readme.js module-federation",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js module-federation packages/module-federation/readme-template.md packages/module-federation/README.md",
       "inputs": ["copyReadme"]
     }
   }

@@ -99,9 +99,9 @@
         "tag": false
       },
       "currentVersionResolver": "registry",
-      "preserveLocalDependencyProtocols": false,
+      "preserveLocalDependencyProtocols": true,
       "preserveMatchingDependencyRanges": false,
-      "manifestRootsToUpdate": ["dist/packages/{projectName}"],
+      "manifestRootsToUpdate": ["{projectRoot}"],
       "versionActionsOptions": {
         "skipLockFileUpdate": true
       }
@@ -113,12 +113,6 @@
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
-      }
-    },
-    {
-      "target": "nx-release-publish",
-      "options": {
-        "packageRoot": "dist/packages/{projectName}"
       }
     },
     {
@@ -170,7 +164,12 @@
     {
       "target": "lint",
       "dependsOn": ["build-native", "^build-native", "build"],
-      "inputs": ["...", { "dependentTasksOutputFiles": "**/*.{js,json,md}" }],
+      "inputs": [
+        "...",
+        {
+          "dependentTasksOutputFiles": "**/*.{js,json,md}"
+        }
+      ],
       "options": {
         "max-warnings": 5
       }
@@ -403,7 +402,7 @@
   "nxCloudId": "62d013ea0852fe0a2df74438",
   "nxCloudUrl": "https://staging.nx.app",
   "parallel": 1,
-  "bust": 3235,
+  "bust": 3236,
   "defaultBase": "master",
   "sync": {
     "applyChanges": true

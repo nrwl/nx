@@ -253,8 +253,13 @@ export async function determineDefaultBase(
  */
 export async function confirmThirdPartyPreset(
   packageName: string,
-  interactive: boolean | undefined
+  interactive: boolean | undefined,
+  trusted?: boolean
 ): Promise<boolean> {
+  if (trusted) {
+    return true;
+  }
+
   output.warn({
     title: `About to install '${packageName}' from the npm registry as a preset.`,
     bodyLines: [

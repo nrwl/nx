@@ -5,7 +5,7 @@ describe('Vue Plugin (legacy)', () => {
 
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/vue'],
+      packages: ['@nx/vue', '@nx/vite', '@nx/vitest', '@nx/playwright'],
     });
   });
 

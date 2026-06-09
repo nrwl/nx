@@ -13,6 +13,7 @@ import {
   handleConfigurations,
   parseConfigurationMode,
 } from './config-utils/user-defined-config-helpers';
+import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
 
 export async function createConfig(
   defaultOptions: {
@@ -46,6 +47,8 @@ export async function _createConfig(
   options: AngularRspackPluginOptions,
   rspackConfigOverrides?: Partial<Configuration>
 ): Promise<Configuration[]> {
+  assertSupportedRspackCoreVersion();
+
   const { i18n, i18nHash, normalizedOptions } =
     await normalizeOptionWithI18n(options);
   const hashFormat = getOutputHashFormat(normalizedOptions.outputHashing);

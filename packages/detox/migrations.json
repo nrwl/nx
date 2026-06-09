@@ -7,7 +7,13 @@
       "version": "22.2.0-beta.2",
       "cli": "nx",
       "description": "Remove @config-plugins/detox for Expo 54+ projects (package discontinued)",
-      "factory": "./src/migrations/update-22-0-0/remove-config-plugins-detox-for-expo-54"
+      "factory": "./dist/src/migrations/update-22-0-0/remove-config-plugins-detox-for-expo-54"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/detox/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

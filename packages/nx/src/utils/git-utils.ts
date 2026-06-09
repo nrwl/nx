@@ -1,4 +1,6 @@
 import { exec, ExecOptions, execSync } from 'child_process';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 import { dirname, join, posix, sep } from 'path';
 import { logger } from './logger';
 
@@ -370,6 +372,74 @@ export function hasUncommittedChanges(directory?: string): boolean {
   } catch {
     return false;
   }
+}
+
+// Returns a content-sensitive sha1 snapshot of the working tree state for
+// before/after comparison. Hashes three probes:
+//   1. `git diff HEAD` with defensive flags — every byte of tracked-file
+//      changes. `--no-ext-diff` / `--no-textconv` neuter user/repo driver
+//      overrides so output is deterministic; `--binary` keeps binary
+//      edits from collapsing to "Binary files differ".
+//   2. `git status --porcelain=v1 -uall` — untracked paths the diff
+//      omits. `-uall` expands untracked directories per-file.
+//   3. Untracked file content bytes — so a same-path content edit on an
+//      already-untracked file does not collapse against the baseline.
+//
+// Each probe is wrapped independently with a failure sentinel so a
+// single-sided git error (e.g. `git diff HEAD` on an initial-commit-less
+// repo) cannot mask surviving signal from the others.
+export function getUncommittedChangesSnapshot(directory?: string): string {
+  const hasher = crypto.createHash('sha1');
+  const cwd = directory ?? process.cwd();
+  const execOpts = {
+    encoding: 'utf8' as const,
+    cwd,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    maxBuffer: 64 * 1024 * 1024,
+  };
+
+  let diffOutput: string;
+  try {
+    diffOutput = execSync(
+      'git diff HEAD --no-color --no-ext-diff --no-textconv --binary',
+      execOpts
+    );
+  } catch {
+    diffOutput = '<diff-unavailable>';
+  }
+  hasher.update('diff:').update(diffOutput).update('\0');
+
+  let statusOutput: string;
+  try {
+    statusOutput = execSync('git status --porcelain=v1 -uall', execOpts);
+  } catch {
+    statusOutput = '<status-unavailable>';
+  }
+  hasher.update('status:').update(statusOutput).update('\0');
+
+  let untrackedRaw: string;
+  try {
+    untrackedRaw = execSync(
+      'git ls-files --others --exclude-standard -z',
+      execOpts
+    );
+  } catch {
+    untrackedRaw = '';
+  }
+  const untrackedPaths = untrackedRaw.split('\0').filter(Boolean).sort();
+  hasher.update('untracked:');
+  for (const p of untrackedPaths) {
+    hasher.update(p).update('\0');
+    try {
+      hasher.update(fs.readFileSync(join(cwd, p)));
+    } catch {
+      hasher.update('<file-unreadable>');
+    }
+    hasher.update('\0');
+  }
+
+  return hasher.digest('hex');
 }
 
 export function commitChanges(

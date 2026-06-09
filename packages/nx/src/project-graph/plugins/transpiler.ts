@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path/posix';
 import type * as ts from 'typescript';
 import {
+  ensureCjsResolverPatched,
+  ensureNodeNextEsmResolverRegistered,
   isNativeStripPreferred,
   registerTranspiler,
   registerTsConfigPaths,
@@ -28,6 +30,14 @@ export function registerPluginTSTranspiler() {
   }
 
   if (isNativeStripPreferred()) {
+    // Native strip handles `.ts` syntax but doesn't rewrite NodeNext-style
+    // `.js` relative specifiers to their `.ts` sources. Patch the CJS resolver
+    // so `require('./foo.js')` from a `.ts` plugin source falls back to
+    // `./foo.ts`, and register an ESM resolution hook so the same rewrite
+    // happens on the dynamic-import path (the CJS patch can't reach ESM
+    // resolution). Both are idempotent and best-effort.
+    ensureCjsResolverPatched();
+    ensureNodeNextEsmResolverRegistered();
     // Sentinel so pluginTranspilerIsRegistered() reports true and callers
     // don't keep retrying. The actual transpiler stays unregistered until
     // a fallback forces it.
@@ -81,6 +91,9 @@ function doRegisterPluginTSTranspiler() {
       tsConfig.raw
     ),
   ];
+  // Fall back from NodeNext `.js` specifiers to their `.ts` sources when a
+  // `.ts` plugin source require()s a sibling. Idempotent.
+  ensureCjsResolverPatched();
   unregisterPluginTSTranspiler = () => {
     cleanupFns.forEach((fn) => fn?.());
   };

@@ -3,27 +3,38 @@
     "update-20-0-4": {
       "version": "20.0.4-beta.0",
       "description": "Add gitignore entry for temporary vite config files.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "documentation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
     },
     "update-20-0-6": {
       "version": "20.0.6-beta.0",
       "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore"
+      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
+      "documentation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
     },
     "update-20-5-0-install-jiti": {
       "version": "20.5.0-beta.2",
+      "requires": {
+        "vite": ">=6.0.0"
+      },
       "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
-      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti"
+      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti",
+      "documentation": "./dist/src/migrations/update-20-5-0/install-jiti.md"
     },
     "update-20-5-0-update-resolve-conditions": {
       "version": "20.5.0-beta.3",
+      "requires": {
+        "vite": ">=6.0.0"
+      },
       "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
-      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions"
+      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions",
+      "documentation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions.md"
     },
     "eslint-ignore-vite-temp-files": {
       "version": "20.5.0-beta.3",
       "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
-      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files"
+      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files",
+      "documentation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files.md"
     },
     "update-22-2-0": {
       "version": "22.2.0-beta.1",
@@ -41,7 +52,8 @@
     "ensure-vitest-package-migration-23": {
       "version": "23.0.0-beta.10",
       "description": "Safety net: ensure any remaining @nx/vite:test executor usages are swapped to @nx/vitest:test and @nx/vitest is installed.",
-      "implementation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration"
+      "implementation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration",
+      "documentation": "./dist/src/migrations/update-23-0-0/ensure-vitest-package-migration.md"
     },
     "rename-rollup-options-to-rolldown-options": {
       "version": "23.0.0-beta.10",
@@ -49,7 +61,8 @@
         "vite": ">=8.0.0"
       },
       "description": "Rename `rollupOptions` to `rolldownOptions` in vite config files (top-level and inside `environments`). Vite 8 replaced Rollup with Rolldown.",
-      "implementation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options"
+      "implementation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options",
+      "documentation": "./dist/src/migrations/update-23-0-0/rename-rollup-options-to-rolldown-options.md"
     },
     "create-ai-instructions-for-vite-8": {
       "version": "23.0.0-beta.10",
@@ -58,6 +71,30 @@
       },
       "description": "Create AI Instructions to help migrate users workspaces past breaking changes for Vite 8.",
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vite-8.md"
+    },
+    "migrate-to-vitest-3": {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": ">=3.0.0"
+      },
+      "description": "Migrate workspaces past breaking changes for Vitest 3.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-3",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-3.md"
+    },
+    "migrate-to-vitest-4": {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": ">=4.0.0"
+      },
+      "description": "Migrate workspaces past breaking changes for Vitest 4.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-4",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-4.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/vite/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
@@ -76,11 +113,22 @@
     },
     "20.5.0": {
       "version": "20.5.0-beta.3",
+      "requires": {
+        "vite": ">=5.0.0 <6.0.0"
+      },
       "packages": {
         "vite": {
           "version": "^6.0.0",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "20.5.0-vite-plugin-dts": {
+      "version": "20.5.0-beta.3",
+      "requires": {
+        "vite-plugin-dts": ">=3.0.0 <4.0.0"
+      },
+      "packages": {
         "vite-plugin-dts": {
           "version": "~4.5.0",
           "alwaysAddToPackageJson": false
@@ -124,6 +172,9 @@
     },
     "21.5.0": {
       "version": "21.5.0-beta.0",
+      "requires": {
+        "vite": ">=6.0.0 <7.0.0"
+      },
       "packages": {
         "vite": {
           "version": "^7.1.3",
@@ -160,11 +211,22 @@
     },
     "22.2.0-analog": {
       "version": "22.2.0-beta.3",
+      "requires": {
+        "@analogjs/vite-plugin-angular": ">=1.0.0 <2.0.0"
+      },
       "packages": {
         "@analogjs/vite-plugin-angular": {
           "version": "~2.1.2",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "22.2.0-analog-vitest-angular": {
+      "version": "22.2.0-beta.3",
+      "requires": {
+        "@analogjs/vitest-angular": ">=1.0.0 <2.0.0"
+      },
+      "packages": {
         "@analogjs/vitest-angular": {
           "version": "~2.1.2",
           "alwaysAddToPackageJson": false
@@ -173,6 +235,9 @@
     },
     "23.0.0": {
       "version": "23.0.0-beta.10",
+      "requires": {
+        "vite": ">=7.0.0 <8.0.0"
+      },
       "packages": {
         "vite": {
           "version": "^8.0.0",
@@ -185,6 +250,54 @@
       },
       "incompatibleWith": {
         "@remix-run/dev": "*"
+      }
+    },
+    "23.0.0-vitest-v3-floor": {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": "<3.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^3.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.0.0-vitest-v4": {
+      "version": "23.0.0-beta.22",
+      "requires": {
+        "vitest": ">=3.0.0 <4.0.0"
+      },
+      "packages": {
+        "vitest": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-v8": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/coverage-istanbul": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@vitest/ui": {
+          "version": "^4.0.0",
+          "alwaysAddToPackageJson": false
+        }
       }
     }
   }

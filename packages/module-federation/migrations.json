@@ -2,6 +2,9 @@
   "packageJsonUpdates": {
     "20.4.0": {
       "version": "20.4.0-beta.0",
+      "requires": {
+        "@module-federation/enhanced": "<0.8.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.8.8",
@@ -23,6 +26,9 @@
     },
     "20.5.0": {
       "version": "20.5.0-beta.5",
+      "requires": {
+        "@module-federation/enhanced": ">=0.8.0 <0.9.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.9.0",
@@ -44,6 +50,9 @@
     },
     "21.2.0": {
       "version": "21.2.0-beta.6",
+      "requires": {
+        "@module-federation/enhanced": ">=0.9.0 <0.15.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.15.0",
@@ -61,6 +70,9 @@
     },
     "21.3.0": {
       "version": "21.3.0-beta.8",
+      "requires": {
+        "@module-federation/enhanced": ">=0.15.0 <0.17.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.17.0",
@@ -78,11 +90,10 @@
     },
     "21.4.0": {
       "version": "21.4.0-beta.8",
+      "requires": {
+        "@module-federation/enhanced": ">=0.17.0 <0.18.0"
+      },
       "packages": {
-        "http-proxy-middleware": {
-          "version": "^3.0.5",
-          "alwaysAddToPackageJson": false
-        },
         "@module-federation/sdk": {
           "version": "^0.18.0",
           "alwaysAddToPackageJson": false
@@ -101,8 +112,23 @@
         }
       }
     },
+    "21.4.0-http-proxy-middleware": {
+      "version": "21.4.0-beta.8",
+      "requires": {
+        "http-proxy-middleware": ">=2.0.0 <3.0.0"
+      },
+      "packages": {
+        "http-proxy-middleware": {
+          "version": "^3.0.5",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/enhanced": ">=0.18.0 <0.21.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.21.2",
@@ -125,6 +151,9 @@
     "22.6.0": {
       "version": "22.6.0-beta.10",
       "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
+      "requires": {
+        "@module-federation/enhanced": ">=0.21.0 <2.0.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^2.1.0",
@@ -143,6 +172,13 @@
           "alwaysAddToPackageJson": false
         }
       }
+    }
+  },
+  "generators": {
+    "rewrite-module-federation-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/module-federation/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/module-federation`'s exports map. Named imports/exports of public symbols are routed to `@nx/module-federation` and the rest to the new `@nx/module-federation/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/module-federation/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   }
 }

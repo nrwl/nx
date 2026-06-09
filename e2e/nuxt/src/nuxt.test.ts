@@ -13,7 +13,7 @@ describe('Nuxt Plugin', () => {
 
   beforeAll(() => {
     newProject({
-      packages: ['@nx/nuxt'],
+      packages: ['@nx/nuxt', '@nx/vite', '@nx/vitest', '@nx/cypress'],
     });
     runCLI(
       `generate @nx/nuxt:app ${app} --unitTestRunner=vitest --e2eTestRunner=cypress --linter=eslint`

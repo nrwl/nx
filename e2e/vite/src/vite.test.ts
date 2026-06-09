@@ -35,7 +35,7 @@ describe('@nx/vite/plugin', () => {
   describe('with react', () => {
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react', '@nx/vue'],
+        packages: ['@nx/react', '@nx/vue', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${myApp} --directory=apps/${myApp} --bundler=vite --unitTestRunner=vitest`
@@ -295,7 +295,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${vite8App} --directory=apps/${vite8App} --bundler=vite --unitTestRunner=vitest`
@@ -320,7 +320,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/react'],
+        packages: ['@nx/react', '@nx/vite', '@nx/vitest'],
       });
       runCLI(
         `generate @nx/react:app ${vite7App} --directory=apps/${vite7App} --bundler=vite --unitTestRunner=vitest`
@@ -363,7 +363,7 @@ describe('@nx/vite/plugin', () => {
 
     beforeAll(() => {
       proj = newProject({
-        packages: ['@nx/vitest', '@nx/react'],
+        packages: ['@nx/vitest', '@nx/react', '@nx/webpack', '@nx/vite'],
       });
       runCLI(
         `generate @nx/react:app ${reactVitest} --bundler=webpack --unitTestRunner=vitest --e2eTestRunner=none`

@@ -327,7 +327,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'migrate latest --interactive',
       description:
-        'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration',
+        'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration. Only supported when migrating to Nx versions lower than v23',
     },
     {
       command: 'migrate latest --from=nx@14.5.0 --exclude-applied-migrations',
@@ -435,25 +435,25 @@ export const examples: Record<string, Example[]> = {
     },
 
     {
-      command: 'show target my-app:build inputs',
+      command: 'show target inputs my-app:build',
       description: 'Prints the resolved inputs for `my-app:build`',
     },
 
     {
       command:
-        'show target my-app:build inputs --check packages/my-app/index.html',
+        'show target inputs my-app:build --check packages/my-app/index.html',
       description:
         'Checks if `packages/my-app/index.html` is an input for `my-app:build`',
     },
 
     {
-      command: 'show target my-app:build outputs',
+      command: 'show target outputs my-app:build',
       description: 'Prints the outputs detected on disk for `my-app:build`',
     },
 
     {
       command:
-        'show target my-app:build outputs --check packages/my-app/dist/index.html',
+        'show target outputs my-app:build --check packages/my-app/dist/index.html',
       description:
         'Checks if `packages/my-app/dist/index.html` is an output for `my-app:build`',
     },

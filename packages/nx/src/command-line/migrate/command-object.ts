@@ -3,6 +3,7 @@ import { handleImport } from '../../utils/handle-import';
 import { linkToNxDevAndExamples } from '../yargs-utils/documentation';
 import { withVerbose } from '../yargs-utils/shared-options';
 import { AGENT_IDS, coerceAgenticArg } from './agentic/cli-args';
+import type { AgenticArg } from './agentic/select';
 
 export const yargsMigrateCommand: CommandModule = {
   command: 'migrate [packageAndVersion]',
@@ -30,6 +31,63 @@ export const yargsInternalMigrateCommand: CommandModule = {
 };
 
 export const DEFAULT_MIGRATION_COMMIT_PREFIX = 'chore: [nx migration] ';
+
+/** Allowed values for `--mode` / `migrate.mode`. */
+export const MIGRATE_MODES = ['first-party', 'third-party', 'all'] as const;
+export type MigrateMode = (typeof MIGRATE_MODES)[number];
+
+/** Allowed values for `--multi-major-mode` / `migrate.multiMajorMode`. */
+export const MULTI_MAJOR_MODES = ['direct', 'gradual'] as const;
+export type MultiMajorMode = (typeof MULTI_MAJOR_MODES)[number];
+
+/**
+ * The `nx migrate` args bag. Types the keys the nx.json overlay and the
+ * commit-prefix invariant read/write; the index signature keeps the rest of
+ * the yargs args flowing through untouched.
+ */
+export interface MigrateArgs {
+  packageAndVersion?: string;
+  runMigrations?: string;
+  mode?: MigrateMode;
+  /**
+   * nx.json `migrate.mode` default. Consumed by `resolveMode` only when the
+   * target is Nx itself; kept separate from `mode` so it is never mistaken for
+   * an explicit `--mode` (which would hard-fail for non-Nx targets).
+   */
+  modeFromConfig?: MigrateMode;
+  multiMajorMode?: MultiMajorMode;
+  createCommits?: boolean;
+  commitPrefix?: string;
+  agentic?: AgenticArg;
+  validate?: boolean;
+  // The rest of the yargs args bag flows through untyped.
+  [key: string]: any;
+}
+
+/**
+ * Whether a custom commit prefix would be silently ignored: commits aren't
+ * enabled and the agentic flow can't enable them either. Shared by the yargs
+ * `.check()` (CLI args) and the nx.json overlay (merged args) so the rule lives
+ * in one place. `agentic` may flip commits on by default, so a configured
+ * agentic value (other than `false`, and not paired with `--no-create-commits`)
+ * keeps the prefix in play.
+ */
+export function customCommitPrefixHasNoEffect(args: {
+  createCommits: boolean | undefined;
+  commitPrefix: string | undefined;
+  agentic: unknown;
+}): boolean {
+  const agenticMayEnableCommits =
+    args.agentic !== undefined &&
+    args.agentic !== false &&
+    args.createCommits !== false;
+  return (
+    args.createCommits !== true &&
+    !agenticMayEnableCommits &&
+    args.commitPrefix !== undefined &&
+    args.commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
+  );
+}
 
 function withMigrationOptions(yargs: Argv) {
   return withVerbose(yargs)
@@ -69,7 +127,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('interactive', {
       describe:
-        'Enable prompts to confirm whether to collect optional package updates and migrations.',
+        "Enable prompts to confirm whether to collect optional package updates and migrations. Not supported when migrating to Nx v23 or later: use '--mode' to choose which packages to migrate.",
       type: 'boolean',
     })
     .option('excludeAppliedMigrations', {
@@ -86,15 +144,15 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('mode', {
       describe:
-        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
+        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. The 'first-party' and 'third-party' modes are only available on Nx v23+: 'third-party' requires the workspace to already be on v23+, and 'first-party' requires migrating from v22+ into a v23+ target. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
-      choices: ['first-party', 'third-party', 'all'],
+      choices: MIGRATE_MODES,
     })
     .option('multiMajorMode', {
       describe:
         "Skip the multi-major migration prompt/warning and pick how to handle the jump. 'direct' migrates straight to the requested target. 'gradual' migrates to the smallest recommended step (re-run `nx migrate` to continue toward the original target). Equivalent env var: NX_MULTI_MAJOR_MODE=direct|gradual.",
       type: 'string',
-      choices: ['direct', 'gradual'],
+      choices: MULTI_MAJOR_MODES,
     })
     .option('agentic', {
       describe:
@@ -115,12 +173,19 @@ function withMigrationOptions(yargs: Argv) {
         mode,
         agentic,
       }) => {
-        const agenticMayEnableCommits =
-          agentic !== undefined && agentic !== false && createCommits !== false;
+        // Only an explicit `--no-create-commits` is decidable here, before the
+        // nx.json overlay runs: an explicit `false` can't be rescued by nx.json
+        // (the CLI flag wins, and the agentic flow can't enable commits when
+        // they're explicitly off). When `createCommits` is undefined, nx.json
+        // may still enable commits, so defer to the post-overlay
+        // `assertCommitPrefixHasCommits` check.
         if (
-          createCommits !== true &&
-          !agenticMayEnableCommits &&
-          commitPrefix !== DEFAULT_MIGRATION_COMMIT_PREFIX
+          createCommits === false &&
+          customCommitPrefixHasNoEffect({
+            createCommits,
+            commitPrefix,
+            agentic,
+          })
         ) {
           throw new Error(
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'

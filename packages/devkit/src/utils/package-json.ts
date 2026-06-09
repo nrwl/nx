@@ -1,6 +1,7 @@
 import { existsSync } from 'fs';
 import { Module } from 'module';
 import {
+  detectPackageManager,
   type GeneratorCallback,
   output,
   readJson,
@@ -908,7 +909,11 @@ export function ensurePackage<T extends any = any>(
     );
   }
 
-  const { tempDir } = installPackageToTmp(pkg, requiredVersion);
+  const { tempDir } = installPackageToTmp(
+    pkg,
+    requiredVersion,
+    detectPackageManager(workspaceRoot)
+  );
 
   addToNodePath(join(workspaceRoot, 'node_modules'));
   addToNodePath(join(tempDir, 'node_modules'));

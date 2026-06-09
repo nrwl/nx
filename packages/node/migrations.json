@@ -1,8 +1,30 @@
 {
-  "generators": {},
+  "generators": {
+    "rewrite-node-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/node/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/node`'s exports map. Named imports/exports of public symbols are routed to `@nx/node` and the rest to the new `@nx/node/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/node/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    }
+  },
   "packageJsonUpdates": {
     "20.4.0": {
       "version": "20.4.0-beta.3",
+      "packages": {
+        "express": {
+          "version": "^4.21.2",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/express": {
+          "version": "^4.17.21",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "20.4.0-fastify": {
+      "version": "20.4.0-beta.3",
+      "requires": {
+        "fastify": ">=4.0.0 <5.0.0"
+      },
       "packages": {
         "fastify": {
           "version": "~5.2.1",
@@ -19,19 +41,14 @@
         "@fastify/sensible": {
           "version": "~6.0.2",
           "alwaysAddToPackageJson": false
-        },
-        "express": {
-          "version": "^4.21.2",
-          "alwaysAddToPackageJson": false
-        },
-        "@types/express": {
-          "version": "^4.17.21",
-          "alwaysAddToPackageJson": false
         }
       }
     },
     "22.0.2": {
       "version": "22.0.2-beta.0",
+      "requires": {
+        "koa": ">=2.0.0 <3.0.0"
+      },
       "packages": {
         "koa": {
           "version": "^3.0.3",
@@ -46,6 +63,9 @@
     "22.6.0": {
       "version": "22.6.0-beta.10",
       "x-prompt": "Bump koa to ^3.1.2 to resolve CVE-2026-27959 (Host Header Injection)",
+      "requires": {
+        "koa": ">=3.0.0 <4.0.0"
+      },
       "packages": {
         "koa": {
           "version": "^3.1.2",

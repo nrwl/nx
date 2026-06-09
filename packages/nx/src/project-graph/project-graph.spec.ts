@@ -10,7 +10,8 @@ import * as plugins from './plugins/get-plugins';
 jest.mock('../utils/workspace-context', () => {
   return {
     globWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
-    multiGlobWithWorkspaceContext: jest.fn().mockReturnValue(['file']),
+    // multiGlob returns one file list per glob group (string[][]).
+    multiGlobWithWorkspaceContext: jest.fn().mockReturnValue([['file']]),
     getNxWorkspaceFilesFromContext: jest.fn().mockReturnValue({
       projectFileMap: {},
       globalFiles: [],

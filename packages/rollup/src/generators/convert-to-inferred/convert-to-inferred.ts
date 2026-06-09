@@ -14,6 +14,7 @@ import type { RollupExecutorOptions } from '../../executors/rollup/schema';
 import type { RollupPluginOptions } from '../../plugins/plugin';
 import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
 import { addPluginRegistrations } from './lib/add-plugin-registrations';
+import { assertSupportedRollupVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -21,6 +22,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedRollupVersion(tree);
+
   const migratedProjects = new Map<string, RollupPluginOptions>();
   let projects = getProjects(tree);
 

@@ -4,21 +4,21 @@
   "extends": ["@nx/vue"],
   "generators": {
     "init": {
-      "factory": "./src/generators/init/init",
-      "schema": "./src/generators/init/schema.json",
+      "factory": "./dist/src/generators/init/init",
+      "schema": "./dist/src/generators/init/schema.json",
       "description": "Initialize the `@nx/nuxt` plugin.",
       "aliases": ["ng-add"],
       "hidden": true
     },
     "application": {
-      "factory": "./src/generators/application/application#applicationGeneratorInternal",
-      "schema": "./src/generators/application/schema.json",
+      "factory": "./dist/src/generators/application/application#applicationGeneratorInternal",
+      "schema": "./dist/src/generators/application/schema.json",
       "aliases": ["app"],
       "description": "Create a Nuxt application."
     },
     "storybook-configuration": {
-      "factory": "./src/generators/storybook-configuration/configuration",
-      "schema": "./src/generators/storybook-configuration/schema.json",
+      "factory": "./dist/src/generators/storybook-configuration/configuration",
+      "schema": "./dist/src/generators/storybook-configuration/schema.json",
       "description": "Set up storybook for a Nuxt app.",
       "hidden": false
     }

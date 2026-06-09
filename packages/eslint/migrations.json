@@ -3,12 +3,20 @@
     "update-typescript-eslint-v8.13.0": {
       "version": "20.2.0-beta.5",
       "description": "Update TypeScript ESLint packages to v8.13.0 if they are already on v8",
-      "implementation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0"
+      "implementation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0",
+      "requires": {
+        "@typescript-eslint/parser": ">=8.0.0"
+      },
+      "documentation": "./dist/src/migrations/update-20-2-0/update-typescript-eslint-v8-13-0.md"
     },
     "add-file-extensions-to-overrides": {
       "version": "20.3.0-beta.1",
       "description": "Update ESLint flat config to include .cjs, .mjs, .cts, and .mts files in overrides (if needed)",
-      "implementation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides"
+      "implementation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides",
+      "requires": {
+        "eslint": ">=8.57.0"
+      },
+      "documentation": "./dist/src/migrations/update-20-3-0/add-file-extensions-to-overrides.md"
     },
     "update-executor-lint-inputs": {
       "version": "22.7.0-beta.12",
@@ -19,6 +27,12 @@
       "version": "23.0.0-beta.17",
       "description": "Rewrites `@nx/eslint/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/eslint`'s exports map. Named imports/exports of public symbols are routed to `@nx/eslint` and the rest to the new `@nx/eslint/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/eslint/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/eslint/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {

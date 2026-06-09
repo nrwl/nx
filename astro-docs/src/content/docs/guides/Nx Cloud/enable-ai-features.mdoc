@@ -56,9 +56,11 @@ Then, enable AI features in the [organization settings](https://cloud.nx.app/go/
 
 If using DTE agents, the self-healing CI step will be automatically added when the setting is enabled in the workspace settings.
 
-#### Manual DTE
+#### Bring your own compute
 
-For manual DTE configurations, the `nx fix-ci` command must be included in the agent configuration after running nx tasks.
+Bringing your own compute requires the [Nx Enterprise plan](https://nx.dev/enterprise?utm_source=nx.dev&utm_medium=callout&utm_campaign=bring-your-own-compute).
+
+When you bring your own compute, the `nx fix-ci` command must be included in the agent configuration after running nx tasks.
 
 **Important:** This command must run **always**, meaning that even when previous nx tasks fail, the `fix-ci` command should still execute.
 

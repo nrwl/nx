@@ -90,6 +90,18 @@
       "default": "./dist/internal.js"
     }
   },
+  "peerDependencies": {
+    "jest": "^29.0.0 || ^30.0.0",
+    "ts-jest": "^29.0.0"
+  },
+  "peerDependenciesMeta": {
+    "jest": {
+      "optional": true
+    },
+    "ts-jest": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "@jest/reporters": "catalog:jest",
     "@jest/test-result": "catalog:jest",

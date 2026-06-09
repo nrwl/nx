@@ -48,7 +48,9 @@ export function addRouting(host: Tree, options: NormalizedSchema) {
     return addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      {}
+      {},
+      undefined,
+      true
     );
   }
 

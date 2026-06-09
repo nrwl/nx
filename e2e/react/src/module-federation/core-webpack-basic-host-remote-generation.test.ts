@@ -106,8 +106,12 @@ describe('React Module Federation - Webpack Basic - Host Remote Generation', () 
         });
       });
 
-      const serveResult = await runCommandUntil(`serve ${shell}`, (output) =>
-        output.includes(`http://localhost:${readPort(shell)}`)
+      const serveResult = await runCommandUntil(
+        `serve ${shell}`,
+        (output) => output.includes(`http://localhost:${readPort(shell)}`),
+        // a module federation host serve builds 3 static remotes + proxies
+        // and recompiles the host, which exceeds runCommandUntil's 30s default
+        { timeout: 120_000 }
       );
 
       await killProcessAndPorts(serveResult.pid, readPort(shell));

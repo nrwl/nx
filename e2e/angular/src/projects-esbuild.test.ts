@@ -10,8 +10,8 @@ import {
 describe('Angular Projects - Esbuild', () => {
   let setup: ProjectsTestSetup;
 
-  beforeAll(() => {
-    setup = setupProjectsTest();
+  beforeAll(async () => {
+    setup = await setupProjectsTest();
   });
 
   afterEach(() => {

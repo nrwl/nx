@@ -6,11 +6,11 @@ import {
 import {
   AggregateCreateNodesError,
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesResultV2,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -50,7 +50,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const webpackConfigGlob = '**/webpack.config.{js,ts,mjs,cjs}';
 
-export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
+export const createNodes: CreateNodes<WebpackPluginOptions> = [
   webpackConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -78,7 +78,7 @@ export const createNodes: CreateNodesV2<WebpackPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -121,7 +121,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   targetsCache: PluginCache<WebpackTargets>,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>,
@@ -160,7 +160,7 @@ async function createWebpackTargets(
   configFilePath: string,
   projectRoot: string,
   options: Required<WebpackPluginOptions>,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   isTsSolutionSetup: boolean,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<WebpackTargets> {
@@ -185,7 +185,7 @@ async function createWebpackTargets(
 
   targets[options.buildTargetName] = {
     command: `webpack-cli build`,
-    options: { cwd: projectRoot, args: ['--node-env=production'] },
+    options: { cwd: projectRoot, env: { NODE_ENV: 'production' } },
     cache: true,
     dependsOn: [`^${options.buildTargetName}`],
     inputs:
@@ -227,7 +227,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=development'],
+      env: { NODE_ENV: 'development' },
     },
     metadata: {
       technologies: ['webpack'],
@@ -248,7 +248,7 @@ async function createWebpackTargets(
     command: `webpack-cli serve`,
     options: {
       cwd: projectRoot,
-      args: ['--node-env=production'],
+      env: { NODE_ENV: 'production' },
     },
     metadata: {
       technologies: ['webpack'],
@@ -344,7 +344,7 @@ interface WebpackEntry {
 
 async function filterWebpackConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: WebpackEntry[];
   preErrors: Array<[string, Error]>;

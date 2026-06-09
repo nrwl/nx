@@ -53,7 +53,7 @@ Caching is opt-in per task. The recommended approach is to set `cache: true` in 
 
 You can also enable caching per-project in `package.json` or `project.json`:
 
-{% tabs %}
+{% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
 
 ```jsonc
@@ -154,6 +154,45 @@ Local cache is stored in `.nx/cache` by default. Run `nx reset` to clear all loc
   },
 }
 ```
+
+When a single project needs an extra input on top of the shared defaults, add it per project with the spread token (`"..."`):
+
+{% tabs syncKey="project-config-file" %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "nx": {
+    "targets": {
+      "build": {
+        "inputs": ["...", "{projectRoot}/src/**/*.json"],
+        "outputs": ["{projectRoot}/dist"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "inputs": ["...", "{projectRoot}/src/**/*.json"],
+      "outputs": ["{projectRoot}/dist"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+The `"..."` in `inputs` expands to the inputs already set in `targetDefaults`, so this project keeps `{projectRoot}/src/**/*` and `{projectRoot}/tsconfig.json` and adds `{projectRoot}/src/**/*.json`. The `outputs` array has no spread token, so it replaces the default. For the full reference, see [spread token](/docs/reference/project-configuration#spread-token).
 
 ### Smart defaults
 

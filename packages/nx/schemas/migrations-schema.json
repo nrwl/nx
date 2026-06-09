@@ -1,0 +1,186 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema",
+  "$id": "https://nx.dev/reference/migrations-json",
+  "title": "JSON schema for Nx migrations",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the migration collection."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the migration collection."
+    },
+    "generators": {
+      "type": "object",
+      "description": "Migrations to run when users run `nx migrate`, keyed by a unique migration name.",
+      "additionalProperties": {
+        "$ref": "#/definitions/migration"
+      }
+    },
+    "schematics": {
+      "type": "object",
+      "description": "Same as `generators`, but migrations are run as Angular Devkit schematics.",
+      "additionalProperties": {
+        "$ref": "#/definitions/migration"
+      }
+    },
+    "packageJsonUpdates": {
+      "type": "object",
+      "description": "Groups of `package.json` dependency updates to apply when users run `nx migrate`, keyed by a unique group name.",
+      "additionalProperties": {
+        "$ref": "#/definitions/packageJsonUpdate"
+      }
+    }
+  },
+  "definitions": {
+    "migration": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version of the package at which the migration should run. The migration runs when migrating from an installed version lower than this version to a target version equal to or greater than it."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of what the migration does, shown to users when it runs."
+        },
+        "implementation": {
+          "type": "string",
+          "description": "Path to the migration implementation file, relative to `migrations.json`. Append `#symbolName` to use a named export; otherwise, the default export is used."
+        },
+        "factory": {
+          "type": "string",
+          "description": "Alias for `implementation`."
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Path to a markdown prompt file with instructions for an AI agent to perform the migration, relative to `migrations.json`. The path must stay within the directory containing `migrations.json` and point at an existing file. The prompt runs under `nx migrate --agentic`."
+        },
+        "schema": {
+          "type": "string",
+          "description": "Path to a JSON schema for the migration options, relative to `migrations.json`. Rarely needed since migrations are run without user-provided options."
+        },
+        "documentation": {
+          "type": "string",
+          "description": "Path to a markdown doc describing the migration, relative to `migrations.json` and resolved like `implementation`/`factory`. Always supplementary; never stands in for them. Under `nx migrate --run-migrations --agentic` the resolved path is passed to the agent as extra context."
+        },
+        "requires": {
+          "type": "object",
+          "description": "Map of package names to semver ranges. The migration runs only when the installed or to-be-updated versions of these packages satisfy the ranges.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "cli": {
+          "type": "string",
+          "enum": ["nx"],
+          "description": "The CLI used to run the migration.",
+          "deprecated": "No longer used. Whether a migration runs as an Nx generator or an Angular Devkit schematic is determined by the section it is defined in (`generators` or `schematics`)."
+        },
+        "x-repair-skip": {
+          "type": "boolean",
+          "description": "Exclude this migration when users run `nx repair`."
+        }
+      },
+      "required": ["version"],
+      "anyOf": [
+        {
+          "required": ["implementation"]
+        },
+        {
+          "required": ["factory"]
+        },
+        {
+          "required": ["prompt"]
+        }
+      ]
+    },
+    "packageJsonUpdate": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version of the package at which the updates should apply. The updates apply when migrating from an installed version equal to or lower than this version to a target version equal to or greater than it."
+        },
+        "packages": {
+          "type": "object",
+          "description": "Packages to update, keyed by package name.",
+          "additionalProperties": {
+            "$ref": "#/definitions/packageUpdate"
+          }
+        },
+        "x-prompt": {
+          "type": "string",
+          "description": "Message shown to users to confirm whether to apply the updates when running `nx migrate --interactive`. When not set, the updates are applied without confirmation.",
+          "deprecated": "No longer used when migrating to Nx v23 or later. The `--interactive` flag of `nx migrate` only applies when migrating to earlier versions."
+        },
+        "requires": {
+          "type": "object",
+          "description": "Map of package names to semver ranges. The updates apply only when the installed or to-be-updated versions of these packages satisfy the ranges.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "incompatibleWith": {
+          "type": "object",
+          "description": "Map of package names to semver ranges. The updates do not apply when the installed or to-be-updated version of any of these packages satisfies its range.",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["version", "packages"]
+    },
+    "packageUpdate": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string",
+          "description": "Version to update the package to."
+        },
+        "ifPackageInstalled": {
+          "type": "string",
+          "description": "Only update the package if the specified package is installed."
+        },
+        "addToPackageJson": {
+          "description": "Set to `dependencies` or `devDependencies` to add the package to the user's `package.json` in the specified section when it is not already installed.",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": ["dependencies", "devDependencies"]
+            }
+          ]
+        },
+        "alwaysAddToPackageJson": {
+          "description": "Same as `addToPackageJson`, with `true` adding the package to `dependencies`. Takes precedence over `addToPackageJson` when both are set.",
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "enum": ["dependencies", "devDependencies"]
+            }
+          ]
+        },
+        "ignorePackageGroup": {
+          "type": "boolean",
+          "description": "Do not include updates from the package's `packageGroup` when applying this update."
+        },
+        "ignoreMigrations": {
+          "type": "boolean",
+          "description": "Do not collect and run migrations for the package when applying this update."
+        }
+      },
+      "required": ["version"]
+    }
+  }
+}

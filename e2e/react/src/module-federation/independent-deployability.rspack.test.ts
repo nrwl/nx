@@ -16,7 +16,9 @@ describe('Independent Deployability', () => {
   let proj: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/rspack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => {
@@ -130,7 +132,8 @@ describe('Independent Deployability', () => {
     if (runE2ETests()) {
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(
         hostE2eResults.pid,
@@ -268,7 +271,8 @@ describe('Independent Deployability', () => {
       // test remote e2e
       const remoteE2eResults = await runCommandUntil(
         `e2e ${remote}-e2e --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(remoteE2eResults.pid, remotePort);
 
@@ -278,12 +282,14 @@ describe('Independent Deployability', () => {
         `serve ${remote} --no-watch --verbose`,
         (output) => {
           return output.includes(`Loopback: http://localhost:${remotePort}/`);
-        }
+        },
+        { timeout: 120000 }
       );
       await killProcessAndPorts(remoteProcess.pid, remotePort);
       const shellE2eResults = await runCommandUntil(
         `e2e ${shell}-e2e --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(
         shellE2eResults.pid,

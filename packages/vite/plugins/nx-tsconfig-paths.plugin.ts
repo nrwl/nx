@@ -18,6 +18,7 @@ import {
   MatchPath,
 } from 'tsconfig-paths';
 import { Plugin } from 'vite';
+import { warnNxViteTsPathsDeprecation } from '../src/utils/deprecation';
 import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { getProjectTsConfigPath } from '../src/utils/options-utils';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
@@ -49,7 +50,15 @@ export interface nxViteTsPathsOptions {
   buildLibsFromSource?: boolean;
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Replace with `tsconfigPaths()` from
+ * the `vite-tsconfig-paths` package. The inferred `@nx/vite/plugin` already
+ * ensures projects extend the workspace base tsconfig, so the community
+ * plugin handles monorepo path resolution end-to-end. See
+ * https://nx.dev/docs/technologies/build-tools/vite/configure-vite for details.
+ */
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
+  warnNxViteTsPathsDeprecation();
   let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;

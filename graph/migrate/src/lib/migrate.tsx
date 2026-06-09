@@ -1,13 +1,12 @@
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 // nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-// nx-ignore-next-line
 import { type FileChange } from 'nx/src/devkit-exports';
 
 import { useEffect, useState } from 'react';
 import { CheckIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Popover } from '@nx/graph-ui-common';
+import type { MigrationsJsonMetadata } from './migration-shape';
 import { useInterpret, useSelector } from '@xstate/react';
 import { machine as automaticMigrationMachine } from './state/automatic/machine';
 import {
@@ -38,6 +37,7 @@ export interface MigrateUIProps {
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
   onUndoMigration: (migration: MigrationDetailsWithId) => void;
   onStopMigration: (migration: MigrationDetailsWithId) => void;
+  onAcknowledgePrompt: (migration: MigrationDetailsWithId) => void;
   onCancel: () => void;
   onFinish: (squashCommits: boolean) => void;
   onFileClick: (
@@ -46,6 +46,7 @@ export interface MigrateUIProps {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
 }
 
 export enum PrimaryAction {
@@ -207,8 +208,10 @@ export function MigrateUI(props: MigrateUIProps) {
           }
           onSkipMigration={props.onSkipMigration}
           onUndoMigration={props.onUndoMigration}
+          onAcknowledgePrompt={props.onAcknowledgePrompt}
           onViewImplementation={props.onViewImplementation}
           onViewDocumentation={props.onViewDocumentation}
+          onViewPrompt={props.onViewPrompt}
           onFileClick={props.onFileClick}
         />
       </div>

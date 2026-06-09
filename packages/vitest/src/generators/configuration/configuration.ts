@@ -33,10 +33,9 @@ import {
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
-import {
-  getInstalledViteMajorVersion,
-  getVitestDependenciesVersionsToInstall,
-} from '../../utils/version-utils';
+import { getInstalledViteMajorVersion } from '../../utils/version-utils';
+import { versions } from '../../utils/versions';
+import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 
 /**
@@ -86,6 +85,8 @@ export async function configurationGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  assertSupportedVitestVersion(tree);
+
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
@@ -435,24 +436,24 @@ function createFiles(
   });
 }
 
-async function getCoverageProviderDependency(
+function getCoverageProviderDependency(
   tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-): Promise<Record<string, string>> {
-  const { vitestCoverageV8, vitestCoverageIstanbul } =
-    await getVitestDependenciesVersionsToInstall(tree);
+): Record<string, string> {
+  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } =
+    versions(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
   }
 }

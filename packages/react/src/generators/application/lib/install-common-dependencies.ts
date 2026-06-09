@@ -8,7 +8,6 @@ import {
   testingLibraryDomVersion,
   tsLibVersion,
   typesNodeVersion,
-  reactRouterVersion,
   reactRouterIsBotVersion,
 } from '../../../utils/versions';
 import { NormalizedSchema } from '../schema';
@@ -31,7 +30,7 @@ export async function installCommonDependencies(
     '@types/node': typesNodeVersion,
     ...(options.useReactRouter
       ? {
-          '@react-router/dev': reactRouterVersion,
+          '@react-router/dev': reactDeps['react-router'],
         }
       : {}),
   };
@@ -41,9 +40,9 @@ export async function installCommonDependencies(
   }
 
   if (options.useReactRouter) {
-    dependencies['react-router'] = reactRouterVersion;
-    dependencies['@react-router/node'] = reactRouterVersion;
-    dependencies['@react-router/serve'] = reactRouterVersion;
+    dependencies['react-router'] = reactDeps['react-router'];
+    dependencies['@react-router/node'] = reactDeps['react-router'];
+    dependencies['@react-router/serve'] = reactDeps['react-router'];
     dependencies['isbot'] = reactRouterIsBotVersion;
   }
 
@@ -71,5 +70,11 @@ export async function installCommonDependencies(
     devDependencies['@testing-library/dom'] = testingLibraryDomVersion;
   }
 
-  return addDependenciesToPackageJson(host, dependencies, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }

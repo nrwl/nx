@@ -42,6 +42,8 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
+    '/guides/nx-cloud/ci-resource-usage':
+      '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':
       '/docs/reference/deprecated/self-hosted-cache-packages',
     '/reference/remote-cache-plugins/s3-cache':
