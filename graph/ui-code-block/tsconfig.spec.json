@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist/spec",
     "module": "nodenext",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"]
   },
   "include": [

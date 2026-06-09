@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "out-tsc/spec",
     "module": "nodenext",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node", "@jest/expect"],
     "composite": true
   },
