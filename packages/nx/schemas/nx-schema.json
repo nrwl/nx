@@ -443,6 +443,11 @@
           "enum": ["direct", "gradual"],
           "description": "How to handle a migration that crosses more than one major version. Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE` environment variable takes precedence over this setting."
         },
+        "useRegistryResolution": {
+          "type": "boolean",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
+          "default": true
+        },
         "agentic": {
           "oneOf": [
             {

@@ -35,14 +35,17 @@ async function ignoreViteTempFilesInEslintConfig(
   }
 
   ensurePackage('@nx/eslint', nxVersion);
-  const { addIgnoresToLintConfig, isEslintConfigSupported } = await import(
-    '@nx/eslint/internal'
-  );
+  const {
+    addIgnoresToLintConfig,
+    isEslintConfigSupported,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   if (!isEslintConfigSupported(tree)) {
     return;
   }
 
-  const { useFlatConfig } = await import('@nx/eslint/internal');
+  const {
+    useFlatConfig,
+  }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
   const isUsingFlatConfig = useFlatConfig(tree);
   if (!projectRoot && !isUsingFlatConfig) {
     // root eslintrc files ignore all files and the root eslintrc files add

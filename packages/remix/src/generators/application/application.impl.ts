@@ -191,7 +191,9 @@ export async function remixApplicationGeneratorInternal(
         typeof import('@nx/vite')
       >('@nx/vite', nxVersion);
       ensurePackage('@nx/vitest', nxVersion);
-      const { configurationGenerator } = await import('@nx/vitest/generators');
+      const {
+        configurationGenerator,
+      }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
       const vitestTask = await configurationGenerator(tree, {
         uiFramework: 'react',
         project: options.projectName,
@@ -259,7 +261,9 @@ export async function remixApplicationGeneratorInternal(
       '@nx/eslint',
       nxVersion
     );
-    const { addIgnoresToLintConfig } = await import('@nx/eslint/internal');
+    const {
+      addIgnoresToLintConfig,
+    }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
     const eslintTask = await lintProjectGenerator(tree, {
       linter: options.linter,
       project: options.projectName,

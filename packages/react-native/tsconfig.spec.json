@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/packages/react-native/spec",
+    "outDir": "dist/spec",
     "types": ["jest", "node"],
     "noEmit": true,
     "composite": true

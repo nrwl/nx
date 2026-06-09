@@ -145,7 +145,9 @@ export async function addVitestAnalog(
   }
 
   ensurePackage('@nx/vitest', nxVersion);
-  const { configurationGenerator } = await import('@nx/vitest/generators');
+  const {
+    configurationGenerator,
+  }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
 
   tasks.push(
     await configurationGenerator(tree, {

@@ -456,8 +456,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 async function handleError(error: unknown): Promise<void> {
-  const { version } = require('../package.json');
-
   // Record error stat for telemetry
   const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
   const errorMessage = error instanceof Error ? error.message : String(error);

@@ -6,9 +6,9 @@
   "targets": {
     "build": {
       "dependsOn": ["build-base"],
-      "command": "node ./scripts/copy-readme.js react",
+      "command": "node ./scripts/copy-readme.js react packages/react/readme-template.md packages/react/README.md",
       "inputs": ["copyReadme"],
-      "outputs": ["{workspaceRoot}/dist/packages/react/README.md"]
+      "outputs": ["{projectRoot}/README.md"]
     },
     "build-base": {
       "dependsOn": [

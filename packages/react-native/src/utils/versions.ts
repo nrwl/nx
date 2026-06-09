@@ -1,4 +1,8 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(
+  join('@nx/react-native', 'package.json')
+).version;
 
 export const reactNativeVersion = '~0.79.3';
 

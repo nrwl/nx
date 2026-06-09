@@ -4,6 +4,7 @@ import {
 } from '../project-graph/error-types';
 import { handleErrors } from './handle-errors';
 import { output } from './output';
+import { MinReleaseAgeViolationError } from './min-release-age/errors';
 
 describe('handleErrors', () => {
   afterEach(() => {
@@ -69,5 +70,27 @@ describe('handleErrors', () => {
     const body = bodyLines.join('\n');
     expect(body).toContain('misc error');
     expect(body).toContain('cause message');
+  });
+
+  it('surfaces minimum-release-age remediation as body lines', async () => {
+    const spy = jest.spyOn(output, 'error').mockImplementation(() => {});
+    await handleErrors(false, async () => {
+      throw new MinReleaseAgeViolationError({
+        packageManager: 'npm',
+        packageName: 'pkg',
+        spec: 'latest',
+        pmShapedDetail:
+          'No matching version found for pkg@latest with a date before 2020.',
+        blocked: [],
+        remediation: [
+          'Wait until a matching version is older than the window.',
+        ],
+      });
+    });
+    const { title, bodyLines } = spy.mock.calls[0][0];
+    expect(title).toContain('No matching version');
+    expect(bodyLines).toEqual([
+      'Wait until a matching version is older than the window.',
+    ]);
   });
 });

@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/angular', 'package.json')).version;
 
 export const angularVersion = '~21.2.0';
 export const angularDevkitVersion = '~21.2.0';

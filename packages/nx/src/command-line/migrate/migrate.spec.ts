@@ -18,10 +18,25 @@ jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledLegacyNrwlWorkspaceVersion: () =>
     mocks.getInstalledLegacyNrwlWorkspaceVersion(),
 }));
+// These tests exercise the migrate logic, not the cooldown wrapper: delegate the
+// policy-aware resolver to the legacy registry resolution so the existing
+// `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
+jest.mock('./resolve-package-version', () => ({
+  isRegistryResolutionEnabled: () => true,
+  resolvePackageVersionRespectingMinReleaseAge: (
+    packageName: string,
+    version: string
+  ) =>
+    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
+      packageName,
+      version
+    ),
+}));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
   formatSkippedPromptsNextStep,
@@ -40,6 +55,7 @@ import {
   resolveMode,
 } from './migrate';
 import { applyNxJsonMigrateDefaults } from './migrate-config';
+import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -3554,6 +3570,49 @@ describe('Migration', () => {
       // `\bERESOLVE\b` must not match arbitrary identifiers that merely contain
       // the letters (e.g. a hypothetical "PREERESOLVED" token).
       expect(isNpmPeerDepsError('some PREERESOLVED cache entry')).toBe(false);
+    });
+  });
+
+  describe('minimum-release-age violation propagation', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    function violation() {
+      return new MinReleaseAgeViolationError({
+        packageManager: 'npm',
+        packageName: 'mypackage',
+        spec: 'latest',
+        // npm's headline contains "No matching version", which the Migrator
+        // catch would otherwise rewrap into a plain Error and lose the type.
+        pmShapedDetail:
+          'No matching version found for mypackage@latest with a date before 2020.',
+        blocked: [],
+        remediation: [
+          'Wait until a matching version is older than the window.',
+        ],
+      });
+    }
+
+    it('the Migrator rethrows a cooldown violation without rewrapping it', async () => {
+      const err = violation();
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () => Promise.reject(err),
+        from: {},
+        to: {},
+      });
+      await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toBe(err);
+    });
+
+    it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
+      const err = violation();
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
     });
   });
 

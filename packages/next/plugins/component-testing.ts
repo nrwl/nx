@@ -18,7 +18,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { withReact } from '@nx/react';
-import { suppressReactComposeHelperWarnings } from '@nx/react/src/utils/deprecation';
+import { suppressReactComposeHelperWarnings } from '@nx/react/internal';
 import {
   AssetGlobPattern,
   composePluginsSync,

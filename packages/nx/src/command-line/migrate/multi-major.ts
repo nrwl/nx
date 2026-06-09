@@ -2,7 +2,7 @@ import { canPrompt, migratePrompt } from './safe-prompt';
 import { gt, major, minor, valid } from 'semver';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import { output } from '../../utils/output';
-import { resolvePackageVersionUsingRegistry } from '../../utils/package-manager';
+import { resolvePackageVersionRespectingMinReleaseAge } from './resolve-package-version';
 import type { MigrateMode } from './migrate';
 import {
   DIST_TAGS,
@@ -19,16 +19,20 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
 
 export type MultiMajorMode = 'direct' | 'gradual';
 
-// Caret-major (`^X.0.0`) excludes prereleases per semver, so
-// `resolvePackageVersionUsingRegistry` returns the highest stable in major X.
+// Caret-major (`^X.0.0`) excludes prereleases per semver, so the registry
+// resolution returns the highest stable in major X.
 async function resolveLatestStableInMajor(
   packageName: string,
   majorVersion: number
 ): Promise<string | null> {
   try {
-    const resolved = await resolvePackageVersionUsingRegistry(
+    // Probe only: this resolves prompt choices the user may never pick, so it
+    // must not prompt or write pnpm excludes. The chosen version is resolved
+    // again (with side effects) when migrations actually run.
+    const resolved = await resolvePackageVersionRespectingMinReleaseAge(
       packageName,
-      `^${majorVersion}.0.0`
+      `^${majorVersion}.0.0`,
+      { applySideEffects: false }
     );
     return valid(resolved) ? resolved : null;
   } catch {

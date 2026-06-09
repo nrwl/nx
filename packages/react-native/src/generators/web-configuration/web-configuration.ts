@@ -11,7 +11,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { hasWebpackPlugin } from '@nx/react/src/utils/has-webpack-plugin';
+import { hasWebpackPlugin } from '@nx/react/internal';
 
 import {
   nxVersion,
@@ -139,7 +139,9 @@ async function addBundlerConfiguration(
     });
     tasks.push(webpackInitTask);
     if (!normalizedSchema.skipPackageJson) {
-      const { ensureDependencies } = await import('@nx/webpack/internal');
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(ensureDependencies(tree, { uiFramework: 'react' }));
     }
 

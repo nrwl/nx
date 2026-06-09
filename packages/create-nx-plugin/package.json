@@ -20,8 +20,16 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-plugin": "./bin/create-nx-plugin.js"
+    "create-nx-plugin": "./dist/bin/create-nx-plugin.js"
   },
+  "main": "./dist/bin/create-nx-plugin.js",
+  "type": "commonjs",
+  "types": "./dist/bin/create-nx-plugin.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/spec"
+  ],
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -37,5 +45,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./bin/create-nx-plugin.ts",
+      "types": "./dist/bin/create-nx-plugin.d.ts",
+      "default": "./dist/bin/create-nx-plugin.js"
+    },
+    "./package.json": "./package.json"
   }
 }

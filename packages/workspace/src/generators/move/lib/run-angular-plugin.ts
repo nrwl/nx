@@ -10,7 +10,7 @@ export async function runAngularPlugin(tree: Tree, schema: Schema) {
   let move: (tree: Tree, schema: PluginOptions) => Promise<void>;
   try {
     // nx-ignore-next-line
-    move = require('@nx/angular/src/generators/move/move-impl').move;
+    move = require('@nx/angular/internal').move;
   } catch {}
 
   if (!move) {

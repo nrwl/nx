@@ -40,7 +40,7 @@ import {
   releaseTasks,
 } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
+import { addRollupBuildTarget } from '@nx/react/internal';
 import { relative } from 'path';
 import { reactNativeVersion, reactVersion } from '../../utils/versions';
 export async function reactNativeLibraryGenerator(

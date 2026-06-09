@@ -4,19 +4,19 @@
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Remove deprecated dependencies from package.json",
-      "factory": "./src/migrations/update-21-4-0/remove-deprecated-deps"
+      "factory": "./dist/src/migrations/update-21-4-0/remove-deprecated-deps"
     },
     "update-21-4-0-upgrade-react-native-projects": {
       "version": "21.4.0-beta.0",
       "cli": "nx",
       "description": "Run nx upgrade for each React Native project",
-      "factory": "./src/migrations/update-21-4-0/upgrade-react-native-projects"
+      "factory": "./dist/src/migrations/update-21-4-0/upgrade-react-native-projects"
     },
     "update-23-0-0-migrate-create-nodes-v2-import": {
       "version": "23.0.0-beta.24",
       "description": "Rename imports of `createNodesV2` from `@nx/react-native/plugin` to the canonical `createNodes` export.",
-      "implementation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
-      "documentation": "./src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
