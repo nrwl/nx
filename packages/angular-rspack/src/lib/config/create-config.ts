@@ -14,7 +14,7 @@ import {
   parseConfigurationMode,
 } from './config-utils/user-defined-config-helpers';
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
-import { bridgeRspackServeEnv, isServeMode } from '../utils/rspack-serve-env';
+import { isServeMode } from '../utils/rspack-serve-env';
 
 export async function createConfig(
   defaultOptions: {
@@ -30,8 +30,6 @@ export async function createConfig(
   > = {},
   configEnvVar = 'NGRS_CONFIG'
 ): Promise<Configuration[]> {
-  bridgeRspackServeEnv();
-
   const configurationMode =
     process.env[configEnvVar] ?? (isServeMode() ? 'development' : 'production');
   const configurationModes = parseConfigurationMode(configurationMode);

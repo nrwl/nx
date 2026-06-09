@@ -1,24 +1,12 @@
 /**
- * `@rspack/dev-server` v1 wrapped `webpack-dev-server`, whose `Server.js`
- * sets `process.env.WEBPACK_SERVE = 'true'` at module load. v2 dropped that
- * dependency and never sets the env var, so the `WEBPACK_SERVE` checks
- * across angular-rspack silently fall through to build mode. Sniff the
- * rspack-cli command on `process.argv` as the v2 fallback.
+ * v1: `@rspack/dev-server` wraps `webpack-dev-server`, which sets
+ * `process.env.WEBPACK_SERVE = 'true'` at module load.
+ * v2: `@rspack/dev-server` sets `process.env.RSPACK_SERVE = 'true'` at
+ * module load instead. Either signal indicates serve mode.
+ *
+ * Both are set before the user config is loaded — rspack-cli's `serve`
+ * command imports `@rspack/dev-server` before invoking the config loader.
  */
-
-function isServeCliCommand(): boolean {
-  const cmd = process.argv[2];
-  return cmd === 'serve' || cmd === 'server' || cmd === 's' || cmd === 'dev';
-}
-
 export function isServeMode(): boolean {
-  return !!process.env['WEBPACK_SERVE'] || isServeCliCommand();
-}
-
-/** Set `WEBPACK_SERVE` from argv so downstream consumers reading the raw
- *  env var (generated configs, MF plugins, etc.) see it on rspack 2. Safe
- *  to call multiple times. */
-export function bridgeRspackServeEnv(): void {
-  if (process.env['WEBPACK_SERVE']) return;
-  if (isServeCliCommand()) process.env['WEBPACK_SERVE'] = 'true';
+  return !!process.env['WEBPACK_SERVE'] || !!process.env['RSPACK_SERVE'];
 }
