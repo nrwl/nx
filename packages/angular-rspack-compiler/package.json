@@ -30,6 +30,11 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "!dist/tsconfig.lib.tsbuildinfo",
+    "patch"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
