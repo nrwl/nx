@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs"
+    "module": "nodenext"
   },
   "files": [],
   "include": [],

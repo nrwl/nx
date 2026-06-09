@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "nodenext",
     "outDir": "out-tsc/spec",
     "types": ["jest", "node"],
     "noEmit": true,

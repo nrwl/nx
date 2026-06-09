@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc/spec",
-    "module": "commonjs",
+    "module": "nodenext",
     "types": ["jest", "node", "@jest/expect"],
     "composite": true
   },

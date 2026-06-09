@@ -12,7 +12,7 @@
   ],
   "compilerOptions": {
     "esModuleInterop": true,
-    "module": "esnext",
+    "module": "nodenext",
     "target": "esnext"
   }
 }

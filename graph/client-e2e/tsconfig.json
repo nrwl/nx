@@ -21,10 +21,6 @@
     "src/**/*.js",
     "src/**/*.json"
   ],
-  "references": [
-    {
-      "path": "../client"
-    }
-  ],
+  "references": [],
   "exclude": []
 }
