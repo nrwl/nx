@@ -3,8 +3,11 @@ import { insertImport } from '../../utils/insert-import';
 import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
 import { insertStatementInDefaultFunction } from '../../utils/insert-statement-in-default-function';
 import { LoaderSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree, schema: LoaderSchema) {
+  assertSupportedRemixVersion(tree);
+
   const routeFilePath = schema.path;
 
   if (!tree.exists(routeFilePath)) {

@@ -24,12 +24,20 @@
           "version": "~20.43.0",
           "alwaysAddToPackageJson": false
         },
-        "@config-plugins/detox": {
-          "version": "~11.0.0",
-          "alwaysAddToPackageJson": false
-        },
         "@testing-library/jest-dom": {
           "version": "~6.9.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "22.0.0-config-plugins-detox": {
+      "version": "22.0.0-beta.5",
+      "requires": {
+        "expo": ">=53.0.0 <54.0.0"
+      },
+      "packages": {
+        "@config-plugins/detox": {
+          "version": "~11.0.0",
           "alwaysAddToPackageJson": false
         }
       }

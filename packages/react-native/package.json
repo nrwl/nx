@@ -64,13 +64,20 @@
     "enhanced-resolve": "^5.8.3",
     "ignore": "^7.0.5",
     "picocolors": "catalog:",
+    "semver": "catalog:",
     "tinyglobby": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "react-native": ">=0.83.0 <0.85.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
+  },
+  "peerDependenciesMeta": {
+    "react-native": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "nx": "workspace:*"

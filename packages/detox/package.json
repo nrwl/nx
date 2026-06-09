@@ -48,7 +48,12 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "detox": "^20.9.0"
+    "detox": "^20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "detox": {
+      "optional": true
+    }
   },
   "executors": "./executors.json",
   "ng-update": {
