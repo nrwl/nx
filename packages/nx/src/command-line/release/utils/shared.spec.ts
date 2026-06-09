@@ -1406,6 +1406,67 @@ describe('shared', () => {
       expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
     });
 
+    it('should detect intra-group ambiguity for independent release groups even when a single project is being processed', async () => {
+      // For independent release groups, only the single project being
+      // processed is passed as `projects`, but the full release group is
+      // forwarded as `releaseGroupProjects`. The scope `graph` matches
+      // both @foo/graph and @bar/graph, which both live in the active
+      // release group, so this is a genuine in-group ambiguity and must
+      // still throw. See https://github.com/nrwl/nx/issues/35744.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep1',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): ambiguous within independent group',
+          'graph'
+        ),
+      ];
+
+      await expect(
+        getCommitsRelevantToProjects(
+          mockProjectGraph,
+          commits,
+          // only the single independent project currently being processed
+          ['@foo/graph'],
+          mockReleaseConfig!,
+          mockReleaseGraph,
+          // the full release group (both siblings)
+          ['@foo/graph', '@bar/graph']
+        )
+      ).rejects.toThrow(/Ambiguous scope "graph"/);
+    });
+
+    it('should NOT throw for independent release groups when the ambiguous scope collides only with projects outside the group', async () => {
+      // The independent project @foo/graph is released on its own (its
+      // release group contains only itself). The scope `graph` also
+      // matches @bar/graph, but that project lives in a different release
+      // group, so there is no in-group ambiguity. The commit should be
+      // treated as scoped to @foo/graph.
+      const commits: GitCommit[] = [
+        createMockCommit(
+          'indep2',
+          ['foo/graph/src/index.ts'],
+          'feat(graph): only collides outside the group',
+          'graph'
+        ),
+      ];
+
+      const result = await getCommitsRelevantToProjects(
+        mockProjectGraph,
+        commits,
+        ['@foo/graph'],
+        mockReleaseConfig!,
+        mockReleaseGraph,
+        // release group only contains the single independent project
+        ['@foo/graph']
+      );
+
+      expect(result.size).toBe(1);
+      expect(result.get('@foo/graph')).toHaveLength(1);
+      expect(result.get('@foo/graph')?.[0].commit.shortHash).toBe('indep2');
+      expect(result.get('@foo/graph')?.[0].isProjectScopedCommit).toBe(true);
+    });
+
     function createMockCommit(
       shortHash: string,
       affectedFiles: string[],
