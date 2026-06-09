@@ -102,12 +102,12 @@ catalogs:
     sass-embedded: '^1.97.2'
     sass-loader: '^16.0.7'
   eslint:
-    '@angular-eslint/eslint-plugin': '^21.3.1'
-    '@angular-eslint/eslint-plugin-template': '^21.3.1'
-    '@angular-eslint/template-parser': '^21.3.1'
+    '@angular-eslint/eslint-plugin': '^22.0.0'
+    '@angular-eslint/eslint-plugin-template': '^22.0.0'
+    '@angular-eslint/template-parser': '^22.0.0'
     '@typescript-eslint/type-utils': '^8.0.0'
     '@typescript-eslint/utils': '^8.0.0'
-    angular-eslint: '^21.3.1'
+    angular-eslint: '^22.0.0'
     eslint-config-prettier: '^10.0.0'
   jest:
     '@jest/reporters': '^30.0.2'
