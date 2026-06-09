@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/angular-rspack/spec",
+    "outDir": "dist/spec",
     "types": ["vitest/globals", "vitest/importMeta", "node", "vitest"],
     "isolatedModules": true
   },

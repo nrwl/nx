@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/angular-rspack-compiler/spec",
+    "outDir": "dist/spec",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
