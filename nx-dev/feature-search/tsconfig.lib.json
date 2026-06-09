@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/feature-search",
+    "outDir": "dist",
     "types": ["node"],
     "lib": ["dom", "es2021"],
     "composite": true,
