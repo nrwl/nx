@@ -266,7 +266,7 @@
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
-      "include": ["astro-docs/**"]
+      "include": ["astro-docs/**", "examples/react/**"]
     },
     {
       "plugin": "@nx/vitest",
@@ -276,7 +276,7 @@
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "exclude": ["examples/**/*", "nx-dev/**/*", "e2e/**/*"],
       "options": {
         "typecheck": true,
         "build": {
