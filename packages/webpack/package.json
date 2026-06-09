@@ -52,7 +52,8 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

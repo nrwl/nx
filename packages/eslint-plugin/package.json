@@ -48,7 +48,8 @@
   },
   "homepage": "https://nx.dev",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

@@ -32,9 +32,9 @@ export const yargsInternalMigrateCommand: CommandModule = {
 
 export const DEFAULT_MIGRATION_COMMIT_PREFIX = 'chore: [nx migration] ';
 
-/** Allowed values for `--mode` / `migrate.mode`. */
-export const MIGRATE_MODES = ['first-party', 'third-party', 'all'] as const;
-export type MigrateMode = (typeof MIGRATE_MODES)[number];
+/** Allowed values for `--include` / `migrate.include`. */
+export const MIGRATE_INCLUDE_VALUES = ['required', 'optional', 'all'] as const;
+export type MigrateInclude = (typeof MIGRATE_INCLUDE_VALUES)[number];
 
 /** Allowed values for `--multi-major-mode` / `migrate.multiMajorMode`. */
 export const MULTI_MAJOR_MODES = ['direct', 'gradual'] as const;
@@ -48,13 +48,14 @@ export type MultiMajorMode = (typeof MULTI_MAJOR_MODES)[number];
 export interface MigrateArgs {
   packageAndVersion?: string;
   runMigrations?: string;
-  mode?: MigrateMode;
+  include?: MigrateInclude;
   /**
-   * nx.json `migrate.mode` default. Consumed by `resolveMode` only when the
-   * target is Nx itself; kept separate from `mode` so it is never mistaken for
-   * an explicit `--mode` (which would hard-fail for non-Nx targets).
+   * nx.json `migrate.include` default. Consumed by `resolveInclude` only when the
+   * resolved target supports optional updates; kept separate from `include` so it is never
+   * mistaken for an explicit `--include` (which hard-fails when the target does
+   * not support optional updates).
    */
-  modeFromConfig?: MigrateMode;
+  includeFromConfig?: MigrateInclude;
   multiMajorMode?: MultiMajorMode;
   createCommits?: boolean;
   commitPrefix?: string;
@@ -127,7 +128,7 @@ function withMigrationOptions(yargs: Argv) {
     })
     .option('interactive', {
       describe:
-        "Enable prompts to confirm whether to collect optional package updates and migrations. Not supported when migrating to Nx v23 or later: use '--mode' to choose which packages to migrate.",
+        "Enable confirmation prompts for collecting optional package updates and migrations. Deprecated and slated for removal in Nx v24. Use '--include' instead. The flag stays valid for other interactive prompts.",
       type: 'boolean',
     })
     .option('excludeAppliedMigrations', {
@@ -142,11 +143,11 @@ function withMigrationOptions(yargs: Argv) {
       type: 'boolean',
       default: false,
     })
-    .option('mode', {
+    .option('include', {
       describe:
-        "Restrict which packages to migrate. Only applies when migrating Nx itself. 'first-party' processes only Nx and its plugins (the target package plus its nx.packageGroup); 'third-party' processes only the third-party dependencies referenced by Nx packageJsonUpdates entries, catching up on any updates that may have been skipped previously; 'all' processes everything. The 'first-party' and 'third-party' modes are only available on Nx v23+: 'third-party' requires the workspace to already be on v23+, and 'first-party' requires migrating from v22+ into a v23+ target. When targeting Nx in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
+        "Restrict which packages to migrate. Only applies when the target package supports optional updates. 'required' processes only the target package and the related packages it ships with; 'optional' processes only the optional dependency updates those packages recommend, catching up on any that may have been skipped previously; 'all' processes everything. When the target supports optional updates in an interactive terminal, prompts for the value if not provided; otherwise defaults to 'all'.",
       type: 'string',
-      choices: MIGRATE_MODES,
+      choices: MIGRATE_INCLUDE_VALUES,
     })
     .option('multiMajorMode', {
       describe:
@@ -170,7 +171,7 @@ function withMigrationOptions(yargs: Argv) {
         commitPrefix,
         from,
         excludeAppliedMigrations,
-        mode,
+        include,
         agentic,
       }) => {
         // Only an explicit `--no-create-commits` is decidable here, before the
@@ -191,7 +192,7 @@ function withMigrationOptions(yargs: Argv) {
             'Error: Providing a custom commit prefix requires --create-commits to be enabled'
           );
         }
-        if (excludeAppliedMigrations && !from && mode !== 'third-party') {
+        if (excludeAppliedMigrations && !from && include !== 'optional') {
           throw new Error(
             'Error: Excluding migrations that should have been previously applied requires --from to be set'
           );

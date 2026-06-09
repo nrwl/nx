@@ -88,7 +88,8 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "peerDependencies": {
     "react": ">=18.0.0 <20.0.0",

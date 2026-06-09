@@ -42,7 +42,8 @@
   "generators": "./generators.json",
   "executors": "./executors.json",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

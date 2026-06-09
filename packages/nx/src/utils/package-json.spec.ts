@@ -14,6 +14,7 @@ import {
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
+  readNxMigrateConfig,
   readTargetsFromPackageJson,
 } from './package-json';
 import * as pacakgeManager from './package-manager';
@@ -881,5 +882,54 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('readNxMigrateConfig', () => {
+  it('should carry supportsOptionalUpdates from the nx-migrations config', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalUpdates: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalUpdates: true,
+    });
+  });
+
+  it('should carry supportsOptionalUpdates from the ng-update config', () => {
+    const config = readNxMigrateConfig({
+      'ng-update': {
+        migrations: './migrations.json',
+        supportsOptionalUpdates: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalUpdates: true,
+    });
+  });
+
+  it('should not set supportsOptionalUpdates when the config omits it', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': { migrations: './migrations.json' },
+    });
+
+    expect(config.supportsOptionalUpdates).toBeUndefined();
+  });
+
+  it('should not set supportsOptionalUpdates when the config sets it to false', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalUpdates: false,
+      },
+    });
+
+    expect(config.supportsOptionalUpdates).toBeUndefined();
   });
 });

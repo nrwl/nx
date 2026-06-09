@@ -51,7 +51,8 @@
     "packageGroup": {
       "nx-cloud": "latest",
       "nx": "*"
-    }
+    },
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {
