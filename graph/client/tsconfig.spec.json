@@ -7,6 +7,7 @@
     "types": ["jest", "node"],
     "lib": ["DOM"]
   },
+  "exclude": ["out-tsc"],
   "include": [
     "**/*.test.ts",
     "**/*.spec.ts",

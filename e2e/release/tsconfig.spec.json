@@ -5,6 +5,7 @@
     "module": "nodenext",
     "types": ["jest", "node"]
   },
+  "exclude": ["out-tsc"],
   "include": [
     "src/utils.ts",
     "**/*.test.ts",

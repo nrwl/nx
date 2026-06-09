@@ -22,5 +22,5 @@
     "src/**/*.json"
   ],
   "references": [],
-  "exclude": []
+  "exclude": ["out-tsc"]
 }

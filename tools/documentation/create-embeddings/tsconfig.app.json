@@ -13,6 +13,11 @@
     "allowJs": true,
     "composite": false
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "out-tsc",
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ],
   "include": ["src/**/*.ts", "src/**/*.mts"]
 }

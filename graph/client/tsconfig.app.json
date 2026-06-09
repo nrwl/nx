@@ -13,6 +13,7 @@
     "../../node_modules/@nx/react/typings/image.d.ts"
   ],
   "exclude": [
+    "out-tsc",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*.spec.tsx",
