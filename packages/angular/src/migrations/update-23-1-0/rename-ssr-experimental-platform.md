@@ -1,6 +1,6 @@
 #### Rename `ssr.experimentalPlatform` to `ssr.platform`
 
-Angular v22 renamed the `@angular/build:application` SSR `experimentalPlatform` option to `platform` and removed the old key. This migration renames `ssr.experimentalPlatform` to `ssr.platform` in the options and configurations of `@nx/angular:application` targets in `project.json`.
+Angular v22 renamed the `@angular/build:application` SSR `experimentalPlatform` option to `platform` and removed the old key. This migration renames `ssr.experimentalPlatform` to `ssr.platform` in the options and configurations of application targets in `project.json`, covering the `@angular/build:application` and `@angular-devkit/build-angular:application` builders as well as the `@nx/angular:application` executor that wraps them.
 
 #### Examples
 

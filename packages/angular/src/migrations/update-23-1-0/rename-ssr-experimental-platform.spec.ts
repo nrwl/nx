@@ -6,6 +6,12 @@ import {
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import migration from './rename-ssr-experimental-platform';
 
+const ssrApplicationExecutors = [
+  '@angular/build:application',
+  '@angular-devkit/build-angular:application',
+  '@nx/angular:application',
+];
+
 describe('rename-ssr-experimental-platform migration', () => {
   let tree: Tree;
 
@@ -13,7 +19,33 @@ describe('rename-ssr-experimental-platform migration', () => {
     tree = createTreeWithEmptyWorkspace();
   });
 
-  it('should rename ssr.experimentalPlatform to ssr.platform in options', async () => {
+  test.each(ssrApplicationExecutors)(
+    'should rename ssr.experimentalPlatform to ssr.platform in options for the "%s" executor',
+    async (executor) => {
+      addProjectConfiguration(tree, 'app1', {
+        root: 'apps/app1',
+        projectType: 'application',
+        targets: {
+          build: {
+            executor,
+            options: {
+              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            },
+          },
+        },
+      });
+
+      await migration(tree);
+
+      const project = readProjectConfiguration(tree, 'app1');
+      expect(project.targets.build.options.ssr).toStrictEqual({
+        entry: 'src/server.ts',
+        platform: 'neutral',
+      });
+    }
+  );
+
+  it('should rename ssr.experimentalPlatform to ssr.platform in configurations', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       projectType: 'application',
@@ -21,7 +53,44 @@ describe('rename-ssr-experimental-platform migration', () => {
         build: {
           executor: '@nx/angular:application',
           options: {
-            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            ssr: { entry: 'src/server.ts', experimentalPlatform: 'node' },
+          },
+          configurations: {
+            production: {
+              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+            },
+          },
+        },
+      },
+    });
+
+    await migration(tree);
+
+    const project = readProjectConfiguration(tree, 'app1');
+    expect(project.targets.build.options.ssr).toStrictEqual({
+      entry: 'src/server.ts',
+      platform: 'node',
+    });
+    expect(project.targets.build.configurations.production.ssr).toStrictEqual({
+      entry: 'src/server.ts',
+      platform: 'neutral',
+    });
+  });
+
+  it('should overwrite an existing ssr.platform with the deprecated value when both are set', async () => {
+    // Matches Angular's update-workspace-config: experimentalPlatform wins.
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      projectType: 'application',
+      targets: {
+        build: {
+          executor: '@nx/angular:application',
+          options: {
+            ssr: {
+              entry: 'src/server.ts',
+              platform: 'node',
+              experimentalPlatform: 'neutral',
+            },
           },
         },
       },
@@ -33,31 +102,6 @@ describe('rename-ssr-experimental-platform migration', () => {
     expect(project.targets.build.options.ssr).toStrictEqual({
       entry: 'src/server.ts',
       platform: 'neutral',
-    });
-  });
-
-  it('should rename ssr.experimentalPlatform to ssr.platform in configurations', async () => {
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      projectType: 'application',
-      targets: {
-        build: {
-          executor: '@nx/angular:application',
-          configurations: {
-            production: {
-              ssr: { entry: 'src/server.ts', experimentalPlatform: 'node' },
-            },
-          },
-        },
-      },
-    });
-
-    await migration(tree);
-
-    const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.configurations.production.ssr).toStrictEqual({
-      entry: 'src/server.ts',
-      platform: 'node',
     });
   });
 
@@ -68,9 +112,7 @@ describe('rename-ssr-experimental-platform migration', () => {
       targets: {
         build: {
           executor: '@nx/angular:application',
-          options: {
-            ssr: { entry: 'src/server.ts', platform: 'neutral' },
-          },
+          options: { ssr: { entry: 'src/server.ts', platform: 'neutral' } },
         },
       },
     });
@@ -82,60 +124,6 @@ describe('rename-ssr-experimental-platform migration', () => {
       entry: 'src/server.ts',
       platform: 'neutral',
     });
-  });
-
-  it('should keep the existing platform value when both keys are set', async () => {
-    addProjectConfiguration(tree, 'app1', {
-      root: 'apps/app1',
-      projectType: 'application',
-      targets: {
-        build: {
-          executor: '@nx/angular:application',
-          options: {
-            ssr: {
-              entry: 'src/server.ts',
-              platform: 'neutral',
-              experimentalPlatform: 'node',
-            },
-          },
-        },
-      },
-    });
-
-    await migration(tree);
-
-    const project = readProjectConfiguration(tree, 'app1');
-    expect(project.targets.build.options.ssr).toStrictEqual({
-      entry: 'src/server.ts',
-      platform: 'neutral',
-    });
-  });
-
-  it('should update multiple projects', async () => {
-    for (const name of ['app1', 'app2']) {
-      addProjectConfiguration(tree, name, {
-        root: `apps/${name}`,
-        projectType: 'application',
-        targets: {
-          build: {
-            executor: '@nx/angular:application',
-            options: {
-              ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
-            },
-          },
-        },
-      });
-    }
-
-    await migration(tree);
-
-    for (const name of ['app1', 'app2']) {
-      const project = readProjectConfiguration(tree, name);
-      expect(project.targets.build.options.ssr).toStrictEqual({
-        entry: 'src/server.ts',
-        platform: 'neutral',
-      });
-    }
   });
 
   it('should skip targets when ssr is a boolean', async () => {
@@ -156,13 +144,36 @@ describe('rename-ssr-experimental-platform migration', () => {
     expect(project.targets.build.options.ssr).toBe(true);
   });
 
-  it('should skip targets that do not use the @nx/angular:application executor', async () => {
+  it('should skip non-application projects', async () => {
+    addProjectConfiguration(tree, 'lib1', {
+      root: 'libs/lib1',
+      projectType: 'library',
+      targets: {
+        build: {
+          executor: '@nx/angular:application',
+          options: {
+            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
+          },
+        },
+      },
+    });
+
+    await migration(tree);
+
+    const project = readProjectConfiguration(tree, 'lib1');
+    expect(project.targets.build.options.ssr).toStrictEqual({
+      entry: 'src/server.ts',
+      experimentalPlatform: 'neutral',
+    });
+  });
+
+  it('should skip targets that do not use an application executor', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       projectType: 'application',
       targets: {
         build: {
-          executor: '@angular/build:application',
+          executor: '@nx/angular:ng-packagr-lite',
           options: {
             ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
           },

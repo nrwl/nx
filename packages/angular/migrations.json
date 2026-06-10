@@ -327,7 +327,7 @@
       "requires": {
         "@angular/core": ">=22.0.0"
       },
-      "description": "Rename the `ssr.experimentalPlatform` option to `ssr.platform` in `@nx/angular:application` targets, matching the Angular v22 rename.",
+      "description": "Rename the `ssr.experimentalPlatform` option to `ssr.platform` in `@angular/build:application`, `@angular-devkit/build-angular:application`, and `@nx/angular:application` targets, matching the Angular v22 rename.",
       "factory": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform",
       "documentation": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform.md"
     }
