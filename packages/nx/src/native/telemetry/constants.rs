@@ -73,7 +73,6 @@ pub mod event_dimension {
     pub const CREATE_COMMITS: &str = "ep.create_commits";
     pub const AGENTIC_OUTCOME: &str = "ep.agentic_outcome";
     pub const AGENT_USED: &str = "ep.agent_used";
-    pub const ERROR_CODE: &str = "ep.migrate_error_code";
     // Unprefixed (no `migrate_`) so they can be reused by future non-migrate
     // events; keep their schema stable if reused elsewhere.
     pub const ERROR_NAME: &str = "ep.error_name";

@@ -109,7 +109,7 @@ describe('migrate-analytics events', () => {
         migrationCount: 3,
         appliedCount: 3,
       });
-      a.reportMigrateGenerateError('fetch-migrations', new Error('x'));
+      a.reportMigrateGenerateError('fetch_migrations', new Error('x'));
       a.reportMigrateRunError({ code: 'other', error: new Error('x') });
       expect(mockReportEvent).not.toHaveBeenCalled();
     });
@@ -226,26 +226,30 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateGenerateError', () => {
-    it('records once and folds in include context plus the error name', () => {
+    it('encodes the phase in the event name, records once, and folds in include context plus the error name', () => {
       const a = load();
       a.setMigrateInclude('optional');
       a.setMigrateIncludeSource('flag');
-      a.reportMigrateGenerateError('package-updates', new TypeError('boom'));
-      a.reportMigrateGenerateError('fetch-migrations', new Error('second'));
-      expect(countOf('migrate_generate_error')).toBe(1);
-      expect(paramsFor('migrate_generate_error')).toMatchObject({
-        errorCode: 'package-updates',
-        include: 'optional',
-        includeSource: 'flag',
-        errorName: 'TypeError',
-      });
+      a.reportMigrateGenerateError('package_updates', new TypeError('boom'));
+      a.reportMigrateGenerateError('fetch_migrations', new Error('second'));
+      expect(countOf('migrate_generate_error_package_updates')).toBe(1);
+      expect(countOf('migrate_generate_error_fetch_migrations')).toBe(0);
+      expect(paramsFor('migrate_generate_error_package_updates')).toMatchObject(
+        {
+          include: 'optional',
+          includeSource: 'flag',
+          errorName: 'TypeError',
+        }
+      );
     });
 
     it('prefers a Node system code over the constructor name', () => {
       const a = load();
       const err = Object.assign(new Error('no file'), { code: 'ENOENT' });
-      a.reportMigrateGenerateError('fetch-migrations', err);
-      expect(paramsFor('migrate_generate_error')?.errorName).toBe('ENOENT');
+      a.reportMigrateGenerateError('fetch_migrations', err);
+      expect(
+        paramsFor('migrate_generate_error_fetch_migrations')?.errorName
+      ).toBe('ENOENT');
     });
 
     it('rejects a non-identifier code (path/message) and falls back to the name', () => {
@@ -253,9 +257,11 @@ describe('migrate-analytics events', () => {
       const err = Object.assign(new TypeError('x'), {
         code: '/Users/alice/secret-project',
       });
-      a.reportMigrateGenerateError('fetch-migrations', err);
+      a.reportMigrateGenerateError('fetch_migrations', err);
       // The path-shaped `.code` would leak; it is dropped for the name.
-      expect(paramsFor('migrate_generate_error')?.errorName).toBe('TypeError');
+      expect(
+        paramsFor('migrate_generate_error_fetch_migrations')?.errorName
+      ).toBe('TypeError');
     });
 
     it('extracts a package-qualified nx location from the stack', () => {
@@ -263,10 +269,10 @@ describe('migrate-analytics events', () => {
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/nx/dist/src/command-line/migrate/migrate.js:1830:18)';
-      a.reportMigrateGenerateError('package-updates', err);
-      expect(paramsFor('migrate_generate_error')?.errorLocation).toBe(
-        'nx/src/command-line/migrate/migrate.js:1830:18'
-      );
+      a.reportMigrateGenerateError('package_updates', err);
+      expect(
+        paramsFor('migrate_generate_error_package_updates')?.errorLocation
+      ).toBe('nx/src/command-line/migrate/migrate.js:1830:18');
     });
 
     it('captures first-party @nx/* frames too', () => {
@@ -274,10 +280,10 @@ describe('migrate-analytics events', () => {
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/@nx/devkit/dist/src/generators/run.js:5:1)';
-      a.reportMigrateGenerateError('package-updates', err);
-      expect(paramsFor('migrate_generate_error')?.errorLocation).toBe(
-        '@nx/devkit/src/generators/run.js:5:1'
-      );
+      a.reportMigrateGenerateError('package_updates', err);
+      expect(
+        paramsFor('migrate_generate_error_package_updates')?.errorLocation
+      ).toBe('@nx/devkit/src/generators/run.js:5:1');
     });
 
     it('normalizes Windows backslash stack paths', () => {
@@ -285,10 +291,10 @@ describe('migrate-analytics events', () => {
       const err = new Error('x');
       err.stack =
         'Error: x\r\n    at fn (C:\\proj\\node_modules\\nx\\dist\\src\\command-line\\migrate\\migrate.js:1830:18)';
-      a.reportMigrateGenerateError('package-updates', err);
-      expect(paramsFor('migrate_generate_error')?.errorLocation).toBe(
-        'nx/src/command-line/migrate/migrate.js:1830:18'
-      );
+      a.reportMigrateGenerateError('package_updates', err);
+      expect(
+        paramsFor('migrate_generate_error_package_updates')?.errorLocation
+      ).toBe('nx/src/command-line/migrate/migrate.js:1830:18');
     });
 
     it('omits the location for non-first-party (third-party migration) frames', () => {
@@ -296,9 +302,9 @@ describe('migrate-analytics events', () => {
       const err = new Error('x');
       err.stack =
         'Error: x\n    at fn (/Users/me/proj/node_modules/@acme/plugin/migrations/x.js:5:1)';
-      a.reportMigrateGenerateError('package-updates', err);
+      a.reportMigrateGenerateError('package_updates', err);
       expect(
-        paramsFor('migrate_generate_error')?.errorLocation
+        paramsFor('migrate_generate_error_package_updates')?.errorLocation
       ).toBeUndefined();
     });
   });
@@ -333,16 +339,16 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigrateRunError', () => {
-    it('records once with the error name', () => {
+    it('encodes the step in the event name and records once with the error name', () => {
       const a = load();
       a.reportMigrateRunError({
-        code: 'migration-exec',
+        code: 'migration_exec',
         error: new Error('a'),
       });
       a.reportMigrateRunError({ code: 'other', error: new Error('b') });
-      expect(countOf('migrate_run_error')).toBe(1);
-      expect(paramsFor('migrate_run_error')).toMatchObject({
-        errorCode: 'migration-exec',
+      expect(countOf('migrate_run_error_migration_exec')).toBe(1);
+      expect(countOf('migrate_run_error_other')).toBe(0);
+      expect(paramsFor('migrate_run_error_migration_exec')).toMatchObject({
         errorName: 'Error',
       });
     });
@@ -350,30 +356,30 @@ describe('migrate-analytics events', () => {
     it('reports the run size when provided', () => {
       const a = load();
       a.reportMigrateRunError({
-        code: 'migration-exec',
+        code: 'migration_exec',
         migrationCount: 12,
         error: new Error('boom'),
       });
-      expect(paramsFor('migrate_run_error')).toMatchObject({
+      expect(paramsFor('migrate_run_error_migration_exec')).toMatchObject({
         migrationCount: 12,
       });
     });
 
     it('omits the run size at non-loop error sites', () => {
       const a = load();
-      a.reportMigrateRunError({ code: 'npm-install', error: new Error('x') });
-      const params = paramsFor('migrate_run_error');
+      a.reportMigrateRunError({ code: 'npm_install', error: new Error('x') });
+      const params = paramsFor('migrate_run_error_npm_install');
       expect(params?.migrationCount).toBeUndefined();
     });
 
     it('reports the migration name only for first-party packages', () => {
       const a = load();
       a.reportMigrateRunError({
-        code: 'migration-exec',
+        code: 'migration_exec',
         migrationPackage: '@nx/js',
         migrationName: 'update-foo',
       });
-      expect(paramsFor('migrate_run_error')).toMatchObject({
+      expect(paramsFor('migrate_run_error_migration_exec')).toMatchObject({
         migrationName: '@nx/js:update-foo',
       });
     });
@@ -381,11 +387,11 @@ describe('migrate-analytics events', () => {
     it('omits the migration name for third-party packages', () => {
       const a = load();
       a.reportMigrateRunError({
-        code: 'migration-exec',
+        code: 'migration_exec',
         migrationPackage: 'some-third-party',
         migrationName: 'update-foo',
       });
-      expect(paramsFor('migrate_run_error')).not.toHaveProperty(
+      expect(paramsFor('migrate_run_error_migration_exec')).not.toHaveProperty(
         'migrationName'
       );
     });

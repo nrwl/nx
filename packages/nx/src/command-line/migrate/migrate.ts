@@ -2207,7 +2207,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   fetch?: MigratorOptions['fetch']
 ) {
   const pmc = getPackageManagerCommand();
-  let phase: MigrateGenerateErrorCode = 'fetch-migrations';
+  let phase: MigrateGenerateErrorCode = 'fetch_migrations';
   try {
     const rootPkgJsonPath = join(root, 'package.json');
     let originalPackageJson = existsSync(rootPkgJsonPath)
@@ -2289,7 +2289,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // surface a stale historical pin that would write a lower version than
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
-    phase = 'package-updates';
+    phase = 'package_updates';
     const writableUpdates = filterDowngradedUpdates(
       packageUpdates,
       originalPackageJson,
@@ -2931,7 +2931,7 @@ export async function executeMigrations(
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
     // Tracks whether a failure originated in the agentic step so the error
-    // event classifies it as 'agentic' rather than 'migration-exec'.
+    // event classifies it as 'agentic' rather than 'migration_exec'.
     let inAgenticStep = false;
     try {
       // Read this migration's collection once and derive everything from it:
@@ -3140,10 +3140,10 @@ export async function executeMigrations(
         reportMigrateRunError({
           code:
             e instanceof NpmPeerDepsInstallError
-              ? 'npm-install'
+              ? 'npm_install'
               : inAgenticStep
                 ? 'agentic'
-                : 'migration-exec',
+                : 'migration_exec',
           migrationPackage: m.package,
           migrationName: m.name,
           migrationCount: totalMigrations,
@@ -3679,7 +3679,7 @@ export async function migrate(
       opts = await parseMigrationsOptions(mergedArgs, fetch);
     } catch (e) {
       if (isGenerateInvocation) {
-        reportMigrateGenerateError('version-resolution', e);
+        reportMigrateGenerateError('resolve_version', e);
       }
       throw e;
     }
@@ -3701,7 +3701,7 @@ export async function migrate(
         // the error here so `handleErrors` doesn't print a noisy stack after
         // the friendly output.
         if (e instanceof NpmPeerDepsInstallError) {
-          reportMigrateRunError({ code: 'npm-install', error: e });
+          reportMigrateRunError({ code: 'npm_install', error: e });
           return 1;
         }
         reportMigrateRunError({ code: 'other', error: e });

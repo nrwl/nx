@@ -30,13 +30,17 @@ export type MigratePromptName =
   | 'agentic'
   | 'agent_select'
   | 'ambiguous_agent_outcome';
+// Underscore-shaped because the code is appended verbatim to the error event
+// name. `resolve_version` (not `version_resolution`) keeps the longest name,
+// `migrate_generate_error_resolve_version`, within GA4's 40-char event-name
+// cap.
 export type MigrateGenerateErrorCode =
-  | 'version-resolution'
-  | 'fetch-migrations'
-  | 'package-updates';
+  | 'resolve_version'
+  | 'fetch_migrations'
+  | 'package_updates';
 export type MigrateRunErrorCode =
-  | 'npm-install'
-  | 'migration-exec'
+  | 'npm_install'
+  | 'migration_exec'
   | 'agentic'
   | 'other';
 
@@ -175,10 +179,11 @@ export function reportMigrateGenerateError(
   safeReport(() => {
     if (!customDimensions || generateErrorRecorded) return;
     generateErrorRecorded = true;
-    reportEvent('migrate_generate_error', {
-      [customDimensions.errorCode]: code,
+    // The failing phase is encoded in the event name so it doesn't cost a GA
+    // custom dimension.
+    reportEvent(`migrate_generate_error_${code}`, {
       // Populated only when the failure occurred after include resolution; the
-      // earliest (version-resolution) failures leave these undefined.
+      // earliest (resolve_version) failures leave these undefined.
       [customDimensions.include]: resolvedInclude,
       [customDimensions.includeSource]: includeSource,
       [customDimensions.errorName]: errorName(error),
@@ -245,8 +250,9 @@ export function reportMigrateRunError(opts: {
   safeReport(() => {
     if (!customDimensions || runErrorRecorded) return;
     runErrorRecorded = true;
-    reportEvent('migrate_run_error', {
-      [customDimensions.errorCode]: opts.code,
+    // The failing step is encoded in the event name so it doesn't cost a GA
+    // custom dimension.
+    reportEvent(`migrate_run_error_${opts.code}`, {
       // Third-party migration names can reveal private packages; only report
       // first-party ones.
       ...(opts.migrationPackage &&

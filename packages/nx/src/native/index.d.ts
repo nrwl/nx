@@ -325,7 +325,6 @@ export interface EventDimensions {
   createCommits: string
   agenticOutcome: string
   agentUsed: string
-  errorCode: string
   errorName: string
   errorLocation: string
   migrationName: string
