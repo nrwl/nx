@@ -1,7 +1,10 @@
 import {
   formatFiles,
   getProjects,
+  readNxJson,
+  updateNxJson,
   updateProjectConfiguration,
+  type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { allTargetOptions } from '../../utils/targets';
@@ -18,10 +21,41 @@ const ssrApplicationExecutors = [
   '@nx/angular:application',
 ];
 
-export default async function (tree: Tree) {
-  const projects = getProjects(tree);
+type SsrTargetOptions = {
+  ssr?:
+    | boolean
+    | {
+        experimentalPlatform?: 'node' | 'neutral';
+        platform?: 'node' | 'neutral';
+      };
+};
 
-  for (const [projectName, project] of projects) {
+function renameSsrPlatform(
+  target: Pick<TargetConfiguration, 'options' | 'configurations'>
+): boolean {
+  let isUpdated = false;
+  for (const [, options] of allTargetOptions(
+    target as TargetConfiguration<SsrTargetOptions>
+  )) {
+    const ssr = options.ssr;
+    if (!ssr || typeof ssr !== 'object') {
+      continue;
+    }
+
+    const platform = ssr.experimentalPlatform;
+    if (platform) {
+      ssr.platform = platform;
+      delete ssr.experimentalPlatform;
+      isUpdated = true;
+    }
+  }
+
+  return isUpdated;
+}
+
+export default async function (tree: Tree) {
+  // project.json target options and configurations
+  for (const [projectName, project] of getProjects(tree)) {
     if (project.projectType !== 'application') {
       continue;
     }
@@ -31,31 +65,51 @@ export default async function (tree: Tree) {
       if (!ssrApplicationExecutors.includes(target.executor)) {
         continue;
       }
+      if (renameSsrPlatform(target)) {
+        isUpdated = true;
+      }
+    }
 
-      for (const [, options] of allTargetOptions<{
-        ssr?:
-          | boolean
-          | {
-              experimentalPlatform?: 'node' | 'neutral';
-              platform?: 'node' | 'neutral';
-            };
-      }>(target)) {
-        const ssr = options.ssr;
-        if (!ssr || typeof ssr !== 'object') {
+    if (isUpdated) {
+      updateProjectConfiguration(tree, projectName, project);
+    }
+  }
+
+  // nx.json targetDefaults (both the array and the legacy record shapes)
+  const nxJson = readNxJson(tree);
+  if (nxJson?.targetDefaults) {
+    let isUpdated = false;
+
+    if (Array.isArray(nxJson.targetDefaults)) {
+      for (const entry of nxJson.targetDefaults) {
+        if (
+          !ssrApplicationExecutors.includes(entry.executor) &&
+          !ssrApplicationExecutors.includes(entry.target)
+        ) {
           continue;
         }
-
-        const platform = ssr.experimentalPlatform;
-        if (platform) {
-          ssr.platform = platform;
-          delete ssr.experimentalPlatform;
+        if (renameSsrPlatform(entry)) {
+          isUpdated = true;
+        }
+      }
+    } else {
+      for (const [targetOrExecutor, targetConfig] of Object.entries(
+        nxJson.targetDefaults
+      )) {
+        if (
+          !ssrApplicationExecutors.includes(targetOrExecutor) &&
+          !ssrApplicationExecutors.includes(targetConfig.executor)
+        ) {
+          continue;
+        }
+        if (renameSsrPlatform(targetConfig)) {
           isUpdated = true;
         }
       }
     }
 
     if (isUpdated) {
-      updateProjectConfiguration(tree, projectName, project);
+      updateNxJson(tree, nxJson);
     }
   }
 
