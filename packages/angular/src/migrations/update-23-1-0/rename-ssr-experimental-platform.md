@@ -4,7 +4,9 @@ Angular v22 renamed the `@angular/build:application` SSR `experimentalPlatform` 
 
 #### Examples
 
-##### Before
+##### `project.json`
+
+Before:
 
 ```jsonc {9}
 // project.json
@@ -23,7 +25,7 @@ Angular v22 renamed the `@angular/build:application` SSR `experimentalPlatform` 
 }
 ```
 
-##### After
+After:
 
 ```jsonc {9}
 // project.json
@@ -31,6 +33,44 @@ Angular v22 renamed the `@angular/build:application` SSR `experimentalPlatform` 
   "targets": {
     "build": {
       "executor": "@nx/angular:application",
+      "options": {
+        "ssr": {
+          "entry": "src/server.ts",
+          "platform": "neutral",
+        },
+      },
+    },
+  },
+}
+```
+
+##### `nx.json` (`targetDefaults`)
+
+Before:
+
+```jsonc {8}
+// nx.json
+{
+  "targetDefaults": {
+    "@nx/angular:application": {
+      "options": {
+        "ssr": {
+          "entry": "src/server.ts",
+          "experimentalPlatform": "neutral",
+        },
+      },
+    },
+  },
+}
+```
+
+After:
+
+```jsonc {8}
+// nx.json
+{
+  "targetDefaults": {
+    "@nx/angular:application": {
       "options": {
         "ssr": {
           "entry": "src/server.ts",
