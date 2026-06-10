@@ -1,6 +1,7 @@
 import { ChildProcess, execSync, spawn, SpawnOptions } from 'child_process';
 import { extname } from 'path';
 import { output } from '../../../utils/output';
+import { reportMigratePrompt } from '../migrate-analytics';
 import { migratePrompt } from '../safe-prompt';
 import {
   HandoffReadFailureReason,
@@ -478,6 +479,7 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
         },
       ],
     });
+    reportMigratePrompt('ambiguous-agent-outcome', response.choice);
     return response.choice === 'continue'
       ? { kind: 'ambiguous-continue' }
       : { kind: 'ambiguous-abort' };

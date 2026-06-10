@@ -4,6 +4,7 @@ import { join } from 'path';
 import * as pc from 'picocolors';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import { reportMigratePrompt } from '../migrate-analytics';
 import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
@@ -207,6 +208,8 @@ async function firePromptForAgentic(
     },
   } as any);
 
+  reportMigratePrompt('agentic', response.choice);
+
   switch (response.choice) {
     case 'yes-once':
       return { enabled: true };
@@ -309,5 +312,6 @@ async function selectAgent(
     message: 'Multiple AI agents detected. Which one should Nx use?',
     choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
   });
+  reportMigratePrompt('agent-select', response.id);
   return detected.find((d) => d.id === response.id)!;
 }

@@ -109,6 +109,15 @@ async function main() {
     (process.argv[2] === 'graph' && !workspace)
   ) {
     process.env.NX_DAEMON = 'false';
+    if (process.argv[2] === '_migrate') {
+      // `_migrate` runs the actual migrate flow (spawned by `nx migrate`,
+      // potentially from a temp install of the latest CLI), so its analytics
+      // events would otherwise be silently dropped. Start analytics without
+      // prompting - the outer `nx migrate` process handles the preference
+      // prompt and the session ID is inherited via NX_ANALYTICS_SESSION_ID.
+      const { startAnalytics } = await import('../src/analytics/index.js');
+      await startAnalytics();
+    }
     (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
   } else {
     // polyfill rxjs observable to avoid issues with multiple version of Observable installed in node_modules

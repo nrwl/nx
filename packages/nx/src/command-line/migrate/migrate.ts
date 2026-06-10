@@ -102,6 +102,22 @@ import {
 } from '../../utils/provenance';
 import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
 import {
+  classifyMigrateFetchFallback,
+  hasMigrateRunStarted,
+  type MigrateGenerateErrorCode,
+  recordMigrateFetch,
+  reportMigrateGenerateComplete,
+  reportMigrateGenerateError,
+  reportMigrateGenerateStart,
+  reportMigratePrompt,
+  reportMigrateRunComplete,
+  reportMigrateRunError,
+  reportMigrateRunStart,
+  setMigrateInclude,
+  setMigrateIncludeSource,
+} from './migrate-analytics';
+import {
+  isNxTarget,
   maybePromptOrWarnMultiMajorMigration,
   MULTI_MAJOR_MODE_FLAG,
   type MultiMajorMode,
@@ -978,6 +994,7 @@ export async function resolveInclude(
   // An explicit `--include` is validated against the target's `supportsOptionalUpdates` in
   // `resolveTargetAndInclude`, so honor it directly here.
   if (include) {
+    setMigrateIncludeSource('flag');
     return include;
   }
   // Targets that don't declare `supportsOptionalUpdates` only ever run the full
@@ -989,10 +1006,12 @@ export async function resolveInclude(
         bodyLines: [`The target package does not support optional updates.`],
       });
     }
+    setMigrateIncludeSource('default');
     return 'all';
   }
   // nx.json `migrate.include` pre-selects the answer the prompt would ask for.
   if (configuredInclude) {
+    setMigrateIncludeSource('nx-json');
     return configuredInclude;
   }
   const choices: { name: string; message: string }[] = [
@@ -1016,6 +1035,7 @@ export async function resolveInclude(
     });
   }
   if (!canPrompt(context.interactive)) {
+    setMigrateIncludeSource('default');
     return 'all';
   }
   choices.push({
@@ -1030,6 +1050,8 @@ export async function resolveInclude(
     message: 'Which packages would you like to migrate?',
     choices,
   });
+  reportMigratePrompt('include', selected);
+  setMigrateIncludeSource('prompt');
   return selected;
 }
 
@@ -1363,6 +1385,14 @@ async function resolveTargetAndInclude(args: {
     );
   }
 
+  // Recorded before the interactive prompts (include, multi-major) so runs
+  // abandoned at a prompt still register a start.
+  reportMigrateGenerateStart({
+    targetPackage: targetPackage ?? 'nx',
+    interactive: options.interactive,
+    excludeAppliedMigrations: options.excludeAppliedMigrations,
+  });
+
   const include = await resolveInclude(
     options.include,
     {
@@ -1589,6 +1619,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
     if (!isRegistryResolutionEnabled()) {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
+      recordMigrateFetch('install', 'env-skip');
       return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
     }
 
@@ -1614,7 +1645,13 @@ export function createFetcher(pmc: PackageManagerCommands) {
           return migrationsCache[`${packageName}-${resolvedVersion}`];
         }
         setCache(packageName, resolvedVersion);
-        return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
+        return getPackageMigrationsUsingRegistry(
+          packageName,
+          resolvedVersion
+        ).then((result) => {
+          recordMigrateFetch('registry');
+          return result;
+        });
       })
       .catch((e) => {
         // A cooldown violation would fail an install identically (only slower),
@@ -1626,6 +1663,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
           `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
         );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
+        recordMigrateFetch('install', classifyMigrateFetchFallback(e));
 
         return getPackageMigrationsUsingInstall(
           packageName,
@@ -2151,6 +2189,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
   fetch?: MigratorOptions['fetch']
 ) {
   const pmc = getPackageManagerCommand();
+  let phase: MigrateGenerateErrorCode = 'fetch-migrations';
   try {
     const rootPkgJsonPath = join(root, 'package.json');
     let originalPackageJson = existsSync(rootPkgJsonPath)
@@ -2162,6 +2201,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       readNxVersion(originalPackageJson, root);
 
     const include = opts.include;
+    setMigrateInclude(include);
 
     let walkedTargetPackage = opts.targetPackage;
     let fromOverrides = opts.from;
@@ -2231,6 +2271,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // surface a stale historical pin that would write a lower version than
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
+    phase = 'package-updates';
     const writableUpdates = filterDowngradedUpdates(
       packageUpdates,
       originalPackageJson,
@@ -2264,6 +2305,22 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
+    const resolvedTargetVersion =
+      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+    const recordCompletion = () =>
+      reportMigrateGenerateComplete({
+        targetVersion: resolvedTargetVersion,
+        requestedTargetVersion:
+          opts.originalTargetVersion ?? resolvedTargetVersion,
+        installedTargetVersion: isNxTarget(
+          opts.targetPackage,
+          opts.targetVersion
+        )
+          ? from
+          : installedPackageVersions(opts.targetPackage),
+        include,
+      });
+
     const noChanges =
       !wrotePackageJson && !wroteNxJsonInstallation && migrations.length === 0;
 
@@ -2279,6 +2336,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       });
       // Nothing was applied; skip the "Next steps" guidance below — it would
       // tell the user to inspect package.json changes that don't exist.
+      recordCompletion();
       return;
     }
 
@@ -2376,7 +2434,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: 'Next steps:',
       bodyLines,
     });
+
+    recordCompletion();
   } catch (e) {
+    reportMigrateGenerateError(phase, e);
     output.error({
       title: `The migrate command failed.`,
     });
@@ -2849,6 +2910,9 @@ export async function executeMigrations(
     // Content-sensitive so a dirty→dirty case (this migration mutating an
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
+    // Tracks whether a failure originated in the agentic step so the error
+    // event classifies it as 'agentic' rather than 'migration-exec'.
+    let inAgenticStep = false;
     try {
       // Read this migration's collection once and derive everything from it:
       // the implementation context (passed to runNxOrAngularMigration) and the
@@ -2863,6 +2927,7 @@ export async function executeMigrations(
       let commit: CommitState = { kind: 'none' };
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
+          inAgenticStep = true;
           const stepResult = await agenticRun.runStep({
             root,
             migration: m,
@@ -2871,6 +2936,7 @@ export async function executeMigrations(
             installDepsIfChanged,
             documentationPath,
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
@@ -2902,6 +2968,7 @@ export async function executeMigrations(
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
           await installDepsIfChanged();
+          inAgenticStep = true;
           const stepResult = await agenticRun.runStep({
             root,
             migration: m,
@@ -2919,6 +2986,7 @@ export async function executeMigrations(
               hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
             },
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
@@ -2978,6 +3046,7 @@ export async function executeMigrations(
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await installDepsIfChanged();
+          inAgenticStep = true;
           const stepResult = await validationRun.runStep({
             root,
             migration: m,
@@ -2995,6 +3064,7 @@ export async function executeMigrations(
             },
             mode: 'generic-validation',
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous
@@ -3045,6 +3115,22 @@ export async function executeMigrations(
             ? { kind: 'failed' }
             : { kind: 'none' },
       });
+      // `nx repair` reuses executeMigrations; only record for migrate runs.
+      if (hasMigrateRunStarted()) {
+        reportMigrateRunError({
+          code:
+            e instanceof NpmPeerDepsInstallError
+              ? 'npm-install'
+              : inAgenticStep
+                ? 'agentic'
+                : 'migration-exec',
+          migrationPackage: m.package,
+          migrationName: m.name,
+          migrationIndex,
+          migrationCount: totalMigrations,
+          error: e,
+        });
+      }
       if (!(e instanceof NpmPeerDepsInstallError)) {
         // `withGeneratorOutputCapture` attaches the generator's `console.*`
         // output as `capturedLogs` (best-effort; may be absent). Surface it
@@ -3285,13 +3371,24 @@ async function runMigrations(
     join(root, opts.runMigrations)
   ).migrations;
 
+  reportMigrateRunStart({
+    createCommits: shouldCreateCommits ?? false,
+    migrationCount: migrations.length,
+  });
+
   const { resolveAgentic } =
     require('./agentic/select') as typeof import('./agentic/select');
-  const agentic = await resolveAgentic({
-    agentic: opts.agentic,
-    migrations,
-    interactive: opts.interactive,
-  });
+  let agentic: ResolvedAgentic;
+  try {
+    agentic = await resolveAgentic({
+      agentic: opts.agentic,
+      migrations,
+      interactive: opts.interactive,
+    });
+  } catch (e) {
+    reportMigrateRunError({ code: 'agentic', error: e });
+    throw e;
+  }
 
   const {
     effective: effectiveCreateCommits,
@@ -3454,6 +3551,14 @@ async function runMigrations(
       bodyLines: bodyLines.map((line) => `- ${line}`),
     });
   }
+
+  reportMigrateRunComplete({
+    agenticOutcome: agentic.kind,
+    agentUsed:
+      agentic.kind === 'enabled' ? agentic.selectedAgent.id : undefined,
+    migrationCount: migrations.length,
+    appliedCount,
+  });
 }
 
 function getStringifiedPackageJsonDeps(root: string): string {
@@ -3547,7 +3652,18 @@ export async function migrate(
     // eligibility gate and the migration cascade so package metadata is fetched
     // at most once per package/version.
     const fetch = createFetcher(getPackageManagerCommand());
-    const opts = await parseMigrationsOptions(mergedArgs, fetch);
+    // `--run-migrations` without a value parses as '' - undefined means the
+    // generate phase.
+    const isGenerateInvocation = mergedArgs['runMigrations'] === undefined;
+    let opts: Awaited<ReturnType<typeof parseMigrationsOptions>>;
+    try {
+      opts = await parseMigrationsOptions(mergedArgs, fetch);
+    } catch (e) {
+      if (isGenerateInvocation) {
+        reportMigrateGenerateError('version-resolution', e);
+      }
+      throw e;
+    }
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch);
     } else {
@@ -3566,8 +3682,10 @@ export async function migrate(
         // the error here so `handleErrors` doesn't print a noisy stack after
         // the friendly output.
         if (e instanceof NpmPeerDepsInstallError) {
+          reportMigrateRunError({ code: 'npm-install', error: e });
           return 1;
         }
+        reportMigrateRunError({ code: 'other', error: e });
         throw e;
       }
     }

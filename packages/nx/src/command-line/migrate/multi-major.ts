@@ -5,6 +5,10 @@ import { output } from '../../utils/output';
 import { resolvePackageVersionRespectingMinReleaseAge } from './resolve-package-version';
 import type { MigrateInclude } from './migrate';
 import {
+  reportMigratePrompt,
+  setMigrateMultiMajorDecision,
+} from './migrate-analytics';
+import {
   DIST_TAGS,
   type DistTag,
   isLegacyEra,
@@ -166,7 +170,10 @@ export type MultiMajorResult = {
 
 // Whether the target is the canonical Nx package for its era (`@nrwl/workspace`
 // for legacy `< 14`, `nx`/`@nx/workspace` otherwise).
-function isNxTarget(targetPackage: string, targetVersion: string): boolean {
+export function isNxTarget(
+  targetPackage: string,
+  targetVersion: string
+): boolean {
   if (isLegacyEra(targetVersion)) {
     return targetPackage === '@nrwl/workspace';
   }
@@ -183,7 +190,10 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   let { targetVersion } = args;
   if (include === 'optional') return { chosen: targetVersion };
   const multiMajorMode = resolveMultiMajorMode(options);
-  if (multiMajorMode === 'direct') return { chosen: targetVersion };
+  if (multiMajorMode === 'direct') {
+    setMigrateMultiMajorDecision({ choice: 'direct', source: 'flag' });
+    return { chosen: targetVersion };
+  }
   // The multi-major catch-up only applies to Nx's own versioned cascade, so it
   // keys off the canonical Nx package identity, not `--include` eligibility.
   if (!isNxTarget(targetPackage, targetVersion)) {
@@ -229,6 +239,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
   // up incremental migration options.
   if (!interactive && multiMajorMode !== 'gradual') {
     warnMultiMajorMigration(targetPackage, installed, targetVersion);
+    setMigrateMultiMajorDecision({ choice: 'direct', source: 'default' });
     return { chosen: targetVersion };
   }
 
@@ -252,6 +263,7 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
     const step = showCurrent ?? latestInNext;
     if (step) {
       logGradualStep(targetPackage, step, targetVersion);
+      setMigrateMultiMajorDecision({ choice: 'gradual', source: 'flag' });
       return { chosen: step, originalTarget: targetVersion, gradual: true };
     }
     // Registry returned no eligible incremental version (or the lookup
@@ -265,6 +277,9 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
         installedMajor + 1
       } (registry lookup returned no result or failed).`
     );
+    // `default`, not `flag`: direct here is a forced fallback, not a
+    // user-requested direct migration (they asked for gradual).
+    setMigrateMultiMajorDecision({ choice: 'direct', source: 'default' });
     return { chosen: targetVersion };
   }
 
@@ -276,10 +291,26 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
       latestInCurrent: showCurrent,
       latestInNext,
     });
+    // The prompt returns a concrete version; map it back to the option the
+    // user picked for the prompt dimension, then collapse to gradual/direct for
+    // the decision dimension (any incremental step counts as gradual).
+    reportMigratePrompt(
+      'multi-major',
+      chosen === targetVersion
+        ? 'direct'
+        : chosen === showCurrent
+          ? 'latest-in-current'
+          : 'latest-in-next'
+    );
+    setMigrateMultiMajorDecision({
+      choice: chosen === targetVersion ? 'direct' : 'gradual',
+      source: 'prompt',
+    });
     return chosen !== targetVersion
       ? { chosen, originalTarget: targetVersion }
       : { chosen };
   }
   warnMultiMajorMigration(targetPackage, installed, targetVersion);
+  setMigrateMultiMajorDecision({ choice: 'direct', source: 'default' });
   return { chosen: targetVersion };
 }
