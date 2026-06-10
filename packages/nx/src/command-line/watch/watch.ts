@@ -12,6 +12,18 @@ export interface WatchArguments {
   all?: boolean;
   includeDependencies?: boolean;
   includeGlobalWorkspaceFiles?: boolean;
+  /**
+   * Glob patterns for changed file paths that should re-trigger the watched
+   * command. A changed file must match at least one include pattern to count.
+   * When omitted, all files are included.
+   */
+  include?: string[];
+  /**
+   * Glob patterns for changed file paths that should never re-trigger the
+   * watched command. A file matching any exclude pattern is always ignored,
+   * even if it matched an include pattern.
+   */
+  exclude?: string[];
   verbose?: boolean;
   command?: string;
   initialRun?: boolean;
@@ -213,6 +225,8 @@ export async function watch(args: WatchArguments) {
       watchProjects: whatToWatch,
       includeDependencies: args.includeDependencies,
       includeGlobalWorkspaceFiles: args.includeGlobalWorkspaceFiles,
+      include: args.include,
+      exclude: args.exclude,
     },
     async (err, data) => {
       if (err === 'reconnecting') {

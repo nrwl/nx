@@ -264,6 +264,8 @@ export class DaemonClient {
       includeGlobalWorkspaceFiles?: boolean;
       includeDependencies?: boolean;
       allowPartialGraph?: boolean;
+      include?: string[];
+      exclude?: string[];
     }
   > = new Map();
 
@@ -461,6 +463,8 @@ export class DaemonClient {
       includeGlobalWorkspaceFiles?: boolean;
       includeDependencies?: boolean;
       allowPartialGraph?: boolean;
+      include?: string[];
+      exclude?: string[];
     },
     callback: (
       error: Error | null | 'reconnecting' | 'reconnected' | 'closed',
