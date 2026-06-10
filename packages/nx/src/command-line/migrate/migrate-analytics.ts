@@ -22,14 +22,24 @@ export type MigrateFetchStats = {
 // Mirrors `ResolvedAgentic['kind']`; kept local to avoid importing agentic
 // types into the analytics module (which agentic/* already imports from).
 export type MigrateAgenticOutcome = 'enabled' | 'disabled' | 'inside-agent';
-// Underscore-shaped because the prompt name is appended verbatim to the
-// `migrate_prompt_` event name.
-export type MigratePromptName =
-  | 'include'
-  | 'multi_major'
-  | 'agentic'
-  | 'agent_select'
-  | 'ambiguous_agent_outcome';
+// Per-prompt GA choice value-spaces. Closed sets are typed as literal unions
+// so renaming a value at a call site fails to compile instead of silently
+// forking the GA data. Prompt names (the keys) are underscore-shaped because
+// they are appended verbatim to the `migrate_prompt_` event name.
+export type MigratePromptChoices = {
+  // The resolved MigrateInclude.
+  include: MigrateInclude;
+  // The raw 3-way selection. The `multi_major_choice` completion dim
+  // deliberately collapses this to the 2-way semantic (`gradual` | `direct`);
+  // the variant survives only here.
+  multi_major: 'direct' | 'latest-in-current' | 'latest-in-next';
+  // `yes-pin` is offered only when multiple agents are installed.
+  agentic: 'yes-once' | 'yes-flex' | 'yes-pin' | 'no-once' | 'no-never';
+  // The chosen agent id (open-ended).
+  agent_select: string;
+  ambiguous_agent_outcome: 'abort' | 'continue';
+};
+export type MigratePromptName = keyof MigratePromptChoices;
 // Underscore-shaped because the code is appended verbatim to the error event
 // name. `resolve_version` (not `version_resolution`) keeps the longest name,
 // `migrate_generate_error_resolve_version`, within GA4's 40-char event-name
@@ -86,20 +96,12 @@ export function classifyMigrateFetchFallback(
  *
  * The prompt identity is encoded in the event name (`migrate_prompt_<prompt>`)
  * so it doesn't cost a GA custom dimension; `choice` is one dimension
- * multiplexed across all prompts, read conditioned on the event name.
- * Per-prompt `choice` value-spaces:
- * - `include`: `required` | `optional` | `all` (the resolved MigrateInclude).
- * - `multi_major`: `direct` | `latest-in-current` | `latest-in-next` - the raw
- *   3-way selection. The `multi_major_choice` outcome dim deliberately collapses
- *   this to the 2-way semantic (`gradual` | `direct`); the variant survives only
- *   here.
- * - `agentic`: `yes-flex` | `yes-pin` (multi-agent only) | `no-once` | `no-never`.
- * - `agent_select`: the chosen agent id (open-ended).
- * - `ambiguous_agent_outcome`: `abort` | `continue`.
+ * multiplexed across all prompts, read conditioned on the event name. The
+ * per-prompt value-spaces are typed in {@link MigratePromptChoices}.
  */
-export function reportMigratePrompt(
-  prompt: MigratePromptName,
-  choice: string
+export function reportMigratePrompt<P extends MigratePromptName>(
+  prompt: P,
+  choice: MigratePromptChoices[P]
 ): void {
   safeReport(() => {
     if (!customDimensions) return;
