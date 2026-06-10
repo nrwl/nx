@@ -140,6 +140,11 @@ to = "/docs/getting-started/setup-ci"
 from = "/docs/guides/nx-cloud/ci-resource-usage"
 to = "/docs/features/ci-features/resource-usage"
 
+# NXC-4453: Knowledge Base "Installation" section renamed to "Installation and updates"
+[[redirects]]
+from = "/docs/knowledge-base/installation"
+to = "/docs/knowledge-base/installation-and-updates"
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"

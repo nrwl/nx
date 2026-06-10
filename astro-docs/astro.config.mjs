@@ -42,6 +42,8 @@ export default defineConfig({
   },
   trailingSlash: 'never',
   redirects: {
+    '/knowledge-base/installation':
+      '/docs/knowledge-base/installation-and-updates',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':
