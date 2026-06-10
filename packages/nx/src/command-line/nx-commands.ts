@@ -137,7 +137,9 @@ export const commandsObject = yargs
     const command =
       (context.commands ?? []).join(' ') ||
       (args._ ?? []).slice(0, 1).join(' ');
-    if (command) {
+    // Internal commands (e.g. `_migrate`) are spawned by their public
+    // wrapper, which already reported the run - skip to avoid double counts.
+    if (command && !command.startsWith('_')) {
       reportCommandRunEvent(command, undefined, args);
     }
   })

@@ -62,4 +62,24 @@ pub mod event_dimension {
     pub const TASK_COUNT: &str = "epn.task_count";
     pub const PROJECT_COUNT: &str = "epn.project_count";
     pub const CACHED_TASK_COUNT: &str = "epn.cached_task_count";
+    pub const CLI_SOURCE: &str = "ep.cli_source";
+    pub const INTERACTIVE: &str = "ep.interactive";
+    pub const EXCLUDE_APPLIED_MIGRATIONS: &str = "ep.exclude_applied_migrations";
+    pub const INCLUDE: &str = "ep.migrate_include";
+    pub const INCLUDE_SOURCE: &str = "ep.migrate_include_source";
+    pub const MULTI_MAJOR_CHOICE: &str = "ep.multi_major_choice";
+    pub const FETCH_METHOD: &str = "ep.migrate_fetch_method";
+    pub const FETCH_FALLBACK_REASON: &str = "ep.migrate_fetch_fallback_reason";
+    pub const CREATE_COMMITS: &str = "ep.create_commits";
+    pub const AGENTIC_OUTCOME: &str = "ep.agentic_outcome";
+    pub const AGENT_USED: &str = "ep.agent_used";
+    // Unprefixed (no `migrate_`) so they can be reused by future non-migrate
+    // events; keep their schema stable if reused elsewhere.
+    pub const ERROR_NAME: &str = "ep.error_name";
+    pub const ERROR_LOCATION: &str = "ep.error_location";
+    pub const MIGRATION_NAME: &str = "ep.migration_name";
+    pub const PROMPT_CHOICE: &str = "ep.prompt_choice";
+    pub const MAJORS_CROSSED: &str = "epn.majors_crossed";
+    pub const MIGRATION_COUNT: &str = "epn.migration_count";
+    pub const APPLIED_COUNT: &str = "epn.applied_count";
 }
