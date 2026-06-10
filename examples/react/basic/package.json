@@ -1,0 +1,33 @@
+{
+  "name": "examples-react-basic",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p vite react playwright eslint eslint-plugin"
+  },
+  "nx": {
+    "includedScripts": []
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@nx/vite": "link:../../../packages/vite",
+    "@nx/react": "link:../../../packages/react",
+    "@nx/playwright": "link:../../../packages/playwright",
+    "@nx/eslint": "link:../../../packages/eslint",
+    "@nx/eslint-plugin": "link:../../../packages/eslint-plugin",
+    "@playwright/test": "^1.36.0",
+    "@testing-library/react": "15.0.6",
+    "@types/react": "18.3.1",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "^6.0.0",
+    "eslint": "^9.39.4",
+    "jsdom": "^26.1.0",
+    "typescript": "~5.9.2",
+    "typescript-eslint": "^8.58.2",
+    "vite": "^8.0.0",
+    "vitest": "^4.0.0"
+  }
+}

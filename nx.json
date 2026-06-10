@@ -263,6 +263,7 @@
   ],
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
+    "./tools/workspace-plugin/src/plugins/examples-plugin.ts",
     "@monodon/rust",
     {
       "plugin": "@nx/vite/plugin",
@@ -270,13 +271,19 @@
     },
     {
       "plugin": "@nx/vitest",
+      "exclude": ["examples/react/**"],
       "options": {
         "testTargetName": "test"
       }
     },
     {
       "plugin": "@nx/js/typescript",
-      "exclude": ["examples/angular-rspack/**/*", "nx-dev/**/*", "e2e/**/*"],
+      "exclude": [
+        "examples/angular-rspack/**/*",
+        "examples/react/**/*",
+        "nx-dev/**/*",
+        "e2e/**/*"
+      ],
       "options": {
         "typecheck": true,
         "build": {
@@ -294,6 +301,7 @@
     },
     {
       "plugin": "@nx/playwright/plugin",
+      "exclude": ["examples/react/**"],
       "options": {
         "targetName": "pw-e2e",
         "ciTargetName": "e2e-ci"
@@ -301,7 +309,7 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "exclude": ["packages/**/__fixtures__/**/*"],
+      "exclude": ["packages/**/__fixtures__/**/*", "examples/react/**/*"],
       "options": {
         "targetName": "lint"
       }

@@ -381,6 +381,9 @@
     },
     {
       "path": "./e2e/nx-build"
+    },
+    {
+      "path": "./examples/react/basic"
     }
   ],
   "extends": "./tsconfig.base.json"

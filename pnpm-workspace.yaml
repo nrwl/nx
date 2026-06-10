@@ -7,6 +7,8 @@ packages:
   - 'tools/*'
   - 'astro-docs'
   - 'examples/*/*'
+  # examples/react/basic is a standalone pnpm workspace with its own lockfile
+  - '!examples/react/basic'
   - 'examples/angular-rspack/module-federation/host'
   - 'examples/angular-rspack/module-federation/remote'
   - 'packages/nx/native-packages/*'
