@@ -146,6 +146,12 @@ export class NgRspackPlugin implements RspackPluginInstance {
         deployUrl: this.pluginOptions.deployUrl,
         crossOrigin: this.pluginOptions.crossOrigin,
         sri: this.pluginOptions.subresourceIntegrity,
+        // The augment plugin captures this map at construction; IndexHtmlPlugin
+        // fills it during the build so SRI builds emit a lazy-chunk integrity
+        // importmap (on the Angular versions that support it).
+        chunksIntegrity: this.pluginOptions.subresourceIntegrity
+          ? new Map()
+          : undefined,
       }).apply(compiler);
     }
     if (
