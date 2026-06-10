@@ -1,4 +1,4 @@
-import { type Compiler, type Configuration, javascript } from '@rspack/core';
+import type { Compiler, Configuration } from '@rspack/core';
 import { join, resolve } from 'node:path';
 import {
   JS_ALL_EXT_REGEX,
@@ -180,7 +180,11 @@ export async function getCommonConfig(
                 compiler.hooks.compilation.tap(
                   'AngularRspackPlugin',
                   (compilation) => {
-                    javascript.JavascriptModulesPlugin.getCompilationHooks(
+                    // Resolve from the live compiler: the statically imported
+                    // copy can be a different @rspack/core major than the one
+                    // running the build, and getCompilationHooks rejects
+                    // foreign Compilation instances.
+                    compiler.rspack.javascript.JavascriptModulesPlugin.getCompilationHooks(
                       compilation
                     ).chunkHash.tap('AngularRspackPlugin', (_, hash) => {
                       hash.update(Buffer.from('$localize' + i18nHash));
