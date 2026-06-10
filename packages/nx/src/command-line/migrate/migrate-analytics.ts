@@ -41,9 +41,11 @@ export type MigratePromptChoices = {
 };
 export type MigratePromptName = keyof MigratePromptChoices;
 // Underscore-shaped because the code is appended verbatim to the error event
-// name. `resolve_version` (not `version_resolution`) keeps the longest name,
-// `migrate_generate_error_resolve_version`, within GA4's 40-char event-name
-// cap.
+// name, and every resulting name must stay within GA4's 40-char event-name
+// cap - the Rust sender silently truncates past it. The cap is why
+// `resolve_version` is not `version_resolution` (41 chars); the longest live
+// name, `migrate_generate_error_fetch_migrations`, is 39. Enforced by the
+// event-name length test in migrate-analytics.spec.ts.
 export type MigrateGenerateErrorCode =
   | 'resolve_version'
   | 'fetch_migrations'
@@ -184,8 +186,8 @@ export function reportMigrateGenerateError(
     // The failing phase is encoded in the event name so it doesn't cost a GA
     // custom dimension.
     reportEvent(`migrate_generate_error_${code}`, {
-      // Populated only when the failure occurred after include resolution; the
-      // earliest (resolve_version) failures leave these undefined.
+      // Populated only when include resolution had already happened when the
+      // failure occurred; earlier failures leave these undefined.
       [customDimensions.include]: resolvedInclude,
       [customDimensions.includeSource]: includeSource,
       [customDimensions.errorName]: errorName(error),
@@ -220,8 +222,9 @@ export function hasMigrateRunStarted(): boolean {
 }
 
 export function reportMigrateRunComplete(opts: {
-  // `inside-agent` (outer agent drives the run) and `disabled` (opted out) are
-  // distinct outcomes the old boolean collapsed together.
+  // `inside-agent` (an outer agent drives the run) and `disabled` (the user
+  // opted out) are deliberately distinct outcomes; don't collapse them into a
+  // boolean.
   agenticOutcome: MigrateAgenticOutcome;
   agentUsed?: string;
   migrationCount: number;

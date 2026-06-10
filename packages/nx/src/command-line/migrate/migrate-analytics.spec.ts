@@ -2,6 +2,9 @@ import { ProvenanceError } from '../../utils/provenance';
 import {
   classifyMigrateFetchFallback,
   computeMajorsCrossed,
+  type MigrateGenerateErrorCode,
+  type MigratePromptName,
+  type MigrateRunErrorCode,
 } from './migrate-analytics';
 
 describe('computeMajorsCrossed', () => {
@@ -51,6 +54,47 @@ describe('classifyMigrateFetchFallback', () => {
       'registry-error'
     );
     expect(classifyMigrateFetchFallback('boom')).toBe('registry-error');
+  });
+});
+
+// GA4 caps event names at 40 chars and the Rust sender silently truncates
+// past it (service.rs), so every name built from the prompt-name and
+// error-code unions must fit. `Record<union, true>` makes these lists fail
+// to compile when a member is added or renamed, keeping the check exhaustive.
+describe('GA4 event name length cap', () => {
+  const PROMPT_NAMES: Record<MigratePromptName, true> = {
+    include: true,
+    multi_major: true,
+    agentic: true,
+    agent_select: true,
+    ambiguous_agent_outcome: true,
+  };
+  const GENERATE_ERROR_CODES: Record<MigrateGenerateErrorCode, true> = {
+    resolve_version: true,
+    fetch_migrations: true,
+    package_updates: true,
+  };
+  const RUN_ERROR_CODES: Record<MigrateRunErrorCode, true> = {
+    npm_install: true,
+    migration_exec: true,
+    agentic: true,
+    other: true,
+  };
+
+  it('keeps every event name within 40 characters', () => {
+    const names = [
+      'migrate_generate_start',
+      'migrate_generate_complete',
+      'migrate_run_start',
+      'migrate_run_complete',
+      ...Object.keys(PROMPT_NAMES).map((p) => `migrate_prompt_${p}`),
+      ...Object.keys(GENERATE_ERROR_CODES).map(
+        (c) => `migrate_generate_error_${c}`
+      ),
+      ...Object.keys(RUN_ERROR_CODES).map((c) => `migrate_run_error_${c}`),
+    ];
+    const tooLong = names.filter((name) => name.length > 40);
+    expect(tooLong).toEqual([]);
   });
 });
 

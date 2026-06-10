@@ -169,7 +169,23 @@ async function firePromptForAgentic(
   // installed. With a single agent, "always" simply persists `true` and the
   // pin option is dropped.
   const multipleAgents = detected.length > 1;
-  const choices = [
+  // `name` is typed so renaming a choice here fails to compile instead of
+  // silently forking the GA value-space and falling through the switch below.
+  type AgenticChoice = {
+    name: MigratePromptChoices['agentic'];
+    message: string;
+    description: string;
+  };
+  const pinChoice: AgenticChoice[] = multipleAgents
+    ? [
+        {
+          name: 'yes-pin',
+          message: 'Yes, always with the same agent',
+          description: rememberHint,
+        },
+      ]
+    : [];
+  const choices: AgenticChoice[] = [
     {
       name: 'yes-once',
       message: 'Yes, just this time',
@@ -182,15 +198,7 @@ async function firePromptForAgentic(
         : 'Yes, always',
       description: rememberHint,
     },
-    ...(multipleAgents
-      ? [
-          {
-            name: 'yes-pin',
-            message: 'Yes, always with the same agent',
-            description: rememberHint,
-          },
-        ]
-      : []),
+    ...pinChoice,
     { name: 'no-once', message: 'No, just this time', description: skipHint },
     { name: 'no-never', message: 'No, never', description: rememberHint },
   ];
