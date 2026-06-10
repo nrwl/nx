@@ -9,7 +9,6 @@ import {
   updateJson,
 } from '@nx/devkit';
 import type { Linter } from 'eslint';
-import { gte } from 'semver';
 import {
   baseEsLintConfigFile,
   ESLINT_CONFIG_FILENAMES,
@@ -20,11 +19,10 @@ import {
   eslintFlatConfigFilenames,
   useFlatConfig,
 } from '../../utils/flat-config';
-import { getInstalledEslintVersion } from '../../utils/version-utils';
 import {
-  eslint9__eslintVersion,
   eslintCompat,
   eslintrcVersion,
+  getInstalledEslintMajorVersion,
 } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
@@ -438,10 +436,9 @@ export function addExtendsToLintConfig(
           : 'mjs';
 
     let shouldImportEslintCompat = false;
-    // assume eslint version is 9 if not found, as it's what we'd be generating by default
-    const eslintVersion =
-      getInstalledEslintVersion(tree) ?? eslint9__eslintVersion;
-    if (gte(eslintVersion, '9.0.0')) {
+    // assume eslint major is 9 if not found, as it's what we'd be generating by default
+    const eslintMajor = getInstalledEslintMajorVersion(tree) ?? 9;
+    if (eslintMajor >= 9) {
       // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
       const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
         typeof p === 'string' ? { name: p, needCompatFixup: false } : p

@@ -67,6 +67,11 @@ to = "/docs/getting-started/tutorials/:splat"
 from = "/docs/features/ci-features/self-healing"
 to = "/docs/features/ci-features/self-healing-ci"
 
+# DOC-513: Manual DTE guide renamed to Bring Your Own Compute
+[[redirects]]
+from = "/docs/guides/nx-cloud/manual-dte"
+to = "/docs/guides/nx-cloud/bring-your-own-compute"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
@@ -129,6 +134,11 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 [[redirects]]
 from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
 to = "/docs/getting-started/setup-ci"
+
+# Resource usage consolidated into the Nx Cloud add-ons platform feature pages
+[[redirects]]
+from = "/docs/guides/nx-cloud/ci-resource-usage"
+to = "/docs/features/ci-features/resource-usage"
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

@@ -223,7 +223,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
 
         Assert.Equal(
-            new[] { "{projectRoot}/bin/Release/publish" },
+            new[] { "{projectRoot}/bin/Release/publish", "{projectRoot}/obj" },
             targets["publish"].Outputs);
     }
 
@@ -241,7 +241,7 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
 
         Assert.Equal(
-            new[] { "{projectRoot}/dist-publish" },
+            new[] { "{projectRoot}/dist-publish", "{projectRoot}/obj" },
             targets["publish"].Outputs);
     }
 
@@ -257,7 +257,39 @@ public class TargetBuilderOutputPathsTests
         var targets = BuildTargets(properties, projectDirectory, projectName: "foo", isExe: true);
 
         Assert.Equal(
-            new[] { "{workspaceRoot}/artifacts/publish/foo" },
+            new[] { "{workspaceRoot}/artifacts/publish/foo", "{workspaceRoot}/artifacts/obj/foo" },
             targets["publish"].Outputs);
+    }
+
+    // --- Pack output: nupkg glob plus the intermediate (obj) directory ------
+
+    [Fact]
+    public void Pack_EmitsNupkgGlobAndIntermediateObj()
+    {
+        // `dotnet pack` writes the .nupkg into the package output directory and
+        // intermediate state into obj, so both must be declared as outputs.
+        var projectDirectory = ProjectDir("libs", "foo");
+
+        var targets = BuildTargets(properties: new Dictionary<string, string>(), projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{projectRoot}/bin/*.nupkg", "{projectRoot}/obj" },
+            targets["pack"].Outputs);
+    }
+
+    [Fact]
+    public void Pack_ArtifactsLayout_EmitsWorkspaceRootPackageAndObjPaths()
+    {
+        var projectDirectory = ProjectDir("libs", "foo");
+        var properties = new Dictionary<string, string>
+        {
+            ["UseArtifactsOutput"] = "true",
+        };
+
+        var targets = BuildTargets(properties, projectDirectory, projectName: "foo");
+
+        Assert.Equal(
+            new[] { "{workspaceRoot}/artifacts/package/*.nupkg", "{workspaceRoot}/artifacts/obj/foo" },
+            targets["pack"].Outputs);
     }
 }

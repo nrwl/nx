@@ -6,61 +6,44 @@
 /**
  * @category Tree
  */
-export type { Tree, FileChange } from './generators/tree';
+export type { FileChange, Tree } from './generators/tree';
 
 /**
  * @category Workspace
  */
 export type {
-  WorkspaceJsonConfiguration,
-  ProjectsConfigurations,
-  TargetDependencyConfig,
-  TargetConfiguration,
   ProjectConfiguration,
+  ProjectsConfigurations,
   ProjectType,
+  TargetConfiguration,
+  TargetDependencyConfig,
   Workspace,
+  WorkspaceJsonConfiguration,
 } from './config/workspace-json-project-json';
 
 /**
  * @category Workspace
  */
 export type {
-  Generator,
-  Migration,
-  MigrationReturnObject,
-  GeneratorCallback,
-  PromiseExecutor,
   AsyncIteratorExecutor,
+  CustomHasher,
   Executor,
   ExecutorContext,
-  TaskGraphExecutor,
-  GeneratorsJson,
   ExecutorsJson,
-  MigrationsJson,
-  CustomHasher,
+  Generator,
+  GeneratorCallback,
+  GeneratorsJson,
   HasherContext,
+  Migration,
+  MigrationReturnObject,
+  MigrationsJson,
+  PromiseExecutor,
+  TaskGraphExecutor,
 } from './config/misc-interfaces';
 
 export { workspaceLayout } from './config/configuration';
 
-export type {
-  NxPlugin,
-  NxPluginV2,
-  CreateNodesResult,
-  CreateNodesContextV2,
-  CreateNodesFunctionV2,
-  CreateNodesResultV2,
-  CreateNodesV2,
-  CreateDependencies,
-  CreateDependenciesContext,
-  CreateMetadata,
-  CreateMetadataContext,
-  ProjectsMetadata,
-  PreTasksExecution,
-  PreTasksExecutionContext,
-  PostTasksExecution,
-  PostTasksExecutionContext,
-} from './project-graph/plugins';
+export type * from './project-graph/plugins/public-api';
 
 export {
   AggregateCreateNodesError,
@@ -83,15 +66,15 @@ export type { TaskResult, TaskResults } from './tasks-runner/life-cycle';
  * @category Workspace
  */
 export type {
+  ExpandedPluginConfiguration,
   ImplicitDependencyEntry,
   ImplicitJsonSubsetDependency,
+  NxAffectedConfig,
   NxJsonConfiguration,
   PluginConfiguration,
-  ExpandedPluginConfiguration,
   TargetDefaults,
   TargetDefaultEntry,
   TargetDefaultsRecord,
-  NxAffectedConfig,
 } from './config/nx-json';
 
 /**
@@ -113,8 +96,8 @@ export type { PackageManager } from './utils/package-manager';
  * @category Package Manager
  */
 export {
-  getPackageManagerCommand,
   detectPackageManager,
+  getPackageManagerCommand,
   getPackageManagerVersion,
   isWorkspacesEnabled,
 } from './utils/package-manager';
@@ -133,10 +116,10 @@ export { runExecutor } from './command-line/run/run';
  */
 export {
   addProjectConfiguration,
+  getProjects,
   readProjectConfiguration,
   removeProjectConfiguration,
   updateProjectConfiguration,
-  getProjects,
 } from './generators/utils/project-configuration';
 
 /**
@@ -156,13 +139,13 @@ export {
  * @category Project Graph
  */
 export type {
-  ProjectFileMap,
-  FileMap,
   FileData,
+  FileMap,
+  ProjectFileMap,
   ProjectGraph,
   ProjectGraphDependency,
-  ProjectGraphProjectNode,
   ProjectGraphExternalNode,
+  ProjectGraphProjectNode,
 } from './config/project-graph';
 
 export type { GraphJson } from './command-line/graph/graph';
@@ -176,9 +159,9 @@ export { DependencyType } from './config/project-graph';
  * @category Project Graph
  */
 export {
-  RawProjectGraphDependency,
   DynamicDependency,
   ImplicitDependency,
+  RawProjectGraphDependency,
   StaticDependency,
   validateDependency,
 } from './project-graph/project-graph-builder';
@@ -186,7 +169,7 @@ export {
 /**
  * @category Generators
  */
-export { readJson, writeJson, updateJson } from './generators/utils/json';
+export { readJson, updateJson, writeJson } from './generators/utils/json';
 
 /**
  * @category Utils
@@ -248,8 +231,8 @@ export {
 /**
  * @category Utils
  */
-export { Hash, TaskHasher, Hasher } from './hasher/task-hasher';
 export { hashArray } from './hasher/file-hasher';
+export { Hash, Hasher, TaskHasher } from './hasher/task-hasher';
 
 /**
  * @category Utils

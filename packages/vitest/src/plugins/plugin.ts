@@ -5,9 +5,9 @@ import {
 } from '@nx/devkit/internal';
 import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -59,7 +59,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<VitestPluginOptions> = [
+export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
     const pmc = getPackageManagerCommand(
@@ -163,7 +163,7 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
 ): Promise<VitestTargets> {
@@ -363,8 +363,26 @@ async function testTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
+      // Vitest runs on Vite, which transforms a dependency's sources and
+      // resolves their TypeScript project references. When a dependency's root
+      // tsconfig references its tsconfig.spec.json / tsconfig.storybook.json,
+      // those files are read during resolution, yet the `production` named
+      // input excludes them (so `^production` does not cover them). When
+      // `production` is in use, declare them explicitly so the dependency's
+      // spec/storybook tsconfigs are tracked as inputs.
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? [
+            'default',
+            '^production',
+            {
+              fileset: '{projectRoot}/tsconfig.spec.json',
+              dependencies: true as const,
+            },
+            {
+              fileset: '{projectRoot}/tsconfig.storybook.json',
+              dependencies: true as const,
+            },
+          ]
         : ['default', '^default']),
       ...tsconfigInputs.map((f) => ({
         json: `{workspaceRoot}/${f}`,
@@ -556,7 +574,7 @@ function collectTsconfigInputsByProjectRoot(
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));

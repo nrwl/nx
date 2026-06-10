@@ -1,4 +1,5 @@
 import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -22,6 +23,7 @@ import { updateModuleFederationProject } from '../../rules/update-module-federat
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
 import { maybeJs } from '../../utils/maybe-js';
+import { warnReactRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
@@ -129,6 +131,8 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+  warnReactRemoteGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeRemoteName(host, schema.name, schema);
   const options: NormalizedSchema<Schema> = {
@@ -284,7 +288,9 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

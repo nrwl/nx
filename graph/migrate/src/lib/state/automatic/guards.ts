@@ -5,6 +5,7 @@ import {
   currentMigrationHasChanges,
   currentMigrationIsRunning,
 } from './selectors';
+import { isPromptOnlyShape } from '../../migration-shape';
 
 export const guards = {
   canStartRunningCurrentMigration: (ctx: AutomaticMigrationState) => {
@@ -16,7 +17,14 @@ export const guards = {
       // Allow running if migration is not completed
       // stopped migrations can be restarted via the UI, Nx-console will handle the state change
       !(type === 'failed') &&
-      !currentMigrationHasChanges(ctx)
+      // An already-successful entry should never re-spawn the generator —
+      // it falls to needsReview instead (where the user acks for hybrid or
+      // the machine increments past for regular).
+      !(type === 'successful') &&
+      !currentMigrationHasChanges(ctx) &&
+      // Nx Console can't run AI prompts — prompt-only migrations require the
+      // user to explicitly Approve once they've run the prompt externally.
+      !isPromptOnlyShape(ctx.currentMigration)
     );
   },
 

@@ -288,14 +288,9 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     });
 
     // add e2e project config
-    addProjectConfiguration(
-      this.tree,
-      this.project.name,
-      {
-        ...this.projectConfig,
-      },
-      true
-    );
+    addProjectConfiguration(this.tree, this.project.name, {
+      ...this.projectConfig,
+    });
 
     if (this.isProjectUsingEsLint) {
       await lintProjectGenerator(this.tree, {

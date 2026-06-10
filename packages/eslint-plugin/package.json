@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json"
   ],
   "description": "The eslint-plugin package is an ESLint plugin that contains a collection of recommended ESLint rule configurations which you can extend from in your own ESLint configs, as well as an Nx-specific lint rule called enforce-module-boundaries.",
@@ -48,7 +47,8 @@
   },
   "homepage": "https://nx.dev",
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {
@@ -80,10 +80,13 @@
     }
   },
   "peerDependencies": {
-    "@typescript-eslint/parser": "^6.13.2 || ^7.0.0 || ^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
     "eslint-config-prettier": "catalog:eslint"
   },
   "peerDependenciesMeta": {
+    "@typescript-eslint/parser": {
+      "optional": true
+    },
     "eslint-config-prettier": {
       "optional": true
     }

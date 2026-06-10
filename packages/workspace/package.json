@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -51,7 +50,8 @@
     "packageGroup": {
       "nx-cloud": "latest",
       "nx": "*"
-    }
+    },
+    "supportsOptionalUpdates": true
   },
   "exports": {
     ".": {

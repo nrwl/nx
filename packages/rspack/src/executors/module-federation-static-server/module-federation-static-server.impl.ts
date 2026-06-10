@@ -10,15 +10,14 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { buildStaticRemotes } from '@nx/module-federation/src/executors/utils';
 import {
+  buildStaticRemotes,
   getModuleFederationConfig,
   getRemotes,
   parseStaticRemotesConfig,
   StaticRemotesConfig,
-} from '@nx/module-federation/src/utils';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
+} from '@nx/module-federation/internal';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
@@ -27,6 +26,7 @@ import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';
 import { ModuleFederationStaticServerSchema } from './schema';
+import { warnRspackMfStaticServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 function getBuildAndServeOptionsFromServeTarget(
   serveTarget: string,
@@ -248,6 +248,7 @@ export default async function* moduleFederationStaticServer(
   schema: ModuleFederationStaticServerSchema,
   context: ExecutorContext
 ) {
+  warnRspackMfStaticServerExecutorDeprecation();
   // Force Node to resolve to look for the nx binary that is inside node_modules
   const nxBin = require.resolve('nx/bin/nx');
 

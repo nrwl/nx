@@ -17,7 +17,6 @@ export interface Schema {
   babelJest?: boolean;
   js?: boolean;
   strict?: boolean;
-  standaloneConfig?: boolean;
   setParserOptionsProject?: boolean;
   compiler: 'tsc' | 'swc';
   addPlugin?: boolean;

@@ -12,7 +12,16 @@ let proj: string;
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/eslint',
+        '@nx/jest',
+        '@nx/js',
+        '@nx/react',
+        '@nx/webpack',
+      ],
+    });
   });
 
   afterEach(() => cleanupProject());

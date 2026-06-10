@@ -55,11 +55,15 @@ describe('release publishable libraries', () => {
   beforeAll(async () => {
     newProject({
       packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/jest',
         '@nx/js',
         '@nx/react',
-        '@nx/angular',
-        '@nx/vue',
         '@nx/react-native',
+        '@nx/rollup',
+        '@nx/vite',
+        '@nx/vue',
       ],
     });
 

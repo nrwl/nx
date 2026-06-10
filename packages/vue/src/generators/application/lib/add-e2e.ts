@@ -44,9 +44,11 @@ export async function addE2e(
     );
   } else if (options.bundler === 'rsbuild') {
     ensurePackage('@nx/rsbuild', nxVersion);
-    const { getRsbuildE2EWebServerInfo } = await import(
-      '@nx/rsbuild/config-utils'
-    );
+    // `require()` honors Module._initPaths (which ensurePackage updates); ESM
+    // dynamic `import()` doesn't, so it can't see the on-demand temp install.
+    const {
+      getRsbuildE2EWebServerInfo,
+    }: typeof import('@nx/rsbuild/config-utils') = require('@nx/rsbuild/config-utils');
     e2eWebServerInfo = await getRsbuildE2EWebServerInfo(
       tree,
       options.projectName,

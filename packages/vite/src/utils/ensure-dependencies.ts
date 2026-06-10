@@ -49,5 +49,11 @@ export function ensureDependencies(
     }
   }
 
-  return addDependenciesToPackageJson(host, {}, devDependencies);
+  return addDependenciesToPackageJson(
+    host,
+    {},
+    devDependencies,
+    undefined,
+    true
+  );
 }

@@ -14,7 +14,13 @@ import {
 describe('Vite - TS solution setup', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react', '@nx/js'],
+      packages: [
+        '@nx/react',
+        '@nx/js',
+        '@nx/vite',
+        '@nx/esbuild',
+        '@nx/rollup',
+      ],
       preset: 'ts',
     });
   });

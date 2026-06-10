@@ -22,7 +22,17 @@ describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/react'] });
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
       ensureCypressInstallation();
     });
 
@@ -268,7 +278,15 @@ describe('React Applications', () => {
   describe('Non-Crystal Tests', () => {
     beforeAll(() => {
       process.env.NX_ADD_PLUGINS = 'false';
-      proj = newProject({ packages: ['@nx/react'] });
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
       ensureCypressInstallation();
     });
 

@@ -290,6 +290,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
             type: 'string',
+          })
+          .option('trustThirdPartyPreset', {
+            describe: chalk.dim`Skip the confirmation prompt when installing a third-party preset. Use this when you trust the preset publisher.`,
+            type: 'boolean',
+            default: false,
           }),
         withNxCloud,
         withUseGitHub,
@@ -451,8 +456,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 async function handleError(error: unknown): Promise<void> {
-  const { version } = require('../package.json');
-
   // Record error stat for telemetry
   const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
   const errorMessage = error instanceof Error ? error.message : String(error);

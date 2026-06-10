@@ -8,7 +8,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
 import { expoLibraryGenerator } from './library';
 import { Schema } from './schema';
 
@@ -562,8 +562,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.1.0",
-            "react-native": "0.81.5",
+            "react": "^19.2.0",
+            "react-native": "0.83.6",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -693,8 +693,8 @@ describe('lib', () => {
           "module": "./dist/index.esm.js",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.1.0",
-            "react-native": "0.81.5",
+            "react": "^19.2.0",
+            "react-native": "0.83.6",
           },
           "types": "./dist/index.esm.d.ts",
           "version": "0.0.1",

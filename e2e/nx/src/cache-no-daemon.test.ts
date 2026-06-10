@@ -27,7 +27,9 @@ const runCLI = (cmd: string, opts: RunCmdOpts = {}) =>
   _runCLI(cmd, { ...opts, daemon: false });
 
 describe('cache (no daemon)', () => {
-  beforeEach(() => newProject({ packages: ['@nx/web', '@nx/js'] }));
+  beforeEach(() =>
+    newProject({ packages: ['@nx/eslint', '@nx/web', '@nx/js', '@nx/jest'] })
+  );
 
   afterEach(() => cleanupProject());
 

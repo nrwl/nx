@@ -269,7 +269,7 @@ Nx provides two methods to exclude glob patterns (files and folders) from `affec
 
 ## Marking projects affected by dependency updates
 
-By default, Nx will mark all projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. If you'd like to opt into smarter behavior, you can configure Nx to only mark projects as affected if they actually depend on the updated packages.
+By default, Nx will mark **all** projects as affected whenever your package manager's lock file changes. This behavior is a failsafe in case Nx misses a project that should be affected by a dependency update. You can configure this behavior with the `projectsAffectedByDependencyUpdates` option in `nx.json`:
 
 ```json
 // nx.json
@@ -282,7 +282,21 @@ By default, Nx will mark all projects as affected whenever your package manager'
 }
 ```
 
-The flag `projectsAffectedByDependencyUpdates` can be set to `auto`, `all`, or an array that contains project specifiers. The default value is `all`.
+The `projectsAffectedByDependencyUpdates` option accepts the following values:
+
+| Value      | Description                                                                                                                                                                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `"all"`    | **(default)** Every project in the workspace is marked as affected when the lock file changes. This is the safest option but may result in unnecessary CI work.                                                                              |
+| `"auto"`   | Only projects whose dependencies actually changed in the lock file are marked as affected. Nx inspects the lock file structure to determine which workspace projects had their resolved dependencies change. See the note below for details. |
+| `string[]` | An array of project names or glob patterns (e.g., `["app-*", "shared-lib"]`). Only the matching projects are marked as affected when the lock file changes.                                                                                  |
+
+{% aside type="note" title="How 'auto' works per package manager" %}
+In `"auto"` mode, Nx parses both the base and head revisions of your lock file using the same parsers it uses to build the project graph, diffs the resolved package metadata to find which dependencies changed, then maps those packages back to the workspace projects that depend on them.
+
+Nx supports the following lock files: `pnpm-lock.yaml`, `pnpm-lock.yml`, `package-lock.json`, `yarn.lock`, `bun.lock`, and `bun.lockb`.
+
+For binary Bun lockfiles (`bun.lockb`), Nx asks Bun to render the lockfile before diffing it, so Bun needs to be available in the environment that runs `nx affected`.
+{% /aside %}
 
 ## Not using git
 

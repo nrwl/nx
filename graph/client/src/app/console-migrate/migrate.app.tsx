@@ -111,6 +111,20 @@ export function MigrateApp({
     });
   };
 
+  const onAcknowledgePrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'acknowledge-prompt',
+      payload: { migration },
+    });
+  };
+
+  const onViewPrompt = (migration: MigrationDetailsWithId) => {
+    externalApiService.postEvent({
+      type: 'view-prompt',
+      payload: { migration },
+    });
+  };
+
   return (
     <MigrateUI
       migrations={migrations}
@@ -122,8 +136,10 @@ export function MigrateApp({
       onFileClick={onFileClick}
       onSkipMigration={onSkipMigration}
       onUndoMigration={onUndoMigration}
+      onAcknowledgePrompt={onAcknowledgePrompt}
       onViewImplementation={onViewImplementation}
       onViewDocumentation={onViewDocumentation}
+      onViewPrompt={onViewPrompt}
       onStopMigration={onStopMigration}
     ></MigrateUI>
   );

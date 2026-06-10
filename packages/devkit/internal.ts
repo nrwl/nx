@@ -59,7 +59,10 @@ export {
   getDeclaredPackageVersion,
   getInstalledPackageVersion,
 } from './src/utils/installed-version';
-export { assertSupportedPackageVersion } from './src/utils/version-floor';
+export {
+  assertSupportedInstalledPackageVersion,
+  assertSupportedPackageVersion,
+} from './src/utils/version-floor';
 export {
   createAsyncIterable,
   combineAsyncIterables,

@@ -2,9 +2,10 @@ import {
   type Tree,
   type PluginConfiguration,
   readNxJson,
-  CreateNodesV2,
+  CreateNodes,
 } from 'nx/src/devkit-exports';
 import { findMatchingConfigFiles } from 'nx/src/devkit-internals';
+import { minimatch } from 'minimatch';
 export async function findPluginForConfigFile(
   tree: Tree,
   pluginName: string,
@@ -30,17 +31,22 @@ export async function findPluginForConfigFile(
 
     if (plugin.include || plugin.exclude) {
       const resolvedPlugin: {
-        createNodes?: CreateNodesV2;
-        createNodesV2?: CreateNodesV2;
+        createNodes?: CreateNodes;
+        createNodesV2?: CreateNodes;
       } = await import(pluginName);
       const pluginGlob =
-        resolvedPlugin.createNodesV2?.[0] ?? resolvedPlugin.createNodes?.[0];
-      const matchingConfigFile = findMatchingConfigFiles(
-        [pathToConfigFile],
-        pluginGlob,
-        plugin.include,
-        plugin.exclude
-      );
+        resolvedPlugin.createNodes?.[0] ?? resolvedPlugin.createNodesV2?.[0];
+      // The file must be one this plugin actually processes (its path matches
+      // the plugin's createNodes glob) before the registration's include/exclude
+      // filters are applied.
+      const matchingConfigFile =
+        !pluginGlob || minimatch(pathToConfigFile, pluginGlob, { dot: true })
+          ? findMatchingConfigFiles(
+              [pathToConfigFile],
+              plugin.include,
+              plugin.exclude
+            )
+          : [];
       if (matchingConfigFile.length) {
         return plugin;
       }

@@ -68,33 +68,79 @@ export function logAgenticSuccessOutcome(
  * landed multiple migrations' contributions.
  */
 export type MigrationOutcomeKind = 'applied' | 'no-changes' | 'deferred';
-export interface MigrationOutcome {
-  migration: { package: string; name: string };
-  outcome: MigrationOutcomeKind;
-  // Sha of this migration's own commit. `null` covers three states:
-  //   - `commitFailed: true`     → commit attempted, errored; diff
-  //                                 retained in the working tree until
-  //                                 absorbed (or surfaced at end of run).
-  //   - `committedAsPartOf` set  → own commit errored, but a later
-  //                                 migration's commit absorbed the diff
-  //                                 (own sha lost, the diff DID clear).
-  //   - neither flag set         → no commit attempted (`--no-create-commits`
-  //                                 or no-op step), OR own commit landed
-  //                                 but `git rev-parse HEAD` raced — the
-  //                                 recap disambiguates by checking
-  //                                 `committedAsPartOf` first.
-  committedSha: string | null;
-  // Set when a commit was attempted and errored (signing, hook rejection,
-  // lock, etc.). Distinct from a plain `committedSha: null`, which also
-  // covers `--no-create-commits` and no-op steps. Stays `true` after
-  // `committedAsPartOf` is set so the audit view "own commit failed" stays
-  // queryable; retained-WT filtering must combine `commitFailed === true`
-  // with `!committedAsPartOf`.
-  commitFailed?: boolean;
-  // Set when this migration's diff was absorbed into a later migration's
-  // commit via `git add -A`. `sha: null` means that absorbing commit itself
-  // hit a HEAD-resolve race; the recap renders an anchor without a sha.
-  committedAsPartOf?: { name: string; sha: string | null };
+
+/**
+ * The state of a migration's commit attempt. Tagged union so consumers don't
+ * have to re-derive legal combinations from nullable fields.
+ *
+ * - `none`     — no commit was attempted (`--no-create-commits` or no diff to
+ *                commit).
+ * - `landed`   — a commit was actually created. `sha: null` only when
+ *                `git rev-parse HEAD` failed transiently right after the
+ *                commit landed; by contract the diff did clear.
+ * - `failed`   — commit was attempted and errored (signing, hook rejection,
+ *                lock, install error mid-attempt, etc.). The diff stays in
+ *                the working tree until a later migration's commit absorbs
+ *                it (then transitions to `absorbed`) or until the run ends
+ *                (then surfaces as retained state).
+ * - `absorbed` — own commit failed but a later migration's commit absorbed
+ *                this diff via `git add -A`. `into.sha: null` means that
+ *                absorbing commit itself hit a HEAD-resolve race; the recap
+ *                renders an anchor without a sha.
+ */
+export type CommitState =
+  | { kind: 'none' }
+  | { kind: 'landed'; sha: string | null }
+  | { kind: 'failed' }
+  | { kind: 'absorbed'; into: { name: string; sha: string | null } };
+
+/**
+ * Per-migration record produced by the executor loop. `status: 'completed'`
+ * carries the kind (applied / no-changes / deferred); `status: 'aborted'`
+ * means the migration threw before completing — the executor's catch block
+ * records it so the recap can list it under retained-state alongside any
+ * other migrations whose commits never landed.
+ */
+export type MigrationOutcome =
+  | {
+      migration: { package: string; name: string };
+      status: 'completed';
+      kind: MigrationOutcomeKind;
+      commit: CommitState;
+    }
+  | {
+      migration: { package: string; name: string };
+      status: 'aborted';
+      commit: CommitState;
+    };
+
+/**
+ * Counts the migrations whose own commit actually landed — including the
+ * HEAD-resolve-race case (`commit: { kind: 'landed', sha: null }`). Used by
+ * the end-of-run "<K> commits created" tally and by the success-path
+ * accounting in `executeMigrations`. Counts landed-commit *records* rather
+ * than distinct shas; absorbed predecessors (`kind: 'absorbed'`) are not
+ * counted because the absorbing commit's record already contributes one.
+ */
+export function countLandedCommits(
+  outcomes: ReadonlyArray<MigrationOutcome>
+): number {
+  return outcomes.filter((o) => o.commit.kind === 'landed').length;
+}
+
+/**
+ * Migrations whose own commit attempt failed and whose diff was never
+ * absorbed by a later commit. Surfaces what the user has to commit or
+ * revert after the run. Filters on `commit.kind === 'failed'` exactly —
+ * `'absorbed'` means the diff cleared into a later commit, `'none'` means
+ * no commit was attempted (intentional `--no-create-commits` or no-op).
+ */
+export function retainedMigrations(
+  outcomes: ReadonlyArray<MigrationOutcome>
+): Array<{ package: string; name: string }> {
+  return outcomes
+    .filter((o) => o.commit.kind === 'failed')
+    .map((o) => ({ package: o.migration.package, name: o.migration.name }));
 }
 
 /**
@@ -114,11 +160,6 @@ export function logFailureRecap(opts: {
   migrationIndex: number;
   totalMigrations: number;
   outcomes: ReadonlyArray<MigrationOutcome>;
-  // Migrations whose commits failed and whose diffs are still in the
-  // working tree. Includes the in-flight migration if its install threw
-  // before an outcome record could be pushed. Listed in the retained
-  // section alongside outcome-derived entries; deduped by `package:name`.
-  pendingMigrations?: ReadonlyArray<{ package: string; name: string }>;
   migrationEmittedNextSteps: string[];
   insideAgent: boolean;
 }): void {
@@ -126,26 +167,33 @@ export function logFailureRecap(opts: {
     migrationIndex,
     totalMigrations,
     outcomes,
-    pendingMigrations = [],
     migrationEmittedNextSteps,
     insideAgent,
   } = opts;
   const appliedCount = outcomes.filter(
-    (o) => o.outcome === 'applied' || o.outcome === 'no-changes'
+    (o) =>
+      o.status === 'completed' &&
+      (o.kind === 'applied' || o.kind === 'no-changes')
   ).length;
-  const deferredCount = outcomes.filter((o) => o.outcome === 'deferred').length;
+  const deferredCount = outcomes.filter(
+    (o) => o.status === 'completed' && o.kind === 'deferred'
+  ).length;
   const notAttempted = totalMigrations - migrationIndex;
-  // Walk back to the most recent record whose work is anchored to a sha —
-  // either its own commit, or a later commit that absorbed it. Both
-  // `applied` AND `deferred` outcomes can carry a successful commit
-  // (hybrid-without-agentic produces `deferred` with a sha from its
-  // deterministic half). Skipped and uncommitted records don't anchor.
-  let lastApplied: MigrationOutcome | undefined;
+  // Walk back to the most recent completed record whose work is anchored to
+  // a sha — either its own commit (`landed`), or a later commit that
+  // absorbed it (`absorbed`). Both `applied` AND `deferred` outcomes can
+  // carry a successful commit (hybrid-without-agentic produces `deferred`
+  // with a sha from its deterministic half). Skipped and uncommitted
+  // records don't anchor.
+  let lastApplied:
+    | Extract<MigrationOutcome, { status: 'completed' }>
+    | undefined;
   for (let i = outcomes.length - 1; i >= 0; i--) {
     const o = outcomes[i];
+    if (o.status !== 'completed') continue;
     if (
-      (o.outcome === 'applied' || o.outcome === 'deferred') &&
-      (o.committedSha || o.committedAsPartOf)
+      (o.kind === 'applied' || o.kind === 'deferred') &&
+      (o.commit.kind === 'landed' || o.commit.kind === 'absorbed')
     ) {
       lastApplied = o;
       break;
@@ -153,33 +201,17 @@ export function logFailureRecap(opts: {
   }
   // Migrations whose own commit attempt errored AND whose diff was never
   // absorbed by a later commit. Surfaces what the user has to inspect or
-  // clean up in the working tree.
-  //
-  // Two sources, merged and deduped:
-  //   - Outcomes with `commitFailed: true && !committedAsPartOf`.
-  //   - `pendingMigrations` entries — covers the in-flight migration whose
-  //     install threw before its outcome could be pushed, AND any prior
-  //     failed-commit migration that's still pending at recap time.
-  //
-  // Filtering on `commitFailed` (rather than on missing sha) avoids
-  // mislabeling intentional-no-commit cases: `--no-create-commits` runs
-  // and no-op steps both yield `committedSha: null` without a failure.
-  const seenKeys = new Set<string>();
+  // clean up in the working tree. Single iteration over `outcomes` —
+  // `outcomes` is the sole source of truth (including the in-flight
+  // migration recorded by the executor's catch block), so no dedupe is
+  // needed. `kind: 'failed'` excludes `kind: 'none'` (intentional no-commit:
+  // `--no-create-commits` runs and no-op steps).
   const uncommittedAtFailure: Array<{
     migration: { package: string; name: string };
   }> = [];
   for (const o of outcomes) {
-    if (o.commitFailed !== true || o.committedAsPartOf) continue;
-    const key = `${o.migration.package}:${o.migration.name}`;
-    if (seenKeys.has(key)) continue;
-    seenKeys.add(key);
+    if (o.commit.kind !== 'failed') continue;
     uncommittedAtFailure.push({ migration: o.migration });
-  }
-  for (const p of pendingMigrations) {
-    const key = `${p.package}:${p.name}`;
-    if (seenKeys.has(key)) continue;
-    seenKeys.add(key);
-    uncommittedAtFailure.push({ migration: p });
   }
 
   logger.info('');
@@ -190,7 +222,13 @@ export function logFailureRecap(opts: {
     logger.info(`0 migrations completed. ${notAttempted} not attempted.`);
   } else {
     const anchorSha =
-      lastApplied?.committedSha ?? lastApplied?.committedAsPartOf?.sha;
+      lastApplied === undefined
+        ? undefined
+        : lastApplied.commit.kind === 'landed'
+          ? lastApplied.commit.sha
+          : lastApplied.commit.kind === 'absorbed'
+            ? lastApplied.commit.into.sha
+            : undefined;
     // When the anchoring commit hit a HEAD-resolve race, the sha is null;
     // render the migration name alone (without "→ null") so the recap
     // never displays the literal word "null" to the user.

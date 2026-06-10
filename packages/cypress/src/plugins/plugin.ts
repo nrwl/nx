@@ -5,10 +5,10 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  type CreateNodesContextV2,
+  type CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesResultV2,
-  type CreateNodesV2,
+  CreateNodesResultArray,
+  type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -46,7 +46,7 @@ const defaultPatterns = {
   },
 };
 
-export const createNodes: CreateNodesV2<CypressPluginOptions> = [
+export const createNodes: CreateNodes<CypressPluginOptions> = [
   cypressConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
@@ -73,7 +73,7 @@ export const createNodes: CreateNodesV2<CypressPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -115,7 +115,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   options: CypressPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pluginCache: PluginCache<CypressTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   projectHash: string
@@ -319,7 +319,7 @@ async function buildCypressTargets(
   configFilePath: string,
   projectRoot: string,
   options: CypressPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<CypressTargets> {
   const cypressConfig = await loadConfigFile(
@@ -769,7 +769,7 @@ interface CypressEntry {
 
 async function filterCypressConfigs(
   configFiles: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: CypressEntry[];
   preErrors: Array<[string, Error]>;

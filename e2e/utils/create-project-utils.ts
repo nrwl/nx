@@ -19,7 +19,7 @@ import {
 } from './get-env-info';
 
 import { output, readJsonFile } from '@nx/devkit';
-import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/src/utils';
+import { angularDevkitVersion as defaultAngularCliVersion } from '@nx/angular/internal';
 import { dump } from '@zkochan/js-yaml';
 import { execSync, ExecSyncOptions } from 'node:child_process';
 import { readFileSync } from 'node:fs';
@@ -58,6 +58,7 @@ const nxPackages = [
   `@nx/rollup`,
   `@nx/react`,
   `@nx/remix`,
+  `@nx/rsbuild`,
   `@nx/rspack`,
   `@nx/storybook`,
   `@nx/vue`,
@@ -68,6 +69,7 @@ const nxPackages = [
   `@nx/react-native`,
   `@nx/expo`,
   '@nx/dotnet',
+  `@nx/module-federation`,
   `@nx/workspace`,
 ] as const;
 

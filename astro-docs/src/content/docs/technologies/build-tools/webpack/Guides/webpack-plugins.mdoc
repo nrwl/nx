@@ -383,6 +383,12 @@ module.exports = {
 
 ## Nx-enhanced plugins
 
+{% aside type="caution" title="The compose helpers are deprecated" %}
+The `composePlugins`, `withNx`, `withWeb`, and `withReact` helpers below are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor. They still work in v23, but using them logs a deprecation warning.
+
+Prefer a standard webpack config built around [`NxAppWebpackPlugin`](#nxappwebpackplugin) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
+{% /aside %}
+
 The Nx-enhanced plugins work with `@nx/webpack:webpack` executor and receive the target options and context from the
 executor. These are used when using [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx).
 

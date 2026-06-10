@@ -10,6 +10,8 @@ import {
   nuxtDevtoolsV3Version,
   nuxtKitV3Version,
   nuxtKitVersion,
+  nuxtSchemaV3Version,
+  nuxtSchemaVersion,
   nuxtUiTemplatesVersion,
   nuxtV3Version,
   nuxtVersion,
@@ -18,6 +20,7 @@ import {
 export type NuxtDependenciesVersions = {
   nuxt: string;
   nuxtKit: string;
+  nuxtSchema: string;
   h3: string;
   nuxtDevtools: string;
   nuxtUiTemplates: string;
@@ -30,6 +33,7 @@ export async function getNuxtDependenciesVersionsToInstall(
     return {
       nuxt: nuxtV3Version,
       nuxtKit: nuxtKitV3Version,
+      nuxtSchema: nuxtSchemaV3Version,
       h3: h3Version,
       nuxtDevtools: nuxtDevtoolsV3Version,
       nuxtUiTemplates: nuxtUiTemplatesVersion,
@@ -39,6 +43,7 @@ export async function getNuxtDependenciesVersionsToInstall(
     return {
       nuxt: nuxtVersion,
       nuxtKit: nuxtKitVersion,
+      nuxtSchema: nuxtSchemaVersion,
       h3: h3Version,
       nuxtDevtools: nuxtDevtoolsVersion,
       nuxtUiTemplates: nuxtUiTemplatesVersion,

@@ -1,6 +1,6 @@
-import { CreateNodesContextV2, workspaceRoot } from '@nx/devkit';
+import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { createNodesV2, getProjectNameFromPath } from './plugin';
+import { createNodes, getProjectNameFromPath } from './plugin';
 import * as gitUtils from 'nx/src/utils/git-utils';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
@@ -22,8 +22,8 @@ expect.addSnapshotSerializer({
 });
 
 describe('@nx/docker', () => {
-  let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 

@@ -732,6 +732,44 @@ export async function getFirstGitCommit() {
   }
 }
 
+/**
+ * Returns the parent of the first commit that touched the given project root,
+ * so that `from..HEAD` ranges include the project's creation commit.
+ * Falls back to getFirstGitCommit() if the project history cannot be determined.
+ */
+export async function getFirstProjectCommit(
+  projectRoot: string
+): Promise<string> {
+  try {
+    const result = (
+      await execCommand('git', [
+        'rev-list',
+        '--reverse',
+        'HEAD',
+        '--first-parent',
+        '--',
+        projectRoot,
+      ])
+    ).trim();
+    const firstCommit = result.split('\n')[0];
+
+    if (firstCommit) {
+      // Return the parent so the creation commit is included in from..to ranges
+      try {
+        return (
+          await execCommand('git', ['rev-parse', `${firstCommit}~1`])
+        ).trim();
+      } catch {
+        // No parent (project was added in the repo's very first commit)
+        return firstCommit;
+      }
+    }
+  } catch {
+    // fall through to fallback
+  }
+  return getFirstGitCommit();
+}
+
 async function getGitRoot() {
   try {
     return (await execCommand('git', ['rev-parse', '--show-toplevel'])).trim();

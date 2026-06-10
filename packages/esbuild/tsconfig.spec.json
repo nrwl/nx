@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/esbuild/spec",
+    "outDir": "out-tsc/spec",
     "module": "commonjs",
     "types": ["jest", "node", "@jest/expect"],
     "composite": true

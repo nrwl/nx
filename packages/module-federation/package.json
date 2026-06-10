@@ -3,6 +3,12 @@
   "description": "The Nx Plugin for Module Federation contains executors and utilities that support building applications using Module Federation.",
   "version": "0.0.1",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/nrwl/nx.git",
@@ -21,12 +27,44 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "angular": [
+        "dist/angular.d.ts"
+      ],
+      "rspack": [
+        "dist/rspack.d.ts"
+      ],
+      "webpack": [
+        "dist/webpack.d.ts"
+      ],
+      "url-helpers": [
+        "dist/url-helpers.d.ts"
+      ],
+      "angular.js": [
+        "dist/angular.d.ts"
+      ],
+      "rspack.js": [
+        "dist/rspack.d.ts"
+      ],
+      "webpack.js": [
+        "dist/webpack.d.ts"
+      ],
+      "url-helpers.js": [
+        "dist/url-helpers.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./package": "./package.json",
@@ -35,71 +73,57 @@
     "./executors": "./executors.json",
     "./migrations": "./migrations.json",
     "./angular": {
-      "types": "./angular.d.ts",
-      "default": "./angular.js"
+      "@nx/nx-source": "./angular.ts",
+      "types": "./dist/angular.d.ts",
+      "default": "./dist/angular.js"
     },
     "./angular.js": {
-      "types": "./angular.d.ts",
-      "default": "./angular.js"
+      "@nx/nx-source": "./angular.ts",
+      "types": "./dist/angular.d.ts",
+      "default": "./dist/angular.js"
     },
     "./rspack": {
-      "types": "./rspack.d.ts",
-      "default": "./rspack.js"
+      "@nx/nx-source": "./rspack.ts",
+      "types": "./dist/rspack.d.ts",
+      "default": "./dist/rspack.js"
     },
     "./rspack.js": {
-      "types": "./rspack.d.ts",
-      "default": "./rspack.js"
+      "@nx/nx-source": "./rspack.ts",
+      "types": "./dist/rspack.d.ts",
+      "default": "./dist/rspack.js"
     },
     "./webpack": {
-      "types": "./webpack.d.ts",
-      "default": "./webpack.js"
+      "@nx/nx-source": "./webpack.ts",
+      "types": "./dist/webpack.d.ts",
+      "default": "./dist/webpack.js"
     },
     "./webpack.js": {
-      "types": "./webpack.d.ts",
-      "default": "./webpack.js"
+      "@nx/nx-source": "./webpack.ts",
+      "types": "./dist/webpack.d.ts",
+      "default": "./dist/webpack.js"
     },
     "./url-helpers": {
-      "types": "./url-helpers.d.ts",
-      "default": "./url-helpers.js"
+      "@nx/nx-source": "./url-helpers.ts",
+      "types": "./dist/url-helpers.d.ts",
+      "default": "./dist/url-helpers.js"
     },
     "./url-helpers.js": {
-      "types": "./url-helpers.d.ts",
-      "default": "./url-helpers.js"
+      "@nx/nx-source": "./url-helpers.ts",
+      "types": "./dist/url-helpers.d.ts",
+      "default": "./dist/url-helpers.js"
     },
-    "./src/utils": {
-      "types": "./src/utils/index.d.ts",
-      "default": "./src/utils/index.js"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
     },
-    "./src/utils/models": {
-      "types": "./src/utils/models/index.d.ts",
-      "default": "./src/utils/models/index.js"
-    },
-    "./src/executors/utils": {
-      "types": "./src/executors/utils/index.d.ts",
-      "default": "./src/executors/utils/index.js"
-    },
-    "./src/plugins/models": {
-      "types": "./src/plugins/models/index.d.ts",
-      "default": "./src/plugins/models/index.js"
-    },
-    "./src/plugins/utils": {
-      "types": "./src/plugins/utils/index.d.ts",
-      "default": "./src/plugins/utils/index.js"
-    },
-    "./src/*": {
-      "types": "./src/*.d.ts",
-      "default": "./src/*.js"
-    },
-    "./src/*.js": {
-      "types": "./src/*.d.ts",
-      "default": "./src/*.js"
+    "./runtime-library-control-plugin": {
+      "@nx/nx-source": "./src/utils/plugins/runtime-library-control.plugin.ts",
+      "default": "./dist/src/utils/plugins/runtime-library-control.plugin.js"
     }
   },
   "executors": "./executors.json",
   "dependencies": {
-    "@module-federation/enhanced": "catalog:",
-    "@module-federation/node": "^2.7.21",
-    "@module-federation/sdk": "^2.1.0",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
     "@nx/web": "workspace:*",
@@ -110,11 +134,24 @@
     "tslib": "catalog:typescript",
     "webpack": "catalog:"
   },
+  "peerDependencies": {
+    "@module-federation/enhanced": "^2.0.0",
+    "@module-federation/node": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@module-federation/enhanced": {
+      "optional": true
+    },
+    "@module-federation/node": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "nx": "workspace:*"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalUpdates": true
   },
   "publishConfig": {
     "access": "public"

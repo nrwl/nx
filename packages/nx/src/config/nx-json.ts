@@ -3,6 +3,11 @@ import { dirname, join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
+import type { AgentId } from '../command-line/migrate/agentic/cli-args';
+import type {
+  MigrateInclude,
+  MultiMajorMode,
+} from '../command-line/migrate/command-object';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -707,6 +712,64 @@ export interface NxSyncConfiguration {
   disabledTaskSyncGenerators?: string[];
 }
 
+export interface NxMigrateConfiguration {
+  /**
+   * Whether to automatically create a git commit after each migration runs.
+   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   */
+  createCommits?: boolean;
+
+  /**
+   * Commit message prefix applied to each migration commit when commits are
+   * enabled (via `createCommits` or `--create-commits`). Equivalent to the
+   * `--commit-prefix` flag. Defaults to `"chore: [nx migration] "`.
+   */
+  commitPrefix?: string;
+
+  /**
+   * Restricts which packages to migrate. Only applies to target packages that
+   * support optional updates. Equivalent to the `--include` flag.
+   * - `required`: the target package and the related packages it ships with.
+   * - `optional`: the optional dependency updates those packages recommend.
+   * - `all`: everything (default).
+   */
+  include?: MigrateInclude;
+
+  /**
+   * How to handle a migration that crosses more than one major version.
+   * Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE`
+   * environment variable takes precedence over this setting.
+   * - `direct`: migrate straight to the requested target.
+   * - `gradual`: migrate to the smallest recommended step.
+   */
+  multiMajorMode?: MultiMajorMode;
+
+  /**
+   * Whether `nx migrate` resolves package versions via the npm registry
+   * (faster) instead of a package-manager install. The
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
+   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * Defaults to `true`.
+   */
+  useRegistryResolution?: boolean;
+
+  /**
+   * Default for the agentic flow used by `nx migrate --run-migrations`.
+   * Equivalent to the `--agentic` flag.
+   * - `false`: never use the agentic flow.
+   * - `true`: use the agentic flow and resolve the installed agent.
+   * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`): always use that agent.
+   */
+  agentic?: boolean | AgentId;
+
+  /**
+   * Whether to run agent-driven validation after generator-only migrations when
+   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
+   * to `true` when the agentic flow is enabled.
+   */
+  validate?: boolean;
+}
+
 /**
  * Nx.json configuration
  *
@@ -879,6 +942,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Configuration for the `nx migrate` command.
+   */
+  migrate?: NxMigrateConfiguration;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.

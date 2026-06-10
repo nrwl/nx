@@ -30,6 +30,10 @@ export default [
           ],
           ignoredDependencies: [
             '@angular/core',
+            // Loaded via a dynamic runtime import in load-compiler-cli.ts (its
+            // nodenext-incompatible types are shimmed locally), so static
+            // analysis can't see the usage.
+            '@angular/compiler-cli',
             'jsonc-eslint-parser',
             'semver',
             'vitest',

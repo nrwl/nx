@@ -3,10 +3,10 @@ import {
   PluginCache,
 } from '@nx/devkit/internal';
 import {
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   TargetConfiguration,
@@ -62,7 +62,7 @@ const internalCreateNodesV2 = async (
   ESLint: typeof ESLintType,
   configFilePath: string,
   options: EslintPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   projectRootsByEslintRoots: Map<string, string[]>,
   lintableFilesPerProjectRoot: Map<string, string[]>,
   tsconfigChainsByProjectRoot: Map<string, string[]>,
@@ -155,7 +155,7 @@ const internalCreateNodesV2 = async (
   };
 };
 
-export const createNodes: CreateNodesV2<EslintPluginOptions> = [
+export const createNodes: CreateNodes<EslintPluginOptions> = [
   ESLINT_CONFIG_GLOB_V2,
   async (configFiles, options, context) => {
     options = normalizeOptions(options);
@@ -363,7 +363,7 @@ function collectTsconfigChainsByProjectRoot(
 async function collectLintableFilesByProjectRoot(
   projectRoots: string[],
   options: EslintPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<Map<string, string[]>> {
   const lintableFilesPerProjectRoot = new Map<string, string[]>();
 
@@ -409,7 +409,7 @@ function getProjectUsingESLintConfig(
   projectRoot: string,
   eslintVersion: string,
   options: EslintPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigChainOutsideProjectRoot: string[]
 ): CreateNodesResult['projects'][string] | null {

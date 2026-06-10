@@ -1,4 +1,5 @@
 import { determineProjectNameAndRootOptions } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   GeneratorCallback,
   Tree,
@@ -15,8 +16,11 @@ import { Schema } from './schema';
 import { remoteGenerator } from '../remote/remote';
 import { addPathToExposes, checkRemoteExists } from './lib/utils';
 import { addTsConfigPath, getRootTsConfigPathInTree } from '@nx/js';
+import { warnReactFederateModuleGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 
 export async function federateModuleGenerator(tree: Tree, schema: Schema) {
+  assertSupportedReactVersion(tree);
+  warnReactFederateModuleGeneratorDeprecation();
   // Check if the file exists
   if (!tree.exists(schema.path)) {
     throw new Error(stripIndents`The "path" provided  does not exist. Please verify the path is correct and pointing to a file that exists in the workspace.

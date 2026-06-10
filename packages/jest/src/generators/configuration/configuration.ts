@@ -19,6 +19,7 @@ import {
   getPresetExt,
 } from '../../utils/config/config-file';
 import { jestInitGenerator } from '../init/init';
+import { assertSupportedJestVersion } from '../../utils/assert-supported-jest-version';
 import { warnJestExecutorGenerating } from '../../utils/deprecation';
 import { checkForTestTarget } from './lib/check-for-test-target';
 import { createFiles } from './lib/create-files';
@@ -33,7 +34,6 @@ const schemaDefaults = {
   setupFile: 'none',
   babelJest: false,
   supportTsx: false,
-  skipSetupFile: false,
   skipSerializers: false,
   testEnvironment: 'jsdom',
 } as const;
@@ -68,11 +68,6 @@ function normalizeOptions(
     options.skipSerializers = true;
   }
 
-  if (options.skipSetupFile) {
-    // setupFile is always 'none'
-    options.setupFile = schemaDefaults.setupFile;
-  }
-
   const project = readProjectConfiguration(tree, options.project);
 
   return {
@@ -92,6 +87,8 @@ export async function configurationGeneratorInternal(
   tree: Tree,
   schema: JestProjectSchema
 ): Promise<GeneratorCallback> {
+  assertSupportedJestVersion(tree);
+
   const options = normalizeOptions(tree, schema);
 
   // we'll only add the vscode recommended extension if the jest preset does

@@ -20,7 +20,19 @@ import { join } from 'path';
 import { copyFileSync } from 'fs';
 
 describe('Web Components Applications', () => {
-  beforeAll(() => newProject({ packages: ['@nx/web'] }));
+  beforeAll(() =>
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/webpack',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/cypress',
+        '@nx/playwright',
+      ],
+    })
+  );
   afterAll(() => cleanupProject());
 
   it('should be able to generate a web app', async () => {
@@ -243,7 +255,15 @@ describe('Web Components Applications', () => {
 
 describe('CLI - Environment Variables', () => {
   it('should automatically load workspace and per-project environment variables', async () => {
-    newProject();
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
+    });
 
     const appName = uniq('app');
     //test if the Nx CLI loads root .env vars
@@ -333,7 +353,7 @@ describe('CLI - Environment Variables', () => {
       'optimization',
       false
     );
-    runCLI(`run-many --target build --node-env=test`);
+    runCLI(`run-many --target build --config-node-env=test`);
     expect(readFile(`dist/apps/${appName}/main.js`)).toContain(
       'const envVars = ["test", "ws-base", "ws-env-local", "ws-local-env", "app-base", "app-env-local", "app-local-env", "shared-in-app-env-local"];'
     );
@@ -344,7 +364,17 @@ describe('CLI - Environment Variables', () => {
 });
 
 describe('index.html interpolation', () => {
-  beforeAll(() => newProject());
+  beforeAll(() =>
+    newProject({
+      packages: [
+        '@nx/web',
+        '@nx/webpack',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
+    })
+  );
   afterAll(() => cleanupProject());
 
   test('should interpolate environment variables', async () => {

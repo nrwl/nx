@@ -71,7 +71,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       installTask = addDependenciesToPackageJson(
         host,
         extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies
+        extraEslintDependencies.devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

@@ -5,6 +5,23 @@ import {
 import type { Tree } from 'nx/src/generators/tree';
 import { clean, coerce, major } from 'semver';
 import {
+  // v55 versions
+  expoV55Version,
+  expoV55SplashScreenVersion,
+  expoV55StatusBarVersion,
+  expoV55SystemUiVersion,
+  expoV55CliVersion,
+  babelPresetExpoV55Version,
+  expoV55MetroConfigVersion,
+  expoV55MetroRuntimeVersion,
+  jestExpoV55Version,
+  reactV55Version,
+  reactDomV55Version,
+  typesReactV55Version,
+  reactNativeV55Version,
+  metroV55Version,
+  reactNativeWebV55Version,
+  reactTestRendererV55Version,
   // v54 versions
   expoV54Version,
   expoV54SplashScreenVersion,
@@ -44,8 +61,6 @@ import {
   reactNativeSvgVersion,
   testingLibraryReactNativeVersion,
   babelRuntimeVersion,
-  // Default versions
-  expoVersion,
 } from './versions';
 
 export type ExpoDependenciesVersions = {
@@ -72,44 +87,38 @@ export type ExpoDependenciesVersions = {
   babelRuntime: string;
 };
 
-/**
- * Get the appropriate dependency versions based on the installed Expo version.
- * Returns v53 versions if v53 is detected, otherwise returns v54 (latest).
- */
-export async function getExpoDependenciesVersionsToInstall(
-  tree: Tree
-): Promise<ExpoDependenciesVersions> {
-  const sharedVersions = {
-    reactNativeSvgTransformer: reactNativeSvgTransformerVersion,
-    reactNativeSvg: reactNativeSvgVersion,
-    testingLibraryReactNative: testingLibraryReactNativeVersion,
-    babelRuntime: babelRuntimeVersion,
-  };
+// Version-independent deps shared by every Expo lane.
+const sharedVersions = {
+  reactNativeSvgTransformer: reactNativeSvgTransformerVersion,
+  reactNativeSvg: reactNativeSvgVersion,
+  testingLibraryReactNative: testingLibraryReactNativeVersion,
+  babelRuntime: babelRuntimeVersion,
+};
 
-  if (await isExpoV53(tree)) {
-    return {
-      expo: expoV53Version,
-      expoSplashScreen: expoV53SplashScreenVersion,
-      expoStatusBar: expoV53StatusBarVersion,
-      expoSystemUi: expoV53SystemUiVersion,
-      expoCli: expoV53CliVersion,
-      babelPresetExpo: babelPresetExpoV53Version,
-      expoMetroConfig: expoV53MetroConfigVersion,
-      expoMetroRuntime: expoV53MetroRuntimeVersion,
-      jestExpo: jestExpoV53Version,
-      react: reactV53Version,
-      reactDom: reactDomV53Version,
-      typesReact: typesReactV53Version,
-      reactNative: reactNativeV53Version,
-      metro: metroV53Version,
-      reactNativeWeb: reactNativeWebV53Version,
-      reactTestRenderer: reactTestRendererV53Version,
-      ...sharedVersions,
-    };
-  }
-
-  // Default to v54 (latest)
-  return {
+// Per-major Expo install lanes. 55 is the latest/default; 53 and 54 are kept
+// for existing workspaces. Anything outside this window routes to 55 — the
+// below-floor throw is assertSupportedExpoVersion's job, not the router's.
+const expoVersionsByMajor: Record<53 | 54 | 55, ExpoDependenciesVersions> = {
+  53: {
+    expo: expoV53Version,
+    expoSplashScreen: expoV53SplashScreenVersion,
+    expoStatusBar: expoV53StatusBarVersion,
+    expoSystemUi: expoV53SystemUiVersion,
+    expoCli: expoV53CliVersion,
+    babelPresetExpo: babelPresetExpoV53Version,
+    expoMetroConfig: expoV53MetroConfigVersion,
+    expoMetroRuntime: expoV53MetroRuntimeVersion,
+    jestExpo: jestExpoV53Version,
+    react: reactV53Version,
+    reactDom: reactDomV53Version,
+    typesReact: typesReactV53Version,
+    reactNative: reactNativeV53Version,
+    metro: metroV53Version,
+    reactNativeWeb: reactNativeWebV53Version,
+    reactTestRenderer: reactTestRendererV53Version,
+    ...sharedVersions,
+  },
+  54: {
     expo: expoV54Version,
     expoSplashScreen: expoV54SplashScreenVersion,
     expoStatusBar: expoV54StatusBarVersion,
@@ -127,35 +136,59 @@ export async function getExpoDependenciesVersionsToInstall(
     reactNativeWeb: reactNativeWebV54Version,
     reactTestRenderer: reactTestRendererV54Version,
     ...sharedVersions,
-  };
+  },
+  55: {
+    expo: expoV55Version,
+    expoSplashScreen: expoV55SplashScreenVersion,
+    expoStatusBar: expoV55StatusBarVersion,
+    expoSystemUi: expoV55SystemUiVersion,
+    expoCli: expoV55CliVersion,
+    babelPresetExpo: babelPresetExpoV55Version,
+    expoMetroConfig: expoV55MetroConfigVersion,
+    expoMetroRuntime: expoV55MetroRuntimeVersion,
+    jestExpo: jestExpoV55Version,
+    react: reactV55Version,
+    reactDom: reactDomV55Version,
+    typesReact: typesReactV55Version,
+    reactNative: reactNativeV55Version,
+    metro: metroV55Version,
+    reactNativeWeb: reactNativeWebV55Version,
+    reactTestRenderer: reactTestRendererV55Version,
+    ...sharedVersions,
+  },
+};
+
+/**
+ * Get the appropriate dependency versions based on the installed Expo version.
+ * Returns v53 or v54 versions when those are detected, otherwise v55 (latest).
+ */
+export async function getExpoDependenciesVersionsToInstall(
+  tree: Tree
+): Promise<ExpoDependenciesVersions> {
+  const installedMajor = await getInstalledExpoMajor(tree);
+  if (installedMajor === 53 || installedMajor === 54) {
+    return expoVersionsByMajor[installedMajor];
+  }
+  return expoVersionsByMajor[55];
 }
 
 /**
- * Check if the workspace is using Expo v53.
+ * Resolve the installed Expo major version. Prefers the resolved version from
+ * the project graph, falling back to the declared package.json version.
+ * Returns null when Expo isn't installed.
+ */
+async function getInstalledExpoMajor(tree: Tree): Promise<number | null> {
+  const installedExpoVersion =
+    (await getInstalledExpoVersionFromGraph()) ?? getInstalledExpoVersion(tree);
+  return installedExpoVersion ? major(installedExpoVersion) : null;
+}
+
+/**
+ * Check if the workspace is using Expo v53 — the only SDK that still needs the
+ * legacy Jest resolver. SDK 54+ use the winter-runtime mock instead.
  */
 export async function isExpoV53(tree: Tree): Promise<boolean> {
-  let installedExpoVersion = await getInstalledExpoVersionFromGraph();
-  if (!installedExpoVersion) {
-    installedExpoVersion = getInstalledExpoVersion(tree);
-  }
-  if (!installedExpoVersion) {
-    return false; // No Expo installed, default to latest
-  }
-  return major(installedExpoVersion) === 53;
-}
-
-/**
- * Check if the workspace is using Expo v54.
- */
-export async function isExpoV54(tree: Tree): Promise<boolean> {
-  let installedExpoVersion = await getInstalledExpoVersionFromGraph();
-  if (!installedExpoVersion) {
-    installedExpoVersion = getInstalledExpoVersion(tree);
-  }
-  if (!installedExpoVersion) {
-    return true; // No Expo installed, default to latest (v54)
-  }
-  return major(installedExpoVersion) === 54;
+  return (await getInstalledExpoMajor(tree)) === 53;
 }
 
 /**
@@ -178,22 +211,6 @@ export function getInstalledExpoVersion(tree: Tree): string | null {
   return (
     clean(installedExpoVersion) ?? coerce(installedExpoVersion)?.version ?? null
   );
-}
-
-/**
- * Get the installed Expo major version.
- */
-export function getInstalledExpoMajorVersion(tree: Tree): 53 | 54 | undefined {
-  const installedExpoVersion = getInstalledExpoVersion(tree);
-  if (!installedExpoVersion) {
-    return undefined;
-  }
-
-  const installedMajor = major(installedExpoVersion);
-  if (installedMajor !== 53 && installedMajor !== 54) {
-    return undefined;
-  }
-  return installedMajor as 53 | 54;
 }
 
 /**

@@ -112,9 +112,10 @@ function withNx(
   context: WithNxContext = getWithNxContext()
 ): NextConfigFn {
   return async (phase: string) => {
-    const { PHASE_PRODUCTION_SERVER, PHASE_DEVELOPMENT_SERVER } = await import(
-      'next/constants'
-    );
+    const {
+      PHASE_PRODUCTION_SERVER,
+      PHASE_DEVELOPMENT_SERVER,
+    }: typeof import('next/constants') = require('next/constants');
     // Three scenarios where we want to skip graph creation:
     // 1. Running production server means the build is already done so we just need to start the Next.js server.
     // 2. During graph creation (i.e. create nodes), we won't have a graph to read, and it is not needed anyway since it's a build-time concern.
@@ -138,6 +139,16 @@ function withNx(
         offsetFromRoot,
         workspaceRoot,
       } = require('@nx/devkit');
+
+      // Resolved from the workspace (not bundled) so the deprecation warning is
+      // not inlined into production builds. Reached only on the active Nx-task
+      // path; the production-server phase returns above.
+      const { warnWithNxDeprecation } = require(
+        require.resolve('@nx/next/src/utils/deprecation', {
+          paths: [workspaceRoot],
+        })
+      ) as typeof import('../src/utils/deprecation');
+      warnWithNxDeprecation();
 
       // Since this is invoked by an Nx task, the graph is already cached.
       const graph: ProjectGraph = readCachedProjectGraph();

@@ -41,12 +41,15 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory 2`] = `
-"import { TSESLint } from '@typescript-eslint/utils';
+"import { RuleTester } from '@typescript-eslint/rule-tester';
+import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './another-rule';
 
-const ruleTester = new TSESLint.RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-});
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+  },
+} as RuleTesterConfig);
 
 ruleTester.run(RULE_NAME, rule, {
   valid: [\`const example = true;\`],
@@ -96,12 +99,15 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nx/eslint:workspace-rule --dir should support creating the rule in a nested directory with multiple levels of nesting 2`] = `
-"import { TSESLint } from '@typescript-eslint/utils';
+"import { RuleTester } from '@typescript-eslint/rule-tester';
+import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './one-more-rule';
 
-const ruleTester = new TSESLint.RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-});
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+  },
+} as RuleTesterConfig);
 
 ruleTester.run(RULE_NAME, rule, {
   valid: [\`const example = true;\`],
@@ -151,12 +157,15 @@ export const rule = ESLintUtils.RuleCreator(() => __filename)({
 `;
 
 exports[`@nx/eslint:workspace-rule should generate the required files 2`] = `
-"import { TSESLint } from '@typescript-eslint/utils';
+"import { RuleTester } from '@typescript-eslint/rule-tester';
+import type { RuleTesterConfig } from '@typescript-eslint/rule-tester';
 import { rule, RULE_NAME } from './my-rule';
 
-const ruleTester = new TSESLint.RuleTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-});
+const ruleTester = new RuleTester({
+  languageOptions: {
+    parser: require('@typescript-eslint/parser'),
+  },
+} as RuleTesterConfig);
 
 ruleTester.run(RULE_NAME, rule, {
   valid: [\`const example = true;\`],

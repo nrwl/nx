@@ -14,7 +14,14 @@ describe('Build React applications and libraries with Rspack', () => {
   let proj: string;
   beforeAll(() => {
     proj = newProject({
-      packages: ['@nx/react'],
+      packages: [
+        '@nx/react',
+        '@nx/rspack',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/eslint',
+        '@nx/playwright',
+      ],
     });
   });
 

@@ -1,4 +1,9 @@
-import { escapeXmlBody, renderKeyMultilineValue } from './shared-rendering';
+import {
+  escapeXmlBody,
+  renderHandoffPathFooter,
+  renderMigrationBlock,
+  renderMigrationDocumentationBlock,
+} from './shared-rendering';
 
 export interface PromptMigrationContext {
   package: string;
@@ -9,6 +14,11 @@ export interface PromptMigrationContext {
   promptPath: string;
   /** Absolute path the agent must write its handoff file to. */
   handoffFileAbsolutePath: string;
+  /**
+   * Path to the migration's documentation file, if any - workspace-relative,
+   * or absolute when it resolves outside the workspace.
+   */
+  documentationPath?: string;
 }
 
 /**
@@ -26,29 +36,14 @@ export function buildPromptMigrationUserPrompt(
 ): string {
   const lines = [
     `Apply one prompt-based migration to this Nx workspace.`,
-    ``,
-    `<migration>`,
-    `package: ${escapeXmlBody(ctx.package)}`,
-    `version: ${escapeXmlBody(ctx.version)}`,
-    `name: ${escapeXmlBody(ctx.name)}`,
-  ];
-
-  if (ctx.description) {
-    lines.push(
-      ...renderKeyMultilineValue('description', escapeXmlBody(ctx.description))
-    );
-  }
-
-  lines.push(
-    `</migration>`,
+    ...renderMigrationBlock(ctx),
+    ...renderMigrationDocumentationBlock(ctx.documentationPath),
     ``,
     `<instructions_file>${escapeXmlBody(ctx.promptPath)}</instructions_file>`,
     ``,
-    `Open the instructions file (path is workspace-relative), follow its instructions step by step, then write your handoff JSON to:`,
-    `<handoff_path>`,
-    escapeXmlBody(ctx.handoffFileAbsolutePath),
-    `</handoff_path>`
-  );
+    `Open the instructions file (path is workspace-relative), follow its instructions step by step, then end the step per the handoff contract. Your handoff path is:`,
+    ...renderHandoffPathFooter(ctx.handoffFileAbsolutePath),
+  ];
 
   return lines.join('\n');
 }

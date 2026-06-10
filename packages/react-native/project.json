@@ -5,9 +5,9 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/react-native/README.md"],
-      "command": "node ./scripts/copy-readme.js react-native",
-      "inputs": ["copyReadme"]
+      "command": "node ./scripts/copy-readme.js react-native packages/react-native/readme-template.md packages/react-native/README.md",
+      "inputs": ["copyReadme"],
+      "outputs": ["{projectRoot}/README.md"]
     }
   },
   "implicitDependencies": ["jest", "vite", "webpack"]
