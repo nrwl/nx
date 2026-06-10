@@ -5,7 +5,7 @@
 
 import { execSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { gte } from 'semver';
 import {
   ProjectGraph,
@@ -76,6 +76,68 @@ const PNPM_LOCK_PATH = join(workspaceRoot, PNPM_LOCK_FILE);
 const BUN_LOCK_PATH = join(workspaceRoot, BUN_LOCK_FILE);
 const BUN_TEXT_LOCK_PATH = join(workspaceRoot, BUN_TEXT_LOCK_FILE);
 
+const LOCK_FILE_TO_PACKAGE_MANAGER: Record<string, PackageManager> = {
+  [PNPM_LOCK_FILE]: 'pnpm',
+  [YARN_LOCK_FILE]: 'yarn',
+  [NPM_LOCK_FILE]: 'npm',
+  [BUN_TEXT_LOCK_FILE]: 'bun',
+  [BUN_LOCK_FILE]: 'bun',
+};
+
+/**
+ * Walks up from the workspace root looking for `fileName` in an ancestor
+ * directory. Used when a nested workspace shares a parent monorepo's install
+ * and therefore has no lockfile of its own.
+ */
+function findAncestorFile(fileName: string): string | null {
+  let dir = dirname(workspaceRoot);
+  while (dir !== dirname(dir)) {
+    const candidate = join(dir, fileName);
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    dir = dirname(dir);
+  }
+  return null;
+}
+
+function resolveLockPath(localPath: string, fileName: string): string {
+  if (existsSync(localPath)) {
+    return localPath;
+  }
+  return findAncestorFile(fileName) ?? localPath;
+}
+
+/**
+ * Finds the nearest ancestor lockfile of any supported package manager and
+ * infers the package manager from it. Returns `null` when the workspace root
+ * has a lockfile of its own (the regular file-driven processing handles it)
+ * or when no ancestor lockfile exists.
+ */
+export function findAncestorLockFile(): {
+  lockFilePath: string;
+  packageManager: PackageManager;
+} | null {
+  for (const fileName of Object.keys(LOCK_FILE_TO_PACKAGE_MANAGER)) {
+    if (existsSync(join(workspaceRoot, fileName))) {
+      return null;
+    }
+  }
+  let dir = dirname(workspaceRoot);
+  while (dir !== dirname(dir)) {
+    for (const [fileName, packageManager] of Object.entries(
+      LOCK_FILE_TO_PACKAGE_MANAGER
+    )) {
+      const candidate = join(dir, fileName);
+      if (existsSync(candidate)) {
+        return { lockFilePath: candidate, packageManager };
+      }
+    }
+    dir = dirname(dir);
+  }
+  return null;
+}
+
 /**
  * Parses lock file and maps dependencies and metadata to {@link LockFileGraph}
  */
@@ -83,7 +145,8 @@ export function getLockFileNodes(
   packageManager: PackageManager,
   contents: string,
   lockFileHash: string,
-  context: CreateNodesContext
+  context: CreateNodesContext,
+  importerPath?: string
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -98,7 +161,8 @@ export function getLockFileNodes(
       getLockFileName(packageManager),
       contents,
       lockFileHash,
-      packageJson
+      packageJson,
+      importerPath
     );
   } catch (e) {
     if (!isPostInstallProcess()) {
@@ -116,7 +180,8 @@ export function getLockFileNodesForName(
   lockFile: string,
   contents: string,
   lockFileHash: string,
-  packageJson?: PackageJson
+  packageJson?: PackageJson,
+  importerPath?: string
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, any>;
@@ -132,7 +197,7 @@ export function getLockFileNodesForName(
     );
   }
   if (lockFile === PNPM_LOCK_FILE || lockFile === PNPM_LOCK_FILE_LEGACY) {
-    return getPnpmLockfileNodes(contents, lockFileHash);
+    return getPnpmLockfileNodes(contents, lockFileHash, importerPath);
   }
   if (lockFile === NPM_LOCK_FILE) {
     return getNpmLockfileNodes(contents, lockFileHash);
@@ -152,7 +217,8 @@ export function getLockFileDependencies(
   contents: string,
   lockFileHash: string,
   context: CreateDependenciesContext,
-  keyMap: Map<string, any>
+  keyMap: Map<string, any>,
+  importerPath?: string
 ): RawProjectGraphDependency[] {
   try {
     if (packageManager === 'yarn') {
@@ -168,7 +234,8 @@ export function getLockFileDependencies(
         contents,
         lockFileHash,
         context,
-        keyMap
+        keyMap,
+        importerPath
       );
     }
     if (packageManager === 'npm') {
@@ -208,13 +275,13 @@ export function getLockFileDependencies(
 
 export function lockFileExists(packageManager: PackageManager): boolean {
   if (packageManager === 'yarn') {
-    return existsSync(YARN_LOCK_PATH);
+    return existsSync(resolveLockPath(YARN_LOCK_PATH, YARN_LOCK_FILE));
   }
   if (packageManager === 'pnpm') {
-    return existsSync(PNPM_LOCK_PATH);
+    return existsSync(resolveLockPath(PNPM_LOCK_PATH, PNPM_LOCK_FILE));
   }
   if (packageManager === 'npm') {
-    return existsSync(NPM_LOCK_PATH);
+    return existsSync(resolveLockPath(NPM_LOCK_PATH, NPM_LOCK_FILE));
   }
   if (packageManager === 'bun') {
     return existsSync(BUN_LOCK_PATH) || existsSync(BUN_TEXT_LOCK_PATH);
@@ -250,13 +317,13 @@ export function getLockFileName(packageManager: PackageManager): string {
 
 export function getLockFilePath(packageManager: PackageManager): string {
   if (packageManager === 'yarn') {
-    return YARN_LOCK_PATH;
+    return resolveLockPath(YARN_LOCK_PATH, YARN_LOCK_FILE);
   }
   if (packageManager === 'pnpm') {
-    return PNPM_LOCK_PATH;
+    return resolveLockPath(PNPM_LOCK_PATH, PNPM_LOCK_FILE);
   }
   if (packageManager === 'npm') {
-    return NPM_LOCK_PATH;
+    return resolveLockPath(NPM_LOCK_PATH, NPM_LOCK_FILE);
   }
   if (packageManager === 'bun') {
     try {

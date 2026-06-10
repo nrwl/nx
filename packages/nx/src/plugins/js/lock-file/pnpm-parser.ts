@@ -58,18 +58,25 @@ function parsePnpmLockFile(
 
 export function getPnpmLockfileNodes(
   lockFileContent: string,
-  lockFileHash: string
+  lockFileHash: string,
+  importerPath?: string
 ): {
   nodes: Record<string, ProjectGraphExternalNode>;
   keyMap: Map<string, Set<ProjectGraphExternalNode>>;
 } {
-  const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  let data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
     console.warn(
       'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
     );
   }
   const isV5 = isV5Syntax(data);
+  if (importerPath) {
+    data = pruneLockfileToImporter(data, importerPath, isV5);
+    if (!data) {
+      return { nodes: {}, keyMap: new Map() };
+    }
+  }
   return getNodes(data, isV5);
 }
 
@@ -77,16 +84,150 @@ export function getPnpmLockfileDependencies(
   lockFileContent: string,
   lockFileHash: string,
   ctx: CreateDependenciesContext,
-  keyMap: Map<string, Set<ProjectGraphExternalNode>>
+  keyMap: Map<string, Set<ProjectGraphExternalNode>>,
+  importerPath?: string
 ) {
-  const data = parsePnpmLockFile(lockFileContent, lockFileHash);
+  let data = parsePnpmLockFile(lockFileContent, lockFileHash);
   if (+data.lockfileVersion.toString() >= 10) {
     console.warn(
       'Nx was tested only with pnpm lockfile version 5-9. If you encounter any issues, please report them and downgrade to older version of pnpm.'
     );
   }
   const isV5 = isV5Syntax(data);
+  if (importerPath) {
+    data = pruneLockfileToImporter(data, importerPath, isV5);
+    if (!data) {
+      return [];
+    }
+  }
   return getDependencies(data, keyMap, isV5, ctx);
+}
+
+/**
+ * Prunes parsed lockfile data to the dependency closure of a single importer.
+ *
+ * Used when external nodes are derived from an ancestor workspace's lockfile
+ * (a nested workspace sharing a parent monorepo's install): only the packages
+ * reachable from `importerPath` are kept, following `link:` entries into
+ * sibling importers, and that importer becomes the root so package naming and
+ * alias handling reflect the nested workspace's perspective.
+ *
+ * Returns `null` when the lockfile has no entry for `importerPath` — an
+ * unrelated ancestor lockfile must not contribute nodes (membership gate).
+ */
+function pruneLockfileToImporter(
+  data: Lockfile,
+  importerPath: string,
+  isV5: boolean
+): Lockfile | null {
+  const seedImporter = data.importers?.[importerPath];
+  if (!seedImporter) {
+    return null;
+  }
+
+  // Index package keys by name -> exact version ref -> key, so dependency
+  // references resolve without re-deriving pnpm's per-version key formats.
+  const keyIndex = new Map<string, Map<string, string>>();
+  for (const key of Object.keys(data.packages ?? {})) {
+    const name = extractNameFromKey(key, isV5);
+    if (!name) {
+      continue;
+    }
+    if (!keyIndex.has(name)) {
+      keyIndex.set(name, new Map());
+    }
+    keyIndex.get(name).set(getVersion(key, name), key);
+  }
+
+  const resolveKey = (depName: string, versionRef: string): string | null => {
+    let ref = versionRef.startsWith('/') ? versionRef.slice(1) : versionRef;
+    if (ref.startsWith('npm:')) {
+      // alias: npm:actual-name@version
+      const aliased = ref.slice(4);
+      const sepIndex = aliased.lastIndexOf('@');
+      if (sepIndex > 0) {
+        depName = aliased.slice(0, sepIndex);
+        ref = aliased.slice(sepIndex + 1);
+      }
+    }
+    const direct = keyIndex.get(depName)?.get(ref);
+    if (direct) {
+      return direct;
+    }
+    // The ref may itself be a full key (e.g. alias refs in older formats) or
+    // a tarball/url spec where the whole ref is the key.
+    if (data.packages?.[ref]) {
+      return ref;
+    }
+    const refName = extractNameFromKey(ref, isV5);
+    if (refName) {
+      return keyIndex.get(refName)?.get(getVersion(ref, refName)) ?? null;
+    }
+    return null;
+  };
+
+  const visitedKeys = new Set<string>();
+  const keyQueue: string[] = [];
+  const visitedImporters = new Set<string>();
+  const importerQueue: string[] = [importerPath];
+
+  const enqueueDeps = (
+    deps: Record<string, string> | undefined,
+    fromImporterPath: string | null
+  ) => {
+    if (!deps) {
+      return;
+    }
+    for (const [depName, versionRef] of Object.entries(deps)) {
+      if (versionRef.startsWith('link:')) {
+        if (fromImporterPath !== null) {
+          const target = posixJoin(fromImporterPath, versionRef.slice(5));
+          if (data.importers[target] && !visitedImporters.has(target)) {
+            visitedImporters.add(target);
+            importerQueue.push(target);
+          }
+        }
+        continue;
+      }
+      const key = resolveKey(depName, versionRef);
+      if (key && !visitedKeys.has(key)) {
+        visitedKeys.add(key);
+        keyQueue.push(key);
+      }
+    }
+  };
+
+  visitedImporters.add(importerPath);
+  while (importerQueue.length) {
+    const path = importerQueue.shift();
+    const importer = data.importers[path];
+    enqueueDeps(importer.dependencies, path);
+    enqueueDeps(importer.devDependencies, path);
+    enqueueDeps(importer.optionalDependencies, path);
+  }
+  while (keyQueue.length) {
+    const key = keyQueue.shift();
+    const snapshot = data.packages[key];
+    enqueueDeps(snapshot.dependencies, null);
+    enqueueDeps(snapshot.optionalDependencies, null);
+  }
+
+  const prunedPackages: PackageSnapshots = {} as PackageSnapshots;
+  for (const key of Object.keys(data.packages ?? {})) {
+    if (visitedKeys.has(key)) {
+      prunedPackages[key] = data.packages[key];
+    }
+  }
+
+  return {
+    ...data,
+    importers: { '.': seedImporter },
+    packages: prunedPackages,
+  };
+}
+
+function posixJoin(base: string, relativePath: string): string {
+  return join(base, relativePath).split(sep).join('/');
 }
 
 function invertRecordWithoutAliases(

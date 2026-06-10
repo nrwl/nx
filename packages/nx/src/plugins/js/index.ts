@@ -1,5 +1,5 @@
 import { existsSync, readFileSync, rmSync } from 'fs';
-import { join } from 'path';
+import { dirname, join, relative, sep } from 'path';
 import { performance } from 'perf_hooks';
 import {
   ProjectGraph,
@@ -23,9 +23,11 @@ import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readBunLockFile } from './lock-file/bun-parser';
 import {
+  findAncestorLockFile,
   getLockFileDependencies,
   getLockFileName,
   getLockFileNodes,
+  getLockFilePath,
   lockFileExists,
   LOCKFILES,
 } from './lock-file/lock-file';
@@ -39,16 +41,69 @@ let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
 let cachedKeyMap: Map<string, any> | undefined;
 
 export const createNodes: CreateNodes = [
-  combineGlobPatterns(LOCKFILES),
+  // The root package.json is also matched so external nodes can be created
+  // from an ancestor lockfile when the workspace has none of its own (e.g. a
+  // nested workspace sharing a parent monorepo's install).
+  combineGlobPatterns([...LOCKFILES, 'package.json']),
   (files, _, context) => {
     return createNodesFromFiles(internalCreateNodes, files, _, context);
   },
 ];
 
+/**
+ * The lockfile-relative importer path of this workspace within an ancestor
+ * lockfile (e.g. `examples/react/basic` for a nested workspace inside a
+ * monorepo).
+ */
+function getAncestorImporterPath(ancestorLockFilePath: string): string {
+  return relative(dirname(ancestorLockFilePath), workspaceRoot)
+    .split(sep)
+    .join('/');
+}
+
 function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   const pluginConfig = jsPluginConfig(context.nxJsonConfiguration);
   if (!pluginConfig.analyzeLockfile) {
     return {};
+  }
+
+  // Root package.json trigger: only relevant when the workspace has no
+  // lockfile but an ancestor directory does. The package manager is inferred
+  // from the ancestor lockfile since local detection cannot see it.
+  if (lockFile === 'package.json') {
+    const ancestorLockFile = findAncestorLockFile();
+    // Ancestor-lockfile derivation is pnpm-only for now: the importer-closure
+    // filter that scopes external nodes to this workspace's dependencies is
+    // implemented for pnpm's lockfile format.
+    if (!ancestorLockFile || ancestorLockFile.packageManager !== 'pnpm') {
+      return {};
+    }
+    const { lockFilePath, packageManager } = ancestorLockFile;
+    const importerPath = getAncestorImporterPath(lockFilePath);
+    const lockFileContents = readFileSync(lockFilePath, 'utf-8');
+    const lockFileHash = getLockFileHash(lockFileContents);
+
+    if (!lockFileNeedsReprocessing(lockFileHash, externalNodesHashFile)) {
+      const { nodes, keyMap } = readCachedExternalNodes();
+      cachedExternalNodes = nodes;
+      cachedKeyMap = keyMap;
+
+      return { externalNodes: nodes };
+    }
+
+    const { nodes: externalNodes, keyMap } = getLockFileNodes(
+      packageManager,
+      lockFileContents,
+      lockFileHash,
+      context,
+      importerPath
+    );
+    cachedExternalNodes = externalNodes;
+    cachedKeyMap = keyMap;
+
+    writeExternalNodesCache(lockFileHash, externalNodes, keyMap);
+
+    return { externalNodes };
   }
 
   const packageManager = detectPackageManager(workspaceRoot);
@@ -97,7 +152,17 @@ export const createDependencies: CreateDependencies = (
 ) => {
   const pluginConfig = jsPluginConfig(ctx.nxJsonConfiguration);
 
-  const packageManager = detectPackageManager(workspaceRoot);
+  // When the workspace has no lockfile but an ancestor does (nested workspace
+  // sharing a parent monorepo's install), the package manager is inferred from
+  // the ancestor lockfile — local detection cannot see it. pnpm-only, matching
+  // the createNodes handling.
+  const rawAncestorLockFile = findAncestorLockFile();
+  const ancestorLockFile =
+    rawAncestorLockFile?.packageManager === 'pnpm'
+      ? rawAncestorLockFile
+      : null;
+  const packageManager =
+    ancestorLockFile?.packageManager ?? detectPackageManager(workspaceRoot);
 
   let lockfileDependencies: RawProjectGraphDependency[] = [];
   // lockfile may not exist yet
@@ -106,7 +171,12 @@ export const createDependencies: CreateDependencies = (
     lockFileExists(packageManager) &&
     cachedExternalNodes
   ) {
-    const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
+    // An ancestor lockfile is used when the workspace has none of its own.
+    const lockFilePath =
+      ancestorLockFile?.lockFilePath ?? getLockFilePath(packageManager);
+    const importerPath = ancestorLockFile
+      ? getAncestorImporterPath(ancestorLockFile.lockFilePath)
+      : undefined;
     const lockFileContents =
       packageManager !== 'bun'
         ? readFileSync(lockFilePath, 'utf-8')
@@ -121,7 +191,8 @@ export const createDependencies: CreateDependencies = (
         lockFileContents,
         lockFileHash,
         ctx,
-        cachedKeyMap
+        cachedKeyMap,
+        importerPath
       );
 
       writeDependenciesCache(lockFileHash, lockfileDependencies);

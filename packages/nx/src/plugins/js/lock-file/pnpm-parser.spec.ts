@@ -2833,4 +2833,171 @@ snapshots: {}`;
       );
     });
   });
+
+  describe('importer closure filter (ancestor lockfile)', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/.modules.yaml': 'hoistedDependencies: {}' },
+        '/root'
+      );
+    });
+
+    // Workspace lockfile: the root importer has its own dep, apps/app1 has
+    // react(-dom) and links libs/lib1, which has tslib.
+    const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      root-only-dep:
+        specifier: ^1.0.0
+        version: 1.0.0
+
+  apps/app1:
+    dependencies:
+      react:
+        specifier: ^18.0.0
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.0.0
+        version: 18.3.1(react@18.3.1)
+      '@my/lib':
+        specifier: workspace:*
+        version: link:../../libs/lib1
+
+  libs/lib1:
+    dependencies:
+      tslib:
+        specifier: ^2.0.0
+        version: 2.6.0
+
+packages:
+
+  root-only-dep@1.0.0:
+    resolution: {integrity: sha512-root}
+
+  react@18.3.1:
+    resolution: {integrity: sha512-react}
+
+  react-dom@18.3.1:
+    resolution: {integrity: sha512-reactdom}
+    peerDependencies:
+      react: ^18.3.1
+
+  scheduler@0.23.0:
+    resolution: {integrity: sha512-scheduler}
+
+  loose-envify@1.4.0:
+    resolution: {integrity: sha512-looseenvify}
+
+  js-tokens@4.0.0:
+    resolution: {integrity: sha512-jstokens}
+
+  tslib@2.6.0:
+    resolution: {integrity: sha512-tslib}
+
+snapshots:
+
+  root-only-dep@1.0.0: {}
+
+  react@18.3.1:
+    dependencies:
+      loose-envify: 1.4.0
+
+  react-dom@18.3.1(react@18.3.1):
+    dependencies:
+      react: 18.3.1
+      scheduler: 0.23.0
+
+  scheduler@0.23.0:
+    dependencies:
+      loose-envify: 1.4.0
+
+  loose-envify@1.4.0:
+    dependencies:
+      js-tokens: 4.0.0
+
+  js-tokens@4.0.0: {}
+
+  tslib@2.6.0: {}
+`;
+
+    it('should only create nodes for the importer dependency closure', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, 'hash1', 'apps/app1');
+
+      expect(Object.keys(nodes).sort()).toEqual([
+        'npm:js-tokens',
+        'npm:loose-envify',
+        'npm:react',
+        'npm:react-dom',
+        'npm:scheduler',
+        'npm:tslib',
+      ]);
+      // root importer's dep is outside the closure
+      expect(nodes['npm:root-only-dep']).toBeUndefined();
+      // peer-suffixed snapshot key resolved through the importer ref
+      expect(nodes['npm:react-dom'].data.version).toEqual('18.3.1');
+      // link: hop into libs/lib1 absorbed its closure
+      expect(nodes['npm:tslib'].data.version).toEqual('2.6.0');
+    });
+
+    it('should not create nodes when the importer is not in the lockfile', () => {
+      const { nodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        'hash2',
+        'apps/not-a-member'
+      );
+
+      expect(nodes).toEqual({});
+      expect(keyMap.size).toEqual(0);
+    });
+
+    it('should create all nodes when no importer path is provided', () => {
+      const { nodes } = getPnpmLockfileNodes(lockFile, 'hash3');
+
+      expect(nodes['npm:root-only-dep']).toBeDefined();
+      expect(nodes['npm:react']).toBeDefined();
+      expect(nodes['npm:tslib']).toBeDefined();
+    });
+
+    it('should only create dependencies within the closure', () => {
+      const { nodes, keyMap } = getPnpmLockfileNodes(
+        lockFile,
+        'hash4',
+        'apps/app1'
+      );
+      const ctx = {
+        projects: {},
+        externalNodes: nodes,
+        fileMap: { nonProjectFiles: [], projectFileMap: {} },
+        filesToProcess: { nonProjectFiles: [], projectFileMap: {} },
+        nxJsonConfiguration: null,
+        workspaceRoot: '/root',
+      } as CreateDependenciesContext;
+
+      const deps = getPnpmLockfileDependencies(
+        lockFile,
+        'hash4',
+        ctx,
+        keyMap,
+        'apps/app1'
+      );
+
+      // react -> loose-envify -> js-tokens etc., but nothing from root-only-dep
+      expect(
+        deps.every(
+          (d) =>
+            d.source.startsWith('npm:') &&
+            d.source !== 'npm:root-only-dep' &&
+            d.target !== 'npm:root-only-dep'
+        )
+      ).toBe(true);
+      expect(
+        deps.some(
+          (d) => d.source === 'npm:react' && d.target === 'npm:loose-envify'
+        )
+      ).toBe(true);
+    });
+  });
 });

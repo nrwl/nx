@@ -17,6 +17,7 @@ import type {
   ResolvedDependencies,
 } from '@pnpm/lockfile-types';
 import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { valid } from 'semver';
 import { workspaceRoot } from '../../../../utils/workspace-root';
 import { hashObject } from '../../../../hasher/file-hasher';
@@ -40,14 +41,28 @@ export function usesLeadingDash(data: { lockfileVersion: number | string }) {
 }
 
 export function loadPnpmHoistedDepsDefinition() {
-  const fullPath = `${workspaceRoot}/node_modules/.modules.yaml`;
-
-  if (existsSync(fullPath)) {
-    const content = readFileSync(fullPath, 'utf-8');
-    const { load } = require('@zkochan/js-yaml');
-    return load(content)?.hoistedDependencies ?? {};
-  } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
+  // When the workspace root has no pnpm install metadata (e.g. a nested
+  // workspace sharing a parent monorepo's install), walk up to the nearest
+  // ancestor that has node_modules/.modules.yaml.
+  let dir = workspaceRoot;
+  while (true) {
+    const fullPath = join(dir, 'node_modules', '.modules.yaml');
+    if (existsSync(fullPath)) {
+      const content = readFileSync(fullPath, 'utf-8');
+      const { load } = require('@zkochan/js-yaml');
+      return load(content)?.hoistedDependencies ?? {};
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      throw new Error(
+        `Could not find ".modules.yaml" at "${join(
+          workspaceRoot,
+          'node_modules',
+          '.modules.yaml'
+        )}" or any ancestor directory`
+      );
+    }
+    dir = parent;
   }
 }
 
