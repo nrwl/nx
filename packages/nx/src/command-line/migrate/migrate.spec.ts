@@ -86,12 +86,12 @@ const createPackageJson = (
   ...overrides,
 });
 
-// Stub fetcher driving the `--include` supportsOptionalUpdates gate without the
-// registry/install round-trip. `supportsOptionalUpdates` defaults to true; pass a
+// Stub fetcher driving the `--include` supportsOptionalMigrations gate without the
+// registry/install round-trip. `supportsOptionalMigrations` defaults to true; pass a
 // predicate to mark specific (package, version) targets unsupported.
 const includeGateFetch =
   (
-    supportsOptionalUpdates:
+    supportsOptionalMigrations:
       | boolean
       | ((pkg: string, version: string) => boolean) = true
   ): ((
@@ -102,10 +102,10 @@ const includeGateFetch =
     Promise.resolve({
       name: pkg,
       version,
-      supportsOptionalUpdates:
-        typeof supportsOptionalUpdates === 'function'
-          ? supportsOptionalUpdates(pkg, version)
-          : supportsOptionalUpdates,
+      supportsOptionalMigrations:
+        typeof supportsOptionalMigrations === 'function'
+          ? supportsOptionalMigrations(pkg, version)
+          : supportsOptionalMigrations,
     });
 
 describe('Migration', () => {
@@ -2645,7 +2645,7 @@ describe('Migration', () => {
     });
 
     it('should gate --include=optional on the installed version, not the older explicit target', async () => {
-      // Catch-up reads `supportsOptionalUpdates` at the INSTALLED version (what you
+      // Catch-up reads `supportsOptionalMigrations` at the INSTALLED version (what you
       // have), not the older explicit target. The stub only marks 23.0.0 as
       // supporting optional updates, so eligibility proves the gate read installed 23,
       // even though the target 22 predates the flag.
@@ -2684,7 +2684,7 @@ describe('Migration', () => {
     });
 
     it('should surface a fetch failure instead of reporting the target as unsupported', async () => {
-      // The gate resolves `supportsOptionalUpdates` through the shared fetcher (registry,
+      // The gate resolves `supportsOptionalMigrations` through the shared fetcher (registry,
       // then install). A genuine fetch failure must surface as-is, not be
       // swallowed into a misleading "does not support optional updates" rejection.
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
@@ -3047,7 +3047,7 @@ describe('Migration', () => {
       });
     });
 
-    const supportsOptionalUpdatesContext = {
+    const supportsOptionalMigrationsContext = {
       hasFrom: false,
       hasExcludeAppliedMigrations: false,
       targetSupportsOptionalUpdates: true,
@@ -3061,14 +3061,14 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         'required',
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
     it('should return the provided include even when the target does not support optional updates', async () => {
-      // The `supportsOptionalUpdates` gate is enforced in `resolveTargetAndInclude`;
+      // The `supportsOptionalMigrations` gate is enforced in `resolveTargetAndInclude`;
       // `resolveInclude` honors an explicit include as-is.
       const result = await resolveInclude('required', {
         hasFrom: false,
@@ -3086,7 +3086,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3100,7 +3100,7 @@ describe('Migration', () => {
       process.env.CI = 'true';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3113,7 +3113,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       const result = await resolveInclude(undefined, {
-        ...supportsOptionalUpdatesContext,
+        ...supportsOptionalMigrationsContext,
         interactive: false,
       });
       expect(result).toBe('all');
@@ -3144,7 +3144,7 @@ describe('Migration', () => {
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('required');
       expect(mockPrompt).toHaveBeenCalled();
@@ -3157,7 +3157,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
-      await resolveInclude(undefined, supportsOptionalUpdatesContext);
+      await resolveInclude(undefined, supportsOptionalMigrationsContext);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
         'required',
@@ -3212,7 +3212,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
       await resolveInclude(undefined, {
-        ...supportsOptionalUpdatesContext,
+        ...supportsOptionalMigrationsContext,
         interactive: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
@@ -3230,7 +3230,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('required');
@@ -3245,7 +3245,7 @@ describe('Migration', () => {
       process.env.CI = 'true';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('required');
@@ -3260,7 +3260,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         'all',
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('all');
