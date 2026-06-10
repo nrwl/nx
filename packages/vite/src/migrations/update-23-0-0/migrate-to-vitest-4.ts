@@ -19,9 +19,10 @@ import {
   type TextEdit,
 } from './lib/ast-edits';
 import { visitCiFiles } from './lib/ci-files';
+import { generateLocalVitestConfigs } from './lib/generate-local-vitest-configs';
+import { inlineVitestWorkspaceFiles } from './lib/inline-vitest-workspace';
 import {
   isJsOrTsFile,
-  isVitestWorkspaceFile,
   visitVitestConfigFiles,
 } from './lib/vitest-config-files';
 
@@ -48,15 +49,15 @@ export default async function migrateToVitest4(tree: Tree) {
     processVitestConfig(tree, filePath, unhandled)
   );
 
-  // Workspace files are removed entirely in v4 — their presence is always a
-  // signal that the agent needs to inline them into the root config.
-  visitNotIgnoredFiles(tree, '', (filePath) => {
-    if (!isVitestWorkspaceFile(filePath)) return;
-    unhandled.push(
-      `${filePath}: \`vitest.workspace.*\` files are removed in Vitest 4. ` +
-        `Inline its project list into the root \`vitest.config.*\` under \`test.projects\` and delete this file.`
-    );
-  });
+  // Workspace files are removed entirely in v4. Static ones are inlined into
+  // the root config here; dynamic shapes are forwarded to the agent.
+  const { foundWorkspaceFiles } = inlineVitestWorkspaceFiles(tree, unhandled);
+
+  // The new root projects config breaks `vitest` runs from package
+  // directories that have no config of their own; give those packages one.
+  const generatedConfigs = foundWorkspaceFiles
+    ? generateLocalVitestConfigs(tree)
+    : [];
 
   visitNotIgnoredFiles(tree, '', (filePath) => {
     if (!isJsOrTsFile(filePath)) return;
@@ -81,6 +82,14 @@ export default async function migrateToVitest4(tree: Tree) {
   const nextSteps = [
     `If your CI provider stores Vitest env vars in its dashboard (GitHub Actions repo/org secrets, GitLab CI/CD variables, Vercel/Netlify env vars, etc.), rename \`VITEST_MAX_THREADS\` and \`VITEST_MAX_FORKS\` to \`VITEST_MAX_WORKERS\`, and \`VITE_NODE_DEPS_MODULE_DIRECTORIES\` to \`VITEST_MODULE_DIRECTORIES\`. The pre-pass only handles in-repo files.`,
   ];
+  if (generatedConfigs.length > 0) {
+    nextSteps.push(
+      `Generated a minimal vitest config for packages that run vitest via a package.json script but had no local config (${generatedConfigs.join(
+        ', '
+      )}). Without one, Vitest 4 climbs to the root \`test.projects\` config and fails to start from those directories. Review them and add any test options the packages need. ` +
+        `Note that these packages are now also discovered as projects by root-level \`vitest\` runs when the root \`test.projects\` globs match their new config files.`
+    );
+  }
 
   const result: { nextSteps?: string[]; agentContext?: string[] } = {
     nextSteps,
