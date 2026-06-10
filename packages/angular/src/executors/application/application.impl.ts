@@ -9,6 +9,7 @@ import {
   loadPlugins,
 } from '../utilities/esbuild-extensions';
 import type { ApplicationExecutorOptions } from './schema';
+import { coerceSsrPlatformOption } from './utils/coerce-ssr-platform';
 import { validateOptions } from './utils/validate-options';
 
 export default async function* applicationExecutor(
@@ -23,6 +24,10 @@ export default async function* applicationExecutor(
     indexHtmlTransformer: indexHtmlTransformerPath,
     ...delegateExecutorOptions
   } = options;
+
+  delegateExecutorOptions.ssr = coerceSsrPlatformOption(
+    delegateExecutorOptions.ssr
+  );
 
   let dependencies: DependentBuildableProjectNode[];
 

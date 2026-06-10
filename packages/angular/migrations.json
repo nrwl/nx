@@ -321,6 +321,15 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites the now-removed deep `@nx/angular/src/utils`, `@nx/angular/src/generators/utils` and `@nx/angular/src/generators/move/move-impl` subpath imports to the new `@nx/angular/internal` entry. The executor/builder/generator schema and impl subpaths remain available and are left untouched.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-1-0-rename-ssr-experimental-platform": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Rename the `ssr.experimentalPlatform` option to `ssr.platform` in `@nx/angular:application` targets, matching the Angular v22 rename.",
+      "factory": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform",
+      "documentation": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform.md"
     }
   },
   "packageJsonUpdates": {
