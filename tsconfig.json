@@ -377,6 +377,9 @@
       "path": "./examples/angular-rspack/ssr-css"
     },
     {
+      "path": "./examples/react/basic"
+    },
+    {
       "path": "./nx-dev/nx-dev-e2e"
     },
     {

@@ -1,0 +1,33 @@
+{
+  "name": "examples-react-basic",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {},
+  "dependencies": {
+    "react": "catalog:react",
+    "react-dom": "catalog:react"
+  },
+  "devDependencies": {
+    "@nx/vite": "workspace:*",
+    "@nx/react": "workspace:*",
+    "@nx/playwright": "workspace:*",
+    "@nx/eslint": "workspace:*",
+    "@playwright/test": "catalog:",
+    "@testing-library/react": "15.0.6",
+    "@types/react": "catalog:react",
+    "@types/react-dom": "catalog:react",
+    "@vitejs/plugin-react": "^6.0.0",
+    "jsdom": "^26.1.0",
+    "vite": "^8.0.0",
+    "vitest": "catalog:vite"
+  },
+  "nx": {
+    "targets": {
+      "pw-e2e": {
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
+}

@@ -37,7 +37,6 @@
   ],
   "exports": {
     ".": {
-      "@nx/nx-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
@@ -73,16 +72,6 @@
         "outputs": [
           "{projectRoot}/README.md"
         ]
-      },
-      "test": {
-        "dependsOn": [
-          "^build-native"
-        ],
-        "options": {
-          "args": [
-            "--passWithNoTests"
-          ]
-        }
       }
     }
   }
