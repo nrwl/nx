@@ -342,8 +342,9 @@ function errorLocation(error: unknown): string | undefined {
 // Analytics is a secondary concern and must never interfere with the migrate
 // run. Swallow any failure while building params or emitting the event
 // (surfaced only under verbose logging), mirroring `trackEvent`/`flushAnalytics`
-// in `../../analytics`.
-function safeReport(emit: () => void): void {
+// in `../../analytics`. Exported for callers whose param-building expressions
+// evaluate before the report function is entered.
+export function safeReport(emit: () => void): void {
   try {
     emit();
   } catch (e) {

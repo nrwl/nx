@@ -115,6 +115,7 @@ import {
   reportMigrateRunComplete,
   reportMigrateRunError,
   reportMigrateRunStart,
+  safeReport,
   setMigrateInclude,
   setMigrateIncludeSource,
 } from './migrate-analytics';
@@ -2325,21 +2326,27 @@ async function generateMigrationsJsonAndUpdatePackageJson(
 
     const resolvedTargetVersion =
       packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+    // The param expressions below evaluate before the report function is
+    // entered; `safeReport` keeps them inside the analytics boundary so a
+    // param-building throw can't surface here and convert an already
+    // successful migrate into a reported failure.
     const recordCompletion = () =>
-      reportMigrateGenerateComplete({
-        targetVersion: resolvedTargetVersion,
-        requestedTargetVersion:
-          opts.originalTargetVersion ?? resolvedTargetVersion,
-        installedTargetVersion: isNxTarget(
-          opts.targetPackage,
-          opts.targetVersion
-        )
-          ? from
-          : installedPackageVersions(opts.targetPackage),
-        include,
-        multiMajorChoice: opts.multiMajorChoice,
-        fetchStats: resolvedFetch.stats,
-      });
+      safeReport(() =>
+        reportMigrateGenerateComplete({
+          targetVersion: resolvedTargetVersion,
+          requestedTargetVersion:
+            opts.originalTargetVersion ?? resolvedTargetVersion,
+          installedTargetVersion: isNxTarget(
+            opts.targetPackage,
+            opts.targetVersion
+          )
+            ? from
+            : installedPackageVersions(opts.targetPackage),
+          include,
+          multiMajorChoice: opts.multiMajorChoice,
+          fetchStats: resolvedFetch.stats,
+        })
+      );
 
     const noChanges =
       !wrotePackageJson && !wroteNxJsonInstallation && migrations.length === 0;
