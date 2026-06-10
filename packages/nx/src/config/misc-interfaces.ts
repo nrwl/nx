@@ -66,14 +66,6 @@ export type PackageJsonUpdates = {
       [packageName: string]: PackageJsonUpdateForPackage;
     };
     'x-prompt'?: string;
-    /**
-     * Additional package version requirements for applying this package update.
-     * When a required package is also updated in the same `nx migrate`
-     * collection, Nx checks whether this range intersects the journey from the
-     * installed version (or `--from` override) to the planned version. When no
-     * update is planned for the required package, Nx checks the installed
-     * version as a point-in-time requirement.
-     */
     requires?: Record<string, string>;
     incompatibleWith?: Record<string, string>;
   };
@@ -115,14 +107,6 @@ export interface MigrationsJsonEntry {
   implementation?: string;
   factory?: string;
   prompt?: string;
-  /**
-   * Additional package version requirements for staging this migration. When a
-   * required package is also updated in the same `nx migrate` collection, Nx
-   * checks whether this range intersects the journey from the installed version
-   * (or `--from` override) to the planned version. When no update is planned
-   * for the required package, Nx checks the installed version as a point-in-time
-   * requirement.
-   */
   requires?: Record<string, string>;
   /**
    * Path to a markdown doc describing the migration, relative to the
