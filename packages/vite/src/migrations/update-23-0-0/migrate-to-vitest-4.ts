@@ -87,7 +87,7 @@ export default async function migrateToVitest4(tree: Tree) {
       `Generated a minimal vitest config for packages that run vitest via a package.json script but had no local config (${generatedConfigs.join(
         ', '
       )}). Without one, Vitest 4 climbs to the root \`test.projects\` config and fails to start from those directories. Review them and add any test options the packages need. ` +
-        `Note that these packages are now also discovered as projects by root-level \`vitest\` runs when the root \`test.projects\` globs match their new config files.`
+        `Note that these packages may also be discovered as projects by root-level \`vitest\` runs when the root \`test.projects\` globs match their new config files.`
     );
   }
 
@@ -188,7 +188,8 @@ function collectCoverageRemovalEdits(
 
 /**
  * `test.workspace` → `test.projects` (V4-2). The external `vitest.workspace.*`
- * file form is detected separately at the top level and always logged.
+ * file form is handled separately at the top level: static files are inlined,
+ * the rest are logged for the agent.
  */
 function collectWorkspaceRenameEdits(
   sourceFile: SourceFile,

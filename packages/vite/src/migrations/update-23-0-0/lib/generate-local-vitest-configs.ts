@@ -23,9 +23,11 @@ export function generateLocalVitestConfigs(tree: Tree): string[] {
     }
   });
 
+  const rootHasTsconfig =
+    tree.exists('tsconfig.base.json') || tree.exists('tsconfig.json');
   for (const packageJsonPath of packageJsonPaths) {
     try {
-      processPackage(tree, packageJsonPath, created);
+      processPackage(tree, packageJsonPath, rootHasTsconfig, created);
     } catch {
       // Generation is best-effort; a problematic package must not fail the
       // migration.
@@ -38,6 +40,7 @@ export function generateLocalVitestConfigs(tree: Tree): string[] {
 function processPackage(
   tree: Tree,
   packageJsonPath: string,
+  rootHasTsconfig: boolean,
   created: string[]
 ): void {
   let packageJson: any;
@@ -66,9 +69,7 @@ function processPackage(
   if (siblings.some((f) => isVitestWorkspaceFile(f))) return;
 
   const ext =
-    siblings.some((f) => /^tsconfig(\..+)?\.json$/.test(f)) ||
-    tree.exists('tsconfig.base.json') ||
-    tree.exists('tsconfig.json')
+    rootHasTsconfig || siblings.some((f) => /^tsconfig(\..+)?\.json$/.test(f))
       ? '.ts'
       : '.mjs';
   const configPath = joinPathFragments(dir, `vitest.config${ext}`);
@@ -110,6 +111,7 @@ function scriptInvokesVitest(script: string): boolean {
           token === '-c' ||
           token === '--root' ||
           token.startsWith('--config=') ||
+          token.startsWith('-c=') ||
           token.startsWith('--root=')
       );
   });

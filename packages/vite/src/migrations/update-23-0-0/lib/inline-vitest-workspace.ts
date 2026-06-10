@@ -1,6 +1,7 @@
 import { joinPathFragments, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import { ast } from '@phenomnomnominal/tsquery';
+import picomatch = require('picomatch');
 import type {
   Expression,
   ObjectLiteralExpression,
@@ -124,8 +125,9 @@ function extractStaticProjectGlobs(contents: string): string[] | null {
 
   const globs: string[] = [];
   for (const element of expression.elements) {
-    if (!ts.isStringLiteral(element)) return null;
-    globs.push(element.text);
+    const unwrapped = unwrapExpression(element);
+    if (!ts.isStringLiteral(unwrapped)) return null;
+    globs.push(unwrapped.text);
   }
   return globs;
 }
@@ -169,6 +171,10 @@ function tryAddProjectsToConfig(
   if (hasSpreadOrUnsupportedProperty(configObject.properties, ['test'])) {
     return false;
   }
+
+  // Duplicate keys are valid JS; editing the first occurrence would be dead
+  // code since the last one wins at runtime.
+  if (countPropertyAssignments(configObject, 'test') > 1) return false;
 
   const testProperty = findPropertyAssignment(configObject, 'test');
   const projectsText = `projects: ${formatEntriesArray(entries)}`;
@@ -264,8 +270,6 @@ function computeDualConfigNegations(
   workspaceFilePath: string,
   globs: string[]
 ): { negations: string[]; advisories: string[] } {
-  // Lazily required to reuse the same module instance as the main migration.
-  const picomatch: typeof import('picomatch') = require('picomatch');
   const matchers = globs
     .filter((g) => !g.startsWith('!'))
     // picomatch does not normalize a leading './', vitest's glob layer does.
@@ -378,6 +382,23 @@ function findDefaultExportConfigObject(
     expression = unwrapExpression(expression.arguments[0]);
   }
   return ts.isObjectLiteralExpression(expression) ? expression : undefined;
+}
+
+function countPropertyAssignments(
+  objectLiteral: ObjectLiteralExpression,
+  name: string
+): number {
+  let count = 0;
+  for (const property of objectLiteral.properties) {
+    if (
+      ts.isPropertyAssignment(property) &&
+      (ts.isIdentifier(property.name) || ts.isStringLiteral(property.name)) &&
+      property.name.text === name
+    ) {
+      count++;
+    }
+  }
+  return count;
 }
 
 function findPropertyAssignment(
