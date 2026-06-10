@@ -5,6 +5,7 @@ import { PromisedBasedQueue } from '../../../utils/promised-based-queue';
 import { currentProjectGraph } from '../project-graph-incremental-recomputation';
 import { handleResult } from '../server';
 import { getProjectsAndGlobalChanges } from './changed-projects';
+import { filterChangedFiles } from './glob-filter';
 
 const queue = new PromisedBasedQueue();
 
@@ -14,6 +15,8 @@ export let registeredFileWatcherSockets: {
     watchProjects: string[] | 'all';
     includeGlobalWorkspaceFiles: boolean;
     includeDependencies: boolean;
+    include?: string[];
+    exclude?: string[];
   };
 }[] = [];
 
@@ -45,14 +48,24 @@ export function notifyFileWatcherSockets(
 
     await Promise.all(
       registeredFileWatcherSockets.map(({ socket, config }) => {
+        const include = config.include ?? [];
+        const exclude = config.exclude ?? [];
+
         const changedProjects = [];
         const changedFiles = [];
         if (config.watchProjects === 'all') {
           for (const [projectName, projectFiles] of Object.entries(
             projectAndGlobalChanges.projects
           )) {
-            changedProjects.push(projectName);
-            changedFiles.push(...projectFiles);
+            const filteredFiles = filterChangedFiles(
+              projectFiles,
+              include,
+              exclude
+            );
+            if (filteredFiles.length > 0) {
+              changedProjects.push(projectName);
+              changedFiles.push(...filteredFiles);
+            }
           }
         } else {
           const watchedProjects = new Set<string>(
@@ -75,17 +88,26 @@ export function notifyFileWatcherSockets(
 
           for (const watchedProject of watchedProjects) {
             if (!!projectAndGlobalChanges.projects[watchedProject]) {
-              changedProjects.push(watchedProject);
-
-              changedFiles.push(
-                ...projectAndGlobalChanges.projects[watchedProject]
+              const filteredFiles = filterChangedFiles(
+                projectAndGlobalChanges.projects[watchedProject],
+                include,
+                exclude
               );
+              if (filteredFiles.length > 0) {
+                changedProjects.push(watchedProject);
+                changedFiles.push(...filteredFiles);
+              }
             }
           }
         }
 
         if (config.includeGlobalWorkspaceFiles) {
-          changedFiles.push(...projectAndGlobalChanges.globalFiles);
+          const filteredGlobalFiles = filterChangedFiles(
+            projectAndGlobalChanges.globalFiles,
+            include,
+            exclude
+          );
+          changedFiles.push(...filteredGlobalFiles);
         }
 
         if (changedProjects.length > 0 || changedFiles.length > 0) {
