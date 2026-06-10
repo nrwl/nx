@@ -39,6 +39,13 @@ common-init-steps: &common-init-steps
       echo "dotnet: $(dotnet --version)"
       echo "java:   $(javac --version)"
 
+  - name: NETDIAG Maven Central connectivity
+    script: |
+      echo "NETDIAG === ipv6 global addrs ==="; ip -6 addr show scope global 2>&1 | grep inet6 || echo "NETDIAG no-global-ipv6"
+      echo "NETDIAG === resolver order (JVM follows getaddrinfo) ==="; getent ahosts repo.maven.apache.org 2>&1 | sed 's/^/NETDIAG resolve /'
+      curl -4 -sS -o /dev/null -w 'NETDIAG v4 http=%{http_code} connect=%{time_connect}s\n' -m 10 https://repo.maven.apache.org/maven2/ 2>&1 || echo "NETDIAG v4 FAIL"
+      curl -6 -sS -o /dev/null -w 'NETDIAG v6 http=%{http_code} connect=%{time_connect}s\n' -m 10 https://repo.maven.apache.org/maven2/ 2>&1 || echo "NETDIAG v6 FAIL"
+
   - name: Install system deps
     script: |
       # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
