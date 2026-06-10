@@ -104,15 +104,4 @@ describe('coerceSsrPlatformOption', () => {
       ).toEqual({ entry: 'server.ts', experimentalPlatform: 'neutral' });
     });
   });
-
-  it('should default to the platform key when the Angular version is unknown', () => {
-    getInstalledAngularVersionInfoSpy.mockReturnValue(null);
-
-    expect(
-      coerceSsrPlatformOption({
-        entry: 'server.ts',
-        experimentalPlatform: 'neutral',
-      })
-    ).toEqual({ entry: 'server.ts', platform: 'neutral' });
-  });
 });

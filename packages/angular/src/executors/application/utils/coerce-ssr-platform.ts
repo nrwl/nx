@@ -30,10 +30,12 @@ export function coerceSsrPlatformOption(
     return ssr as SsrOption;
   }
 
-  const angularMajorVersion = getInstalledAngularVersionInfo()?.major;
+  // `validateOptions` runs first and asserts Angular is installed, so the
+  // version info is always present here.
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo();
 
   return (
-    angularMajorVersion === undefined || angularMajorVersion >= 22
+    angularMajorVersion >= 22
       ? { ...rest, platform: resolvedPlatform }
       : { ...rest, experimentalPlatform: resolvedPlatform }
   ) as SsrOption;
