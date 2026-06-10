@@ -112,11 +112,12 @@ async function main() {
     if (process.argv[2] === '_migrate') {
       // `_migrate` runs the actual migrate flow (spawned by `nx migrate`,
       // potentially from a temp install of the latest CLI), so its analytics
-      // events would otherwise be silently dropped. Start analytics without
-      // prompting - the outer `nx migrate` process handles the preference
-      // prompt and the session ID is inherited via NX_ANALYTICS_SESSION_ID.
-      const { startAnalytics } = await import('../src/analytics/index.js');
-      await startAnalytics();
+      // events would otherwise be silently dropped. A new-enough outer
+      // process prompts for the preference before spawning (making the
+      // ensure step a no-op here), but when the outer is an older nx with no
+      // analytics prompt, this is the first chance to ask. The session ID is
+      // inherited via NX_ANALYTICS_SESSION_ID.
+      await initAnalytics();
     }
     (await import('nx/src/command-line/nx-commands')).commandsObject.argv;
   } else {
