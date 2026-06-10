@@ -100,7 +100,7 @@ export function reportMigratePrompt(
   safeReport(() => {
     if (!customDimensions) return;
     reportEvent(`migrate_prompt_${prompt}`, {
-      [customDimensions.choice]: choice,
+      [customDimensions.promptChoice]: choice,
     });
   });
 }

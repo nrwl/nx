@@ -79,7 +79,7 @@ pub mod event_dimension {
     pub const ERROR_NAME: &str = "ep.error_name";
     pub const ERROR_LOCATION: &str = "ep.error_location";
     pub const MIGRATION_NAME: &str = "ep.migration_name";
-    pub const CHOICE: &str = "ep.prompt_choice";
+    pub const PROMPT_CHOICE: &str = "ep.prompt_choice";
     pub const MAJORS_CROSSED: &str = "epn.majors_crossed";
     pub const MIGRATION_COUNT: &str = "epn.migration_count";
     pub const APPLIED_COUNT: &str = "epn.applied_count";

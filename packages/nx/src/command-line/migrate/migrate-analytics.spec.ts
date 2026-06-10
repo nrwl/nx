@@ -120,7 +120,7 @@ describe('migrate-analytics events', () => {
       const a = load();
       a.reportMigratePrompt('multi_major', 'latest-in-current');
       expect(paramsFor('migrate_prompt_multi_major')).toEqual({
-        choice: 'latest-in-current',
+        promptChoice: 'latest-in-current',
       });
     });
   });
