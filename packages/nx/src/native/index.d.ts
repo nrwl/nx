@@ -333,7 +333,6 @@ export interface EventDimensions {
   majorsCrossed: string
   migrationCount: string
   appliedCount: string
-  migrationIndex: string
 }
 
 export declare const enum EventType {

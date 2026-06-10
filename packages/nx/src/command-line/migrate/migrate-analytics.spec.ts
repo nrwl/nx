@@ -347,25 +347,22 @@ describe('migrate-analytics events', () => {
       });
     });
 
-    it('reports the failing migration position when provided', () => {
+    it('reports the run size when provided', () => {
       const a = load();
       a.reportMigrateRunError({
         code: 'migration-exec',
-        migrationIndex: 3,
         migrationCount: 12,
         error: new Error('boom'),
       });
       expect(paramsFor('migrate_run_error')).toMatchObject({
-        migrationIndex: 3,
         migrationCount: 12,
       });
     });
 
-    it('omits the position at non-loop error sites', () => {
+    it('omits the run size at non-loop error sites', () => {
       const a = load();
       a.reportMigrateRunError({ code: 'npm-install', error: new Error('x') });
       const params = paramsFor('migrate_run_error');
-      expect(params?.migrationIndex).toBeUndefined();
       expect(params?.migrationCount).toBeUndefined();
     });
 

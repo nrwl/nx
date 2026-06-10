@@ -212,7 +212,6 @@ pub struct EventDimensions {
     pub majors_crossed: String,
     pub migration_count: String,
     pub applied_count: String,
-    pub migration_index: String,
 }
 
 /// Returns the canonical event dimension names.
@@ -246,7 +245,6 @@ pub fn get_event_dimensions() -> EventDimensions {
         majors_crossed: event_dimension::MAJORS_CROSSED.to_string(),
         migration_count: event_dimension::MIGRATION_COUNT.to_string(),
         applied_count: event_dimension::APPLIED_COUNT.to_string(),
-        migration_index: event_dimension::MIGRATION_INDEX.to_string(),
     }
 }
 

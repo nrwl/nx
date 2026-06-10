@@ -83,5 +83,4 @@ pub mod event_dimension {
     pub const MAJORS_CROSSED: &str = "epn.majors_crossed";
     pub const MIGRATION_COUNT: &str = "epn.migration_count";
     pub const APPLIED_COUNT: &str = "epn.applied_count";
-    pub const MIGRATION_INDEX: &str = "epn.migration_index";
 }

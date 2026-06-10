@@ -3146,7 +3146,6 @@ export async function executeMigrations(
                 : 'migration-exec',
           migrationPackage: m.package,
           migrationName: m.name,
-          migrationIndex,
           migrationCount: totalMigrations,
           error: e,
         });

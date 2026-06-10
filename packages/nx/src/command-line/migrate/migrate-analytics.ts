@@ -237,9 +237,8 @@ export function reportMigrateRunError(opts: {
   code: MigrateRunErrorCode;
   migrationPackage?: string;
   migrationName?: string;
-  // Position of the failing migration within the run. Set only at the in-loop
-  // failure site; the agentic-resolve and outer-install sites leave them unset.
-  migrationIndex?: number;
+  // Set only at the in-loop failure site; the agentic-resolve and
+  // outer-install sites leave it unset.
   migrationCount?: number;
   error?: unknown;
 }): void {
@@ -257,7 +256,6 @@ export function reportMigrateRunError(opts: {
             [customDimensions.migrationName]: `${opts.migrationPackage}:${opts.migrationName}`,
           }
         : {}),
-      [customDimensions.migrationIndex]: opts.migrationIndex,
       [customDimensions.migrationCount]: opts.migrationCount,
       [customDimensions.errorName]:
         opts.error !== undefined ? errorName(opts.error) : undefined,
