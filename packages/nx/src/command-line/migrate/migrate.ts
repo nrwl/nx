@@ -104,9 +104,10 @@ import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
 import {
   classifyMigrateFetchFallback,
   hasMigrateRunStarted,
+  type MigrateFetchFallbackReason,
+  type MigrateFetchStats,
   type MigrateGenerateErrorCode,
   type MigrateMultiMajorChoice,
-  recordMigrateFetch,
   reportMigrateGenerateComplete,
   reportMigrateGenerateError,
   reportMigrateGenerateStart,
@@ -249,10 +250,13 @@ export interface MigratorOptions {
     pkg: string,
     overrides?: Record<string, string>
   ) => string;
-  fetch: (
+  fetch: ((
     pkg: string,
     version: string
-  ) => Promise<ResolvedMigrationConfiguration>;
+  ) => Promise<ResolvedMigrationConfiguration>) & {
+    // Set by `createFetcher`; absent on injected (test) fetchers.
+    stats?: MigrateFetchStats;
+  };
   from: { [pkg: string]: string };
   to: { [pkg: string]: string };
   interactive?: boolean;
@@ -1617,6 +1621,11 @@ export function createFetcher(pmc: PackageManagerCommands) {
     Promise<ResolvedMigrationConfiguration>
   > = {};
   const resolvedVersionCache: Record<string, Promise<string>> = {};
+  const stats: MigrateFetchStats = { registryCount: 0, installCount: 0 };
+  function recordInstallFetch(reason: MigrateFetchFallbackReason): void {
+    stats.installCount++;
+    stats.fallbackReason ??= reason;
+  }
 
   function fetchMigrations(
     packageName,
@@ -1626,7 +1635,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
     if (!isRegistryResolutionEnabled()) {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
-      recordMigrateFetch('install', 'env-skip');
+      recordInstallFetch('env-skip');
       return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
     }
 
@@ -1656,7 +1665,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
           packageName,
           resolvedVersion
         ).then((result) => {
-          recordMigrateFetch('registry');
+          stats.registryCount++;
           return result;
         });
       })
@@ -1670,7 +1679,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
           `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
         );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
-        recordMigrateFetch('install', classifyMigrateFetchFallback(e));
+        recordInstallFetch(classifyMigrateFetchFallback(e));
 
         return getPackageMigrationsUsingInstall(
           packageName,
@@ -1680,10 +1689,10 @@ export function createFetcher(pmc: PackageManagerCommands) {
       });
   }
 
-  return function nxMigrateFetcher(
+  const nxMigrateFetcher: MigratorOptions['fetch'] = (
     packageName: string,
     packageVersion: string
-  ): Promise<ResolvedMigrationConfiguration> {
+  ): Promise<ResolvedMigrationConfiguration> => {
     if (migrationsCache[`${packageName}-${packageVersion}`]) {
       return migrationsCache[`${packageName}-${packageVersion}`];
     }
@@ -1710,6 +1719,8 @@ export function createFetcher(pmc: PackageManagerCommands) {
 
     return migrations;
   };
+  nxMigrateFetcher.stats = stats;
+  return nxMigrateFetcher;
 }
 
 // testing-fetch-end
@@ -2327,6 +2338,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           : installedPackageVersions(opts.targetPackage),
         include,
         multiMajorChoice: opts.multiMajorChoice,
+        fetchStats: resolvedFetch.stats,
       });
 
     const noChanges =

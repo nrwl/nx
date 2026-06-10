@@ -11,6 +11,14 @@ export type MigrateFetchFallbackReason =
   | 'unsupported-registry'
   | 'provenance'
   | 'registry-error';
+// Accumulated by `createFetcher` across the migration cascade (one fetch per
+// package) and folded into the single completion event - never reported
+// per fetch. `fallbackReason` holds the first fallback hit.
+export type MigrateFetchStats = {
+  registryCount: number;
+  installCount: number;
+  fallbackReason?: MigrateFetchFallbackReason;
+};
 // Mirrors `ResolvedAgentic['kind']`; kept local to avoid importing agentic
 // types into the analytics module (which agentic/* already imports from).
 export type MigrateAgenticOutcome = 'enabled' | 'disabled' | 'inside-agent';
@@ -42,9 +50,6 @@ const IDENTIFIER_SHAPE = /^[A-Za-z][A-Za-z0-9_]*$/;
 // module state is safe.
 let resolvedInclude: MigrateInclude | undefined;
 let includeSource: MigrateIncludeSource | undefined;
-let fetchFallbackReason: MigrateFetchFallbackReason | undefined;
-let registryFetchCount = 0;
-let installFetchCount = 0;
 let generateErrorRecorded = false;
 let runErrorRecorded = false;
 let runStarted = false;
@@ -55,18 +60,6 @@ export function setMigrateInclude(include: MigrateInclude): void {
 
 export function setMigrateIncludeSource(source: MigrateIncludeSource): void {
   includeSource = source;
-}
-
-export function recordMigrateFetch(
-  method: 'registry' | 'install',
-  fallbackReason?: MigrateFetchFallbackReason
-): void {
-  if (method === 'registry') {
-    registryFetchCount++;
-  } else {
-    installFetchCount++;
-    fetchFallbackReason ??= fallbackReason;
-  }
 }
 
 export function classifyMigrateFetchFallback(
@@ -140,6 +133,8 @@ export function reportMigrateGenerateComplete(opts: {
   installedTargetVersion: string | null | undefined;
   include: MigrateInclude;
   multiMajorChoice?: MigrateMultiMajorChoice;
+  // Absent when the fetcher was injected (tests) rather than `createFetcher`'s.
+  fetchStats?: MigrateFetchStats;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
@@ -147,12 +142,13 @@ export function reportMigrateGenerateComplete(opts: {
       opts.installedTargetVersion,
       opts.requestedTargetVersion
     );
+    const { registryCount = 0, installCount = 0 } = opts.fetchStats ?? {};
     const fetchMethod =
-      registryFetchCount > 0 && installFetchCount > 0
+      registryCount > 0 && installCount > 0
         ? 'mixed'
-        : installFetchCount > 0
+        : installCount > 0
           ? 'install'
-          : registryFetchCount > 0
+          : registryCount > 0
             ? 'registry'
             : undefined;
     reportEvent('migrate_generate_complete', {
@@ -167,7 +163,7 @@ export function reportMigrateGenerateComplete(opts: {
         ? { [customDimensions.multiMajorChoice]: opts.multiMajorChoice }
         : {}),
       [customDimensions.fetchMethod]: fetchMethod,
-      [customDimensions.fetchFallbackReason]: fetchFallbackReason,
+      [customDimensions.fetchFallbackReason]: opts.fetchStats?.fallbackReason,
     });
   });
 }

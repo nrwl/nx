@@ -159,22 +159,42 @@ describe('migrate-analytics events', () => {
     });
 
     it.each([
-      { methods: ['registry'] as const, expected: 'registry' },
-      { methods: ['install'] as const, expected: 'install' },
-      { methods: ['registry', 'install'] as const, expected: 'mixed' },
-      { methods: [] as const, expected: undefined },
-    ])('derives fetch_method=$expected', ({ methods, expected }) => {
+      { stats: { registryCount: 2, installCount: 0 }, expected: 'registry' },
+      { stats: { registryCount: 0, installCount: 1 }, expected: 'install' },
+      { stats: { registryCount: 1, installCount: 1 }, expected: 'mixed' },
+      { stats: { registryCount: 0, installCount: 0 }, expected: undefined },
+      { stats: undefined, expected: undefined },
+    ])('derives fetch_method=$expected from $stats', ({ stats, expected }) => {
       const a = load();
-      for (const m of methods) a.recordMigrateFetch(m);
       a.reportMigrateGenerateComplete({
         targetVersion: '22.1.0',
         requestedTargetVersion: '22.1.0',
         installedTargetVersion: '22.0.0',
         include: 'all',
+        fetchStats: stats,
       });
       expect(paramsFor('migrate_generate_complete')?.fetchMethod).toBe(
         expected
       );
+    });
+
+    it('passes through the first fetch fallback reason', () => {
+      const a = load();
+      a.reportMigrateGenerateComplete({
+        targetVersion: '22.1.0',
+        requestedTargetVersion: '22.1.0',
+        installedTargetVersion: '22.0.0',
+        include: 'all',
+        fetchStats: {
+          registryCount: 3,
+          installCount: 1,
+          fallbackReason: 'provenance',
+        },
+      });
+      expect(paramsFor('migrate_generate_complete')).toMatchObject({
+        fetchMethod: 'mixed',
+        fetchFallbackReason: 'provenance',
+      });
     });
 
     it('includes the multi-major choice only when 2+ majors are crossed', () => {
