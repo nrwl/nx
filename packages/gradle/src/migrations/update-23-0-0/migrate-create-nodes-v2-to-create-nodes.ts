@@ -82,15 +82,26 @@ export function rewriteCreateNodesV2Imports(
     ts.ScriptKind.TSX
   );
 
+  // Top-level names declared in this file. A lone `createNodesV2` import must
+  // NOT be renamed to `createNodes` when `createNodes` is already declared here
+  // (e.g. a file with its own local `createNodes`); doing so would collide with
+  // the local declaration.
+  const conflicts = collectLocalDeclarationNames(sourceFile);
+
   const changes: StringChange[] = [];
   let renameLocalUsages = false;
   for (const stmt of sourceFile.statements) {
     if (ts.isImportDeclaration(stmt)) {
       renameLocalUsages =
-        collectImportRewrite(sourceFile, stmt, specifiers, changes) ||
-        renameLocalUsages;
+        collectImportRewrite(
+          sourceFile,
+          stmt,
+          specifiers,
+          changes,
+          conflicts
+        ) || renameLocalUsages;
     } else if (ts.isExportDeclaration(stmt)) {
-      collectExportRewrite(sourceFile, stmt, specifiers, changes);
+      collectExportRewrite(sourceFile, stmt, specifiers, changes, conflicts);
     }
   }
 
@@ -117,7 +128,8 @@ function collectImportRewrite(
   sourceFile: SourceFile,
   stmt: ImportDeclaration,
   specifiers: ReadonlySet<string>,
-  changes: StringChange[]
+  changes: StringChange[],
+  conflicts: ReadonlySet<string>
 ): boolean {
   if (!isTargetSpecifier(stmt.moduleSpecifier, specifiers)) {
     return false;
@@ -134,15 +146,17 @@ function collectImportRewrite(
   // The local `createNodesV2` binding only disappears when it is imported
   // without an alias — a lone `{ createNodesV2 }` or one deduped against an
   // existing `createNodes`. `{ createNodesV2 as x }` keeps the local `x`, so
-  // its in-file usages are unaffected and must not be rewritten.
-  const localBindingRenamed = (
-    namedBindings.elements as readonly ImportSpecifier[]
-  ).some(
-    (el) =>
-      el.name.text === DEPRECATED_NAME &&
-      (el.propertyName ?? el.name).text === DEPRECATED_NAME
-  );
-  rewriteNamedBindings(sourceFile, namedBindings, changes);
+  // its in-file usages are unaffected and must not be rewritten. When
+  // `createNodes` is already declared locally the rewrite is suppressed, so the
+  // binding (and its references) stay on the V2 name.
+  const localBindingRenamed =
+    !conflicts.has(CANONICAL_NAME) &&
+    (namedBindings.elements as readonly ImportSpecifier[]).some(
+      (el) =>
+        el.name.text === DEPRECATED_NAME &&
+        (el.propertyName ?? el.name).text === DEPRECATED_NAME
+    );
+  rewriteNamedBindings(sourceFile, namedBindings, changes, conflicts);
   return localBindingRenamed;
 }
 
@@ -150,7 +164,8 @@ function collectExportRewrite(
   sourceFile: SourceFile,
   stmt: ExportDeclaration,
   specifiers: ReadonlySet<string>,
-  changes: StringChange[]
+  changes: StringChange[],
+  conflicts: ReadonlySet<string>
 ): void {
   if (
     !stmt.moduleSpecifier ||
@@ -163,7 +178,7 @@ function collectExportRewrite(
   if (!stmt.exportClause || !ts!.isNamedExports(stmt.exportClause)) {
     return;
   }
-  rewriteNamedBindings(sourceFile, stmt.exportClause, changes);
+  rewriteNamedBindings(sourceFile, stmt.exportClause, changes, conflicts);
 }
 
 /**
@@ -176,23 +191,31 @@ function collectExportRewrite(
 function rewriteNamedBindings(
   sourceFile: SourceFile,
   namedBindings: NamedImports | NamedExports,
-  changes: StringChange[]
+  changes: StringChange[],
+  conflicts: ReadonlySet<string>
 ): void {
   const elements = namedBindings.elements as readonly (
     | ImportSpecifier
     | ExportSpecifier
   )[];
-  const hasDeprecated = elements.some(
-    (el) => (el.propertyName ?? el.name).text === DEPRECATED_NAME
-  );
-  if (!hasDeprecated) {
+  // Whether any specifier is actually renamed once the local-declaration guard
+  // is applied. A non-aliased `{ createNodesV2 }` is suppressed when
+  // `createNodes` is declared locally, so a list whose only deprecated binding
+  // hits that guard is left untouched.
+  const willRename = elements.some((el) => {
+    if ((el.propertyName ?? el.name).text !== DEPRECATED_NAME) {
+      return false;
+    }
+    return el.propertyName ? true : !conflicts.has(CANONICAL_NAME);
+  });
+  if (!willRename) {
     return;
   }
 
   const seen = new Set<string>();
   const rendered: string[] = [];
   for (const el of elements) {
-    const text = renderSpecifier(el);
+    const text = renderSpecifier(el, conflicts);
     if (!seen.has(text)) {
       seen.add(text);
       rendered.push(text);
@@ -214,14 +237,23 @@ function rewriteNamedBindings(
   );
 }
 
-function renderSpecifier(el: ImportSpecifier | ExportSpecifier): string {
+function renderSpecifier(
+  el: ImportSpecifier | ExportSpecifier,
+  conflicts: ReadonlySet<string>
+): string {
   const typePrefix = el.isTypeOnly ? 'type ' : '';
   const rename = (name: string) =>
     name === DEPRECATED_NAME ? CANONICAL_NAME : name;
 
-  // `{ name }` — no alias, so the local binding follows the rename.
+  // `{ name }` — no alias, so the local binding follows the rename, unless the
+  // canonical name is already declared locally (keep the V2 name to avoid a
+  // collision with that declaration).
   if (!el.propertyName) {
-    return `${typePrefix}${rename(el.name.text)}`;
+    const canonical = rename(el.name.text);
+    if (canonical !== el.name.text && conflicts.has(canonical)) {
+      return `${typePrefix}${el.name.text}`;
+    }
+    return `${typePrefix}${canonical}`;
   }
 
   // `{ propertyName as name }` — only the imported (left) side is renamed; the
@@ -317,4 +349,34 @@ function isRenamableValueUsage(node: Identifier): boolean {
     return false;
   }
   return true;
+}
+
+/**
+ * Collects the names of top-level type/value declarations in the file. A lone
+ * `createNodesV2` import is not renamed to `createNodes` when that name appears
+ * here, since doing so would collide with the local declaration.
+ */
+function collectLocalDeclarationNames(
+  sourceFile: SourceFile
+): ReadonlySet<string> {
+  const names = new Set<string>();
+  for (const stmt of sourceFile.statements) {
+    if (
+      (ts!.isInterfaceDeclaration(stmt) ||
+        ts!.isTypeAliasDeclaration(stmt) ||
+        ts!.isClassDeclaration(stmt) ||
+        ts!.isFunctionDeclaration(stmt) ||
+        ts!.isEnumDeclaration(stmt)) &&
+      stmt.name
+    ) {
+      names.add(stmt.name.text);
+    } else if (ts!.isVariableStatement(stmt)) {
+      for (const decl of stmt.declarationList.declarations) {
+        if (ts!.isIdentifier(decl.name)) {
+          names.add(decl.name.text);
+        }
+      }
+    }
+  }
+  return names;
 }

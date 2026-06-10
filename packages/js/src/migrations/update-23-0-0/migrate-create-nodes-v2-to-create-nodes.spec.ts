@@ -195,6 +195,26 @@ describe('migrate-create-nodes-v2-to-create-nodes migration', () => {
           `export const plugin = cn;\n`
       );
     });
+
+    it('does not rename when createNodes is declared locally', () => {
+      // The file defines its own `createNodes`, so renaming the import would
+      // collide with it. Leave the import and its usages on the V2 name.
+      const input =
+        `import { createNodesV2 } from '@nx/js/typescript';\n` +
+        `export function createNodes() {}\n` +
+        `export const plugin = createNodesV2;\n`;
+      expect(rewrite(input)).toBe(input);
+    });
+
+    it('still dedupes when createNodes is imported (not locally declared)', () => {
+      const input =
+        `import { createNodes, createNodesV2 } from '@nx/js/typescript';\n` +
+        `export const plugin = createNodesV2;\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/js/typescript';\n` +
+          `export const plugin = createNodes;\n`
+      );
+    });
   });
 
   describe('migration runner', () => {
