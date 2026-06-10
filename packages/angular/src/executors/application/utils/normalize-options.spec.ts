@@ -1,7 +1,14 @@
 import * as angularVersionUtils from '../../utilities/angular-version-utils';
-import { coerceSsrPlatformOption } from './coerce-ssr-platform';
+import type { ApplicationExecutorOptions } from '../schema';
+import { normalizeOptions } from './normalize-options';
 
-describe('coerceSsrPlatformOption', () => {
+function normalizeSsr(
+  ssr: ApplicationExecutorOptions['ssr']
+): ApplicationExecutorOptions['ssr'] {
+  return normalizeOptions({ ssr } as ApplicationExecutorOptions).ssr;
+}
+
+describe('normalizeOptions', () => {
   let getInstalledAngularVersionInfoSpy: jest.SpyInstance;
 
   beforeEach(() => {
@@ -15,26 +22,41 @@ describe('coerceSsrPlatformOption', () => {
     jest.restoreAllMocks();
   });
 
+  it('should preserve other options untouched', () => {
+    getInstalledAngularVersionInfoSpy.mockReturnValue({
+      major: 22,
+      version: '22.0.0',
+    });
+
+    const result = normalizeOptions({
+      tsConfig: 'tsconfig.app.json',
+      ssr: { entry: 'server.ts', experimentalPlatform: 'neutral' },
+    } as ApplicationExecutorOptions);
+
+    expect(result.tsConfig).toBe('tsconfig.app.json');
+    expect(result.ssr).toEqual({ entry: 'server.ts', platform: 'neutral' });
+  });
+
   it.each([undefined, false, true])(
-    'should return non-object ssr (%s) unchanged',
+    'should leave non-object ssr (%s) unchanged',
     (ssr) => {
       getInstalledAngularVersionInfoSpy.mockReturnValue({
         major: 22,
         version: '22.0.0',
       });
 
-      expect(coerceSsrPlatformOption(ssr)).toBe(ssr);
+      expect(normalizeSsr(ssr as ApplicationExecutorOptions['ssr'])).toBe(ssr);
     }
   );
 
-  it('should return the ssr object unchanged when no platform is set', () => {
+  it('should leave the ssr object unchanged when no platform is set', () => {
     getInstalledAngularVersionInfoSpy.mockReturnValue({
       major: 22,
       version: '22.0.0',
     });
     const ssr = { entry: 'server.ts' };
 
-    expect(coerceSsrPlatformOption(ssr)).toBe(ssr);
+    expect(normalizeSsr(ssr)).toBe(ssr);
   });
 
   describe('when Angular version is >= 22', () => {
@@ -47,22 +69,19 @@ describe('coerceSsrPlatformOption', () => {
 
     it('should map experimentalPlatform to platform', () => {
       expect(
-        coerceSsrPlatformOption({
-          entry: 'server.ts',
-          experimentalPlatform: 'neutral',
-        })
+        normalizeSsr({ entry: 'server.ts', experimentalPlatform: 'neutral' })
       ).toEqual({ entry: 'server.ts', platform: 'neutral' });
     });
 
     it('should keep platform as-is', () => {
-      expect(
-        coerceSsrPlatformOption({ entry: 'server.ts', platform: 'neutral' })
-      ).toEqual({ entry: 'server.ts', platform: 'neutral' });
+      expect(normalizeSsr({ entry: 'server.ts', platform: 'neutral' })).toEqual(
+        { entry: 'server.ts', platform: 'neutral' }
+      );
     });
 
     it('should prefer platform over experimentalPlatform when both are set', () => {
       expect(
-        coerceSsrPlatformOption({
+        normalizeSsr({
           entry: 'server.ts',
           platform: 'neutral',
           experimentalPlatform: 'node',
@@ -80,23 +99,20 @@ describe('coerceSsrPlatformOption', () => {
     });
 
     it('should map platform to experimentalPlatform', () => {
-      expect(
-        coerceSsrPlatformOption({ entry: 'server.ts', platform: 'neutral' })
-      ).toEqual({ entry: 'server.ts', experimentalPlatform: 'neutral' });
+      expect(normalizeSsr({ entry: 'server.ts', platform: 'neutral' })).toEqual(
+        { entry: 'server.ts', experimentalPlatform: 'neutral' }
+      );
     });
 
     it('should keep experimentalPlatform as-is', () => {
       expect(
-        coerceSsrPlatformOption({
-          entry: 'server.ts',
-          experimentalPlatform: 'neutral',
-        })
+        normalizeSsr({ entry: 'server.ts', experimentalPlatform: 'neutral' })
       ).toEqual({ entry: 'server.ts', experimentalPlatform: 'neutral' });
     });
 
     it('should prefer platform over experimentalPlatform when both are set', () => {
       expect(
-        coerceSsrPlatformOption({
+        normalizeSsr({
           entry: 'server.ts',
           platform: 'neutral',
           experimentalPlatform: 'node',

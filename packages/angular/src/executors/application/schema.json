@@ -614,7 +614,7 @@
               "description": "Specifies the platform for which the server bundle is generated. This affects the APIs and modules available in the server-side code. \n\n- `node`:  (Default) Generates a bundle optimized for Node.js environments. \n- `neutral`: Generates a platform-neutral bundle suitable for environments like edge workers, and other serverless platforms. This option avoids using Node.js-specific APIs, making the bundle more portable. \n\nPlease note that this feature does not provide polyfills for Node.js modules. Additionally, it is experimental, and the feature may undergo changes in future versions.",
               "default": "node",
               "enum": ["node", "neutral"],
-              "x-deprecated": "Use 'platform' instead. The 'experimentalPlatform' option was renamed to 'platform' in Angular v22."
+              "x-deprecated": "Use 'platform' instead. The 'experimentalPlatform' option is deprecated."
             }
           },
           "additionalProperties": false

@@ -14,12 +14,16 @@ type SsrPlatformInput =
       experimentalPlatform?: 'node' | 'neutral';
     };
 
-// Angular v22 renamed the SSR `experimentalPlatform` option to `platform` and
-// dropped the old key. We accept both from users; forward the one the installed
+export function normalizeOptions(
+  options: ApplicationExecutorOptions
+): ApplicationExecutorOptions {
+  return { ...options, ssr: coerceSsrPlatform(options.ssr) };
+}
+
+// `platform` is the option name from Angular v22 onwards; earlier majors use
+// `experimentalPlatform`. We accept both and forward the one the installed
 // builder understands so a `neutral` value is never silently dropped.
-export function coerceSsrPlatformOption(
-  ssr: SsrPlatformInput | undefined
-): SsrOption {
+function coerceSsrPlatform(ssr: SsrPlatformInput | undefined): SsrOption {
   if (!ssr || typeof ssr !== 'object') {
     return ssr as SsrOption;
   }
