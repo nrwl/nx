@@ -21,15 +21,16 @@ Many conventions and best practices used in Angular applications can be also be 
 
 The `@nx/nest` plugin supports the following NestJS package versions.
 
-| Package        | Supported Versions |
-| -------------- | ------------------ |
-| `@nestjs/core` | ^10.0.0, ^11.0.0   |
+| Package        | Supported Versions   |
+| -------------- | -------------------- |
+| `@nestjs/core` | ^10.0.0 \|\| ^11.0.0 |
 
 The plugin detects the installed `@nestjs/core` major and routes the rest of the `@nestjs/*` family (plus `rxjs` and `reflect-metadata`) to versions that pair with it. Fresh installs default to NestJS v11.
 
 | Nx Version     | Default NestJS Version |
 | -------------- | ---------------------- |
-| 22.x (current) | ^11.0.0                |
+| 23.x (current) | ^11.0.0                |
+| 22.x           | ^11.0.0                |
 | 21.x           | ^11.0.0                |
 | 20.x           | ^10.0.0                |
 
