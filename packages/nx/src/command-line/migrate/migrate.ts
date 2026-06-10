@@ -17,6 +17,7 @@ import {
   rsort,
   satisfies,
   valid,
+  validRange,
 } from 'semver';
 import { URL } from 'node:url';
 import { promisify } from 'util';
@@ -774,6 +775,10 @@ export class Migrator {
     toVersion: string | null,
     versionRange: string
   ): boolean {
+    if (!validRange(versionRange, { includePrerelease: true })) {
+      return false;
+    }
+
     const cleanedToVersion = toVersion && cleanSemverVersion(toVersion);
     if (!cleanedToVersion) {
       return false;

@@ -1448,6 +1448,66 @@ describe('Migration', () => {
         });
       });
 
+      it('should skip updates with invalid requirements against a planned dependency journey', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              mypackage: '1.0.0',
+              dep: '1.0.0',
+              child: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: (p) => {
+            if (p === 'mypackage' || p === 'dep' || p === 'child') {
+              return '1.0.0';
+            }
+            return null;
+          },
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '3.0.0',
+                packageJsonUpdates: {
+                  depV3: {
+                    version: '3.0.0',
+                    packages: {
+                      dep: { version: '3.0.0' },
+                    },
+                  },
+                  invalidRequirement: {
+                    version: '3.0.0',
+                    packages: {
+                      child: { version: '2.0.0' },
+                    },
+                    requires: { dep: 'not a range' },
+                  },
+                },
+              });
+            }
+            if (p === 'dep') {
+              return Promise.resolve({ version: '3.0.0' });
+            }
+            if (p === 'child') {
+              throw new Error('should not be processed');
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+        });
+
+        await expect(
+          migrator.migrate('mypackage', '3.0.0')
+        ).resolves.toStrictEqual({
+          migrations: [],
+          packageUpdates: {
+            mypackage: { version: '3.0.0', addToPackageJson: false },
+            dep: { version: '3.0.0', addToPackageJson: false },
+          },
+          minVersionWithSkippedUpdates: undefined,
+        });
+      });
+
       it('should meet requirements with versions set by dependent package updates in package groups', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
@@ -1697,6 +1757,13 @@ describe('Migration', () => {
         requiresRange: '>=2.0.0 <3.0.0',
         fromOverrides: { dep: '1.0.0' },
         expectedMigrationNames: ['gated'],
+      },
+      {
+        description: 'invalid range with a planned update',
+        installedDepVersion: '1.0.0',
+        plannedDepVersion: '3.0.0',
+        requiresRange: 'not a range',
+        expectedMigrationNames: [],
       },
     ])(
       'should evaluate migration requirements against the dependency journey: $description',
@@ -2313,6 +2380,13 @@ describe('Migration', () => {
                   description: 'previous capped migration desc',
                   requires: {
                     pkg1: '>=1.0.0 <2.0.0',
+                  },
+                },
+                previousInvalidMigration: {
+                  version: '1.0.0',
+                  description: 'previous invalid migration desc',
+                  requires: {
+                    pkg1: 'not a range',
                   },
                 },
                 newMigration: {
