@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "../scripts/tools-out",
     "module": "commonjs",
+    "moduleResolution": "node",
     "types": ["node"]
   },
   "include": ["**/*.ts"]
