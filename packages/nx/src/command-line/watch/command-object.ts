@@ -52,6 +52,18 @@ function withWatchOptions(yargs: Argv) {
         alias: 'g',
         hidden: true,
       })
+      .option('include', {
+        type: 'string',
+        coerce: parseCSV,
+        description:
+          'Glob patterns (comma/space delimited) for file paths that should re-trigger the watched command. A changed file must match at least one pattern to count. When omitted, all changed files are included.',
+      })
+      .option('exclude', {
+        type: 'string',
+        coerce: parseCSV,
+        description:
+          'Glob patterns (comma/space delimited) for file paths that should never re-trigger the watched command. A file matching any exclude pattern is always skipped, even if it also matched --include.',
+      })
       .option('command', { type: 'string', hidden: true })
       .option('verbose', {
         type: 'boolean',
