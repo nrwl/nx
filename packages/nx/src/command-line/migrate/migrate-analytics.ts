@@ -33,10 +33,6 @@ export type MigrateRunErrorCode =
   | 'agentic'
   | 'other';
 
-// GA4 caps event param values at 100 chars; truncate proactively so payloads
-// are deterministic regardless of the sender's behavior.
-const MAX_PARAM_VALUE_LENGTH = 100;
-
 // Identifier-shaped tokens only (Node codes like ENOENT, class names like
 // TypeError). Rejects anything with a slash, space, or punctuation so a
 // settable `.code`/`.name` can't smuggle a path or message into GA.
@@ -271,9 +267,7 @@ export function reportMigrateRunError(opts: {
       opts.migrationName &&
       isFirstPartyMigrationPackage(opts.migrationPackage)
         ? {
-            [customDimensions.migrationName]: truncate(
-              `${opts.migrationPackage}:${opts.migrationName}`
-            ),
+            [customDimensions.migrationName]: `${opts.migrationPackage}:${opts.migrationName}`,
           }
         : {}),
       [customDimensions.migrationIndex]: opts.migrationIndex,
@@ -323,10 +317,10 @@ function isFirstPartyMigrationPackage(packageName: string): boolean {
 function errorName(error: unknown): string {
   const code = (error as { code?: unknown })?.code;
   if (typeof code === 'string' && IDENTIFIER_SHAPE.test(code)) {
-    return truncate(code);
+    return code;
   }
   if (error instanceof Error && IDENTIFIER_SHAPE.test(error.name)) {
-    return truncate(error.name);
+    return error.name;
   }
   return typeof error;
 }
@@ -347,15 +341,9 @@ function errorLocation(error: unknown): string | undefined {
       .match(
         /\/node_modules\/((?:@(?:nx|nrwl)\/[^/]+|nx))\/(?:dist\/)?(src\/.+?:\d+:\d+)/
       );
-    if (match) return truncate(`${match[1]}/${match[2]}`);
+    if (match) return `${match[1]}/${match[2]}`;
   }
   return undefined;
-}
-
-function truncate(value: string): string {
-  return value.length > MAX_PARAM_VALUE_LENGTH
-    ? value.slice(0, MAX_PARAM_VALUE_LENGTH)
-    : value;
 }
 
 // Analytics is a secondary concern and must never interfere with the migrate
