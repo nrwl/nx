@@ -1,6 +1,6 @@
 import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
 import type { HashInputs } from '../../../native';
-import { createTaskFileResolver } from '../../../hasher/task-file-resolver';
+import { getTaskRawInputs } from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
 import type { ShowTargetInputsOptions } from '../command-object';
 import {
@@ -34,12 +34,7 @@ export async function showTargetInputsHandler(
   const { projectName, targetName, configuration } = t;
   const taskId = createTaskId(projectName, targetName, configuration);
 
-  const resolver = await createTaskFileResolver({
-    projectGraph: t.graph,
-    nxJson: t.nxJson,
-  });
-
-  const hashInputs = resolver.getRawInputs(taskId);
+  const hashInputs = await getTaskRawInputs(taskId);
   if (!hashInputs) {
     throw new Error(`Could not find hash plan for task "${taskId}".`);
   }
