@@ -162,6 +162,32 @@ describe('rename-create-nodes-v2-types migration', () => {
         `const s = 'CreateNodesV2';\n`;
       expect(rewriteCreateNodesV2Types(input)).toBe(input);
     });
+
+    it('does not rename when the canonical name is declared locally (inlined-shim shape)', () => {
+      // A multi-version plugin that inlines its own `CreateNodesContext` over
+      // the devkit `CreateNodesContextV2` base. Renaming the import to
+      // `CreateNodesContext` would collide with — and self-reference — the local
+      // declaration, so the file is left untouched.
+      const input =
+        `import { CreateNodesContextV2 } from '@nx/devkit';\n` +
+        `export interface CreateNodesContext extends CreateNodesContextV2 {\n` +
+        `  readonly configFiles: readonly string[];\n` +
+        `}\n` +
+        `export const fn = (context: CreateNodesContext) => context;\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(input);
+    });
+
+    it('still renames other deprecated types when one collides with a local name', () => {
+      const input =
+        `import { CreateNodesContextV2, NxPluginV2 } from '@nx/devkit';\n` +
+        `export interface CreateNodesContext extends CreateNodesContextV2 {}\n` +
+        `export const p: NxPluginV2 = {} as NxPluginV2;\n`;
+      expect(rewriteCreateNodesV2Types(input)).toBe(
+        `import { CreateNodesContextV2, NxPlugin } from '@nx/devkit';\n` +
+          `export interface CreateNodesContext extends CreateNodesContextV2 {}\n` +
+          `export const p: NxPlugin = {} as NxPlugin;\n`
+      );
+    });
   });
 
   describe('migration runner', () => {
