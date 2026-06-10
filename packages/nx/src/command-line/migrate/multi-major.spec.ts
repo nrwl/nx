@@ -15,12 +15,9 @@ jest.mock('./safe-prompt', () => ({
 jest.mock('../../utils/output', () => ({
   output: { warn: jest.fn(), log: jest.fn() },
 }));
-const setMultiMajorDecisionMock = jest.fn();
 const recordPromptMock = jest.fn();
 jest.mock('./migrate-analytics', () => ({
   reportMigratePrompt: (...args: unknown[]) => recordPromptMock(...args),
-  setMigrateMultiMajorDecision: (...args: unknown[]) =>
-    setMultiMajorDecisionMock(...args),
 }));
 
 import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
@@ -81,71 +78,70 @@ describe('multi-major analytics decision', () => {
     canPromptMock.mockReset();
     canPromptMock.mockReturnValue(false);
     migratePromptMock.mockReset();
-    setMultiMajorDecisionMock.mockReset();
     recordPromptMock.mockReset();
   });
 
-  it('records a direct decision from the --multi-major-mode flag', async () => {
-    await maybePromptOrWarnMultiMajorMigration({
+  it('returns a direct decision from the --multi-major-mode flag', async () => {
+    const result = await maybePromptOrWarnMultiMajorMigration({
       include: 'all',
       options: { multiMajorMode: 'direct' },
       targetPackage: 'nx',
       targetVersion: '23.0.0',
     });
-    expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
-      choice: 'direct',
-      source: 'flag',
-    });
+    expect(result.decision).toBe('direct');
   });
 
-  it('records a gradual decision when an incremental step is available', async () => {
+  it('returns a gradual decision when an incremental step is available', async () => {
     resolveMock.mockImplementation((_pkg: string, range: string) =>
       Promise.resolve(range === '^21.0.0' ? '21.9.9' : '22.9.9')
     );
-    await maybePromptOrWarnMultiMajorMigration({
+    const result = await maybePromptOrWarnMultiMajorMigration({
       include: 'all',
       options: { multiMajorMode: 'gradual' },
       targetPackage: 'nx',
       targetVersion: '23.0.0',
     });
-    expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
-      choice: 'gradual',
-      source: 'flag',
-    });
+    expect(result.decision).toBe('gradual');
   });
 
-  it('records a default direct decision on the non-interactive warn-only path', async () => {
-    await maybePromptOrWarnMultiMajorMigration({
+  it('returns a direct decision on the non-interactive warn-only path', async () => {
+    const result = await maybePromptOrWarnMultiMajorMigration({
       include: 'all',
       options: {},
       targetPackage: 'nx',
       targetVersion: '23.0.0',
     });
-    expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
-      choice: 'direct',
-      source: 'default',
-    });
+    expect(result.decision).toBe('direct');
   });
 
-  it('records a default (not flag) decision when gradual has no eligible step', async () => {
+  it('returns a direct decision when gradual has no eligible step', async () => {
     // gradual flag set, but the registry probe yields no valid incremental
     // version, so gradual is forced to degrade to direct.
     resolveMock.mockResolvedValue('not-a-version');
-    await maybePromptOrWarnMultiMajorMigration({
+    const result = await maybePromptOrWarnMultiMajorMigration({
       include: 'all',
       options: { multiMajorMode: 'gradual' },
       targetPackage: 'nx',
       targetVersion: '23.0.0',
     });
-    expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
-      choice: 'direct',
-      source: 'default',
+    expect(result.decision).toBe('direct');
+  });
+
+  it('leaves the decision unset when the multi-major gate does not apply', async () => {
+    const result = await maybePromptOrWarnMultiMajorMigration({
+      include: 'all',
+      options: {},
+      targetPackage: 'nx',
+      // 1-major jump: below the multi-major threshold.
+      targetVersion: '22.0.0',
     });
+    expect(result.decision).toBeUndefined();
   });
 
   // The interactive prompt returns a concrete version; the mapping collapses it
-  // back to the option the user picked (prompt dimension) and to gradual/direct
-  // (decision dimension). Installed 21, current=21.9.9, next=22.9.9, target=23.0.0.
+  // back to the option the user picked (prompt event choice) and to
+  // gradual/direct (returned decision). Installed 21, current=21.9.9,
+  // next=22.9.9, target=23.0.0.
   it.each([
     { chosen: '23.0.0', prompt: 'direct', choice: 'direct' },
     { chosen: '21.9.9', prompt: 'latest-in-current', choice: 'gradual' },
@@ -158,17 +154,14 @@ describe('multi-major analytics decision', () => {
         Promise.resolve(range === '^21.0.0' ? '21.9.9' : '22.9.9')
       );
       migratePromptMock.mockResolvedValue({ chosen });
-      await maybePromptOrWarnMultiMajorMigration({
+      const result = await maybePromptOrWarnMultiMajorMigration({
         include: 'all',
         options: { interactive: true },
         targetPackage: 'nx',
         targetVersion: '23.0.0',
       });
       expect(recordPromptMock).toHaveBeenCalledWith('multi_major', prompt);
-      expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
-        choice,
-        source: 'prompt',
-      });
+      expect(result.decision).toBe(choice);
     }
   );
 });

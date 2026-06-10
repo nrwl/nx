@@ -177,33 +177,31 @@ describe('migrate-analytics events', () => {
       );
     });
 
-    it('includes the multi-major decision only when 2+ majors are crossed', () => {
+    it('includes the multi-major choice only when 2+ majors are crossed', () => {
       const a = load();
-      a.setMigrateMultiMajorDecision({ choice: 'gradual', source: 'prompt' });
       a.reportMigrateGenerateComplete({
         targetVersion: '23.0.0',
         requestedTargetVersion: '23.0.0',
         installedTargetVersion: '21.0.0',
         include: 'all',
+        multiMajorChoice: 'gradual',
       });
       expect(paramsFor('migrate_generate_complete')).toMatchObject({
         multiMajorChoice: 'gradual',
-        multiMajorSource: 'prompt',
       });
     });
 
-    it('omits the multi-major decision when fewer than 2 majors are crossed', () => {
+    it('omits the multi-major choice when fewer than 2 majors are crossed', () => {
       const a = load();
-      a.setMigrateMultiMajorDecision({ choice: 'gradual', source: 'prompt' });
       a.reportMigrateGenerateComplete({
         targetVersion: '23.0.0',
         requestedTargetVersion: '23.0.0',
         installedTargetVersion: '22.0.0',
         include: 'all',
+        multiMajorChoice: 'gradual',
       });
       const params = paramsFor('migrate_generate_complete');
       expect(params).not.toHaveProperty('multiMajorChoice');
-      expect(params).not.toHaveProperty('multiMajorSource');
     });
   });
 

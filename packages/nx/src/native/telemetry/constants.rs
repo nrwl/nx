@@ -68,7 +68,6 @@ pub mod event_dimension {
     pub const INCLUDE: &str = "ep.migrate_include";
     pub const INCLUDE_SOURCE: &str = "ep.migrate_include_source";
     pub const MULTI_MAJOR_CHOICE: &str = "ep.multi_major_choice";
-    pub const MULTI_MAJOR_SOURCE: &str = "ep.multi_major_source";
     pub const FETCH_METHOD: &str = "ep.migrate_fetch_method";
     pub const FETCH_FALLBACK_REASON: &str = "ep.migrate_fetch_fallback_reason";
     pub const CREATE_COMMITS: &str = "ep.create_commits";

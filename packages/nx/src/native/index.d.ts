@@ -320,7 +320,6 @@ export interface EventDimensions {
   include: string
   includeSource: string
   multiMajorChoice: string
-  multiMajorSource: string
   fetchMethod: string
   fetchFallbackReason: string
   createCommits: string

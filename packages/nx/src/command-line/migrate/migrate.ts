@@ -105,6 +105,7 @@ import {
   classifyMigrateFetchFallback,
   hasMigrateRunStarted,
   type MigrateGenerateErrorCode,
+  type MigrateMultiMajorChoice,
   recordMigrateFetch,
   reportMigrateGenerateComplete,
   reportMigrateGenerateError,
@@ -1150,6 +1151,11 @@ type GenerateMigrations = {
    * or undefined to omit it. See `MultiMajorResult.gradual` for when it's set.
    */
   multiMajorMode?: MultiMajorMode;
+  /**
+   * Collapsed multi-major outcome for the generate completion analytics
+   * event. See `MultiMajorResult.decision` for when it's set.
+   */
+  multiMajorChoice?: MigrateMultiMajorChoice;
 };
 
 type RunMigrations = {
@@ -1259,6 +1265,7 @@ export async function parseMigrationsOptions(
     include,
     originalTargetVersion: multiMajorResult.originalTarget,
     multiMajorMode: multiMajorResult.gradual ? 'gradual' : undefined,
+    multiMajorChoice: multiMajorResult.decision,
   };
 }
 
@@ -2319,6 +2326,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? from
           : installedPackageVersions(opts.targetPackage),
         include,
+        multiMajorChoice: opts.multiMajorChoice,
       });
 
     const noChanges =

@@ -5,10 +5,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import type { MigrateInclude } from './command-object';
 
 export type MigrateIncludeSource = 'flag' | 'nx-json' | 'prompt' | 'default';
-export type MigrateMultiMajorDecision = {
-  choice: 'gradual' | 'direct';
-  source: 'prompt' | 'flag' | 'default';
-};
+export type MigrateMultiMajorChoice = 'gradual' | 'direct';
 export type MigrateFetchFallbackReason =
   | 'env-skip'
   | 'unsupported-registry'
@@ -45,7 +42,6 @@ const IDENTIFIER_SHAPE = /^[A-Za-z][A-Za-z0-9_]*$/;
 // module state is safe.
 let resolvedInclude: MigrateInclude | undefined;
 let includeSource: MigrateIncludeSource | undefined;
-let multiMajorDecision: MigrateMultiMajorDecision | undefined;
 let fetchFallbackReason: MigrateFetchFallbackReason | undefined;
 let registryFetchCount = 0;
 let installFetchCount = 0;
@@ -59,12 +55,6 @@ export function setMigrateInclude(include: MigrateInclude): void {
 
 export function setMigrateIncludeSource(source: MigrateIncludeSource): void {
   includeSource = source;
-}
-
-export function setMigrateMultiMajorDecision(
-  decision: MigrateMultiMajorDecision
-): void {
-  multiMajorDecision = decision;
 }
 
 export function recordMigrateFetch(
@@ -149,6 +139,7 @@ export function reportMigrateGenerateComplete(opts: {
   requestedTargetVersion: string;
   installedTargetVersion: string | null | undefined;
   include: MigrateInclude;
+  multiMajorChoice?: MigrateMultiMajorChoice;
 }): void {
   safeReport(() => {
     if (!customDimensions) return;
@@ -172,11 +163,8 @@ export function reportMigrateGenerateComplete(opts: {
       // Only meaningful when the multi-major gate (2+ majors) applied.
       ...(majorsCrossed !== undefined &&
       majorsCrossed >= 2 &&
-      multiMajorDecision
-        ? {
-            [customDimensions.multiMajorChoice]: multiMajorDecision.choice,
-            [customDimensions.multiMajorSource]: multiMajorDecision.source,
-          }
+      opts.multiMajorChoice
+        ? { [customDimensions.multiMajorChoice]: opts.multiMajorChoice }
         : {}),
       [customDimensions.fetchMethod]: fetchMethod,
       [customDimensions.fetchFallbackReason]: fetchFallbackReason,
