@@ -40,6 +40,8 @@ export const pluginToTechnology: Record<string, string> = {
   eslint: 'eslint',
   'eslint-plugin': 'eslint',
 
+  oxlint: 'oxlint',
+
   webpack: 'build-tools',
   vite: 'build-tools',
   rollup: 'build-tools',
