@@ -312,6 +312,6 @@ async function selectAgent(
     message: 'Multiple AI agents detected. Which one should Nx use?',
     choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
   });
-  reportMigratePrompt('agent-select', response.id);
+  reportMigratePrompt('agent_select', response.id);
   return detected.find((d) => d.id === response.id)!;
 }

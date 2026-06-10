@@ -17,12 +17,14 @@ export type MigrateFetchFallbackReason =
 // Mirrors `ResolvedAgentic['kind']`; kept local to avoid importing agentic
 // types into the analytics module (which agentic/* already imports from).
 export type MigrateAgenticOutcome = 'enabled' | 'disabled' | 'inside-agent';
+// Underscore-shaped because the prompt name is appended verbatim to the
+// `migrate_prompt_` event name.
 export type MigratePromptName =
   | 'include'
-  | 'multi-major'
+  | 'multi_major'
   | 'agentic'
-  | 'agent-select'
-  | 'ambiguous-agent-outcome';
+  | 'agent_select'
+  | 'ambiguous_agent_outcome';
 export type MigrateGenerateErrorCode =
   | 'version-resolution'
   | 'fetch-migrations'
@@ -95,16 +97,18 @@ export function classifyMigrateFetchFallback(
 /**
  * Records an interactive migrate prompt and the user's selection.
  *
- * `choice` is one GA dimension multiplexed across all prompts; read it
- * conditioned on `prompt`. Per-prompt `choice` value-spaces:
+ * The prompt identity is encoded in the event name (`migrate_prompt_<prompt>`)
+ * so it doesn't cost a GA custom dimension; `choice` is one dimension
+ * multiplexed across all prompts, read conditioned on the event name.
+ * Per-prompt `choice` value-spaces:
  * - `include`: `required` | `optional` | `all` (the resolved MigrateInclude).
- * - `multi-major`: `direct` | `latest-in-current` | `latest-in-next` - the raw
+ * - `multi_major`: `direct` | `latest-in-current` | `latest-in-next` - the raw
  *   3-way selection. The `multi_major_choice` outcome dim deliberately collapses
  *   this to the 2-way semantic (`gradual` | `direct`); the variant survives only
  *   here.
  * - `agentic`: `yes-flex` | `yes-pin` (multi-agent only) | `no-once` | `no-never`.
- * - `agent-select`: the chosen agent id (open-ended).
- * - `ambiguous-agent-outcome`: `abort` | `continue`.
+ * - `agent_select`: the chosen agent id (open-ended).
+ * - `ambiguous_agent_outcome`: `abort` | `continue`.
  */
 export function reportMigratePrompt(
   prompt: MigratePromptName,
@@ -112,8 +116,7 @@ export function reportMigratePrompt(
 ): void {
   safeReport(() => {
     if (!customDimensions) return;
-    reportEvent('migrate_prompt', {
-      [customDimensions.prompt]: prompt,
+    reportEvent(`migrate_prompt_${prompt}`, {
       [customDimensions.choice]: choice,
     });
   });

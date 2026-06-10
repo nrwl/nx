@@ -116,11 +116,10 @@ describe('migrate-analytics events', () => {
   });
 
   describe('reportMigratePrompt', () => {
-    it('emits the prompt name and choice', () => {
+    it('encodes the prompt name in the event name and emits the choice', () => {
       const a = load();
-      a.reportMigratePrompt('multi-major', 'latest-in-current');
-      expect(paramsFor('migrate_prompt')).toEqual({
-        prompt: 'multi-major',
+      a.reportMigratePrompt('multi_major', 'latest-in-current');
+      expect(paramsFor('migrate_prompt_multi_major')).toEqual({
         choice: 'latest-in-current',
       });
     });

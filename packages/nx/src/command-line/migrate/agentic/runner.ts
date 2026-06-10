@@ -479,7 +479,7 @@ async function promptAmbiguous(cause: AmbiguousCause): Promise<HandoffOutcome> {
         },
       ],
     });
-    reportMigratePrompt('ambiguous-agent-outcome', response.choice);
+    reportMigratePrompt('ambiguous_agent_outcome', response.choice);
     return response.choice === 'continue'
       ? { kind: 'ambiguous-continue' }
       : { kind: 'ambiguous-abort' };

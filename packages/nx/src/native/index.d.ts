@@ -330,7 +330,6 @@ export interface EventDimensions {
   errorName: string
   errorLocation: string
   migrationName: string
-  prompt: string
   choice: string
   majorsCrossed: string
   migrationCount: string

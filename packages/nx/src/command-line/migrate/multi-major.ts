@@ -292,10 +292,11 @@ export async function maybePromptOrWarnMultiMajorMigration(args: {
       latestInNext,
     });
     // The prompt returns a concrete version; map it back to the option the
-    // user picked for the prompt dimension, then collapse to gradual/direct for
-    // the decision dimension (any incremental step counts as gradual).
+    // user picked for the prompt event's choice, then collapse to
+    // gradual/direct for the decision dimension (any incremental step counts
+    // as gradual).
     reportMigratePrompt(
-      'multi-major',
+      'multi_major',
       chosen === targetVersion
         ? 'direct'
         : chosen === showCurrent

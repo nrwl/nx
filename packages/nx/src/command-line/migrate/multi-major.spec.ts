@@ -164,7 +164,7 @@ describe('multi-major analytics decision', () => {
         targetPackage: 'nx',
         targetVersion: '23.0.0',
       });
-      expect(recordPromptMock).toHaveBeenCalledWith('multi-major', prompt);
+      expect(recordPromptMock).toHaveBeenCalledWith('multi_major', prompt);
       expect(setMultiMajorDecisionMock).toHaveBeenCalledWith({
         choice,
         source: 'prompt',
