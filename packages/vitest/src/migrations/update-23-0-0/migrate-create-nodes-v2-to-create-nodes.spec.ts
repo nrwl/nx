@@ -131,6 +131,69 @@ describe('migrate-create-nodes-v2-to-create-nodes migration', () => {
       const input = `const { createNodesV2 } = require('@nx/vitest');\n`;
       expect(rewrite(input)).toBe(input);
     });
+
+    it('renames value usages of a lone createNodesV2 import', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/vitest';\n` +
+        `export const plugin = createNodesV2;\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/vitest';\n` +
+          `export const plugin = createNodes;\n`
+      );
+    });
+
+    it('renames a value usage passed as a call argument', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/vitest';\n` +
+        `addPlugin(graph, '@nx/vitest', createNodesV2, {});\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/vitest';\n` +
+          `addPlugin(graph, '@nx/vitest', createNodes, {});\n`
+      );
+    });
+
+    it('renames value usages when deduped against an existing createNodes', () => {
+      const input =
+        `import { createNodes, createNodesV2 } from '@nx/vitest';\n` +
+        `use(createNodesV2);\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/vitest';\n` + `use(createNodes);\n`
+      );
+    });
+
+    it('expands a shorthand property usage to preserve the key', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/vitest';\n` +
+        `export const plugins = { createNodesV2 };\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/vitest';\n` +
+          `export const plugins = { createNodesV2: createNodes };\n`
+      );
+    });
+
+    it('leaves property accesses and strings while renaming the binding', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/vitest';\n` +
+        `const v = createNodesV2;\n` +
+        `const w = config.createNodesV2;\n` +
+        `const s = 'createNodesV2';\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/vitest';\n` +
+          `const v = createNodes;\n` +
+          `const w = config.createNodesV2;\n` +
+          `const s = 'createNodesV2';\n`
+      );
+    });
+
+    it('does not rename usages for an aliased import (local name preserved)', () => {
+      const input =
+        `import { createNodesV2 as cn } from '@nx/vitest';\n` +
+        `export const plugin = cn;\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes as cn } from '@nx/vitest';\n` +
+          `export const plugin = cn;\n`
+      );
+    });
   });
 
   describe('migration runner', () => {
