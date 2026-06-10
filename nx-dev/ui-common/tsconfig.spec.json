@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "dist/spec",
     "module": "commonjs",
+    "moduleResolution": "node",
     "types": ["jest", "node"],
     "lib": ["DOM"]
   },
