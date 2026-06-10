@@ -24,6 +24,7 @@ import { workspaceRoot } from '../../utils/workspace-root';
 import { getInstalledNxVersion } from '../../utils/installed-nx-version';
 import {
   agentsMdPath,
+  analyticsDomain,
   claudeMcpJsonPath,
   geminiMdPath,
   getAgentRulesWrapped,
@@ -171,6 +172,21 @@ export async function setupAiAgentsGeneratorImpl(
       enabledPlugins: {
         ...json.enabledPlugins,
         'nx@nx-claude-plugins': true,
+      },
+      // Allow Nx analytics requests through Claude Code's sandbox network filter
+      sandbox: {
+        ...json.sandbox,
+        network: {
+          ...json.sandbox?.network,
+          allowedDomains: json.sandbox?.network?.allowedDomains?.includes(
+            analyticsDomain
+          )
+            ? json.sandbox.network.allowedDomains
+            : [
+                ...(json.sandbox?.network?.allowedDomains ?? []),
+                analyticsDomain,
+              ],
+        },
       },
     }));
 
