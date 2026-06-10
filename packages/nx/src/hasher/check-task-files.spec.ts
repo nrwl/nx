@@ -3,11 +3,18 @@ import type { HashInputs } from '../native';
 
 // ── Mocks must be declared BEFORE imports that use them ─────────────────────
 //
-// jest.mock() calls are hoisted to the top of the file by Babel/SWC, which
-// means any factory closure runs before module-level `const` declarations are
-// initialised.  The pattern below avoids referencing outer-scope variables
-// inside the factory; instead we configure the mock in beforeEach so every
-// test starts with a fresh set of spies.
+// jest.mock() calls are hoisted to the top of the file by Babel/SWC. We
+// configure the mock implementations in beforeEach so every test starts with a
+// fresh set of spies. _resetContextForTesting() clears the module-level cache
+// so each test loads a clean context.
+
+jest.mock('../project-graph/project-graph', () => ({
+  createProjectGraphAsync: jest.fn(),
+}));
+
+jest.mock('../config/nx-json', () => ({
+  readNxJson: jest.fn().mockReturnValue({}),
+}));
 
 jest.mock('./hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn(),
@@ -31,12 +38,18 @@ jest.mock('./task-hasher', () => ({
 
 // ── Imports (after mocks) ────────────────────────────────────────────────────
 
+import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { HashPlanInspector } from './hash-plan-inspector';
 import { getOutputsForTargetAndConfiguration } from '../tasks-runner/utils';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import { getInputs as mockedGetInputs } from './task-hasher';
-import { createTaskFileResolver } from './task-file-resolver';
+import {
+  checkFilesAreInputs,
+  checkFilesAreOutputs,
+  _resetContextForTesting,
+} from './check-task-files';
 
+const mockCreateProjectGraphAsync = jest.mocked(createProjectGraphAsync);
 const MockHashPlanInspector = jest.mocked(HashPlanInspector);
 const mockGetOutputs = jest.mocked(getOutputsForTargetAndConfiguration);
 const mockCreateTaskGraph = jest.mocked(createTaskGraph);
@@ -81,9 +94,8 @@ function makeHashInputs(files: string[]): HashInputs {
 }
 
 /**
- * Project graph used by the dependentTasksOutputFiles tests: includes a
- * direct dep `dep` and a transitive chain `mid → deep`, all with a `build`
- * target so the resolver's getOutputs() doesn't short-circuit.
+ * Graph with a direct dep and a transitive chain for dependentTasksOutputFiles
+ * tests.
  */
 function buildGraphWithDeps(): ProjectGraph {
   const buildTarget = {
@@ -119,11 +131,12 @@ function buildGraphWithDeps(): ProjectGraph {
 
 // ── Tests ────────────────────────────────────────────────────────────────────
 
-describe('createTaskFileResolver', () => {
+describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Reset module-level caches so each test gets a fresh context load.
+    _resetContextForTesting();
 
-    // Rebuild per-test spies so callers can customise return values.
     mockInit = jest.fn().mockResolvedValue(undefined);
     mockInspectTaskInputs = jest.fn();
 
@@ -135,11 +148,13 @@ describe('createTaskFileResolver', () => {
         }) as unknown as HashPlanInspector
     );
 
-    // Default: no outputs
+    // Default project graph returned by createProjectGraphAsync.
+    mockCreateProjectGraphAsync.mockResolvedValue(buildGraph());
+
+    // Default: no outputs.
     mockGetOutputs.mockReturnValue([]);
 
-    // Defaults for the new dependentTasksOutputFiles code path: empty task
-    // graph and empty depsOutputs unless a test overrides them.
+    // Defaults for the dependentTasksOutputFiles code path.
     mockCreateTaskGraph.mockReturnValue({
       roots: [],
       tasks: {},
@@ -155,26 +170,48 @@ describe('createTaskFileResolver', () => {
     } as ReturnType<typeof mockedGetInputs>);
   });
 
-  it('initialises the HashPlanInspector exactly once', async () => {
-    const graph = buildGraph();
+  it('loads the project graph exactly once across multiple calls', async () => {
     mockInspectTaskInputs.mockReturnValue({
       'myproj:build': makeHashInputs([]),
     });
 
-    const resolver = await createTaskFileResolver({ projectGraph: graph });
+    await checkFilesAreInputs('myproj:build', []);
+    await checkFilesAreInputs('myproj:build', []);
+    await checkFilesAreOutputs('myproj:build', []);
 
-    // Trigger multiple calls to exercise init-once guarantee
-    resolver.getInputs('myproj:build');
-    resolver.getInputs('myproj:build');
-    resolver.getOutputs('myproj:build');
-
+    expect(mockCreateProjectGraphAsync).toHaveBeenCalledTimes(1);
     expect(MockHashPlanInspector).toHaveBeenCalledTimes(1);
     expect(mockInit).toHaveBeenCalledTimes(1);
   });
 
-  describe('getInputs', () => {
-    it('returns the expanded file list from the inspector', async () => {
-      const graph = buildGraph();
+  // ── checkFilesAreInputs ──────────────────────────────────────────────────
+
+  describe('checkFilesAreInputs', () => {
+    it('returns matched for a path in the input file list (exact match)', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/myproj/src/index.ts',
+      ]);
+      expect(result.matched).toEqual(['libs/myproj/src/index.ts']);
+      expect(result.unmatched).toEqual([]);
+    });
+
+    it('returns unmatched for a path NOT in the input file list', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/other/src/index.ts',
+      ]);
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual(['libs/other/src/index.ts']);
+    });
+
+    it('splits a mixed file list into matched and unmatched', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([
           'libs/myproj/src/index.ts',
@@ -182,105 +219,19 @@ describe('createTaskFileResolver', () => {
         ]),
       });
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      const inputs = resolver.getInputs('myproj:build');
-
-      expect(inputs).toEqual([
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/myproj/src/index.ts',
+        'libs/other/src/unrelated.ts',
+        'libs/myproj/package.json',
+      ]);
+      expect(result.matched).toEqual([
         'libs/myproj/src/index.ts',
         'libs/myproj/package.json',
       ]);
+      expect(result.unmatched).toEqual(['libs/other/src/unrelated.ts']);
     });
 
-    it('returns empty array when inspector finds no files', async () => {
-      const graph = buildGraph();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs([]),
-      });
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.getInputs('myproj:build')).toEqual([]);
-    });
-
-    it('caches result — inspectTaskInputs called only once per taskId', async () => {
-      const graph = buildGraph();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
-      });
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      resolver.getInputs('myproj:build');
-      resolver.getInputs('myproj:build');
-      resolver.getInputs('myproj:build');
-
-      expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('getOutputs', () => {
-    it('returns the output patterns for the task', async () => {
-      const graph = buildGraph();
-      mockGetOutputs.mockReturnValue([
-        'dist/libs/myproj',
-        'dist/libs/myproj/**',
-      ]);
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      const outputs = resolver.getOutputs('myproj:build');
-
-      expect(outputs).toEqual(['dist/libs/myproj', 'dist/libs/myproj/**']);
-    });
-
-    it('returns empty array when node has no matching target', async () => {
-      const graph = buildGraph();
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      // 'myproj:test' target does not exist in graph
-      const outputs = resolver.getOutputs('myproj:test');
-
-      expect(outputs).toEqual([]);
-      expect(mockGetOutputs).not.toHaveBeenCalled();
-    });
-
-    it('caches result — getOutputsForTargetAndConfiguration called only once per taskId', async () => {
-      const graph = buildGraph();
-      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      resolver.getOutputs('myproj:build');
-      resolver.getOutputs('myproj:build');
-      resolver.getOutputs('myproj:build');
-
-      expect(mockGetOutputs).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('isInput', () => {
-    it('returns true for a path in the input file list (exact match)', async () => {
-      const graph = buildGraph();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
-      });
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.isInput('myproj:build', 'libs/myproj/src/index.ts')).toBe(
-        true
-      );
-    });
-
-    it('returns false for a path NOT in the input file list', async () => {
-      const graph = buildGraph();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
-      });
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.isInput('myproj:build', 'libs/other/src/index.ts')).toBe(
-        false
-      );
-    });
-
-    it('returns true when path matches a materialized depOutputs entry (upstream has run)', async () => {
-      const graph = buildGraph();
+    it('matches a materialized depOutputs entry (upstream has run)', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': {
           files: [],
@@ -291,20 +242,18 @@ describe('createTaskFileResolver', () => {
         },
       });
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.isInput('myproj:build', 'libs/dep/dist/index.d.ts')).toBe(
-        true
-      );
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/dep/dist/index.d.ts',
+      ]);
+      expect(result.matched).toEqual(['libs/dep/dist/index.d.ts']);
     });
 
-    it('returns true when path matches a dependentTasksOutputFiles glob AND an upstream task output (upstream has NOT run)', async () => {
-      const graph = buildGraphWithDeps();
-      // No materialized files / depOutputs — simulating "upstream not yet run".
+    it('matches via dependentTasksOutputFiles glob + upstream output (upstream has NOT run)', async () => {
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
 
-      // Task graph: myproj:build depends directly on dep:build.
       mockCreateTaskGraph.mockReturnValue({
         roots: ['dep:build'],
         tasks: {
@@ -328,7 +277,6 @@ describe('createTaskFileResolver', () => {
         continuousDependencies: {},
       });
 
-      // myproj:build declares one dependentTasksOutputFiles input.
       mockGetStructuredInputs.mockReturnValue({
         selfInputs: [],
         depsInputs: [],
@@ -339,7 +287,6 @@ describe('createTaskFileResolver', () => {
         depsFilesets: [],
       } as ReturnType<typeof mockedGetInputs>);
 
-      // dep:build declares libs/dep/dist as an output dir.
       mockGetOutputs.mockImplementation(((t: {
         project?: string;
         target?: { project?: string };
@@ -348,16 +295,13 @@ describe('createTaskFileResolver', () => {
           ? ['libs/dep/dist']
           : []) as typeof getOutputsForTargetAndConfiguration);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
-      // Path lies inside dep:build's outputs AND matches the **/*.d.ts glob.
-      expect(resolver.isInput('myproj:build', 'libs/dep/dist/index.d.ts')).toBe(
-        true
-      );
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/dep/dist/index.d.ts',
+      ]);
+      expect(result.matched).toEqual(['libs/dep/dist/index.d.ts']);
     });
 
-    it('returns false when path matches the dependentTasksOutputFiles glob but no upstream output covers it', async () => {
-      const graph = buildGraph();
+    it('does NOT match when path matches the glob but no upstream output covers it', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -392,19 +336,16 @@ describe('createTaskFileResolver', () => {
         projectInputs: [],
         depsFilesets: [],
       } as ReturnType<typeof mockedGetInputs>);
-      // dep:build's outputs do NOT include this path.
+      // dep:build outputs do NOT cover the path being checked.
       mockGetOutputs.mockReturnValue(['libs/dep/dist']);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
-      // Matches **/*.d.ts but NOT inside libs/dep/dist.
-      expect(
-        resolver.isInput('myproj:build', 'libs/somewhere-else/index.d.ts')
-      ).toBe(false);
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/somewhere-else/index.d.ts',
+      ]);
+      expect(result.unmatched).toEqual(['libs/somewhere-else/index.d.ts']);
     });
 
-    it('returns false when path lies inside an upstream output but does not match the dependentTasksOutputFiles glob', async () => {
-      const graph = buildGraph();
+    it('does NOT match when path is inside an upstream output but does not match the glob', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -440,21 +381,19 @@ describe('createTaskFileResolver', () => {
         depsFilesets: [],
       } as ReturnType<typeof mockedGetInputs>);
       mockGetOutputs.mockReturnValue(['libs/dep/dist']);
-
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
 
       // .js does not match **/*.d.ts even though the path is inside the output dir.
-      expect(resolver.isInput('myproj:build', 'libs/dep/dist/index.js')).toBe(
-        false
-      );
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/dep/dist/index.js',
+      ]);
+      expect(result.unmatched).toEqual(['libs/dep/dist/index.js']);
     });
 
     it('walks transitive task graph dependencies when transitive=true', async () => {
-      const graph = buildGraphWithDeps();
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
-      // myproj -> mid -> deep
       mockCreateTaskGraph.mockReturnValue({
         roots: ['deep:build'],
         tasks: {
@@ -501,16 +440,14 @@ describe('createTaskFileResolver', () => {
           ? ['libs/deep/dist']
           : []) as typeof getOutputsForTargetAndConfiguration);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
       // The matching output lives on the transitive dep `deep:build`.
-      expect(
-        resolver.isInput('myproj:build', 'libs/deep/dist/index.d.ts')
-      ).toBe(true);
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/deep/dist/index.d.ts',
+      ]);
+      expect(result.matched).toEqual(['libs/deep/dist/index.d.ts']);
     });
 
-    it('does NOT walk transitive deps when transitive flag is false (default)', async () => {
-      const graph = buildGraph();
+    it('does NOT walk transitive deps when transitive=false', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -552,7 +489,6 @@ describe('createTaskFileResolver', () => {
         projectInputs: [],
         depsFilesets: [],
       } as ReturnType<typeof mockedGetInputs>);
-      // Only `deep` declares a matching output dir; `mid` declares nothing.
       mockGetOutputs.mockImplementation(((t: {
         project?: string;
         target?: { project?: string };
@@ -561,156 +497,106 @@ describe('createTaskFileResolver', () => {
           ? ['libs/deep/dist']
           : []) as typeof getOutputsForTargetAndConfiguration);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
       // With transitive=false, only direct dep `mid:build` is consulted, and
-      // it has no matching outputs.
-      expect(
-        resolver.isInput('myproj:build', 'libs/deep/dist/index.d.ts')
-      ).toBe(false);
+      // it has no matching outputs → path is unmatched.
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/deep/dist/index.d.ts',
+      ]);
+      expect(result.unmatched).toEqual(['libs/deep/dist/index.d.ts']);
     });
   });
 
-  describe('matchesDependentTaskOutputs', () => {
-    it('exposes the same dep-outputs check as a standalone method', async () => {
-      const graph = buildGraphWithDeps();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs([]),
-      });
-      mockCreateTaskGraph.mockReturnValue({
-        roots: ['dep:build'],
-        tasks: {
-          'myproj:build': {
-            id: 'myproj:build',
-            target: { project: 'myproj', target: 'build' },
-            overrides: {},
-            outputs: [],
-          },
-          'dep:build': {
-            id: 'dep:build',
-            target: { project: 'dep', target: 'build' },
-            overrides: {},
-            outputs: [],
-          },
-        },
-        dependencies: {
-          'myproj:build': ['dep:build'],
-          'dep:build': [],
-        },
-        continuousDependencies: {},
-      });
-      mockGetStructuredInputs.mockReturnValue({
-        selfInputs: [],
-        depsInputs: [],
-        depsOutputs: [
-          { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
-        ],
-        projectInputs: [],
-        depsFilesets: [],
-      } as ReturnType<typeof mockedGetInputs>);
-      mockGetOutputs.mockImplementation(((t: {
-        project?: string;
-        target?: { project?: string };
-      }) =>
-        (t.project ?? t.target?.project) === 'dep'
-          ? ['libs/dep/dist']
-          : []) as typeof getOutputsForTargetAndConfiguration);
+  // ── checkFilesAreOutputs ─────────────────────────────────────────────────
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(
-        resolver.matchesDependentTaskOutputs(
-          'myproj:build',
-          'libs/dep/dist/index.d.ts'
-        )
-      ).toBe(true);
-      expect(
-        resolver.matchesDependentTaskOutputs(
-          'myproj:build',
-          'libs/dep/dist/index.js'
-        )
-      ).toBe(false);
-    });
-  });
-
-  describe('isOutput', () => {
-    it('returns true for an exact match against an output pattern', async () => {
-      const graph = buildGraph();
+  describe('checkFilesAreOutputs', () => {
+    it('returns matched for an exact match against an output pattern', async () => {
       mockGetOutputs.mockReturnValue(['dist/libs/myproj/index.js']);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(
-        resolver.isOutput('myproj:build', 'dist/libs/myproj/index.js')
-      ).toBe(true);
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/myproj/index.js',
+      ]);
+      expect(result.matched).toEqual(['dist/libs/myproj/index.js']);
+      expect(result.unmatched).toEqual([]);
     });
 
-    it('returns true when path is nested inside an output directory', async () => {
-      const graph = buildGraph();
+    it('returns matched when path is nested inside an output directory', async () => {
       mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(
-        resolver.isOutput('myproj:build', 'dist/libs/myproj/deep/file.js')
-      ).toBe(true);
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/myproj/deep/file.js',
+      ]);
+      expect(result.matched).toEqual(['dist/libs/myproj/deep/file.js']);
     });
 
-    it('returns true for a glob pattern match (dist/**)', async () => {
-      const graph = buildGraph();
+    it('returns matched for a glob pattern match', async () => {
       mockGetOutputs.mockReturnValue(['dist/**']);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.isOutput('myproj:build', 'dist/main.js')).toBe(true);
-      expect(resolver.isOutput('myproj:build', 'dist/nested/chunk.js')).toBe(
-        true
-      );
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/main.js',
+        'dist/nested/chunk.js',
+        'other-dir/file.js',
+      ]);
+      expect(result.matched).toEqual(['dist/main.js', 'dist/nested/chunk.js']);
+      expect(result.unmatched).toEqual(['other-dir/file.js']);
     });
 
-    it('returns false for a path that does NOT match any output pattern', async () => {
-      const graph = buildGraph();
+    it('returns unmatched for a path that does NOT match any output pattern', async () => {
       mockGetOutputs.mockReturnValue(['dist/**']);
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-      expect(resolver.isOutput('myproj:build', 'other-dir/file.js')).toBe(
-        false
-      );
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'other-dir/file.js',
+      ]);
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual(['other-dir/file.js']);
+    });
+
+    it('returns empty matched/unmatched for an empty file list', async () => {
+      mockGetOutputs.mockReturnValue(['dist/**']);
+
+      const result = await checkFilesAreOutputs('myproj:build', []);
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([]);
     });
   });
 
-  describe('caching across both getInputs and getOutputs', () => {
-    it('does not call underlying APIs more than once per taskId even with mixed calls', async () => {
-      const graph = buildGraph();
-      mockInspectTaskInputs.mockReturnValue({
-        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
-      });
-      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+  // ── taskId validation ────────────────────────────────────────────────────
 
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
-      // Interleaved calls for the same taskId
-      resolver.getInputs('myproj:build');
-      resolver.getOutputs('myproj:build');
-      resolver.getInputs('myproj:build');
-      resolver.getOutputs('myproj:build');
-
-      expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
-      expect(mockGetOutputs).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('parseTaskId validation', () => {
+  describe('taskId validation', () => {
     it('throws on a taskId that has no colon (no target)', async () => {
-      const graph = buildGraph();
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
-
-      expect(() => resolver.getInputs('justproject')).toThrow(
+      await expect(checkFilesAreInputs('justproject', [])).rejects.toThrow(
         /Invalid taskId "justproject"/
       );
     });
 
     it('throws on an empty taskId string', async () => {
-      const graph = buildGraph();
-      const resolver = await createTaskFileResolver({ projectGraph: graph });
+      await expect(checkFilesAreInputs('', [])).rejects.toThrow(
+        /Invalid taskId ""/
+      );
+    });
 
-      expect(() => resolver.getInputs('')).toThrow(/Invalid taskId ""/);
+    it('throws from checkFilesAreOutputs on an invalid taskId', async () => {
+      await expect(checkFilesAreOutputs('justproject', [])).rejects.toThrow(
+        /Invalid taskId "justproject"/
+      );
+    });
+  });
+
+  // ── caching ──────────────────────────────────────────────────────────────
+
+  describe('caching across calls', () => {
+    it('does not call underlying APIs more than once per taskId', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
+      });
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      await checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts']);
+      await checkFilesAreOutputs('myproj:build', ['dist/libs/myproj/x.js']);
+      await checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts']);
+      await checkFilesAreOutputs('myproj:build', ['dist/libs/myproj/x.js']);
+
+      expect(mockInspectTaskInputs).toHaveBeenCalledTimes(1);
+      expect(mockGetOutputs).toHaveBeenCalledTimes(1);
     });
   });
 });

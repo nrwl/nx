@@ -1,7 +1,7 @@
 import {
-  createTaskFileResolver,
-  type TaskFileResolver,
-} from '../../../hasher/task-file-resolver';
+  checkFilesAreOutputs,
+  getTaskOutputPatterns,
+} from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ShowTargetOutputsOptions } from '../command-object';
@@ -23,17 +23,12 @@ export async function showTargetOutputsHandler(
 
   const taskId = createTaskId(t.projectName, t.targetName, t.configuration);
 
-  const resolver = await createTaskFileResolver({
-    projectGraph: t.graph,
-    nxJson: t.nxJson,
-  });
-
-  const outputsData = resolveOutputsData(t, resolver, taskId);
+  const outputsData = await resolveOutputsData(t, taskId);
 
   if (args.check !== undefined) {
     const checkItems = deduplicateFolderEntries(args.check);
-    const results = checkItems.map((o) =>
-      resolveCheckOutputData(o, outputsData, resolver, taskId)
+    const results = await Promise.all(
+      checkItems.map((o) => resolveCheckOutputData(o, outputsData, taskId))
     );
 
     if (results.length >= 2) {
@@ -58,18 +53,12 @@ export async function showTargetOutputsHandler(
 
 // ── Data resolution ─────────────────────────────────────────────────
 
-type OutputsData = ReturnType<typeof resolveOutputsData>;
-type CheckOutputResult = ReturnType<typeof resolveCheckOutputData>;
+type OutputsData = Awaited<ReturnType<typeof resolveOutputsData>>;
+type CheckOutputResult = Awaited<ReturnType<typeof resolveCheckOutputData>>;
 
-function resolveOutputsData(
-  t: ResolvedTarget,
-  resolver: TaskFileResolver,
-  taskId: string
-) {
+async function resolveOutputsData(t: ResolvedTarget, taskId: string) {
   const { projectName, targetName, configuration, node } = t;
-  // Use the resolver to obtain resolved output paths — avoids duplicating
-  // the getOutputsForTargetAndConfiguration call that the resolver already makes.
-  const resolvedOutputs = resolver.getOutputs(taskId);
+  const resolvedOutputs = await getTaskOutputPatterns(taskId);
 
   const targetConfig = node.data.targets?.[targetName];
   const configuredOutputs: string[] = targetConfig?.outputs ?? [];
@@ -105,19 +94,18 @@ function resolveOutputsData(
   };
 }
 
-function resolveCheckOutputData(
+async function resolveCheckOutputData(
   rawFileToCheck: string,
   outputsData: OutputsData,
-  resolver: TaskFileResolver,
   taskId: string
 ) {
   const fileToCheck = normalizePath(rawFileToCheck);
   const { outputPaths, expandedOutputs } = outputsData;
 
-  // Delegate the direct-match decision to the resolver (handles exact, prefix,
-  // and glob matching via minimatch — supersedes the previous manual prefix
-  // comparison + expandedOutputs exact-match approach).
-  const matchedOutput = resolver.isOutput(taskId, fileToCheck);
+  // Delegate the direct-match decision to checkFilesAreOutputs (handles
+  // exact, prefix, and glob matching via minimatch).
+  const matchedOutput =
+    (await checkFilesAreOutputs(taskId, [fileToCheck])).matched.length > 0;
 
   let containedOutputPaths: string[] = [];
   let containedExpandedOutputs: string[] = [];
