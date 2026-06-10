@@ -44,7 +44,9 @@ export function getStylesheetProcessor(): new (
       protected readonly cacheDirectory?: string | false,
       protected readonly watch?: boolean
     ) {
-      if (ngPackagrMajorVersion === 21) {
+      if (ngPackagrMajorVersion === 22) {
+        browserslist.defaults = ['baseline widely available on 2026-05-07'];
+      } else if (ngPackagrMajorVersion === 21) {
         browserslist.defaults = ['baseline widely available on 2025-10-20'];
       } else if (ngPackagrMajorVersion === 20) {
         (browserslist.defaults as string[]) = browserslist(undefined, {
