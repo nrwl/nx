@@ -10,6 +10,7 @@ import {
   coerce,
   gt,
   gte,
+  intersects,
   lt,
   lte,
   major,
@@ -217,6 +218,13 @@ function runOrReturnExitCode(run: () => void): number {
 
 function cleanSemver(version: string) {
   return clean(version) ?? coerce(version);
+}
+
+function cleanSemverVersion(version: string): string | null {
+  const cleanedVersion = cleanSemver(version);
+  return typeof cleanedVersion === 'string'
+    ? cleanedVersion
+    : (cleanedVersion?.version ?? null);
 }
 
 function normalizeSlashes(packageName: string): string {
@@ -741,22 +749,57 @@ export class Migrator {
       return true;
     }
 
-    return Object.entries(requirements).every(([pkgName, versionRange]) => {
-      if (this.packageUpdates[pkgName]) {
-        return satisfies(
-          cleanSemver(this.packageUpdates[pkgName].version),
-          versionRange,
-          { includePrerelease: true }
-        );
-      }
+    return Object.entries(requirements).every(([pkgName, versionRange]) =>
+      this.isRequirementMet(pkgName, versionRange)
+    );
+  }
 
-      return (
-        this.getPkgVersion(pkgName) &&
-        satisfies(this.getPkgVersion(pkgName), versionRange, {
-          includePrerelease: true,
-        })
+  private isRequirementMet(pkgName: string, versionRange: string): boolean {
+    if (this.packageUpdates[pkgName]) {
+      return this.doesVersionRangeIntersectJourney(
+        this.getPkgVersion(pkgName),
+        this.packageUpdates[pkgName].version,
+        versionRange
       );
-    });
+    }
+
+    return this.doesVersionRangeMatchVersion(
+      this.getPkgVersion(pkgName),
+      versionRange
+    );
+  }
+
+  private doesVersionRangeIntersectJourney(
+    fromVersion: string | null,
+    toVersion: string | null,
+    versionRange: string
+  ): boolean {
+    const cleanedToVersion = toVersion && cleanSemverVersion(toVersion);
+    if (!cleanedToVersion) {
+      return false;
+    }
+
+    const cleanedFromVersion = fromVersion && cleanSemverVersion(fromVersion);
+    if (!cleanedFromVersion || gt(cleanedFromVersion, cleanedToVersion)) {
+      return this.doesVersionRangeMatchVersion(cleanedToVersion, versionRange);
+    }
+
+    return intersects(
+      versionRange,
+      `>=${cleanedFromVersion} <=${cleanedToVersion}`,
+      { includePrerelease: true }
+    );
+  }
+
+  private doesVersionRangeMatchVersion(
+    version: string | null,
+    versionRange: string
+  ): boolean {
+    const cleanedVersion = version && cleanSemverVersion(version);
+    return (
+      !!cleanedVersion &&
+      satisfies(cleanedVersion, versionRange, { includePrerelease: true })
+    );
   }
 
   private areIncompatiblePackagesPresent(
@@ -818,19 +861,23 @@ export class Migrator {
   private wasMigrationSkipped(
     requirements: PackageJsonUpdates[string]['requires']
   ): boolean {
-    // no requiremets, so it ran before
+    // no requirements, so it ran before
     if (!requirements || !Object.keys(requirements).length) {
       return false;
     }
 
     // at least a requirement was not met, it was skipped
-    return Object.entries(requirements).some(
-      ([pkgName, versionRange]) =>
-        !this.getInstalledPackageVersion(pkgName) ||
-        !satisfies(this.getInstalledPackageVersion(pkgName), versionRange, {
-          includePrerelease: true,
-        })
-    );
+    return Object.entries(requirements).some(([pkgName, versionRange]) => {
+      const installedVersion = this.getInstalledPackageVersion(pkgName);
+      return (
+        !installedVersion ||
+        !this.doesVersionRangeIntersectJourney(
+          this.getPkgVersion(pkgName),
+          installedVersion,
+          versionRange
+        )
+      );
+    });
   }
 
   private async runPackageJsonUpdatesConfirmationPrompt(

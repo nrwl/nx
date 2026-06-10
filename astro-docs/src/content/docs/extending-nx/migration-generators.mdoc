@@ -96,3 +96,29 @@ If you just need to change dependency versions, you can add some configuration o
   }
 }
 ```
+
+## Gate migrations and package updates by dependency version
+
+Migration entries and `packageJsonUpdates` entries can use `requires` to apply only when another package version is relevant to the workspace.
+
+```json
+// migrations.json
+{
+  "generators": {
+    "migrate-storybook-v9": {
+      "version": "21.2.0",
+      "description": "Updates Storybook v9 configuration",
+      "implementation": "./src/migrations/migrate-storybook-v9/migrate-storybook-v9",
+      "requires": {
+        "storybook": ">=9.0.0 <10.0.0"
+      }
+    }
+  }
+}
+```
+
+If the required package is also being updated by the same `nx migrate` collection, Nx checks whether the `requires` range intersects the version journey from the installed version (or `--from` override) to the planned version. If there is no planned update for the required package, Nx checks the installed version only.
+
+This means bounded ranges like `>=9.0.0 <10.0.0` are safe for multi-major migrations. For example, a workspace moving `storybook` from `8.x` to `10.1.x` still stages migrations that require `storybook` `>=9.0.0 <10.0.0`, because the update journey crosses the `9.x` range.
+
+Nx does not treat `requires` as a boundary-crossing check. If a workspace starts inside a required range and migrates past it, the migration still matches because the journey intersects the range.

@@ -1380,6 +1380,74 @@ describe('Migration', () => {
         });
       });
 
+      it('should collect updates when capped requirements intersect a planned dependency journey', async () => {
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              mypackage: '1.0.0',
+              dep: '1.0.0',
+              child: '1.0.0',
+            },
+          }),
+          getInstalledPackageVersion: (p) => {
+            if (p === 'mypackage' || p === 'dep' || p === 'child') {
+              return '1.0.0';
+            }
+            return null;
+          },
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'mypackage') {
+              return Promise.resolve({
+                version: '3.0.0',
+                packageJsonUpdates: {
+                  depV2: {
+                    version: '2.0.0',
+                    packages: {
+                      dep: { version: '2.0.0' },
+                    },
+                  },
+                  depV3: {
+                    version: '3.0.0',
+                    packages: {
+                      dep: { version: '3.0.0' },
+                    },
+                    requires: { dep: '>=2.0.0 <3.0.0' },
+                  },
+                  childForDepV2: {
+                    version: '3.0.0',
+                    packages: {
+                      child: { version: '2.0.0' },
+                    },
+                    requires: { dep: '>=2.0.0 <3.0.0' },
+                  },
+                },
+              });
+            }
+            if (p === 'dep') {
+              return Promise.resolve({ version: '3.0.0' });
+            }
+            if (p === 'child') {
+              return Promise.resolve({ version: '2.0.0' });
+            }
+            return Promise.resolve(null);
+          },
+          from: {},
+          to: {},
+        });
+
+        const result = await migrator.migrate('mypackage', '3.0.0');
+
+        expect(result).toStrictEqual({
+          migrations: [],
+          packageUpdates: {
+            mypackage: { version: '3.0.0', addToPackageJson: false },
+            dep: { version: '3.0.0', addToPackageJson: false },
+            child: { version: '2.0.0', addToPackageJson: false },
+          },
+          minVersionWithSkippedUpdates: undefined,
+        });
+      });
+
       it('should meet requirements with versions set by dependent package updates in package groups', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
@@ -1565,6 +1633,207 @@ describe('Migration', () => {
   });
 
   describe('migrations', () => {
+    it.each([
+      {
+        description: 'capped rung on a chained journey',
+        installedDepVersion: '1.0.0',
+        plannedDepVersion: '3.0.0',
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: ['gated'],
+      },
+      {
+        description: 'endpoint in range',
+        installedDepVersion: '2.0.0',
+        plannedDepVersion: '2.5.0',
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: ['gated'],
+      },
+      {
+        description: 'journey entirely below the range',
+        installedDepVersion: '1.0.0',
+        plannedDepVersion: '1.5.0',
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: [],
+      },
+      {
+        description: 'journey entirely above the range',
+        installedDepVersion: '3.0.0',
+        plannedDepVersion: '4.0.0',
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: [],
+      },
+      {
+        description: 'pure floor crossed by planned update',
+        installedDepVersion: '1.0.0',
+        plannedDepVersion: '3.0.0',
+        requiresRange: '>=2.0.0',
+        expectedMigrationNames: ['gated'],
+      },
+      {
+        description: 'pure floor above planned update',
+        installedDepVersion: '3.0.0',
+        plannedDepVersion: '4.0.0',
+        requiresRange: '>=5.0.0',
+        expectedMigrationNames: [],
+      },
+      {
+        description: 'no planned update with matching installed version',
+        installedDepVersion: '2.0.0',
+        plannedDepVersion: null,
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: ['gated'],
+      },
+      {
+        description: 'no planned update with non-matching installed version',
+        installedDepVersion: '1.0.0',
+        plannedDepVersion: null,
+        requiresRange: '>=2.0.0 <3.0.0',
+        expectedMigrationNames: [],
+      },
+      {
+        description: '--from override used as journey origin',
+        installedDepVersion: '3.0.0',
+        plannedDepVersion: '4.0.0',
+        requiresRange: '>=2.0.0 <3.0.0',
+        fromOverrides: { dep: '1.0.0' },
+        expectedMigrationNames: ['gated'],
+      },
+    ])(
+      'should evaluate migration requirements against the dependency journey: $description',
+      async ({
+        installedDepVersion,
+        plannedDepVersion,
+        requiresRange,
+        fromOverrides = {},
+        expectedMigrationNames,
+      }) => {
+        const installedVersions: Record<string, string> = {
+          parent: '1.0.0',
+          dep: installedDepVersion,
+        };
+        const migrator = new Migrator({
+          packageJson: createPackageJson({
+            dependencies: {
+              parent: '1.0.0',
+              dep: installedDepVersion,
+            },
+          }),
+          getInstalledPackageVersion: (p, overrides) =>
+            overrides?.[p] ?? installedVersions[p] ?? null,
+          fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+            if (p === 'parent') {
+              return Promise.resolve({
+                version: '3.0.0',
+                ...(plannedDepVersion
+                  ? {
+                      packageJsonUpdates: {
+                        depUpdate: {
+                          version: '3.0.0',
+                          packages: {
+                            dep: { version: plannedDepVersion },
+                          },
+                        },
+                      },
+                    }
+                  : {}),
+                generators: {
+                  gated: {
+                    version: '3.0.0',
+                    description: 'gated desc',
+                    requires: { dep: requiresRange },
+                  },
+                },
+              });
+            }
+            if (p === 'dep') {
+              return Promise.resolve({
+                version: plannedDepVersion ?? installedDepVersion,
+              });
+            }
+            return Promise.resolve(null);
+          },
+          from: fromOverrides,
+          to: {},
+        });
+
+        const result = await migrator.migrate('parent', '3.0.0');
+
+        expect(result.migrations.map((migration) => migration.name)).toEqual(
+          expectedMigrationNames
+        );
+      }
+    );
+
+    it('should stage a capped migration when a Storybook-style chain crosses the required major', async () => {
+      const installedVersions: Record<string, string> = {
+        '@nx/storybook': '20.0.0',
+        storybook: '8.0.0',
+      };
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            '@nx/storybook': '20.0.0',
+            storybook: '8.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (p, overrides) =>
+          overrides?.[p] ?? installedVersions[p] ?? null,
+        fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+          if (p === '@nx/storybook') {
+            return Promise.resolve({
+              version: '22.2.0',
+              packageJsonUpdates: {
+                storybookV9: {
+                  version: '21.1.0',
+                  packages: {
+                    storybook: { version: '^9.0.0' },
+                  },
+                  requires: { storybook: '<9.0.0' },
+                },
+                storybookV10: {
+                  version: '22.1.0',
+                  packages: {
+                    storybook: { version: '^10.0.0' },
+                  },
+                  requires: { storybook: '>=9.0.0 <10.0.0' },
+                },
+                storybookV10_1: {
+                  version: '22.2.0',
+                  packages: {
+                    storybook: { version: '^10.1.0' },
+                  },
+                  requires: { storybook: '>=10.0.0 <10.1.0' },
+                },
+              },
+              generators: {
+                'update-21-2-0-migrate-storybook-v9': {
+                  version: '21.2.0',
+                  description: 'Migrate Storybook v9 configuration',
+                  requires: { storybook: '>=9.0.0 <10.0.0' },
+                },
+              },
+            });
+          }
+          if (p === 'storybook') {
+            return Promise.resolve({ version: '10.1.0' });
+          }
+          return Promise.resolve(null);
+        },
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('@nx/storybook', '22.2.0');
+
+      expect(result.migrations).toContainEqual({
+        version: '21.2.0',
+        name: 'update-21-2-0-migrate-storybook-v9',
+        package: '@nx/storybook',
+        description: 'Migrate Storybook v9 configuration',
+        requires: { storybook: '>=9.0.0 <10.0.0' },
+      });
+    });
+
     it('should create a list of migrations to run', async () => {
       const migrator = new Migrator({
         packageJson: createPackageJson({
@@ -2017,6 +2286,57 @@ describe('Migration', () => {
           pkg1: { version: '2.0.0', addToPackageJson: false },
         },
       });
+    });
+
+    it('should not treat capped requirements as skipped when --exclude-applied-migrations already crossed the range', async () => {
+      const installedVersions: Record<string, string> = {
+        parent: '2.0.0',
+        pkg1: '3.0.0',
+      };
+      const migrator = new Migrator({
+        packageJson: createPackageJson({
+          dependencies: {
+            parent: '2.0.0',
+            pkg1: '3.0.0',
+          },
+        }),
+        getInstalledPackageVersion: (p, overrides) =>
+          overrides?.[p] ?? installedVersions[p] ?? null,
+        fetch: (p): Promise<ResolvedMigrationConfiguration> => {
+          if (p === 'parent') {
+            return Promise.resolve({
+              version: '3.0.0',
+              packageGroup: [{ package: 'pkg1', version: '*' }],
+              generators: {
+                previousCappedMigration: {
+                  version: '1.0.0',
+                  description: 'previous capped migration desc',
+                  requires: {
+                    pkg1: '>=1.0.0 <2.0.0',
+                  },
+                },
+                newMigration: {
+                  version: '3.0.0',
+                  description: 'new migration desc',
+                },
+              },
+            });
+          }
+          if (p === 'pkg1') {
+            return Promise.resolve({ version: '3.0.0' });
+          }
+          return Promise.resolve(null);
+        },
+        from: { parent: '0.1.0' },
+        to: {},
+        excludeAppliedMigrations: true,
+      });
+
+      const result = await migrator.migrate('parent', '3.0.0');
+
+      expect(result.migrations.map((migration) => migration.name)).toEqual([
+        'newMigration',
+      ]);
     });
   });
 
