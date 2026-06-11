@@ -106,10 +106,6 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
-      {
-        label: 'Synthetic monorepos',
-        link: 'concepts/synthetic-monorepos',
-      },
     ],
   },
   {
@@ -342,12 +338,7 @@ const learnGroups: SidebarItems = [
             link: 'enterprise/publish-conformance-rules-to-nx-cloud',
           },
           { label: 'Owners', link: 'enterprise/owners' },
-          { label: 'Polygraph', link: 'enterprise/polygraph' },
           { label: 'Custom workflows', link: 'enterprise/custom-workflows' },
-          {
-            label: 'Metadata only workspace',
-            link: 'enterprise/metadata-only-workspace',
-          },
           { label: 'Activate license', link: 'enterprise/activate-license' },
           {
             label: 'Single tenant',
