@@ -5,7 +5,6 @@ import {
   gte,
   maxSatisfying,
   minSatisfying,
-  prerelease,
   rcompare,
   satisfies,
   valid,
@@ -17,6 +16,7 @@ import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
   classifySpec,
+  degradeTagToCompliant,
   newestInRange,
   splitPackageDescriptor,
   type PickOutcome,
@@ -30,7 +30,7 @@ import type {
 
 // First-match-by-version-range row describing how a pnpm version treats the
 // cooldown gate. Resolution semantics differ enough across the 10.16/10.19/
-// 10.20/11.0.0/11.0.4/11.1.0/11.1.3 boundaries that they are encoded as data.
+// 11.0.0/11.0.4/11.1.0/11.1.3 boundaries that they are encoded as data.
 interface PnpmBehaviorRow {
   // Inclusive lower bound; the first row whose bound is <= the version wins
   // when iterating newest-bound-first.
@@ -40,7 +40,6 @@ interface PnpmBehaviorRow {
   strictMode: 'always' | 'default-loose';
   // >=11.0.4: window explicitly set on any surface auto-enables strict.
   strictAutoOnWhenExplicit: boolean;
-  latestTagDegrade: 'same-major' | 'any-major';
   excludeGrammar: 'v1-exact-names' | 'v2-globs-unions';
   writesExcludes: boolean;
   // v11.1.0+ also reads uppercase PNPM_CONFIG_* env vars.
@@ -54,7 +53,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 11,
     strictMode: 'default-loose',
     strictAutoOnWhenExplicit: true,
-    latestTagDegrade: 'any-major',
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: true,
     uppercaseEnv: true,
@@ -64,7 +62,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 11,
     strictMode: 'default-loose',
     strictAutoOnWhenExplicit: true,
-    latestTagDegrade: 'any-major',
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
     uppercaseEnv: true,
@@ -74,7 +71,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 11,
     strictMode: 'default-loose',
     strictAutoOnWhenExplicit: true,
-    latestTagDegrade: 'any-major',
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
     uppercaseEnv: false,
@@ -84,17 +80,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 11,
     strictMode: 'default-loose',
     strictAutoOnWhenExplicit: false,
-    latestTagDegrade: 'any-major',
-    excludeGrammar: 'v2-globs-unions',
-    writesExcludes: false,
-    uppercaseEnv: false,
-  },
-  {
-    minVersion: '10.20.0',
-    major: 10,
-    strictMode: 'always',
-    strictAutoOnWhenExplicit: false,
-    latestTagDegrade: 'any-major',
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
     uppercaseEnv: false,
@@ -104,7 +89,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 10,
     strictMode: 'always',
     strictAutoOnWhenExplicit: false,
-    latestTagDegrade: 'same-major',
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
     uppercaseEnv: false,
@@ -114,7 +98,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     major: 10,
     strictMode: 'always',
     strictAutoOnWhenExplicit: false,
-    latestTagDegrade: 'same-major',
     excludeGrammar: 'v1-exact-names',
     writesExcludes: false,
     uppercaseEnv: false,
@@ -235,7 +218,6 @@ export async function readPnpmPolicy(
     strict,
     // Loose fallback only exists on v11 when strict is off.
     looseFallback: row.major === 11 && !strict,
-    latestTagDegrade: row.latestTagDegrade,
     writesExcludes: row.writesExcludes,
     missingTimeMap:
       row.major === 10 ? 'error' : ignoreMissingTime ? 'skip' : 'error',
@@ -793,15 +775,14 @@ function escapeRegExp(value: string): string {
 // --- pick -------------------------------------------------------------------
 
 /**
- * Mirrors pnpm's resolver under an active cooldown:
+ * pnpm resolution under an active cooldown. Exact pins and ranges mirror pnpm's
+ * resolver; dist-tag degrade uses the shared cross-PM rule:
  * - exact pin too new -> strict/v10 violation; v11 loose installs it (immature).
  * - range -> newest mature; none -> v10/strict violation, v11 loose lowest
  *   (least-immature) version unfiltered (immature).
- * - latest tag -> degrade to newest mature (same-major <10.20, any-major after),
- *   none -> violation (loose installs the original target immature when even
- *   the unfiltered tag exists).
- * - non-latest tags (all versions) -> same-major mature required, else
- *   violation/loose-immature.
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant -> violation
+ *   (v11 loose installs the original target immature).
  */
 export function pickPnpmVersion(
   spec: string,
@@ -871,16 +852,18 @@ function pickTag(
     return { version: tagTarget, unconstrained };
   }
 
-  // latest degrades any-major (>=10.20) or same-major; non-latest is always
-  // same-major. Prerelease flag must match the original tag target.
-  const anyMajor =
-    spec === 'latest' && behavior.latestTagDegrade === 'any-major';
-  const degraded = degradeTag(metadata, policy, behavior, tagTarget, anyMajor);
+  const degraded = degradeTagToCompliant(tagTarget, metadata, (v) =>
+    mature(metadata, policy, v, behavior)
+  );
   if (degraded) {
     return { version: degraded, unconstrained };
   }
-  if (behavior.looseFallback) {
-    // No mature tag candidate; loose keeps the original (immature) target.
+  // The loose fallback requires a real version: a non-semver tag target must
+  // not be installed immature, or the consumer would write `pkg@<garbage>`
+  // into minimumReleaseAgeExclude and break every later install
+  // (ERR_PNPM_INVALID_VERSION_UNION).
+  if (behavior.looseFallback && valid(tagTarget)) {
+    // No compliant candidate; loose keeps the original (immature) target.
     return { version: tagTarget, unconstrained, immature: true };
   }
   throw violation(metadata, policy, spec, 'tag', [tagTarget]);
@@ -919,67 +902,6 @@ function pickRange(
   throw violation(metadata, policy, spec, 'range', blocked);
 }
 
-// Mirrors pnpm's filterPkgMetadataByPublishDate dist-tag repopulation: highest
-// mature candidate with (unless any-major) the same major as the original
-// target. pnpm 10.16 matched the major by string prefix with no prerelease
-// filter and no deprecation tie-break; 10.17 switched to numeric-major matching
-// and added the prerelease-flag filter; 10.18 added the deprecation tie-break.
-// All three apply to same-major degrades; any-major for `latest` arrived in
-// 10.20 (npm-resolver -> registry/pkg-metadata-filter).
-function degradeTag(
-  metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy,
-  behavior: PnpmBehavior,
-  target: string,
-  anyMajor: boolean
-): string | undefined {
-  const pmVersion = policy.packageManagerVersion;
-  const filtersNumericAndPrerelease = gte(pmVersion, '10.17.0');
-  const prefersNonDeprecated = gte(pmVersion, '10.18.0');
-  const targetMajor = majorOf(target);
-  const targetIsPre = prerelease(target) !== null;
-  const targetMajorPrefix = `${targetMajor}.`;
-  const candidates = matureVersions(metadata, policy, behavior).filter((v) => {
-    if (
-      filtersNumericAndPrerelease &&
-      (prerelease(v) !== null) !== targetIsPre
-    ) {
-      return false;
-    }
-    if (anyMajor) {
-      return true;
-    }
-    return filtersNumericAndPrerelease
-      ? majorOf(v) === targetMajor
-      : v.startsWith(targetMajorPrefix);
-  });
-  if (candidates.length === 0) {
-    return undefined;
-  }
-  return pickPreferringNonDeprecated(
-    candidates,
-    metadata,
-    prefersNonDeprecated
-  );
-}
-
-function pickPreferringNonDeprecated(
-  candidates: string[],
-  metadata: RegistryMetadata,
-  preferNonDeprecated: boolean
-): string {
-  const sorted = [...candidates].sort(rcompare);
-  // Deprecations are fetched lazily by the migrate layer when needed; the
-  // synchronous pick prefers highest and lets the deprecation map (if attached
-  // to metadata) break ties. 10.16-10.17 never had the tie-break.
-  const deprecated = preferNonDeprecated ? metadata.deprecations : undefined;
-  if (!deprecated) {
-    return sorted[0];
-  }
-  const nonDeprecated = sorted.filter((v) => !deprecated[v]);
-  return nonDeprecated[0] ?? sorted[0];
-}
-
 function matureVersions(
   metadata: RegistryMetadata,
   policy: MinReleaseAgePolicy,
@@ -1009,10 +931,6 @@ function mature(
     return false;
   }
   return Date.parse(time) <= policy.cutoffMs;
-}
-
-function majorOf(version: string): number {
-  return Number(version.split('.')[0].replace(/[^0-9].*$/, '')) || 0;
 }
 
 // --- errors -----------------------------------------------------------------

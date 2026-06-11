@@ -1,12 +1,26 @@
 jest.mock('child_process');
+// detectSurfaces reads os.homedir() and the .npmrc files through named imports
+// bound at module load, so a per-test jest.spyOn never intercepts them. Mock at
+// module scope (as yarn.spec.ts does for os) so the host's real ~/.npmrc cannot
+// leak into the config-surface attribution tests.
+jest.mock('os', () => ({
+  ...jest.requireActual('os'),
+  homedir: jest.fn(() => '/home/user'),
+}));
+jest.mock('../npmrc', () => ({ readNpmrcEntries: jest.fn(() => null) }));
 
 import * as childProcess from 'child_process';
-import * as fs from 'fs';
-import * as os from 'os';
 import { MinReleaseAgeViolationError } from '../errors';
+import { readNpmrcEntries } from '../npmrc';
 import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy } from '../policy';
 import { pickNpmVersion, readNpmPolicy } from './npm';
+
+// The real parser drives the mocked surface map (path -> contents) so
+// detectSurfaces sees genuine parsing; an absent path reads as a missing
+// file (null).
+const { parseNpmrcContent } =
+  jest.requireActual<typeof import('../npmrc')>('../npmrc');
 
 const HOUR = 3_600_000;
 const NOW = Date.parse('2026-06-05T00:00:00.000Z');
@@ -65,6 +79,24 @@ const pkgEdge = metadataFromAges(
   'pkg-edge',
   { '1.0.0': 24.2, '1.0.1': 23.8 },
   { latest: '1.0.1' }
+);
+
+// Multiple prerelease channels sharing a release line, for the channel-aware
+// tag degrade: an `rc` next-target with an internal `pr` build and a `beta` of
+// the same line, plus an older cross-line `rc` and a same-line older `rc`.
+const pkgChannels = metadataFromAges(
+  'pkg-ch',
+  {
+    '22.7.0': 200,
+    '22.7.5': 6,
+    '22.7.0-rc.2': 220,
+    '23.0.0-beta.1': 100,
+    '23.0.0-pr.5': 90,
+    '23.0.0-rc.0': 2,
+    '23.1.0-rc.1': 80,
+    '23.1.0-rc.4': 4,
+  },
+  { latest: '22.7.5', next: '23.0.0-rc.0', pre: '23.1.0-rc.4' }
 );
 
 // 24h window policy anchored to the fixture clock.
@@ -209,6 +241,39 @@ describe('npm min-release-age behavior', () => {
       });
     });
 
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      // next -> 23.0.0-rc.0 is too new and has no older same-line rc; beta is a
+      // lower rung of the same line so 23.0.0-beta.1 wins, while the internal
+      // 23.0.0-pr.5 (newer-published) is off the ladder and stays walled off.
+      expect(pickNpmVersion('next', pkgChannels, policy)).toEqual({
+        version: '23.0.0-beta.1',
+        unconstrained: '23.0.0-rc.0',
+      });
+    });
+
+    it('too-new rc tag keeps a compliant same-line rc', () => {
+      // pre -> 23.1.0-rc.4 is too new, but 23.1.0-rc.1 (same channel, same line)
+      // is compliant and outranks every stable below 23.x.
+      expect(pickNpmVersion('pre', pkgChannels, policy)).toEqual({
+        version: '23.1.0-rc.1',
+        unconstrained: '23.1.0-rc.4',
+      });
+    });
+
+    it('tag with no compliant candidate at all -> ENOVERSIONS violation', () => {
+      // latest -> 1.0.1 is too new and the degrade pool (1.0.0, also too new)
+      // has nothing compliant, so the tag path's ENOVERSIONS fires.
+      try {
+        pickNpmVersion('latest', pkgB, policy);
+        throw new Error('expected throw');
+      } catch (e) {
+        expect(e).toBeInstanceOf(MinReleaseAgeViolationError);
+        expect((e as MinReleaseAgeViolationError).pmShapedDetail).toBe(
+          'No versions available for pkg-b'
+        );
+      }
+    });
+
     it('tag pointing at an already-mature version returns it', () => {
       expect(pickNpmVersion('stable-old', pkgA, policy)).toEqual({
         version: '1.0.1',
@@ -306,29 +371,20 @@ describe('npm min-release-age behavior', () => {
 
   describe('readNpmPolicy', () => {
     const execSyncMock = childProcess.execSync as jest.Mock;
+    const readNpmrcEntriesMock = readNpmrcEntries as jest.Mock;
 
     // path -> .npmrc contents; absent paths read as missing files.
     let npmrcFiles: Record<string, string>;
 
     beforeEach(() => {
       npmrcFiles = {};
-      jest.spyOn(os, 'homedir').mockReturnValue('/home/user');
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation(
-          (p: any) => typeof p === 'string' && p in npmrcFiles
-        );
-      jest.spyOn(fs, 'readFileSync').mockImplementation((p: any) => {
-        if (typeof p === 'string' && p in npmrcFiles) {
-          return npmrcFiles[p];
-        }
-        throw new Error(`ENOENT: ${p}`);
-      });
+      readNpmrcEntriesMock.mockImplementation((p: string) =>
+        npmrcFiles[p] === undefined ? null : parseNpmrcContent(npmrcFiles[p])
+      );
     });
 
     afterEach(() => {
       jest.clearAllMocks();
-      jest.restoreAllMocks();
     });
 
     function mockConfig(config: Record<string, unknown>) {

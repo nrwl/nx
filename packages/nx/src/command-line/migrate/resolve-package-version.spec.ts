@@ -64,7 +64,6 @@ function pnpmPolicy(
         packageManager: 'pnpm',
         strict: overrides.strict ?? false,
         looseFallback: true,
-        latestTagDegrade: 'any-major',
         writesExcludes: overrides.writesExcludes ?? true,
         missingTimeMap: 'skip',
       },
