@@ -361,10 +361,16 @@ const nodeSupportsNativeTypescript: boolean = !!(process as any).features
  * type stripping. `loadTsFile` catches these failures and falls back to
  * registering swc/ts-node + tsconfig-paths automatically.
  *
+ * Setting NX_PREFER_TS_NODE=true also opts out, since that flag explicitly
+ * requests ts-node for transpilation.
+ *
  * See: https://nodejs.org/api/typescript.html#full-typescript-support
  */
 const preferNodeStripTypes: boolean = (() => {
   if (!nodeSupportsNativeTypescript) {
+    return false;
+  }
+  if (process.env.NX_PREFER_TS_NODE === 'true') {
     return false;
   }
   return process.env.NX_PREFER_NODE_STRIP_TYPES !== 'false';

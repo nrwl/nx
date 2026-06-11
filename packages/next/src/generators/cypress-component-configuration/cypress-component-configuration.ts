@@ -12,7 +12,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { componentTestGenerator } from '@nx/react';
-import { isComponent } from '@nx/react/src/utils/ct-utils';
+import { isComponent } from '@nx/react/internal';
 import { relative } from 'path';
 import { nxVersion } from '../../utils/versions';
 import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
@@ -59,9 +59,9 @@ export async function cypressComponentConfigurationInternal(
       addPlugin: options.addPlugin,
     })
   );
-  const { ensureDependencies } = await import(
-    '@nx/webpack/src/utils/ensure-dependencies'
-  );
+  const {
+    ensureDependencies,
+  }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
   tasks.push(
     ensureDependencies(tree, { compiler: 'swc', uiFramework: 'react' })
   );

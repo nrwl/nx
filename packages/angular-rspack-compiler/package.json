@@ -30,8 +30,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "!dist/tsconfig.lib.tsbuildinfo",
+    "patch"
+  ],
   "exports": {
     ".": {
+      "@nx/nx-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
@@ -58,14 +64,6 @@
     "sourceRoot": "packages/angular-rspack-compiler/src",
     "projectType": "library",
     "name": "angular-rspack-compiler",
-    "release": {
-      "version": {
-        "preserveLocalDependencyProtocols": true,
-        "manifestRootsToUpdate": [
-          "packages/{projectName}"
-        ]
-      }
-    },
     "targets": {
       "build": {
         "command": "node ./scripts/copy-readme.js angular-rspack-compiler packages/angular-rspack-compiler/readme-template.md packages/angular-rspack-compiler/README.md",
@@ -85,15 +83,6 @@
             "--passWithNoTests"
           ]
         }
-      },
-      "nx-release-publish": {
-        "executor": "@nx/js:release-publish",
-        "options": {
-          "packageRoot": "packages/angular-rspack-compiler"
-        },
-        "dependsOn": [
-          "^nx-release-publish"
-        ]
       }
     }
   }

@@ -22,56 +22,15 @@
       "version": "23.0.0-beta.14",
       "description": "Rewrites `@nx/js/src/*` subpath imports to the new `@nx/js/internal` entry. The `./src/*` wildcard has been removed from `@nx/js`'s exports map; `@nx/js/src/release/version-actions` is preserved as a non-wildcard entry for back-compat with existing nx.json release configs. If a rewritten import resolves to a symbol that lives on the public `@nx/js` entry (e.g. `libraryGenerator`, `extractTsConfigBase`, `resolvePathsBaseUrl`), change the specifier to `@nx/js`.",
       "factory": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/js/typescript` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
-    "20.2.0": {
-      "version": "20.2.0-beta.5",
-      "x-prompt": "Do you want to update to TypeScript v5.6?",
-      "requires": {
-        "typescript": ">=5.5.0 <5.6.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.6.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.4.0": {
-      "version": "20.4.0-beta.1",
-      "x-prompt": "Do you want to update to TypeScript v5.7?",
-      "requires": {
-        "typescript": ">=5.6.0 <5.7.0"
-      },
-      "packages": {
-        "typescript": {
-          "version": "~5.7.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.5.0": {
-      "version": "20.5.0-beta.3",
-      "packages": {
-        "verdaccio": {
-          "version": "^6.0.5",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.7.1-beta.0": {
-      "version": "20.7.1-beta.0",
-      "requires": {
-        "@swc/cli": ">=0.3.0 <0.6.0"
-      },
-      "packages": {
-        "@swc/cli": {
-          "version": "~0.6.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.2.0": {
       "version": "21.2.0-beta.0",
       "x-prompt": "Do you want to update to TypeScript v5.8?",

@@ -18,14 +18,14 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { withReact } from '@nx/react';
-import { suppressReactComposeHelperWarnings } from '@nx/react/src/utils/deprecation';
+import { suppressReactComposeHelperWarnings } from '@nx/react/internal';
 import {
   AssetGlobPattern,
   composePluginsSync,
   NormalizedWebpackExecutorOptions,
   withNx,
 } from '@nx/webpack';
-import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/src/utils/deprecation';
+import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
 import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';

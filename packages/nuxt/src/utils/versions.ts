@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/nuxt', 'package.json')).version;
 
 // Lowest Nuxt version the plugin supports. Nuxt 2 is EOL (2024-06-30). The only
 // runtime Nuxt API the plugin uses is `@nuxt/kit`'s `loadNuxtConfig` (reading

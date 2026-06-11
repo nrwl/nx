@@ -1,4 +1,6 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/react', 'package.json')).version;
 
 export const minSupportedReactVersion = '18.0.0';
 

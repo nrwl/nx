@@ -1,41 +1,5 @@
 {
   "generators": {
-    "update-20-0-4": {
-      "version": "20.0.4-beta.0",
-      "description": "Add gitignore entry for temporary vite config files.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
-      "documentation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
-    },
-    "update-20-0-6": {
-      "version": "20.0.6-beta.0",
-      "description": "Add gitignore entry for temporary vite config files and remove previous incorrect glob.",
-      "implementation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore",
-      "documentation": "./dist/src/migrations/update-20-0-4/add-vite-temp-files-to-git-ignore.md"
-    },
-    "update-20-5-0-install-jiti": {
-      "version": "20.5.0-beta.2",
-      "requires": {
-        "vite": ">=6.0.0"
-      },
-      "description": "Install jiti as a devDependency to allow vite to parse TS postcss files.",
-      "implementation": "./dist/src/migrations/update-20-5-0/install-jiti",
-      "documentation": "./dist/src/migrations/update-20-5-0/install-jiti.md"
-    },
-    "update-20-5-0-update-resolve-conditions": {
-      "version": "20.5.0-beta.3",
-      "requires": {
-        "vite": ">=6.0.0"
-      },
-      "description": "Update resolve.conditions to include defaults that are no longer provided by Vite.",
-      "implementation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions",
-      "documentation": "./dist/src/migrations/update-20-5-0/update-resolve-conditions.md"
-    },
-    "eslint-ignore-vite-temp-files": {
-      "version": "20.5.0-beta.3",
-      "description": "Add vite config temporary files to the ESLint configuration ignore patterns if ESLint is used.",
-      "implementation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files",
-      "documentation": "./dist/src/migrations/update-20-5-0/eslint-ignore-vite-temp-files.md"
-    },
     "update-22-2-0": {
       "version": "22.2.0-beta.1",
       "requires": {
@@ -89,46 +53,15 @@
       "description": "Migrate workspaces past breaking changes for Vitest 4.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-to-vitest-4",
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-vitest-4.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/vite/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
-    "20.7.1": {
-      "version": "20.7.1-beta.0",
-      "packages": {
-        "@analogjs/vite-plugin-angular": {
-          "version": "~1.14.1",
-          "alwaysAddToPackageJson": false
-        },
-        "@analogjs/vitest-angular": {
-          "version": "~1.14.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.5.0": {
-      "version": "20.5.0-beta.3",
-      "requires": {
-        "vite": ">=5.0.0 <6.0.0"
-      },
-      "packages": {
-        "vite": {
-          "version": "^6.0.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.5.0-vite-plugin-dts": {
-      "version": "20.5.0-beta.3",
-      "requires": {
-        "vite-plugin-dts": ">=3.0.0 <4.0.0"
-      },
-      "packages": {
-        "vite-plugin-dts": {
-          "version": "~4.5.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.1.2": {
       "version": "21.1.2-beta.0",
       "packages": {

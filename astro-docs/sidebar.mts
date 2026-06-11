@@ -303,10 +303,6 @@ const learnGroups: SidebarItems = [
             link: 'features/automate-updating-dependencies',
           },
           {
-            label: 'Nx Console migration assistance',
-            link: 'guides/nx-console/console-migrate-ui',
-          },
-          {
             label: 'Advanced update process',
             link: 'guides/tips-n-tricks/advanced-update',
           },
@@ -465,12 +461,29 @@ const technologiesGroups: SidebarItems = [
           { label: 'Expo', link: 'technologies/react/expo/introduction' },
           { label: 'Vue', link: 'technologies/vue/introduction' },
           { label: 'Nuxt', link: 'technologies/vue/nuxt/introduction' },
+          {
+            label: 'Module Federation',
+            link: 'technologies/module-federation/introduction',
+          },
+          { label: 'ESLint', link: 'technologies/eslint/introduction' },
+        ],
+      },
+      {
+        label: 'Node',
+        collapsed: false,
+        items: [
           { label: 'Node.js', link: 'technologies/node/introduction' },
           {
             label: 'Express',
             link: 'technologies/node/express/introduction',
           },
           { label: 'Nest', link: 'technologies/node/nest/introduction' },
+        ],
+      },
+      {
+        label: 'Java (JVM)',
+        collapsed: false,
+        items: [
           { label: 'Java', link: 'technologies/java/introduction' },
           {
             label: 'Gradle',
@@ -480,13 +493,12 @@ const technologiesGroups: SidebarItems = [
             label: 'Maven',
             link: 'technologies/java/maven/introduction',
           },
-          { label: '.NET', link: 'technologies/dotnet/introduction' },
-          {
-            label: 'Module Federation',
-            link: 'technologies/module-federation/introduction',
-          },
-          { label: 'ESLint', link: 'technologies/eslint/introduction' },
         ],
+      },
+      {
+        label: '.NET',
+        collapsed: false,
+        items: [{ label: '.NET', link: 'technologies/dotnet/introduction' }],
       },
       {
         label: 'Build tools',
@@ -710,7 +722,7 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Installation',
+        label: 'Installation and updates',
         collapsed: true,
         items: [
           {
@@ -720,6 +732,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Update global installation',
             link: 'guides/installation/update-global-installation',
+          },
+          {
+            label: 'Nx Console migration assistance',
+            link: 'guides/nx-console/console-migrate-ui',
           },
         ],
       },

@@ -15,9 +15,22 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -25,22 +38,24 @@
   },
   "homepage": "https://nx.dev",
   "generators": "./generators.json",
-  "executors": "./executors.json",
   "exports": {
     ".": {
-      "default": "./index.js",
-      "types": "./index.d.ts"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": "./package.json",
-    "./generators.json": "./generators.json",
-    "./executors.json": "./executors.json",
     "./migrations.json": "./migrations.json",
-    "./plugin": "./plugin.js"
+    "./generators.json": "./generators.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    }
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "tslib": "catalog:typescript",

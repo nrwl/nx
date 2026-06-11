@@ -2,7 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "../../dist/out-tsc/nx-dev/models-package",
+    "outDir": "dist",
     "declaration": true,
     "types": ["node"],
     "composite": true

@@ -43,6 +43,65 @@ describe('getTsNodeCompilerOptions', () => {
   });
 });
 
+describe('isNativeStripPreferred', () => {
+  const originalEnv = { ...process.env };
+  const featuresDescriptor = Object.getOwnPropertyDescriptor(
+    process.features,
+    'typescript'
+  );
+
+  function setNativeTypescriptSupport(value: 'strip' | 'transform' | false) {
+    Object.defineProperty(process.features, 'typescript', {
+      value,
+      configurable: true,
+    });
+  }
+
+  function loadIsNativeStripPreferred(): boolean {
+    let result: boolean;
+    jest.isolateModules(() => {
+      result = require('./register').isNativeStripPreferred();
+    });
+    return result;
+  }
+
+  afterEach(() => {
+    process.env = { ...originalEnv };
+    if (featuresDescriptor) {
+      Object.defineProperty(process.features, 'typescript', featuresDescriptor);
+    } else {
+      delete (process.features as { typescript?: unknown }).typescript;
+    }
+  });
+
+  it('prefers native strip when the runtime supports it', () => {
+    setNativeTypescriptSupport('strip');
+    delete process.env.NX_PREFER_TS_NODE;
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(true);
+  });
+
+  it('does not prefer native strip when the runtime lacks support', () => {
+    setNativeTypescriptSupport(false);
+    delete process.env.NX_PREFER_TS_NODE;
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+
+  it('does not prefer native strip when NX_PREFER_NODE_STRIP_TYPES is false', () => {
+    setNativeTypescriptSupport('strip');
+    process.env.NX_PREFER_NODE_STRIP_TYPES = 'false';
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+
+  it('does not prefer native strip when NX_PREFER_TS_NODE is true', () => {
+    setNativeTypescriptSupport('strip');
+    process.env.NX_PREFER_TS_NODE = 'true';
+    delete process.env.NX_PREFER_NODE_STRIP_TYPES;
+    expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+});
+
 describe('isNativeTypeStripError', () => {
   it('returns true for ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX', () => {
     const err = Object.assign(new Error('boom'), {

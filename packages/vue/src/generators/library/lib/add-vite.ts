@@ -54,7 +54,11 @@ export async function addVite(
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    const { configurationGenerator } = await import('@nx/vitest/generators');
+    // `require()` honors Module._initPaths (which ensurePackage updates); ESM
+    // dynamic `import()` doesn't, so it can't see the on-demand temp install.
+    const {
+      configurationGenerator,
+    }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
     const vitestTask = await configurationGenerator(tree, {
       uiFramework: 'vue',
       project: options.projectName,

@@ -21,10 +21,10 @@ export async function addFiles(
 ) {
   // must dynamicaly import to prevent packages not using cypress from erroring out
   // when importing react
-  const { addMountDefinition } = await import('@nx/cypress/internal');
-  const { getInstalledCypressMajorVersion } = await import(
-    '@nx/cypress/internal'
-  );
+  const {
+    addMountDefinition,
+    getInstalledCypressMajorVersion,
+  }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
   const installedCypressMajorVersion = getInstalledCypressMajorVersion(tree);
 
   // Specifically undefined to allow Remix workaround of passing an empty string

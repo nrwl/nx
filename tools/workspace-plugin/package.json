@@ -6,8 +6,8 @@
   "executors": "./executors.json",
   "dependencies": {
     "@nx/conformance": "5.0.4",
-    "@nx/devkit": "23.0.0-beta.4",
-    "@nx/js": "23.0.0-beta.4",
+    "@nx/devkit": "23.0.0-beta.22",
+    "@nx/js": "23.0.0-beta.22",
     "@xmldom/xmldom": "^0.8.10",
     "semver": "catalog:",
     "shiki": "^4.0.2",
@@ -15,7 +15,7 @@
     "tslib": "catalog:typescript"
   },
   "type": "module",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "typings": "./dist/src/index.d.ts",
   "devDependencies": {}
 }

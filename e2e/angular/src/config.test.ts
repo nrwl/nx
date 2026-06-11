@@ -12,7 +12,9 @@ describe('angular.json v1 config', () => {
   const app1 = uniq('app1');
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular'] });
+    newProject({
+      packages: ['@nx/angular', '@nx/webpack', '@nx/jest', '@nx/playwright'],
+    });
     runCLI(
       `generate @nx/angular:app ${app1} --bundler=webpack --unit-test-runner=jest --no-interactive`
     );

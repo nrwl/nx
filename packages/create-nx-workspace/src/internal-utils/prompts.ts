@@ -186,14 +186,14 @@ async function aiAgentsPrompt(): Promise<Agent[]> {
 
 export async function determineAnalytics(
   parsedArgs: yargs.Arguments<{ analytics?: boolean }>
-): Promise<boolean> {
+): Promise<'yes' | 'no' | 'unset'> {
   if (typeof parsedArgs.analytics === 'boolean') {
-    return parsedArgs.analytics;
+    return parsedArgs.analytics ? 'yes' : 'no';
   }
 
   if (!parsedArgs.interactive || isCI()) {
-    // Default to false in non-interactive/CI
-    return false;
+    // Not asked in non-interactive/CI.
+    return 'unset';
   }
 
   const { enableAnalytics } = await enquirer.prompt<{
@@ -207,7 +207,7 @@ export async function determineAnalytics(
       initial: 0,
     },
   ]);
-  return enableAnalytics === 'Yes';
+  return enableAnalytics === 'Yes' ? 'yes' : 'no';
 }
 
 export async function determineDefaultBase(
@@ -253,8 +253,13 @@ export async function determineDefaultBase(
  */
 export async function confirmThirdPartyPreset(
   packageName: string,
-  interactive: boolean | undefined
+  interactive: boolean | undefined,
+  trusted?: boolean
 ): Promise<boolean> {
+  if (trusted) {
+    return true;
+  }
+
   output.warn({
     title: `About to install '${packageName}' from the npm registry as a preset.`,
     bodyLines: [

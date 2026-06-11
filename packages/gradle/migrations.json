@@ -1,165 +1,164 @@
 {
   "generators": {
-    "add-include-subprojects-tasks": {
-      "version": "20.2.0-beta.4",
-      "cli": "nx",
-      "description": "Add includeSubprojectsTasks to build.gradle file",
-      "factory": "./src/migrations/20-2-0/add-include-subprojects-tasks",
-      "documentation": "./src/migrations/20-2-0/add-include-subprojects-tasks.md"
-    },
     "change-plugin-to-v1": {
       "version": "21.0.0-beta.5",
       "cli": "nx",
       "description": "Change @nx/gradle plugin to version 1",
-      "factory": "./src/migrations/21-0-0/change-plugin-to-v1",
-      "documentation": "./src/migrations/21-0-0/change-plugin-to-v1.md"
+      "factory": "./dist/src/migrations/21-0-0/change-plugin-to-v1",
+      "documentation": "./dist/src/migrations/21-0-0/change-plugin-to-v1.md"
     },
     "change-ciTargetName-to-ciTestTargetName": {
       "version": "21.0.0-beta.13",
       "cli": "nx",
       "description": "Change @nx/gradle option from ciTargetName to ciTestTargetName",
-      "factory": "./src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName",
-      "documentation": "./src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName.md"
+      "factory": "./dist/src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName",
+      "documentation": "./dist/src/migrations/21-0-0/change-ciTargetName-to-ciTestTargetName.md"
     },
     "change-plugin-version-0-1-0": {
       "version": "21.1.2-beta.1",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.0 in build file",
-      "factory": "./src/migrations/21-1-2/change-plugin-version-0-1-0",
-      "documentation": "./src/migrations/21-1-2/change-plugin-version-0-1-0.md"
+      "factory": "./dist/src/migrations/21-1-2/change-plugin-version-0-1-0",
+      "documentation": "./dist/src/migrations/21-1-2/change-plugin-version-0-1-0.md"
     },
     "change-plugin-version-0-1-2": {
       "version": "21.3.0-beta.0",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.2 in build file",
-      "factory": "./src/migrations/21-3-0/change-plugin-version-0-1-2",
-      "documentation": "./src/migrations/21-3-0/change-plugin-version-0-1-2.md"
+      "factory": "./dist/src/migrations/21-3-0/change-plugin-version-0-1-2",
+      "documentation": "./dist/src/migrations/21-3-0/change-plugin-version-0-1-2.md"
     },
     "change-plugin-version-0-1-4": {
       "version": "21.3.11-beta.0",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.4 in build file",
-      "factory": "./src/migrations/21-3-11/change-plugin-version-0-1-4",
-      "documentation": "./src/migrations/21-3-11/change-plugin-version-0-1-4.md"
+      "factory": "./dist/src/migrations/21-3-11/change-plugin-version-0-1-4",
+      "documentation": "./dist/src/migrations/21-3-11/change-plugin-version-0-1-4.md"
     },
     "change-plugin-version-0-1-5": {
       "version": "21.4.0-beta.12",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.5 in build file",
-      "factory": "./src/migrations/21-4-0/change-plugin-version-0-1-5",
-      "documentation": "./src/migrations/21-4-0/change-plugin-version-0-1-5.md"
+      "factory": "./dist/src/migrations/21-4-0/change-plugin-version-0-1-5",
+      "documentation": "./dist/src/migrations/21-4-0/change-plugin-version-0-1-5.md"
     },
     "change-plugin-version-0-1-6": {
       "version": "21.4.1-beta.1",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.6 in build file",
-      "factory": "./src/migrations/21-4-1/change-plugin-version-0-1-6",
-      "documentation": "./src/migrations/21-4-1/change-plugin-version-0-1-6.md"
+      "factory": "./dist/src/migrations/21-4-1/change-plugin-version-0-1-6",
+      "documentation": "./dist/src/migrations/21-4-1/change-plugin-version-0-1-6.md"
     },
     "change-plugin-version-0-1-7": {
       "version": "21.5.1-beta.5",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.7 in build file",
-      "factory": "./src/migrations/21-5-1/change-plugin-version-0-1-7",
-      "documentation": "./src/migrations/21-5-1/change-plugin-version-0-1-7.md"
+      "factory": "./dist/src/migrations/21-5-1/change-plugin-version-0-1-7",
+      "documentation": "./dist/src/migrations/21-5-1/change-plugin-version-0-1-7.md"
     },
     "change-plugin-version-0-1-8": {
       "version": "21.6.1-beta.2",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.8 in build file",
-      "factory": "./src/migrations/21-6-1/change-plugin-version-0-1-8",
-      "documentation": "./src/migrations/21-6-1/change-plugin-version-0-1-8.md"
+      "factory": "./dist/src/migrations/21-6-1/change-plugin-version-0-1-8",
+      "documentation": "./dist/src/migrations/21-6-1/change-plugin-version-0-1-8.md"
     },
     "change-plugin-version-0-1-9": {
       "version": "22.1.0-rc.3",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.9 in build file",
-      "factory": "./src/migrations/22-1-0/change-plugin-version-0-1-9",
-      "documentation": "./src/migrations/22-1-0/change-plugin-version-0-1-9.md"
+      "factory": "./dist/src/migrations/22-1-0/change-plugin-version-0-1-9",
+      "documentation": "./dist/src/migrations/22-1-0/change-plugin-version-0-1-9.md"
     },
     "change-plugin-version-0-1-10": {
       "version": "22.2.0-beta.4",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.10 in build file",
-      "factory": "./src/migrations/22-2-0/change-plugin-version-0-1-10",
-      "documentation": "./src/migrations/22-2-0/change-plugin-version-0-1-10.md"
+      "factory": "./dist/src/migrations/22-2-0/change-plugin-version-0-1-10",
+      "documentation": "./dist/src/migrations/22-2-0/change-plugin-version-0-1-10.md"
     },
     "change-plugin-version-0-1-11": {
       "version": "22.4.0-beta.2",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.11 in build file",
-      "factory": "./src/migrations/22-3-0/change-plugin-version-0-1-11",
-      "documentation": "./src/migrations/22-3-0/change-plugin-version-0-1-11.md"
+      "factory": "./dist/src/migrations/22-3-0/change-plugin-version-0-1-11",
+      "documentation": "./dist/src/migrations/22-3-0/change-plugin-version-0-1-11.md"
     },
     "change-plugin-version-0-1-12": {
       "version": "22.5.0-beta.5",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.12 in build file",
-      "factory": "./src/migrations/22-5-0/change-plugin-version-0-1-12",
-      "documentation": "./src/migrations/22-5-0/change-plugin-version-0-1-12.md"
+      "factory": "./dist/src/migrations/22-5-0/change-plugin-version-0-1-12",
+      "documentation": "./dist/src/migrations/22-5-0/change-plugin-version-0-1-12.md"
     },
     "change-plugin-version-0-1-13": {
       "version": "22.5.3",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.13 in build file",
-      "factory": "./src/migrations/22-5-3/change-plugin-version-0-1-13",
-      "documentation": "./src/migrations/22-5-3/change-plugin-version-0-1-13.md"
+      "factory": "./dist/src/migrations/22-5-3/change-plugin-version-0-1-13",
+      "documentation": "./dist/src/migrations/22-5-3/change-plugin-version-0-1-13.md"
     },
     "change-plugin-version-0-1-14": {
       "version": "22.6.0-beta.11",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.14 in build file",
-      "factory": "./src/migrations/22-6-0/change-plugin-version-0-1-14",
-      "documentation": "./src/migrations/22-6-0/change-plugin-version-0-1-14.md"
+      "factory": "./dist/src/migrations/22-6-0/change-plugin-version-0-1-14",
+      "documentation": "./dist/src/migrations/22-6-0/change-plugin-version-0-1-14.md"
     },
     "change-plugin-version-0-1-15": {
       "version": "22.6.0-beta.13",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.15 in build file",
-      "factory": "./src/migrations/22-6-0/change-plugin-version-0-1-15",
-      "documentation": "./src/migrations/22-6-0/change-plugin-version-0-1-15.md"
+      "factory": "./dist/src/migrations/22-6-0/change-plugin-version-0-1-15",
+      "documentation": "./dist/src/migrations/22-6-0/change-plugin-version-0-1-15.md"
     },
     "change-plugin-version-0-1-16": {
       "version": "22.7.0-beta.2",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.16 in build file",
-      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-16",
-      "documentation": "./src/migrations/22-7-0/change-plugin-version-0-1-16.md"
+      "factory": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-16",
+      "documentation": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-16.md"
     },
     "change-plugin-version-0-1-17": {
       "version": "22.7.0-beta.4",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.17 in build file",
-      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-17",
-      "documentation": "./src/migrations/22-7-0/change-plugin-version-0-1-17.md"
+      "factory": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-17",
+      "documentation": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-17.md"
     },
     "change-plugin-version-0-1-18": {
       "version": "22.7.0-beta.9",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.18 in build file",
-      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-18",
-      "documentation": "./src/migrations/22-7-0/change-plugin-version-0-1-18.md"
+      "factory": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-18",
+      "documentation": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-18.md"
     },
     "change-plugin-version-0-1-19": {
       "version": "22.7.0-beta.11",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.19 in build file",
-      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-19",
-      "documentation": "./src/migrations/22-7-0/change-plugin-version-0-1-19.md"
+      "factory": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-19",
+      "documentation": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-19.md"
     },
     "change-plugin-version-0-1-20": {
       "version": "22.7.0-beta.16",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.20 in build file",
-      "factory": "./src/migrations/22-7-0/change-plugin-version-0-1-20",
-      "documentation": "./src/migrations/22-7-0/change-plugin-version-0-1-20.md"
+      "factory": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-20",
+      "documentation": "./dist/src/migrations/22-7-0/change-plugin-version-0-1-20.md"
     },
     "change-plugin-version-0-1-21": {
       "version": "23.0.0-beta.11",
       "cli": "nx",
       "description": "Change dev.nx.gradle.project-graph to version 0.1.21 in build file",
-      "factory": "./src/migrations/23-0-0/change-plugin-version-0-1-21",
-      "documentation": "./src/migrations/23-0-0/change-plugin-version-0-1-21.md"
+      "factory": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-21",
+      "documentation": "./dist/src/migrations/23-0-0/change-plugin-version-0-1-21.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/gradle` and `@nx/gradle/plugin-v1` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {}

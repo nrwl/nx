@@ -1,19 +1,28 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/angular",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "esModuleInterop": true,
-    "tsBuildInfoFile": "../../dist/packages/angular/tsconfig.tsbuildinfo"
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
     "jest.config.ts",
     "test-setup.ts",
+    "eslint.config.mjs",
     "index.ts",
     "mf/**/*"
   ],

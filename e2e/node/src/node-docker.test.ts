@@ -2,8 +2,8 @@ import { names } from '@nx/devkit';
 import {
   cleanupProject,
   getPackageManagerCommand,
-  getRandomPort,
   newProject,
+  reservePort,
   runCLI,
   runCommand,
   isDockerAvailable,
@@ -32,7 +32,7 @@ describe('Node Docker Applications', () => {
         });
 
         it(`should generate ${packageManager} compliant dockerfile and use it`, async () => {
-          const { nodeapp } = setupTest(packageManager);
+          const { nodeapp } = await setupTest(packageManager);
           expect(runCLI(`docker:build ${nodeapp} --network=host`)).toContain(
             `Successfully ran target docker:build for project @proj/${nodeapp}`
           );
@@ -44,10 +44,10 @@ describe('Node Docker Applications', () => {
   }
 });
 
-function setupTest(packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun') {
+async function setupTest(packageManager: 'npm' | 'yarn' | 'pnpm' | 'bun') {
   const nodeapp = uniq('nodeapp');
   const lib = uniq('lib');
-  const port = getRandomPort();
+  const port = await reservePort();
   process.env.PORT = `${port}`;
 
   runCLI(

@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/next/spec",
+    "outDir": "out-tsc/spec",
     "module": "commonjs",
     "types": ["jest", "node"],
     "composite": true

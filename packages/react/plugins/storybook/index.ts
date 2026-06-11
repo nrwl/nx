@@ -6,9 +6,11 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { NormalizedWebpackExecutorOptions } from '@nx/webpack/src/executors/webpack/schema';
-import { composePluginsSync } from '@nx/webpack/src/utils/config';
-import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/src/utils/deprecation';
+import {
+  NormalizedWebpackExecutorOptions,
+  composePluginsSync,
+} from '@nx/webpack';
+import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import {

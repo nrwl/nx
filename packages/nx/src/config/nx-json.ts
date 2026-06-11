@@ -5,7 +5,7 @@ import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
 import type { AgentId } from '../command-line/migrate/agentic/cli-args';
 import type {
-  MigrateMode,
+  MigrateInclude,
   MultiMajorMode,
 } from '../command-line/migrate/command-object';
 import { readJsonFile } from '../utils/fileutils';
@@ -727,13 +727,13 @@ export interface NxMigrateConfiguration {
   commitPrefix?: string;
 
   /**
-   * Restricts which packages to migrate when migrating Nx itself. Equivalent to
-   * the `--mode` flag.
-   * - `first-party`: only Nx and its plugins.
-   * - `third-party`: only the third-party dependencies referenced by Nx.
+   * Restricts which packages to migrate. Only applies to target packages that
+   * support optional updates. Equivalent to the `--include` flag.
+   * - `required`: the target package and the related packages it ships with.
+   * - `optional`: the optional dependency updates those packages recommend.
    * - `all`: everything (default).
    */
-  mode?: MigrateMode;
+  include?: MigrateInclude;
 
   /**
    * How to handle a migration that crosses more than one major version.
@@ -743,6 +743,15 @@ export interface NxMigrateConfiguration {
    * - `gradual`: migrate to the smallest recommended step.
    */
   multiMajorMode?: MultiMajorMode;
+
+  /**
+   * Whether `nx migrate` resolves package versions via the npm registry
+   * (faster) instead of a package-manager install. The
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
+   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * Defaults to `true`.
+   */
+  useRegistryResolution?: boolean;
 
   /**
    * Default for the agentic flow used by `nx migrate --run-migrations`.

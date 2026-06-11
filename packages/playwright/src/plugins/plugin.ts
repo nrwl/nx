@@ -7,7 +7,7 @@ import {
   AggregateCreateNodesError,
   createNodesFromFiles,
   type CreateNodesContext,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
@@ -70,7 +70,7 @@ export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
         entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -372,6 +372,7 @@ async function buildPlaywrightTargets(
     }
     targets[options.mergeReportsTargetName] = {
       executor: '@nx/playwright:merge-reports',
+      continuous: false,
       cache: true,
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),

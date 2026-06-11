@@ -14,6 +14,7 @@ import {
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
+  readNxMigrateConfig,
   readTargetsFromPackageJson,
 } from './package-json';
 import * as pacakgeManager from './package-manager';
@@ -881,5 +882,54 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('readNxMigrateConfig', () => {
+  it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should carry supportsOptionalMigrations from the ng-update config', () => {
+    const config = readNxMigrateConfig({
+      'ng-update': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should not set supportsOptionalMigrations when the config omits it', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': { migrations: './migrations.json' },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
+  });
+
+  it('should not set supportsOptionalMigrations when the config sets it to false', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: false,
+      },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 });

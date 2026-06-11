@@ -18,6 +18,10 @@ jest.mock('enquirer', () => ({
   default: { prompt: jest.fn() },
 }));
 
+jest.mock('../utils/output', () => ({
+  output: { warn: jest.fn(), log: jest.fn() },
+}));
+
 describe('determineTemplate', () => {
   describe('non-interactive mode', () => {
     it('should return nrwl/empty-template when no preset or template is provided', async () => {
@@ -109,5 +113,22 @@ describe('confirmThirdPartyPreset', () => {
       confirmThirdPartyPreset('@my-org/nx-plugin', true)
     ).resolves.toBe(true);
     expect(enquirer.prompt).not.toHaveBeenCalled();
+  });
+
+  it('skips prompt and warning when trusted flag is set', async () => {
+    const { output } = require('../utils/output');
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, true)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).not.toHaveBeenCalled();
+    expect(output.warn).not.toHaveBeenCalled();
+  });
+
+  it('still prompts when trusted flag is false', async () => {
+    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({ confirm: 'Yes' });
+    await expect(
+      confirmThirdPartyPreset('@my-org/nx-plugin', true, false)
+    ).resolves.toBe(true);
+    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
   });
 });

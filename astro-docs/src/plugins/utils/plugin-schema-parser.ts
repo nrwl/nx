@@ -44,6 +44,19 @@ export type PluginItem = {
   schemaPath: string;
 };
 
+// schema.json files are hand-authored sources copied verbatim into dist at build
+// time. When a plugin's dist isn't built during docs generation (e.g. @nx/gradle,
+// whose dist requires a Gradle/JVM assemble step) the built path is missing, so
+// fall back to the source path by stripping the leading "dist/" segment.
+function resolveSchemaPath(pluginPath: string, schemaRef: string): string {
+  const builtPath = join(pluginPath, schemaRef);
+  if (existsSync(builtPath)) {
+    return builtPath;
+  }
+  const sourcePath = join(pluginPath, schemaRef.replace(/^(\.\/)?dist\//, ''));
+  return existsSync(sourcePath) ? sourcePath : builtPath;
+}
+
 export function parseGenerators(
   pluginPath: string
 ): Map<string, PluginItem> | null {
@@ -64,7 +77,7 @@ export function parseGenerators(
       continue;
     }
 
-    const schemaPath = join(pluginPath, config.schema);
+    const schemaPath = resolveSchemaPath(pluginPath, config.schema);
 
     const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
     generators.set(name, { config, schema, schemaPath });
@@ -93,7 +106,7 @@ export function parseExecutors(
       continue;
     }
 
-    const schemaPath = join(pluginPath, config.schema);
+    const schemaPath = resolveSchemaPath(pluginPath, config.schema);
 
     const schema = JSON.parse(readFileSync(schemaPath, 'utf-8'));
     executors.set(name, { config, schema, schemaPath });

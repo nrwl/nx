@@ -9,7 +9,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
@@ -64,7 +64,7 @@ export const createNodes: CreateNodes<ExpoPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -167,12 +167,15 @@ function buildExpoTargets(
     },
     [options.installTargetName]: {
       executor: '@nx/expo:install',
+      continuous: false,
     },
     [options.prebuildTargetName]: {
       executor: `@nx/expo:prebuild`,
+      continuous: false,
     },
     [options.buildTargetName]: {
       executor: `@nx/expo:build`,
+      continuous: false,
     },
     [options.submitTargetName]: {
       command: `eas submit`,

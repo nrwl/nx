@@ -28,7 +28,20 @@ describe('@nx/react-native (legacy)', () => {
     originalEnv = process.env.NX_ADD_PLUGINS;
     process.env.NX_ADD_PLUGINS = 'false';
 
-    proj = newProject({ packages: ['@nx/react-native', '@nx/react'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/react-native',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/vite',
+        '@nx/web',
+        '@nx/webpack',
+      ],
+    });
     // we create empty preset above which skips creation of `production` named input
     updateJson('nx.json', (nxJson) => {
       nxJson.namedInputs = {

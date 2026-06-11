@@ -14,7 +14,7 @@ import {
   updateFile,
   updateJson,
 } from '@nx/e2e-utils';
-import { angularDevkitVersion } from '@nx/angular/src/utils';
+import { angularDevkitVersion } from '@nx/angular/internal';
 import { ensureDirSync } from 'fs-extra';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';

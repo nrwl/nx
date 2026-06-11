@@ -94,18 +94,18 @@ describe('applyNxJsonMigrateDefaults', () => {
 
     it('does not apply generate-only options in run-migrations mode', () => {
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        include: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
-      expect(result.mode).toBeUndefined();
+      expect(result.include).toBeUndefined();
       expect(result.multiMajorMode).toBeUndefined();
     });
 
     it('detects run-migrations mode even when the value is an empty string', () => {
       const config: NxMigrateConfiguration = {
         createCommits: true,
-        mode: 'first-party',
+        include: 'required',
       };
       const result = applyNxJsonMigrateDefaults(
         { runMigrations: '' },
@@ -113,7 +113,7 @@ describe('applyNxJsonMigrateDefaults', () => {
         noEnv
       );
       expect(result.createCommits).toBe(true);
-      expect(result.mode).toBeUndefined();
+      expect(result.include).toBeUndefined();
     });
 
     it('errors when a config commit prefix is set without commits enabled', () => {
@@ -230,16 +230,16 @@ describe('applyNxJsonMigrateDefaults', () => {
   describe('generate-migrations phase', () => {
     const base = { packageAndVersion: 'nx@latest' };
 
-    it('carries config mode as modeFromConfig (not mode) and fills other generate-only options', () => {
+    it('carries config mode as includeFromConfig (not mode) and fills other generate-only options', () => {
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        include: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(base, config, noEnv);
-      // Carried separately so it is never treated as an explicit `--mode`,
+      // Carried separately so it is never treated as an explicit `--include`,
       // which would hard-fail `nx migrate <non-nx-pkg>`.
-      expect(result.mode).toBeUndefined();
-      expect(result.modeFromConfig).toBe('first-party');
+      expect(result.include).toBeUndefined();
+      expect(result.includeFromConfig).toBe('required');
       expect(result.multiMajorMode).toBe('gradual');
     });
 
@@ -258,14 +258,14 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
 
     it('lets the CLI flag win over config', () => {
-      const args = { ...base, mode: 'all', multiMajorMode: 'direct' };
+      const args = { ...base, include: 'all', multiMajorMode: 'direct' };
       const config: NxMigrateConfiguration = {
-        mode: 'first-party',
+        include: 'required',
         multiMajorMode: 'gradual',
       };
       const result = applyNxJsonMigrateDefaults(args, config, noEnv);
-      expect(result.mode).toBe('all');
-      expect(result.modeFromConfig).toBeUndefined();
+      expect(result.include).toBe('all');
+      expect(result.includeFromConfig).toBeUndefined();
       expect(result.multiMajorMode).toBe('direct');
     });
 
@@ -279,9 +279,9 @@ describe('applyNxJsonMigrateDefaults', () => {
     });
 
     it('errors on an invalid config mode value', () => {
-      const config = { mode: 'bogus' } as unknown as NxMigrateConfiguration;
+      const config = { include: 'bogus' } as unknown as NxMigrateConfiguration;
       expect(() => applyNxJsonMigrateDefaults(base, config, noEnv)).toThrow(
-        /Invalid nx\.json migrate\.mode/i
+        /Invalid nx\.json migrate\.include/i
       );
     });
 

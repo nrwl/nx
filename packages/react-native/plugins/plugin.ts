@@ -9,7 +9,7 @@ import {
   CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   CreateNodes,
   detectPackageManager,
   joinPathFragments,
@@ -67,7 +67,7 @@ export const createNodes: CreateNodes<ReactNativePluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -182,6 +182,7 @@ function buildReactNativeTargets(
     },
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
+      continuous: false,
     },
     [options.upgradeTargetName]: {
       command: `react-native upgrade`,

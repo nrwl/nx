@@ -433,15 +433,20 @@
           "type": "string",
           "description": "Commit message prefix applied to each migration commit when commits are enabled. Equivalent to the `--commit-prefix` flag. Defaults to `\"chore: [nx migration] \"`."
         },
-        "mode": {
+        "include": {
           "type": "string",
-          "enum": ["first-party", "third-party", "all"],
-          "description": "Restricts which packages to migrate when migrating Nx itself. Equivalent to the `--mode` flag. Defaults to `all`."
+          "enum": ["required", "optional", "all"],
+          "description": "Restricts which packages to migrate, for target packages that support optional updates: `required` (the target package and the related packages it ships with), `optional` (the optional dependency updates those packages recommend), or `all`. Equivalent to the `--include` flag. Defaults to `all`."
         },
         "multiMajorMode": {
           "type": "string",
           "enum": ["direct", "gradual"],
           "description": "How to handle a migration that crosses more than one major version. Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE` environment variable takes precedence over this setting."
+        },
+        "useRegistryResolution": {
+          "type": "boolean",
+          "description": "Whether nx migrate resolves package versions via the npm registry (faster) instead of a package-manager install. The NX_MIGRATE_USE_REGISTRY_RESOLUTION and the deprecated NX_MIGRATE_SKIP_REGISTRY_FETCH (removed in Nx 24) env vars take precedence over this.",
+          "default": true
         },
         "agentic": {
           "oneOf": [

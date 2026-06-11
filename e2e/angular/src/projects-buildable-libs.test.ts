@@ -11,8 +11,8 @@ import {
 describe('Angular Projects - Buildable Libraries', () => {
   let setup: ProjectsTestSetup;
 
-  beforeAll(() => {
-    setup = setupProjectsTest();
+  beforeAll(async () => {
+    setup = await setupProjectsTest();
   });
 
   afterEach(() => {

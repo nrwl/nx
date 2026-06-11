@@ -5,7 +5,7 @@ import {
 } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
-  CreateNodesResultV2,
+  CreateNodesResultArray,
   type ProjectConfiguration,
   type TargetConfiguration,
   CreateNodes,
@@ -68,7 +68,7 @@ export const createNodes: CreateNodes<RsbuildPluginOptions> = [
         entries.map(() => [lockFileName])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(

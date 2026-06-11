@@ -63,7 +63,11 @@ export async function deriveSpecifierFromConventionalCommits(
       projectGraph,
       affectedProjects,
       nxReleaseConfig,
-      releaseGraph
+      releaseGraph,
+      // Always match conventional-commit scopes against the full release
+      // group, even when only a single (independent) project is being
+      // processed, so genuine intra-group ambiguity is still detected.
+      releaseGroup.projects
     );
 
   const getHighestSemverChange = (

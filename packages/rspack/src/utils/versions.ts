@@ -1,4 +1,5 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+export const nxVersion = require(join('@nx/rspack', 'package.json')).version;
 
 export const minSupportedRspackVersion = '1.0.0';
 

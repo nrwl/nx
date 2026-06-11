@@ -16,26 +16,45 @@
     "CLI",
     "Front-end"
   ],
+  "module": "./dist/fesm2022/nx-angular.mjs",
+  "types": "./dist/types/nx-angular.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "!dist/package.json",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "exports": {
+    ".": {
+      "types": "./dist/types/nx-angular.d.ts",
+      "default": "./dist/fesm2022/nx-angular.mjs"
+    },
+    "./mf": {
+      "types": "./dist/types/nx-angular-mf.d.ts",
+      "default": "./dist/fesm2022/nx-angular-mf.mjs"
+    },
+    "./package.json": {
+      "default": "./package.json"
+    },
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
-    "./generators": "./generators.js",
-    "./executors": "./executors.js",
-    "./plugin": "./plugin.js",
-    "./tailwind": "./tailwind.js",
-    "./src/utils": "./src/utils/index.js",
-    "./plugins/component-testing": "./plugins/component-testing.js",
-    "./src/generators/utils": "./src/generators/utils/index.js",
-    "./src/generators/move/move-impl": "./src/generators/move/move-impl.js",
-    "./src/builders/*/schema.json": "./src/builders/*/schema.json",
-    "./src/builders/*.impl": "./src/builders/*.impl.js",
-    "./src/builders/*/schema": "./src/builders/*/schema.d.ts",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": "./src/executors/*.impl.js",
-    "./src/executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/generators/*/schema": "./src/generators/*/schema.d.ts"
+    "./generators": "./dist/generators.js",
+    "./executors": "./dist/executors.js",
+    "./plugin": "./dist/plugin.js",
+    "./tailwind": "./dist/tailwind.js",
+    "./plugins/component-testing": "./dist/plugins/component-testing.js",
+    "./internal": "./dist/internal.js",
+    "./src/builders/*/schema.json": "./dist/src/builders/*/schema.json",
+    "./src/builders/*.impl": "./dist/src/builders/*.impl.js",
+    "./src/builders/*/schema": "./dist/src/builders/*/schema.d.ts",
+    "./src/executors/*/schema.json": "./dist/src/executors/*/schema.json",
+    "./src/executors/*.impl": "./dist/src/executors/*.impl.js",
+    "./src/executors/*/schema": "./dist/src/executors/*/schema.d.ts",
+    "./src/generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./src/generators/*/schema": "./dist/src/generators/*/schema.d.ts"
   },
   "author": "Victor Savkin",
   "license": "MIT",
@@ -47,7 +66,8 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

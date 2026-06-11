@@ -1,6 +1,20 @@
 import { getDependencyVersionFromPackageJson, Tree } from '@nx/devkit';
+import { join } from 'path';
+import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 
-export const nxVersion = require('../../package.json').version;
+export const nxVersion = require(join('@nx/remix', 'package.json')).version;
+
+// @nx/remix supports Remix v2 only. React Router v7 (the successor to Remix) is
+// handled by @nx/react. The floor rejects Remix v1; v2 is the only supported major.
+export const minSupportedRemixVersion = '2.0.0';
+
+export function assertSupportedRemixVersion(tree: Tree): void {
+  assertSupportedPackageVersion(
+    tree,
+    '@remix-run/dev',
+    minSupportedRemixVersion
+  );
+}
 
 export const remixVersion = '^2.17.3';
 export const isbotVersion = '^4.4.0';

@@ -34,10 +34,11 @@ import {
   sortPackageJsonFields,
 } from '@nx/js/internal';
 import { PackageJson } from 'nx/src/utils/package-json';
-import { addRollupBuildTarget } from '@nx/react/src/generators/library/lib/add-rollup-build-target';
+import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 
 export async function expoLibraryGenerator(
   host: Tree,
@@ -54,6 +55,8 @@ export async function expoLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedExpoVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
