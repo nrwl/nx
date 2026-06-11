@@ -1,0 +1,54 @@
+{
+  "name": "smol-toml",
+  "license": "BSD-3-Clause",
+  "version": "1.6.1",
+  "description": "A small, fast, and correct TOML parser/serializer",
+  "author": "Cynthia <cyyynthia@borkenware.com>",
+  "repository": "github:squirrelchat/smol-toml",
+  "bugs": "https://github.com/squirrelchat/smol-toml/issues",
+  "funding": "https://github.com/sponsors/cyyynthia",
+  "keywords": [
+    "toml",
+    "parser",
+    "serializer"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">= 18"
+  },
+  "devDependencies": {
+    "@iarna/toml": "3.0.0",
+    "@ltd/j-toml": "^1.38.0",
+    "@tsconfig/node-lts": "^24.0.0",
+    "@tsconfig/strictest": "^2.0.8",
+    "@types/node": "^25.5.0",
+    "@vitest/ui": "^4.1.1",
+    "esbuild": "^0.27.4",
+    "fast-toml": "^0.5.4",
+    "pin-github-action": "^3.4.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.1"
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "types": "./dist/index.d.ts",
+    "import": "./dist/index.js",
+    "require": "./dist/index.cjs"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "dist"
+  ],
+  "scripts": {
+    "test": "vitest",
+    "test-ui": "vitest --ui",
+    "bench": "vitest bench",
+    "build": "pnpm run build:mjs && pnpm run build:cjs && node test/package/package-test.mjs",
+    "build:mjs": "tsc",
+    "build:cjs": "esbuild dist/index.js --bundle --platform=node --target=node18 --format=cjs --outfile=dist/index.cjs",
+    "update-gha": "pin-github-action .github/workflows"
+  }
+}

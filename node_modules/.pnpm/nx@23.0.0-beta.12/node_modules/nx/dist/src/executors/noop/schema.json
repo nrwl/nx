@@ -1,0 +1,10 @@
+{
+    "version": 2,
+    "title": "Noop",
+    "description": "An executor that does nothing.",
+    "type": "object",
+    "cli": "nx",
+    "outputCapture": "pipe",
+    "properties": {},
+    "additionalProperties": true
+}

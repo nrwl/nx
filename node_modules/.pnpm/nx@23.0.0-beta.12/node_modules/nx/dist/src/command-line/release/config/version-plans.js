@@ -1,0 +1,278 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.readRawVersionPlans = readRawVersionPlans;
+exports.setResolvedVersionPlansOnGroups = setResolvedVersionPlansOnGroups;
+exports.getVersionPlansAbsolutePath = getVersionPlansAbsolutePath;
+const node_child_process_1 = require("node:child_process");
+const node_fs_1 = require("node:fs");
+const promises_1 = require("node:fs/promises");
+const path_1 = require("path");
+const semver_1 = require("semver");
+const workspace_root_1 = require("../../../utils/workspace-root");
+const config_1 = require("./config");
+const { load } = require('@zkochan/js-yaml');
+// Ported from https://github.com/jxson/front-matter/blob/master/index.js
+const fmPattern = new RegExp('^(' +
+    '\\ufeff?' +
+    '(= yaml =|---)' +
+    '$([\\s\\S]*?)' +
+    '^(?:\\2|\\.\\.\\.)\\s*' +
+    '$' +
+    (process.platform === 'win32' ? '\\r?' : '') +
+    '(?:\\n)?)', 'm');
+function parseFrontMatter(str) {
+    str = str || '';
+    const lines = str.split(/(\r?\n)/);
+    if (!lines[0] || !/= yaml =|---/.test(lines[0])) {
+        return { attributes: {}, body: str };
+    }
+    const match = fmPattern.exec(str);
+    if (!match) {
+        return { attributes: {}, body: str };
+    }
+    const yaml = match[match.length - 1].replace(/^\s+|\s+$/g, '');
+    const attributes = load(yaml) || {};
+    const body = str.replace(match[0], '');
+    return { attributes, body };
+}
+const versionPlansDirectory = (0, path_1.join)('.nx', 'version-plans');
+const allowedAttributeValues = [
+    // Stable releases (with conventional-commit style aliases)
+    '"major" (aliases: "feat!" or "fix!")',
+    '"minor" (alias: "feat")',
+    '"patch" (alias: "fix")',
+    // Prereleases
+    '"premajor"',
+    '"preminor"',
+    '"prepatch"',
+    '"prerelease"',
+];
+async function readRawVersionPlans() {
+    const versionPlansPath = getVersionPlansAbsolutePath();
+    if (!(0, node_fs_1.existsSync)(versionPlansPath)) {
+        return [];
+    }
+    const versionPlans = [];
+    const versionPlanFiles = (0, node_fs_1.readdirSync)(versionPlansPath);
+    for (const versionPlanFile of versionPlanFiles) {
+        const filePath = (0, path_1.join)(versionPlansPath, versionPlanFile);
+        const versionPlanContent = (0, node_fs_1.readFileSync)(filePath).toString();
+        const versionPlanStats = await (0, promises_1.stat)(filePath);
+        const parsedContent = parseFrontMatter(versionPlanContent);
+        /**
+         * For convenience allow:
+         * - feat to be used as an alias of minor
+         * - fix to be used as an alias of patch
+         * - Either feat! or fix! to be used as an alias of major
+         */
+        for (const [key, value] of Object.entries(parsedContent.attributes)) {
+            switch (value) {
+                case 'feat':
+                    parsedContent.attributes[key] = 'minor';
+                    break;
+                case 'fix':
+                    parsedContent.attributes[key] = 'patch';
+                    break;
+                case 'feat!':
+                case 'fix!':
+                    parsedContent.attributes[key] = 'major';
+                    break;
+            }
+        }
+        versionPlans.push({
+            absolutePath: filePath,
+            relativePath: (0, path_1.join)(versionPlansDirectory, versionPlanFile),
+            fileName: versionPlanFile,
+            content: parsedContent.attributes,
+            message: parsedContent.body,
+            createdOnMs: versionPlanStats.birthtimeMs,
+        });
+    }
+    return versionPlans;
+}
+async function setResolvedVersionPlansOnGroups(rawVersionPlans, releaseGroups, allProjectNamesInWorkspace, isVerbose) {
+    const groupsByName = releaseGroups.reduce((acc, group) => acc.set(group.name, group), new Map());
+    const isDefaultGroup = isDefault(releaseGroups);
+    for (const rawVersionPlan of rawVersionPlans) {
+        if (!rawVersionPlan.message) {
+            throw new Error(`Please add a changelog message to version plan: '${rawVersionPlan.fileName}'`);
+        }
+        for (const [key, value] of Object.entries(rawVersionPlan.content)) {
+            if (groupsByName.has(key)) {
+                const group = groupsByName.get(key);
+                if (!group.resolvedVersionPlans) {
+                    if (isDefaultGroup) {
+                        throw new Error(`Found a version bump in '${rawVersionPlan.fileName}' but version plans are not enabled.`);
+                    }
+                    else {
+                        throw new Error(`Found a version bump for group '${key}' in '${rawVersionPlan.fileName}' but the group does not have version plans enabled.`);
+                    }
+                }
+                if (group.projectsRelationship === 'independent') {
+                    if (isDefaultGroup) {
+                        throw new Error(`Found a version bump in '${rawVersionPlan.fileName}' but projects are configured to be independently versioned. Individual projects should be bumped instead.`);
+                    }
+                    else {
+                        throw new Error(`Found a version bump for group '${key}' in '${rawVersionPlan.fileName}' but the group's projects are independently versioned. Individual projects of '${key}' should be bumped instead.`);
+                    }
+                }
+                if (!isReleaseType(value)) {
+                    if (isDefaultGroup) {
+                        throw new Error(`Found a version bump in '${rawVersionPlan.fileName}' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(', ')}.`);
+                    }
+                    else {
+                        throw new Error(`Found a version bump for group '${key}' in '${rawVersionPlan.fileName}' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(', ')}.`);
+                    }
+                }
+                const existingPlan = (group.resolvedVersionPlans.find((plan) => plan.fileName === rawVersionPlan.fileName));
+                if (existingPlan) {
+                    if (existingPlan.groupVersionBump !== value) {
+                        if (isDefaultGroup) {
+                            throw new Error(`Found a version bump in '${rawVersionPlan.fileName}' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`);
+                        }
+                        else {
+                            throw new Error(`Found a version bump for group '${key}' in '${rawVersionPlan.fileName}' that conflicts with another version bump for this group. When the group is in fixed versioning mode, all groups' version bumps within the same version plan must match.`);
+                        }
+                    }
+                }
+                else {
+                    group.resolvedVersionPlans.push({
+                        absolutePath: rawVersionPlan.absolutePath,
+                        relativePath: rawVersionPlan.relativePath,
+                        fileName: rawVersionPlan.fileName,
+                        createdOnMs: rawVersionPlan.createdOnMs,
+                        message: rawVersionPlan.message,
+                        groupVersionBump: value,
+                        commit: await getCommitForVersionPlanFile(rawVersionPlan, isVerbose),
+                    });
+                }
+            }
+            else {
+                const groupForProject = releaseGroups.find((group) => group.projects.includes(key));
+                if (!groupForProject) {
+                    if (!allProjectNamesInWorkspace.includes(key)) {
+                        throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but the project does not exist in the workspace.`);
+                    }
+                    if (isDefaultGroup) {
+                        throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but the project is not configured for release. Ensure it is included by the 'release.projects' globs in nx.json.`);
+                    }
+                    else {
+                        throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but the project is not in any configured release groups.`);
+                    }
+                }
+                if (!groupForProject.resolvedVersionPlans) {
+                    if (isDefaultGroup) {
+                        throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but version plans are not enabled.`);
+                    }
+                    else {
+                        throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' but the project's group '${groupForProject.name}' does not have version plans enabled.`);
+                    }
+                }
+                if (!isReleaseType(value)) {
+                    throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' with an invalid release type. Please specify one of: ${allowedAttributeValues.join(', ')}.`);
+                }
+                if (groupForProject.projectsRelationship === 'independent') {
+                    const existingPlan = (groupForProject.resolvedVersionPlans.find((plan) => plan.fileName === rawVersionPlan.fileName));
+                    if (existingPlan) {
+                        existingPlan.projectVersionBumps[key] = value;
+                    }
+                    else {
+                        groupForProject.resolvedVersionPlans.push({
+                            absolutePath: rawVersionPlan.absolutePath,
+                            relativePath: rawVersionPlan.relativePath,
+                            fileName: rawVersionPlan.fileName,
+                            createdOnMs: rawVersionPlan.createdOnMs,
+                            message: rawVersionPlan.message,
+                            projectVersionBumps: {
+                                [key]: value,
+                            },
+                            commit: await getCommitForVersionPlanFile(rawVersionPlan, isVerbose),
+                        });
+                    }
+                }
+                else {
+                    const existingPlan = (groupForProject.resolvedVersionPlans.find((plan) => plan.fileName === rawVersionPlan.fileName));
+                    // This can occur if the same fixed release group has multiple entries for different projects within
+                    // the same version plan file. This will be the case when users are using the default release group.
+                    if (existingPlan) {
+                        if (existingPlan.groupVersionBump !== value) {
+                            if (isDefaultGroup) {
+                                throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' that conflicts with another version bump. When in fixed versioning mode, all version bumps must match.`);
+                            }
+                            else {
+                                throw new Error(`Found a version bump for project '${key}' in '${rawVersionPlan.fileName}' that conflicts with another project's version bump in the same release group '${groupForProject.name}'. When the group is in fixed versioning mode, all projects' version bumps within the same group must match.`);
+                            }
+                        }
+                        else {
+                            // Avoid duplicates when releaseGraph is reused and version plans are resolved multiple times
+                            if (!existingPlan.triggeredByProjects.includes(key)) {
+                                existingPlan.triggeredByProjects.push(key);
+                            }
+                        }
+                    }
+                    else {
+                        groupForProject.resolvedVersionPlans.push({
+                            absolutePath: rawVersionPlan.absolutePath,
+                            relativePath: rawVersionPlan.relativePath,
+                            fileName: rawVersionPlan.fileName,
+                            createdOnMs: rawVersionPlan.createdOnMs,
+                            message: rawVersionPlan.message,
+                            // This is a fixed group, so the version bump is for the group, even if a project within it was specified
+                            // but we track the projects that triggered the version bump so that we can accurately produce changelog entries.
+                            groupVersionBump: value,
+                            triggeredByProjects: [key],
+                            commit: await getCommitForVersionPlanFile(rawVersionPlan, isVerbose),
+                        });
+                    }
+                }
+            }
+        }
+    }
+    // Order the plans from newest to oldest
+    releaseGroups.forEach((group) => {
+        if (group.resolvedVersionPlans) {
+            group.resolvedVersionPlans.sort((a, b) => b.createdOnMs - a.createdOnMs);
+        }
+    });
+    return releaseGroups;
+}
+function isDefault(releaseGroups) {
+    return (releaseGroups.length === 1 &&
+        releaseGroups.some((group) => group.name === config_1.IMPLICIT_DEFAULT_RELEASE_GROUP));
+}
+function getVersionPlansAbsolutePath() {
+    return (0, path_1.join)(workspace_root_1.workspaceRoot, versionPlansDirectory);
+}
+function isReleaseType(value) {
+    return semver_1.RELEASE_TYPES.includes(value);
+}
+async function getCommitForVersionPlanFile(rawVersionPlan, isVerbose) {
+    return new Promise((resolve) => {
+        (0, node_child_process_1.exec)(`git log --diff-filter=A --pretty=format:"%s|%h|%an|%ae|%b" -n 1 -- ${rawVersionPlan.absolutePath}`, {
+            windowsHide: true,
+        }, (error, stdout, stderr) => {
+            if (error) {
+                if (isVerbose) {
+                    console.error(`Error executing git command for ${rawVersionPlan.relativePath}: ${error.message}`);
+                }
+                return resolve(null);
+            }
+            if (stderr) {
+                if (isVerbose) {
+                    console.error(`Git command stderr for ${rawVersionPlan.relativePath}: ${stderr}`);
+                }
+                return resolve(null);
+            }
+            const [message, shortHash, authorName, authorEmail, ...body] = stdout
+                .trim()
+                .split('|');
+            const commitDetails = {
+                message: message || '',
+                shortHash: shortHash || '',
+                author: { name: authorName || '', email: authorEmail || '' },
+                body: body.join('|') || '', // Handle case where body might be empty or contain multiple '|'
+            };
+            return resolve(commitDetails);
+        });
+    });
+}

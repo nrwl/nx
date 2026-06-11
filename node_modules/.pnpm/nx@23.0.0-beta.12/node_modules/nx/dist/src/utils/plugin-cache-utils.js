@@ -1,0 +1,212 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.PluginCache = void 0;
+exports.safeWriteFileCache = safeWriteFileCache;
+const node_fs_1 = require("node:fs");
+const node_path_1 = require("node:path");
+const fileutils_1 = require("./fileutils");
+const logger_1 = require("./logger");
+/**
+ * A plugin cache that tracks access order for LRU eviction.
+ *
+ * Uses explicit `get()` / `set()` / `has()` methods instead of a Proxy
+ * for easier debugging and predictable behavior.
+ *
+ * Access order is tracked via an append-only session log. Deduplication
+ * happens once at serialization time (`toSerializable()`), keeping per-access
+ * cost at O(1).
+ *
+ * Eviction splices the first half of the deduped access-order queue — the
+ * least recently used keys.
+ */
+class PluginCache {
+    /**
+     * Constructs a `PluginCache`. The `cachePath` is the single source of truth
+     * for both reading and writing — `writeToDisk()` writes to it.
+     *
+     * If `entries` is omitted, the cache is loaded from `cachePath` on disk.
+     * If `entries` is provided, those entries are used as the in-memory state
+     * and the on-disk file is not read (useful for tests or for seeding the
+     * cache with known state).
+     */
+    constructor(cachePath, entries, accessOrder) {
+        this.cachePath = cachePath;
+        if (entries !== undefined) {
+            this.entries = entries;
+            this.accessOrder =
+                accessOrder instanceof Set ? accessOrder : new Set(accessOrder ?? []);
+        }
+        else {
+            const loaded = loadFromDisk(cachePath);
+            this.entries = loaded.entries;
+            this.accessOrder = loaded.accessOrder;
+        }
+    }
+    touch(key) {
+        // Sets are guaranteed to maintain insertion order, so we can delete and re-add to move it to the end.
+        this.accessOrder.delete(key); // remove from current position in access order
+        this.accessOrder.add(key); // add to end of access order (most recently accessed)
+    }
+    /**
+     * Returns the value for `key`, or `undefined` if not present.
+     * Tracks the access in the session log for LRU ordering.
+     */
+    get(key) {
+        if (key in this.entries) {
+            this.touch(key);
+            return this.entries[key];
+        }
+        return undefined;
+    }
+    /**
+     * Sets `key` to `value` and tracks the access in the session log.
+     */
+    set(key, value) {
+        this.entries[key] = value;
+        this.touch(key);
+    }
+    /**
+     * Returns `true` if `key` exists in the cache.
+     * Does NOT track access — use this for existence checks that
+     * should not affect eviction order.
+     */
+    has(key) {
+        return key in this.entries;
+    }
+    /**
+     * Returns the serializable cache data (entries + accessOrder).
+     */
+    toSerializable() {
+        return {
+            entries: this.entries,
+            accessOrder: [...this.accessOrder],
+        };
+    }
+    /**
+     * Safely writes this cache to the path it was constructed with.
+     *
+     * Strategy:
+     * 1. Serialize to JSON
+     *    - RangeError (string too large): evict oldest 50% and retry
+     *    - Other errors (e.g. circular refs): skip straight to empty cache
+     * 2. Write the serialized string to disk — if this fails (fs error),
+     *    wipe the cache file so a corrupted file doesn't persist
+     * 3. On total serialization failure (even after eviction),
+     *    write an empty cache so the file is valid
+     */
+    writeToDisk() {
+        (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(this.cachePath), { recursive: true });
+        let content;
+        try {
+            content = JSON.stringify({
+                entries: this.entries,
+                accessOrder: [...this.accessOrder],
+            });
+        }
+        catch (e) {
+            // RangeError → string too large, recoverable via eviction
+            if (e instanceof RangeError) {
+                const reduced = this.evictOldestHalf();
+                // Update in-memory state
+                this.entries = reduced.entries;
+                this.accessOrder = new Set(reduced.accessOrder);
+                try {
+                    content = JSON.stringify(reduced);
+                }
+                catch {
+                    // Still fails after eviction — fall through to empty cache
+                }
+            }
+            // Other errors (TypeError for circular refs, etc.) fall through to empty cache
+        }
+        // If serialization still fails, fall back to an empty cache
+        if (content === undefined) {
+            content = JSON.stringify({ entries: {}, accessOrder: [] });
+        }
+        // Attempt to write the serialized content to disk
+        try {
+            (0, node_fs_1.writeFileSync)(this.cachePath, content);
+        }
+        catch {
+            // Filesystem error — wipe cache so a corrupted file doesn't persist
+            tryRemoveFile(this.cachePath);
+        }
+    }
+    /**
+     * Evicts the oldest 50% of entries (front of the access-order queue)
+     * and returns the remaining entries + accessOrder as a plain object.
+     */
+    evictOldestHalf() {
+        const accessOrderArr = [...this.accessOrder];
+        if (accessOrderArr.length === 0)
+            return { entries: {}, accessOrder: [] };
+        const cutoff = Math.ceil(accessOrderArr.length / 2);
+        const remaining = accessOrderArr.slice(cutoff);
+        const entries = {};
+        for (const key of remaining) {
+            if (key in this.entries) {
+                entries[key] = this.entries[key];
+            }
+        }
+        return { entries, accessOrder: remaining };
+    }
+}
+exports.PluginCache = PluginCache;
+/**
+ * Loads plugin cache data from disk.
+ *
+ * Returns the current format `{ entries, accessOrder }` if it matches,
+ * otherwise returns an empty cache (no backward compat — stale caches
+ * are simply discarded).
+ */
+function loadFromDisk(cachePath) {
+    const empty = {
+        entries: {},
+        accessOrder: new Set(),
+    };
+    try {
+        if (process.env.NX_CACHE_PROJECT_GRAPH === 'false' ||
+            !(0, node_fs_1.existsSync)(cachePath)) {
+            return empty;
+        }
+        const raw = (0, fileutils_1.readJsonFile)(cachePath);
+        // Current format: { entries, accessOrder }
+        if (raw &&
+            typeof raw === 'object' &&
+            'entries' in raw &&
+            'accessOrder' in raw &&
+            Array.isArray(raw.accessOrder)) {
+            return { entries: raw.entries, accessOrder: new Set(raw.accessOrder) };
+        }
+        return empty;
+    }
+    catch {
+        return empty;
+    }
+}
+/**
+ * Safely writes already-stringified content to a cache file on disk.
+ *
+ * Strategy:
+ * 1. Attempt mkdirSync + writeFileSync
+ * 2. On failure: remove existing cache file, log warning, return without throwing
+ */
+function safeWriteFileCache(cachePath, content) {
+    try {
+        (0, node_fs_1.mkdirSync)((0, node_path_1.dirname)(cachePath), { recursive: true });
+        (0, node_fs_1.writeFileSync)(cachePath, content);
+    }
+    catch (e) {
+        logger_1.logger.warn(`Failed to write cache at ${cachePath}: ${e instanceof Error ? e.message : 'unknown error'}. Removing existing cache file.`);
+        tryRemoveFile(cachePath);
+    }
+}
+// --- Internal helpers ---
+function tryRemoveFile(path) {
+    try {
+        (0, node_fs_1.unlinkSync)(path);
+    }
+    catch {
+        // Intentionally ignored — best effort
+    }
+}

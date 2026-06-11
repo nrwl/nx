@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.flushAnalytics = exports.reportEvent = exports.reportCommandRunEvent = exports.reportNxGenerateCommand = exports.reportNxAddCommand = exports.startAnalytics = exports.customDimensions = void 0;
+var analytics_1 = require("./analytics");
+Object.defineProperty(exports, "customDimensions", { enumerable: true, get: function () { return analytics_1.customDimensions; } });
+Object.defineProperty(exports, "startAnalytics", { enumerable: true, get: function () { return analytics_1.startAnalytics; } });
+Object.defineProperty(exports, "reportNxAddCommand", { enumerable: true, get: function () { return analytics_1.reportNxAddCommand; } });
+Object.defineProperty(exports, "reportNxGenerateCommand", { enumerable: true, get: function () { return analytics_1.reportNxGenerateCommand; } });
+Object.defineProperty(exports, "reportCommandRunEvent", { enumerable: true, get: function () { return analytics_1.reportCommandRunEvent; } });
+Object.defineProperty(exports, "reportEvent", { enumerable: true, get: function () { return analytics_1.reportEvent; } });
+Object.defineProperty(exports, "flushAnalytics", { enumerable: true, get: function () { return analytics_1.flushAnalytics; } });

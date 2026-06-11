@@ -1,0 +1,60 @@
+{
+  "name": "@napi-rs/wasm-runtime",
+  "version": "0.2.4",
+  "type": "module",
+  "description": "Runtime and polyfill for wasm targets",
+  "author": {
+    "name": "LongYinan",
+    "url": "https://github.com/Brooooooklyn"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napi-rs/napi-rs.git",
+    "directory": "wasi-runtime"
+  },
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "runtime.cjs",
+    "fs-proxy.cjs",
+    "dist/*.js"
+  ],
+  "devDependencies": {
+    "@rollup/plugin-alias": "^5.1.0",
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-inject": "^5.0.5",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "buffer": "^6.0.3",
+    "memfs": "^4.8.2",
+    "node-inspect-extracted": "^3.0.0",
+    "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
+    "readable-stream": "^4.5.2",
+    "rollup": "^4.9.6",
+    "rollup-plugin-polyfill-node": "^0.13.0",
+    "tslib": "^2.6.2"
+  },
+  "dependencies": {
+    "@emnapi/core": "^1.1.0",
+    "@emnapi/runtime": "^1.1.0",
+    "@tybys/wasm-util": "^0.9.0"
+  },
+  "scripts": {
+    "build": "rollup -c rollup.config.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/runtime.js",
+      "require": "./runtime.cjs"
+    },
+    "./fs": {
+      "import": "./dist/fs.js"
+    }
+  },
+  "gitHead": "ca2cd5c35a0c39ec4a94e93c6c5695b681046df2"
+}

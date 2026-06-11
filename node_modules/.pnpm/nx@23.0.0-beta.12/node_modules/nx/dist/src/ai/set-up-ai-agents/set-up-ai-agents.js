@@ -1,0 +1,516 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.setupAiAgentsGenerator = setupAiAgentsGenerator;
+exports.setupAiAgentsGeneratorImpl = setupAiAgentsGeneratorImpl;
+const tslib_1 = require("tslib");
+const fs_1 = require("fs");
+const path_1 = require("path");
+const semver_1 = require("semver");
+const smol_toml_1 = tslib_1.__importDefault(require("smol-toml"));
+const format_changed_files_with_prettier_if_available_1 = require("../../generators/internal-utils/format-changed-files-with-prettier-if-available");
+const generate_files_1 = require("../../generators/utils/generate-files");
+const json_1 = require("../../generators/utils/json");
+const native_1 = require("../../native");
+const package_json_1 = require("../../utils/package-json");
+const ignore_1 = require("../../utils/ignore");
+const provenance_1 = require("../../utils/provenance");
+const workspace_root_1 = require("../../utils/workspace-root");
+const installed_nx_version_1 = require("../../utils/installed-nx-version");
+const constants_1 = require("../constants");
+const clone_ai_config_repo_1 = require("../clone-ai-config-repo");
+const utils_1 = require("../utils");
+const handle_import_1 = require("../../utils/handle-import");
+/**
+ * Best-effort fallback when `getInstalledNxVersion()` can't find an
+ * installed nx — read the version declared in the workspace's
+ * `package.json` (devDependencies/dependencies), stripping any semver
+ * range prefix, and finally a sane default.
+ */
+function getDeclaredNxVersionOrDefault() {
+    try {
+        const workspacePackageJson = JSON.parse((0, fs_1.readFileSync)((0, path_1.join)(workspace_root_1.workspaceRoot, 'package.json'), 'utf-8'));
+        const declared = workspacePackageJson.devDependencies?.nx ||
+            workspacePackageJson.dependencies?.nx;
+        if (declared) {
+            return declared.replace(/^[\^~>=<]+/, '');
+        }
+    }
+    catch {
+        // fall through to default
+    }
+    return '22.0.0';
+}
+async function setupAiAgentsGenerator(tree, options, inner = false) {
+    const normalizedOptions = normalizeOptions(options);
+    // Use environment variable to force local execution
+    if (process.env.NX_AI_FILES_USE_LOCAL === 'true' || inner) {
+        return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
+    }
+    try {
+        await (0, provenance_1.ensurePackageHasProvenance)('nx', normalizedOptions.packageVersion);
+        const { tempDir, cleanup } = (0, package_json_1.installPackageToTmp)('nx', normalizedOptions.packageVersion);
+        let modulePath = (0, path_1.join)(tempDir, 'node_modules', 'nx', 'src/ai/set-up-ai-agents/set-up-ai-agents.js');
+        const module = await (0, handle_import_1.handleImport)(modulePath);
+        const setupAiAgentsGeneratorResult = await module.setupAiAgentsGenerator(tree, normalizedOptions, true);
+        cleanup();
+        return setupAiAgentsGeneratorResult;
+    }
+    catch (error) {
+        return await setupAiAgentsGeneratorImpl(tree, normalizedOptions);
+    }
+}
+function normalizeOptions(options) {
+    return {
+        directory: options.directory,
+        writeNxCloudRules: options.writeNxCloudRules ?? false,
+        packageVersion: options.packageVersion ?? 'latest',
+        agents: options.agents ?? [...utils_1.supportedAgents],
+    };
+}
+async function setupAiAgentsGeneratorImpl(tree, options) {
+    const hasAgent = (agent) => options.agents.includes(agent);
+    const nxVersion = (0, installed_nx_version_1.getInstalledNxVersion)() ?? getDeclaredNxVersionOrDefault();
+    const agentsMd = (0, constants_1.agentsMdPath)(options.directory);
+    // write AGENTS.md for most agents
+    if (hasAgent('cursor') ||
+        hasAgent('copilot') ||
+        hasAgent('codex') ||
+        hasAgent('opencode')) {
+        writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+    }
+    if (hasAgent('claude')) {
+        const claudePath = (0, path_1.join)(options.directory, 'CLAUDE.md');
+        writeAgentRules(tree, claudePath, options.writeNxCloudRules);
+        // Configure Claude plugin via marketplace (plugin includes MCP server)
+        const claudeSettingsPath = (0, path_1.join)(options.directory, '.claude', 'settings.json');
+        if (!tree.exists(claudeSettingsPath)) {
+            (0, json_1.writeJson)(tree, claudeSettingsPath, {});
+        }
+        (0, json_1.updateJson)(tree, claudeSettingsPath, (json) => ({
+            ...json,
+            extraKnownMarketplaces: {
+                ...json.extraKnownMarketplaces,
+                'nx-claude-plugins': {
+                    source: {
+                        ...json.extraKnownMarketplaces?.['nx-claude-plugins']?.source,
+                        source: 'github',
+                        repo: 'nrwl/nx-ai-agents-config',
+                    },
+                },
+            },
+            enabledPlugins: {
+                ...json.enabledPlugins,
+                'nx@nx-claude-plugins': true,
+            },
+        }));
+        // Clean up .mcp.json (nx-mcp now handled by plugin)
+        const mcpJsonPath = (0, constants_1.claudeMcpJsonPath)(options.directory);
+        if (tree.exists(mcpJsonPath)) {
+            try {
+                const mcpJsonContents = (0, json_1.readJson)(tree, mcpJsonPath);
+                if (mcpJsonContents?.mcpServers?.['nx-mcp']) {
+                    const serverKeys = Object.keys(mcpJsonContents.mcpServers || {});
+                    if (serverKeys.length === 1 && serverKeys[0] === 'nx-mcp') {
+                        // nx-mcp is the only server, delete the file
+                        tree.delete(mcpJsonPath);
+                    }
+                    else {
+                        // Other servers exist, just remove nx-mcp entry
+                        delete mcpJsonContents.mcpServers['nx-mcp'];
+                        (0, json_1.writeJson)(tree, mcpJsonPath, mcpJsonContents);
+                    }
+                }
+            }
+            catch {
+                // Ignore errors reading .mcp.json
+            }
+        }
+    }
+    if (hasAgent('opencode')) {
+        const opencodeMcpJsonPath = (0, constants_1.opencodeMcpPath)(options.directory);
+        if (!tree.exists(opencodeMcpJsonPath)) {
+            (0, json_1.writeJson)(tree, opencodeMcpJsonPath, {});
+        }
+        (0, json_1.updateJson)(tree, opencodeMcpJsonPath, (json) => opencodeMcpConfigUpdater(json, nxVersion));
+    }
+    // Get the ai-config repo path once for all non-Claude agents that need it
+    const needsAiConfigRepo = hasAgent('codex') ||
+        hasAgent('opencode') ||
+        hasAgent('copilot') ||
+        hasAgent('cursor') ||
+        hasAgent('gemini');
+    let aiConfigRepoPath;
+    if (needsAiConfigRepo) {
+        try {
+            aiConfigRepoPath = (0, clone_ai_config_repo_1.getAiConfigRepoPath)();
+        }
+        catch {
+            // Network/clone failure — individual consumers handle fallback
+        }
+    }
+    if (hasAgent('codex')) {
+        const codexTomlPath = (0, path_1.join)(options.directory, '.codex', 'config.toml');
+        writeCodexConfig(tree, codexTomlPath, nxVersion, aiConfigRepoPath);
+    }
+    if (hasAgent('gemini')) {
+        const geminiSettingsPath = (0, path_1.join)(options.directory, '.gemini', 'settings.json');
+        if (!tree.exists(geminiSettingsPath)) {
+            (0, json_1.writeJson)(tree, geminiSettingsPath, {});
+        }
+        (0, json_1.updateJson)(tree, geminiSettingsPath, (json) => mcpConfigUpdater(json, nxVersion));
+        const contextFileName = (0, json_1.readJson)(tree, geminiSettingsPath).contextFileName;
+        const geminiMd = (0, constants_1.geminiMdPath)(options.directory);
+        // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
+        if (!contextFileName && !tree.exists(geminiMd)) {
+            writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+            (0, json_1.updateJson)(tree, geminiSettingsPath, (json) => ({
+                ...json,
+                contextFileName: 'AGENTS.md',
+            }));
+        }
+        else {
+            writeAgentRules(tree, contextFileName ?? geminiMd, options.writeNxCloudRules);
+        }
+    }
+    // Copy extensibility artifacts (commands, skills, subagents) for non-Claude agents
+    if (aiConfigRepoPath) {
+        const repoPath = aiConfigRepoPath;
+        // Shared skills directory used by codex, cursor, and gemini
+        if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
+            const sharedSkillsSrc = (0, path_1.join)(repoPath, 'generated/.agents');
+            if ((0, fs_1.existsSync)(sharedSkillsSrc)) {
+                (0, generate_files_1.generateFiles)(tree, sharedSkillsSrc, (0, path_1.join)(options.directory, '.agents'), {});
+            }
+        }
+        // Agent-specific directories (commands, agents, config)
+        const agentDirs = [
+            { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
+            { agent: 'copilot', src: 'generated/.github', dest: '.github' },
+            { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
+            {
+                agent: 'codex',
+                src: 'generated/.codex/agents',
+                dest: '.codex/agents',
+            },
+            { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
+        ];
+        for (const { agent, src, dest } of agentDirs) {
+            if (hasAgent(agent)) {
+                const srcPath = (0, path_1.join)(repoPath, src);
+                if ((0, fs_1.existsSync)(srcPath)) {
+                    (0, generate_files_1.generateFiles)(tree, srcPath, (0, path_1.join)(options.directory, dest), {});
+                }
+            }
+        }
+    }
+    // Clean up legacy .gemini/skills that have been migrated to shared .agents/skills.
+    // Only delete skills that exist in both locations to preserve user-created skills.
+    if (hasAgent('gemini')) {
+        const geminiSkillsDir = (0, path_1.join)(options.directory, '.gemini', 'skills');
+        const sharedSkillsDir = (0, path_1.join)(options.directory, '.agents', 'skills');
+        if (tree.exists(geminiSkillsDir) && tree.exists(sharedSkillsDir)) {
+            const sharedSkills = new Set(tree.children(sharedSkillsDir));
+            for (const skill of tree.children(geminiSkillsDir)) {
+                if (sharedSkills.has(skill)) {
+                    tree.delete((0, path_1.join)(geminiSkillsDir, skill));
+                }
+            }
+        }
+    }
+    (0, ignore_1.addEntryToGitIgnore)(tree, (0, path_1.join)(options.directory, '.gitignore'), '.nx/polygraph');
+    (0, ignore_1.addEntryToGitIgnore)(tree, (0, path_1.join)(options.directory, '.gitignore'), '.claude/worktrees');
+    (0, ignore_1.addEntryToGitIgnore)(tree, (0, path_1.join)(options.directory, '.gitignore'), '.claude/settings.local.json');
+    await (0, format_changed_files_with_prettier_if_available_1.formatChangedFilesWithPrettierIfAvailable)(tree);
+    // we use the check variable to determine if we should actually make changes or just report what would be changed
+    return async (check = false) => {
+        const messages = [];
+        const errors = [];
+        if (hasAgent('copilot')) {
+            try {
+                if ((await (0, native_1.isEditorInstalled)(0 /* SupportedEditor.VSCode */)) &&
+                    (await (0, native_1.canInstallNxConsoleForEditor)(0 /* SupportedEditor.VSCode */))) {
+                    if (!check) {
+                        await (0, native_1.installNxConsoleForEditor)(0 /* SupportedEditor.VSCode */);
+                    }
+                    messages.push({
+                        title: `Installed Nx Console for VSCode`,
+                    });
+                }
+            }
+            catch (e) {
+                errors.push({
+                    title: `Failed to install Nx Console for VSCode. Please install it manually.`,
+                    bodyLines: [e.message],
+                });
+            }
+            try {
+                if ((await (0, native_1.isEditorInstalled)(1 /* SupportedEditor.VSCodeInsiders */)) &&
+                    (await (0, native_1.canInstallNxConsoleForEditor)(1 /* SupportedEditor.VSCodeInsiders */))) {
+                    if (!check) {
+                        await (0, native_1.installNxConsoleForEditor)(1 /* SupportedEditor.VSCodeInsiders */);
+                    }
+                    messages.push({
+                        title: `Installed Nx Console for VSCode Insiders`,
+                    });
+                }
+            }
+            catch (e) {
+                errors.push({
+                    title: `Failed to install Nx Console for VSCode Insiders. Please install it manually.`,
+                    bodyLines: [e.message],
+                });
+            }
+        }
+        if (hasAgent('cursor')) {
+            try {
+                if ((await (0, native_1.isEditorInstalled)(2 /* SupportedEditor.Cursor */)) &&
+                    (await (0, native_1.canInstallNxConsoleForEditor)(2 /* SupportedEditor.Cursor */))) {
+                    if (!check) {
+                        await (0, native_1.installNxConsoleForEditor)(2 /* SupportedEditor.Cursor */);
+                    }
+                    messages.push({
+                        title: `Installed Nx Console for Cursor`,
+                    });
+                }
+            }
+            catch (e) {
+                errors.push({
+                    title: `Failed to install Nx Console for Cursor. Please install it manually.`,
+                    bodyLines: [e.message],
+                });
+            }
+        }
+        return {
+            messages,
+            errors,
+        };
+    };
+}
+function writeAgentRules(tree, path, writeNxCloudRules) {
+    if (!tree.exists(path)) {
+        // File doesn't exist - create with h1 header (standalone content)
+        const expectedRules = (0, constants_1.getAgentRulesWrapped)({
+            writeNxCloudRules,
+            useH1: true,
+        });
+        tree.write(path, expectedRules);
+        return;
+    }
+    const existing = tree.read(path, 'utf-8');
+    const regex = constants_1.rulesRegex;
+    const existingNxConfiguration = existing.match(regex);
+    if (existingNxConfiguration) {
+        // Check the rest of the file (outside nx block) for an h1 header
+        // to ensure only one h1 exists in the document
+        const contentWithoutNxBlock = existing.replace(regex, '');
+        const hasExternalH1 = /^# /m.test(contentWithoutNxBlock);
+        const expectedRules = (0, constants_1.getAgentRulesWrapped)({
+            writeNxCloudRules,
+            useH1: !hasExternalH1,
+        });
+        const contentOnly = (str) => str
+            .replace(constants_1.nxRulesMarkerCommentStart, '')
+            .replace(constants_1.nxRulesMarkerCommentEnd, '')
+            .replace(constants_1.nxRulesMarkerCommentDescription, '')
+            .replace(/\s/g, '');
+        // we don't want to make updates on whitespace-only changes
+        if (contentOnly(existingNxConfiguration[0]) === contentOnly(expectedRules)) {
+            return;
+        }
+        // otherwise replace the existing configuration
+        const updatedContent = existing.replace(regex, expectedRules);
+        tree.write(path, updatedContent);
+    }
+    else {
+        // Appending to existing content - use h2 only if the file already has an h1 header
+        // This prevents unnecessary changes when users add content without their own h1
+        const hasExistingH1 = /^# /m.test(existing);
+        const expectedRules = (0, constants_1.getAgentRulesWrapped)({
+            writeNxCloudRules,
+            useH1: !hasExistingH1,
+        });
+        tree.write(path, existing + '\n\n' + expectedRules);
+    }
+}
+/**
+ * Write or merge the Codex config.toml.
+ *
+ * Reads the generated config.toml from the nx-ai-agents-config repo (which
+ * contains MCP servers, agent definitions, and feature flags) and deep-merges
+ * it into the user's existing config.toml using proper TOML parsing.
+ *
+ * Merge rules:
+ * - [mcp_servers."nx-mcp"] — upsert with version-adjusted args, preserving extra user args
+ * - [features] multi_agent — set to true unless user has explicitly set it to false
+ * - [agents.*] — upsert each agent definition
+ * - All other user config is preserved untouched
+ *
+ * Falls back to a minimal hardcoded MCP config if the generated file is unavailable.
+ */
+function writeCodexConfig(tree, codexTomlPath, nxVersion, aiConfigRepoPath) {
+    let generated = null;
+    if (aiConfigRepoPath) {
+        const generatedConfigPath = (0, path_1.join)(aiConfigRepoPath, 'generated', '.codex', 'config.toml');
+        if ((0, fs_1.existsSync)(generatedConfigPath)) {
+            const generatedConfig = (0, fs_1.readFileSync)(generatedConfigPath, 'utf-8');
+            generated = smol_toml_1.default.parse(generatedConfig);
+        }
+    }
+    if (!generated) {
+        // Fallback: use hardcoded MCP-only config (no agents/features)
+        const tomlConfig = (0, constants_1.getNxMcpTomlConfig)(nxVersion);
+        if (!tree.exists(codexTomlPath)) {
+            tree.write(codexTomlPath, tomlConfig);
+        }
+        else {
+            const existing = tree.read(codexTomlPath, 'utf-8');
+            if (!existing.includes(constants_1.nxMcpTomlHeader)) {
+                tree.write(codexTomlPath, existing + '\n' + tomlConfig);
+            }
+        }
+        return;
+    }
+    // Parse existing config (or start empty)
+    let config = {};
+    if (tree.exists(codexTomlPath)) {
+        try {
+            config = smol_toml_1.default.parse(tree.read(codexTomlPath, 'utf-8'));
+        }
+        catch {
+            // If existing file can't be parsed, start fresh
+            config = {};
+        }
+    }
+    // ── Merge MCP servers ──
+    const majorVersion = (0, semver_1.major)(nxVersion);
+    const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+    // Preserve extra user args from existing config
+    const existingArgs = config.mcp_servers?.['nx-mcp']?.args ?? [];
+    const extraArgs = stripKnownMcpBaseArgs(existingArgs);
+    mcpArgs.push(...extraArgs);
+    config.mcp_servers ??= {};
+    config.mcp_servers['nx-mcp'] = {
+        command: 'npx',
+        args: mcpArgs,
+    };
+    // ── Merge features ──
+    // Only set multi_agent = true if user hasn't explicitly set it to false
+    const userSetMultiAgentFalse = config.features?.multi_agent === false;
+    if (!userSetMultiAgentFalse && generated.features) {
+        config.features ??= {};
+        Object.assign(config.features, generated.features);
+    }
+    // ── Merge agents ──
+    if (generated.agents) {
+        config.agents ??= {};
+        for (const [name, def] of Object.entries(generated.agents)) {
+            config.agents[name] = def;
+        }
+    }
+    // ── Serialize and write ──
+    const tomlString = smol_toml_1.default.stringify(config);
+    tree.write(codexTomlPath, tomlString);
+}
+/**
+ * Strip known MCP base command args (["nx", "mcp"] or ["nx-mcp"]) from an
+ * args array, returning only the extra user-added args.
+ */
+function stripKnownMcpBaseArgs(args) {
+    const knownBasePatterns = [['nx', 'mcp'], ['nx-mcp']];
+    for (const pattern of knownBasePatterns) {
+        if (args.length < pattern.length)
+            continue;
+        const matches = pattern.every((baseArg, i) => {
+            if (baseArg === 'nx-mcp') {
+                return args[i] === 'nx-mcp' || args[i].startsWith('nx-mcp@');
+            }
+            return args[i] === baseArg;
+        });
+        if (matches) {
+            return args.slice(pattern.length);
+        }
+    }
+    return [];
+}
+/**
+ * Extract user-added extra args/flags from an existing MCP config args array
+ * by stripping the known base command prefix.
+ *
+ * Known base patterns (matched in order, first wins):
+ *   ['nx', 'mcp']  or  ['nx-mcp'] (possibly with @version suffix like nx-mcp@latest)
+ *   For opencode the caller prepends 'npx' to these patterns.
+ */
+function getExtraMcpArgs(existingArgs, knownBasePatterns) {
+    if (!Array.isArray(existingArgs) || existingArgs.length === 0)
+        return [];
+    for (const pattern of knownBasePatterns) {
+        if (existingArgs.length < pattern.length)
+            continue;
+        const matches = pattern.every((baseArg, i) => {
+            if (baseArg === 'nx-mcp') {
+                // Also match versioned variants like nx-mcp@latest
+                return (existingArgs[i] === 'nx-mcp' || existingArgs[i].startsWith('nx-mcp@'));
+            }
+            return existingArgs[i] === baseArg;
+        });
+        if (matches) {
+            return existingArgs.slice(pattern.length);
+        }
+    }
+    return [];
+}
+function mcpConfigUpdater(existing, nxVersion) {
+    const majorVersion = (0, semver_1.major)(nxVersion);
+    const mcpArgs = majorVersion >= 22 ? ['nx', 'mcp'] : ['nx-mcp'];
+    // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+    const extraArgs = getExtraMcpArgs(existing.mcpServers?.['nx-mcp']?.args, [
+        ['nx', 'mcp'],
+        ['nx-mcp'],
+    ]);
+    mcpArgs.push(...extraArgs);
+    if (existing.mcpServers) {
+        existing.mcpServers['nx-mcp'] = {
+            type: 'stdio',
+            command: 'npx',
+            args: mcpArgs,
+        };
+    }
+    else {
+        existing.mcpServers = {
+            'nx-mcp': {
+                type: 'stdio',
+                command: 'npx',
+                args: mcpArgs,
+            },
+        };
+    }
+    return existing;
+}
+function opencodeMcpConfigUpdater(existing, nxVersion) {
+    const majorVersion = (0, semver_1.major)(nxVersion);
+    const mcpCommand = majorVersion >= 22 ? ['npx', 'nx', 'mcp'] : ['npx', 'nx-mcp'];
+    // Preserve any extra args (e.g. --experimental-polygraph, --transport http) from existing config
+    const extraArgs = getExtraMcpArgs(existing.mcp?.['nx-mcp']?.command, [
+        ['npx', 'nx', 'mcp'],
+        ['npx', 'nx-mcp'],
+    ]);
+    mcpCommand.push(...extraArgs);
+    if (existing.mcp) {
+        existing.mcp['nx-mcp'] = {
+            type: 'local',
+            command: mcpCommand,
+            enabled: true,
+        };
+    }
+    else {
+        existing.mcp = {
+            'nx-mcp': {
+                type: 'local',
+                command: mcpCommand,
+                enabled: true,
+            },
+        };
+    }
+    return existing;
+}
+exports.default = setupAiAgentsGenerator;

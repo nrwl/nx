@@ -1,0 +1,10 @@
+import type { EventDimensions } from '../native';
+export declare const customDimensions: EventDimensions;
+export type EventParameters = Partial<Record<EventDimensions[keyof EventDimensions], string | number | boolean>>;
+export declare function startAnalytics(): Promise<void>;
+export declare function reportNxAddCommand(packageName: string, version: string): void;
+export declare function reportNxGenerateCommand(generator: string): void;
+export declare function reportCommandRunEvent(command: string, parameters?: Record<string, any>, args?: Record<string, any>): void;
+export declare function reportEvent(name: string, eventParameters?: EventParameters): void;
+export declare function argsToQueryString(args: Record<string, any>): string;
+export declare function flushAnalytics(): void;

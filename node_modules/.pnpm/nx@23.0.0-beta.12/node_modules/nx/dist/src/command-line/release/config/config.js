@@ -1,0 +1,1172 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.DEFAULT_VERSION_ACTIONS_PATH = exports.IMPLICIT_DEFAULT_RELEASE_GROUP = void 0;
+exports.createNxReleaseConfig = createNxReleaseConfig;
+exports.handleNxReleaseConfigError = handleNxReleaseConfigError;
+/**
+ * `nx release` is a powerful feature which spans many possible use cases. The possible variations
+ * of configuration are therefore quite complex, particularly when you consider release groups.
+ *
+ * We want to provide the best possible DX for users so that they can harness the power of `nx release`
+ * most effectively, therefore we need to both provide sensible defaults for common scenarios (to avoid
+ * verbose nx.json files wherever possible), and proactively handle potential sources of config issues
+ * in more complex use-cases.
+ *
+ * This file is the source of truth for all `nx release` configuration reconciliation, including sensible
+ * defaults and user overrides, as well as handling common errors, up front to produce a single, consistent,
+ * and easy to consume config object for all the `nx release` command implementations.
+ */
+const node_path_1 = require("node:path");
+const node_url_1 = require("node:url");
+const fileutils_1 = require("../../../utils/fileutils");
+const find_matching_projects_1 = require("../../../utils/find-matching-projects");
+const output_1 = require("../../../utils/output");
+const path_1 = require("../../../utils/path");
+const workspace_root_1 = require("../../../utils/workspace-root");
+const github_1 = require("../utils/remote-release-clients/github");
+const gitlab_1 = require("../utils/remote-release-clients/gitlab");
+const resolve_changelog_renderer_1 = require("../utils/resolve-changelog-renderer");
+const resolve_nx_json_error_message_1 = require("../utils/resolve-nx-json-error-message");
+const conventional_commits_1 = require("./conventional-commits");
+exports.IMPLICIT_DEFAULT_RELEASE_GROUP = '__default__';
+exports.DEFAULT_VERSION_ACTIONS_PATH = '@nx/js/src/release/version-actions';
+// Apply default configuration to any optional user configuration and handle known errors
+async function createNxReleaseConfig(projectGraph, projectFileMap, userConfig = {}) {
+    if (userConfig.projects && userConfig.groups) {
+        return {
+            error: {
+                code: 'PROJECTS_AND_GROUPS_DEFINED',
+                data: {},
+            },
+            nxReleaseConfig: null,
+        };
+    }
+    if (hasInvalidGitConfig(userConfig)) {
+        return {
+            error: {
+                code: 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG',
+                data: {},
+            },
+            nxReleaseConfig: null,
+        };
+    }
+    if (hasInvalidConventionalCommitsConfig(userConfig)) {
+        return {
+            error: {
+                code: 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS',
+                data: {},
+            },
+            nxReleaseConfig: null,
+        };
+    }
+    const gitDefaults = {
+        commit: false,
+        commitMessage: 'chore(release): publish {version}',
+        commitArgs: '',
+        tag: false,
+        tagMessage: '',
+        tagArgs: '',
+        stageChanges: false,
+        push: false,
+        pushArgs: '',
+    };
+    const versionGitDefaults = {
+        ...gitDefaults,
+        stageChanges: true,
+    };
+    const isObjectWithCreateReleaseEnabled = (data) => typeof data === 'object' &&
+        data !== null &&
+        'createRelease' in data &&
+        (typeof data.createRelease === 'string' ||
+            (typeof data.createRelease === 'object' && data.createRelease !== null));
+    const isCreateReleaseEnabledAtTheRoot = isObjectWithCreateReleaseEnabled(userConfig.changelog?.workspaceChangelog);
+    const isCreateReleaseEnabledForProjectChangelogs = 
+    // At the root
+    isObjectWithCreateReleaseEnabled(userConfig.changelog?.projectChangelogs) ||
+        // Or any release group
+        Object.values(userConfig.groups ?? {}).some((group) => isObjectWithCreateReleaseEnabled(group.changelog));
+    const isGitPushExplicitlyDisabled = userConfig.git?.push === false ||
+        userConfig.changelog?.git?.push === false ||
+        userConfig.version?.git?.push === false;
+    if (isGitPushExplicitlyDisabled &&
+        (isCreateReleaseEnabledAtTheRoot ||
+            isCreateReleaseEnabledForProjectChangelogs)) {
+        return {
+            error: {
+                code: 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE',
+                data: {},
+            },
+            nxReleaseConfig: null,
+        };
+    }
+    const changelogGitDefaults = {
+        ...gitDefaults,
+        commit: true,
+        tag: true,
+        push: 
+        // We have to perform a git push in order to create a release
+        isCreateReleaseEnabledAtTheRoot ||
+            isCreateReleaseEnabledForProjectChangelogs
+            ? true
+            : false,
+    };
+    const defaultFixedReleaseTagPattern = 'v{version}';
+    const defaultFixedGroupReleaseTagPattern = '{releaseGroupName}-v{version}';
+    const defaultIndependentReleaseTagPattern = '{projectName}@{version}';
+    const defaultReleaseTagPatternRequireSemver = true;
+    const defaultReleaseTagPatternStrictPreid = true;
+    const workspaceProjectsRelationship = userConfig.projectsRelationship || 'fixed';
+    const defaultGeneratorOptions = {};
+    if (userConfig.version?.conventionalCommits) {
+        defaultGeneratorOptions.currentVersionResolver = 'git-tag';
+        defaultGeneratorOptions.specifierSource = 'conventional-commits';
+    }
+    if (userConfig.versionPlans) {
+        defaultGeneratorOptions.specifierSource = 'version-plans';
+    }
+    const userGroups = Object.values(userConfig.groups ?? {});
+    const disableWorkspaceChangelog = userGroups.length > 1 ||
+        (userGroups.length === 1 &&
+            userGroups[0].projectsRelationship === 'independent') ||
+        (userConfig.projectsRelationship === 'independent' &&
+            !userGroups.some((g) => g.projectsRelationship === 'fixed'));
+    const defaultRendererPath = (0, node_path_1.join)(__dirname, '../../../../release/changelog-renderer');
+    // Helper function to create meaningful docker defaults when user opts in
+    function createDockerDefaults(userDockerConfig) {
+        const defaultVersionSchemes = {
+            production: '{currentDate|YYMM.DD}.{shortCommitSha}',
+            hotfix: '{currentDate|YYMM.DD}.{shortCommitSha}-hotfix',
+        };
+        const defaultPreVersionCommand = 'npx nx run-many -t docker:build';
+        // If user explicitly sets docker: true, apply meaningful defaults
+        if (userDockerConfig === true) {
+            return {
+                preVersionCommand: defaultPreVersionCommand,
+                skipVersionActions: undefined,
+                versionSchemes: defaultVersionSchemes,
+                repositoryName: undefined,
+                registryUrl: undefined,
+            };
+        }
+        // If user provides docker configuration object, merge with base defaults
+        return {
+            preVersionCommand: userDockerConfig.preVersionCommand ?? defaultPreVersionCommand,
+            skipVersionActions: userDockerConfig.skipVersionActions
+                ? Array.isArray(userDockerConfig.skipVersionActions)
+                    ? (0, find_matching_projects_1.findMatchingProjects)(userDockerConfig.skipVersionActions, projectGraph.nodes)
+                    : userDockerConfig.skipVersionActions
+                : undefined,
+            versionSchemes: userDockerConfig.versionSchemes ?? defaultVersionSchemes,
+            repositoryName: userDockerConfig.repositoryName,
+            registryUrl: userDockerConfig.registryUrl,
+        };
+    }
+    // Helper function to normalize docker config at group level
+    function normalizeDockerConfig(dockerConfig) {
+        // If user explicitly sets docker: true at group level, apply meaningful defaults
+        if (dockerConfig === true) {
+            return createDockerDefaults(true);
+        }
+        // If user provides docker configuration object at group level, return it
+        if (dockerConfig && typeof dockerConfig === 'object') {
+            return createDockerDefaults(dockerConfig);
+        }
+        // No group-level docker config
+        return undefined;
+    }
+    const WORKSPACE_DEFAULTS = {
+        // By default all projects in all groups are released together
+        projectsRelationship: workspaceProjectsRelationship,
+        // Create docker defaults only if user has explicitly configured it, otherwise undefined
+        docker: userConfig.docker !== undefined
+            ? createDockerDefaults(userConfig.docker)
+            : undefined,
+        git: gitDefaults,
+        version: {
+            git: versionGitDefaults,
+            conventionalCommits: userConfig.version?.conventionalCommits || false,
+            preVersionCommand: userConfig.version?.preVersionCommand || '',
+            versionActions: exports.DEFAULT_VERSION_ACTIONS_PATH,
+            versionActionsOptions: {},
+            currentVersionResolver: defaultGeneratorOptions.currentVersionResolver,
+            specifierSource: defaultGeneratorOptions.specifierSource,
+            preserveLocalDependencyProtocols: userConfig.version?.preserveLocalDependencyProtocols ?? true,
+            preserveMatchingDependencyRanges: userConfig.version?.preserveMatchingDependencyRanges ?? true,
+            logUnchangedProjects: userConfig.version?.logUnchangedProjects ?? true,
+            updateDependents: userConfig.version?.updateDependents ?? 'always',
+            // TODO(v23): change the default value of this to true
+            adjustSemverBumpsForZeroMajorVersion: userConfig.version?.adjustSemverBumpsForZeroMajorVersion ?? false,
+        },
+        changelog: {
+            git: changelogGitDefaults,
+            workspaceChangelog: disableWorkspaceChangelog
+                ? false
+                : {
+                    createRelease: false,
+                    entryWhenNoChanges: 'This was a version bump only, there were no code changes.',
+                    file: '{workspaceRoot}/CHANGELOG.md',
+                    renderer: defaultRendererPath,
+                    renderOptions: {
+                        authors: true,
+                        applyUsernameToAuthors: true,
+                        commitReferences: true,
+                        versionTitleDate: true,
+                    },
+                },
+            // For projectChangelogs if the user has set any changelog config at all, then use one set of defaults, otherwise default to false for the whole feature
+            projectChangelogs: userConfig.changelog?.projectChangelogs
+                ? {
+                    createRelease: false,
+                    file: '{projectRoot}/CHANGELOG.md',
+                    entryWhenNoChanges: 'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
+                    renderer: defaultRendererPath,
+                    renderOptions: {
+                        authors: true,
+                        applyUsernameToAuthors: true,
+                        commitReferences: true,
+                        versionTitleDate: true,
+                    },
+                }
+                : false,
+            automaticFromRef: false,
+        },
+        releaseTag: {
+            pattern: userConfig.releaseTag?.pattern ||
+                userConfig.releaseTagPattern ||
+                // The appropriate default pattern is dependent upon the projectRelationships
+                (workspaceProjectsRelationship === 'independent'
+                    ? defaultIndependentReleaseTagPattern
+                    : defaultFixedReleaseTagPattern),
+            checkAllBranchesWhen: userConfig.releaseTag?.checkAllBranchesWhen ??
+                userConfig.releaseTagPatternCheckAllBranchesWhen ??
+                undefined,
+            requireSemver: userConfig.releaseTag?.requireSemver ??
+                userConfig.releaseTagPatternRequireSemver ??
+                defaultReleaseTagPatternRequireSemver,
+            preferDockerVersion: userConfig.releaseTag?.preferDockerVersion ??
+                userConfig.releaseTagPatternPreferDockerVersion ??
+                false,
+            strictPreid: userConfig.releaseTag?.strictPreid ??
+                userConfig.releaseTagPatternStrictPreid ??
+                defaultReleaseTagPatternStrictPreid,
+        },
+        conventionalCommits: conventional_commits_1.DEFAULT_CONVENTIONAL_COMMITS_CONFIG,
+        versionPlans: (userConfig.versionPlans ||
+            false),
+    };
+    const groupProjectsRelationship = userConfig.projectsRelationship || WORKSPACE_DEFAULTS.projectsRelationship;
+    const groupReleaseTagRequireSemver = userConfig.releaseTag?.requireSemver ??
+        userConfig.releaseTagPatternRequireSemver ??
+        WORKSPACE_DEFAULTS.releaseTag.requireSemver;
+    const groupReleaseTagStrictPreid = userConfig.releaseTag?.strictPreid ??
+        userConfig.releaseTagPatternStrictPreid ??
+        defaultReleaseTagPatternStrictPreid;
+    const groupDocker = normalizeDockerConfig(userConfig.docker ?? WORKSPACE_DEFAULTS.docker);
+    const GROUP_DEFAULTS = {
+        projectsRelationship: groupProjectsRelationship,
+        // Only include docker configuration if user has explicitly configured it
+        docker: groupDocker && Object.keys(groupDocker).length > 0
+            ? {
+                ...groupDocker,
+                groupPreVersionCommand: '',
+            }
+            : undefined,
+        version: {
+            conventionalCommits: false,
+            versionActions: exports.DEFAULT_VERSION_ACTIONS_PATH,
+            versionActionsOptions: {},
+            groupPreVersionCommand: '',
+        },
+        changelog: {
+            createRelease: false,
+            entryWhenNoChanges: 'This was a version bump only for {projectName} to align it with other projects, there were no code changes.',
+            file: '{projectRoot}/CHANGELOG.md',
+            renderer: defaultRendererPath,
+            renderOptions: {
+                authors: true,
+                applyUsernameToAuthors: true,
+                commitReferences: true,
+                versionTitleDate: true,
+            },
+        },
+        releaseTag: {
+            pattern: 
+            // The appropriate group default pattern is dependent upon the projectRelationships
+            groupProjectsRelationship === 'independent'
+                ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+                    // Otherwise, use the default value to guarantee unique tags
+                    WORKSPACE_DEFAULTS.releaseTag.pattern?.includes('{projectName}')
+                        ? WORKSPACE_DEFAULTS.releaseTag.pattern
+                        : defaultIndependentReleaseTagPattern
+                : WORKSPACE_DEFAULTS.releaseTag.pattern,
+            checkAllBranchesWhen: userConfig.releaseTag?.checkAllBranchesWhen ??
+                userConfig.releaseTagPatternCheckAllBranchesWhen ??
+                undefined,
+            requireSemver: groupReleaseTagRequireSemver,
+            preferDockerVersion: false,
+            strictPreid: groupReleaseTagStrictPreid,
+        },
+        versionPlans: false,
+    };
+    /**
+     * We first process root level config and apply defaults, so that we know how to handle the group level
+     * overrides, if applicable.
+     */
+    const rootGitConfig = deepMergeDefaults([WORKSPACE_DEFAULTS.git], userConfig.git);
+    const rootVersionConfig = deepMergeDefaults([
+        WORKSPACE_DEFAULTS.version,
+        // Merge in the git defaults from the top level
+        {
+            git: versionGitDefaults,
+        },
+        {
+            git: userConfig.git,
+        },
+    ], userConfig.version);
+    const rootDockerConfig = userConfig.docker && {
+        ...normalizeDockerConfig(WORKSPACE_DEFAULTS.docker),
+        ...normalizeDockerConfig(userConfig.docker),
+    };
+    if (userConfig.changelog?.workspaceChangelog) {
+        userConfig.changelog.workspaceChangelog = normalizeTrueToEmptyObject(userConfig.changelog.workspaceChangelog);
+    }
+    if (userConfig.changelog?.projectChangelogs) {
+        userConfig.changelog.projectChangelogs = normalizeTrueToEmptyObject(userConfig.changelog.projectChangelogs);
+    }
+    const rootChangelogConfig = deepMergeDefaults([
+        WORKSPACE_DEFAULTS.changelog,
+        // Merge in the git defaults from the top level
+        { git: changelogGitDefaults },
+        {
+            git: userConfig.git,
+        },
+    ], normalizeTrueToEmptyObject(userConfig.changelog));
+    const rootVersionPlansConfig = (userConfig.versionPlans ??
+        WORKSPACE_DEFAULTS.versionPlans);
+    const rootConventionalCommitsConfig = deepMergeDefaults([WORKSPACE_DEFAULTS.conventionalCommits], fillUnspecifiedConventionalCommitsProperties(normalizeConventionalCommitsConfig(userConfig.conventionalCommits)));
+    // these options are not supported at the group level, only the root/command level
+    let rootVersionWithoutGlobalOptions = {
+        ...rootVersionConfig,
+    };
+    delete rootVersionWithoutGlobalOptions.git;
+    delete rootVersionWithoutGlobalOptions.preVersionCommand;
+    // Apply conventionalCommits shorthand to the final group defaults if explicitly configured in the original user config
+    if (userConfig.version?.conventionalCommits === true) {
+        rootVersionWithoutGlobalOptions.currentVersionResolver = 'git-tag';
+        rootVersionWithoutGlobalOptions.specifierSource = 'conventional-commits';
+    }
+    if (userConfig.version?.conventionalCommits === false) {
+        delete rootVersionWithoutGlobalOptions.currentVersionResolver;
+        delete rootVersionWithoutGlobalOptions.specifierSource;
+    }
+    // Apply versionPlans shorthand to the final group defaults if explicitly configured in the original user config
+    if (userConfig.versionPlans) {
+        rootVersionWithoutGlobalOptions.specifierSource = 'version-plans';
+    }
+    if (userConfig.versionPlans === false) {
+        delete rootVersionWithoutGlobalOptions.specifierSource;
+    }
+    const rootDockerWithoutGlobalOptions = { ...rootDockerConfig };
+    delete rootDockerWithoutGlobalOptions.preVersionCommand;
+    const groups = userConfig.groups && Object.keys(userConfig.groups).length
+        ? ensureProjectsConfigIsArray(userConfig.groups)
+        : /**
+           * No user specified release groups, so we treat all projects (or any any user-defined subset via the top level "projects" property)
+           * as being in one release group together in which the projects are released in lock step.
+           */
+            {
+                [exports.IMPLICIT_DEFAULT_RELEASE_GROUP]: {
+                    projectsRelationship: GROUP_DEFAULTS.projectsRelationship,
+                    // Only include docker configuration if user has explicitly configured it
+                    docker: Object.keys(rootDockerWithoutGlobalOptions).length > 0
+                        ? deepMergeDefaults([GROUP_DEFAULTS.docker], rootDockerWithoutGlobalOptions)
+                        : undefined,
+                    projects: userConfig.projects
+                        ? // user-defined top level "projects" config takes priority if set
+                            (0, find_matching_projects_1.findMatchingProjects)(ensureArray(userConfig.projects), projectGraph.nodes)
+                        : await getDefaultProjects(projectGraph, projectFileMap),
+                    /**
+                     * For properties which are overriding config at the root, we use the root level config as the
+                     * default values to merge with so that the group that matches a specific project will always
+                     * be the valid source of truth for that type of config.
+                     */
+                    version: deepMergeDefaults([GROUP_DEFAULTS.version], rootVersionWithoutGlobalOptions),
+                    // If the user has set something custom for releaseTag at the top level, respect it for the implicit default group
+                    releaseTag: {
+                        pattern: userConfig.releaseTag?.pattern ||
+                            userConfig.releaseTagPattern ||
+                            GROUP_DEFAULTS.releaseTag.pattern,
+                        checkAllBranchesWhen: userConfig.releaseTag?.checkAllBranchesWhen ??
+                            userConfig.releaseTagPatternCheckAllBranchesWhen ??
+                            GROUP_DEFAULTS.releaseTag.checkAllBranchesWhen,
+                        requireSemver: userConfig.releaseTag?.requireSemver ??
+                            userConfig.releaseTagPatternRequireSemver ??
+                            GROUP_DEFAULTS.releaseTag.requireSemver,
+                        preferDockerVersion: userConfig.releaseTag?.preferDockerVersion ??
+                            userConfig.releaseTagPatternPreferDockerVersion ??
+                            GROUP_DEFAULTS.releaseTag.preferDockerVersion,
+                        strictPreid: userConfig.releaseTag?.strictPreid ??
+                            userConfig.releaseTagPatternStrictPreid ??
+                            GROUP_DEFAULTS.releaseTag.strictPreid,
+                    },
+                    // Directly inherit the root level config for projectChangelogs, if set
+                    changelog: rootChangelogConfig.projectChangelogs || false,
+                    versionPlans: rootVersionPlansConfig || GROUP_DEFAULTS.versionPlans,
+                },
+            };
+    /**
+     * Resolve all the project names into their release groups, and check
+     * that individual projects are not found in multiple groups.
+     */
+    const releaseGroups = {};
+    const alreadyMatchedProjects = new Set();
+    for (const [releaseGroupName, releaseGroup] of Object.entries(groups)) {
+        // Ensure that the config for the release group can resolve at least one project
+        const matchingProjects = (0, find_matching_projects_1.findMatchingProjects)(releaseGroup.projects, projectGraph.nodes);
+        if (!matchingProjects.length) {
+            return {
+                error: {
+                    code: 'RELEASE_GROUP_MATCHES_NO_PROJECTS',
+                    data: {
+                        releaseGroupName: releaseGroupName,
+                    },
+                },
+                nxReleaseConfig: null,
+            };
+        }
+        // If provided, ensure release tag pattern is valid
+        const releaseTagPattern = releaseGroup.releaseTag?.pattern || releaseGroup.releaseTagPattern;
+        if (releaseTagPattern) {
+            const error = ensureReleaseGroupReleaseTagPatternIsValid(releaseTagPattern, releaseGroupName);
+            if (error) {
+                return {
+                    error,
+                    nxReleaseConfig: null,
+                };
+            }
+        }
+        else {
+            // Set default pattern if not provided
+            const defaultPattern = releaseGroup.projectsRelationship === 'independent'
+                ? WORKSPACE_DEFAULTS.releaseTag.pattern?.includes('{projectName}')
+                    ? WORKSPACE_DEFAULTS.releaseTag.pattern
+                    : defaultIndependentReleaseTagPattern
+                : (userConfig?.releaseTag?.pattern ??
+                    userConfig?.releaseTagPattern ??
+                    defaultFixedGroupReleaseTagPattern);
+            // Initialize releaseTag object if it doesn't exist
+            if (!releaseGroup.releaseTag) {
+                releaseGroup.releaseTag = {};
+            }
+            releaseGroup.releaseTag.pattern = defaultPattern;
+        }
+        for (const project of matchingProjects) {
+            if (alreadyMatchedProjects.has(project)) {
+                return {
+                    error: {
+                        code: 'PROJECT_MATCHES_MULTIPLE_GROUPS',
+                        data: {
+                            project,
+                        },
+                    },
+                    nxReleaseConfig: null,
+                };
+            }
+            alreadyMatchedProjects.add(project);
+        }
+        // First apply any group level defaults, then apply actual root level config (if applicable), then group level config
+        const groupChangelogDefaults = [GROUP_DEFAULTS.changelog];
+        if (rootChangelogConfig.projectChangelogs) {
+            groupChangelogDefaults.push(rootChangelogConfig.projectChangelogs);
+        }
+        const projectsRelationship = releaseGroup.projectsRelationship || GROUP_DEFAULTS.projectsRelationship;
+        if (releaseGroup.changelog) {
+            releaseGroup.changelog = normalizeTrueToEmptyObject(releaseGroup.changelog);
+        }
+        const normalizedGroupDockerConfig = normalizeDockerConfig(releaseGroup.docker);
+        // Only include docker configuration if user has explicitly configured it at root or group level
+        const shouldIncludeDockerConfig = Object.keys(rootDockerWithoutGlobalOptions).length > 0 ||
+            normalizedGroupDockerConfig !== undefined;
+        const groupDefaults = {
+            projectsRelationship,
+            // Only include docker configuration if user has explicitly configured it
+            docker: shouldIncludeDockerConfig
+                ? {
+                    ...GROUP_DEFAULTS.docker,
+                    ...rootDockerWithoutGlobalOptions,
+                    groupPreVersionCommand: '',
+                    ...releaseGroup.docker,
+                }
+                : undefined,
+            projects: matchingProjects,
+            version: deepMergeDefaults(
+            // First apply any group level defaults, then apply actual root level config, then group level config
+            [
+                GROUP_DEFAULTS.version,
+                { ...rootVersionWithoutGlobalOptions, groupPreVersionCommand: '' },
+            ], releaseGroup.version),
+            // If the user has set any changelog config at all, including at the root level, then use one set of defaults, otherwise default to false for the whole feature
+            changelog: releaseGroup.changelog || rootChangelogConfig.projectChangelogs
+                ? deepMergeDefaults(groupChangelogDefaults, releaseGroup.changelog || {})
+                : false,
+            releaseTag: {
+                pattern: releaseGroup.releaseTag?.pattern ||
+                    releaseGroup.releaseTagPattern ||
+                    // The appropriate group default pattern is dependent upon the projectRelationships
+                    (projectsRelationship === 'independent'
+                        ? // If the default pattern contains {projectName} then it will create unique release tags for each project.
+                            // Otherwise, use the default value to guarantee unique tags
+                            (userConfig.releaseTag?.pattern || userConfig.releaseTagPattern)?.includes('{projectName}')
+                                ? userConfig.releaseTag?.pattern || userConfig.releaseTagPattern
+                                : defaultIndependentReleaseTagPattern
+                        : userConfig.releaseTag?.pattern ||
+                            userConfig.releaseTagPattern ||
+                            defaultFixedReleaseTagPattern),
+                checkAllBranchesWhen: releaseGroup.releaseTag?.checkAllBranchesWhen ??
+                    releaseGroup.releaseTagPatternCheckAllBranchesWhen ??
+                    userConfig.releaseTag?.checkAllBranchesWhen ??
+                    userConfig.releaseTagPatternCheckAllBranchesWhen ??
+                    undefined,
+                requireSemver: releaseGroup.releaseTag?.requireSemver ??
+                    releaseGroup.releaseTagPatternRequireSemver ??
+                    userConfig.releaseTag?.requireSemver ??
+                    userConfig.releaseTagPatternRequireSemver ??
+                    defaultReleaseTagPatternRequireSemver,
+                preferDockerVersion: releaseGroup.releaseTag?.preferDockerVersion ??
+                    releaseGroup.releaseTagPatternPreferDockerVersion ??
+                    userConfig.releaseTag?.preferDockerVersion ??
+                    userConfig.releaseTagPatternPreferDockerVersion ??
+                    false,
+                strictPreid: releaseGroup.releaseTag?.strictPreid ??
+                    releaseGroup.releaseTagPatternStrictPreid ??
+                    userConfig.releaseTag?.strictPreid ??
+                    userConfig.releaseTagPatternStrictPreid ??
+                    defaultReleaseTagPatternStrictPreid,
+            },
+            versionPlans: releaseGroup.versionPlans ?? rootVersionPlansConfig,
+        };
+        const finalReleaseGroup = deepMergeDefaults([groupDefaults], {
+            ...releaseGroup,
+            // Ensure that the resolved project names take priority over the original user config (which could have contained unresolved globs etc)
+            projects: matchingProjects,
+        });
+        finalReleaseGroup.version =
+            finalReleaseGroup.version;
+        // Clean up docker global options that are not supported at the group level
+        if (finalReleaseGroup.docker) {
+            delete finalReleaseGroup.docker.preVersionCommand;
+        }
+        // Apply conventionalCommits shorthand to the final group if explicitly configured in the original group
+        if (releaseGroup.version?.conventionalCommits === true) {
+            finalReleaseGroup.version.currentVersionResolver = 'git-tag';
+            finalReleaseGroup.version.specifierSource = 'conventional-commits';
+        }
+        if (releaseGroup.version?.conventionalCommits === false &&
+            releaseGroupName !== exports.IMPLICIT_DEFAULT_RELEASE_GROUP) {
+            delete finalReleaseGroup.version.currentVersionResolver;
+            delete finalReleaseGroup.version.specifierSource;
+        }
+        // Apply versionPlans shorthand to the final group if explicitly configured in the original group
+        if (releaseGroup.versionPlans) {
+            finalReleaseGroup.version.specifierSource = 'version-plans';
+        }
+        if (releaseGroup.versionPlans === false &&
+            releaseGroupName !== exports.IMPLICIT_DEFAULT_RELEASE_GROUP) {
+            delete finalReleaseGroup.version.specifierSource;
+        }
+        releaseGroups[releaseGroupName] = finalReleaseGroup;
+    }
+    // Infer docker-related properties based on project configurations
+    for (const [releaseGroupName, releaseGroup] of Object.entries(releaseGroups)) {
+        const hasDockerProjects = releaseGroup.projects.some((projectName) => {
+            const projectNode = projectGraph.nodes[projectName];
+            // Check if project has meaningful docker config (not just undefined/empty values)
+            const projectDockerConfig = projectNode?.data.release?.docker;
+            const hasProjectDockerConfig = projectDockerConfig !== undefined;
+            // Check if release group has docker config at all (since we now only include it when explicitly configured)
+            const hasGroupDockerConfig = !!releaseGroup.docker;
+            return hasProjectDockerConfig || hasGroupDockerConfig;
+        });
+        if (hasDockerProjects) {
+            const error = validateDockerVersionSchemes({ releaseGroups });
+            if (error)
+                return { error, nxReleaseConfig: null };
+            // If any project in the group has docker configuration, disable semver requirement
+            releaseGroup.releaseTag.requireSemver = false;
+            // Set preferDockerVersion by default when docker projects exist,
+            // unless user has explicitly configured it
+            if (releaseGroup.releaseTag.preferDockerVersion === false &&
+                userConfig.groups?.[releaseGroupName]?.releaseTag
+                    ?.preferDockerVersion === undefined &&
+                userConfig.groups?.[releaseGroupName]
+                    ?.releaseTagPatternPreferDockerVersion === undefined &&
+                userConfig.releaseTag?.preferDockerVersion === undefined &&
+                userConfig.releaseTagPatternPreferDockerVersion === undefined) {
+                // Check if ALL projects have docker config, or just some
+                const allProjectsHaveDocker = releaseGroup.projects.every((projectName) => {
+                    const projectNode = projectGraph.nodes[projectName];
+                    const projectDockerConfig = projectNode?.data.release?.docker;
+                    return projectDockerConfig !== undefined || !!releaseGroup.docker;
+                });
+                // Use 'both' for mixed groups so non-docker projects fall back correctly
+                releaseGroup.releaseTag.preferDockerVersion = allProjectsHaveDocker
+                    ? true
+                    : 'both';
+            }
+        }
+    }
+    const configError = validateChangelogConfig(releaseGroups, rootChangelogConfig);
+    if (configError) {
+        return {
+            error: configError,
+            nxReleaseConfig: null,
+        };
+    }
+    return {
+        error: null,
+        nxReleaseConfig: {
+            projectsRelationship: WORKSPACE_DEFAULTS.projectsRelationship,
+            // Only include docker configuration if user has explicitly configured it
+            ...(WORKSPACE_DEFAULTS.docker
+                ? { docker: WORKSPACE_DEFAULTS.docker }
+                : {}),
+            releaseTag: WORKSPACE_DEFAULTS.releaseTag,
+            git: rootGitConfig,
+            docker: rootDockerConfig,
+            version: rootVersionConfig,
+            changelog: rootChangelogConfig,
+            groups: releaseGroups,
+            conventionalCommits: rootConventionalCommitsConfig,
+            versionPlans: rootVersionPlansConfig,
+        },
+    };
+}
+/**
+ * In some cases it is much cleaner and more intuitive for the user to be able to
+ * specify `true` in their config when they want to use the default config for a
+ * particular property, rather than having to specify an empty object.
+ */
+function normalizeTrueToEmptyObject(value) {
+    return value === true ? {} : value;
+}
+function normalizeConventionalCommitsConfig(userConventionalCommitsConfig) {
+    if (!userConventionalCommitsConfig || !userConventionalCommitsConfig.types) {
+        return userConventionalCommitsConfig;
+    }
+    const types = {};
+    for (const [t, typeConfig] of Object.entries(userConventionalCommitsConfig.types)) {
+        if (typeConfig === false) {
+            types[t] = {
+                semverBump: 'none',
+                changelog: {
+                    hidden: true,
+                },
+            };
+            continue;
+        }
+        if (typeConfig === true) {
+            types[t] = {};
+            continue;
+        }
+        if (typeConfig.changelog === false) {
+            types[t] = {
+                ...typeConfig,
+                changelog: {
+                    hidden: true,
+                },
+            };
+            continue;
+        }
+        if (typeConfig.changelog === true) {
+            types[t] = {
+                ...typeConfig,
+                changelog: {},
+            };
+            continue;
+        }
+        types[t] = typeConfig;
+    }
+    return {
+        ...userConventionalCommitsConfig,
+        types,
+    };
+}
+/**
+ * New, custom types specified by users will not be given the appropriate
+ * defaults with `deepMergeDefaults`, so we need to fill in the gaps here.
+ */
+function fillUnspecifiedConventionalCommitsProperties(config) {
+    if (!config || !config.types) {
+        return config;
+    }
+    const types = {};
+    for (const [t, typeConfig] of Object.entries(config.types)) {
+        const defaultTypeConfig = conventional_commits_1.DEFAULT_CONVENTIONAL_COMMITS_CONFIG.types[t];
+        const semverBump = typeConfig.semverBump ||
+            // preserve our default semver bump if it's not 'none'
+            // this prevents a 'feat' from becoming a 'patch' just
+            // because they modified the changelog config for 'feat'
+            (defaultTypeConfig?.semverBump !== 'none' &&
+                defaultTypeConfig?.semverBump) ||
+            'patch';
+        // don't preserve our default behavior for hidden, ever.
+        // we should assume that if users are explicitly enabling a
+        // type, then they intend it to be visible in the changelog
+        const hidden = typeConfig.changelog?.hidden || false;
+        const title = typeConfig.changelog?.title ||
+            // our default title is better than just the unmodified type name
+            defaultTypeConfig?.changelog.title ||
+            t;
+        types[t] = {
+            semverBump,
+            changelog: {
+                hidden,
+                title,
+            },
+        };
+    }
+    return {
+        ...config,
+        types,
+    };
+}
+async function handleNxReleaseConfigError(error) {
+    const linkMessage = `\nRead more about Nx Release at https://nx.dev/features/manage-releases.`;
+    switch (error.code) {
+        case 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'groups',
+                    error.data.releaseGroupName,
+                    'docker',
+                    'versionSchemes',
+                ]);
+                output_1.output.error({
+                    title: `Release group "${error.data.releaseGroupName}" configures "skipVersionActions" but its docker version scheme "${error.data.schemeName}" contains the "{versionActionsVersion}" placeholder which cannot be resolved without version actions. Remove "skipVersionActions" or remove the placeholder from the scheme.`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'PROJECTS_AND_GROUPS_DEFINED':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'projects',
+                ]);
+                output_1.output.error({
+                    title: `"projects" is not valid when explicitly defining release groups, and everything should be expressed within "groups" in that case. If you are using "groups" then you should remove the "projects" property`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'RELEASE_GROUP_MATCHES_NO_PROJECTS':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'groups',
+                ]);
+                output_1.output.error({
+                    title: `Release group "${error.data.releaseGroupName}" matches no projects. Please ensure all release groups match at least one project:`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'PROJECT_MATCHES_MULTIPLE_GROUPS':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'groups',
+                ]);
+                output_1.output.error({
+                    title: `Project "${error.data.project}" matches multiple release groups. Please ensure all projects are part of only one release group:`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'groups',
+                    error.data.releaseGroupName,
+                    'releaseTagPattern',
+                ]);
+                output_1.output.error({
+                    title: `Release group "${error.data.releaseGroupName}" has an invalid releaseTagPattern. Please ensure the pattern contains exactly one instance of the "{version}" placeholder`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'CONVENTIONAL_COMMITS_SHORTHAND_MIXED_WITH_OVERLAPPING_OPTIONS':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                ]);
+                output_1.output.error({
+                    title: `You have configured both the shorthand "version.conventionalCommits" and one or more of the related configuration options that it sets for you. Please use one or the other:`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'GLOBAL_GIT_CONFIG_MIXED_WITH_GRANULAR_GIT_CONFIG':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                    'git',
+                ]);
+                output_1.output.error({
+                    title: `You have duplicate conflicting git configurations. If you are using the top level 'nx release' command, then remove the 'release.version.git' and 'release.changelog.git' properties in favor of 'release.git'. If you are using the subcommands or the programmatic API, then remove the 'release.git' property in favor of 'release.version.git' and 'release.changelog.git':`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'CANNOT_RESOLVE_CHANGELOG_RENDERER': {
+            const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)(['release']);
+            output_1.output.error({
+                title: `There was an error when resolving the configured changelog renderer at path: ${error.data.workspaceRelativePath}`,
+                bodyLines: [nxJsonMessage, linkMessage],
+            });
+            break;
+        }
+        case 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                ]);
+                output_1.output.error({
+                    title: `Your "changelog.createRelease" config specifies an unsupported provider "${error.data.provider}". The supported providers are ${error.data.supportedProviders
+                        .map((p) => `"${p}"`)
+                        .join(', ')}`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                ]);
+                output_1.output.error({
+                    title: `Your "changelog.createRelease" config specifies an invalid hostname "${error.data.hostname}". Please ensure you provide a valid hostname value, such as "example.com"`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                ]);
+                output_1.output.error({
+                    title: `Your "changelog.createRelease" config specifies an invalid apiBaseUrl "${error.data.apiBaseUrl}". Please ensure you provide a valid URL value, such as "https://example.com"`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        case 'GIT_PUSH_FALSE_WITH_CREATE_RELEASE':
+            {
+                const nxJsonMessage = await (0, resolve_nx_json_error_message_1.resolveNxJsonConfigErrorMessage)([
+                    'release',
+                ]);
+                output_1.output.error({
+                    title: `The createRelease option for changelogs cannot be enabled when git push is explicitly disabled because the commit needs to be pushed to the remote in order to tie the release to it`,
+                    bodyLines: [nxJsonMessage, linkMessage],
+                });
+            }
+            break;
+        default:
+            throw new Error(`Unhandled error code: ${error.code}`);
+    }
+    process.exit(1);
+}
+function ensureReleaseGroupReleaseTagPatternIsValid(releaseTagPattern, releaseGroupName) {
+    // ensure that any provided releaseTagPattern contains exactly one instance of {version}
+    return releaseTagPattern.split('{version}').length === 2
+        ? null
+        : {
+            code: 'RELEASE_GROUP_RELEASE_TAG_PATTERN_VERSION_PLACEHOLDER_MISSING_OR_EXCESSIVE',
+            data: {
+                releaseGroupName,
+            },
+        };
+}
+function ensureProjectsConfigIsArray(groups) {
+    const result = {};
+    for (const [groupName, groupConfig] of Object.entries(groups)) {
+        result[groupName] = {
+            ...groupConfig,
+            projects: ensureArray(groupConfig.projects),
+        };
+    }
+    return result;
+}
+function ensureArray(value) {
+    return Array.isArray(value) ? value : [value];
+}
+function isObject(value) {
+    return value && typeof value === 'object' && !Array.isArray(value);
+}
+// Helper function to merge two config objects
+function mergeConfig(objA, objB) {
+    const merged = { ...objA };
+    for (const key in objB) {
+        if (objB.hasOwnProperty(key)) {
+            // If objB[key] is explicitly set to false, null or 0, respect that value
+            if (objB[key] === false || objB[key] === null || objB[key] === 0) {
+                merged[key] = objB[key];
+            }
+            // If both objA[key] and objB[key] are objects, recursively merge them
+            else if (isObject(merged[key]) && isObject(objB[key])) {
+                merged[key] = mergeConfig(merged[key], objB[key]);
+            }
+            // If objB[key] is defined, use it (this will overwrite any existing value in merged[key])
+            else if (objB[key] !== undefined) {
+                merged[key] = objB[key];
+            }
+        }
+    }
+    return merged;
+}
+/**
+ * This function takes in a strictly typed collection of all possible default values in a particular section of config,
+ * and an optional set of partial user config, and returns a single, deeply merged config object, where the user
+ * config takes priority over the defaults in all cases (only an `undefined` value in the user config will be
+ * overwritten by the defaults, all other falsey values from the user will be respected).
+ */
+function deepMergeDefaults(defaultConfigs, userConfig) {
+    let result;
+    // First merge defaultConfigs sequentially (meaning later defaults will override earlier ones)
+    for (const defaultConfig of defaultConfigs) {
+        if (!result) {
+            result = defaultConfig;
+            continue;
+        }
+        result = mergeConfig(result, defaultConfig);
+    }
+    // Finally, merge the userConfig
+    if (userConfig) {
+        result = mergeConfig(result, userConfig);
+    }
+    return result;
+}
+/**
+ * We want to prevent users from setting both the conventionalCommits shorthand and any of the related
+ * configuration options at the same time, since it is at best redundant, and at worst invalid.
+ */
+function hasInvalidConventionalCommitsConfig(userConfig) {
+    // at the root
+    if (userConfig.version?.conventionalCommits === true &&
+        (userConfig.version?.currentVersionResolver ||
+            userConfig.version?.specifierSource)) {
+        return true;
+    }
+    // within any groups
+    if (userConfig.groups) {
+        for (const group of Object.values(userConfig.groups)) {
+            if (group.version?.conventionalCommits === true &&
+                (group.version?.currentVersionResolver ||
+                    group.version?.specifierSource)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+/**
+ * We want to prevent users from setting both the global and granular git configurations. Users should prefer the
+ * global configuration if using the top level nx release command and the granular configuration if using
+ * the subcommands or the programmatic API.
+ */
+function hasInvalidGitConfig(userConfig) {
+    return (!!userConfig.git && !!(userConfig.version?.git || userConfig.changelog?.git));
+}
+async function getDefaultProjects(projectGraph, projectFileMap) {
+    // default to all library projects in the workspace with a package.json file
+    return (0, find_matching_projects_1.findMatchingProjects)(['*'], projectGraph.nodes).filter((project) => projectGraph.nodes[project].type === 'lib' &&
+        // Exclude all projects with "private": true in their package.json because this is
+        // a common indicator that a project is not intended for release.
+        // Users can override this behavior by explicitly defining the projects they want to release.
+        isProjectPublic(project, projectGraph, projectFileMap));
+}
+function isProjectPublic(project, projectGraph, projectFileMap) {
+    const projectNode = projectGraph.nodes[project];
+    const packageJsonPath = (0, node_path_1.join)(projectNode.data.root, 'package.json');
+    if (!projectFileMap[project]?.find((f) => f.file === (0, path_1.normalizePath)(packageJsonPath))) {
+        return false;
+    }
+    try {
+        const fullPackageJsonPath = (0, node_path_1.join)(workspace_root_1.workspaceRoot, packageJsonPath);
+        const packageJson = (0, fileutils_1.readJsonFile)(fullPackageJsonPath);
+        return !(packageJson.private === true);
+    }
+    catch (e) {
+        // do nothing and assume that the project is not public if there is a parsing issue
+        // this will result in it being excluded from the default projects list
+        return false;
+    }
+}
+/**
+ * We need to ensure that changelog renderers are resolvable up front so that we do not end up erroring after performing
+ * actions later, and we also make sure that any configured createRelease options are valid.
+ *
+ * For the createRelease config, we also set a default apiBaseUrl if applicable.
+ */
+function validateChangelogConfig(releaseGroups, rootChangelogConfig) {
+    /**
+     * If any form of changelog config is enabled, ensure that any provided changelog renderers are resolvable
+     * up front so that we do not end up erroring only after the versioning step has been completed.
+     */
+    const uniqueRendererPaths = new Set();
+    if (rootChangelogConfig.workspaceChangelog &&
+        typeof rootChangelogConfig.workspaceChangelog !== 'boolean') {
+        if (typeof rootChangelogConfig.workspaceChangelog.renderer === 'string' &&
+            rootChangelogConfig.workspaceChangelog.renderer.length > 0) {
+            uniqueRendererPaths.add(rootChangelogConfig.workspaceChangelog.renderer);
+        }
+        const createReleaseError = validateCreateReleaseConfig(rootChangelogConfig.workspaceChangelog);
+        if (createReleaseError) {
+            return createReleaseError;
+        }
+    }
+    if (rootChangelogConfig.projectChangelogs &&
+        typeof rootChangelogConfig.projectChangelogs !== 'boolean') {
+        if (typeof rootChangelogConfig.projectChangelogs.renderer === 'string' &&
+            rootChangelogConfig.projectChangelogs.renderer.length > 0) {
+            uniqueRendererPaths.add(rootChangelogConfig.projectChangelogs.renderer);
+        }
+        const createReleaseError = validateCreateReleaseConfig(rootChangelogConfig.projectChangelogs);
+        if (createReleaseError) {
+            return createReleaseError;
+        }
+    }
+    for (const group of Object.values(releaseGroups)) {
+        if (group.changelog && typeof group.changelog !== 'boolean') {
+            if (typeof group.changelog.renderer === 'string' &&
+                group.changelog.renderer.length > 0) {
+                uniqueRendererPaths.add(group.changelog.renderer);
+            }
+            const createReleaseError = validateCreateReleaseConfig(group.changelog);
+            if (createReleaseError) {
+                return createReleaseError;
+            }
+        }
+    }
+    if (!uniqueRendererPaths.size) {
+        return null;
+    }
+    for (const rendererPath of uniqueRendererPaths) {
+        try {
+            (0, resolve_changelog_renderer_1.resolveChangelogRenderer)(rendererPath);
+        }
+        catch {
+            return {
+                code: 'CANNOT_RESOLVE_CHANGELOG_RENDERER',
+                data: {
+                    workspaceRelativePath: (0, node_path_1.relative)(workspace_root_1.workspaceRoot, rendererPath),
+                },
+            };
+        }
+    }
+    return null;
+}
+const supportedCreateReleaseProviders = [
+    {
+        name: 'github-enterprise-server',
+        defaultApiBaseUrl: 'https://__hostname__/api/v3',
+    },
+    {
+        name: 'gitlab',
+        defaultApiBaseUrl: 'https://__hostname__/api/v4',
+    },
+];
+function validateCreateReleaseConfig(changelogConfig) {
+    const createRelease = changelogConfig.createRelease;
+    // Disabled: valid
+    if (!createRelease) {
+        return null;
+    }
+    // GitHub shorthand, expand to full object form, mark as valid
+    if (createRelease === 'github') {
+        changelogConfig.createRelease =
+            github_1.defaultCreateReleaseProvider;
+        return null;
+    }
+    // Gitlab shorthand, expand to full object form, mark as valid
+    if (createRelease === 'gitlab') {
+        changelogConfig.createRelease =
+            gitlab_1.defaultCreateReleaseProvider;
+        return null;
+    }
+    // Object config, ensure that properties are valid
+    const supportedProvider = supportedCreateReleaseProviders.find((p) => p.name === createRelease.provider);
+    if (!supportedProvider) {
+        return {
+            code: 'INVALID_CHANGELOG_CREATE_RELEASE_PROVIDER',
+            data: {
+                provider: createRelease.provider,
+                supportedProviders: supportedCreateReleaseProviders.map((p) => p.name),
+            },
+        };
+    }
+    if (!isValidHostname(createRelease.hostname)) {
+        return {
+            code: 'INVALID_CHANGELOG_CREATE_RELEASE_HOSTNAME',
+            data: {
+                hostname: createRelease.hostname,
+            },
+        };
+    }
+    // user provided a custom apiBaseUrl, ensure it is valid (accounting for empty string case)
+    if (createRelease.apiBaseUrl ||
+        typeof createRelease.apiBaseUrl === 'string') {
+        if (!isValidUrl(createRelease.apiBaseUrl)) {
+            return {
+                code: 'INVALID_CHANGELOG_CREATE_RELEASE_API_BASE_URL',
+                data: {
+                    apiBaseUrl: createRelease.apiBaseUrl,
+                },
+            };
+        }
+    }
+    else {
+        // Set default apiBaseUrl when not provided by the user
+        createRelease.apiBaseUrl = supportedProvider.defaultApiBaseUrl.replace('__hostname__', createRelease.hostname);
+    }
+    return null;
+}
+function validateDockerVersionSchemes({ releaseGroups, }) {
+    for (const [releaseGroupName, releaseGroup] of Object.entries(releaseGroups)) {
+        if (!releaseGroup.docker)
+            continue;
+        const versionSchemes = releaseGroup.docker.versionSchemes ?? {};
+        const skipVersionActions = releaseGroup.docker.skipVersionActions;
+        if (!versionSchemes || !skipVersionActions)
+            continue;
+        const schemeWithPlaceholder = Object.entries(versionSchemes).find(([, scheme]) => scheme.includes('{versionActionsVersion}'));
+        if (!schemeWithPlaceholder)
+            continue;
+        return {
+            code: 'DOCKER_VERSION_SCHEME_USES_VERSION_ACTIONS_VERSION_WHEN_SKIP_VERSION_ACTIONS',
+            data: {
+                releaseGroupName,
+                schemeName: schemeWithPlaceholder[0],
+            },
+        };
+    }
+    return null;
+}
+function isValidHostname(hostname) {
+    // Regular expression to match a valid hostname
+    const hostnameRegex = /^(?!:\/\/)(?=.{1,255}$)(?!.*\.$)(?!.*?\.\.)(?!.*?-$)(?!^-)([a-zA-Z0-9-]{1,63}\.?)+[a-zA-Z]{2,}$/;
+    return hostnameRegex.test(hostname);
+}
+function isValidUrl(str) {
+    try {
+        new node_url_1.URL(str);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}

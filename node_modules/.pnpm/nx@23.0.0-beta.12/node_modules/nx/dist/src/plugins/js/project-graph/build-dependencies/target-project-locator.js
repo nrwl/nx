@@ -1,0 +1,429 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.TargetProjectLocator = void 0;
+exports.isBuiltinModuleImport = isBuiltinModuleImport;
+const node_module_1 = require("node:module");
+const node_path_1 = require("node:path");
+const semver_1 = require("semver");
+const find_project_for_path_1 = require("../../../../project-graph/utils/find-project-for-path");
+const fileutils_1 = require("../../../../utils/fileutils");
+const get_package_name_from_import_path_1 = require("../../../../utils/get-package-name-from-import-path");
+const workspace_root_1 = require("../../../../utils/workspace-root");
+const packages_1 = require("../../utils/packages");
+const resolve_relative_to_dir_1 = require("../../utils/resolve-relative-to-dir");
+const typescript_1 = require("../../utils/typescript");
+/**
+ * Use a shared cache to avoid repeated npm package resolution work within the TargetProjectLocator.
+ */
+const defaultNpmResolutionCache = new Map();
+const defaultPackageJsonResolutionCache = new Map();
+const experimentalNodeModules = new Set(['node:sqlite']);
+function isBuiltinModuleImport(importExpr) {
+    const packageName = (0, get_package_name_from_import_path_1.getPackageNameFromImportPath)(importExpr);
+    return (0, node_module_1.isBuiltin)(packageName) || experimentalNodeModules.has(packageName);
+}
+class TargetProjectLocator {
+    constructor(nodes, externalNodes = {}, npmResolutionCache = defaultNpmResolutionCache, packageJsonResolutionCache = defaultPackageJsonResolutionCache) {
+        this.nodes = nodes;
+        this.externalNodes = externalNodes;
+        this.npmResolutionCache = npmResolutionCache;
+        this.packageJsonResolutionCache = packageJsonResolutionCache;
+        this.projectRootMappings = (0, find_project_for_path_1.createProjectRootMappings)(this.nodes);
+        this.tsConfig = this.getRootTsConfig();
+        this.paths = this.tsConfig.config?.compilerOptions?.paths;
+        this.typescriptResolutionCache = new Map();
+        /**
+         * Only the npm external nodes should be included.
+         *
+         * Unlike the raw externalNodes, ensure that there is always copy of the node where the version
+         * is set in the key for optimal lookup.
+         */
+        this.npmProjects = Object.values(this.externalNodes).reduce((acc, node) => {
+            if (node.type === 'npm') {
+                const keyWithVersion = `npm:${node.data.packageName}@${node.data.version}`;
+                if (!acc[node.name]) {
+                    acc[node.name] = node;
+                }
+                // The node.name may have already contained the version
+                if (!acc[keyWithVersion]) {
+                    acc[keyWithVersion] = node;
+                }
+            }
+            return acc;
+        }, {});
+        if (this.tsConfig.config?.compilerOptions?.paths) {
+            this.parsePaths(this.tsConfig.config.compilerOptions.paths);
+        }
+    }
+    /**
+     * Resolve any workspace or external project that matches the given import expression,
+     * originating from the given filePath.
+     *
+     * @param importExpr
+     * @param filePath
+     */
+    findProjectFromImport(importExpr, filePath) {
+        if ((0, fileutils_1.isRelativePath)(importExpr)) {
+            const resolvedModule = node_path_1.posix.join((0, node_path_1.dirname)(filePath), importExpr);
+            return this.findProjectOfResolvedModule(resolvedModule);
+        }
+        // find project using tsconfig paths
+        const results = this.findMatchingPaths(importExpr);
+        if (results) {
+            const [path, paths] = results;
+            const matchedStar = typeof path === 'string'
+                ? undefined
+                : importExpr.substring(path.prefix.length, importExpr.length - path.suffix.length);
+            for (let p of paths) {
+                const path = matchedStar ? p.replace('*', matchedStar) : p;
+                const maybeResolvedProject = this.findProjectOfResolvedModule(path);
+                if (maybeResolvedProject) {
+                    return maybeResolvedProject;
+                }
+            }
+        }
+        if (isBuiltinModuleImport(importExpr)) {
+            return null;
+        }
+        // try to find npm package before using expensive typescript resolution
+        const externalProject = this.findNpmProjectFromImport(importExpr, filePath);
+        if (externalProject) {
+            return externalProject;
+        }
+        if (this.tsConfig.config) {
+            // TODO: this can be removed once we rework resolveImportWithRequire below
+            // to properly handle ESM (exports, imports, conditions)
+            const resolvedProject = this.resolveImportWithTypescript(importExpr, filePath);
+            if (resolvedProject) {
+                return resolvedProject;
+            }
+        }
+        try {
+            const resolvedModule = this.resolveImportWithRequire(importExpr, filePath);
+            return this.findProjectOfResolvedModule(resolvedModule);
+        }
+        catch { }
+        // fall back to see if it's a locally linked workspace project where the
+        // output might not exist yet
+        const localProject = this.findImportInWorkspaceProjects(importExpr);
+        if (localProject) {
+            return localProject;
+        }
+        // nothing found, cache the negative result with the scoped key
+        const packageName = (0, get_package_name_from_import_path_1.getPackageNameFromImportPath)(importExpr);
+        const dirPath = (0, node_path_1.dirname)(filePath.startsWith(workspace_root_1.workspaceRoot)
+            ? filePath.replace(workspace_root_1.workspaceRoot, '')
+            : filePath);
+        this.npmResolutionCache.set(`${packageName}__${dirPath}`, null);
+        return null;
+    }
+    /**
+     * Resolve any external project that matches the given import expression,
+     * relative to the given file path.
+     *
+     * @param importExpr
+     * @param projectRoot
+     */
+    findNpmProjectFromImport(importExpr, fromFilePath) {
+        const packageName = (0, get_package_name_from_import_path_1.getPackageNameFromImportPath)(importExpr);
+        let fullFilePath = fromFilePath;
+        let workspaceRelativeFilePath = fromFilePath;
+        if (fromFilePath.startsWith(workspace_root_1.workspaceRoot)) {
+            workspaceRelativeFilePath = fromFilePath.replace(workspace_root_1.workspaceRoot, '');
+        }
+        else {
+            fullFilePath = (0, node_path_1.join)(workspace_root_1.workspaceRoot, fromFilePath);
+        }
+        const fullDirPath = (0, node_path_1.dirname)(fullFilePath);
+        const workspaceRelativeDirPath = (0, node_path_1.dirname)(workspaceRelativeFilePath);
+        const npmImportForProject = `${packageName}__${workspaceRelativeDirPath}`;
+        if (this.npmResolutionCache.has(npmImportForProject)) {
+            return this.npmResolutionCache.get(npmImportForProject);
+        }
+        try {
+            // package.json refers to an external package, we do not match against the version found in there, we instead try and resolve the relevant package how node would
+            const externalPackageJson = this.readPackageJson(packageName, fullDirPath);
+            // The external package.json path might be not be resolvable, e.g. if a reference has been added to a project package.json, but the install command has not been run yet.
+            if (!externalPackageJson) {
+                // Try and fall back to resolving an external node from the graph by name
+                const externalNode = this.npmProjects[`npm:${packageName}`];
+                const externalNodeName = externalNode?.name || null;
+                this.npmResolutionCache.set(npmImportForProject, externalNodeName);
+                return externalNodeName;
+            }
+            const version = (0, semver_1.clean)(externalPackageJson.version);
+            let matchingExternalNode = this.npmProjects[`npm:${externalPackageJson.name}@${version}`];
+            if (!matchingExternalNode) {
+                // check if it's a package alias, where the resolved package key is used as the version
+                const aliasNpmProjectKey = `npm:${packageName}@npm:${externalPackageJson.name}@${version}`;
+                matchingExternalNode = this.npmProjects[aliasNpmProjectKey];
+            }
+            if (!matchingExternalNode) {
+                // Fallback to package name as key. This can happen if the version in project graph is not the same as in the resolved package.json.
+                // e.g. Version in project graph is a git remote, but the resolved version is semver.
+                matchingExternalNode =
+                    this.npmProjects[`npm:${externalPackageJson.name}`];
+            }
+            if (!matchingExternalNode) {
+                return null;
+            }
+            this.npmResolutionCache.set(npmImportForProject, matchingExternalNode.name);
+            return matchingExternalNode.name;
+        }
+        catch (e) {
+            if (process.env.NX_VERBOSE_LOGGING === 'true') {
+                console.error(e);
+            }
+            return null;
+        }
+    }
+    /**
+     * Return file paths matching the import relative to the repo root
+     * @param normalizedImportExpr
+     * @deprecated Use `findMatchingPaths` instead. It will be removed in Nx v22.
+     */
+    findPaths(normalizedImportExpr) {
+        if (!this.paths) {
+            return undefined;
+        }
+        if (this.paths[normalizedImportExpr]) {
+            return [normalizedImportExpr, this.paths[normalizedImportExpr]];
+        }
+        const wildcardPath = Object.keys(this.paths).find((path) => path.endsWith('/*') &&
+            (normalizedImportExpr.startsWith(path.replace(/\*$/, '')) ||
+                normalizedImportExpr === path.replace(/\/\*$/, '')));
+        if (wildcardPath) {
+            return [wildcardPath, this.paths[wildcardPath]];
+        }
+        return undefined;
+    }
+    findMatchingPaths(importExpr) {
+        if (!this.parsedPathPatterns) {
+            return undefined;
+        }
+        const { matchableStrings, patterns } = this.parsedPathPatterns;
+        if (matchableStrings.has(importExpr)) {
+            return [importExpr, this.paths[importExpr]];
+        }
+        // https://github.com/microsoft/TypeScript/blob/29e6d6689dfb422e4f1395546c1917d07e1f664d/src/compiler/core.ts#L2410
+        let matchedValue;
+        let longestMatchPrefixLength = -1;
+        for (let i = 0; i < patterns.length; i++) {
+            const pattern = patterns[i];
+            if (pattern.prefix.length > longestMatchPrefixLength &&
+                this.isPatternMatch(pattern, importExpr)) {
+                longestMatchPrefixLength = pattern.prefix.length;
+                matchedValue = pattern;
+            }
+        }
+        return matchedValue
+            ? [matchedValue, this.paths[matchedValue.pattern]]
+            : undefined;
+    }
+    findImportInWorkspaceProjects(importPath) {
+        this.packagesMetadata ??= (0, packages_1.getWorkspacePackagesMetadata)(this.nodes);
+        if (this.packagesMetadata.entryPointsToProjectMap[importPath]) {
+            return this.packagesMetadata.entryPointsToProjectMap[importPath].name;
+        }
+        const project = (0, packages_1.matchImportToWildcardEntryPointsToProjectMap)(this.packagesMetadata.wildcardEntryPointsToProjectMap, importPath);
+        return project?.name;
+    }
+    findDependencyInWorkspaceProjects(packageJsonPath, dep, packageVersion) {
+        this.packagesMetadata ??= (0, packages_1.getWorkspacePackagesMetadata)(this.nodes);
+        const maybeDep = this.packagesMetadata.packageToProjectMap[dep];
+        const maybeDepMetadata = maybeDep?.data.metadata.js;
+        if (!maybeDepMetadata) {
+            return null;
+        }
+        const workspaceRegex = /^workspace:/;
+        const hasWorkspaceProtocol = workspaceRegex.test(packageVersion);
+        const normalizedRange = packageVersion.replace(workspaceRegex, '');
+        /**
+         * Regex is needed to test for workspace: protocol because following options are all valid:
+         *  - workspace:*
+         *  - workspace:^
+         *  - workspace:~
+         *  - workspace:foo@*
+         */
+        if (hasWorkspaceProtocol || normalizedRange === '*') {
+            return maybeDep?.name;
+        }
+        if (normalizedRange.startsWith('file:')) {
+            const targetPath = maybeDep?.data.root;
+            const normalizedPath = normalizedRange.replace('file:', '');
+            const resolvedPath = node_path_1.posix.join((0, node_path_1.dirname)(packageJsonPath), normalizedPath);
+            if (targetPath === resolvedPath) {
+                return maybeDep?.name;
+            }
+        }
+        if ((0, semver_1.satisfies)(maybeDepMetadata.packageVersion, normalizedRange, {
+            includePrerelease: true,
+        })) {
+            return maybeDep?.name;
+        }
+        return null;
+    }
+    isPatternMatch({ prefix, suffix }, candidate) {
+        return (candidate.length >= prefix.length + suffix.length &&
+            candidate.startsWith(prefix) &&
+            candidate.endsWith(suffix));
+    }
+    parsePaths(paths) {
+        this.parsedPathPatterns = {
+            matchableStrings: new Set(),
+            patterns: [],
+        };
+        for (const key of Object.keys(paths)) {
+            const parts = key.split('*');
+            if (parts.length > 2) {
+                continue;
+            }
+            if (parts.length === 1) {
+                this.parsedPathPatterns.matchableStrings.add(key);
+                continue;
+            }
+            this.parsedPathPatterns.patterns.push({
+                pattern: key,
+                prefix: parts[0],
+                suffix: parts[1],
+            });
+        }
+    }
+    resolveImportWithTypescript(normalizedImportExpr, filePath) {
+        let resolvedModule;
+        if (!(0, node_path_1.isAbsolute)(filePath)) {
+            // Convert to an absolute file path because TypeScript's module resolution won't
+            // properly walk up the directory tree (toward the workspace root) when given a relative path.
+            filePath = this.getAbsolutePath(filePath);
+        }
+        const projectName = (0, find_project_for_path_1.findProjectForPath)(filePath, this.projectRootMappings);
+        const cacheScope = projectName
+            ? // fall back to the project name if the project root can't be determined
+                this.nodes[projectName]?.data?.root || projectName
+            : // fall back to the file path if the project can't be determined
+                filePath;
+        const cacheKey = `${normalizedImportExpr}__${cacheScope}`;
+        if (this.typescriptResolutionCache.has(cacheKey)) {
+            resolvedModule = this.typescriptResolutionCache.get(cacheKey);
+        }
+        else {
+            resolvedModule = (0, typescript_1.resolveModuleByImport)(normalizedImportExpr, filePath, this.tsConfig.absolutePath);
+            this.typescriptResolutionCache.set(cacheKey, resolvedModule ? resolvedModule : null);
+        }
+        if (!resolvedModule) {
+            return;
+        }
+        const nodeModulesIndex = resolvedModule.lastIndexOf('node_modules/');
+        if (nodeModulesIndex === -1) {
+            const resolvedProject = this.findProjectOfResolvedModule(resolvedModule);
+            return resolvedProject;
+        }
+        // strip the node_modules/ prefix from the resolved module path
+        const packagePath = resolvedModule.substring(nodeModulesIndex + 'node_modules/'.length);
+        const externalProject = this.findNpmProjectFromImport(packagePath, filePath);
+        return externalProject;
+    }
+    resolveImportWithRequire(normalizedImportExpr, filePath) {
+        return (0, node_path_1.relative)(workspace_root_1.workspaceRoot, require.resolve(normalizedImportExpr, {
+            paths: [(0, node_path_1.dirname)(filePath)],
+        }));
+    }
+    findProjectOfResolvedModule(resolvedModule) {
+        if (resolvedModule.startsWith('node_modules/') ||
+            resolvedModule.includes('/node_modules/')) {
+            return undefined;
+        }
+        let normalizedResolvedModule = resolvedModule.startsWith('./')
+            ? resolvedModule.substring(2)
+            : resolvedModule;
+        // Remove trailing slash to ensure proper project matching
+        if (normalizedResolvedModule.endsWith('/')) {
+            normalizedResolvedModule = normalizedResolvedModule.slice(0, -1);
+        }
+        const importedProject = this.findMatchingProjectFiles(normalizedResolvedModule);
+        return importedProject ? importedProject.name : void 0;
+    }
+    getAbsolutePath(path) {
+        return (0, node_path_1.join)(workspace_root_1.workspaceRoot, path);
+    }
+    getRootTsConfig() {
+        const path = (0, typescript_1.getRootTsConfigFileName)();
+        if (!path) {
+            return {
+                path: null,
+                absolutePath: null,
+                config: null,
+            };
+        }
+        const absolutePath = this.getAbsolutePath(path);
+        return {
+            absolutePath,
+            path,
+            config: (0, fileutils_1.readJsonFile)(absolutePath),
+        };
+    }
+    findMatchingProjectFiles(file) {
+        const project = (0, find_project_for_path_1.findProjectForPath)(file, this.projectRootMappings);
+        return this.nodes[project];
+    }
+    /**
+     * In many cases the package.json will be directly resolvable, so we try that first.
+     * If, however, package exports are used and the package.json is not defined, we will
+     * need to resolve the main entry point of the package and traverse upwards to find the
+     * package.json.
+     *
+     * In some cases, such as when multiple module formats are published, the resolved package.json
+     * might only contain the "type" field - no "name" or "version", so in such cases we keep traversing
+     * until we find a package.json that contains the "name" and "version" fields.
+     */
+    readPackageJson(packageName, relativeToDir) {
+        // The package.json is directly resolvable
+        const packageJsonPath = (0, resolve_relative_to_dir_1.resolveRelativeToDir)((0, node_path_1.join)(packageName, 'package.json'), relativeToDir);
+        if (packageJsonPath) {
+            if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+                return this.packageJsonResolutionCache.get(packageJsonPath);
+            }
+            const parsedPackageJson = (0, fileutils_1.readJsonFile)(packageJsonPath);
+            if (parsedPackageJson.name && parsedPackageJson.version) {
+                this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
+                return parsedPackageJson;
+            }
+            else {
+                this.packageJsonResolutionCache.set(packageJsonPath, null);
+                return null;
+            }
+        }
+        try {
+            // Resolve the main entry point of the package
+            const pathOfFileInPackage = packageJsonPath ?? (0, resolve_relative_to_dir_1.resolveRelativeToDir)(packageName, relativeToDir);
+            let dir = (0, node_path_1.dirname)(pathOfFileInPackage);
+            while (dir !== (0, node_path_1.dirname)(dir)) {
+                const packageJsonPath = (0, node_path_1.join)(dir, 'package.json');
+                if (this.packageJsonResolutionCache.has(packageJsonPath)) {
+                    return this.packageJsonResolutionCache.get(packageJsonPath);
+                }
+                try {
+                    const parsedPackageJson = (0, fileutils_1.readJsonFile)(packageJsonPath);
+                    // Ensure the package.json contains the "name" and "version" fields
+                    if (parsedPackageJson.name && parsedPackageJson.version) {
+                        this.packageJsonResolutionCache.set(packageJsonPath, parsedPackageJson);
+                        return parsedPackageJson;
+                    }
+                    else {
+                        this.packageJsonResolutionCache.set(packageJsonPath, null);
+                        return null;
+                    }
+                }
+                catch {
+                    // Package.json is invalid, keep traversing
+                }
+                dir = (0, node_path_1.dirname)(dir);
+            }
+            return null;
+        }
+        catch {
+            return null;
+        }
+    }
+}
+exports.TargetProjectLocator = TargetProjectLocator;

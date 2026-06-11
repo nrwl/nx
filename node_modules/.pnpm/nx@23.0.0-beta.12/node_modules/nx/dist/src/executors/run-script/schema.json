@@ -1,0 +1,28 @@
+{
+    "version": 2,
+    "title": "Run Script",
+    "description": "Run any NPM script of a project in the project's root directory.",
+    "type": "object",
+    "cli": "nx",
+    "outputCapture": "pipe",
+    "properties": {
+        "script": {
+            "type": "string",
+            "description": "An npm script name in the `package.json` file of the project (e.g., `build`)."
+        },
+        "__unparsed__": {
+            "hidden": true,
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "$default": {
+                "$source": "unparsed"
+            },
+            "x-priority": "internal"
+        }
+    },
+    "additionalProperties": true,
+    "required": ["script"],
+    "examplesFile": "../../../docs/run-script-examples.md"
+}

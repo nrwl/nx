@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json-schema.org/schema",
+    "id": "NxCloudInit",
+    "title": "Add Nx Cloud Configuration to the workspace",
+    "description": "Connect a workspace to Nx Cloud.",
+    "type": "object",
+    "cli": "nx",
+    "properties": {
+        "analytics": {
+            "type": "boolean",
+            "description": "Anonymously store hashed machine ID for task runs",
+            "default": false
+        },
+        "installationSource": {
+            "type": "string",
+            "description": "Name of Nx Cloud installation invoker (ex. user, add-nx-to-monorepo, create-nx-workspace, nx-upgrade",
+            "default": "user"
+        },
+        "hideFormatLogs": {
+            "type": "boolean",
+            "description": "Hide formatting logs",
+            "x-priority": "internal"
+        },
+        "generateToken": {
+            "type": "boolean",
+            "description": "Explicitly asks for a token to be created, do not override existing tokens from Nx Cloud"
+        },
+        "github": {
+            "type": "boolean",
+            "description": "If the user will be using GitHub as their git hosting provider",
+            "default": false
+        },
+        "directory": {
+            "type": "string",
+            "description": "The directory where the workspace is located",
+            "x-priority": "internal"
+        }
+    },
+    "additionalProperties": false,
+    "required": []
+}

@@ -1,0 +1,56 @@
+{
+  "name": "dotenv-expand",
+  "version": "12.0.3",
+  "description": "Expand environment variables using dotenv",
+  "main": "lib/main.js",
+  "types": "lib/main.d.ts",
+  "exports": {
+    ".": {
+      "require": "./lib/main.js",
+      "types": "./lib/main.d.ts",
+      "default": "./lib/main.js"
+    },
+    "./config": "./config.js",
+    "./config.js": "./config.js",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "dts-check": "tsc --project tests/types/tsconfig.json",
+    "lint": "standard",
+    "pretest": "npm run lint && npm run dts-check",
+    "test": "tap tests/*.js --100 -Rspec",
+    "test:coverage": "tap --coverage-report=lcov",
+    "prerelease": "npm test",
+    "release": "standard-version"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/motdotla/dotenv-expand"
+  },
+  "funding": "https://dotenvx.com",
+  "author": "motdotla",
+  "keywords": [
+    "dotenv",
+    "expand",
+    "variables",
+    "interpolation",
+    "substitution",
+    "env",
+    ".env"
+  ],
+  "readmeFilename": "README.md",
+  "license": "BSD-2-Clause",
+  "devDependencies": {
+    "@types/node": "^18.11.3",
+    "standard": "^16.0.4",
+    "standard-version": "^9.5.0",
+    "tap": "^16.3.0",
+    "typescript": "^4.5.4"
+  },
+  "engines": {
+    "node": ">=12"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
+  }
+}

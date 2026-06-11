@@ -1,0 +1,198 @@
+{
+    "version": 2,
+    "title": "Run Commands",
+    "description": "Run any custom commands with Nx.",
+    "type": "object",
+    "cli": "nx",
+    "outputCapture": "pipe",
+    "presets": [
+        {
+            "name": "Arguments forwarding",
+            "keys": ["commands"]
+        },
+        {
+            "name": "Custom done conditions",
+            "keys": ["commands", "readyWhen"]
+        },
+        {
+            "name": "Setting the cwd",
+            "keys": ["commands", "cwd"]
+        }
+    ],
+    "properties": {
+        "commands": {
+            "type": "array",
+            "description": "Commands to run in child process.",
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "command": {
+                                "type": "string",
+                                "description": "Command to run in child process."
+                            },
+                            "forwardAllArgs": {
+                                "type": "boolean",
+                                "description": "Whether arguments should be forwarded when interpolation is not present."
+                            },
+                            "prefix": {
+                                "type": "string",
+                                "description": "Prefix in front of every line out of the output"
+                            },
+                            "prefixColor": {
+                                "type": "string",
+                                "description": "Color of the prefix",
+                                "enum": [
+                                    "black",
+                                    "red",
+                                    "green",
+                                    "yellow",
+                                    "blue",
+                                    "magenta",
+                                    "cyan",
+                                    "white"
+                                ]
+                            },
+                            "color": {
+                                "type": "string",
+                                "description": "Color of the output",
+                                "enum": [
+                                    "black",
+                                    "red",
+                                    "green",
+                                    "yellow",
+                                    "blue",
+                                    "magenta",
+                                    "cyan",
+                                    "white"
+                                ]
+                            },
+                            "bgColor": {
+                                "type": "string",
+                                "description": "Background color of the output",
+                                "enum": [
+                                    "bgBlack",
+                                    "bgRed",
+                                    "bgGreen",
+                                    "bgYellow",
+                                    "bgBlue",
+                                    "bgMagenta",
+                                    "bgCyan",
+                                    "bgWhite"
+                                ]
+                            },
+                            "description": {
+                                "type": "string",
+                                "description": "An optional description useful for inline documentation purposes. It is not used as part of the execution of the command."
+                            }
+                        },
+                        "additionalProperties": false,
+                        "required": ["command"]
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            },
+            "x-priority": "important"
+        },
+        "command": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "description": "Command to run in child process, but divided into parts.",
+                    "items": {
+                        "type": "string"
+                    },
+                    "x-priority": "important"
+                },
+                {
+                    "type": "string",
+                    "description": "Command to run in child process."
+                }
+            ],
+            "type": "string",
+            "description": "Command to run in child process.",
+            "x-priority": "important"
+        },
+        "parallel": {
+            "type": "boolean",
+            "description": "Run commands in parallel.",
+            "default": true,
+            "x-priority": "important"
+        },
+        "readyWhen": {
+            "description": "String or array of strings to appear in `stdout` or `stderr` that indicate that the task is done. When running multiple commands, this option can only be used when `parallel` is set to `true`. If not specified, the task is done when all the child processes complete.",
+            "oneOf": [
+                { "type": "string" },
+                { "type": "array", "items": { "type": "string" } }
+            ]
+        },
+        "args": {
+            "oneOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                {
+                    "type": "string"
+                }
+            ],
+            "description": "Extra arguments. You can pass them as follows: nx run project:target --args='--wait=100'. You can then use {args.wait} syntax to interpolate them in the workspace config file. See example [above](#chaining-commands-interpolating-args-and-setting-the-cwd)"
+        },
+        "envFile": {
+            "type": "string",
+            "description": "You may specify a custom .env file path."
+        },
+        "color": {
+            "type": "boolean",
+            "description": "Use colors when showing output of command.",
+            "default": false
+        },
+        "cwd": {
+            "type": "string",
+            "description": "Current working directory of the commands. If it's not specified the commands will run in the workspace root, if a relative path is specified the commands will run in that path relative to the workspace root and if it's an absolute path the commands will run in that path."
+        },
+        "env": {
+            "type": "object",
+            "description": "Environment variables that will be made available to the commands. This property has priority over the `.env` files.",
+            "additionalProperties": {
+                "type": "string"
+            }
+        },
+        "__unparsed__": {
+            "hidden": true,
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "$default": {
+                "$source": "unparsed"
+            },
+            "x-priority": "internal"
+        },
+        "forwardAllArgs": {
+            "type": "boolean",
+            "description": "Whether arguments should be forwarded when interpolation is not present.",
+            "default": true
+        },
+        "tty": {
+            "type": "boolean",
+            "description": "Whether commands should be run with a tty terminal",
+            "hidden": true
+        }
+    },
+    "additionalProperties": true,
+    "oneOf": [
+        {
+            "required": ["commands"]
+        },
+        {
+            "required": ["command"]
+        }
+    ],
+    "examplesFile": "../../../docs/run-commands-examples.md"
+}

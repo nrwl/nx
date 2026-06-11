@@ -1,0 +1,49 @@
+{
+  "name": "ejs",
+  "description": "Embedded JavaScript templates",
+  "keywords": [
+    "template",
+    "templating",
+    "engine",
+    "ejs"
+  ],
+  "version": "5.0.1",
+  "author": "Matthew Eernisse <matthew.eernisse@gmail.com>",
+  "license": "Apache-2.0",
+  "bin": {
+    "ejs": "./bin/cli.js"
+  },
+  "main": "./lib/cjs/ejs.js",
+  "module": "./lib/esm/ejs.js",
+  "browser": "./ejs.min.js",
+  "exports": {
+    "import": "./lib/esm/ejs.js",
+    "require": "./lib/cjs/ejs.js"
+  },
+  "jsdelivr": "ejs.min.js",
+  "unpkg": "ejs.min.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mde/ejs.git"
+  },
+  "bugs": "https://github.com/mde/ejs/issues",
+  "homepage": "https://github.com/mde/ejs",
+  "devDependencies": {
+    "jake": "^10.9.1",
+    "typescript": "^5.4.5",
+    "@babel/eslint-parser": "^7.24.5",
+    "browserify": "^17.0.0",
+    "eslint": "^9.1.1",
+    "git-directory-deploy": "^1.5.1",
+    "jsdoc": "^4.0.2",
+    "lru-cache": "^4.0.1",
+    "mocha": "^10.2.0",
+    "uglify-js": "^3.3.16"
+  },
+  "engines": {
+    "node": ">=0.12.18"
+  },
+  "scripts": {
+    "test": "npx jake test"
+  }
+}

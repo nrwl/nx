@@ -1,0 +1,10 @@
+import { ProjectsConfigurations } from '../config/workspace-json-project-json';
+import { NxPluginV2 } from '../project-graph/plugins';
+export declare const NX_ANGULAR_JSON_PLUGIN_NAME = "nx-angular-json-plugin";
+export declare const NxAngularJsonPlugin: NxPluginV2;
+export default NxAngularJsonPlugin;
+export declare function shouldMergeAngularProjects(root: string, includeProjectsFromAngularJson: boolean): boolean;
+export declare function isAngularPluginInstalled(): boolean;
+export declare function toNewFormat(w: any): ProjectsConfigurations;
+export declare function toOldFormat(w: any): any;
+export declare function renamePropertyWithStableKeys(obj: any, from: string, to: string): void;
