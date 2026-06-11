@@ -18,7 +18,6 @@ minimumReleaseAgeExclude:
   - 'create-nx-workspace'
   - 'create-nx-plugin'
   - 'tmp@0.2.6'
-  - 'cypress'
 overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
