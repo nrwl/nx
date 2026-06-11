@@ -241,12 +241,12 @@ describe('npm min-release-age behavior', () => {
       });
     });
 
-    it('too-new rc tag never crosses into a pr/beta channel -> latest stable', () => {
-      // next -> 23.0.0-rc.0 is too new. The internal 23.0.0-pr.5 and 23.0.0-beta.1
-      // are different channels (excluded), and the only same-channel candidate is
-      // the cross-line 22.7.0-rc.2, which loses to the stable 22.7.0.
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      // next -> 23.0.0-rc.0 is too new and has no older same-line rc; beta is a
+      // lower rung of the same line so 23.0.0-beta.1 wins, while the internal
+      // 23.0.0-pr.5 (newer-published) is off the ladder and stays walled off.
       expect(pickNpmVersion('next', pkgChannels, policy)).toEqual({
-        version: '22.7.0',
+        version: '23.0.0-beta.1',
         unconstrained: '23.0.0-rc.0',
       });
     });

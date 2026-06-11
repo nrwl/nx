@@ -172,9 +172,9 @@ describe('yarn min-release-age behavior', () => {
       });
     });
 
-    it('too-new rc tag never crosses into a pr/beta channel -> latest stable', () => {
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
       expect(pickYarnVersion('next', pkgChannels, p)).toEqual({
-        version: '22.7.0',
+        version: '23.0.0-beta.1',
         unconstrained: '23.0.0-rc.0',
       });
     });

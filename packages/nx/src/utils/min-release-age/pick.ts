@@ -121,23 +121,48 @@ function publishedAtMs(metadata: RegistryMetadata, version: string): number {
   return Number.isNaN(parsed) ? -Infinity : parsed;
 }
 
+// Prerelease channels with a conventional maturity order, least mature first.
+// A blocked target may descend to a lower rung of its own release line
+// (rc.0 -> beta.x); channels off the ladder (pr, canary, ...) have no implied
+// ordering and stay walled off. `next` is deliberately omitted: it is pre-rc
+// in some ecosystems (Angular) but a rolling dev snapshot in others - exactly
+// the kind of build a degrade must never land on.
+const ORDERED_CHANNELS = ['alpha', 'beta', 'rc'];
+
+// Whether a prerelease channel may serve as a degrade candidate for a target
+// on `targetChannel`: the target's own channel always; a strictly lower rung
+// when both sit on the ladder. A stable target (null channel) admits none.
+function channelAdmits(targetChannel: string | null, channel: string): boolean {
+  if (channel === targetChannel) {
+    return true;
+  }
+  if (targetChannel === null) {
+    return false;
+  }
+  const rank = ORDERED_CHANNELS.indexOf(channel);
+  const targetRank = ORDERED_CHANNELS.indexOf(targetChannel);
+  return rank !== -1 && targetRank !== -1 && rank < targetRank;
+}
+
 /**
  * Degrades a too-new dist-tag target to a cooldown-compliant version "of the
  * same kind", shared by every package manager.
  *
  * The candidate pool is every version at or below the resolved target that is
- * either stable or shares the target's prerelease channel. It is ordered so
- * that same-channel prereleases of the target's exact release line come first,
+ * stable, in the target's prerelease channel, or on a lower rung of the
+ * channel ladder (alpha < beta < rc). It is ordered so that prereleases of
+ * the target's exact release line come first - own channel, then lower rungs -
  * then everything else; within each group the most recently published version
  * comes first (semver breaks ties and orders versions with no publish time).
  * The first compliant version in that order wins.
  *
  * So a stable target degrades to the newest compliant stable, and a prerelease
  * target keeps a compliant prerelease of the release it points at when one
- * exists, otherwise drops to the newest compliant version below it - never
- * crossing into a different prerelease channel (e.g. an internal `pr` build).
- * Returns null when nothing in the pool is compliant; callers turn that into
- * their package manager's violation.
+ * exists (an rc may fall to a same-line beta), otherwise drops to the newest
+ * compliant version below it - never crossing into a channel with no place on
+ * the ladder (e.g. an internal `pr` build) and never climbing up it. Returns
+ * null when nothing in the pool is compliant; callers turn that into their
+ * package manager's violation.
  *
  * `isCompliant` is the caller's per-PM maturity test (package managers differ
  * on missing publish times and excludes).
@@ -161,20 +186,28 @@ export function degradeTagToCompliant(
       return false; // unparseable or newer than the target
     }
     const channel = prereleaseChannel(version);
-    // A prerelease in any other channel (and every prerelease when the target
-    // is stable) is out; stables and same-channel prereleases stay.
-    return channel === null || channel === targetChannel;
+    // Stables always stay; a prerelease stays only in the target's channel or
+    // on a lower ladder rung (every prerelease is out for a stable target).
+    return channel === null || channelAdmits(targetChannel, channel);
   });
 
-  // Same-channel prereleases of the target's exact release line rank ahead of
-  // the rest; within each group, newest published first.
-  const sameLine = (version: string): boolean =>
-    prereleaseChannel(version) === targetChannel &&
-    releaseLine(version) === targetLine;
+  // Prereleases of the target's exact release line rank ahead of the rest -
+  // own channel before lower rungs - then everything else; within each tier,
+  // newest published first.
+  const tier = (version: string): number => {
+    if (releaseLine(version) !== targetLine) {
+      return 2;
+    }
+    const channel = prereleaseChannel(version);
+    if (channel === targetChannel) {
+      return 0;
+    }
+    return channel === null ? 2 : 1;
+  };
   pool.sort((a, b) => {
-    const sameLineDelta = Number(sameLine(b)) - Number(sameLine(a));
-    if (sameLineDelta !== 0) {
-      return sameLineDelta;
+    const tierDelta = tier(a) - tier(b);
+    if (tierDelta !== 0) {
+      return tierDelta;
     }
     const publishedA = publishedAtMs(metadata, a);
     const publishedB = publishedAtMs(metadata, b);

@@ -233,13 +233,13 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('too-new rc tag never crosses into a pr/beta channel -> latest stable', () => {
-      // next -> 23.0.0-rc.0 too new; 23.0.0-pr.5 / 23.0.0-beta.1 are other
-      // channels (excluded), the only same-channel candidate 22.7.0-rc.2 loses
-      // to the stable 22.7.0.
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      // next -> 23.0.0-rc.0 too new with no older same-line rc; the same-line
+      // 23.0.0-beta.1 (lower ladder rung) wins, while the newer-published
+      // internal 23.0.0-pr.5 is off the ladder and stays walled off.
       expect(pickPnpmVersion('next', pkgChannels, v11StrictPolicy(24))).toEqual(
         {
-          version: '22.7.0',
+          version: '23.0.0-beta.1',
           unconstrained: '23.0.0-rc.0',
         }
       );

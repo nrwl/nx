@@ -92,11 +92,71 @@ describe('degradeTagToCompliant', () => {
     expect(degradeTagToCompliant('22.7.5', metadata, onlyPre)).toBeNull();
   });
 
-  it('keeps a prerelease target in its own channel and never crosses to pr/beta', () => {
-    // next -> 23.0.0-rc.0: the pr/beta of the same line are out, the only
-    // same-channel candidate (22.7.0-rc.2) loses to the stable 22.7.0.
+  it('falls from a blocked rc to a same-line beta, never into pr', () => {
+    // 23.0.0-rc.0 has no older same-line rc sibling; beta sits on a lower
+    // ladder rung of the same line, so 23.0.0-beta.1 wins. The internal
+    // 23.0.0-pr.5 is off the ladder and stays walled off.
     expect(degradeTagToCompliant('23.0.0-rc.0', metadata, compliant)).toBe(
+      '23.0.0-beta.1'
+    );
+  });
+
+  it('drops to the common pool when no same-line ladder candidate is compliant', () => {
+    // With the same-line beta also blocked, the only same-channel candidate
+    // (the cross-line 22.7.0-rc.2) loses to the stable 22.7.0.
+    const withoutBeta = (v: string) => compliant(v) && v !== '23.0.0-beta.1';
+    expect(degradeTagToCompliant('23.0.0-rc.0', metadata, withoutBeta)).toBe(
       '22.7.0'
+    );
+  });
+
+  it('returns null when only an off-ladder channel is compliant', () => {
+    // pr has no place on the ladder, so it never enters the pool even as the
+    // sole compliant version below the target.
+    const onlyPr = (v: string) => v === '23.0.0-pr.5';
+    expect(degradeTagToCompliant('23.0.0-rc.0', metadata, onlyPr)).toBeNull();
+  });
+
+  it('never climbs the ladder: a beta target ignores a lower rc', () => {
+    // 22.0.0-rc.1 is below the target by semver but on a HIGHER rung; the
+    // ladder only permits descent, so nothing qualifies.
+    const meta: RegistryMetadata = {
+      name: 'pkg-climb',
+      versions: ['22.0.0-rc.1', '23.0.0-beta.0', '23.0.0-beta.1'],
+      time: null,
+      distTags: {},
+    };
+    const onlyRc = (v: string) => v === '22.0.0-rc.1';
+    expect(degradeTagToCompliant('23.0.0-beta.1', meta, onlyRc)).toBeNull();
+  });
+
+  it('treats next as off-ladder (rolling snapshot in some ecosystems)', () => {
+    const meta: RegistryMetadata = {
+      name: 'pkg-next',
+      versions: ['23.0.0-next.3', '23.0.0-rc.0'],
+      time: null,
+      distTags: {},
+    };
+    const onlyNext = (v: string) => v === '23.0.0-next.3';
+    expect(degradeTagToCompliant('23.0.0-rc.0', meta, onlyNext)).toBeNull();
+  });
+
+  it('prefers a same-line lower-rung beta over a newer-published cross-line stable', () => {
+    // The stable backport was published after the beta, so publish-date order
+    // alone would pick it; the same-line tier must outrank publish recency.
+    const meta: RegistryMetadata = {
+      name: 'pkg-tier',
+      versions: ['22.7.0', '23.0.0-beta.1', '23.0.0-rc.0'],
+      time: {
+        '23.0.0-beta.1': '2026-06-01T00:00:00.000Z',
+        '22.7.0': '2026-06-08T00:00:00.000Z',
+        '23.0.0-rc.0': '2026-06-10T00:00:00.000Z',
+      },
+      distTags: {},
+    };
+    const compliantByDate = (v: string) => v !== '23.0.0-rc.0';
+    expect(degradeTagToCompliant('23.0.0-rc.0', meta, compliantByDate)).toBe(
+      '23.0.0-beta.1'
     );
   });
 
