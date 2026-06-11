@@ -1,0 +1,32 @@
+import { existsSync, readFileSync } from 'fs';
+
+/**
+ * The directory holding bun's global config files (.bunfig.toml and, for bun's
+ * npmrc support, .npmrc): $XDG_CONFIG_HOME when set, else $HOME (mirrors bun's
+ * getHomeConfigPath; when XDG_CONFIG_HOME is set $HOME is NOT consulted).
+ * Returns null when neither is set, in which case bun reads no global config.
+ */
+export function getBunGlobalConfigBase(env: NodeJS.ProcessEnv): string | null {
+  return env.XDG_CONFIG_HOME || env.HOME || null;
+}
+
+/**
+ * Parses a bunfig.toml. An absent file returns null; a file bun's own TOML
+ * parser would reject returns 'invalid' (bun hard-errors on it, so callers
+ * decide whether to defer or skip the surface).
+ */
+export function readBunfigRaw(
+  path: string
+): Record<string, unknown> | 'invalid' | null {
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    const { parse } = require('smol-toml') as {
+      parse: (raw: string) => Record<string, unknown>;
+    };
+    return parse(readFileSync(path, 'utf-8'));
+  } catch {
+    return 'invalid';
+  }
+}
