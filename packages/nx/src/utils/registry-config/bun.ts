@@ -32,6 +32,8 @@ import {
  * The final default/scoped registry is always injected: bun does not read
  * npm-only surfaces (e.g. $PREFIX/etc/npmrc), so npm must not fall back to
  * them.
+ *
+ * See https://github.com/oven-sh/bun/blob/bun-v1.2.23/src/install/PackageManager.zig#L791
  */
 
 const BUN_DEFAULT_REGISTRY = 'https://registry.npmjs.org/';
