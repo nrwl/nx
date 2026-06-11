@@ -2,6 +2,7 @@ import {
   addProjectConfiguration,
   readProjectConfiguration,
   type Tree,
+  updateJson,
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
@@ -1102,6 +1103,140 @@ export class LibModule {}
         'utf-8'
       );
       expect(indexSource).toBe('');
+    });
+  });
+
+  describe('changeDetection', () => {
+    function setup(): Tree {
+      const tree = createTreeWithEmptyWorkspace();
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write('libs/lib1/src/index.ts', '');
+
+      return tree;
+    }
+
+    it('should default to OnPush without emitting a strategy', async () => {
+      const tree = setup();
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
+
+    it('should emit the Eager strategy when requested', async () => {
+      const tree = setup();
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'Eager',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).toContain(
+        'changeDetection: ChangeDetectionStrategy.Eager'
+      );
+    });
+
+    it('should not emit a strategy when OnPush is explicitly passed', async () => {
+      const tree = setup();
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'OnPush',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
+  });
+
+  describe('angular compat support', () => {
+    function setup(angularCoreVersion: string): Tree {
+      const tree = createTreeWithEmptyWorkspace();
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        dependencies: {
+          ...json.dependencies,
+          '@angular/core': angularCoreVersion,
+        },
+      }));
+      addProjectConfiguration(tree, 'lib1', {
+        projectType: 'library',
+        sourceRoot: 'libs/lib1/src',
+        root: 'libs/lib1',
+      });
+      tree.write('libs/lib1/src/index.ts', '');
+
+      return tree;
+    }
+
+    it('should default changeDetection to Default without emitting a strategy on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).not.toContain('changeDetection');
+      expect(content).not.toContain('ChangeDetectionStrategy');
+    });
+
+    it('should emit the OnPush changeDetection strategy on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await componentGenerator(tree, {
+        path: 'libs/lib1/src/lib/example/example',
+        changeDetection: 'OnPush',
+        skipFormat: true,
+      });
+
+      const content = tree.read(
+        'libs/lib1/src/lib/example/example.ts',
+        'utf-8'
+      );
+      expect(content).toContain(
+        'changeDetection: ChangeDetectionStrategy.OnPush'
+      );
+    });
+
+    it('should throw when the Eager changeDetection strategy is used on Angular < 22', async () => {
+      const tree = setup('~21.0.0');
+
+      await expect(
+        componentGenerator(tree, {
+          path: 'libs/lib1/src/lib/example/example',
+          changeDetection: 'Eager',
+          skipFormat: true,
+        })
+      ).rejects.toThrow(
+        'The "Eager" change detection strategy is only supported for Angular versions >= 22.0.0.'
+      );
     });
   });
 });
