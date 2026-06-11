@@ -52,7 +52,7 @@
           "input": "production",
           "projects": ["tag:npm:public"]
         },
-        "{workspaceRoot}/scripts/local-registry",
+        "{workspaceRoot}/scripts/local-registry/**/*",
         "native"
       ],
       "dependsOn": ["local-registry-e2e", "populate-local-registry-storage"],

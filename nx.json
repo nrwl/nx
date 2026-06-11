@@ -71,6 +71,9 @@
         "transitive": true
       },
       {
+        "dependentTasksOutputFiles": "dist/local-registry/proj-backup/**/*"
+      },
+      {
         "json": "{workspaceRoot}/tsconfig.json",
         "fields": ["compilerOptions", "extends", "files", "include"]
       }
