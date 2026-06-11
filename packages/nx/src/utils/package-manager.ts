@@ -662,7 +662,7 @@ export async function packageRegistryView(
 }
 
 export async function packageRegistryPack(
-  cwd: string,
+  packDestination: string,
   pkg: string,
   version: string
 ): Promise<{ tarballPath: string }> {
@@ -676,25 +676,31 @@ export async function packageRegistryPack(
   const pm = 'npm';
 
   const workspacePm = detectPackageManager();
-  const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
-    cwd,
-    windowsHide: true,
-    // npm never reads the workspace package manager's own config files
-    // (pnpm-workspace.yaml registries, .yarnrc(.yml), bunfig.toml); the env
-    // overlay reproduces that resolution for the fetched package.
-    // npm_config_force keeps the download working when the workspace pins a
-    // non-npm manager via `devEngines.packageManager` with `onFail: error`.
-    env: {
-      ...process.env,
-      ...getNpmSpawnRegistryEnv(
-        pkg,
-        workspaceRoot,
-        workspacePm,
-        getPackageManagerVersionSafe(workspacePm, workspaceRoot)
-      ),
-      npm_config_force: 'true',
-    },
-  });
+  // Run from the workspace root (not the temp dir) so npm reads the workspace
+  // .npmrc natively - the registry/auth an npm workspace configures there,
+  // which packageRegistryView already picks up; --pack-destination keeps the
+  // tarball in the temp dir. For non-npm package managers the env overlay
+  // reproduces the config npm cannot read (pnpm-workspace.yaml, .yarnrc(.yml),
+  // bunfig.toml). npm prints the tarball basename to stdout.
+  const { stdout } = await execAsync(
+    `${pm} pack ${pkg}@${version} --pack-destination "${packDestination}"`,
+    {
+      cwd: workspaceRoot,
+      windowsHide: true,
+      env: {
+        ...process.env,
+        ...getNpmSpawnRegistryEnv(
+          pkg,
+          workspaceRoot,
+          workspacePm,
+          getPackageManagerVersionSafe(workspacePm, workspaceRoot)
+        ),
+        // downgrade npm's devEngines.packageManager enforcement (onFail: error)
+        // to a warning so pack still runs in a non-npm workspace
+        npm_config_force: 'true',
+      },
+    }
+  );
 
   const tarballPath = stdout.trim();
   return { tarballPath };

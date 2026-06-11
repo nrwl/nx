@@ -32,6 +32,9 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'YARN_HTTP_PROXY',
     'YARN_HTTPS_PROXY',
     'BERRY_TEST_CA',
+    'BERRY_TEST_REGISTRY',
+    'BERRY_TEST_IDENT',
+    'BERRY_TEST_TOKEN',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -465,6 +468,77 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
       npm_config_registry: 'https://reg-a.example.com/',
       'npm_config_//reg-a.example.com/:_auth':
         Buffer.from('user:pass').toString('base64'),
+    });
+  });
+
+  it('expands ${VAR} in npmRegistryServer before nerf-darting its auth', () => {
+    // Without expansion the registry stays `${BERRY_TEST_REGISTRY}`, which fails
+    // to parse as a URL, so no auth key is ever emitted for the real host.
+    process.env.BERRY_TEST_REGISTRY = 'https://reg-env.example.com/';
+    projectRc(
+      [
+        'npmRegistryServer: "${BERRY_TEST_REGISTRY}"',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: secret-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-env.example.com/',
+      'npm_config_//reg-env.example.com/:_authToken': 'secret-token',
+    });
+  });
+
+  it('expands ${VAR} in a scoped npmRegistryServer and keys auth to the expanded host', () => {
+    process.env.BERRY_TEST_REGISTRY = 'https://reg-scope-env.example.com/';
+    projectRc(
+      [
+        'npmScopes:',
+        '  acme:',
+        '    npmRegistryServer: "${BERRY_TEST_REGISTRY}"',
+        '    npmAuthToken: acme-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@acme/pkg', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      'npm_config_@acme:registry': 'https://reg-scope-env.example.com/',
+      'npm_config_//reg-scope-env.example.com/:_authToken': 'acme-token',
+    });
+  });
+
+  it('expands ${VAR} in npmAuthIdent before the base64 decision', () => {
+    // The expanded value `user:pass` contains a `:`, so v4 base64-encodes it;
+    // the raw `${BERRY_TEST_IDENT}` has no `:` and would be passed through.
+    process.env.BERRY_TEST_IDENT = 'user:pass';
+    projectRc(
+      [
+        'npmScopes:',
+        '  types:',
+        '    npmRegistryServer: https://reg-e.example.com/',
+        '    npmAuthIdent: "${BERRY_TEST_IDENT}"',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('@types/node', ROOT, '4.16.0')).toEqual(
+      {
+        npm_config_registry: 'https://registry.yarnpkg.com',
+        'npm_config_@types:registry': 'https://reg-e.example.com/',
+        'npm_config_//reg-e.example.com/:_auth':
+          Buffer.from('user:pass').toString('base64'),
+      }
+    );
+  });
+
+  it('expands ${VAR} in an auth token value', () => {
+    process.env.BERRY_TEST_TOKEN = 'real-secret';
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: "${BERRY_TEST_TOKEN}"',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': 'real-secret',
     });
   });
 

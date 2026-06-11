@@ -10,6 +10,15 @@ jest.mock('fs', () => ({
   existsSync: jest.fn(),
   readFileSync: jest.fn(),
 }));
+jest.mock('../logger', () => ({
+  logger: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    log: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
 import * as fs from 'fs';
 import { homedir } from 'os';
@@ -95,6 +104,20 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
     files[`${ROOT}/.yarnrc.yml`] =
       'npmRegistryServer: https://reg-a.example.com/\n';
     expect(getNpmSpawnRegistryEnv('is-even', ROOT, 'yarn', null)).toEqual({});
+  });
+
+  it('warns once (not per package) when the yarn version is unknown', () => {
+    // isolateModules gives a fresh index (the once-flag resets) but shares the
+    // logger mock, so clear it first; the yarn-unknown branch returns before
+    // touching the filesystem, so no file mocks are needed.
+    const { logger } = require('../logger');
+    (logger.warn as jest.Mock).mockClear();
+    jest.isolateModules(() => {
+      const { getNpmSpawnRegistryEnv: fresh } = require('./index');
+      fresh('is-even', ROOT, 'yarn', null);
+      fresh('is-odd', ROOT, 'yarn', null);
+    });
+    expect(logger.warn).toHaveBeenCalledTimes(1);
   });
 
   it('routes yarn 1.x to the classic resolver', () => {
