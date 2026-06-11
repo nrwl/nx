@@ -1,9 +1,9 @@
 import { existsSync } from 'fs';
 import { minimatch } from 'minimatch';
+import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
 import { gte, major } from 'semver';
 import { readYamlFile } from '../fileutils';
-import { homeFile } from '../package-manager-config/home';
 import {
   ancestorDirectories,
   getPackageScope,
@@ -36,6 +36,8 @@ import {
  * npm keys. TLS: caFilePath (v2/3) / httpsCaFilePath (v4), per-host
  * networkSettings (hostname globs, longest key first), enableStrictSsl
  * (global only).
+ *
+ * See https://github.com/yarnpkg/berry/blob/a26895a80d2784a5be92c54d5e7622bc9b0864a5/packages/yarnpkg-core/sources/Configuration.ts#L1424
  */
 
 const BERRY_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
@@ -231,7 +233,7 @@ function collectRcFiles(root: string): BerryRcFile[] {
   const paths = [
     join(root, rcName),
     ...ancestorDirectories(root).map((dir) => join(dir, rcName)),
-    homeFile(rcName),
+    join(homedir(), rcName),
   ];
   const files: BerryRcFile[] = [];
   for (const path of paths) {
@@ -431,6 +433,7 @@ function resolveNetworkSettings(
 // Berry's miscUtils.replaceEnvVariables for ABSOLUTE_PATH settings: ${VAR},
 // ${VAR-default} (default when unset), and ${VAR:-default} (default when unset
 // or empty). An undefined bare ${VAR} aborts berry itself, so leave it literal.
+// see https://github.com/yarnpkg/berry/blob/c5857bdee5737425b879492db5e2732a5e6e14f2/packages/yarnpkg-core/sources/miscUtils.ts#L473
 function expandBerryEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
