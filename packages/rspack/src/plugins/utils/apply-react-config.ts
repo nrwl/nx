@@ -52,6 +52,8 @@ function loadReactRefreshPluginClass(): new (opts: Record<string, any>) => {
 } {
   // Lazy require — runs only when actually instantiated (CLI executor
   // path; Jest never reaches this). Works on Node 22.12+ via require(esm).
+  // v1 (CJS) exports the class as default; v2 (ESM) only exports the named
+  // ReactRefreshRspackPlugin.
   const mod = require('@rspack/plugin-react-refresh');
-  return mod.default ?? mod;
+  return mod.ReactRefreshRspackPlugin ?? mod.default ?? mod;
 }
