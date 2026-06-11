@@ -22,6 +22,7 @@ export function getPackageScope(packageName: string): string | null {
  * Converts a registry URL into npm's nerf-dart key prefix (host + directory
  * path), e.g. `https://r.example.com/npm/` -> `//r.example.com/npm/`. Returns
  * null for unparseable URLs.
+ * See https://github.com/npm/cli/blob/bb056c85059cfb39514614e31abba09f20ac1612/workspaces/config/lib/nerf-dart.js#L12-L17
  */
 export function nerfDart(registryUrl: string): string | null {
   try {
