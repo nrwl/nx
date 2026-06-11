@@ -293,8 +293,8 @@ function createNpmPolicy(opts: {
  * npm-pick-manifest@11.0.3; dist-tag degrade uses the shared cross-PM rule:
  * - exact pin too new -> ETARGET (no fallback).
  * - unknown dist-tag -> ETARGET (no version to resolve against).
- * - dist-tag too new -> degrade to the newest compliant version in the tag's
- *   own channel, falling back to stable (`degradeTagToCompliant`); none -> ENOVERSIONS.
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant -> ENOVERSIONS.
  * - range -> filter every version by maturity FIRST; empty -> ENOVERSIONS;
  *   else newest in-range survivor; survivors but none in range -> ETARGET.
  */

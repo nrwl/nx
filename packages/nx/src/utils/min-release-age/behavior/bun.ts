@@ -163,8 +163,8 @@ function readBunInstall(path: string): BunInstallConfig | 'error' {
  *   version >= min(window, 7d), inclusive); unstable -> keep walking but remember
  *   it; stop past `now - (window + 7d)`; no stable -> newest age-passing fallback.
  *   No in-range version at all -> err.not_found (a plain, non-cooldown error).
- * - dist-tag too new -> degrade to the newest compliant version in the tag's
- *   own channel, falling back to stable (`degradeTagToCompliant`); none ->
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant ->
  *   TooRecentVersion.
  * Missing/unparseable publish times are treated as timestamp 0 (always pass);
  * future timestamps are blocked.

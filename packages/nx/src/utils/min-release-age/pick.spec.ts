@@ -86,8 +86,9 @@ describe('degradeTagToCompliant', () => {
   });
 
   it('excludes prereleases entirely for a stable target', () => {
-    // Only a lower prerelease is compliant -> nothing in the stable-only pool.
-    const onlyPre = (v: string) => v === '23.0.0-pr.5';
+    // Only a prerelease BELOW the stable target is compliant: it survives the
+    // newer-than-target cut, so only the channel rule keeps it out of the pool.
+    const onlyPre = (v: string) => v === '22.7.0-rc.2';
     expect(degradeTagToCompliant('22.7.5', metadata, onlyPre)).toBeNull();
   });
 
@@ -107,6 +108,24 @@ describe('degradeTagToCompliant', () => {
 
   it('returns null when nothing in the pool is compliant', () => {
     expect(degradeTagToCompliant('22.7.5', metadata, () => false)).toBeNull();
+  });
+
+  it('returns null for a non-semver target instead of throwing', () => {
+    expect(
+      degradeTagToCompliant('not-a-version', metadata, () => true)
+    ).toBeNull();
+  });
+
+  it('skips non-semver junk in the versions list instead of throwing', () => {
+    const junk: RegistryMetadata = {
+      name: 'pkg-junk',
+      versions: ['created', '1.0.0', '1.1.0'],
+      time: null,
+      distTags: {},
+    };
+    expect(degradeTagToCompliant('1.1.0', junk, (v) => v === '1.0.0')).toBe(
+      '1.0.0'
+    );
   });
 
   it('orders the pool by publish date, newest released first', () => {

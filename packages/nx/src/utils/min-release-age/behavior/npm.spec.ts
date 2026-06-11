@@ -16,31 +16,11 @@ import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy } from '../policy';
 import { pickNpmVersion, readNpmPolicy } from './npm';
 
-// Mirrors readNpmrcEntries parsing so the mocked surface map (path -> contents)
-// drives detectSurfaces; an absent path reads as a missing file (null).
-function parseNpmrcEntries(
-  raw: string | undefined
-): { key: string; value: string }[] | null {
-  if (raw === undefined) {
-    return null;
-  }
-  const entries: { key: string; value: string }[] = [];
-  for (const line of raw.split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith(';')) {
-      continue;
-    }
-    const eq = trimmed.indexOf('=');
-    if (eq === -1) {
-      continue;
-    }
-    entries.push({
-      key: trimmed.slice(0, eq).trim(),
-      value: trimmed.slice(eq + 1).trim(),
-    });
-  }
-  return entries;
-}
+// The real parser drives the mocked surface map (path -> contents) so
+// detectSurfaces sees genuine parsing; an absent path reads as a missing
+// file (null).
+const { parseNpmrcContent } =
+  jest.requireActual<typeof import('../npmrc')>('../npmrc');
 
 const HOUR = 3_600_000;
 const NOW = Date.parse('2026-06-05T00:00:00.000Z');
@@ -280,6 +260,20 @@ describe('npm min-release-age behavior', () => {
       });
     });
 
+    it('tag with no compliant candidate at all -> ENOVERSIONS violation', () => {
+      // latest -> 1.0.1 is too new and the degrade pool (1.0.0, also too new)
+      // has nothing compliant, so the tag path's ENOVERSIONS fires.
+      try {
+        pickNpmVersion('latest', pkgB, policy);
+        throw new Error('expected throw');
+      } catch (e) {
+        expect(e).toBeInstanceOf(MinReleaseAgeViolationError);
+        expect((e as MinReleaseAgeViolationError).pmShapedDetail).toBe(
+          'No versions available for pkg-b'
+        );
+      }
+    });
+
     it('tag pointing at an already-mature version returns it', () => {
       expect(pickNpmVersion('stable-old', pkgA, policy)).toEqual({
         version: '1.0.1',
@@ -385,7 +379,7 @@ describe('npm min-release-age behavior', () => {
     beforeEach(() => {
       npmrcFiles = {};
       readNpmrcEntriesMock.mockImplementation((p: string) =>
-        parseNpmrcEntries(npmrcFiles[p])
+        npmrcFiles[p] === undefined ? null : parseNpmrcContent(npmrcFiles[p])
       );
     });
 

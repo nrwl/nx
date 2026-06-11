@@ -268,8 +268,8 @@ function splitDescriptor(entry: string): {
  * berry's NpmSemverResolver gate; dist-tag degrade uses the shared cross-PM rule:
  * - exact/range: newest approved match; none approved -> violation (YN0016
  *   wording >=4.13, YN0082 wording <4.13).
- * - dist-tag too new -> degrade to the newest compliant version in the tag's
- *   own channel, falling back to stable (`degradeTagToCompliant`); none -> violation.
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant -> violation.
  */
 export function pickYarnVersion(
   spec: string,

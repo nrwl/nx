@@ -780,9 +780,9 @@ function escapeRegExp(value: string): string {
  * - exact pin too new -> strict/v10 violation; v11 loose installs it (immature).
  * - range -> newest mature; none -> v10/strict violation, v11 loose lowest
  *   (least-immature) version unfiltered (immature).
- * - dist-tag too new -> degrade to the newest compliant version in the tag's
- *   own channel, falling back to stable (`degradeTagToCompliant`); none ->
- *   violation (v11 loose installs the original target immature).
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant -> violation
+ *   (v11 loose installs the original target immature).
  */
 export function pickPnpmVersion(
   spec: string,

@@ -147,12 +147,18 @@ export function degradeTagToCompliant(
   metadata: RegistryMetadata,
   isCompliant: (version: string) => boolean
 ): string | null {
+  // semver.compare throws on a non-semver string; a tag pointing at one has no
+  // channel or ordering to reason about, so report no candidate and let the
+  // caller raise its violation.
+  if (!valid(target)) {
+    return null;
+  }
   const targetChannel = prereleaseChannel(target);
   const targetLine = releaseLine(target);
 
   const pool = metadata.versions.filter((version) => {
-    if (compare(version, target) > 0) {
-      return false; // newer than the target
+    if (!valid(version) || compare(version, target) > 0) {
+      return false; // unparseable or newer than the target
     }
     const channel = prereleaseChannel(version);
     // A prerelease in any other channel (and every prerelease when the target
