@@ -1,4 +1,5 @@
 import { major } from 'semver';
+import { logger } from '../logger';
 import { getBunSpawnRegistryEnv } from './bun';
 import { getPnpmSpawnRegistryEnv } from './pnpm';
 import { getYarnBerrySpawnRegistryEnv } from './yarn-berry';
@@ -41,8 +42,11 @@ export function getNpmSpawnRegistryEnv(
         );
       case 'yarn':
         if (!packageManagerVersion) {
-          // Cannot distinguish classic from berry; leave npm's resolution
-          // untouched (the pre-existing behavior).
+          // Without the version we cannot tell classic from berry, so we cannot
+          // reproduce yarn's registry resolution; npm falls back to its own
+          // config (the pre-existing behavior). Warn once so a silent revert to
+          // npm's default registry is diagnosable.
+          warnUnknownYarnVersion();
           return {};
         }
         return major(packageManagerVersion) >= 2
@@ -58,4 +62,15 @@ export function getNpmSpawnRegistryEnv(
   } catch {
     return {};
   }
+}
+
+let warnedUnknownYarnVersion = false;
+function warnUnknownYarnVersion(): void {
+  if (warnedUnknownYarnVersion) {
+    return;
+  }
+  warnedUnknownYarnVersion = true;
+  logger.warn(
+    `Could not determine the yarn version; skipping yarn registry configuration when fetching packages. They will be fetched using npm's own registry resolution, which may differ from yarn's (for example, a custom registry configured only in .yarnrc.yml).`
+  );
 }

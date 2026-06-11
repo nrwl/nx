@@ -125,10 +125,15 @@ export function getYarnBerrySpawnRegistryEnv(
     return any ? merged : undefined;
   };
 
-  const defaultRegistry =
+  // Berry env-expands ${VAR}/${VAR-default}/${VAR:-default} in every string
+  // setting at parse time, so expand before any URL parse / nerf-dart / base64
+  // (e.g. `npmRegistryServer: "${MY_REGISTRY}"` must resolve to the real host or
+  // its auth/TLS keys are never emitted).
+  const defaultRegistry = expandBerryEnvVars(
     process.env['YARN_NPM_REGISTRY_SERVER'] ??
-    firstDefinedIn(rcFiles, (c) => c.npmRegistryServer) ??
-    BERRY_DEFAULT_REGISTRY;
+      firstDefinedIn(rcFiles, (c) => c.npmRegistryServer) ??
+      BERRY_DEFAULT_REGISTRY
+  );
   // npmScopes keys are scope names without the leading @.
   const scopeName = scope?.slice(1);
   const scopeEntry = scopeName
@@ -148,7 +153,9 @@ export function getYarnBerrySpawnRegistryEnv(
   const jsrDefault =
     scopeName === 'jsr' && !scopeConfigured && gte(yarnVersion, '4.9.0');
   const effectiveRegistry = scopeConfigured
-    ? (scopeEntry?.npmRegistryServer ?? BERRY_DEFAULT_REGISTRY)
+    ? expandBerryEnvVars(
+        scopeEntry?.npmRegistryServer ?? BERRY_DEFAULT_REGISTRY
+      )
     : jsrDefault
       ? JSR_REGISTRY
       : defaultRegistry;
@@ -198,6 +205,12 @@ export function getYarnBerrySpawnRegistryEnv(
         ? process.env['YARN_NPM_ALWAYS_AUTH'] === 'true'
         : firstDefinedIn(rcFiles, (c) => c.npmAlwaysAuth) === true;
   }
+  // Expand ${VAR} before use so the npmAuthIdent base64 decision (made on the
+  // presence of a `:`) and the bridged value are computed on the real
+  // credentials, matching berry. Env-sourced values are literal (no-op).
+  authToken = expandBerryValue(authToken);
+  authIdent = expandBerryValue(authIdent);
+
   // A scoped fetch authenticates (berry forces BEST_EFFORT); an unscoped fetch
   // only when npmAlwaysAuth is set on the selected config (npm view/pack leaves
   // berry's authType at CONFIGURATION).
@@ -319,10 +332,12 @@ function applyTls(
     }
   }
 
-  const httpProxy =
-    network.httpProxy ?? firstDefinedIn(rcFiles, (c) => c.httpProxy);
-  const httpsProxy =
-    network.httpsProxy ?? firstDefinedIn(rcFiles, (c) => c.httpsProxy);
+  const httpProxy = expandBerryValue(
+    network.httpProxy ?? firstDefinedIn(rcFiles, (c) => c.httpProxy)
+  );
+  const httpsProxy = expandBerryValue(
+    network.httpsProxy ?? firstDefinedIn(rcFiles, (c) => c.httpsProxy)
+  );
 
   const envCaFile =
     process.env['YARN_HTTPS_CA_FILE_PATH'] ?? process.env['YARN_CA_FILE_PATH'];
@@ -433,6 +448,11 @@ function expandBerryEnvVars(
       return resolved !== undefined ? resolved : fallback;
     }
   );
+}
+
+/** Expands ${VAR} in an optional berry string value, passing undefined through. */
+function expandBerryValue(value: string | undefined): string | undefined {
+  return value === undefined ? undefined : expandBerryEnvVars(value);
 }
 
 function firstDefinedIn<T>(
