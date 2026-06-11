@@ -25,7 +25,7 @@ This is the Polygraph way: each repo's work runs in its own child agent (`spawn_
 
 > Migrate this repository to nx `<VERSION>`.
 >
-> 1. Create and check out branch `migrate-nx-<VERSION>`.
+> 1. **Branch from the current default branch, not the clone's checkout.** Fetch first so you don't inherit a stale clone or an in-place working-dir branch, then create the branch from `origin/<base>` (`master` or `main`): `git fetch origin <base> && git checkout -B migrate-nx-<VERSION> origin/<base>`.
 > 2. Detect the package manager from the lockfile (`package-lock.json`=npm, `yarn.lock`=Yarn Berry, `pnpm-lock.yaml`=pnpm, `bun.lock`/`bun.lockb`=bun).
 > 3. **Install first, so `node_modules` is at the repo's _current_ (pre-migrate) nx version.** `nx migrate` reads the "from" version from `node_modules`, not `package.json` — if `node_modules` is already at the target, it finds **zero migrations** and silently skips them. Verify with `node -p "require('./node_modules/nx/package.json').version"`.
 > 4. Run `nx migrate <VERSION>` (updates `package.json`, writes `migrations.json`).
@@ -51,9 +51,18 @@ This is the Polygraph way: each repo's work runs in its own child agent (`spawn_
 
 **Migrations can rewrite source:** a multi-beta jump (e.g. beta.23→beta.25) pulls migrations from every intervening version, so it may rewrite real code (e.g. `CreateNodesContextV2`→`CreateNodesContext`). The child should review the non-dep diff before committing. A single-beta jump on an already-current repo often legitimately has none.
 
-### 3. Push + open linked draft PRs
+### 3. Push + open a PR per repo, as each child finishes
 
-Once every child reports success, `push_branch` each repo (branch `migrate-nx-<VERSION>`), then `create_pr` with all repos in one call to open **linked draft PRs**. Commit-message scope `repo` passes nx's commitlint. Print the Polygraph session URL.
+Don't barrier on the slowest repo. The moment a child reports success, `push_branch` that repo (branch `migrate-nx-<VERSION>`) and `create_pr` for **that repo alone** — so its CI starts immediately and one slow repo (e.g. one stuck fighting the sandbox) doesn't gate the others:
+
+```
+for each repo, as its child reaches terminal success (not in a barrier):
+  push_branch(repo) → create_pr([repo])
+```
+
+The PRs stay **linked** because they all join the same Polygraph session — the link is the session, not the single batched call. Commit-message scope `repo` passes nx's commitlint. Print the Polygraph session URL once all are open.
+
+> **Verify once:** a single batched `create_pr` writes every PR body with its sibling cross-references at creation time; with incremental creation, confirm Polygraph **back-fills** the earlier PRs' bodies with links to the later ones (vs. each PR only linking to the session). If it doesn't back-fill and you need the in-body cross-links, fall back to one batched `create_pr` after all children finish.
 
 ## Verification checklist (per repo, before opening PRs)
 
@@ -69,7 +78,7 @@ These each cost real time on a live 5-repo run. Plan for them up front.
 
 **pnpm dies under the Bash sandbox; bun/yarn don't.** As of Claude Code 2.1.172 the Bash tool sandboxes by default. pnpm's content-addressed store + `clonefile()` reflink + `node_modules` purge trip macOS rules — `com.apple.provenance` xattr removal, creating `.vscode`/`.idea` dirs in the virtual store — plus outbound TLS, so pnpm `install` fails with `ERR_PNPM_EPERM` / reflink / `Operation not permitted`, while bun and yarn install cleanly. **Polygraph children carry their _own_ sandbox** (`~/.polygraph/config.json` → `agentOptions.claude.sandbox`), separate from `~/.claude/settings.json` → `sandbox.enabled`; either one only reaches already-spawned processes after a **restart**. If a pnpm child stops on a sandbox/EPERM error, do **not** let it invent workarounds (xattr stripping, TLS shims, store redirection). Instead, disable the sandbox + restart, or migrate that repo from the **unsandboxed parent**: the initiator repo is in-place, and clones live at `~/.polygraph/sessions/<id>/repos/<org>/<repo>` — run the same install→migrate→install steps there with the sandbox off, then push.
 
-**Clones can lag the repo's real base.** A Polygraph clone may sit on an older commit than the repo's live default branch — e.g. a repo migrated "from" beta.23 while its `main` was already beta.25, because a prior version-bump PR hadn't merged. This gives a stale "from" version and a **conflicting** PR. Before migrating: `git fetch origin <base>`, check the behind-count (`git rev-list --count migrate-nx-<V>..origin/<base>`), and look for an open bump PR. When the base moves (or that PR merges), **redo the branch onto the fresh base** — only the repos whose base actually advanced need it. Redoing onto a newer base can also _shrink_ the diff: a beta.25→rc.0 redo is dep-only, whereas the old beta.23→rc.0 ran 16 migrations and rewrote source.
+**The base can move after you start.** Step 1 (branch from `origin/<base>`) handles the _initial_ state, but the default branch can still advance **mid-run** — e.g. a separate version-bump PR merges underneath you, as happened when ocean's `main` jumped beta.23→beta.25 below an open migrate PR and turned it **conflicting**. Detect it with the behind-count (`git rev-list --count migrate-nx-<V>..origin/<base>`) and watch for open bump PRs; when the base moves, **redo the branch onto the fresh base** — only the repos whose base actually advanced need it. Redoing onto a newer base can also _shrink_ the diff: a beta.25→rc.0 redo is dep-only, whereas the old beta.23→rc.0 ran 16 migrations and rewrote source.
 
 **The initiator repo runs in-place** in your working dir, so migrating it switches branches and churns `node_modules`. Restore it afterward — or run its migration in a throwaway worktree off the real base (`git worktree add -B migrate-nx-<V> /tmp/wt origin/<base>`) so the working copy is never touched.
 
