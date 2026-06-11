@@ -156,6 +156,7 @@ import {
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -248,11 +249,12 @@ async function handleMessage(socket: Socket, data: string) {
       mode = 'v8';
     }
   } catch (e) {
-    await respondWithErrorAndExit(
+    await respondWithError(
       socket,
       `Invalid payload from the client`,
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
+    return;
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
@@ -471,7 +473,7 @@ async function handleMessage(socket: Socket, data: string) {
       mode
     );
   } else {
-    await respondWithErrorAndExit(
+    await respondWithError(
       socket,
       `Invalid payload from the client`,
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
@@ -494,7 +496,11 @@ export async function handleResult(
   }
   const doneHandlingMark = new Date();
   if (hr.error) {
-    await respondWithErrorAndExit(socket, hr.description, hr.error);
+    // A handler failing is local to that one request — return the error to the
+    // requesting client, but keep the daemon (and every other connected client)
+    // alive. The daemon only self-terminates when its own state is broken
+    // (e.g. a file-watcher error), not on a per-request failure.
+    await respondWithError(socket, hr.description, hr.error);
   } else {
     serverLogger.log(
       `Serializing response for ${type} message in ${mode} mode`
