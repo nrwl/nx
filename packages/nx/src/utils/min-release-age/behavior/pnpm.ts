@@ -858,7 +858,11 @@ function pickTag(
   if (degraded) {
     return { version: degraded, unconstrained };
   }
-  if (behavior.looseFallback) {
+  // The loose fallback requires a real version: a non-semver tag target must
+  // not be installed immature, or the consumer would write `pkg@<garbage>`
+  // into minimumReleaseAgeExclude and break every later install
+  // (ERR_PNPM_INVALID_VERSION_UNION).
+  if (behavior.looseFallback && valid(tagTarget)) {
     // No compliant candidate; loose keeps the original (immature) target.
     return { version: tagTarget, unconstrained, immature: true };
   }

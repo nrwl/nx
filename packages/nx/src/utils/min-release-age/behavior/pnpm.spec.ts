@@ -434,6 +434,21 @@ describe('pnpm min-release-age behavior', () => {
         immature: true,
       });
     });
+
+    it('tag pointing at a non-semver target -> violation, never an immature install', () => {
+      // An immature return here would make the consumer write pkg@<garbage>
+      // into minimumReleaseAgeExclude, which pnpm rejects on every later
+      // install (ERR_PNPM_INVALID_VERSION_UNION).
+      const meta: RegistryMetadata = {
+        name: 'pkg-garbage',
+        versions: ['1.0.0'],
+        time: { '1.0.0': new Date(NOW - 9600 * HOUR).toISOString() },
+        distTags: { latest: 'not-a-version' },
+      };
+      expect(() => pickPnpmVersion('latest', meta, v11LoosePolicy(24))).toThrow(
+        MinReleaseAgeViolationError
+      );
+    });
   });
 
   describe('excludes bypass', () => {
