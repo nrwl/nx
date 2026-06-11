@@ -2075,7 +2075,15 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
+    // Pin non-TTY so the canPrompt-gated eligibility fetch stays off as it does
+    // on CI, instead of hitting the registry in a local TTY run.
+    let originalStdinIsTTY: boolean | undefined;
     beforeEach(() => {
+      originalStdinIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        configurable: true,
+      });
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       // `getInstalledVersion(pkg)` mirrors the installed nx version for the
       // canonical packages so optional bound checks read the same value.
@@ -2102,6 +2110,10 @@ describe('Migration', () => {
       mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
       jest.restoreAllMocks();
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: originalStdinIsTTY,
+        configurable: true,
+      });
     });
 
     it('should work for generating migrations', async () => {
