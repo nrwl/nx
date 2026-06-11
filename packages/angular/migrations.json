@@ -330,6 +330,15 @@
       "description": "Rename the `ssr.experimentalPlatform` option to `ssr.platform` in `@angular/build:application`, `@angular-devkit/build-angular:application`, and `@nx/angular:application` targets, matching the Angular v22 rename.",
       "factory": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform",
       "documentation": "./dist/src/migrations/update-23-1-0/rename-ssr-experimental-platform.md"
+    },
+    "update-23-1-0-add-istanbul-instrumenter": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/core": ">=22.0.0"
+      },
+      "description": "Add `istanbul-lib-instrument` to `devDependencies` when a project runs unit tests with Karma (the `@angular-devkit/build-angular:karma` / `@angular/build:karma` builders, or `@angular/build:unit-test` / `@nx/angular:unit-test` with `runner: karma`), matching the Angular v22 `add-istanbul-instrumenter` migration.",
+      "factory": "./dist/src/migrations/update-23-1-0/add-istanbul-instrumenter",
+      "documentation": "./dist/src/migrations/update-23-1-0/add-istanbul-instrumenter.md"
     }
   },
   "packageJsonUpdates": {
