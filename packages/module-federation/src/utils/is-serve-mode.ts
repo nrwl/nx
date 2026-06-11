@@ -6,5 +6,11 @@ export function isServeMode(): boolean {
 
 export function childBuildEnv(): NodeJS.ProcessEnv {
   const { WEBPACK_SERVE, RSPACK_SERVE, ...rest } = process.env;
-  return rest;
+  return {
+    ...rest,
+    // Static remotes for a dev-server session are development builds.
+    // angular-rspack picks production when no serve signal is present, which
+    // would enforce bundle budgets and optimization on a dev workflow.
+    NGRS_CONFIG: rest.NGRS_CONFIG ?? 'development',
+  };
 }
