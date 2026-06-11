@@ -35,6 +35,20 @@
       "command": "node ./scripts/local-registry/run-populate-storage.mjs",
       "outputs": ["{workspaceRoot}/dist/local-registry/storage"]
     },
+    "populate-e2e-base-workspace": {
+      "cache": true,
+      "inputs": [
+        {
+          "input": "production",
+          "projects": ["tag:npm:public"]
+        },
+        "{workspaceRoot}/scripts/local-registry",
+        "native"
+      ],
+      "dependsOn": ["local-registry", "populate-local-registry-storage"],
+      "command": "node ./scripts/local-registry/build-e2e-base-workspace.mjs",
+      "outputs": ["{workspaceRoot}/dist/local-registry/proj-backup"]
+    },
     "nx-release": {
       "dependsOn": [
         {
