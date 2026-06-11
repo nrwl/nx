@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 800 290">
+  <style>
+    text { font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace; }
+  </style>
+
+  <!-- Inputs column (centered at y=140) -->
+  <rect x="20" y="74" width="180" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="110" y="97" fill="#94A3B8" font-size="13" text-anchor="middle">src/App.tsx</text>
+
+  <rect x="20" y="122" width="180" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="110" y="145" fill="#94A3B8" font-size="13" text-anchor="middle">src/main.tsx</text>
+
+  <rect x="20" y="170" width="180" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="110" y="193" fill="#94A3B8" font-size="13" text-anchor="middle">vite.config.ts</text>
+
+  <!-- Inputs label -->
+  <text x="110" y="230" fill="#64748B" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="0.05em">DECLARED INPUTS</text>
+
+  <!-- Arrows from inputs to build box -->
+  <path d="M200 92 L280 126" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M200 140 L280 140" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M200 188 L280 154" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Build box (y=105, height=70, center=140) -->
+  <rect x="280" y="105" width="200" height="70" rx="8" fill="#3B82F6"/>
+  <text x="380" y="136" fill="#fff" font-size="14" text-anchor="middle" font-weight="600">vite build</text>
+  <text x="380" y="156" fill="#BFDBFE" font-size="12" text-anchor="middle">shop:build</text>
+
+  <!-- Arrows from build to outputs -->
+  <path d="M480 126 L560 92" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M480 140 L560 140" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M480 154 L560 188" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Outputs column (centered at y=140) -->
+  <rect x="560" y="74" width="220" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="670" y="97" fill="#94A3B8" font-size="13" text-anchor="middle">dist/index.html</text>
+
+  <rect x="560" y="122" width="220" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="670" y="145" fill="#94A3B8" font-size="13" text-anchor="middle">dist/assets/*.js</text>
+
+  <rect x="560" y="170" width="220" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="670" y="193" fill="#94A3B8" font-size="13" text-anchor="middle">dist/assets/*.css</text>
+
+  <!-- Outputs label -->
+  <text x="670" y="230" fill="#64748B" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="0.05em">DECLARED OUTPUTS</text>
+
+  <!-- Cache indicator -->
+  <rect x="310" y="200" width="160" height="50" rx="8" fill="#1E293B" stroke="#22C55E" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="390" y="222" fill="#22C55E" font-size="12" text-anchor="middle" font-weight="600">CACHE KEY</text>
+  <text x="390" y="238" fill="#64748B" font-size="11" text-anchor="middle">hash(inputs)</text>
+
+  <!-- Arrow from inputs to cache -->
+  <path d="M200 206 L310 220" stroke="#22C55E" stroke-width="1" stroke-dasharray="4 3" stroke-linecap="round" opacity="0.6"/>
+
+  <!-- Replay label -->
+  <text x="390" y="282" fill="#64748B" font-size="10" text-anchor="middle" font-style="italic">same inputs = cache hit = replay outputs</text>
+</svg>

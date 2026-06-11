@@ -1,0 +1,132 @@
+---
+title: Installation
+description: Install Nx globally via npm, Homebrew, Chocolatey, or apt. Add Nx to existing repos with nx init.
+sidebar:
+  order: 2
+filter: 'type:Guides'
+---
+
+## Global installation
+
+Install Nx globally to run commands from anywhere. Choose a method based on your operating system and package manager.
+
+{% tabs syncKey="install-method" %}
+{% tabitem label="npm" %}
+
+```shell
+npm add --global nx
+```
+
+**Note:** You can also use `yarn global add nx`, `pnpm add --global nx`, or `bun add --global nx`
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco install nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell
+sudo add-apt-repository ppa:nrwl/nx
+sudo apt update
+sudo apt install nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+### Verify installation
+
+```shell
+nx --version
+```
+
+You should see a version number like `22.5.0`.
+
+### Update global installation
+
+{% tabs syncKey="install-method" %}
+{% tabitem label="npm" %}
+
+```shell
+npm update --global nx
+```
+
+**Note:** You can also use `yarn global upgrade nx`, `pnpm update --global nx`, or `bun update --global nx`
+{% /tabitem %}
+
+{% tabitem label="Homebrew (macOS, Linux)" %}
+
+```shell
+brew upgrade nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="Chocolatey (Windows)" %}
+
+```shell
+choco upgrade nx
+```
+
+{% /tabitem %}
+
+{% tabitem label="apt (Ubuntu)" %}
+
+```shell
+sudo apt update
+sudo apt upgrade nx
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+## Install in a repository
+
+To add Nx to an existing repository, run:
+
+```shell
+npx nx@latest init
+```
+
+This installs the `nx` package as a dev dependency and creates an `nx.json` configuration file. If you have Nx installed globally, it will defer to the local version in your repository.
+
+{% aside type="note" title="Manual Installation" %}
+You can also manually install the [`nx` NPM package](https://www.npmjs.com/package/nx) and create an [nx.json](/docs/reference/nx-json) configuration file.
+{% /aside %}
+
+### Update Nx in your repository
+
+When you update Nx in your repository, it will also [automatically update your dependencies](/docs/features/automate-updating-dependencies) if you have an [Nx plugin](/docs/concepts/nx-plugins) installed for that dependency. To update Nx, run:
+
+```shell
+nx migrate latest
+```
+
+This creates a `migrations.json` file with any update scripts that need to be run. Run them with:
+
+```shell
+nx migrate --run-migrations
+```
+
+{% aside type="note" title="Update One Major Version at a Time" %}
+To avoid potential issues, it is [recommended to update one major version of Nx at a time](/docs/guides/tips-n-tricks/advanced-update#one-major-version-at-a-time-small-steps).
+{% /aside %}
+
+## Next steps
+
+- **Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
+- **Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
+- **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on

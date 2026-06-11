@@ -1,0 +1,87 @@
+---
+title: 'Enhance Your AI Coding Agent'
+description: 'Learn how Nx enhances your AI assistant by providing rich workspace metadata, architectural insights, and CI integration for autonomous workflows.'
+sidebar:
+  order: 3
+filter: 'type:Features'
+---
+
+AI agents are moving beyond autocomplete. They can now operate independently across projects. But most setups hit a wall: agents lack workspace context (seeing files, not architecture), generate inconsistent code, and have a hard time to interact with CI.
+
+Nx monorepos solve this by enabling cross-project reasoning and by providing the structured metadata and CI integration that agents need to work autonomously:
+
+- Deep **workspace architecture** understanding and project relationships
+- **Code generators** for fast, predictable scaffolding
+- **CI pipeline integration** to fix failures autonomously
+- The ability to **iterate until CI is green** without human intervention
+
+## Setup
+
+To configure your Nx workspace for AI agents, run:
+
+```shell
+npx nx configure-ai-agents
+```
+
+This sets up:
+
+- **Agent configuration files**: `CLAUDE.md`, `AGENTS.md` with workspace-specific guidelines
+- **Agent skills**: Domain-specific knowledge for monorepo workflows — workspace exploration, code generation, task execution, CI monitoring, and package linking. Skills teach agents _how_ to work with Nx rather than dumping data into context.
+- **Nx MCP server**: Provides connectivity to Nx Cloud CI pipelines, self-healing fixes, running processes, and Nx documentation — things agents can't easily reach on their own
+
+### Creating new workspaces
+
+For creating new Nx workspaces, use `npx create-nx-workspace@latest --template=nrwl/<name>-template` (e.g. `react-template`, `angular-template`, `typescript-template`). For existing projects, use `npx nx init`.
+
+## What this enables
+
+### Self-healing CI integration
+
+Nx Cloud provides AI-powered [Self-Healing CI](/docs/features/ci-features/self-healing-ci) that analyzes failed runs and proposes verified fixes. With `configure-ai-agents`, your local agent connects to this CI counterpart via skills and the Nx MCP, gaining full context about run information, failures, and suggested fixes.
+
+Your agent can autonomously iterate until CI passes:
+
+```text
+Commit this work, create a PR, and monitor CI until it's green.
+```
+
+The workflow:
+
+1. Agent pushes changes and creates PR
+2. Monitors CI pipeline
+3. Receives failure context from Nx Cloud and Self-Healing CI
+4. Accepts proposed fix or pulls context locally and manually applies it
+5. Repeats until CI is green
+
+This reduces context-switching—you review the final PR rather than intervening at each failure.
+
+### Workspace architecture understanding
+
+Nx exposes the project graph and relevant metadata to AI agents. This helps them move faster and more precisely:
+
+- Identify all applications and libraries in the workspace
+- Understand project relationships and dependencies
+- Recognize project types and ownership via tags
+- Determine which projects are affected by changes
+- Suggest where to implement new functionality based on existing structure
+
+This architectural awareness is critical for agents operating in large monorepos where understanding project relationships determines the quality of generated code.
+
+### Predictable, fast code generation
+
+AI-generated code is token-intensive, slow, and not guaranteed to align with patterns in other projects. Nx generators solve this by providing predictable scaffolding that agents can invoke and then adapt.
+
+Your AI agent can:
+
+1. Find generators from [Nx plugins](/docs/plugin-registry) or custom [local workspace generators](/docs/extending-nx/local-generators)
+2. Run the generator with correct options
+3. Make small adjustments based on the specific situation
+
+This approach is faster, produces consistent code across projects, and reduces hallucinations.
+
+## Learn more
+
+- [Autonomous AI Agents at Scale](https://nx.dev/blog/ai-agents-and-continuity): Infrastructure requirements for AI agent workflows
+- [Why Nx and AI Work So Well Together](https://nx.dev/blog/nx-and-ai-why-they-work-together): The foundation for AI-powered development
+- [Nx MCP Server Reference](/docs/reference/nx-mcp): Complete tool reference and setup instructions
+- [Configure Claude Code sandboxes for Nx](/docs/troubleshooting/nx-sandbox-unix-sockets): Allow Unix socket access for daemon and plugin communication

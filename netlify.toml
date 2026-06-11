@@ -1,0 +1,138 @@
+# Auto-generated for versioned docs branch — overrides Netlify UI settings.
+# NETLIFY_NEXT_PLUGIN_SKIP disables @netlify/plugin-nextjs = pure static serving.
+
+[build]
+  command = "npx nx run nx-dev:deploy-build:netlify --skip-nx-cache"
+  publish = "nx-dev/nx-dev/.next"
+
+[build.environment]
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    Content-Security-Policy = "frame-ancestors 'none'"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # Agent discovery via RFC 8288 Link headers (see https://isitagentready.com/.well-known/agent-skills/link-headers/SKILL.md)
+    # Points AI agents/crawlers at machine-readable entry points hosted on nx.dev.
+
+    Link = '''</llms.txt>; rel="describedby"; type="text/plain", </llms-full.txt>; rel="service-doc"; type="text/plain", </sitemap.xml>; rel="sitemap"; type="application/xml"'''
+
+
+# Disable gradle and maven plugins on Netlify
+# (Netlify only supports Java 8 but these plugins require Java 17)
+
+# Edge functions are auto-discovered from netlify/edge-functions/
+# Path configuration is in each function's inline `config` export
+
+# Permanent redirects (301 by default)
+
+# Storybook docs consolidation
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"
+to = "/docs/technologies/test-tools/storybook/guides/upgrading-storybook"
+
+[[redirects]]
+from = "/"
+to = "/docs/getting-started/intro"
+
+[[redirects]]
+from = "/showcase"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/example-repos/*"
+to = "/docs/quickstart"
+
+[[redirects]]
+from = "/showcase/benchmarks/*"
+to = "/docs/reference/benchmarks/:splat"
+
+# DOC-452: Old framework tutorials redirect to new topic-based tutorials
+[[redirects]]
+from = "/docs/getting-started/tutorials/react-monorepo-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+[[redirects]]
+from = "/docs/getting-started/tutorials/angular-monorepo-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+[[redirects]]
+from = "/docs/getting-started/tutorials/typescript-packages-tutorial"
+to = "/docs/getting-started/tutorials/crafting-your-workspace"
+
+# DOC-452: Learn Nx URLs redirect to Tutorials (in case any were indexed)
+[[redirects]]
+from = "/docs/getting-started/learn-nx/*"
+to = "/docs/getting-started/tutorials/:splat"
+
+# Fix broken /docs/ paths still linked from CLI/Cloud source code (DOC-428)
+[[redirects]]
+from = "/docs/features/ci-features/self-healing"
+to = "/docs/features/ci-features/self-healing-ci"
+
+[[redirects]]
+from = "/docs/extending-nx/recipes/create-preset"
+to = "/docs/extending-nx/create-preset"
+
+[[redirects]]
+from = "/docs/guides/adopting-nx/adding-to-monorepos"
+to = "/docs/guides/adopting-nx/adding-to-monorepo"
+
+# Angular multiple workspace migration page removed (DOC-419)
+[[redirects]]
+from = "/docs/technologies/angular/migration/angular-multiple"
+to = "/docs/technologies/angular/migration/angular"
+
+[[redirects]]
+from = "/docs/getting-started/nx-cloud"
+to = "/docs/features/ci-features"
+
+# NX-4480: Self-hosted remote cache packages deprecated (CVE-2025-36852)
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/s3-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/s3-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/gcs-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/gcs-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/azure-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/azure-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache/overview"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+[[redirects]]
+from = "/docs/reference/remote-cache-plugins/shared-fs-cache/generators"
+to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+# Rewrite for base path handling (keeps URL the same)
+[[redirects]]
+from = "/docs/*"
+to = "/:splat"
+status = 200

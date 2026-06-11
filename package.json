@@ -1,0 +1,8 @@
+{
+  "name": "@nx/nx-docs-versioned",
+  "version": "0.0.1",
+  "private": true,
+  "devDependencies": {
+    "nx": "23.0.0-beta.12"
+  }
+}

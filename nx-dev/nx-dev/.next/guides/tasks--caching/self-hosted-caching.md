@@ -1,0 +1,214 @@
+---
+title: 'Remote Cache'
+description: 'Learn how to set up remote cache with Nx Cloud or a self-hosted solution.'
+filter: 'type:Guides'
+---
+
+Remote caching shares build results across your team and CI so you don't repeat work.
+You can use Nx Cloud for a fully managed solution or build your own self-hosted server using the OpenAPI specification below.
+
+{% aside type="note" title="Nx Cloud: Managed Remote Cache" %}
+
+Recommended for everyone.
+
+- [Fully managed multi-tier remote caching with Nx Replay](/docs/features/ci-features/remote-cache)
+- [Both secure and fast](https://nx.dev/enterprise/security)
+- Generous free plan
+
+You'll also get access to advanced CI features:
+
+- [Automated distribution of tasks across machines with Nx Agents](/docs/features/ci-features/distribute-task-execution)
+- [Automated splitting of tasks (including e2e tests) with Nx Atomizer](/docs/features/ci-features/split-e2e-tasks)
+- [Detection and re-running of flaky tasks](/docs/features/ci-features/flaky-tasks)
+- [Self-healing CI and other AI features](https://nx.dev/ai)
+
+[Get Started](https://cloud.nx.app/get-started/)
+{% /aside %}
+
+{% aside type="note" title="Nx Enterprise" %}
+
+Recommended for large organizations.
+
+Includes everything from Nx Cloud, plus:
+
+- Work hand-in-hand with the Nx team for continual improvement
+- Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
+- SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
+
+[Reach out for an Enterprise trial](https://nx.dev/enterprise/trial)
+
+{% /aside %}
+
+## Build your own caching server
+
+Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
+
+Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
+
+You can implement your server in any programming language or framework, as long as it adheres to the OpenAPI spec.
+
+### Open API specification
+
+```json
+// Nx 20.8+
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Nx custom remote cache specification.",
+    "description": "Nx is an AI-first monorepo platform that connects everything from your editor to CI. Helping you deliver fast, without breaking things.",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/v1/cache/{hash}": {
+      "put": {
+        "description": "Upload a task output",
+        "operationId": "put",
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully uploaded the output"
+          },
+          "401": {
+            "description": "Missing or invalid authentication token.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden. (e.g. read-only token used to write)",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Cannot override an existing record"
+          }
+        },
+        "parameters": [
+          {
+            "in": "header",
+            "description": "The file size in bytes",
+            "required": true,
+            "schema": {
+              "type": "number"
+            },
+            "name": "Content-Length"
+          },
+          {
+            "name": "hash",
+            "description": "The task hash corresponding to the uploaded task output",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "description": "Download a task output",
+        "operationId": "get",
+        "security": [
+          {
+            "bearerToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully retrieved cache artifact",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary",
+                  "description": "An octet stream with the content."
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Access forbidden",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "description": "Error message provided to the Nx CLI user"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The record was not found"
+          }
+        },
+        "parameters": [
+          {
+            "name": "hash",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerToken": {
+        "type": "http",
+        "description": "Auth mechanism",
+        "scheme": "bearer"
+      }
+    }
+  }
+}
+```
+
+### Usage notes
+
+To use your custom caching server, set the `NX_SELF_HOSTED_REMOTE_CACHE_SERVER` environment variable. The following environment variables also affect behavior:
+
+- `NX_SELF_HOSTED_REMOTE_CACHE_ACCESS_TOKEN`: The authentication token to access the cache server.
+- `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `0` to disable TLS certificate validation.
+
+### Migrating from custom tasks runners
+
+You might have used Nx now-deprecated custom task runners API in these scenarios:
+
+- To implement custom self-hosted caching, follow the [OpenAPI spec](#open-api-specification), or switch to Nx Cloud
+- To inject custom behavior before and after running tasks: use our new API with dedicated pre and post hooks
+
+To learn more about migrating from custom task runners, [please refer to this detailed guide](/docs/reference/deprecated/custom-tasks-runner).
+
+## Looking for conformance or code owners?
+
+If you previously used Nx Powerpack for conformance rules or code ownership, those features are now part of [Nx Enterprise](/docs/enterprise). See:
+
+- [Conformance](/docs/enterprise/conformance) — write and enforce language-agnostic rules across your workspace
+- [Owners](/docs/enterprise/owners) — define code ownership at the project level and auto-generate CODEOWNERS files

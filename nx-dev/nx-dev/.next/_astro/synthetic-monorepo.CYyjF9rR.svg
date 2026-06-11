@@ -1,0 +1,122 @@
+<svg width="980" height="720" viewBox="0 0 980 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Defs: arrow markers -->
+  <defs>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#476088"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#70AF40"/>
+    </marker>
+  </defs>
+
+  <!-- Outer dotted border: Synthetic Monorepo boundary -->
+  <rect x="40" y="40" width="900" height="590" rx="24" ry="24"
+        stroke="#94A3B8" stroke-width="3" stroke-dasharray="12 6" fill="none"/>
+
+  <!-- "Synthetic Monorepo" label at bottom inside box -->
+  <text x="490" y="665" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="26" font-weight="700" fill="#94A3B8">Synthetic Monorepo</text>
+
+  <!-- ============================================ -->
+  <!-- Monorepo A (top-left): a rounded rect with 3 internal projects -->
+  <!-- ============================================ -->
+  <rect x="80" y="70" width="260" height="200" rx="16" ry="16"
+        stroke="#9CA3AF" stroke-width="2" fill="none"/>
+  <text x="210" y="100" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#9CA3AF">Monorepo A</text>
+
+  <!-- App 1 (blue) -->
+  <circle cx="140" cy="165" r="38" fill="#476088"/>
+  <text x="140" y="161" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">App 1</text>
+  <text x="140" y="178" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#CBD5E1">frontend</text>
+
+  <!-- Lib A (green) -->
+  <circle cx="270" cy="145" r="32" fill="#70AF40"/>
+  <text x="270" y="141" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">Lib A</text>
+  <text x="270" y="157" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#E8F5E9">utils</text>
+
+  <!-- Lib B (green) -->
+  <circle cx="248" cy="222" r="28" fill="#70AF40"/>
+  <text x="248" y="218" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="12" font-weight="600" fill="white">Lib B</text>
+  <text x="248" y="233" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="10" fill="#E8F5E9">ui</text>
+
+  <!-- Internal arrows within Monorepo A -->
+  <line x1="175" y1="155" x2="238" y2="143" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.4"/>
+  <line x1="165" y1="190" x2="225" y2="212" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.4"/>
+
+  <!-- ============================================ -->
+  <!-- Monorepo B (right): a rounded rect with 2 internal projects -->
+  <!-- ============================================ -->
+  <rect x="640" y="70" width="260" height="200" rx="16" ry="16"
+        stroke="#9CA3AF" stroke-width="2" fill="none"/>
+  <text x="770" y="100" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="600" fill="#9CA3AF">Monorepo B</text>
+
+  <!-- App 2 (blue) -->
+  <circle cx="710" cy="170" r="38" fill="#476088"/>
+  <text x="710" y="166" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">App 2</text>
+  <text x="710" y="183" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#CBD5E1">backend</text>
+
+  <!-- Lib C (green) -->
+  <circle cx="840" cy="185" r="32" fill="#70AF40"/>
+  <text x="840" y="181" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">Lib C</text>
+  <text x="840" y="197" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#E8F5E9">auth</text>
+
+  <!-- Internal arrow within Monorepo B -->
+  <line x1="745" y1="175" x2="808" y2="182" stroke="#9CA3AF" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.4"/>
+
+  <!-- ============================================ -->
+  <!-- Standalone repos -->
+  <!-- ============================================ -->
+
+  <!-- Lib D (green, standalone, CENTER - pushed down to middle row) -->
+  <circle cx="490" cy="340" r="38" fill="#70AF40"/>
+  <text x="490" y="336" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">Lib D</text>
+  <text x="490" y="352" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#E8F5E9">shared</text>
+  <text x="490" y="390" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#9CA3AF">standalone repo</text>
+
+  <!-- App 3 (blue, standalone, bottom-left) -->
+  <circle cx="200" cy="500" r="42" fill="#476088"/>
+  <text x="200" y="496" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">App 3</text>
+  <text x="200" y="513" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#CBD5E1">mobile</text>
+  <text x="200" y="554" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#9CA3AF">standalone repo</text>
+
+  <!-- Lib E (green, standalone, bottom-center) -->
+  <circle cx="490" cy="520" r="32" fill="#70AF40"/>
+  <text x="490" y="516" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">Lib E</text>
+  <text x="490" y="532" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#E8F5E9">design</text>
+  <text x="490" y="564" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#9CA3AF">standalone repo</text>
+
+  <!-- App 4 (blue, standalone, bottom-right) -->
+  <circle cx="770" cy="500" r="42" fill="#476088"/>
+  <text x="770" y="496" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="13" font-weight="600" fill="white">App 4</text>
+  <text x="770" y="513" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" fill="#CBD5E1">API</text>
+  <text x="770" y="554" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="11" font-weight="500" fill="#9CA3AF">standalone repo</text>
+
+  <!-- ============================================ -->
+  <!-- Cross-repo dependency arrows -->
+  <!-- ============================================ -->
+
+  <!-- App 2 → Lib D (shared): curve down-left -->
+  <path d="M 675 185 C 620 240, 560 280, 525 325" stroke="#476088" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- Lib A → Lib D: gentle arc down -->
+  <path d="M 300 155 C 370 200, 420 260, 458 322" stroke="#70AF40" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- App 3 → Lib B (in Monorepo A): straight up -->
+  <path d="M 210 458 C 220 380, 230 320, 242 252" stroke="#476088" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- App 3 → Lib E (design): horizontal -->
+  <path d="M 242 500 C 320 490, 400 500, 458 515" stroke="#476088" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- App 4 → Lib C (in Monorepo B): straight up -->
+  <path d="M 790 458 C 805 380, 820 310, 835 217" stroke="#476088" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- App 4 → Lib D (shared): arc up-left -->
+  <path d="M 730 490 C 650 460, 570 410, 525 358" stroke="#476088" stroke-width="2.5" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- App 4 → Lib E (design): horizontal left -->
+  <path d="M 728 505 C 660 510, 580 515, 522 518" stroke="#476088" stroke-width="2" fill="none" marker-end="url(#arrowBlue)"/>
+
+  <!-- Lib D → Lib C (cross-repo lib dependency): arc up-right -->
+  <path d="M 525 330 C 620 300, 740 260, 812 200" stroke="#70AF40" stroke-width="2" fill="none" marker-end="url(#arrowGreen)"/>
+
+
+</svg>

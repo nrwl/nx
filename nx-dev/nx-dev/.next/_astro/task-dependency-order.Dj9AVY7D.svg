@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 760 160">
+  <style>
+    text { font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace; }
+  </style>
+
+  <!-- Step 1 label -->
+  <text x="130" y="24" fill="#64748B" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="0.05em">STEP 1</text>
+
+  <!-- shared-ui:build box -->
+  <rect x="30" y="36" width="200" height="60" rx="8" fill="#3B82F6"/>
+  <text x="130" y="63" fill="#fff" font-size="13" text-anchor="middle" font-weight="600">vite build</text>
+  <text x="130" y="81" fill="#BFDBFE" font-size="11" text-anchor="middle">shared-ui:build</text>
+
+  <!-- utils:build box -->
+  <rect x="30" y="108" width="200" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="130" y="131" fill="#94A3B8" font-size="12" text-anchor="middle">utils:build</text>
+
+  <!-- Arrow from step 1 to step 2 (centered in 100px gap: 230 to 330) -->
+  <path d="M250 66 L310 66" stroke="#475569" stroke-width="1.5" stroke-linecap="round" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 label -->
+  <text x="430" y="24" fill="#64748B" font-size="11" text-anchor="middle" font-weight="600" letter-spacing="0.05em">STEP 2</text>
+
+  <!-- my-app:build box -->
+  <rect x="330" y="36" width="200" height="60" rx="8" fill="#3B82F6"/>
+  <text x="430" y="63" fill="#fff" font-size="13" text-anchor="middle" font-weight="600">vite build</text>
+  <text x="430" y="81" fill="#BFDBFE" font-size="11" text-anchor="middle">my-app:build</text>
+
+  <!-- data-access:build box -->
+  <rect x="330" y="108" width="200" height="36" rx="6" fill="#1E293B" stroke="#475569" stroke-width="1.5"/>
+  <text x="430" y="131" fill="#94A3B8" font-size="12" text-anchor="middle">data-access:build</text>
+
+  <!-- dependsOn label -->
+  <rect x="560" y="44" width="180" height="44" rx="8" fill="#1E293B" stroke="#22C55E" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="650" y="63" fill="#22C55E" font-size="11" text-anchor="middle" font-weight="600">dependsOn</text>
+  <text x="650" y="79" fill="#64748B" font-size="11" text-anchor="middle">["^build"]</text>
+
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+</svg>

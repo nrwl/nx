@@ -1,0 +1,43 @@
+---
+title: Editor Integration
+description: Set up Nx Console in VSCode or JetBrains for visual UI, task management, code generation, and enhanced AI assistance in your Nx workspace.
+sidebar:
+  order: 5
+filter: 'type:Features'
+---
+
+Running CLI commands manually and discovering available tasks is tedious. You lose context switching between terminal and editor, and it's easy to forget which generators or tasks are available for each project.
+
+Nx Console brings Nx directly into your editor. The extensions:
+
+- [enhance AI integrations](/docs/features/enhance-ai) by providing workspace-level context and up-to-date docs
+- show [inferred tasks](/docs/concepts/inferred-tasks) and help you invoke them via the Project Details View
+- provide a [visual UI for discovering and invoking generators](/docs/guides/nx-console/console-generate-command)
+- visualize dependencies between projects and tasks
+- and more!
+
+You can explore more of the features [in our dedicated Nx Console guides](/docs/guides/nx-console).
+
+## Download
+
+### Official integrations
+
+If you are using [VSCode](https://code.visualstudio.com/) or a [JetBrains IDE](https://www.jetbrains.com/) you can install Nx Console from their respective marketplaces. Nx Console for VSCode and JetBrains is **built and maintained by the Nx team**.
+
+{% install_nx_console /%}
+
+- [Install from the VSCode Marketplace](https://marketplace.visualstudio.com/items?itemName=nrwl.angular-console)
+- [Install from the JetBrains Marketplace](https://plugins.jetbrains.com/plugin/21060-nx-console)
+- [Contribute on GitHub](https://github.com/nrwl/nx-console)
+
+![Nx Console screenshot](../../../assets/nx-console/nx-console-screenshot.webp)
+
+### Neovim (Community)
+
+If you are using [Neovim](https://neovim.io/), you can install [Equilibris/nx.nvim](https://github.com/Equilibris/nx.nvim) with your favorite package manager.
+
+**Community Plugin**: This plugin is maintained by independent community contributors, not the Nx team.
+
+## Troubleshooting
+
+If you encounter issues with Nx Console, see the [Nx Console troubleshooting guide](/docs/guides/nx-console/console-troubleshooting) for detailed steps including how to enable debug logging.

@@ -1,0 +1,75 @@
+---
+title: Integrate Nx with your Coding Assistant
+description: Set up Nx MCP server to give AI assistants deep workspace context, terminal integration, and enhanced development capabilities.
+sidebar:
+  order: 6
+  label: AI Integration
+filter: 'type:Features'
+---
+
+AI coding assistants often hallucinate outdated Nx commands and lack context about your workspace structure. Without workspace awareness, they suggest commands that don't exist or miss project relationships entirely.
+
+The Nx AI integration gives assistants accurate, real-time information about your workspace, projects, and available commands, making them smarter when working in an Nx monorepo and more autonomous when iterating on CI failures.
+
+## Configure Nx AI integration
+
+{% youtube
+src="https://youtu.be/8gdvIz2r_QM"
+title="Set Up AI Agents in Nx"
+/%}
+
+### Automatic AI setup
+
+To automatically configure your Nx monorepo to work best with AI agents and assistants, run the following command:
+
+```shell
+npx nx configure-ai-agents
+```
+
+This will prompt you for which AI agents/assistants to configure and set up the [Nx MCP server](/docs/reference/nx-mcp), AI agent configuration files (`AGENTS.md`, `CLAUDE.md`, etc.), and agent skills (for workspace exploration, code generation, and task execution). For Claude Code, skills are installed via a plugin; for other agents, they're copied into your workspace.
+
+Alternatively, you can install just the skills via:
+
+```shell
+npx skills add nrwl/nx-ai-agents-config
+```
+
+This copies the skills into your workspace but does not install the Claude Code plugin.
+
+Watch [our Youtube video](https://youtu.be/8gdvIz2r_QM) for a full walkthrough.
+
+### What this integration enables
+
+The Nx AI integration provides your coding assistant with powerful capabilities:
+
+- **Workspace Understanding** - Graph-aware exploration of project dependencies and relationships. AI gets structured data instead of grepping through files.
+- **[Real-time Terminal Integration](https://nx.dev/blog/nx-terminal-integration-ai)** - AI can read your terminal output, running processes, and error messages without copy-pasting.
+- **Reliable Code Generation** - AI invokes Nx generators for predictable scaffolding, then adapts the result to your workspace. Faster, standardized, fewer hallucinations.
+- **Autonomous CI Workflows** - The CI monitor skill bridges your local agent with Nx Cloud. Push, monitor, get failures, fix, repeat until CI is green. Enables autonomous CI workflows ("Ralph Wiggum loop")—you review the final PR, not every intermediate fix.
+- **Cross-project Impact Analysis** - Understanding the implications of changes across your entire monorepo.
+
+## Creating new workspaces
+
+When using AI assistants to create new Nx workspaces, use the CLI command:
+
+```shell
+npx create-nx-workspace@latest --template=nrwl/<name>-template
+```
+
+Available templates include `react-template`, `angular-template`, and `typescript-template`. For adding Nx to an existing project, use `npx nx init`.
+
+{% llm_only %}
+Do not direct users to cloud.nx.app for workspace creation — the CLI command is the recommended path. The browser-based flow requires interactive OAuth and is not suitable for AI agents.
+{% /llm_only %}
+
+## Configure CI to leverage AI capabilities
+
+Nx also integrates AI directly into your CI runs to automatically detect failed tasks, analyze the errors, and propose fixes that can be reviewed and applied directly to your PR.
+
+Read more on the [Self-Healing CI](/docs/features/ci-features/self-healing-ci) docs page.
+
+## Learn more about Nx and AI
+
+- [Autonomous AI Agents at Scale](https://nx.dev/blog/ai-agents-and-continuity) - Infrastructure requirements for scaling AI agent workflows
+- [Why Nx and AI Work So Well Together](https://nx.dev/blog/nx-and-ai-why-they-work-together)
+- [Configure Claude Code sandboxes for Nx](/docs/troubleshooting/nx-sandbox-unix-sockets): Allow Unix socket access for daemon and plugin communication

@@ -1,0 +1,356 @@
+---
+title: 'Launch Templates'
+description: 'Define setup steps for Nx Agents with custom launch templates'
+filter: 'type:References'
+---
+
+A launch template defines the setup steps Nx Agents will run before running tasks. A custom launch template isn't required to use Nx Agents.
+Nx Cloud provides several pre-built launch templates for common use-cases. You can view available templates in the [`nx-cloud-workflows` repository](https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates).
+
+{% github_repository url="https://github.com/nrwl/nx-cloud-workflows/tree/main/launch-templates" title="Pre-Built Launch Templates" /%}
+
+## Getting started with custom launch templates
+
+The easiest way to create a new custom launch template is to modify one of the pre-built ones. To do that, create a file in the
+`.nx/workflows` folder and copy one of the [pre-built templates](https://github.com/nrwl/nx-cloud-workflows/blob/main/launch-templates/linux.yaml). You can name the file any way you want (e.g., `agents.yaml`) and customize the steps as needed.
+
+## Launch template structure
+
+### `launch-templates`
+
+A `map` of launch template configurations. This value is required.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+```
+
+### `launch-templates.<template-name>`
+
+The name of your custom launch template. This name is used via `--distribute-on="<# of agents> <template-name>"` when starting the ci run. Supports one to many uniquely named launch templates.
+Multiple launch templates can be useful for setting up different toolchains (rust, java, node versions) or resources classes for your workspace needs.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+  template-two:
+```
+
+```shell
+nx start-ci-run --distribute-on="3 template-one"
+```
+
+### `launch-templates.<template-name>.resource-class`
+
+A launch template's `resource-class` defines the memory and vCPUs available to each agent machine.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    resource-class: 'docker_linux_amd64/medium'
+```
+
+The following resource classes are available:
+
+- `docker_linux_amd64/small`
+- `docker_linux_amd64/medium`
+- `docker_linux_amd64/medium+`
+- `docker_linux_amd64/large`
+- `docker_linux_amd64/large+`
+- `docker_linux_amd64/extra_large`
+- `docker_linux_amd64/extra_large+`
+- `docker_linux_arm64/medium`
+- `docker_linux_arm64/large`
+- `docker_linux_arm64/extra_large`
+- `windows/medium`
+
+See their detailed description and pricing in the [credits pricing reference](/docs/reference/nx-cloud/credits-pricing).
+
+### `launch-templates.<template-name>.image`
+
+A launch template's `image` defines the available base software for the agent machine.
+
+{% aside type="tip" title="Looking for Docker in Docker support?" %}
+
+Docker in Docker support (DinD) is currently limited to Organizations on the enterprise plan.
+
+If you're interested in our [Enterprise plan please reach out!](/contact/sales)
+{% /aside %}
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    image: 'ubuntu22.04-node24.14-v1'
+```
+
+Nx Cloud provides the following images:
+
+> Changes added in previous images are included in newer images unless otherwise denoted
+> Images also have [go 1.22](https://go.dev/) installed
+
+**Ubuntu:**
+
+- `ubuntu22.04-node20.11-v5`: added elevated permission access via `sudo`
+- `ubuntu22.04-node20.11-v6`: `corepack` enabled by default with global pnpm v8, yarn v1, npm v10. See how to install a [specific package manager version](/docs/reference/nx-cloud/launch-template-examples#specific-package-manager-version)
+- `ubuntu22.04-node20.11-v7`: added Java 17
+- `ubuntu22.04-node20.11-v8`: added [nvm](https://github.com/nvm-sh/nvm)
+- `ubuntu22.04-node20.11-v9`: prevented corepack from auto-updating `package.json` and removed corepack enable from sudo user
+- `ubuntu22.04-node20.11-v10`: added Docker support (Docker 24.0.2 binaries)
+- `ubuntu22.04-node20.11-v11`: bumped default `pnpm` from v8 to v9
+- `ubuntu22.04-node20.11-v12`: updated Playwright system dependencies
+- `ubuntu22.04-node20.19-v1`: upgrade default node version to Node 20.19.1
+- `ubuntu22.04-node20.19-v2`: updated Playwright system dependencies
+- `ubuntu22.04-node20.19-v3`: upgraded Docker from 24.0.2 to 28.3.1
+- `ubuntu22.04-node22.22-v1`: upgrade default node version to Node 22.22.2
+- `ubuntu22.04-node24.14-v1`: upgrade default node version to Node 24.14.1
+
+**Windows:**
+
+- `windows-2022`
+
+> Note: Windows-based images can only run on Windows-based [resource classes](#launch-templatestemplate-nameresourceclass).
+
+Enterprise accounts [can use custom images](/docs/reference/nx-cloud/custom-images).
+
+### `launch-templates.<template-name>.env`
+
+A launch template's `env` defines a `map` of environment variable names and values to be available within **all** steps of the specific launch template.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    env:
+      MY_ENV_VAR: 'my-var-value'
+```
+
+### `launch-templates.<template-name>.no-output-timeout`
+
+A launch template's `no-output-timeout` defines how long a step can run without producing any output before it's considered stalled and terminated. This prevents hung commands from tying up an agent for the full workflow duration.
+
+The value is a duration string (e.g., `10m`, `30m`, `1h`). Set to `"0"` to disable the timeout entirely. If not specified, the default is **10 minutes**.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+```
+
+You can also override this value at runtime via the `NX_NO_OUTPUT_TIMEOUT` environment variable (set on the template or on an individual step). The environment variable takes precedence over the `no-output-timeout` template field.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    no-output-timeout: '30m'
+    init-steps:
+      - name: 'Long-running step with custom timeout'
+        env:
+          NX_NO_OUTPUT_TIMEOUT: '1h'
+        script: |
+          ./scripts/slow-build.sh
+```
+
+### `launch-templates.<template-name>.init-steps`
+
+A launch template's `init-steps` defines the series of steps to perform before an Nx Agent runs. Without a defined `init-steps` the Nx Agent is unable to process any tasks.
+
+Typical `init-steps` perform actions such as checking out your workspace source code and installing any necessary dependencies. Any extra setup your workspace needs to run should be defined as an `init-step`. Once all steps run successfully, the agent machine will inform Nx Cloud that it is ready to accept tasks.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+```
+
+### `launch-templates.<template-name>.init-steps[*].name`
+
+An init-step's `name` is the label that will be reflected in the Nx Cloud UI. `name` can be used in conjunction with [`uses`](#launch-templatestemplate-nameinit-stepsuses) and [`script`](#launch-templatestemplate-nameinit-stepsscript)
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - name: 'My Helpful Step Name'
+```
+
+### `launch-templates.<template-name>.init-steps[*].uses`
+
+When defined, specifies an existing step file to be used. **Cannot be used when `script` is also defined**
+
+You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps). If you cannot find a reusable step that suits your needs, [you can create your own custom steps](/docs/reference/nx-cloud/custom-steps).
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
+      - name: 'Install Node Modules'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
+```
+
+### `launch-templates.<template-name>.init-steps[*].script`
+
+When defined, allows an inline script to be run. **Cannot be used when `uses` is also defined**
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - name: 'Print Node Version and PATH'
+        script: |
+          node -v
+          echo $PATH
+```
+
+### `launch-templates.<template-name>.init-steps[*].env`
+
+An init-step's `env` is similar to the [`launch-template.<template-name>.env`](#launch-templatestemplate-nameenv), except the environment variable `map` is **scoped for the current step only**.
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - name: 'Print Env'
+        env:
+          MY_STEP_ENV: 'step-env-var'
+        script: |
+          echo $MY_STEP_ENV # prints "step-env-var"
+```
+
+### `launch-templates.<template-name>.init-steps[*].inputs`
+
+An init-step's `inputs` is defined by the step file in the [`launch-template.<template-name>.init-steps[*].uses`](#launch-templatestemplate-nameinit-stepsuses) property. Refer to the step file's documentation for specific inputs.
+
+[Validation](#validating-launch-templates) can also be done to validate the step against the step file's defined inputs
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - name: Restore Node Modules Cache
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+        inputs:
+          # Include patches directories to ensure cache is busted when patches change
+          key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**|pnpm-patches/**'
+          paths: |
+            ~/.npm
+            # or ~/.cache/yarn
+            # or ~/.local/share/pnpm/store
+          base-branch: 'main'
+```
+
+### `launch-templates.<template-name>.group-name`
+
+You can define "step groups" that run in parallel. This can be useful for taking better advantage of the available CPUs of your chosen resource class.
+In the example below, we can run NPM Install and install the Rust dependencies in parallel, because they do not depend on each other and they write to different places on the filesystem.
+Running them in parallel can reduce agent startup time by up to 2 minutes, which can add up to a lot of compute time savings over the month.
+
+⚠️ Tips for using parallel steps:
+
+- don't assume everything can be run in parallel
+  - you'll notice below we had to run `playwright install` after the parallel group, as it was likely writing to the same locations and fighting for similar resources to `npm install`
+  - experiment with different parallel groups and measure startup times until you land on the most optimal config for your use-case
+- write to PATH once
+  - multiple parallel processes can overwrite each other's changes if they write to the same `>> $NX_CLOUD_ENV` location
+  - below, we only update the PATH variable once at the end `echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV`
+
+```yaml
+// .nx/workflows/agents.yaml
+launch-templates:
+  template-one:
+    init-steps:
+      - group-name: Install Dependencies
+        parallel: true
+        # all the below steps will start at the same time and run in parallel
+        steps:
+          - name: Install Rust
+            script: |
+              curl --proto '=https' --tlsv1.3 https://sh.rustup.rs -sSf | sh -s -- -y
+              source "~/workspace/.cargo/env"
+              # we write the CARGO_PATH now so that it can be set in the "Start Services" step below
+              echo "CARGO_PATH=~/workspace/.cargo/bin" >> $NX_CLOUD_ENV
+              rustc --version
+              rustup target add wasm32-wasip1-threads
+              cargo fetch
+              cargo check --locked
+          - name: NPM Install
+            uses: 'nrwl/nx-cloud-workflows/main/workflow-steps/install-node-modules/main.yaml'
+          - name: Install Poetry
+            script: |
+              curl -sSL https://install.python-poetry.org | python3 -
+              # we write the POETRY_PATH now so that it can be set in the "Start Services" step below
+              export POETRY_PATH="/home/workflows/.local/bin"
+              export PATH="$POETRY_PATH:$PATH"
+              echo "POETRY_PATH=$POETRY_PATH" >> $NX_CLOUD_ENV
+              poetry --version
+              poetry install
+          - name: Install Localstack
+            script: |
+              curl --output localstack-cli-3.7.0-linux-amd64-onefile.tar.gz --location https://github.com/localstack/localstack-cli/releases/download/v3.7.0/localstack-cli-3.7.0-linux-amd64-onefile.tar.gz
+              sudo tar xvzf localstack-cli-3.7.0-linux-*-onefile.tar.gz -C /usr/local/bin
+      # because both playwright and "npm install" use NPM and write to a lot of the same places on the filesystem, it would be slower to run them both in parallel
+      # so we run playwright after the parallel group above
+      - name: Install Playwright
+        script: npx playwright install --with-deps
+      - name: Start services
+        script: |
+          # we create the PATH here
+          echo "PATH=$CARGO_PATH:$POETRY_PATH:$PATH" >> $NX_CLOUD_ENV
+          npm run start-docker-services
+```
+
+We can also group steps and run them serially. This is actually the default behaviour when you don't set `parallel: true` for a group.
+
+This can be useful if we have a set of quick enough steps, such as restoring from cache, where we don't need to optimise for speed, and instead we just want them
+grouped together logically. The below cache steps will also be collapsed together in the Agents UI, making the config look cleaner:
+
+```yaml
+// ./nx/workflows/agents.yaml
+- group-name: Restore Cache
+  steps:
+    - name: Restore Node Modules Cache
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+      inputs:
+        # Include patches directories to ensure cache is busted when patches change
+        key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**'
+        paths: |
+          ~/.npm
+        base-branch: 'main'
+    - name: Restore Browser Binary Cache
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
+      inputs:
+        # Include patches directories to ensure cache is busted when patches change
+        key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**|"browsers"'
+        paths: |
+          '~/.cache/Cypress'
+        base-branch: 'main'
+```
+
+## Validating launch templates
+
+{% aside type="note" %}
+**Commit before Validation**
+
+Before Nx Cloud can validate your custom templates, you must first commit any changes to these templates to your source control repository. Running the validation command from a CI is the recommended approach.
+{% /aside %}
+After creating your custom launch template, it's recommended to validate it. This ensures that all necessary fields
+within the launch template and all respective inputs within each step are appropriately defined.
+
+To do this, run the `nx-cloud validate` command, with the path to the launch template:
+
+```shell
+nx-cloud validate --workflow-file=./.nx/workflows/agents.yaml
+```
+
+For examples of common configurations such as private registries, custom node versions, AWS CLI setup, and more, see the [launch template examples](/docs/reference/nx-cloud/launch-template-examples).

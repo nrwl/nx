@@ -1,0 +1,1 @@
+import{s as t}from"./navigation.DsnliY5A.js";import"./index.Cg4BKdb4.js";import"./app-router-context.shared-runtime.g66q8Efd.js";import"./_interop_require_default.Dsa6vdzQ.js";document.addEventListener("DOMContentLoaded",()=>{t("custom_page_view","404",window.location.pathname)});

@@ -1,0 +1,105 @@
+---
+title: 'What is Nx? Smart Monorepo Build System & CI'
+description: 'Nx is a build system with smart caching and task orchestration for monorepos and polyrepos. Ship faster and keep CI fast as your codebase scales.'
+sidebar:
+  order: 1
+  label: Introduction
+filter: 'type:Features'
+---
+
+Nx is a build system for monorepos. It helps you **develop faster** and **keep CI fast** as your codebase scales.
+
+{% youtube src="https://youtu.be/pbAQErStl9o" title="What is Nx?" width="100%" /%}
+
+## Challenges of monorepos
+
+Monorepos have many advantages and are especially powerful for AI-assisted development. But as teams and codebases grow, monorepos are hard to scale:
+
+- **Slow builds and tests** - Hundreds or thousands of tasks compete for CI resources.
+- **Complex task pipelines** - Projects depend on each other, so tasks need to run in the right order, and that's hard to manage by hand.
+- **Flaky CI** - Longer pipelines lead to random failures and inconsistent results between local and CI environments.
+- **Architectural erosion** - Without clear boundaries, unwanted dependencies creep in and projects become tightly coupled.
+
+## What Nx does
+
+**Nx reduces friction across your entire development cycle** with intelligent caching, task orchestration, and deep understanding of your codebase structure.
+
+At its core, Nx:
+
+1. **Runs tasks fast** - [Caches results](/docs/features/cache-task-results) so you never rebuild the same code twice.
+2. **Understands your codebase** - Builds [project and task graphs](/docs/features/explore-graph) showing how everything connects.
+3. **Orchestrates intelligently** - Runs tasks in the [right order](/docs/concepts/task-pipeline-configuration), parallelizing when possible.
+4. **Enforces boundaries** - [Module boundary rules](/docs/features/enforce-module-boundaries) prevent unwanted dependencies between projects.
+5. **Handles flakiness** - [Automatically re-runs flaky tasks](/docs/features/ci-features/flaky-tasks) and [self-heals CI failures](/docs/features/ci-features/self-healing-ci).
+
+```shell
+nx build myapp            # Run a task
+nx build myapp            # Run again - instant cache hit
+nx run-many -t build test # Run across all projects
+```
+
+{% callout type="deepdive" title="How does Nx run tasks?" %}
+
+At its core, Nx is a fast, intelligent task runner. Take the example of an NPM workspace. This could be a project's `package.json`:
+
+```json
+// package.json
+{
+  "name": "my-project",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest"
+  }
+}
+```
+
+Then add Nx to your root `package.json`:
+
+```json
+// package.json
+{
+  "devDependencies": {
+    "nx": "latest"
+  }
+}
+```
+
+And once that's done, you can run your tasks via Nx.
+
+```shell
+nx build my-project
+```
+
+This will execute the `build` script from `my-project`'s `package.json`, equivalent to running `npm run build` in that project directory.
+
+Similarly you [can run tasks across all projects](/docs/features/run-tasks), specific ones, or only those from projects you touched.
+
+From there, you can gradually enhance your setup by adding features like [task caching](/docs/features/cache-task-results), adding [plugins](/docs/plugin-registry), optimizing your CI via [task distribution](/docs/features/ci-features/distribute-task-execution), and many more powerful capabilities as your needs grow.
+
+{% /callout %}
+
+## Start small, grow as needed
+
+Nx is modular. Start with the CLI and add capabilities as your needs grow.
+
+| Component                                            | What It Does                                                                                                                                                                            |
+| ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Nx Core**                                          | Task runner with [local caching](/docs/features/cache-task-results). Works with any tech stack.                                                                                         |
+| [**Nx Plugins**](/docs/plugin-registry)              | Technology-specific automation (generators, executors, dependency detection).                                                                                                           |
+| [**Nx Console**](/docs/getting-started/editor-setup) | Editor extension for VSCode/JetBrains with visual UI and [AI assistance](/docs/features/enhance-ai).                                                                                    |
+| [**Nx Cloud**](/docs/features/ci-features)           | [Remote caching](/docs/features/ci-features/remote-cache), [affected commands](/docs/features/ci-features/affected), and [self-healing CI](/docs/features/ci-features/self-healing-ci). |
+
+{% callout type="deepdive" title="Can I add Nx to a single-project repo?" %}
+Yes, Nx provides value even for single-project repositories. You get fast task caching, intelligent task orchestration, and access to Nx plugins for your specific technology stack. As your project grows into a monorepo, the foundation is already in place.
+
+Nx can also connect multiple repositories into a synthetic monorepo, letting you orchestrate large changes across all connected repos.
+{% /callout %}
+
+## Where to go from here
+
+- **Starting fresh?** → [Create a new workspace](/docs/getting-started/start-new-project)
+- **Have an existing project?** → [Add Nx to your project](/docs/getting-started/start-with-existing-project)
+- **New to Nx?** → [Follow the tutorial series](/docs/getting-started/tutorials/crafting-your-workspace) to learn core concepts hands-on
+- **Prefer video?** → [Learn with our video courses](https://nx.dev/courses)
+
+**Stay up to date** with our latest news by [⭐️ starring us on Github](https://github.com/nrwl/nx), [subscribing to our Youtube channel](https://www.youtube.com/@nxdevtools), [joining our Discord](https://go.nx.dev/community), [subscribing to our monthly tech newsletter](https://go.nrwl.io/nx-newsletter) or follow us [on X](https://x.com/nxdevtools), [Bluesky](https://bsky.app/profile/nx.dev) and [LinkedIn](https://www.linkedin.com/company/nxdevtools).
