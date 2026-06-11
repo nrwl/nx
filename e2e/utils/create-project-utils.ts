@@ -146,6 +146,10 @@ export function newProject({
       if (sharedBase) {
         ensureDirSync(e2eCwd);
         copySync(sharedBase, `${e2eCwd}/${projScope}`);
+        // runCreateWorkspace (the else branch) sets the module-level projName as a
+        // side effect that downstream helpers (packageInstall ->
+        // getPackageManagerCommand) rely on; mirror it when seeding from the template.
+        projName = projScope;
       } else {
         runCreateWorkspace(projScope, {
           preset,
