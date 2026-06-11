@@ -20,6 +20,24 @@ pub struct CachedTaskOutput {
     pub files: Vec<String>,
 }
 
+/// Filters `files` to those selected by a `dependentTasksOutputFiles` glob.
+///
+/// This is the single place the `dependentTasksOutputFiles` glob is applied to a
+/// set of paths. It is shared by `resolve_task_output_files` (which feeds it a
+/// dependency's on-disk output files) and the hash-plan inspector's static
+/// dependent-output check (which feeds it candidate paths that may not exist on
+/// disk yet), so the glob-matching lives in exactly one place.
+pub fn filter_output_files_by_glob(
+    dependent_tasks_output_files: &str,
+    files: impl IntoIterator<Item = String>,
+) -> Result<Vec<String>> {
+    let glob_set = build_glob_set(&[dependent_tasks_output_files])?;
+    Ok(files
+        .into_iter()
+        .filter(|file| glob_set.is_match(file))
+        .collect())
+}
+
 /// Resolves task output files by expanding output paths and filtering by glob pattern.
 /// This is the file-resolution portion without any hashing, for use by the inspector.
 pub fn resolve_task_output_files(
@@ -28,11 +46,7 @@ pub fn resolve_task_output_files(
     outputs: &[String],
 ) -> Result<Vec<String>> {
     let output_files = get_files_for_outputs(Path::new(workspace_root), outputs.to_vec())?;
-    let glob_set = build_glob_set(&[glob])?;
-    Ok(output_files
-        .into_iter()
-        .filter(|f| glob_set.is_match(f))
-        .collect())
+    filter_output_files_by_glob(glob, output_files)
 }
 
 pub fn hash_task_output(

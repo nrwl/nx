@@ -3,10 +3,8 @@ import type {
   ProjectGraph,
   ProjectGraphProjectNode,
 } from '../config/project-graph';
-import type { Task, TaskGraph } from '../config/task-graph';
-import type { HashInputs } from '../native';
+import type { ExternalObject, HashInputs, HashInstruction } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
-import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
@@ -17,7 +15,6 @@ import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 import { splitTarget } from '../utils/split-target';
 import { workspaceRoot as defaultWorkspaceRoot } from '../utils/workspace-root';
 import { HashPlanInspector } from './hash-plan-inspector';
-import { type ExpandedDepsOutput, getInputs } from './task-hasher';
 
 // ── Module-level context (loaded once per process) ───────────────────────────
 
@@ -55,11 +52,12 @@ interface TaskIdentity {
   projectNode: ProjectGraphProjectNode | undefined;
 }
 
+type PlansReference = ExternalObject<Record<string, Array<HashInstruction>>>;
+
 const identityCache = new Map<string, TaskIdentity>();
+const plansReferenceCache = new Map<string, PlansReference | null>();
 const hashInputsCache = new Map<string, HashInputs | null>();
 const outputsCache = new Map<string, string[]>();
-const taskGraphCache = new Map<string, TaskGraph | null>();
-const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
 
 // ── Internal resolution helpers ──────────────────────────────────────────────
 
@@ -98,34 +96,89 @@ function resolveIdentity(
   return identity;
 }
 
-function getRawInputs(
+/**
+ * Builds the native hash plan for a task (and its dependency subtree) exactly
+ * once per taskId and caches the opaque reference. Both the structured-inputs
+ * lookup and the dependent-task-output matching derive from this single plan,
+ * so the (relatively expensive) plan is never rebuilt per file. Returns null
+ * when the plan cannot be built (e.g. the task graph fails to construct).
+ */
+function getPlansReference(
   taskId: string,
   { projectGraph, inspector }: LoadedContext
-): HashInputs | null {
-  if (hashInputsCache.has(taskId)) {
-    return hashInputsCache.get(taskId) ?? null;
+): PlansReference | null {
+  if (plansReferenceCache.has(taskId)) {
+    return plansReferenceCache.get(taskId) ?? null;
   }
 
-  const { project, target, configuration, canonicalTaskId } = resolveIdentity(
+  const { project, target, configuration } = resolveIdentity(
     taskId,
     projectGraph
   );
 
-  let planResult: Record<string, HashInputs> = {};
+  let reference: PlansReference | null = null;
   try {
-    planResult = inspector.inspectTaskInputs({
+    reference = inspector.getPlansReferenceForTask({
       project,
       target,
       configuration,
     });
   } catch {
-    hashInputsCache.set(taskId, null);
-    return null;
+    reference = null;
+  }
+  plansReferenceCache.set(taskId, reference);
+  return reference;
+}
+
+function getRawInputs(taskId: string, ctx: LoadedContext): HashInputs | null {
+  if (hashInputsCache.has(taskId)) {
+    return hashInputsCache.get(taskId) ?? null;
   }
 
-  const result = planResult[canonicalTaskId] ?? null;
+  const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+  const reference = getPlansReference(taskId, ctx);
+
+  let result: HashInputs | null = null;
+  if (reference) {
+    try {
+      result =
+        ctx.inspector.inspectInputsFromPlan(reference)[canonicalTaskId] ?? null;
+    } catch {
+      result = null;
+    }
+  }
+
   hashInputsCache.set(taskId, result);
   return result;
+}
+
+/**
+ * Returns the subset of `normalizedFiles` that are covered by the task's
+ * `dependentTasksOutputFiles` inputs. The dependency-graph walk and output-glob
+ * matching are done natively (see `HashPlanInspector.checkDependentTaskOutputFiles`),
+ * which performs a static, disk-free check — so files match even when the
+ * upstream tasks have not produced their outputs yet.
+ */
+function getDependentTaskOutputMatches(
+  taskId: string,
+  normalizedFiles: string[],
+  ctx: LoadedContext
+): Set<string> {
+  if (normalizedFiles.length === 0) return new Set();
+
+  const reference = getPlansReference(taskId, ctx);
+  if (!reference) return new Set();
+
+  const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
+  try {
+    const matches = ctx.inspector.checkDependentTaskOutputFiles(
+      reference,
+      normalizedFiles
+    );
+    return new Set(matches[canonicalTaskId] ?? []);
+  } catch {
+    return new Set();
+  }
 }
 
 function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
@@ -147,86 +200,6 @@ function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
 
   outputsCache.set(taskId, outputs);
   return outputs;
-}
-
-function getTaskGraph(
-  taskId: string,
-  projectGraph: ProjectGraph
-): TaskGraph | null {
-  if (taskGraphCache.has(taskId)) return taskGraphCache.get(taskId) ?? null;
-
-  const { project, target, configuration, projectNode } = resolveIdentity(
-    taskId,
-    projectGraph
-  );
-  if (!projectNode) {
-    taskGraphCache.set(taskId, null);
-    return null;
-  }
-
-  let tg: TaskGraph | null = null;
-  try {
-    tg = createTaskGraph(
-      projectGraph,
-      {},
-      [project],
-      [target],
-      configuration,
-      {},
-      false
-    );
-  } catch {
-    tg = null;
-  }
-  taskGraphCache.set(taskId, tg);
-  return tg;
-}
-
-function getDepsOutputs(
-  taskId: string,
-  { projectGraph, nxJson }: LoadedContext
-): ExpandedDepsOutput[] {
-  if (depsOutputsCache.has(taskId)) return depsOutputsCache.get(taskId)!;
-
-  const { project, target, projectNode } = resolveIdentity(
-    taskId,
-    projectGraph
-  );
-  if (!projectNode?.data?.targets?.[target]) {
-    depsOutputsCache.set(taskId, []);
-    return [];
-  }
-
-  let result: ExpandedDepsOutput[] = [];
-  try {
-    result =
-      getInputs({ target: { project, target } } as Task, projectGraph, nxJson)
-        .depsOutputs ?? [];
-  } catch {
-    result = [];
-  }
-  depsOutputsCache.set(taskId, result);
-  return result;
-}
-
-function collectUpstreamTaskIds(
-  taskGraph: TaskGraph,
-  rootTaskId: string,
-  transitive: boolean
-): string[] {
-  const direct = taskGraph.dependencies[rootTaskId] ?? [];
-  if (!transitive) return [...direct];
-
-  const collected = new Set<string>();
-  const walk = (id: string): void => {
-    for (const dep of taskGraph.dependencies[id] ?? []) {
-      if (collected.has(dep)) continue;
-      collected.add(dep);
-      walk(dep);
-    }
-  };
-  walk(rootTaskId);
-  return [...collected];
 }
 
 /**
@@ -254,46 +227,6 @@ function isOutput(
   );
 }
 
-function matchesDependentTaskOutputs(
-  taskId: string,
-  path: string,
-  ctx: LoadedContext
-): boolean {
-  const normalized = normalizePath(path);
-  const depsOutputs = getDepsOutputs(taskId, ctx);
-  if (depsOutputs.length === 0) return false;
-
-  const taskGraph = getTaskGraph(taskId, ctx.projectGraph);
-  if (!taskGraph) return false;
-
-  const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
-  if (!taskGraph.tasks[canonicalTaskId]) return false;
-
-  for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
-    const glob = normalizePath(dependentTasksOutputFiles);
-    if (getMatchingStringsWithCache(glob, [normalized]).length === 0) continue;
-    const upstreamIds = collectUpstreamTaskIds(
-      taskGraph,
-      canonicalTaskId,
-      !!transitive
-    );
-    for (const upstreamId of upstreamIds) {
-      if (isOutput(upstreamId, normalized, ctx.projectGraph)) return true;
-    }
-  }
-  return false;
-}
-
-function isInput(taskId: string, path: string, ctx: LoadedContext): boolean {
-  const normalized = normalizePath(path);
-  const raw = getRawInputs(taskId, ctx);
-  if (raw) {
-    if (raw.files.includes(normalized)) return true;
-    if (raw.depOutputs.includes(normalized)) return true;
-  }
-  return matchesDependentTaskOutputs(taskId, normalized, ctx);
-}
-
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -314,13 +247,30 @@ export async function checkFilesAreInputs(
   // Validate taskId eagerly so callers always get an error for invalid IDs,
   // even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
+
+  const raw = getRawInputs(taskId, ctx);
+  const inputFiles = new Set(raw?.files ?? []);
+  const depOutputs = new Set(raw?.depOutputs ?? []);
+
+  const normalizedFiles = files.map(normalizePath);
+  const dependentMatches = getDependentTaskOutputMatches(
+    taskId,
+    normalizedFiles,
+    ctx
+  );
+
   const matched: string[] = [];
   const unmatched: string[] = [];
-  for (const file of files) {
-    if (isInput(taskId, file, ctx)) {
-      matched.push(file);
+  for (let i = 0; i < files.length; i++) {
+    const normalized = normalizedFiles[i];
+    if (
+      inputFiles.has(normalized) ||
+      depOutputs.has(normalized) ||
+      dependentMatches.has(normalized)
+    ) {
+      matched.push(files[i]);
     } else {
-      unmatched.push(file);
+      unmatched.push(files[i]);
     }
   }
   return { matched, unmatched };
@@ -383,8 +333,7 @@ export async function getTaskOutputPatterns(taskId: string): Promise<string[]> {
 export function _resetContextForTesting(): void {
   cachedContext = null;
   identityCache.clear();
+  plansReferenceCache.clear();
   hashInputsCache.clear();
   outputsCache.clear();
-  taskGraphCache.clear();
-  depsOutputsCache.clear();
 }

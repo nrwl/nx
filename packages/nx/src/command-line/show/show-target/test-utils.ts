@@ -103,7 +103,10 @@ jest.mock('../../../tasks-runner/utils', () => {
 jest.mock('../../../hasher/hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn().mockImplementation(() => ({
     init: jest.fn().mockResolvedValue(undefined),
-    inspectTaskInputs: jest.fn().mockImplementation(() => mockHashInputs),
+    // Opaque native plan reference; only its truthiness matters to the caller.
+    getPlansReferenceForTask: jest.fn().mockReturnValue({}),
+    inspectInputsFromPlan: jest.fn().mockImplementation(() => mockHashInputs),
+    checkDependentTaskOutputFiles: jest.fn().mockReturnValue({}),
   })),
 }));
 

@@ -9,6 +9,7 @@ import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import {
   ExternalObject,
   HashInputs,
+  HashInstruction,
   HashPlanner,
   HashPlanInspector as NativeHashPlanInspector,
   ProjectGraph as NativeProjectGraph,
@@ -130,7 +131,7 @@ export class HashPlanInspector {
    * Each input is categorized into files, runtime, environment, depOutputs, or external.
    */
   inspectTaskInputs(
-    { project, target, configuration }: Target,
+    target: Target,
     parsedArgs: { [k: string]: any } = {},
     extraTargetDependencies: Record<
       string,
@@ -138,6 +139,31 @@ export class HashPlanInspector {
     > = {},
     excludeTaskDependencies: boolean = false
   ): Record<string, HashInputs> {
+    const plansReference = this.getPlansReferenceForTask(
+      target,
+      parsedArgs,
+      extraTargetDependencies,
+      excludeTaskDependencies
+    );
+    return this.inspector.inspectInputs(plansReference);
+  }
+
+  /**
+   * Builds the hash plan for a task (and its dependencies) and returns the
+   * opaque reference consumed by the native inspector. Callers that need more
+   * than one inspection (e.g. structured inputs AND dependent-output matching)
+   * should build the plan once with this and pass the reference to the
+   * `*FromPlan` methods, rather than rebuilding it per inspection.
+   */
+  getPlansReferenceForTask(
+    { project, target, configuration }: Target,
+    parsedArgs: { [k: string]: any } = {},
+    extraTargetDependencies: Record<
+      string,
+      (TargetDependencyConfig | string)[]
+    > = {},
+    excludeTaskDependencies: boolean = false
+  ): ExternalObject<Record<string, Array<HashInstruction>>> {
     const { nxArgs, overrides } = splitArgsIntoNxArgsAndOverrides(
       {
         ...parsedArgs,
@@ -160,7 +186,29 @@ export class HashPlanInspector {
     );
 
     const taskIds = Object.keys(taskGraph.tasks);
-    const plansReference = this.planner.getPlansReference(taskIds, taskGraph);
+    return this.planner.getPlansReference(taskIds, taskGraph);
+  }
+
+  /**
+   * Structured HashInputs for every task in a previously-built plan.
+   */
+  inspectInputsFromPlan(
+    plansReference: ExternalObject<Record<string, Array<HashInstruction>>>
+  ): Record<string, HashInputs> {
     return this.inspector.inspectInputs(plansReference);
+  }
+
+  /**
+   * Statically determines which of `files` are covered by each task's
+   * `dependentTasksOutputFiles` inputs (the file matches the
+   * `dependentTasksOutputFiles` glob AND lies within an upstream task's
+   * declared outputs). Pure pattern matching — no disk access — so it reports a
+   * match even when the upstream tasks have not produced their outputs yet.
+   */
+  checkDependentTaskOutputFiles(
+    plansReference: ExternalObject<Record<string, Array<HashInstruction>>>,
+    files: string[]
+  ): Record<string, string[]> {
+    return this.inspector.checkDependentTaskOutputFiles(plansReference, files);
   }
 }
