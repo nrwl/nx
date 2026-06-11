@@ -25,6 +25,7 @@ import {
 } from './fileutils';
 import { getNxInstallationPath } from './installation-directory';
 import { PackageJson, readModulePackageJson } from './package-json';
+import { getNpmSpawnRegistryEnv } from './registry-config';
 import { workspaceRoot } from './workspace-root';
 
 const execAsync = promisify(exec);
@@ -558,8 +559,12 @@ export async function resolvePackageVersionUsingRegistry(
       .replace(/'/g, '');
 
     return finalResolvedVersion;
-  } catch {
-    throw new Error(`Unable to resolve version ${packageName}@${version}.`);
+  } catch (e) {
+    // `{ cause }` preserves the underlying registry failure (e.g. a TLS error),
+    // which would otherwise be unrecoverable from this generic message.
+    throw new Error(`Unable to resolve version ${packageName}@${version}.`, {
+      cause: e,
+    });
   }
 }
 
@@ -613,7 +618,8 @@ export async function packageRegistryView(
   // collapses to the single highest match (breaks per-version field queries).
   options?: { forceNpm?: boolean }
 ): Promise<string> {
-  let pm = detectPackageManager();
+  const workspacePm = detectPackageManager();
+  let pm = workspacePm;
   if (options?.forceNpm || pm === 'yarn' || pm === 'bun') {
     /**
      * yarn has `yarn info` but it behaves differently than (p)npm,
@@ -632,15 +638,25 @@ export async function packageRegistryView(
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
   // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
-  // npm enforces `devEngines.packageManager` on every command, even a read-only
-  // `view`; in a yarn/bun workspace we run npm, so a non-npm pin with
-  // `onFail: error` aborts the lookup. force downgrades that to a warning.
-  // Scoped to npm so a `pnpm view` spawn is left untouched.
+  // cwd anchors the project .npmrc / pnpm-workspace.yaml discovery to the
+  // workspace; the env overlay reproduces registry config npm cannot read
+  // itself (pnpm >= 11 ignores npm_config_* and resolves natively instead).
+  // npm_config_force downgrades npm's `devEngines.packageManager` enforcement
+  // (which aborts even a read-only `view` in a yarn/bun workspace whose pin sets
+  // `onFail: error`) to a warning; scoped to npm so a `pnpm view` is untouched.
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
-    ...(pm === 'npm'
-      ? { env: { ...process.env, npm_config_force: 'true' } }
-      : {}),
+    cwd: workspaceRoot,
+    env: {
+      ...process.env,
+      ...getNpmSpawnRegistryEnv(
+        pkg,
+        workspaceRoot,
+        workspacePm,
+        getPackageManagerVersionSafe(workspacePm, workspaceRoot)
+      ),
+      ...(pm === 'npm' ? { npm_config_force: 'true' } : {}),
+    },
   });
   return stdout.toString().trim();
 }
@@ -659,16 +675,51 @@ export async function packageRegistryPack(
    */
   const pm = 'npm';
 
+  const workspacePm = detectPackageManager();
   const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
     cwd,
     windowsHide: true,
-    // npm enforces `devEngines.packageManager` even on `pack`; force keeps the
-    // download working in workspaces that pin a non-npm manager (onFail: error).
-    env: { ...process.env, npm_config_force: 'true' },
+    // npm never reads the workspace package manager's own config files
+    // (pnpm-workspace.yaml registries, .yarnrc(.yml), bunfig.toml); the env
+    // overlay reproduces that resolution for the fetched package.
+    // npm_config_force keeps the download working when the workspace pins a
+    // non-npm manager via `devEngines.packageManager` with `onFail: error`.
+    env: {
+      ...process.env,
+      ...getNpmSpawnRegistryEnv(
+        pkg,
+        workspaceRoot,
+        workspacePm,
+        getPackageManagerVersionSafe(workspacePm, workspaceRoot)
+      ),
+      npm_config_force: 'true',
+    },
   });
 
   const tarballPath = stdout.trim();
   return { tarballPath };
+}
+
+/**
+ * `packageRegistryView`/`packageRegistryPack` are called in tight resolution
+ * loops; cache the version probe (it shells out when the packageManager field
+ * is absent). Returns null when the version cannot be determined, in which
+ * case registry bridging degrades to npm's own resolution.
+ */
+const packageManagerVersionCache = new Map<string, string | null>();
+function getPackageManagerVersionSafe(
+  packageManager: PackageManager,
+  root: string
+): string | null {
+  const key = `${packageManager}:${root}`;
+  if (!packageManagerVersionCache.has(key)) {
+    let version: string | null = null;
+    try {
+      version = getPackageManagerVersion(packageManager, root);
+    } catch {}
+    packageManagerVersionCache.set(key, version);
+  }
+  return packageManagerVersionCache.get(key);
 }
 
 /**
