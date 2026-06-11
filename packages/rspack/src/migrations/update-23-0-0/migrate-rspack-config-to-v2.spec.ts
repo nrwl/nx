@@ -1,6 +1,7 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { type Tree } from '@nx/devkit';
 import migrateRspackConfigToV2, {
+  disableLazyCompilationForModuleFederation,
   rewriteExperimentsCss,
   rewriteLibraryTarget,
 } from './migrate-rspack-config-to-v2';
@@ -94,6 +95,53 @@ module.exports = {
 };
 `;
     expect(rewriteExperimentsCss(input)).toBe(input);
+  });
+});
+
+describe('disableLazyCompilationForModuleFederation (pure transform)', () => {
+  it('inserts lazyCompilation: false into a module.exports MF config', () => {
+    const input = `const { NxModuleFederationPlugin } = require('@nx/module-federation/rspack');
+module.exports = {
+  output: {
+    publicPath: 'auto',
+  },
+};
+`;
+    const out = disableLazyCompilationForModuleFederation(input);
+    expect(out).toContain('lazyCompilation: false,');
+    expect(out.indexOf('lazyCompilation')).toBeLessThan(out.indexOf('output:'));
+  });
+
+  it('inserts lazyCompilation: false into an export default MF config', () => {
+    const input = `import { NxModuleFederationPlugin } from '@nx/module-federation/rspack';
+export default {
+  output: {
+    publicPath: 'auto',
+  },
+};
+`;
+    const out = disableLazyCompilationForModuleFederation(input);
+    expect(out).toContain('lazyCompilation: false,');
+  });
+
+  it('leaves configs without module federation untouched', () => {
+    const input = `module.exports = { output: { publicPath: 'auto' } };`;
+    expect(disableLazyCompilationForModuleFederation(input)).toBe(input);
+  });
+
+  it('respects an existing lazyCompilation setting', () => {
+    const input = `const { NxModuleFederationPlugin } = require('@nx/module-federation/rspack');
+module.exports = { lazyCompilation: { imports: true }, output: {} };
+`;
+    expect(disableLazyCompilationForModuleFederation(input)).toBe(input);
+  });
+
+  it('skips compose-style configs (handled at runtime)', () => {
+    const input = `const { composePlugins, withNx } = require('@nx/rspack');
+const { withModuleFederation } = require('@nx/module-federation/rspack');
+module.exports = composePlugins(withNx(), withModuleFederation(config));
+`;
+    expect(disableLazyCompilationForModuleFederation(input)).toBe(input);
   });
 });
 

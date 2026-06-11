@@ -39,6 +39,8 @@ export async function withModuleFederation(
   ): Configuration {
     config.output.uniqueName = options.name;
     config.output.publicPath = 'auto';
+    // rspack-cli dev mode defaults this on; it breaks module federation.
+    config.lazyCompilation ??= false;
 
     if (isGlobal) {
       config.output.scriptType = 'text/javascript';
