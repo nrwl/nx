@@ -11,7 +11,7 @@ Migrate a set of repos to one target nx version, then open linked draft PRs. Thi
 ## Input
 
 - **Target version** — e.g. `23.0.0-beta.25`. Verify it exists: `npm view nx@<version> version`.
-- **Repos** — an explicit list, or the repos already in a Polygraph session.
+- **Repos** — an explicit list, or the repos already in a Polygraph session. When none is given, the **default set** is `nx`, `ocean`, `nx-labs`, `nx-examples`, `nx-console` (all in the `nrwl` org).
 
 ## Procedure
 
@@ -30,10 +30,15 @@ This is the Polygraph way: each repo's work runs in its own child agent (`spawn_
 > 3. **Install first, so `node_modules` is at the repo's _current_ (pre-migrate) nx version.** `nx migrate` reads the "from" version from `node_modules`, not `package.json` — if `node_modules` is already at the target, it finds **zero migrations** and silently skips them. Verify with `node -p "require('./node_modules/nx/package.json').version"`.
 > 4. Run `nx migrate <VERSION>` (updates `package.json`, writes `migrations.json`).
 > 5. Install again — **mutable**. Do NOT set `CI=true` (it makes Yarn Berry immutable / pnpm frozen, so the install and migrations fail silently). pnpm needs `--config.confirm-modules-purge=false`; Yarn Berry needs `YARN_ENABLE_IMMUTABLE_INSTALLS=false`.
-> 6. If `migrations.json` exists, run `nx migrate --run-migrations`.
-> 7. Delete `migrations.json`; re-install if migrations changed deps.
-> 8. Commit all changes: `chore(repo): migrate to nx <VERSION>` (never mention AI/Claude).
-> 9. Report: old→new version, packages bumped, migrations run, and any errors — including type/name collisions (e.g. a repo that pins an older nx and keeps a `*V2` symbol). **Leave those for a human to resolve; do not invent workarounds.**
+> 6. **Commit the version bump first** (before running migrations, so it stays isolated from the migration edits): stage `package.json` + the lockfile — NOT `migrations.json` — and commit `chore(repo): migrate to nx <VERSION>` (never mention AI/Claude).
+> 7. If `migrations.json` exists, run it with commits + agentic review:
+>    `nx migrate --run-migrations --create-commits --commit-prefix="chore(repo): [nx migration] " --agentic`
+>    - `--create-commits` lands each applied migration as its own commit, so migration-driven source edits stay isolated and reviewable.
+>    - The scoped `--commit-prefix` is **required**: nx's default `chore: [nx migration] ` has no scope and fails commitlint. (Pin the agent with `--agentic=claude-code` if auto-detection picks the wrong one.)
+>    - `--validate` (agent-driven validation) is **on by default** once `--agentic` is enabled, so you don't pass it separately.
+>    - Caveat: nx auto-skips the agentic flow when it detects it is already inside an AI agent (`Agentic flow skipped: …`), and `--validate` has **no effect inside an outer agent** (or non-interactively without an explicit agent) — so the review only truly runs when the migration executes outside the child-agent context.
+> 8. Delete `migrations.json`; if migrations changed deps, re-install and commit the lockfile update.
+> 9. Report: old→new version, packages bumped, migrations run (and their commits), and any errors — including type/name collisions (e.g. a repo that pins an older nx and keeps a `*V2` symbol). **Leave those for a human to resolve; do not invent workarounds.**
 
 **Package-manager cheat sheet:**
 
@@ -55,7 +60,7 @@ Once every child reports success, `push_branch` each repo (branch `migrate-nx-<V
 - [ ] `package.json` nx + `@nx/*` at the target version
 - [ ] Migrations **ran** (not skipped because `node_modules` was already at target)
 - [ ] `migrations.json` deleted
-- [ ] Commit present on `migrate-nx-<VERSION>` with message `chore(repo): migrate to nx <VERSION>`
+- [ ] Version-bump commit (`chore(repo): migrate to nx <VERSION>`) present on `migrate-nx-<VERSION>`, plus one `chore(repo): [nx migration] …` commit per applied migration (from `--create-commits`)
 - [ ] Any collision/compile errors surfaced in the child's report for a human to resolve
 
 ## Gotchas from real runs
