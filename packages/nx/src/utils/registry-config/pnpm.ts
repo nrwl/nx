@@ -1,10 +1,10 @@
+import { homedir } from 'os';
 import { join, resolve } from 'path';
 import { gte, lt } from 'semver';
 import {
   getPnpmConfigDir,
   readPnpmYamlConfig,
 } from '../package-manager-config/pnpm-config';
-import { getHomeDir } from '../package-manager-config/home';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   getPackageScope,
@@ -19,9 +19,9 @@ import {
 // pnpm's @pnpm/npm-conf parseField resolves a path setting against the cwd (the
 // workspace root), expanding a leading `~/` (and `~\` only on Windows) against
 // the home dir first. pnpm seeds its HOME from os.homedir() before resolving,
-// so use that (getHomeDir) rather than a possibly-unset process.env.HOME.
+// so use that (os.homedir()) rather than a possibly-unset process.env.HOME.
 function resolvePnpmPath(value: string, root: string): string {
-  const home = getHomeDir();
+  const home = homedir();
   const tilde =
     process.platform === 'win32'
       ? value.startsWith('~/') || value.startsWith('~\\')
@@ -33,16 +33,17 @@ function resolvePnpmPath(value: string, root: string): string {
 }
 
 /*
- * pnpm registry resolution, by version line (all behavior verified against the
- * published binaries; see the gh-35843 investigation):
+ * pnpm registry resolution, by version line (behavior verified against the
+ * published binaries):
  *
  * - < 10.6.0: registry config lives only in the .npmrc chain and npm_config_*
  *   env vars, which a spawned npm resolves identically on its own. Nothing to
  *   bridge.
  * - 10.6.0 - 10.x: pnpm-workspace.yaml accepts every .npmrc setting in
- *   camelCase (PR #9211) and the parsed yaml object is Object.assign-ed over
- *   the npmrc-derived config, so a `registries` map (default/@scope keys)
- *   wholesale-replaces the npmrc/env/CLI registry selection.
+ *   camelCase (https://github.com/pnpm/pnpm/pull/9211) and the parsed yaml
+ *   object is Object.assign-ed over the npmrc-derived config, so a
+ *   `registries` map (default/@scope keys) wholesale-replaces the
+ *   npmrc/env/CLI registry selection.
  * - >= 11.0.0: the config reader merges per key: registries =
  *   {...fromNpmrc, ...fromYaml}, then `pnpm_config_registry` env overrides
  *   only `registries.default`. npm_config_* env vars are no longer read, and

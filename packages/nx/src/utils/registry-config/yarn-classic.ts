@@ -42,6 +42,8 @@ import {
  * vars identically, so bridging is only needed when a yarn-only surface wins
  * (YARN_REGISTRY, any .yarnrc, ancestor .npmrc, the root /usr/local/share home,
  * or a CLI `--registry` line).
+ *
+ * See https://github.com/yarnpkg/yarn/blob/740c38c3a962c30ddb344a919bbfb7065620714b/src/registries/npm-registry.js#L345-L436
  */
 
 export const YARN_CLASSIC_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';

@@ -1,25 +1,27 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync } from 'fs';
+import { homedir } from 'os';
 import { join } from 'path';
-import { getHomeDir } from './home';
+import { readYamlFile } from '../fileutils';
 
 /**
  * pnpm's getConfigDir: XDG_CONFIG_HOME, else the per-platform default. Hosts
  * pnpm's global config.yaml and (v11+) auth.ini.
+ * See https://github.com/pnpm/pnpm/blob/b7195db5c8469c80908d625c648302b26c2f9977/config/reader/src/dirs.ts#L73-L92
  */
 export function getPnpmConfigDir(env: NodeJS.ProcessEnv): string {
   if (env.XDG_CONFIG_HOME) {
     return join(env.XDG_CONFIG_HOME, 'pnpm');
   }
   if (process.platform === 'darwin') {
-    return join(getHomeDir(), 'Library/Preferences/pnpm');
+    return join(homedir(), 'Library/Preferences/pnpm');
   }
   if (process.platform !== 'win32') {
-    return join(getHomeDir(), '.config/pnpm');
+    return join(homedir(), '.config/pnpm');
   }
   if (env.LOCALAPPDATA) {
     return join(env.LOCALAPPDATA, 'pnpm/config');
   }
-  return join(getHomeDir(), '.config/pnpm');
+  return join(homedir(), '.config/pnpm');
 }
 
 /**
@@ -35,8 +37,7 @@ export function readPnpmYamlConfig(
     return null;
   }
   try {
-    const { load } = require('@zkochan/js-yaml');
-    return (load(readFileSync(path, 'utf-8')) as Record<string, unknown>) ?? {};
+    return readYamlFile<Record<string, unknown>>(path) ?? {};
   } catch {
     return 'invalid';
   }

@@ -75,6 +75,7 @@ function isQuoted(val: string): boolean {
  * surrounding quotes (single-quoted is literal, double-quoted is JSON-decoded),
  * and for an unquoted value stops at the first unescaped `;`/`#` (inline
  * comment) while honoring `\` escapes.
+ * See https://github.com/isaacs/ini/blob/a0c72fe9e335a3f949d734fb5ef13371a850bbe3/lib/ini.js#L230
  */
 function iniUnsafe(raw: string): string {
   const val = raw.trim();
