@@ -1,4 +1,12 @@
-import { rcompare, satisfies, valid, validRange } from 'semver';
+import {
+  compare,
+  parse,
+  prerelease,
+  rcompare,
+  satisfies,
+  valid,
+  validRange,
+} from 'semver';
 import { pickBunVersion } from './behavior/bun';
 import { pickNpmVersion } from './behavior/npm';
 import { pickPnpmVersion } from './behavior/pnpm';
@@ -86,6 +94,91 @@ export function newestInRange(
       .filter((v) => satisfies(v, range, { includePrerelease: false }))
       .sort(rcompare)[0] ?? range
   );
+}
+
+/**
+ * The prerelease channel of a version: the first dotted identifier of its
+ * prerelease tag (e.g. `rc` for `23.0.0-rc.0`, `pr` for `23.0.0-pr.123`), or
+ * null for a stable release. Channels keep parallel prerelease lines apart so a
+ * cooldown degrade never crosses from `rc` into an internal `pr` build.
+ */
+function prereleaseChannel(version: string): string | null {
+  const pre = prerelease(version);
+  return pre && pre.length > 0 ? String(pre[0]) : null;
+}
+
+// The stable `major.minor.patch` of a version, ignoring any prerelease tag
+// (e.g. `23.0.0` for both `23.0.0-rc.0` and `23.0.0`).
+function releaseLine(version: string): string {
+  const parsed = parse(version);
+  return parsed ? `${parsed.major}.${parsed.minor}.${parsed.patch}` : version;
+}
+
+// Publish time in epoch ms; a version with no registry time sorts last.
+function publishedAtMs(metadata: RegistryMetadata, version: string): number {
+  const time = metadata.time?.[version];
+  const parsed = time ? Date.parse(time) : NaN;
+  return Number.isNaN(parsed) ? -Infinity : parsed;
+}
+
+/**
+ * Degrades a too-new dist-tag target to a cooldown-compliant version "of the
+ * same kind", shared by every package manager.
+ *
+ * The candidate pool is every version at or below the resolved target that is
+ * either stable or shares the target's prerelease channel. It is ordered so
+ * that same-channel prereleases of the target's exact release line come first,
+ * then everything else; within each group the most recently published version
+ * comes first (semver breaks ties and orders versions with no publish time).
+ * The first compliant version in that order wins.
+ *
+ * So a stable target degrades to the newest compliant stable, and a prerelease
+ * target keeps a compliant prerelease of the release it points at when one
+ * exists, otherwise drops to the newest compliant version below it - never
+ * crossing into a different prerelease channel (e.g. an internal `pr` build).
+ * Returns null when nothing in the pool is compliant; callers turn that into
+ * their package manager's violation.
+ *
+ * `isCompliant` is the caller's per-PM maturity test (package managers differ
+ * on missing publish times and excludes).
+ */
+export function degradeTagToCompliant(
+  target: string,
+  metadata: RegistryMetadata,
+  isCompliant: (version: string) => boolean
+): string | null {
+  const targetChannel = prereleaseChannel(target);
+  const targetLine = releaseLine(target);
+
+  const pool = metadata.versions.filter((version) => {
+    if (compare(version, target) > 0) {
+      return false; // newer than the target
+    }
+    const channel = prereleaseChannel(version);
+    // A prerelease in any other channel (and every prerelease when the target
+    // is stable) is out; stables and same-channel prereleases stay.
+    return channel === null || channel === targetChannel;
+  });
+
+  // Same-channel prereleases of the target's exact release line rank ahead of
+  // the rest; within each group, newest published first.
+  const sameLine = (version: string): boolean =>
+    prereleaseChannel(version) === targetChannel &&
+    releaseLine(version) === targetLine;
+  pool.sort((a, b) => {
+    const sameLineDelta = Number(sameLine(b)) - Number(sameLine(a));
+    if (sameLineDelta !== 0) {
+      return sameLineDelta;
+    }
+    const publishedA = publishedAtMs(metadata, a);
+    const publishedB = publishedAtMs(metadata, b);
+    if (publishedA !== publishedB) {
+      return publishedB - publishedA;
+    }
+    return compare(b, a);
+  });
+
+  return pool.find((version) => isCompliant(version)) ?? null;
 }
 
 /**

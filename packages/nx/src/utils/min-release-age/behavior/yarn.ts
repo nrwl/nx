@@ -3,13 +3,14 @@ import { existsSync, readFileSync } from 'fs';
 import { homedir } from 'os';
 import { dirname, join } from 'path';
 import { minimatch } from 'minimatch';
-import { lt, prerelease, rcompare, rsort, satisfies, validRange } from 'semver';
+import { lt, rcompare, satisfies, validRange } from 'semver';
 import { MS_PER_MINUTE } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
   classifySpec,
+  degradeTagToCompliant,
   newestInRange,
   splitPackageDescriptor,
   type PickOutcome,
@@ -263,14 +264,12 @@ function splitDescriptor(entry: string): {
 }
 
 /**
- * Mirrors yarn berry's NpmSemverResolver/NpmTagResolver gate:
+ * yarn resolution under an active cooldown. Exact pins and ranges mirror yarn
+ * berry's NpmSemverResolver gate; dist-tag degrade uses the shared cross-PM rule:
  * - exact/range: newest approved match; none approved -> violation (YN0016
  *   wording >=4.13, YN0082 wording <4.13).
- * - `latest` tag too new: highest approved version `semver.lt(latest)`, with
- *   prereleases tolerated only when latest itself is a prerelease (>=4.11; pre
- *   4.11 prereleases may be picked); none -> violation.
- * - non-latest tags too new: yarn re-resolves through the gated semver resolver
- *   and fails -> violation.
+ * - dist-tag too new -> degrade to the newest compliant version in the tag's
+ *   own channel, falling back to stable (`degradeTagToCompliant`); none -> violation.
  */
 export function pickYarnVersion(
   spec: string,
@@ -306,51 +305,13 @@ function pickTag(
   if (isApproved(metadata, policy, target)) {
     return { version: target, unconstrained };
   }
-
-  // Only `latest` walks down in the tag resolver; every other tag is re-resolved
-  // by `yarn add` through the gated semver resolver using a range derived from
-  // the resolved target (default `^` modifier via defaultSemverRangePrefix), so
-  // the failure references e.g. `^2.0.0`, not the bare tag name.
-  if (spec !== 'latest') {
-    throw quarantined(metadata, policy, `^${target}`, [target]);
+  const degraded = degradeTagToCompliant(target, metadata, (v) =>
+    isApproved(metadata, policy, v)
+  );
+  if (degraded) {
+    return { version: degraded, unconstrained };
   }
-
-  const fallback = walkDownFromLatest(target, metadata, policy);
-  if (fallback) {
-    return { version: fallback, unconstrained };
-  }
-  throw new MinReleaseAgeViolationError({
-    packageManager: 'yarn',
-    packageName: metadata.name,
-    spec,
-    pmShapedDetail: `The version for tag "${spec}" is quarantined, and no lower version is available`,
-    blocked: blockedVersionsFrom(metadata, [target]),
-    remediation: [remediationHint(metadata, policy)],
-  });
-}
-
-function walkDownFromLatest(
-  latest: string,
-  metadata: RegistryMetadata,
-  policy: MinReleaseAgePolicy
-): string | null {
-  // 4.11+ tolerates prereleases in the fallback only when latest is itself a
-  // prerelease; earlier versions may pick any lower approved version.
-  const pre4_11 = lt(policy.packageManagerVersion, '4.11.0');
-  const tolerate = pre4_11 || prerelease(latest) !== null;
-  const sorted = rsort([...metadata.versions]);
-  for (const candidate of sorted) {
-    if (!lt(candidate, latest)) {
-      continue;
-    }
-    if (!tolerate && prerelease(candidate) !== null) {
-      continue;
-    }
-    if (isApproved(metadata, policy, candidate)) {
-      return candidate;
-    }
-  }
-  return null;
+  throw quarantined(metadata, policy, spec, [target]);
 }
 
 function pickRange(
