@@ -12,6 +12,12 @@ export interface WebinarNotifierProps {
   id: string;
   title: string;
   description: string;
+  /**
+   * Optional decorative key-art URL (840x320 @2x, transparent background),
+   * designed to anchor to the card's top-right corner and crest past its
+   * top/right edges. Hidden below the md breakpoint.
+   */
+  artwork?: string;
   primaryCtaUrl: string;
   primaryCtaText: string;
   secondaryCtaUrl?: string;
@@ -23,6 +29,7 @@ export function WebinarNotifier({
   id,
   title,
   description,
+  artwork,
   primaryCtaUrl,
   primaryCtaText,
   secondaryCtaUrl,
@@ -65,13 +72,30 @@ export function WebinarNotifier({
         damping: 30,
         mass: 1,
       }}
-      className="fixed bottom-0 left-0 right-0 z-30 w-full overflow-hidden border border-zinc-200 bg-white text-zinc-900 shadow-lg md:bottom-4 md:left-auto md:right-4 md:w-[512px] md:rounded-lg dark:border-transparent dark:bg-zinc-950 dark:text-white"
+      className={`fixed right-0 bottom-0 left-0 z-30 w-full overflow-hidden border border-zinc-200 bg-white text-zinc-900 shadow-lg md:right-4 md:bottom-4 md:left-auto md:w-[512px] md:rounded-lg dark:border-transparent dark:bg-zinc-950 dark:text-white ${
+        artwork ? 'md:overflow-visible' : ''
+      }`}
       style={{ originY: 1 }}
     >
-      <div className="relative p-4">
+      {artwork && (
+        <>
+          <img
+            src={artwork}
+            alt=""
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-7 -right-4 z-0 hidden w-[420px] select-none md:block"
+          />
+          {/* Text-protection scrim: keeps title/description legible over any artwork. */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[1] hidden bg-gradient-to-r from-white from-40% via-white/90 via-55% to-transparent to-70% md:block md:rounded-lg dark:from-zinc-950 dark:via-zinc-950/90"
+          />
+        </>
+      )}
+      <div className="relative z-[2] p-4">
         <button
           onClick={closeNotifier}
-          className="absolute right-2 top-2 flex h-9 w-9 cursor-pointer items-center justify-center !rounded-full bg-transparent p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus:outline-none focus:ring-2 focus:ring-zinc-400 dark:text-white dark:hover:bg-zinc-800 dark:hover:text-white dark:focus:ring-white"
+          className="absolute top-2 right-2 flex h-9 w-9 cursor-pointer items-center justify-center !rounded-full bg-transparent p-1 text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 focus:ring-2 focus:ring-zinc-400 focus:outline-none dark:text-white dark:hover:bg-zinc-800 dark:hover:text-white dark:focus:ring-white"
         >
           <XMarkIcon className="size-5" aria-hidden="true" />
           <span className="sr-only">Close</span>
@@ -81,14 +105,20 @@ export function WebinarNotifier({
             layout="position"
             className="flex items-center gap-2 pr-8 text-lg font-semibold"
           >
-            <MegaphoneIcon
-              aria-hidden="true"
-              className="size-8 flex-shrink-0"
-            />
+            {!artwork && (
+              <MegaphoneIcon
+                aria-hidden="true"
+                className="size-8 flex-shrink-0"
+              />
+            )}
             <span>{title}</span>
           </motion.h3>
           <motion.div key="banner-content" className="mt-4 space-y-4">
-            <p className="mb-2 text-sm text-zinc-500 dark:text-zinc-300">
+            <p
+              className={`mb-2 text-sm text-zinc-500 dark:text-zinc-300 ${
+                artwork ? 'md:max-w-[58%]' : ''
+              }`}
+            >
               {description}
             </p>
             <div className="flex flex-wrap items-center justify-end gap-1 sm:gap-4">
