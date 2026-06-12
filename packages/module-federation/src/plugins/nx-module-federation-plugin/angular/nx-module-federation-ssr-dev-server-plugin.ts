@@ -127,7 +127,9 @@ export class NxModuleFederationSSRDevServerPlugin
         }
       }
 
-      this.devServerProcess = fork(serverPath);
+      this.devServerProcess = fork(serverPath, [], {
+        windowsHide: true,
+      });
       process.on('exit', () => {
         this.devServerProcess?.kill('SIGKILL');
       });

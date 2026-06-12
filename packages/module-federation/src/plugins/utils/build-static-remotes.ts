@@ -35,6 +35,7 @@ export async function buildStaticRemotes(
       {
         cwd: workspaceRoot,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        windowsHide: true,
         env: {
           ...process.env,
           WEBPACK_SERVE: 'false',

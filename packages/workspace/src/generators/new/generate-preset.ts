@@ -38,6 +38,7 @@ export function generatePreset(host: Tree, opts: NormalizedSchema) {
   const forkOptions: ForkOptions = {
     stdio: 'inherit',
     cwd: newWorkspaceRoot,
+    windowsHide: true,
   };
   const pmc = getPackageManagerCommand();
   const nxInstallationPaths = getNxRequirePaths(newWorkspaceRoot);

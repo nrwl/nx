@@ -110,6 +110,7 @@ export default async function* serveExecutor(
         {
           cwd: options.dev ? projectRoot : nextDir,
           stdio: 'inherit',
+          windowsHide: true,
         }
       );
 

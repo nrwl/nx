@@ -186,6 +186,7 @@ export async function* nodeExecutor(
               {
                 execArgv: getExecArgv(options),
                 stdio: [0, 'pipe', 'pipe', 'ipc'],
+                windowsHide: true,
                 env: {
                   ...process.env,
                   NX_FILE_TO_RUN: fileToRunCorrectPath(fileToRun),
@@ -307,6 +308,7 @@ export async function* nodeExecutor(
             {
               cwd: context.root,
               stdio: 'inherit',
+              windowsHide: true,
             }
           );
           childProcess.once('exit', (code) => {

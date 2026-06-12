@@ -44,6 +44,7 @@ export async function buildStaticRemotes(
       {
         cwd: context.root,
         stdio: ['ignore', 'pipe', 'pipe', 'ipc'],
+        windowsHide: true,
         env: {
           ...process.env,
           // Ensure that webpack serve env var is not passed to static remotes

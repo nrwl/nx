@@ -52,7 +52,9 @@ export class AngularSsrDevServer implements RspackPluginInstance {
             if (!existsSync(serverPath)) {
               await new Promise<void>((res) => setTimeout(res, 50));
             }
-            this.#devServerProcess = fork(serverPath);
+            this.#devServerProcess = fork(serverPath, [], {
+              windowsHide: true,
+            });
             this.#devServerProcess.on('spawn', () => {
               this.#wsServer.sendReload();
             });
