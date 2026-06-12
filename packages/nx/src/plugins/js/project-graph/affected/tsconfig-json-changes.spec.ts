@@ -335,14 +335,18 @@ describe('getTouchedProjectsFromTsConfig', () => {
                     {
                       compilerOptions: {
                         paths: {
-                          '@proj/cdk-utils': ['libs/typescript/cdk-utils/index.ts'],
+                          '@proj/cdk-utils': [
+                            'libs/typescript/cdk-utils/index.ts',
+                          ],
                         },
                       },
                     },
                     {
                       compilerOptions: {
                         paths: {
-                          '@proj/cdk-utils': ['libs/typescript/cdk-utils/utils.ts'],
+                          '@proj/cdk-utils': [
+                            'libs/typescript/cdk-utils/utils.ts',
+                          ],
                         },
                       },
                     }
