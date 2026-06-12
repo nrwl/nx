@@ -578,6 +578,8 @@ fun isContinuous(task: Task): Boolean {
 private val nonCacheableTasks = setOf("bootRun", "run")
 
 fun isCacheable(task: Task): Boolean {
+  // *ToMavenLocal tasks write to ~/.m2 (outside the workspace) — a cache hit skips the real publish
+  if (task.name.endsWith("ToMavenLocal")) return false
   return !nonCacheableTasks.contains(task.name)
 }
 
