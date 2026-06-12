@@ -24,6 +24,7 @@ overrides:
   underscore: '^1.13.8'
   brace-expansion: '5.0.6'
   minimatch: '^10.2.5'
+  shell-quote: '^1.8.4'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'

@@ -679,6 +679,34 @@ class ProcessTaskUtilsTest {
       assertTrue { result.contains(":compileJava") }
       assertTrue { result.contains(":checkKotlinGradlePluginConfigurationErrors") }
     }
+
+    @Test
+    fun `processTask emits includeDependsOnTasks in sorted order`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinProject").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val result =
+          processTask(
+              compileTestKotlin,
+              projectBuildPath = ":kotlinProject",
+              projectRoot = kotlinProject.projectDir.path,
+              workspaceRoot = kotlinProject.rootDir.path,
+              externalNodes = mutableMapOf(),
+              dependencies = mutableSetOf(),
+              targetNameOverrides = emptyMap(),
+              gitIgnoreClassifier = GitIgnoreClassifier(kotlinProject.rootDir),
+              project = kotlinProject)
+
+      @Suppress("UNCHECKED_CAST") val options = result["options"] as Map<String, Any?>
+      @Suppress("UNCHECKED_CAST")
+      val includeDependsOnTasks = options["includeDependsOnTasks"] as List<String>
+
+      assertEquals(
+          includeDependsOnTasks.sorted(),
+          includeDependsOnTasks,
+          "includeDependsOnTasks must be sorted so options (and the ProjectConfiguration hash) stay stable across JVM runs")
+    }
   }
 
   @Nested
