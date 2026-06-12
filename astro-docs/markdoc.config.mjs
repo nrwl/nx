@@ -391,6 +391,10 @@ export default defineMarkdocConfig({
           type: 'String',
           required: false,
         },
+        poster: {
+          type: 'String',
+          required: false,
+        },
         link: {
           type: 'String',
           required: false,
