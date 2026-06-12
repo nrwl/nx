@@ -118,6 +118,15 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["options"])
   }
 
+  @Test
+  fun `publishToMavenLocal tasks are not cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    assertFalse(
+        isCacheable(project.tasks.register("publishPluginMavenPublicationToMavenLocal").get()))
+    assertFalse(isCacheable(project.tasks.register("publishToMavenLocal").get()))
+    assertTrue(isCacheable(project.tasks.register("compileJava").get()))
+  }
+
   @Nested
   inner class GetInputsForTaskTests {
     lateinit var project: Project
