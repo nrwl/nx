@@ -286,10 +286,12 @@ private fun getInputsForTaskImpl(
     // output directories exist but are empty, so file-based extension discovery misses them)
     dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
-    // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
-    dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
-    }
+    // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
+    dependentTaskOutputExtensions
+        .filterNot { nonInputDependentOutputExtensions.contains(it) }
+        .forEach { extension ->
+          inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
+        }
 
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
@@ -581,6 +583,9 @@ private val nonCacheableTasks = setOf("bootRun", "run")
 fun isCacheable(task: Task): Boolean {
   return !nonCacheableTasks.contains(task.name)
 }
+
+// Compiler incremental-compilation state (*.bin) — non-deterministic and not consumed downstream.
+private val nonInputDependentOutputExtensions = setOf("bin")
 
 fun findProviderBasedDependencies(task: Task): Set<String> {
   val taskInternal = task as? TaskInternal ?: return emptySet()

@@ -212,6 +212,33 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask ignores bin incremental-compilation outputs`() {
+      val dependentTask = project.tasks.register("dependentCompile").get()
+
+      val classFile = java.io.File("$workspaceRoot/build/classes/kotlin/main/Main.class")
+      val incrementalBin =
+          java.io.File("$workspaceRoot/build/tmp/compileJava/previous-compilation-data.bin")
+      dependentTask.outputs.file(classFile)
+      dependentTask.outputs.file(incrementalBin)
+
+      val mainTask = project.tasks.register("consumerTask").get()
+      mainTask.dependsOn(dependentTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.none { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.bin" },
+          "Expected no **/*.bin dependentTasksOutputFiles input, got $result")
+    }
+
+    @Test
     fun `test getInputsForTask with pre-computed dependsOnTasks`() {
       // Create dependent task with output
       val dependentTask = project.tasks.register("dependentTask").get()
