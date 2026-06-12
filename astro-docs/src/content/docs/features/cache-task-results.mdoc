@@ -20,19 +20,21 @@ Nx **restores both the terminal output and the files** created from running the 
 {% tabs syncKey="nx-version" %}
 {% tabitem label="Nx >= 17" %}
 
-To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include the `build` and `test` tasks:
+To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include entries for the `build` and `test` tasks:
 
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "cache": true
     },
-    "test": {
+    {
+      "target": "test",
       "cache": true
     }
-  }
+  ]
 }
 ```
 
@@ -87,7 +89,7 @@ You can define these inputs and outputs at the project level (`project.json`) or
 
 Take the following example: we want to exclude all `*.md` files from the cache so that whenever we change the README.md (or any other markdown file), it does _not_ invalidate the build cache. We also know that the build output will be stored in a folder named after the project name in the `dist` folder at the root of the workspace.
 
-To achieve this, we can add `inputs` and `outputs` definitions globally for all projects or at a per-project level:
+To achieve this, you can add `inputs` and `outputs` definitions globally for all projects or at a per-project level:
 
 {% tabs %}
 {% tabitem label="Globally" %}
@@ -95,12 +97,13 @@ To achieve this, we can add `inputs` and `outputs` definitions globally for all 
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
       "outputs": ["{workspaceRoot}/dist/{projectName}"]
     }
-  }
+  ]
 }
 ```
 

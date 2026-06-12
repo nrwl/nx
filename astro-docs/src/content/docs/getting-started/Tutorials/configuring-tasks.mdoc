@@ -101,11 +101,12 @@ The `dependsOn` property defines this ordering:
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"],
     },
-  },
+  ],
 }
 ```
 
@@ -218,11 +219,12 @@ When many projects share the same task configuration, defining it in every `proj
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"],
     },
-  },
+  ],
 }
 ```
 
