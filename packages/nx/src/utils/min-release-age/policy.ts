@@ -37,7 +37,6 @@ export type PmMinReleaseAgeBehavior =
       strict: boolean;
       // v11 loose fallback: no mature match -> lowest (least-immature) version
       looseFallback: boolean;
-      latestTagDegrade: 'same-major' | 'any-major';
       // >=11.1.3: pnpm itself writes excludes / prompts; nx mirrors that
       writesExcludes: boolean;
       missingTimeMap: 'error' | 'skip';
