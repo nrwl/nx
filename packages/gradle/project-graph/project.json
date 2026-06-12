@@ -5,6 +5,12 @@
     "gradle:publishToMavenLocal": {
       "cache": false
     },
+    "gradle:publishPluginMavenPublicationToMavenLocal": {
+      "cache": false
+    },
+    "gradle:publishNxProjectGraphPluginPluginMarkerMavenPublicationToMavenLocal": {
+      "cache": false
+    },
     "publish-staging": {
       "command": "./gradlew :gradle-project-graph:publish",
       "cache": true,

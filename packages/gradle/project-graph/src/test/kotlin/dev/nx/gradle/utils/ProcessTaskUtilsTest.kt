@@ -118,6 +118,15 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["options"])
   }
 
+  @Test
+  fun `publishToMavenLocal tasks are not cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    assertFalse(
+        isCacheable(project.tasks.register("publishPluginMavenPublicationToMavenLocal").get()))
+    assertFalse(isCacheable(project.tasks.register("publishToMavenLocal").get()))
+    assertTrue(isCacheable(project.tasks.register("compileJava").get()))
+  }
+
   @Nested
   inner class GetInputsForTaskTests {
     lateinit var project: Project
@@ -209,6 +218,33 @@ class ProcessTaskUtilsTest {
       val dependentTasksOutputFilesCount =
           result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
       assertEquals(2, dependentTasksOutputFilesCount)
+    }
+
+    @Test
+    fun `test getInputsForTask ignores bin incremental-compilation outputs`() {
+      val dependentTask = project.tasks.register("dependentCompile").get()
+
+      val classFile = java.io.File("$workspaceRoot/build/classes/kotlin/main/Main.class")
+      val incrementalBin =
+          java.io.File("$workspaceRoot/build/tmp/compileJava/previous-compilation-data.bin")
+      dependentTask.outputs.file(classFile)
+      dependentTask.outputs.file(incrementalBin)
+
+      val mainTask = project.tasks.register("consumerTask").get()
+      mainTask.dependsOn(dependentTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.none { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.bin" },
+          "Expected no **/*.bin dependentTasksOutputFiles input, got $result")
     }
 
     @Test
