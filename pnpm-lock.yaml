@@ -363,6 +363,7 @@ overrides:
   underscore: ^1.13.8
   brace-expansion: 5.0.6
   minimatch: ^10.2.5
+  shell-quote: ^1.8.4
 
 patchedDependencies:
   '@astrojs/starlight': 228878a1bd48ba76f2630925a90b16047a4b87b4559f750d4372442909652235
@@ -23223,8 +23224,8 @@ packages:
   shell-exec@1.0.2:
     resolution: {integrity: sha512-jyVd+kU2X+mWKMmGhx4fpWbPsjvD53k9ivqetutVW/BQ+WIZoDoP4d8vUMGezV6saZsiNoW2f9GIhg9Dondohg==}
 
-  shell-quote@1.8.3:
-    resolution: {integrity: sha512-ObmnIF4hXNg1BqhnHmgbDETF8dLPCggZWBjkQfhZpbszZnYur5DUljTcCHii5LC3J5E0yeO/1LIMyH+UvHQgyw==}
+  shell-quote@1.8.4:
+    resolution: {integrity: sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==}
     engines: {node: '>= 0.4'}
 
   shiki@0.14.7:
@@ -40957,7 +40958,7 @@ snapshots:
       sanitize-filename: 1.6.3
       semver: 7.7.4
       serialize-error: 8.1.0
-      shell-quote: 1.8.3
+      shell-quote: 1.8.4
       signal-exit: 3.0.7
       stream-json: 1.9.1
       strip-ansi: 6.0.1
@@ -45216,7 +45217,7 @@ snapshots:
   launch-editor@2.13.1:
     dependencies:
       picocolors: 1.1.1
-      shell-quote: 1.8.3
+      shell-quote: 1.8.4
 
   layout-base@1.0.2: {}
 
@@ -49978,7 +49979,7 @@ snapshots:
 
   react-devtools-core@6.1.5:
     dependencies:
-      shell-quote: 1.8.3
+      shell-quote: 1.8.4
       ws: 7.5.10
     transitivePeerDependencies:
       - bufferutil
@@ -51416,7 +51417,7 @@ snapshots:
 
   shell-exec@1.0.2: {}
 
-  shell-quote@1.8.3: {}
+  shell-quote@1.8.4: {}
 
   shiki@0.14.7:
     dependencies:
