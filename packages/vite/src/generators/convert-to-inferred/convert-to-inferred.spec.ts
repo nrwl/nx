@@ -15,6 +15,7 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
+  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
@@ -657,12 +658,13 @@ describe('Vite - Convert Executors To Plugin', () => {
     it('should add Vite options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/vite:build'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/vite:build',
         options: {
           mode: 'production',
         },
-      };
+      });
       updateNxJson(tree, nxJson);
       const project = createTestProject(tree);
 

@@ -19,14 +19,16 @@ describe('use legacy cache', () => {
         "affected": {
           "defaultBase": "main",
         },
-        "targetDefaults": {
-          "build": {
+        "targetDefaults": [
+          {
             "cache": true,
+            "target": "build",
           },
-          "lint": {
+          {
             "cache": true,
+            "target": "lint",
           },
-        },
+        ],
         "useLegacyCache": true,
       }
     `);
@@ -45,14 +47,16 @@ describe('use legacy cache', () => {
         "affected": {
           "defaultBase": "main",
         },
-        "targetDefaults": {
-          "build": {
+        "targetDefaults": [
+          {
             "cache": true,
+            "target": "build",
           },
-          "lint": {
+          {
             "cache": true,
+            "target": "lint",
           },
-        },
+        ],
       }
     `);
   });
