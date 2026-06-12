@@ -124,7 +124,8 @@ private fun processTaskImpl(
     put("taskName", "${projectBuildPath}:${task.name}")
     val providerDependencies = findProviderBasedDependencies(task)
     if (providerDependencies.isNotEmpty()) {
-      put("includeDependsOnTasks", providerDependencies.toList())
+      // sorted(): set iteration order is JVM-run-dependent; keep options hash-stable.
+      put("includeDependsOnTasks", providerDependencies.sorted())
     }
     if (continuous) {
       put("continuous", true)
