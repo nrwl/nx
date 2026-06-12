@@ -2,6 +2,9 @@ import { ProjectGraph } from '../config/project-graph';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TaskOrchestrator } from './task-orchestrator';
 
+performance.mark = jest.fn((name: string) => ({ name }) as PerformanceMark);
+performance.measure = jest.fn();
+
 jest.mock('./task-env', () => ({
   ...jest.requireActual('./task-env'),
   getTaskSpecificEnv: jest.fn(() => process.env),
