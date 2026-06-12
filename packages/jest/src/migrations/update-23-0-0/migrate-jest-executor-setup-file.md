@@ -106,17 +106,18 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 
 ##### Before
 
-```json title="nx.json" {7}
+```json title="nx.json" {8}
 {
-  "targetDefaults": {
-    "test": {
+  "targetDefaults": [
+    {
+      "target": "test",
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "setupFile": "{projectRoot}/src/test-setup.ts"
       }
     }
-  }
+  ]
 }
 ```
 
@@ -124,33 +125,35 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 
 ```json title="nx.json"
 {
-  "targetDefaults": {
-    "test": {
+  "targetDefaults": [
+    {
+      "target": "test",
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts"
       }
     }
-  }
+  ]
 }
 ```
 
 Per-project paths don't make sense as workspace defaults, so the option is removed without rewriting individual project Jest configs. A warning is logged so the setup file path can be added to each project's Jest config manually if needed.
 
-Remove the option from a target default using the `@nx/jest:jest` executor as the key:
+Remove the option from a target default entry matching on the `@nx/jest:jest` executor:
 
 ##### Before
 
-```json title="nx.json" {6}
+```json title="nx.json" {7}
 {
-  "targetDefaults": {
-    "@nx/jest:jest": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "setupFile": "{projectRoot}/src/test-setup.ts"
       }
     }
-  }
+  ]
 }
 ```
 
@@ -158,12 +161,13 @@ Remove the option from a target default using the `@nx/jest:jest` executor as th
 
 ```json title="nx.json"
 {
-  "targetDefaults": {
-    "@nx/jest:jest": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts"
       }
     }
-  }
+  ]
 }
 ```
