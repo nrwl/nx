@@ -148,6 +148,30 @@ describe('handleDockerVersion {versionActionsVersion} integration', () => {
     ).toBe('');
   });
 
+  it('skips image tagging when resolved version is empty', async () => {
+    const finalConfigForProject: any = {
+      dockerOptions: {
+        repositoryName: 'repo',
+        registryUrl: 'ghcr.io',
+        versionSchemes: { prod: '{versionActionsVersion}' },
+      },
+    };
+
+    const result = await handleDockerVersion(
+      process.cwd(),
+      mockProjectNode,
+      finalConfigForProject,
+      'prod',
+      undefined,
+      undefined
+    );
+
+    expect(result.newVersion).toBeNull();
+    expect(result.logs).toStrictEqual([
+      'No docker version resolved for my-app; skipping image tagging.',
+    ]);
+  });
+
   it('falls back to env NX_DOCKER_IMAGE_REF tag if provided (extracting version)', async () => {
     process.env.NX_DOCKER_IMAGE_REF = 'registry.example.com/repo:9.9.9';
     const finalConfigForProject: any = {
