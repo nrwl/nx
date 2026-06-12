@@ -380,8 +380,8 @@ function readTsConfigPaths(root: string = workspaceRoot) {
       // Workspaces that wire up packages purely through package-manager
       // workspaces + package.json exports have no root tsconfig — they simply
       // have no tsconfig path mappings. Local plugin lookup must fall through
-      // to the package-metadata matching below instead of failing the whole
-      // plugin load.
+      // to the package-metadata matching in `findNxProjectForImportPath`
+      // instead of failing the whole plugin load.
       tsconfigPaths = {};
       return tsconfigPaths;
     }

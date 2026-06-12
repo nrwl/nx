@@ -31,7 +31,7 @@ jest.mock('../../utils/workspace-root', () => ({
   workspaceRoot: '/workspace',
 }));
 
-// Return minimal tsconfig so readTsConfigPaths doesn't throw when it finds the file.
+// Return a minimal tsconfig for tests that exercise the tsconfig-present path.
 jest.mock('../../utils/fileutils', () => ({
   readJsonFile: jest.fn(() => ({ compilerOptions: { paths: {} } })),
 }));
@@ -105,7 +105,7 @@ function onlyFilesExist(...files: string[]) {
 
 describe('resolveSubpathFromExports (via getPluginPathAndName)', () => {
   beforeEach(() => {
-    // Default: tsconfig exists (so readTsConfigPaths doesn't throw), nothing else.
+    // Default: tsconfig exists (tests exercise the tsconfig-present path), nothing else.
     existsSyncMock.mockImplementation((p: unknown) => {
       const s = String(p);
       return s.endsWith('tsconfig.base.json') || s.endsWith('tsconfig.json');
