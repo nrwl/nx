@@ -479,14 +479,13 @@ export class TaskOrchestrator {
   private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
     const batchResults = await this.cache.getBatch(tasks);
     const cacheHits: CacheHit[] = [];
-    const cacheFailures = process.env.NX_CACHE_FAILURES === 'true';
     for (const task of tasks) {
       const cachedResult = batchResults.get(task.hash);
-      // Successful results are always replayed from cache. Failed results
-      // (non-zero code) are only replayed when NX_CACHE_FAILURES is enabled,
-      // mirroring shouldCacheTaskResult on the write side — otherwise cached
-      // failures would be written but never read back.
-      if (cachedResult && (cachedResult.code === 0 || cacheFailures)) {
+      // Replay a cached result only under the same condition it was cached
+      // under (shouldCacheTaskResult): successes always, failures only when
+      // NX_CACHE_FAILURES is enabled. Otherwise cached failures would be
+      // written but never read back.
+      if (cachedResult && this.shouldCacheTaskResult(task, cachedResult.code)) {
         cacheHits.push({ task, cachedResult });
       }
     }
