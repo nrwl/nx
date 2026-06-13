@@ -1,36 +1,37 @@
 import * as net from 'net';
 
 /**
- * Check if a port is already in use by attempting to connect to it.
+ * Check if a port is already in use by attempting to bind to it.
  *
- * Resolves `true` only when a TCP connection can be established (i.e. something
- * is already listening on the port). A bounded connection timeout ensures the
- * check fails fast and reports the port as free when the address is unreachable
- * rather than blocking on the OS-level TCP connect timeout (which can be minutes
- * on some Linux setups). This matters because callers pass `host: 'localhost'`,
- * which can resolve to the IPv6 loopback `::1`; when nothing accepts the
- * connection there the SYN may be dropped, yielding a slow `ETIMEDOUT` instead
- * of an immediate `ECONNREFUSED`. Without this bound `nx serve` for a module
- * federation host stalls for minutes while probing each remote's proxy port.
+ * Binding is a local operation, so this resolves immediately: if the port is
+ * already taken the OS rejects the bind with `EADDRINUSE` and we return `true`;
+ * otherwise the bind succeeds, we release the port, and return `false`.
+ *
+ * Unlike a connection-based check this performs no network round-trip, so it
+ * cannot stall on the OS-level TCP connect timeout when `localhost` resolves to
+ * an unreachable address (e.g. the IPv6 loopback `::1`, where a dropped SYN
+ * yields a slow `ETIMEDOUT`). That stall was the cause of the multi-minute
+ * `nx serve` hang for module federation hosts. It also tests the exact
+ * operation the caller is about to perform — binding the proxy to the port —
+ * so it is a precise predictor of whether starting the proxy would `EADDRINUSE`.
  */
 export function isPortInUse(
   port: number,
-  host: string = 'localhost',
-  timeout: number = 1000
+  host: string = 'localhost'
 ): Promise<boolean> {
   return new Promise((resolve) => {
-    const socket = new net.Socket();
-    const finish = (inUse: boolean) => {
-      socket.removeAllListeners();
-      socket.destroy();
-      resolve(inUse);
-    };
-    socket.setTimeout(timeout);
-    socket.once('connect', () => finish(true));
-    // Unreachable/slow host or nothing listening -> the port is not serving, so
-    // treat it as free and let the caller start its own proxy.
-    socket.once('timeout', () => finish(false));
-    socket.once('error', () => finish(false));
-    socket.connect({ port, host });
+    const server = net.createServer();
+    server.once('error', (err: NodeJS.ErrnoException) => {
+      // The port is already taken. Any other error means we could not bind for
+      // an unrelated reason; treat the port as free so the caller still attempts
+      // to start its proxy and surfaces the real error there.
+      resolve(err.code === 'EADDRINUSE');
+    });
+    server.once('listening', () => {
+      // We bound successfully, so nothing else holds the port. Release it so the
+      // caller can start its proxy on the same port.
+      server.close(() => resolve(false));
+    });
+    server.listen(port, host);
   });
 }
