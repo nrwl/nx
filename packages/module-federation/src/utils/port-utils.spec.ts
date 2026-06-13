@@ -1,26 +1,24 @@
-import * as net from 'net';
+import { AddressInfo, createServer, Server } from 'net';
 import { isPortInUse } from './port-utils';
 
 describe('isPortInUse', () => {
-  function listen(port: number, host = '127.0.0.1'): Promise<net.Server> {
+  function listen(port: number, host = '127.0.0.1'): Promise<Server> {
     return new Promise((resolve, reject) => {
-      const server = net.createServer();
+      const server = createServer();
       server.once('error', reject);
       server.listen(port, host, () => resolve(server));
     });
   }
 
-  function closeServer(server: net.Server): Promise<void> {
+  function closeServer(server: Server): Promise<void> {
     return new Promise((resolve) => server.close(() => resolve()));
   }
 
-  // Find a port that is currently free by binding to an ephemeral port and
-  // immediately releasing it.
   function getFreePort(): Promise<number> {
     return new Promise((resolve) => {
-      const server = net.createServer();
+      const server = createServer();
       server.listen(0, '127.0.0.1', () => {
-        const { port } = server.address() as net.AddressInfo;
+        const { port } = server.address() as AddressInfo;
         server.close(() => resolve(port));
       });
     });
@@ -47,8 +45,7 @@ describe('isPortInUse', () => {
 
     expect(await isPortInUse(port, '127.0.0.1')).toBe(false);
 
-    // If the check had leaked its probe listener, binding here would throw
-    // EADDRINUSE -- which is exactly the crash the check exists to prevent.
+    // Would throw EADDRINUSE if the check leaked its probe listener.
     const server = await listen(port);
     await closeServer(server);
   });
