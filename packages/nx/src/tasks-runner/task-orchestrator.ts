@@ -479,9 +479,14 @@ export class TaskOrchestrator {
   private async fetchCacheHits(tasks: Task[]): Promise<CacheHit[]> {
     const batchResults = await this.cache.getBatch(tasks);
     const cacheHits: CacheHit[] = [];
+    const cacheFailures = process.env.NX_CACHE_FAILURES === 'true';
     for (const task of tasks) {
       const cachedResult = batchResults.get(task.hash);
-      if (cachedResult && cachedResult.code === 0) {
+      // Successful results are always replayed from cache. Failed results
+      // (non-zero code) are only replayed when NX_CACHE_FAILURES is enabled,
+      // mirroring shouldCacheTaskResult on the write side — otherwise cached
+      // failures would be written but never read back.
+      if (cachedResult && (cachedResult.code === 0 || cacheFailures)) {
         cacheHits.push({ task, cachedResult });
       }
     }
@@ -529,11 +534,19 @@ export class TaskOrchestrator {
     const results: TaskResult[] = [];
     for (const { task, cachedResult } of cacheHits) {
       const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
-      const status: TaskStatus = cachedResult.remote
-        ? 'remote-cache'
-        : shouldCopy
-          ? 'local-cache'
-          : 'local-cache-kept-existing';
+      // A cached failure (only replayed when NX_CACHE_FAILURES is enabled) is
+      // reported as a plain failure so exit codes, run summaries, and the TUI
+      // treat it as a failed run rather than a successful cache hit. Reporting
+      // it as 'failure' also ensures its terminal output is always printed,
+      // which the cache statuses suppress for non-initiating projects.
+      const status: TaskStatus =
+        cachedResult.code !== 0
+          ? 'failure'
+          : cachedResult.remote
+            ? 'remote-cache'
+            : shouldCopy
+              ? 'local-cache'
+              : 'local-cache-kept-existing';
 
       this.options.lifeCycle.printTaskTerminalOutput(
         task,
@@ -651,7 +664,10 @@ export class TaskOrchestrator {
             cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
           );
           await this.preRunSteps(cachedTasks, { groupId });
-          await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
+          await this.postRunSteps(cacheResults, doNotSkipCache, {
+            groupId,
+            fromCache: true,
+          });
         }
 
         for (const task of eligible) {
@@ -948,7 +964,10 @@ export class TaskOrchestrator {
     const hitTasks = cacheHits.map((h) => h.task);
     await this.preRunSteps(hitTasks, { groupId });
     const results = await this.finalizeCacheHits(cacheHits);
-    await this.postRunSteps(results, doNotSkipCache, { groupId });
+    await this.postRunSteps(results, doNotSkipCache, {
+      groupId,
+      fromCache: true,
+    });
     return results;
   }
 
@@ -1407,7 +1426,7 @@ export class TaskOrchestrator {
       terminalOutput?: string;
     }[],
     doNotSkipCache: boolean,
-    { groupId }: { groupId: number }
+    { groupId, fromCache = false }: { groupId: number; fromCache?: boolean }
   ) {
     const now = Date.now();
     const tasksToRecord: { outputs: string[]; hash: string }[] = [];
@@ -1428,7 +1447,11 @@ export class TaskOrchestrator {
       await this.recordOutputsHashBatch(tasksToRecord);
     }
 
-    if (doNotSkipCache && !this.stopRequested) {
+    // Skip caching for results that were just replayed from the cache.
+    // Successful cache hits are already filtered out below by status, but a
+    // replayed failure (reported as 'failure' so it counts as a failed run)
+    // would otherwise be re-written to the cache on every replay.
+    if (doNotSkipCache && !this.stopRequested && !fromCache) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
