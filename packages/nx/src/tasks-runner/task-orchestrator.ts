@@ -664,10 +664,8 @@ export class TaskOrchestrator {
             cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
           );
           await this.preRunSteps(cachedTasks, { groupId });
-          await this.postRunSteps(cacheResults, doNotSkipCache, {
-            groupId,
-            fromCache: true,
-          });
+          // Replayed from the cache — don't write the results back.
+          await this.postRunSteps(cacheResults, false, groupId);
         }
 
         for (const task of eligible) {
@@ -771,7 +769,7 @@ export class TaskOrchestrator {
     }
 
     if (batchResults.length > 0) {
-      await this.postRunSteps(batchResults, doNotSkipCache, { groupId });
+      await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
     // Update batch status based on all task results
@@ -964,10 +962,8 @@ export class TaskOrchestrator {
     const hitTasks = cacheHits.map((h) => h.task);
     await this.preRunSteps(hitTasks, { groupId });
     const results = await this.finalizeCacheHits(cacheHits);
-    await this.postRunSteps(results, doNotSkipCache, {
-      groupId,
-      fromCache: true,
-    });
+    // Replayed from the cache — don't write the results back.
+    await this.postRunSteps(results, false, groupId);
     return results;
   }
 
@@ -1022,7 +1018,7 @@ export class TaskOrchestrator {
     await this.postRunSteps(
       [{ task, status: 'failure', terminalOutput }],
       doNotSkipCache,
-      { groupId }
+      groupId
     );
   }
 
@@ -1103,7 +1099,7 @@ export class TaskOrchestrator {
     };
 
     try {
-      await this.postRunSteps([result], doNotSkipCache, { groupId });
+      await this.postRunSteps([result], doNotSkipCache, groupId);
     } finally {
       this.discreteTaskExitHandled.delete(task.id);
       resolveDiscreteExit!();
@@ -1425,8 +1421,8 @@ export class TaskOrchestrator {
       status: TaskStatus;
       terminalOutput?: string;
     }[],
-    doNotSkipCache: boolean,
-    { groupId, fromCache = false }: { groupId: number; fromCache?: boolean }
+    shouldCache: boolean,
+    groupId: number
   ) {
     const now = Date.now();
     const tasksToRecord: { outputs: string[]; hash: string }[] = [];
@@ -1447,11 +1443,10 @@ export class TaskOrchestrator {
       await this.recordOutputsHashBatch(tasksToRecord);
     }
 
-    // Skip caching for results that were just replayed from the cache.
-    // Successful cache hits are already filtered out below by status, but a
-    // replayed failure (reported as 'failure' so it counts as a failed run)
-    // would otherwise be re-written to the cache on every replay.
-    if (doNotSkipCache && !this.stopRequested && !fromCache) {
+    // Caller decides whether these results should be written to the cache.
+    // Cache replays pass false so a replayed failure (reported as 'failure' so
+    // it counts as a failed run) isn't re-written to the cache on every replay.
+    if (shouldCache && !this.stopRequested) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(
