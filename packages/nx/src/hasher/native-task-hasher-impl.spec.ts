@@ -46,13 +46,14 @@ describe('native task hasher', () => {
       production: ['default'],
       sharedGlobals: [],
     },
-    targetDefaults: {
-      build: {
+    targetDefaults: [
+      {
+        target: 'build',
         cache: true,
         dependsOn: ['^build'],
         inputs: ['production', '^production'],
       },
-    },
+    ],
   };
 
   beforeEach(async () => {
@@ -193,7 +194,7 @@ describe('native task hasher', () => {
             "unrelated:ProjectConfiguration": "11133337791644294114",
             "unrelated:TsConfig": "2264969541778889434",
             "unrelated:libs/unrelated/**/*": "4127219831408253695",
-            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+            "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6859150227600641022",
           },
           "inputs": {
             "depOutputs": [],
@@ -220,7 +221,7 @@ describe('native task hasher', () => {
               "echo runtime123",
             ],
           },
-          "value": "15987635381237972716",
+          "value": "5031601627279345290",
         },
       ]
     `);
@@ -284,7 +285,7 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "8031122597231773116",
           "parent:TsConfig": "2264969541778889434",
           "parent:libs/parent/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6859150227600641022",
         },
         "inputs": {
           "depOutputs": [],
@@ -308,7 +309,7 @@ describe('native task hasher', () => {
           ],
           "runtime": [],
         },
-        "value": "10262178246623018030",
+        "value": "14228125929120094206",
       }
     `);
   });
@@ -959,7 +960,7 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "8661678577354855152",
           "parent:libs/parent/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6859150227600641022",
         },
         "inputs": {
           "depOutputs": [],
@@ -979,7 +980,7 @@ describe('native task hasher', () => {
           ],
           "runtime": [],
         },
-        "value": "16657264716563422624",
+        "value": "4925424742213548611",
       }
     `);
   });
@@ -1056,7 +1057,7 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
           "parent:libs/parent/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6859150227600641022",
         },
         "inputs": {
           "depOutputs": [],
@@ -1080,7 +1081,7 @@ describe('native task hasher', () => {
           ],
           "runtime": [],
         },
-        "value": "1325637283470296766",
+        "value": "290026322141806557",
       }
     `);
 
@@ -1101,7 +1102,7 @@ describe('native task hasher', () => {
           "parent:ProjectConfiguration": "3608670998275221195",
           "parent:TsConfig": "2264969541778889434",
           "parent:libs/parent/**/*": "17059468255294227635",
-          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6993407921919898285",
+          "workspace:[{workspaceRoot}/nx.json,{workspaceRoot}/.gitignore,{workspaceRoot}/.nxignore]": "6859150227600641022",
         },
         "inputs": {
           "depOutputs": [],
@@ -1125,7 +1126,7 @@ describe('native task hasher', () => {
           ],
           "runtime": [],
         },
-        "value": "1325637283470296766",
+        "value": "290026322141806557",
       }
     `);
   });

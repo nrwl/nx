@@ -43,11 +43,11 @@ Caching is opt-in per task. The recommended approach is to set `cache: true` in 
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": { "cache": true },
-    "test": { "cache": true },
-    "lint": { "cache": true },
-  },
+  "targetDefaults": [
+    { "target": "build", "cache": true },
+    { "target": "test", "cache": true },
+    { "target": "lint", "cache": true },
+  ],
 }
 ```
 
@@ -145,13 +145,14 @@ Local cache is stored in `.nx/cache` by default. Run `nx reset` to clear all loc
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "cache": true,
       "inputs": ["{projectRoot}/src/**/*", "{projectRoot}/tsconfig.json"],
       "outputs": ["{projectRoot}/dist"],
     },
-  },
+  ],
 }
 ```
 
@@ -209,12 +210,13 @@ Nx provides sensible defaults out of the box. For example, test specification fi
       "!{projectRoot}/**/*.test.ts",
     ],
   },
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "inputs": ["production", "^production"],
       "cache": true,
     },
-  },
+  ],
 }
 ```
 

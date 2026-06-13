@@ -112,15 +112,17 @@ Move shared configuration to `nx.json` so projects inherit defaults:
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "cache": true,
       "dependsOn": ["^build"],
     },
-    "test": {
+    {
+      "target": "test",
       "cache": true,
     },
-  },
+  ],
 }
 ```
 

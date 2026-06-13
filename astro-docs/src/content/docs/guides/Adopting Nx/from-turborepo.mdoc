@@ -43,7 +43,7 @@ It's important to remember that Nx is a superset of Turborepo, it can do everyth
 
 ### Example: Basic configuration comparison
 
-To help with understanding the new `nx.json` file, let's compare it to the `turbo.json` file:
+To help with understanding the new `nx.json` file, compare it to the `turbo.json` file:
 
 ```json
 {
@@ -79,25 +79,29 @@ After running `nx init`, you'll automatically have an equivalent `nx.json`:
 ```json
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"],
       "inputs": ["{projectRoot}/**/*", "{projectRoot}/.env*"],
       "outputs": ["{projectRoot}/.next/**", "!{projectRoot}/.next/cache/**"],
       "cache": true
     },
-    "lint": {
+    {
+      "target": "lint",
       "dependsOn": ["^lint"],
       "cache": true
     },
-    "check-types": {
+    {
+      "target": "check-types",
       "dependsOn": ["^check-types"],
       "cache": true
     },
-    "dev": {
+    {
+      "target": "dev",
       "continuous": true
     }
-  }
+  ]
 }
 ```
 

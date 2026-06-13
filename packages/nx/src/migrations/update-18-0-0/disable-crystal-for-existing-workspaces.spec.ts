@@ -10,14 +10,16 @@ describe('disable crystal for existing workspaces', () => {
         "affected": {
           "defaultBase": "main"
         },
-        "targetDefaults": {
-          "build": {
+        "targetDefaults": [
+          {
+            "target": "build",
             "cache": true
           },
-          "lint": {
+          {
+            "target": "lint",
             "cache": true
           }
-        },
+        ],
         "useInferencePlugins": false
       }
       "
