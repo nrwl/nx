@@ -163,7 +163,7 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
 
   it('should remove tsConfig and copyFiles options in nx.json target defaults for a target with the cypress executor', async () => {
     updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-      json.targetDefaults ??= {};
+      json.targetDefaults = {};
       json.targetDefaults.e2e = {
         executor: '@nx/cypress:cypress',
         options: {
@@ -205,7 +205,7 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
 
   it('should remove tsConfig and copyFiles options in nx.json target defaults for the cypress executor', async () => {
     updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-      json.targetDefaults ??= {};
+      json.targetDefaults = {};
       json.targetDefaults['@nx/cypress:cypress'] = {
         options: {
           cypressConfig: '{projectRoot}/cypress.config.ts',
