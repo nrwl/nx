@@ -14,16 +14,19 @@ import { isGlobPattern } from '../../utils/globs';
  * array shape introduced in Nx 23. No-op when `targetDefaults` is absent
  * or already an array.
  *
- * This is a pure shape conversion: every legacy key produces at least one
- * array entry, nothing is ever dropped. A key that looks unused at
- * migration time may still be a live default — the target can be added
- * later, and the project graph at migration time can be incomplete.
- *
- * A project graph is built internally (and only when needed) to
- * disambiguate `:`-style keys; see {@link convertTargetDefaultsRecordToArray}.
+ * Disambiguation strategy for record keys (highest precedence first):
+ * 1. Glob → `{ target: key }`.
+ * 2. Project graph available: replicate legacy lookup by checking whether
+ *    the key matches a target name and/or an executor string anywhere in
+ *    the workspace. Emit one entry, or both when it matches both
+ *    (genuinely ambiguous; safer to duplicate than drop a default).
+ *    If neither matches, the default is dead and we drop the entry.
+ * 3. No graph: fall back to the syntactic heuristic — `:` (and not a
+ *    glob) → executor; otherwise target.
  */
 export default async function convertTargetDefaultsToArray(
-  tree: Tree
+  tree: Tree,
+  projectGraph?: ProjectGraph
 ): Promise<string[]> {
   if (!tree.exists('nx.json')) {
     return [];
@@ -36,16 +39,17 @@ export default async function convertTargetDefaultsToArray(
   if (!targetDefaults) return [];
   if (Array.isArray(targetDefaults)) return [];
 
-  const legacy = targetDefaults as TargetDefaultsRecord;
   const nextSteps: string[] = [];
+  const graph = projectGraph ?? (await tryCreateProjectGraph(nextSteps));
 
-  // The graph is only consulted to disambiguate `:`-style keys (target name
-  // vs `pkg:executor` id). Skip building it entirely when there are none.
-  const graph = Object.keys(legacy).some(isExecutorAmbiguousKey)
-    ? await tryCreateProjectGraph(nextSteps)
-    : undefined;
+  const legacy = targetDefaults as TargetDefaultsRecord;
+  const entries: TargetDefaultEntry[] = [];
+  for (const key of Object.keys(legacy)) {
+    const value = legacy[key] ?? {};
+    entries.push(...legacyKeyToEntries(key, value, graph));
+  }
 
-  nxJson.targetDefaults = convertTargetDefaultsRecordToArray(legacy, graph);
+  nxJson.targetDefaults = entries;
   updateNxJson(tree, nxJson);
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
@@ -53,41 +57,12 @@ export default async function convertTargetDefaultsToArray(
 }
 
 /**
- * Pure conversion from the legacy record shape to the array shape.
- *
- * Kept separate from the migration entry point — and accepting the graph
- * as an explicit argument — so the disambiguation logic can be unit tested
- * directly with synthetic graphs. The migration runner never hands a
- * migration a project graph, so this seam is what keeps that behaviour
- * testable without standing up a real workspace.
- *
- * Disambiguation per key:
- * - A glob, or a plain key with no `:`, is unambiguously a target name.
- * - A `:` key is ambiguous (target name vs `pkg:executor` id). When the
- *   graph shows it used as a target name, an executor, or both, the
- *   matching entry/entries are emitted. With no graph signal, it falls
- *   back to the syntactic heuristic (`:` → executor). Either way an entry
- *   is always emitted.
+ * Treat a legacy record key as an executor when it contains `:` and is
+ * not a glob (executor strings are `pkg:name`; globs would also contain
+ * `*` / `{` / etc., which `isGlobPattern` catches). Used only as a
+ * syntactic fallback when no graph signal is available.
  */
-export function convertTargetDefaultsRecordToArray(
-  legacy: TargetDefaultsRecord,
-  graph?: ProjectGraph
-): TargetDefaultEntry[] {
-  const entries: TargetDefaultEntry[] = [];
-  for (const key of Object.keys(legacy)) {
-    const value = legacy[key] ?? {};
-    entries.push(...legacyKeyToEntries(key, value, graph));
-  }
-  return entries;
-}
-
-/**
- * A legacy record key is ambiguous between a target name and an executor
- * id only when it contains `:` and is not a glob (executor ids are
- * `pkg:name`; globs would also contain `*` / `{` / etc., which
- * `isGlobPattern` catches). These are the only keys the graph helps with.
- */
-function isExecutorAmbiguousKey(key: string): boolean {
+export function isExecutorLikeKey(key: string): boolean {
   return key.includes(':') && !isGlobPattern(key);
 }
 
@@ -96,13 +71,10 @@ function legacyKeyToEntries(
   value: Partial<TargetDefaultEntry>,
   graph: ProjectGraph | undefined
 ): TargetDefaultEntry[] {
-  // Globs and plain (no `:`) keys are unambiguously target names.
-  if (!isExecutorAmbiguousKey(key)) {
+  if (isGlobPattern(key)) {
     return [{ target: key, ...value }];
   }
 
-  // A `:` key could be a target name or a `pkg:executor` id. Use the graph
-  // to disambiguate when it has something to say.
   if (graph) {
     const { matchesTargetName, matchesExecutor } = classifyKeyAgainstGraph(
       key,
@@ -116,12 +88,15 @@ function legacyKeyToEntries(
     }
     if (matchesTargetName) return [{ target: key, ...value }];
     if (matchesExecutor) return [{ executor: key, ...value }];
-    // Graph had no signal for this key — fall through to the syntactic
-    // heuristic rather than dropping the entry.
+    // Graph evidence said no target and no executor in the workspace
+    // uses this key — the default is dead. Drop it rather than guess.
+    return [];
   }
 
-  // Syntactic fallback: a `:` key that is not a glob is an executor id.
-  return [{ executor: key, ...value }];
+  // No graph available; fall back to the syntactic heuristic.
+  return isExecutorLikeKey(key)
+    ? [{ executor: key, ...value }]
+    : [{ target: key, ...value }];
 }
 
 function classifyKeyAgainstGraph(
