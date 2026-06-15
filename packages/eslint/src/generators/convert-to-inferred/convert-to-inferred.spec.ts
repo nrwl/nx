@@ -10,6 +10,7 @@ import {
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
+  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -546,10 +547,11 @@ describe('Eslint - Convert Executors To Plugin', () => {
       updateProjectConfiguration(tree, project.name, project);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/eslint:lint'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/eslint:lint',
         inputs: ['default', '^default', '{projectRoot}/.eslintrc.json'],
-      };
+      });
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -566,15 +568,16 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/eslint:lint'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/eslint:lint',
         inputs: [
           'default',
           '{projectRoot}/.eslintrc.json',
           '{projectRoot}/.eslintignore',
           '{projectRoot}/eslint.config.cjs',
         ],
-      };
+      });
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -597,8 +600,9 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/eslint:lint'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/eslint:lint',
         inputs: [
           'default',
           '{projectRoot}/.eslintrc.json',
@@ -606,7 +610,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
           '{projectRoot}/eslint.config.cjs',
           { externalDependencies: ['eslint-plugin-react'] },
         ],
-      };
+      });
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -629,8 +633,9 @@ describe('Eslint - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/eslint:lint'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/eslint:lint',
         inputs: [
           'default',
           '{projectRoot}/.eslintrc.json',
@@ -638,7 +643,7 @@ describe('Eslint - Convert Executors To Plugin', () => {
           '{projectRoot}/eslint.config.cjs',
           { externalDependencies: ['eslint', 'eslint-plugin-react'] },
         ],
-      };
+      });
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -972,12 +977,13 @@ describe('Eslint - Convert Executors To Plugin', () => {
     it('should add Eslint options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/eslint:lint'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/eslint:lint',
         options: {
           maxWarnings: 10,
         },
-      };
+      });
       updateNxJson(tree, nxJson);
       const project = createTestProject(tree);
 

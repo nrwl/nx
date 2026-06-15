@@ -6,7 +6,7 @@ filter: 'type:Guides'
 
 Nx can help you dramatically reduce the lines of configuration code that you need to maintain.
 
-Lets say you have three libraries in your repository - `lib1`, `lib2` and `lib3`. The folder structure looks like this:
+Say you have three libraries in your repository - `lib1`, `lib2` and `lib3`. The folder structure looks like this:
 
 {% filetree %}
 
@@ -178,13 +178,14 @@ If you scan through these three files, they look very similar. The only differen
 
 ## Reduce configuration with targetDefaults
 
-Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
+Use [the `targetDefaults` property](/docs/reference/nx-json#target-defaults) in `nx.json` to reduce some of this duplicate configuration code.
 
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "executor": "@nx/js:tsc",
       "outputs": ["{options.outputPath}"],
       "options": {
@@ -194,14 +195,16 @@ Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-default
         "assets": ["{projectRoot}/*.md"]
       }
     },
-    "lint": {
+    {
+      "target": "lint",
       "executor": "@nx/eslint:lint",
       "outputs": ["{options.outputFile}"],
       "options": {
         "lintFilePatterns": ["{projectRoot}/**/*.ts"]
       }
     },
-    "test": {
+    {
+      "target": "test",
       "executor": "@nx/jest:jest",
       "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
       "options": {
@@ -215,7 +218,7 @@ Let's use [the `targetDefaults` property](/docs/reference/nx-json#target-default
         }
       }
     }
-  }
+  ]
 }
 ```
 
@@ -290,12 +293,12 @@ Now the `project.json` files can be reduced to this:
 {% /tabs %}
 
 {% aside type="caution" title="Target defaults" %}
-This recipe assumes every target with the same name uses the same executor. If you have targets with the same name using different executors and you're providing target defaults for executor options, don't place the executor options under a default target using the target name as the key. Instead, separate target default configurations can be added using the executors as the keys, each with their specific configuration.
+This recipe assumes every target with the same name uses the same executor. If targets with the same name use different executors, don't set executor-specific options on an entry that matches on `target` alone. Instead, add a separate entry for each executor that matches on `executor`, each with its own configuration. Entries can also be scoped with the `projects` and `plugin` filters described in the [nx.json reference](/docs/reference/nx-json#target-defaults).
 {% /aside %}
 
 ## Ramifications
 
-This change adds 33 lines of code to `nx.json` and removes 84 lines of code from the `project.json` files. That's a net reduction of 51 lines of code. And you'll get more benefits from this strategy the more projects you have in your repo.
+This change adds 36 lines of code to `nx.json` and removes 84 lines of code from the `project.json` files. That's a net reduction of 48 lines of code. And you'll get more benefits from this strategy the more projects you have in your repo.
 
 Reducing lines of code is nice, but just like using the DRY principle in code, there are other benefits:
 

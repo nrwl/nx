@@ -339,14 +339,15 @@ As you configure `inputs`, keep the project details screen open and it will refr
 
 [Target Defaults](/docs/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `inputs` here one time will apply to a set of similar targets.
 
-```jsonc {% meta="{5}" %}
+```jsonc {% meta="{6}" %}
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "inputs": ["production", "^production"],
     },
-  },
+  ],
 }
 ```
 
@@ -454,14 +455,15 @@ Instead of defining a named input and referencing it with `^`, you can directly 
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "inputs": [
         "production",
         "^{projectRoot}/src/**/*.ts", // Only consider .ts source files from dependencies
       ],
     },
-  },
+  ],
 }
 ```
 
