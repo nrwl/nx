@@ -80,6 +80,20 @@ function validateOptions(options: UnitTestExecutorOptions): void {
       );
     }
   }
+
+  if (lt(angularVersion, '22.0.0')) {
+    if (options.isolate !== undefined) {
+      throw new Error(
+        `The "isolate" option requires Angular version 22.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+
+    if (options.quiet !== undefined) {
+      throw new Error(
+        `The "quiet" option requires Angular version 22.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
 }
 
 /**
