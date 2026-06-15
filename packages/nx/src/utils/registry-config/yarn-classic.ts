@@ -69,6 +69,9 @@ export function getYarnClassicSpawnRegistryEnv(
   const scope = getPackageScope(packageName);
   const realHome = homedir();
   const { primary, secondary } = yarnHomeTiers(realHome);
+  // Computed once: each feeds two chains below and must stay identical.
+  const ancestors = ancestorDirectories(root);
+  const etcDir = globalEtcDir();
 
   // [project, primary home, etc, (root secondary home), ...ancestors]. yarn
   // ranks <prefix>/etc above the real home it adds under root, so the secondary
@@ -81,12 +84,12 @@ export function getYarnClassicSpawnRegistryEnv(
     dotfiles(root, true),
     dotfiles(primary.dir, primary.npmNative),
     {
-      npmrcPath: join(globalEtcDir(), 'npmrc'),
-      yarnrcPath: join(globalEtcDir(), 'yarnrc'),
+      npmrcPath: join(etcDir, 'npmrc'),
+      yarnrcPath: join(etcDir, 'yarnrc'),
       npmNative: true,
     },
     ...(secondary ? [dotfiles(secondary.dir, secondary.npmNative)] : []),
-    ...ancestorDirectories(root).map((dir) => dotfiles(dir, false)),
+    ...ancestors.map((dir) => dotfiles(dir, false)),
   ];
   const npmrcChain: RcFile[] = sources.map((s) => ({
     npmNative: s.npmNative,
@@ -104,7 +107,7 @@ export function getYarnClassicSpawnRegistryEnv(
   const cliRegistryChain: RcFile[] = [
     { npmNative: false, map: readYarnrcMap(join(realHome, '.yarnrc')) },
     { npmNative: false, map: readYarnrcMap(join(root, '.yarnrc')) },
-    ...ancestorDirectories(root).map((dir) => ({
+    ...ancestors.map((dir) => ({
       npmNative: false,
       map: readYarnrcMap(join(dir, '.yarnrc')),
     })),
