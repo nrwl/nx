@@ -182,7 +182,7 @@ export async function addLinterToCyProject(
       );
       // When cypress is added to an existing eslint config (lintProjectGenerator
       // didn't run because the file already existed), the projectService block
-      // isn't there yet — add it ourselves.
+      // isn't there yet, so add it ourselves.
       if (useFlatConfig(tree) && enableTypedLinting) {
         addTypedLintingToFlatConfig(tree, projectConfig.root);
       }

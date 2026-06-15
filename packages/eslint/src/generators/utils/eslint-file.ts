@@ -216,7 +216,7 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
 /**
  * Returns whether typed linting was requested for a generator. Accepts both
  * the new `enableTypedLinting` flag and the deprecated `setParserOptionsProject`
- * flag (removed in Nx v24) — either set to a truthy value enables the feature.
+ * flag (removed in Nx v24). Either one set to a truthy value enables the feature.
  */
 export function isTypedLintingEnabled(options: {
   enableTypedLinting?: boolean;
@@ -281,6 +281,11 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
     return;
   }
   const content = tree.read(fileName, 'utf8');
+  // Idempotent: skip if a project-service block already exists (e.g. the config
+  // was generated with typed linting), so we don't append a duplicate.
+  if (detectTypedLintingShape(content) === 'project-service') {
+    return;
+  }
   // AST-based detection avoids string false-positives like `// export default ...`
   // inside a `.cjs` config.
   const format = determineEslintConfigFormat(content);

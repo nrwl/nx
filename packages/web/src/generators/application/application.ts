@@ -329,7 +329,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       '@nx/eslint',
       nxVersion
     );
-    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
     const {
       isTypedLintingEnabled,
@@ -397,7 +397,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
     const {
       configurationGenerator,
