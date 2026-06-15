@@ -671,6 +671,9 @@ export async function packageRegistryPack(
    * package. `yarn` packs the active workspace, `pnpm pack` only packs
    * the local project, and `bun` doesn't support pack.
    *
+   * @param packDestination Directory passed to npm's `--pack-destination`, where
+   * the `.tgz` is written. The command itself runs from the workspace root (so
+   * npm reads the workspace .npmrc), not from this directory.
    * @see https://github.com/nrwl/nx/pull/9667#discussion_r842553994
    */
   const pm = 'npm';
