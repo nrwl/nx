@@ -706,7 +706,7 @@ module.exports = [
 
     it('ignores the word "project" in unrelated contexts', () => {
       // The previous regex matched any `project:` after `parserOptions:`, even
-      // in comments — verify the tightened regex no longer false-positives.
+      // in comments. Verify the tightened regex no longer false-positives.
       expect(
         detectTypedLintingShape(
           `// configure parserOptions for your project: false\nexport default [];`
@@ -770,6 +770,21 @@ module.exports = [
       // No flat config file at the project root; helper should silently return.
       addTypedLintingToFlatConfig(tree, 'libs/test');
       expect(tree.read('libs/test/.eslintrc.json', 'utf-8')).toBe('{}');
+    });
+
+    it('does not append a second projectService block when one already exists', () => {
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], rules: {} }];\n`
+      );
+
+      // A re-run (or a consumer re-adding typed linting to a config that already
+      // has it) must not duplicate the projectService block.
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content.match(/projectService: true/g)).toHaveLength(1);
     });
   });
 });

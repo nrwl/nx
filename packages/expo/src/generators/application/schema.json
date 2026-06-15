@@ -75,7 +75,7 @@
       "type": "boolean",
       "description": "Whether or not to configure the ESLint \"parserOptions.project\" option. We do not do this by default for lint performance reasons.",
       "default": false,
-      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in v24."
+      "x-deprecated": "Use `enableTypedLinting` instead. This option will be removed in Nx v24."
     },
     "e2eTestRunner": {
       "description": "Adds the specified e2e test runner",
