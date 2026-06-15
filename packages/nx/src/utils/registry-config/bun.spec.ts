@@ -209,6 +209,51 @@ describe('getBunSpawnRegistryEnv', () => {
     }
   });
 
+  it('expands a whole-value $VAR (no braces) in a bunfig registry URL', () => {
+    writeBunfig('[install]\nregistry = "$NX_TEST_BUN_REG"\n');
+    process.env.NX_TEST_BUN_REG = 'https://reg-l.example.com/';
+    try {
+      expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://reg-l.example.com/',
+      });
+    } finally {
+      delete process.env.NX_TEST_BUN_REG;
+    }
+  });
+
+  it('expands a whole-value $VAR in bunfig registry credentials', () => {
+    writeBunfig(
+      [
+        '[install]',
+        'registry = { url = "https://reg-a.example.com/", token = "$NX_TEST_BUN_TOKEN" }',
+      ].join('\n')
+    );
+    process.env.NX_TEST_BUN_TOKEN = 'real-token';
+    try {
+      expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': 'real-token',
+      });
+    } finally {
+      delete process.env.NX_TEST_BUN_TOKEN;
+    }
+  });
+
+  it('keeps a braced ${VAR} literal in bunfig (bun expands braces only in .npmrc)', () => {
+    writeBunfig(
+      '[install]\nregistry = { url = "https://reg-a.example.com/", token = "${NX_TEST_BUN_TOKEN}" }\n'
+    );
+    process.env.NX_TEST_BUN_TOKEN = 'real-token';
+    try {
+      expect(getBunSpawnRegistryEnv('is-even', root, '1.3.14')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_authToken': '${NX_TEST_BUN_TOKEN}',
+      });
+    } finally {
+      delete process.env.NX_TEST_BUN_TOKEN;
+    }
+  });
+
   it('reads the global npmrc/bunfig from XDG_CONFIG_HOME and swaps npm userconfig', () => {
     const xdg = join(base, 'xdg');
     mkdirSync(xdg);
