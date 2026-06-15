@@ -2,17 +2,11 @@ import {
   addProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
-  type TargetDefaultsRecord,
   type Tree,
   updateNxJson,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import prefixReportsDirectoryWithProjectRoot from './prefix-reports-directory-with-project-root';
-
-// This migration ran before targetDefaults supported the array shape, so
-// the test fixtures all use the legacy record shape.
-const td = (n: { targetDefaults?: unknown }) =>
-  n.targetDefaults as TargetDefaultsRecord;
 
 describe('prefix-reports-directory-with-project-root', () => {
   let tree: Tree;
@@ -273,7 +267,7 @@ describe('prefix-reports-directory-with-project-root', () => {
 
       const updatedNxJson = readNxJson(tree);
       expect(
-        td(updatedNxJson)['@nx/vitest:test'].options.reportsDirectory
+        updatedNxJson.targetDefaults['@nx/vitest:test'].options.reportsDirectory
       ).toBe('{projectRoot}/coverage');
     });
 
@@ -292,7 +286,7 @@ describe('prefix-reports-directory-with-project-root', () => {
       prefixReportsDirectoryWithProjectRoot(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(td(updatedNxJson).test.options.reportsDirectory).toBe(
+      expect(updatedNxJson.targetDefaults.test.options.reportsDirectory).toBe(
         '{projectRoot}/coverage'
       );
     });
@@ -311,9 +305,9 @@ describe('prefix-reports-directory-with-project-root', () => {
       prefixReportsDirectoryWithProjectRoot(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(td(updatedNxJson)['@nx/jest:jest'].options.reportsDirectory).toBe(
-        'coverage'
-      );
+      expect(
+        updatedNxJson.targetDefaults['@nx/jest:jest'].options.reportsDirectory
+      ).toBe('coverage');
     });
 
     it('should handle workspace without targetDefaults', () => {
@@ -325,7 +319,7 @@ describe('prefix-reports-directory-with-project-root', () => {
       prefixReportsDirectoryWithProjectRoot(tree);
 
       const updatedNxJson = readNxJson(tree);
-      expect(td(updatedNxJson)).toBeUndefined();
+      expect(updatedNxJson.targetDefaults).toBeUndefined();
     });
   });
 

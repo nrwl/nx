@@ -1,7 +1,4 @@
-import {
-  addBuildTargetDefaults,
-  readTargetDefaultsForTarget,
-} from '@nx/devkit/internal';
+import { addBuildTargetDefaults } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -158,11 +155,9 @@ function updatePackageJson(
     const projectTarget = project.targets[options.buildTarget];
     const mergedTarget = mergeTargetConfigurations(
       projectTarget,
-      readTargetDefaultsForTarget(
-        options.buildTarget,
-        nxJson.targetDefaults,
-        projectTarget.executor
-      )
+      (projectTarget.executor
+        ? nxJson.targetDefaults?.[projectTarget.executor]
+        : undefined) ?? nxJson.targetDefaults?.[options.buildTarget]
     );
 
     const {

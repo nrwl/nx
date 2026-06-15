@@ -305,8 +305,10 @@ export function getTargetInputs(
   const namedInputs = getNamedInputs(nxJson, projectNode);
 
   const targetData = projectNode.data.targets[target];
+  const targetDefaults = (nxJson.targetDefaults || {})[target];
+
   const inputs = splitInputsIntoSelfAndDependencies(
-    targetData.inputs || DEFAULT_INPUTS,
+    targetData.inputs || targetDefaults?.inputs || DEFAULT_INPUTS,
     namedInputs
   );
 
@@ -340,13 +342,10 @@ export function getInputs(
   const projectNode = projectGraph.nodes[task.target.project];
   const namedInputs = getNamedInputs(nxJson, projectNode);
   const targetData = projectNode.data.targets[task.target.target];
-  // See `getTargetInputs` — graph construction already merged any
-  // matching target-default's `inputs` onto `targetData.inputs`, so a
-  // separate `targetDefaults` lookup here would either repeat that
-  // work or drift from it.
+  const targetDefaults = (nxJson.targetDefaults || {})[task.target.target];
   const { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets } =
     splitInputsIntoSelfAndDependencies(
-      targetData.inputs || (DEFAULT_INPUTS as any),
+      targetData.inputs || targetDefaults?.inputs || (DEFAULT_INPUTS as any),
       namedInputs
     );
   return { selfInputs, depsInputs, depsOutputs, projectInputs, depsFilesets };
