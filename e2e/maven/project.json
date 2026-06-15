@@ -10,14 +10,14 @@
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
-        "dev.nx.maven:nx-maven-plugin:install"
+        "dev.nx.maven:nx-maven-plugin:mvn:install"
       ]
     },
     "e2e-ci--**/**": {
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry",
-        "dev.nx.maven:nx-maven-plugin:install"
+        "dev.nx.maven:nx-maven-plugin:mvn:install"
       ]
     }
   }

@@ -3,12 +3,6 @@
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
   "targets": {
-    "nx-release-publish": {
-      "dependsOn": [
-        "^nx-release-publish",
-        "dev.nx.maven:nx-maven-plugin:install"
-      ]
-    },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
       "inputs": ["copyReadme"],
