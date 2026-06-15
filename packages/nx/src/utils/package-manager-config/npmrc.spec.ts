@@ -79,4 +79,24 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
       { key: 'minimum-release-age-exclude', value: 'b' },
     ]);
   });
+
+  it('strips a [] array suffix to the bare key (ini bracketedArray)', () => {
+    const map = read('ca[]=/etc/ssl/ca.pem');
+    expect(map?.get('ca')).toBe('/etc/ssl/ca.pem');
+    expect(map?.has('ca[]')).toBe(false);
+  });
+
+  it('joins repeated ca[] entries on a blank line (npm env array encoding)', () => {
+    expect(
+      read('ca[]=-----CA-ONE-----\nca[]=-----CA-TWO-----')?.get('ca')
+    ).toBe('-----CA-ONE-----\n\n-----CA-TWO-----');
+  });
+
+  it('flags bracketed entries as arrays in readNpmrcEntries', () => {
+    writeFileSync(path, 'ca[]=a\nca[]=b');
+    expect(readNpmrcEntries(path)).toEqual([
+      { key: 'ca', value: 'a', array: true },
+      { key: 'ca', value: 'b', array: true },
+    ]);
+  });
 });

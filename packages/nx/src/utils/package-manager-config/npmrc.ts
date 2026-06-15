@@ -3,6 +3,8 @@ import { existsSync, readFileSync } from 'fs';
 export interface NpmrcEntry {
   key: string;
   value: string;
+  /** True when the source used ini's `key[]` array-append syntax. */
+  array?: boolean;
 }
 
 /**
@@ -38,10 +40,16 @@ export function parseNpmrcContent(raw: string): NpmrcEntry[] {
     if (eq === -1) {
       continue;
     }
-    entries.push({
-      key: iniUnsafe(trimmed.slice(0, eq)),
-      value: iniUnsafe(trimmed.slice(eq + 1)),
-    });
+    const rawKey = iniUnsafe(trimmed.slice(0, eq));
+    const value = iniUnsafe(trimmed.slice(eq + 1));
+    // ini (bracketedArray on by default) treats a `key[]` suffix as an array
+    // append: the bare key collects each value, instead of a literal `key[]`
+    // entry holding only the last one.
+    if (rawKey.length > 2 && rawKey.endsWith('[]')) {
+      entries.push({ key: rawKey.slice(0, -2), value, array: true });
+    } else {
+      entries.push({ key: rawKey, value });
+    }
   }
   return entries;
 }
@@ -56,8 +64,15 @@ export function readNpmrcMap(path: string): Map<string, string> | null {
     return null;
   }
   const map = new Map<string, string>();
-  for (const { key, value } of entries) {
-    map.set(key, value);
+  for (const { key, value, array } of entries) {
+    // ini collects repeated `key[]` values into an array under the bare key;
+    // npm reconstructs a config array from the env by splitting on a blank
+    // line, so join array values that way. Scalars stay last-write-wins.
+    const existing = map.get(key);
+    map.set(
+      key,
+      array && existing !== undefined ? `${existing}\n\n${value}` : value
+    );
   }
   return map;
 }
