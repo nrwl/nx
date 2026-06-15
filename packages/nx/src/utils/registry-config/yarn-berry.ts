@@ -355,7 +355,7 @@ function applyTls(
     process.env['YARN_ENABLE_STRICT_SSL'] ??
     firstDefinedIn(rcFiles, (c) => c.enableStrictSsl);
   if (strictSsl !== undefined) {
-    setStrictSsl(env, String(strictSsl) !== 'false');
+    setStrictSsl(env, !isBerryFalseBoolean(strictSsl));
   }
 
   setProxies(env, {
@@ -430,27 +430,104 @@ function resolveNetworkSettings(
   return result;
 }
 
-// Berry's miscUtils.replaceEnvVariables for ABSOLUTE_PATH settings: ${VAR},
-// ${VAR-default} (default when unset), and ${VAR:-default} (default when unset
-// or empty). An undefined bare ${VAR} aborts berry itself, so leave it literal.
+// Berry's miscUtils.replaceEnvVariables, applied to every string setting:
+// ${VAR}, ${VAR-default} (default when unset), and ${VAR:-default} (default
+// when unset or empty). Defaults are themselves expanded, so nested forms like
+// ${A:-${B}} resolve and no stray brace leaks; `\$`, `\}`, and `\\` are
+// escapes. Berry throws on an undefined bare ${VAR} (which aborts berry itself,
+// so a working workspace never has one); we leave such a reference literal
+// rather than failing the migrate.
 // see https://github.com/yarnpkg/berry/blob/c5857bdee5737425b879492db5e2732a5e6e14f2/packages/yarnpkg-core/sources/miscUtils.ts#L473
 function expandBerryEnvVars(
   value: string,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return value.replace(
-    /\$\{(\w+)(:)?(?:-([^}]*))?\}/g,
-    (match, name, colon, fallback) => {
-      const resolved = env[name];
-      if (fallback === undefined) {
-        return resolved ?? match;
+  return scanBerryEnv(value, 0, env, false).text;
+}
+
+// Scans from `start`, expanding env-var references. When `nested` is set the
+// scan also stops just after the unescaped `}` that closes an enclosing default.
+function scanBerryEnv(
+  input: string,
+  start: number,
+  env: NodeJS.ProcessEnv,
+  nested: boolean
+): { text: string; end: number } {
+  let text = '';
+  let i = start;
+  while (i < input.length) {
+    const c = input[i];
+    if (c === '\\' && i + 1 < input.length && '\\$}'.includes(input[i + 1])) {
+      text += input[i + 1];
+      i += 2;
+    } else if (nested && c === '}') {
+      return { text, end: i + 1 };
+    } else if (c === '$' && input[i + 1] === '{') {
+      const ref = parseBerryRef(input, i, env);
+      if (ref) {
+        text += ref.text;
+        i = ref.end;
+      } else {
+        // Malformed `${...` (berry would throw); emit it literally and continue.
+        text += '${';
+        i += 2;
       }
-      if (colon) {
-        return resolved ? resolved : fallback;
-      }
-      return resolved !== undefined ? resolved : fallback;
+    } else {
+      text += c;
+      i += 1;
     }
-  );
+  }
+  return { text, end: i };
+}
+
+// Parses one ${NAME} / ${NAME-default} / ${NAME:-default} at `start` (where
+// input[start] === '$' and input[start + 1] === '{'). The default is parsed
+// brace-balanced so a nested ${...} is captured whole. Returns null when the
+// reference is malformed (invalid name or no operator/close).
+function parseBerryRef(
+  input: string,
+  start: number,
+  env: NodeJS.ProcessEnv
+): { text: string; end: number } | null {
+  const nameMatch = input.slice(start + 2).match(/^[a-zA-Z]\w*/);
+  if (!nameMatch) {
+    return null;
+  }
+  const name = nameMatch[0];
+  let i = start + 2 + name.length;
+  const value = env[name];
+  if (input[i] === '}') {
+    // ${NAME}: an undefined value aborts berry; leave the reference literal.
+    return {
+      text: value !== undefined ? value : input.slice(start, i + 1),
+      end: i + 1,
+    };
+  }
+  let emptyIsUnset = false;
+  if (input[i] === ':' && input[i + 1] === '-') {
+    emptyIsUnset = true;
+    i += 2;
+  } else if (input[i] === '-') {
+    i += 1;
+  } else {
+    return null;
+  }
+  // Parse (and expand) the default region even when the value wins, so `end`
+  // skips past the matching close brace.
+  const fallback = scanBerryEnv(input, i, env, true);
+  const useValue = emptyIsUnset
+    ? value !== undefined && value !== ''
+    : value !== undefined;
+  return {
+    text: useValue ? (value as string) : fallback.text,
+    end: fallback.end,
+  };
+}
+
+// Mirrors berry miscUtils.parseBoolean's false set for SettingsType.BOOLEAN
+// (false/'false'/0/'0'); every other value (true/'true'/1/'1', ...) is truthy.
+function isBerryFalseBoolean(value: unknown): boolean {
+  return value === false || value === 0 || value === 'false' || value === '0';
 }
 
 /** Expands ${VAR} in an optional berry string value, passing undefined through. */
