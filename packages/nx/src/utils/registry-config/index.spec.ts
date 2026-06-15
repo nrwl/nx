@@ -145,4 +145,33 @@ describe('getNpmSpawnRegistryEnv (dispatch)', () => {
       getNpmSpawnRegistryEnv('is-even', undefined as any, 'pnpm', '11.5.0')
     ).toEqual({});
   });
+
+  it('points the default registry at a bridged scoped registry for an underscore scope', () => {
+    // npm normalizes the @my_scope:registry env key to @my-scope:registry but
+    // looks it up verbatim, so the scoped override is lost; the view/pack target
+    // is this exact package, so the default must carry the scoped registry.
+    files[`${ROOT}/bunfig.toml`] =
+      '[install.scopes]\n"@my_scope" = "https://reg-underscore.example.com/"\n';
+    expect(
+      getNpmSpawnRegistryEnv('@my_scope/pkg', ROOT, 'bun', '1.2.23')
+    ).toEqual({
+      npm_config_registry: 'https://reg-underscore.example.com/',
+      'npm_config_@my_scope:registry': 'https://reg-underscore.example.com/',
+    });
+  });
+
+  it('does not override the default registry for a normal lowercase scope', () => {
+    files[`${ROOT}/bunfig.toml`] = [
+      '[install]',
+      'registry = "https://reg-a.example.com/"',
+      '[install.scopes]',
+      '"@myorg" = "https://reg-b.example.com/"',
+    ].join('\n');
+    expect(getNpmSpawnRegistryEnv('@myorg/pkg', ROOT, 'bun', '1.2.23')).toEqual(
+      {
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_@myorg:registry': 'https://reg-b.example.com/',
+      }
+    );
+  });
 });
