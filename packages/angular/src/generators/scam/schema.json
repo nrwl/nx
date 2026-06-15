@@ -59,10 +59,9 @@
       "alias": "v"
     },
     "changeDetection": {
-      "description": "The change detection strategy to use in the new component.",
-      "enum": ["Default", "OnPush"],
+      "description": "The change detection strategy to use in the new component. It defaults to `OnPush` for Angular versions >= 22.0.0 and `Default` for lower versions. _Note: the `Eager` value is only supported in Angular versions >= 22.0.0_.",
+      "enum": ["Default", "Eager", "OnPush"],
       "type": "string",
-      "default": "Default",
       "alias": "c"
     },
     "style": {
