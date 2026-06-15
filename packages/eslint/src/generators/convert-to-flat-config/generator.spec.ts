@@ -21,10 +21,16 @@ import { dump } from '@zkochan/js-yaml';
 
 describe('convert-to-flat-config generator', () => {
   let tree: Tree;
+  let originalEslintUseFlatConfigVal: string | undefined;
 
   // TODO(@meeroslav): add plugin in these tests
 
   beforeEach(() => {
+    // The conversion needs an eslintrc workspace to convert from, so force the
+    // generators that build the fixture to emit eslintrc rather than flat config.
+    originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     tree = createTreeWithEmptyWorkspace();
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
@@ -46,6 +52,10 @@ describe('convert-to-flat-config generator', () => {
       };
       return json;
     });
+  });
+
+  afterEach(() => {
+    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   describe('CJS', () => {

@@ -18,9 +18,10 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
-  // Use the broader legacy options shape so the v8 (legacy-only) fields assigned
-  // below type-check. Flat-only fields (ruleFilter, suppress*) are intersected
-  // in; they're ignored at runtime by legacy ESLint and are version-gated below.
+  // Use the broader legacy (eslintrc) options shape so the legacy-only fields
+  // assigned below type-check. Flat-only fields (ruleFilter, suppress*) are
+  // intersected in; legacy ESLint ignores them at runtime, and the suppress*
+  // ones are version-gated below.
   const eslintOptions: ESLint.LegacyOptions & {
     ruleFilter?: Function;
     suppressAll?: boolean;
@@ -82,8 +83,8 @@ export async function resolveAndInstantiateESLint(
       options.reportUnusedDisableDirectives || undefined;
   }
 
-  // pass --quiet to eslint 9+ directly: filter only errors
-  if (options.quiet && gte(ESLint.version, '9.0.0')) {
+  // pass --quiet directly: filter only errors
+  if (options.quiet) {
     eslintOptions.ruleFilter = (rule) => rule.severity === 2;
   }
 

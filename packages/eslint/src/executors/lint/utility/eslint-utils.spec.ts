@@ -1,21 +1,20 @@
+// `loadESLint` resolves the ESLint class for the requested config format; the
+// legacy (eslintrc) path resolves to this mock so the assertions below can
+// verify the options passed to the eslintrc ESLint constructor.
+const LegacyESLint = jest.fn();
+
 jest.mock('eslint', () => ({
-  loadESLint: undefined,
+  loadESLint: jest.fn(),
 }));
 
-jest.mock('eslint/use-at-your-own-risk', () => ({
-  LegacyESLint: jest.fn(),
-}));
-
-const { LegacyESLint } = require('eslint/use-at-your-own-risk');
 import { resolveAndInstantiateESLint } from './eslint-utils';
 import * as resolveEslintClassModule from '../../../utils/resolve-eslint-class';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
-    const eslintModule = require('eslint');
-    eslintModule.loadESLint = undefined;
-
     jest.clearAllMocks();
+    const eslintModule = require('eslint');
+    eslintModule.loadESLint = jest.fn().mockResolvedValue(LegacyESLint);
   });
 
   afterEach(() => {

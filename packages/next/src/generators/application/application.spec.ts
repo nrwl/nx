@@ -440,7 +440,7 @@ describe('app', () => {
         });
       });
 
-      it('should install eslint-config-next@14 when an existing Next.js 14 project is detected', async () => {
+      it('should install eslint-config-next@15 when an existing Next.js 14 project is detected', async () => {
         tree.write(
           '/package.json',
           JSON.stringify({
@@ -459,10 +459,12 @@ describe('app', () => {
         });
 
         const packageJson = readJson(tree, '/package.json');
+        // Next.js 14 projects get eslint-config-next@15; config 14 only
+        // supports ESLint v8, which is no longer supported.
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '~14.2.35',
-            '@next/eslint-plugin-next': '~14.2.35',
+            'eslint-config-next': '^15.5.18',
+            '@next/eslint-plugin-next': '^15.5.18',
           },
         });
       });

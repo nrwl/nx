@@ -13,6 +13,7 @@ import { lintProjectGenerator } from './lint-project';
 
 describe('@nx/eslint:lint-project', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   const defaultOptions = {
     skipFormat: false,
@@ -20,6 +21,7 @@ describe('@nx/eslint:lint-project', () => {
   };
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',
@@ -39,6 +41,14 @@ describe('@nx/eslint:lint-project', () => {
         },
       },
     });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('Eslint base config named eslint.base.config', () => {
@@ -457,6 +467,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should generate a eslint config (legacy)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',
@@ -506,6 +518,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should generate a eslint config for buildable library', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',
@@ -648,6 +662,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should extend root config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',
@@ -661,6 +677,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should not extend root config if rootProject is set', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',
@@ -675,6 +693,8 @@ describe('@nx/eslint:lint-project', () => {
   });
 
   it('should generate the global eslint config', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+
     await lintProjectGenerator(tree, {
       ...defaultOptions,
       linter: 'eslint',

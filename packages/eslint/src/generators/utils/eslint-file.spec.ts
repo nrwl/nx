@@ -21,9 +21,19 @@ function declareEslintVersion(tree: Tree, version: string) {
 
 describe('@nx/eslint:lint-file', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('findEslintFile', () => {
@@ -86,6 +96,7 @@ describe('@nx/eslint:lint-file', () => {
 
   describe('addExtendsToLintConfig', () => {
     it('should update string extends property to array', () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       tree.write(
         'apps/demo/.eslintrc.json',
         JSON.stringify({
@@ -157,7 +168,7 @@ module.exports = [
         .toMatchInlineSnapshot(`
         {
           "@eslint/compat": "^1.1.1",
-          "@eslint/eslintrc": "^2.1.1",
+          "@eslint/eslintrc": "^3.0.0",
           "eslint": "9.0.0",
         }
       `);
@@ -320,60 +331,6 @@ module.exports = [
             ...compat.extends("plugin:some-plugin3"),
 
             ...fixupConfigRules(compat.extends("incompatible-plugin3")),
-
-          ...baseConfig,
-          {
-            files: [
-              "**/*.ts",
-              "**/*.tsx",
-              "**/*.js",
-              "**/*.jsx"
-            ],
-            rules: {}
-          },
-        ];"
-      `);
-    });
-
-    it('should not add wrapped plugin for compat in extends when not using eslint v9', () => {
-      declareEslintVersion(tree, '8.0.0');
-      tree.write('eslint.config.cjs', 'module.exports = {};');
-      tree.write(
-        'apps/demo/eslint.config.cjs',
-        `const baseConfig = require("../../eslint.config.cjs");
-
-module.exports = [
-  ...baseConfig,
-  {
-    files: [
-      "**/*.ts",
-      "**/*.tsx",
-      "**/*.js",
-      "**/*.jsx"
-    ],
-    rules: {}
-  },
-];`
-      );
-
-      addExtendsToLintConfig(tree, 'apps/demo', {
-        name: 'plugin:playwright/recommend',
-        needCompatFixup: true,
-      });
-
-      expect(tree.read('apps/demo/eslint.config.cjs', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "const { FlatCompat } = require("@eslint/eslintrc");
-        const js = require("@eslint/js");
-        const baseConfig = require("../../eslint.config.cjs");
-
-        const compat = new FlatCompat({
-          baseDirectory: __dirname,
-          recommendedConfig: js.configs.recommended,
-        });
-
-        module.exports = [
-            ...compat.extends("plugin:playwright/recommend"),
 
           ...baseConfig,
           {
