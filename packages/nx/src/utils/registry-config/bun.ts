@@ -170,10 +170,26 @@ function normalizeBunRegistryValue(
   value: string | BunRegistryValue
 ): BunRegistryValue {
   if (typeof value !== 'string') {
-    return value;
+    // Table form: bun expands a whole-value `$VAR` in the url (Scope.fromAPI)
+    // and in each credential field (env.getAuto) before use.
+    const result: BunRegistryValue = { url: expandBunRegistryUrl(value.url) };
+    const token = expandBunAuthValue(value.token);
+    if (token !== undefined) {
+      result.token = token;
+    }
+    const username = expandBunAuthValue(value.username);
+    if (username !== undefined) {
+      result.username = username;
+    }
+    const password = expandBunAuthValue(value.password);
+    if (password !== undefined) {
+      result.password = password;
+    }
+    return result;
   }
+  const expanded = expandBunRegistryUrl(value);
   try {
-    const url = new URL(value);
+    const url = new URL(expanded);
     if (url.username || url.password) {
       // bun records user+pass, or a bare password as a token; a username with
       // no password carries no credentials (it is dropped, keeping the url).
@@ -189,7 +205,29 @@ function normalizeBunRegistryValue(
       return { url: url.toString(), ...credentials };
     }
   } catch {}
-  return { url: value };
+  return { url: expanded };
+}
+
+// Bun expands a whole-value `$VARNAME` reference (no braces) in bunfig
+// credential fields via env.getAuto; an unset var keeps the literal. Braces
+// (${VAR}) are not expanded by bun in bunfig (only in its .npmrc).
+function expandBunAuthValue(value: string | undefined): string | undefined {
+  if (value === undefined || value.length < 2 || value[0] !== '$') {
+    return value;
+  }
+  return process.env[value.slice(1)] ?? value;
+}
+
+// Bun expands a `$`-prefixed bunfig registry URL (Scope.fromAPI): it looks up
+// the name with surrounding slashes trimmed and uses it only when the result is
+// longer than one character, else keeps the literal.
+function expandBunRegistryUrl(value: string): string {
+  if (!value || value[0] !== '$') {
+    return value;
+  }
+  const name = value.slice(1).replace(/^\/+|\/+$/g, '');
+  const replaced = process.env[name];
+  return replaced && replaced.length > 1 ? replaced : value;
 }
 
 function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
