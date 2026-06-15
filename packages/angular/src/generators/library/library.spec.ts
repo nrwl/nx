@@ -1814,6 +1814,28 @@ describe('lib', () => {
         tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
     });
+
+    it('should not opt out of the default change detection strategy when not specified on Angular >= 22', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        inlineStyle: true,
+        inlineTemplate: true,
+      });
+
+      expect(tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+
+        @Component({
+          selector: 'lib-my-lib',
+          imports: [],
+          template: \`<p>MyLib works!</p>\`,
+          styles: \`\`
+        })
+        export class MyLib {}
+        "
+      `);
+    });
   });
 
   describe('angular compat support', () => {

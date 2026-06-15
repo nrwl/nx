@@ -4,12 +4,15 @@ import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import type { AngularProjectConfiguration } from '../../../utils/types';
 import { buildSelector, validateHtmlSelector } from '../../utils/selector';
 import { validateClassName } from '../../utils/validations';
+import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema, Schema } from '../schema';
 
 export async function normalizeOptions(
   tree: Tree,
   options: Schema
 ): Promise<NormalizedSchema> {
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+
   const {
     artifactName: name,
     directory,
@@ -47,7 +50,9 @@ export async function normalizeOptions(
     ...options,
     name,
     projectName,
-    changeDetection: options.changeDetection ?? 'Default',
+    changeDetection:
+      options.changeDetection ??
+      (angularMajorVersion >= 22 ? 'OnPush' : 'Default'),
     style: options.style ?? 'css',
     standalone: options.standalone ?? true,
     directory,
