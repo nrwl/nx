@@ -7,13 +7,21 @@ import { addLinting } from './add-linting';
 
 describe('Add Linting', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(async () => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     await libraryGenerator(tree, {
       directory: 'my-lib',
       linter: 'none',
     });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should add update configuration when eslint is passed', async () => {
@@ -25,7 +33,7 @@ describe('Add Linting', () => {
       addPlugin: true,
     });
 
-    expect(tree.exists('my-lib/.eslintrc.json')).toBeTruthy();
+    expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
   });
 
   it('should not add lint target when "none" is passed', async () => {
@@ -37,6 +45,6 @@ describe('Add Linting', () => {
       addPlugin: true,
     });
 
-    expect(tree.exists('my-lib/.eslintrc.json')).toBeFalsy();
+    expect(tree.exists('my-lib/eslint.config.mjs')).toBeFalsy();
   });
 });

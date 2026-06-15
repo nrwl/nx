@@ -12,10 +12,13 @@ import { addLintingGenerator } from './add-linting';
 
 describe('addLinting generator', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const appProjectName = 'ng-app1';
   const appProjectRoot = `apps/${appProjectName}`;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     addProjectConfiguration(tree, appProjectName, {
@@ -24,6 +27,14 @@ describe('addLinting generator', () => {
       projectType: 'application',
       targets: {},
     } as ProjectConfiguration);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should invoke the lintProjectGenerator', async () => {

@@ -22,7 +22,7 @@ describe('preset', () => {
     });
     expect(tree.children(`apps/${name}`).sort()).toMatchInlineSnapshot(`
       [
-        ".eslintrc.json",
+        "eslint.config.mjs",
         "project.json",
         "public",
         "src",
@@ -202,7 +202,7 @@ describe('preset', () => {
     });
 
     expect(tree.exists(`apps/${name}/src/main.ts`)).toBe(true);
-    expect(tree.exists(`apps/${name}/.eslintrc.json`)).toBe(true);
+    expect(tree.exists(`apps/${name}/eslint.config.mjs`)).toBe(true);
   });
 
   it('should create files (preset = react-native)', async () => {

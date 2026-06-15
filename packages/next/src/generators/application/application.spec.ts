@@ -15,9 +15,17 @@ import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should add a .gitkeep file to the public directory', async () => {
@@ -470,6 +478,7 @@ describe('app', () => {
       });
 
       it('should add .eslintrc.json and dependencies', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
           directory: 'myapp',
           style: 'css',
@@ -533,6 +542,7 @@ describe('app', () => {
 
     describe('root level', () => {
       it('should adjust eslint config for root level projects', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         const name = uniq();
 
         await applicationGenerator(tree, {
@@ -679,6 +689,7 @@ describe('app', () => {
     });
 
     it('should not ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',
@@ -985,6 +996,7 @@ describe('app', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',

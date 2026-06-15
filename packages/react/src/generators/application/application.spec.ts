@@ -40,6 +40,7 @@ const packageCmd = getPackageManagerCommand().exec;
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let schema: Schema = {
     compiler: 'babel',
     e2eTestRunner: 'cypress',
@@ -54,12 +55,22 @@ describe('app', () => {
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     appTree = createTreeWithEmptyWorkspace();
     projectGraph = { dependencies: {}, nodes: {}, externalNodes: {} };
     (detectPackageManager as jest.Mock).mockImplementation((...args) =>
       jest.requireActual('@nx/devkit').detectPackageManager(...args)
     );
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -335,11 +346,7 @@ describe('app', () => {
         'jest.config.cts',
       ]);
 
-      const eslintJson = readJson(appTree, 'my-app/.eslintrc.json');
-      expect(eslintJson.extends).toEqual([
-        'plugin:@nx/react',
-        '../.eslintrc.json',
-      ]);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
@@ -480,12 +487,8 @@ describe('app', () => {
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
         },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['plugin:@nx/react', '../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(appTree.exists('my-dir/my-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should setup playwright', async () => {
@@ -597,7 +600,7 @@ describe('app', () => {
   it('should setup the eslint builder', async () => {
     await applicationGenerator(appTree, { ...schema, directory: 'my-app' });
 
-    expect(appTree.exists('my-app/.eslintrc.json')).toBeTruthy();
+    expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
   });
 
   describe('--unit-test-runner none', () => {
@@ -654,6 +657,7 @@ describe('app', () => {
   });
 
   it('should add .eslintrc.json and dependencies', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await applicationGenerator(appTree, { ...schema, linter: 'eslint' });
 
     const packageJson = readJson(appTree, '/package.json');
