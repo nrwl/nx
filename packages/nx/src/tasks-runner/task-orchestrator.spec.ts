@@ -173,4 +173,97 @@ describe('TaskOrchestrator', () => {
       expect(consumer.hash).toBe('consumer:build|call-2');
     });
   });
+
+  describe('cached failures (NX_CACHE_FAILURES)', () => {
+    const originalCacheFailures = process.env.NX_CACHE_FAILURES;
+
+    afterEach(() => {
+      if (originalCacheFailures === undefined) {
+        delete process.env.NX_CACHE_FAILURES;
+      } else {
+        process.env.NX_CACHE_FAILURES = originalCacheFailures;
+      }
+    });
+
+    function createTask(id: string): Task {
+      const [project, target] = id.split(':');
+      return {
+        id,
+        target: { project, target },
+        overrides: {},
+        outputs: [],
+        projectRoot: project,
+        cache: true,
+        parallelism: true,
+        hash: `${id}-hash`,
+      } as Task;
+    }
+
+    function createOrchestrator(batchResults: Map<string, any>) {
+      const orchestrator: any = Object.create(TaskOrchestrator.prototype);
+      orchestrator.cache = {
+        getBatch: jest.fn(async () => batchResults),
+        copyFilesFromCache: jest.fn(),
+      };
+      orchestrator.shouldCopyOutputsFromCacheBatch = jest.fn(
+        async () => new Map()
+      );
+      orchestrator.options = {
+        lifeCycle: { printTaskTerminalOutput: jest.fn() },
+      };
+      return orchestrator;
+    }
+
+    it('should not read failed results from cache by default', async () => {
+      const passing = createTask('app:test');
+      const failing = createTask('app:lint');
+      const orchestrator = createOrchestrator(
+        new Map([
+          [passing.hash, { code: 0, terminalOutput: 'ok', remote: false }],
+          [failing.hash, { code: 1, terminalOutput: 'boom', remote: false }],
+        ])
+      );
+      delete process.env.NX_CACHE_FAILURES;
+
+      const hits = await orchestrator.fetchCacheHits([passing, failing]);
+
+      expect(hits.map((h: any) => h.task.id)).toEqual(['app:test']);
+    });
+
+    it('should read failed results from cache when NX_CACHE_FAILURES is enabled', async () => {
+      const passing = createTask('app:test');
+      const failing = createTask('app:lint');
+      const orchestrator = createOrchestrator(
+        new Map([
+          [passing.hash, { code: 0, terminalOutput: 'ok', remote: false }],
+          [failing.hash, { code: 1, terminalOutput: 'boom', remote: false }],
+        ])
+      );
+      process.env.NX_CACHE_FAILURES = 'true';
+
+      const hits = await orchestrator.fetchCacheHits([passing, failing]);
+
+      expect(hits.map((h: any) => h.task.id)).toEqual(['app:test', 'app:lint']);
+    });
+
+    it('should report a cached failure as a failure, not a cache hit', async () => {
+      const failing = createTask('app:lint');
+      const orchestrator = createOrchestrator(new Map());
+
+      const results = await orchestrator.finalizeCacheHits([
+        {
+          task: failing,
+          cachedResult: { code: 1, terminalOutput: 'boom', remote: false },
+        },
+      ]);
+
+      expect(results).toHaveLength(1);
+      expect(results[0].status).toBe('failure');
+      expect(results[0].code).toBe(1);
+      // The cached failure output is still surfaced to the user.
+      expect(
+        orchestrator.options.lifeCycle.printTaskTerminalOutput
+      ).toHaveBeenCalledWith(failing, 'failure', 'boom');
+    });
+  });
 });
