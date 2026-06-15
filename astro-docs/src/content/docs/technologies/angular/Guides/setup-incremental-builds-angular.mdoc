@@ -209,11 +209,12 @@ required executors you can add it to the `targetDefaults` section of the `nx.jso
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "@nx/angular:application": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/angular:application",
       "dependsOn": ["^build"]
     }
-  }
+  ]
 }
 ```
 
@@ -223,11 +224,12 @@ required executors you can add it to the `targetDefaults` section of the `nx.jso
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "@nx/angular:browser-esbuild": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/angular:browser-esbuild",
       "dependsOn": ["^build"]
     }
-  }
+  ]
 }
 ```
 
@@ -237,11 +239,12 @@ required executors you can add it to the `targetDefaults` section of the `nx.jso
 ```json
 // nx.json
 {
-  "targetDefaults": {
-    "@nx/angular:webpack-browser": {
+  "targetDefaults": [
+    {
+      "executor": "@nx/angular:webpack-browser",
       "dependsOn": ["^build"]
     }
-  }
+  ]
 }
 ```
 
@@ -331,14 +334,16 @@ And the `targetDefaults` configured in the `nx.json` as:
 
 ```json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["build-base"]
     },
-    "build-base": {
+    {
+      "target": "build-base",
       "dependsOn": ["^build-base"]
     }
-  }
+  ]
 }
 ```
 

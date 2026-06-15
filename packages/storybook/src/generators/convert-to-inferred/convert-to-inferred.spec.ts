@@ -9,6 +9,7 @@ import {
   readNxJson,
   type ExpandedPluginConfiguration,
   updateNxJson,
+  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
@@ -360,12 +361,13 @@ describe('Storybook - Convert To Inferred', () => {
       const project2Targets = project2.targets;
 
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/storybook:build'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/storybook:build',
         options: {
           webpackStatsJson: true,
         },
-      };
+      });
       updateNxJson(tree, nxJson);
 
       // ACT

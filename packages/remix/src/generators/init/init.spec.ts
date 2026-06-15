@@ -48,14 +48,16 @@ describe('Remix Init Generator', () => {
             "plugin": "@nx/remix/plugin",
           },
         ],
-        "targetDefaults": {
-          "build": {
+        "targetDefaults": [
+          {
             "cache": true,
+            "target": "build",
           },
-          "lint": {
+          {
             "cache": true,
+            "target": "lint",
           },
-        },
+        ],
       }
     `);
   });

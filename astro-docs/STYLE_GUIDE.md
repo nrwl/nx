@@ -331,11 +331,12 @@ Use triple backticks with a language identifier:
 ````markdown
 ```json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "cache": true
     }
-  }
+  ]
 }
 ```
 ````
@@ -347,11 +348,12 @@ Use triple backticks with a language identifier:
 ```json
 {
   // ... other config
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "cache": true
     }
-  }
+  ]
 }
 ```
 

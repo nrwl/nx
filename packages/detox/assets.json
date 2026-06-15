@@ -10,6 +10,9 @@
     {
       "glob": "src/**/schema.d.ts"
     },
+    {
+      "glob": "src/migrations/**/*.md"
+    },
     "LICENSE"
   ]
 }

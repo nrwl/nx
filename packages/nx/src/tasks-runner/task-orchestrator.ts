@@ -744,6 +744,12 @@ export class TaskOrchestrator {
         )
         .map((r) => r.task);
       if (tasksToRehash.length > 0) {
+        // hashTasks skips tasks that already have a hash — clear the
+        // preliminary hashes so these tasks actually get re-hashed
+        for (const task of tasksToRehash) {
+          task.hash = undefined;
+          task.hashDetails = undefined;
+        }
         await this.hashBatchTasks(tasksToRehash);
       }
     }

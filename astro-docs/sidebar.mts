@@ -808,6 +808,10 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'extending-nx/createnodes-compatibility',
           },
           {
+            label: 'Performant project graph plugins',
+            link: 'extending-nx/performant-project-graph-plugins',
+          },
+          {
             label: 'Organization-specific plugin',
             link: 'extending-nx/organization-specific-plugin',
           },
