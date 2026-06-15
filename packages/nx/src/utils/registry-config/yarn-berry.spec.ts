@@ -35,6 +35,8 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'BERRY_TEST_REGISTRY',
     'BERRY_TEST_IDENT',
     'BERRY_TEST_TOKEN',
+    'BERRY_TEST_PRIMARY',
+    'BERRY_TEST_FALLBACK',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -548,6 +550,71 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://registry.yarnpkg.com',
       npm_config_cafile: resolve(ROOT, './certs/fallback-ca.pem'),
+    });
+  });
+
+  it('resolves a nested ${A:-${B}} default to the inner var when the outer is unset', () => {
+    delete process.env.BERRY_TEST_PRIMARY;
+    process.env.BERRY_TEST_FALLBACK = 'https://reg-fallback.example.com/';
+    projectRc(
+      'npmRegistryServer: ${BERRY_TEST_PRIMARY:-${BERRY_TEST_FALLBACK}}\n'
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-fallback.example.com/',
+    });
+  });
+
+  it('uses the outer var of a nested ${A:-${B}} default without leaking a brace', () => {
+    process.env.BERRY_TEST_PRIMARY = 'https://reg-primary.example.com/';
+    process.env.BERRY_TEST_FALLBACK = 'https://reg-fallback.example.com/';
+    projectRc(
+      [
+        'npmRegistryServer: ${BERRY_TEST_PRIMARY:-${BERRY_TEST_FALLBACK}}',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: tok',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-primary.example.com/',
+      'npm_config_//reg-primary.example.com/:_authToken': 'tok',
+    });
+  });
+
+  it('treats a \\${VAR} escape as a literal ${VAR} (berry escape)', () => {
+    projectRc(
+      [
+        'npmRegistryServer: https://reg-a.example.com/',
+        'npmAlwaysAuth: true',
+        "npmAuthToken: '\\${NOT_A_VAR}'",
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://reg-a.example.com/',
+      'npm_config_//reg-a.example.com/:_authToken': '${NOT_A_VAR}',
+    });
+  });
+
+  it('disables TLS for a numeric enableStrictSsl: 0 (berry parseBoolean)', () => {
+    projectRc('enableStrictSsl: 0\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_strict_ssl: 'false',
+    });
+  });
+
+  it('disables TLS for YARN_ENABLE_STRICT_SSL=0', () => {
+    process.env.YARN_ENABLE_STRICT_SSL = '0';
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_strict_ssl: 'false',
+    });
+  });
+
+  it('keeps TLS on for a numeric enableStrictSsl: 1', () => {
+    projectRc('enableStrictSsl: 1\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
+      npm_config_registry: 'https://registry.yarnpkg.com',
+      npm_config_strict_ssl: 'true',
     });
   });
 });
