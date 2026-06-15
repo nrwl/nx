@@ -1,9 +1,37 @@
+import { existsSync } from 'fs';
 import type { ESLint } from 'eslint';
 import { gte } from 'semver';
 import { isFlatConfig } from '../../../utils/config-file';
 import { resolveESLintClass } from '../../../utils/resolve-eslint-class';
 import type { Schema } from '../schema';
 
+export interface SuppressionsContext {
+  suppressAll: boolean;
+  suppressRule: string[] | undefined;
+  suppressionsLocation: string | undefined;
+  pruneSuppressions: boolean;
+  passOnUnprunedSuppressions: boolean;
+  cwd: string;
+  isEslintV10?: boolean;
+}
+
+export interface SuppressionsResult {
+  results: ESLint.LintResult[];
+  unusedSuppressions: Record<string, any>;
+}
+
+/**
+ * Resolve the ESLint class, validate version requirements for suppression features,
+ * and instantiate an ESLint instance with the appropriate options.
+ *
+ * Version handling:
+ * - ESLint v9.24.0+: supports suppressAll, suppressRule, suppressionsLocation via constructor.
+ *   However, the v9 programmatic API silently ignores these options, so suppression
+ *   application must be handled post-lint via SuppressionsService (see applySuppressions below).
+ * - ESLint v10.0.0+: supports applySuppressions via constructor, which causes lintFiles()
+ *   to automatically apply suppressions from the suppressions file during linting.
+ *   Writing new suppressions (suppressAll/suppressRule) and pruning still happen post-lint.
+ */
 export async function resolveAndInstantiateESLint(
   eslintConfigPath: string | undefined,
   options: Schema,
@@ -18,13 +46,15 @@ export async function resolveAndInstantiateESLint(
     useFlatConfigOverrideVal: useFlatConfig,
   });
 
+  const eslintVersion = ESLint?.version;
+  const isEslintV10 = eslintVersion && gte(eslintVersion, '10.0.0');
+
   // Use the broader legacy options shape so the v8 (legacy-only) fields assigned
   // below type-check. Flat-only fields (ruleFilter, suppress*) are intersected
   // in; they're ignored at runtime by legacy ESLint and are version-gated below.
   const eslintOptions: ESLint.LegacyOptions & {
     ruleFilter?: Function;
-    suppressAll?: boolean;
-    suppressRule?: string[];
+    applySuppressions?: boolean;
     suppressionsLocation?: string;
   } = {
     overrideConfigFile: eslintConfigPath,
@@ -42,7 +72,7 @@ export async function resolveAndInstantiateESLint(
      * a project and therefore doesn't necessarily have matching files, for example.
      *
      * Also, the angular generator creates a lint pattern for `html` files, but there may
-     * not be any html files in the project, so keeping it true would break linting every time
+     * not be any html files in the project, so keeping it true would break linting every time.
      */
     errorOnUnmatchedPattern: false,
   };
@@ -82,44 +112,18 @@ export async function resolveAndInstantiateESLint(
       options.reportUnusedDisableDirectives || undefined;
   }
 
-  // pass --quiet to eslint 9+ directly: filter only errors
+  // pass --quiet to ESLint 9+ directly: filter to only errors
   if (options.quiet && gte(ESLint.version, '9.0.0')) {
     eslintOptions.ruleFilter = (rule) => rule.severity === 2;
   }
 
-  // Handle bulk suppression options (ESLint v9.24.0+)
-  try {
-    if (ESLint.version && gte(ESLint.version, '9.24.0')) {
-      if (options.suppressAll) {
-        eslintOptions.suppressAll = true;
-      }
-      if (options.suppressRule && options.suppressRule.length > 0) {
-        eslintOptions.suppressRule = options.suppressRule;
-      }
-      if (options.suppressionsLocation) {
-        eslintOptions.suppressionsLocation = options.suppressionsLocation;
-      }
-    } else if (
-      options.suppressAll ||
-      (options.suppressRule && options.suppressRule.length > 0) ||
-      options.suppressionsLocation
-    ) {
-      throw new Error(
-        'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation) require ESLint v9.24.0 or higher. Current version: ' +
-          (ESLint.version || 'unknown')
-      );
-    }
-  } catch (error) {
-    // If version checking fails (e.g., in tests), skip suppression options
-    if (
-      options.suppressAll ||
-      (options.suppressRule && options.suppressRule.length > 0) ||
-      options.suppressionsLocation
-    ) {
-      // In test environment, just skip the suppression options
-      console.warn(
-        'Bulk suppression options skipped due to version check failure'
-      );
+  // For ESLint v10+, pass applySuppressions so the programmatic API handles suppression
+  // automatically during lintFiles(). Writing new suppressions (suppressAll/suppressRule)
+  // and pruning remain post-lint operations for all versions.
+  if (isEslintV10) {
+    eslintOptions.applySuppressions = true;
+    if (options.suppressionsLocation) {
+      eslintOptions.suppressionsLocation = options.suppressionsLocation;
     }
   }
 
@@ -131,5 +135,196 @@ export async function resolveAndInstantiateESLint(
   return {
     ESLint,
     eslint,
+    isEslintV10: !!isEslintV10,
   };
+}
+
+/**
+ * Resolve the path to the suppressions file.
+ *
+ * Tries to read the default filename from ESLint's SuppressionsService to stay
+ * in sync with ESLint's own default. Falls back to 'eslint-suppressions.json' if
+ * SuppressionsService cannot be resolved (e.g., ESLint < 9.24.0).
+ *
+ * NOTE: This reaches into ESLint internals (eslint/lib/services/suppressions-service).
+ * The internal path could change between ESLint versions without notice.
+ */
+export function getSuppressionsFilePath(
+  suppressionsLocation: string | undefined,
+  cwd: string
+): string {
+  const path = require('path') as typeof import('path');
+
+  // If the user explicitly provided a location, use it directly
+  if (suppressionsLocation) {
+    return path.resolve(cwd, suppressionsLocation);
+  }
+
+  // Otherwise, try to read the default filename from ESLint's SuppressionsService
+  // to stay in sync with ESLint's own default.
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { SuppressionsService } =
+      require('eslint/lib/services/suppressions-service') as {
+        SuppressionsService: { DEFAULT_SUPPRESSIONS_FILENAME: string };
+      };
+    const defaultName = SuppressionsService.DEFAULT_SUPPRESSIONS_FILENAME;
+    return path.resolve(cwd, defaultName);
+  } catch {
+    return path.resolve(cwd, 'eslint-suppressions.json');
+  }
+}
+
+/**
+ * Apply bulk suppressions to lint results using ESLint's SuppressionsService.
+ *
+ * This is needed because:
+ * - ESLint v9.x: the programmatic API (new ESLint({ suppressAll: true })) silently
+ *   ignores suppression options. We must call SuppressionsService directly to
+ *   write suppressions, prune unused entries, and apply existing suppressions to results.
+ * - ESLint v10.x: lintFiles() applies suppressions automatically when `applySuppressions: true`
+ *   is passed to the constructor, but writing (suppressAll/suppressRule) and pruning still
+ *   need to be done post-lint via this function.
+ *
+ * NOTE: This uses ESLint's internal SuppressionsService API
+ * (eslint/lib/services/suppressions-service). The methods suppress(), prune(), load(),
+ * and applySuppressions() are not part of ESLint's public API and could change.
+ */
+export async function applySuppressions(
+  results: ESLint.LintResult[],
+  context: SuppressionsContext
+): Promise<SuppressionsResult> {
+  const path = await import('path');
+
+  const SuppressionsService = resolveSuppressionsService(path);
+
+  const suppressionsFilePath = getSuppressionsFilePath(
+    context.suppressionsLocation,
+    context.cwd
+  );
+
+  if (
+    context.suppressionsLocation &&
+    !existsSync(suppressionsFilePath) &&
+    !context.suppressAll &&
+    !(context.suppressRule && context.suppressRule.length > 0)
+  ) {
+    throw new Error(
+      'The suppressions file does not exist. Please run the command with `suppressAll` or `suppressRule` to create it.'
+    );
+  }
+
+  const shouldWriteSuppressions =
+    context.suppressAll ||
+    (context.suppressRule && context.suppressRule.length > 0);
+
+  const shouldPrune = context.pruneSuppressions;
+
+  const hasSuppressionsFile = existsSync(suppressionsFilePath);
+
+  if (!shouldWriteSuppressions && !shouldPrune && !hasSuppressionsFile) {
+    return { results, unusedSuppressions: {} };
+  }
+
+  const suppressions = new SuppressionsService({
+    filePath: suppressionsFilePath,
+    cwd: context.cwd,
+  });
+
+  if (shouldWriteSuppressions) {
+    const rulesToSuppress =
+      context.suppressRule && context.suppressRule.length > 0
+        ? context.suppressRule
+        : undefined;
+    await suppressions.suppress(results, rulesToSuppress);
+  }
+
+  if (shouldPrune) {
+    await suppressions.prune(results);
+  }
+
+  const loaded = await suppressions.load();
+
+  if (context.isEslintV10 && !shouldWriteSuppressions) {
+    // v10 already applied suppressions during lintFiles(), so we only need the
+    // unused suppressions data for the passOnUnprunedSuppressions check.
+    if (Object.keys(loaded).length > 0) {
+      const { unused } = suppressions.applySuppressions(results, loaded);
+      return { results, unusedSuppressions: unused };
+    }
+    return { results, unusedSuppressions: {} };
+  }
+
+  const suppressionResults = suppressions.applySuppressions(results, loaded);
+
+  return {
+    results: suppressionResults.results,
+    unusedSuppressions: suppressionResults.unused,
+  };
+}
+
+/**
+ * Validate that mutually exclusive suppression options are not used together.
+ * These constraints mirror ESLint's CLI behavior.
+ */
+export function validateSuppressionOptions(context: SuppressionsContext): void {
+  if (
+    context.suppressAll &&
+    context.suppressRule &&
+    context.suppressRule.length > 0
+  ) {
+    throw new Error(
+      'The suppressAll option and the suppressRule option cannot be used together.'
+    );
+  }
+  if (context.suppressAll && context.pruneSuppressions) {
+    throw new Error(
+      'The suppressAll option and the pruneSuppressions option cannot be used together.'
+    );
+  }
+  if (
+    context.suppressRule &&
+    context.suppressRule.length > 0 &&
+    context.pruneSuppressions
+  ) {
+    throw new Error(
+      'The suppressRule option and the pruneSuppressions option cannot be used together.'
+    );
+  }
+  if (context.passOnUnprunedSuppressions && !context.pruneSuppressions) {
+    throw new Error(
+      'The passOnUnprunedSuppressions option requires pruneSuppressions to be enabled.'
+    );
+  }
+}
+
+/**
+ * Resolve ESLint's internal SuppressionsService class.
+ *
+ * Tries the direct internal path first, then falls back to resolving from
+ * the ESLint package location. Throws a clear error if neither works.
+ */
+export function resolveSuppressionsService(path: typeof import('path')): any {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    return (
+      require('eslint/lib/services/suppressions-service') as {
+        SuppressionsService: any;
+      }
+    ).SuppressionsService;
+  } catch {
+    // Fallback: try to resolve from the ESLint package location
+    try {
+      const eslintPath = require.resolve('eslint');
+      const eslintDir = path.dirname(eslintPath);
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      return require(path.join(eslintDir, 'services', 'suppressions-service'))
+        .SuppressionsService;
+    } catch {
+      throw new Error(
+        'Could not resolve SuppressionsService from the installed ESLint package. ' +
+          'Ensure ESLint v9.24.0 or higher is installed.'
+      );
+    }
+  }
 }

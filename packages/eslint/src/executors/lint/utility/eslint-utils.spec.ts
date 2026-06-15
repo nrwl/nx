@@ -7,8 +7,13 @@ jest.mock('eslint/use-at-your-own-risk', () => ({
 }));
 
 const { LegacyESLint } = require('eslint/use-at-your-own-risk');
-import { resolveAndInstantiateESLint } from './eslint-utils';
+import {
+  resolveAndInstantiateESLint,
+  getSuppressionsFilePath,
+  validateSuppressionOptions,
+} from './eslint-utils';
 import * as resolveEslintClassModule from '../../../utils/resolve-eslint-class';
+import type { SuppressionsContext } from './eslint-utils';
 
 describe('eslint-utils', () => {
   beforeEach(() => {
@@ -277,6 +282,131 @@ describe('eslint-utils', () => {
         ruleFilter: expect.any(Function),
       });
       expect(LegacyESLint).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('validateSuppressionOptions', () => {
+    function createContext(
+      overrides: Partial<SuppressionsContext> = {}
+    ): SuppressionsContext {
+      return {
+        suppressAll: false,
+        suppressRule: undefined,
+        suppressionsLocation: undefined,
+        pruneSuppressions: false,
+        passOnUnprunedSuppressions: false,
+        cwd: '/root',
+        ...overrides,
+      };
+    }
+
+    it('should not throw when no suppression options are set', () => {
+      expect(() => validateSuppressionOptions(createContext())).not.toThrow();
+    });
+
+    it('should not throw when only suppressAll is set', () => {
+      expect(() =>
+        validateSuppressionOptions(createContext({ suppressAll: true }))
+      ).not.toThrow();
+    });
+
+    it('should not throw when only suppressRule is set', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({ suppressRule: ['no-console'] })
+        )
+      ).not.toThrow();
+    });
+
+    it('should not throw when only pruneSuppressions is set', () => {
+      expect(() =>
+        validateSuppressionOptions(createContext({ pruneSuppressions: true }))
+      ).not.toThrow();
+    });
+
+    it('should throw when suppressAll and suppressRule are used together', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            suppressAll: true,
+            suppressRule: ['no-console'],
+          })
+        )
+      ).toThrow(
+        'The suppressAll option and the suppressRule option cannot be used together.'
+      );
+    });
+
+    it('should throw when suppressAll and pruneSuppressions are used together', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            suppressAll: true,
+            pruneSuppressions: true,
+          })
+        )
+      ).toThrow(
+        'The suppressAll option and the pruneSuppressions option cannot be used together.'
+      );
+    });
+
+    it('should throw when suppressRule and pruneSuppressions are used together', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            suppressRule: ['no-console'],
+            pruneSuppressions: true,
+          })
+        )
+      ).toThrow(
+        'The suppressRule option and the pruneSuppressions option cannot be used together.'
+      );
+    });
+
+    it('should throw when passOnUnprunedSuppressions is true but pruneSuppressions is false', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            passOnUnprunedSuppressions: true,
+            pruneSuppressions: false,
+          })
+        )
+      ).toThrow(
+        'The passOnUnprunedSuppressions option requires pruneSuppressions to be enabled.'
+      );
+    });
+
+    it('should not throw when passOnUnprunedSuppressions and pruneSuppressions are both true', () => {
+      expect(() =>
+        validateSuppressionOptions(
+          createContext({
+            passOnUnprunedSuppressions: true,
+            pruneSuppressions: true,
+          })
+        )
+      ).not.toThrow();
+    });
+  });
+
+  describe('getSuppressionsFilePath', () => {
+    it('should return a resolved path ending with the provided custom location', () => {
+      const result = getSuppressionsFilePath(
+        'custom-suppressions.json',
+        '/project'
+      );
+      expect(result).toBe('/project/custom-suppressions.json');
+    });
+
+    it('should return a path ending with a fallback filename when no location is provided and SuppressionsService is unavailable', () => {
+      const result = getSuppressionsFilePath(undefined, '/project');
+      expect(result).toContain('/project/');
+      expect(result).toContain('eslint-suppressions.json');
+    });
+
+    it('should always return a string, never null', () => {
+      const result = getSuppressionsFilePath(undefined, '/project');
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
     });
   });
 });

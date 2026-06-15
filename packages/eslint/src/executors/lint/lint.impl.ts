@@ -4,10 +4,10 @@ import {
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import type { ESLint } from 'eslint';
-import { mkdirSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, writeFileSync } from 'fs';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { dirname, posix, relative, resolve } from 'path';
-import { major } from 'semver';
+import { gte, major, valid } from 'semver';
 import { findFlatConfigFile, findOldConfigFile } from '../../utils/config-file';
 import {
   warnEslintExecutorDeprecation,
@@ -15,7 +15,12 @@ import {
 } from '../../utils/deprecation';
 import { minSupportedEslintVersion } from '../../utils/versions';
 import type { Schema } from './schema';
-import { resolveAndInstantiateESLint } from './utility/eslint-utils';
+import {
+  resolveAndInstantiateESLint,
+  applySuppressions,
+  getSuppressionsFilePath,
+  validateSuppressionOptions,
+} from './utility/eslint-utils';
 
 export default async function run(
   options: Schema,
@@ -49,6 +54,29 @@ export default async function run(
   const { printConfig, errorOnUnmatchedPattern, ...normalizedOptions } =
     options;
 
+  // Validate mutually exclusive suppression options early, before any ESLint work.
+  // This provides clear error messages instead of failing deep in the utility layer.
+  const hasUserSuppressionOptions =
+    !!normalizedOptions.suppressAll ||
+    !!(
+      normalizedOptions.suppressRule &&
+      normalizedOptions.suppressRule.length > 0
+    ) ||
+    !!normalizedOptions.pruneSuppressions ||
+    !!normalizedOptions.passOnUnprunedSuppressions;
+
+  if (hasUserSuppressionOptions) {
+    validateSuppressionOptions({
+      suppressAll: !!normalizedOptions.suppressAll,
+      suppressRule: normalizedOptions.suppressRule,
+      suppressionsLocation: normalizedOptions.suppressionsLocation,
+      pruneSuppressions: !!normalizedOptions.pruneSuppressions,
+      passOnUnprunedSuppressions:
+        !!normalizedOptions.passOnUnprunedSuppressions,
+      cwd: systemRoot,
+    });
+  }
+
   // locate the flat config file if it exists starting from the project root
   const flatConfigFilePath = findFlatConfigFile(projectRoot, context.root);
   const hasFlatConfig = flatConfigFilePath !== null;
@@ -68,7 +96,7 @@ export default async function run(
     ? resolve(systemRoot, normalizedOptions.eslintConfig)
     : undefined;
 
-  const { eslint, ESLint } = await resolveAndInstantiateESLint(
+  const { eslint, ESLint, isEslintV10 } = await resolveAndInstantiateESLint(
     eslintConfigPath,
     normalizedOptions,
     hasFlatConfig
@@ -79,6 +107,16 @@ export default async function run(
   const installedEslintVersion = getInstalledPackageVersion('eslint');
   if (installedEslintVersion && major(installedEslintVersion) === 8) {
     warnEslintV8Deprecation();
+  }
+
+  if (hasUserSuppressionOptions) {
+    const eslintVersion = ESLint.version;
+    if (!eslintVersion || !gte(eslintVersion, '9.24.0')) {
+      throw new Error(
+        'Bulk suppression options (suppressAll, suppressRule, suppressionsLocation, pruneSuppressions) require ESLint v9.24.0 or higher. Current version: ' +
+          (eslintVersion || 'unknown')
+      );
+    }
   }
 
   if (printConfig) {
@@ -194,6 +232,65 @@ Please see https://nx.dev/recipes/tips-n-tricks/eslint for full guidance on how 
 
   // output fixes to disk, if applicable based on the options
   await ESLint.outputFixes(lintResults);
+
+  // Handle suppressions:
+  // - ESLint v10+: applySuppressions is set on the constructor, so lintFiles() already applied suppressions.
+  //   We only need post-lint handling for writing (suppressAll/suppressRule) and pruning.
+  // - ESLint v9.x: The programmatic API silently ignores suppression options, so we handle everything post-lint.
+  const hasWriteOrPruneOptions =
+    !!normalizedOptions.suppressAll ||
+    !!(
+      normalizedOptions.suppressRule &&
+      normalizedOptions.suppressRule.length > 0
+    ) ||
+    !!normalizedOptions.pruneSuppressions;
+
+  // For v9.x, check if there's an existing suppressions file to apply.
+  // For v10+, suppressions are already applied by lintFiles() — we only need
+  // post-lint handling for write/prune operations.
+  const eslintVersion = ESLint.version;
+  const supportsSuppressions =
+    !isEslintV10 &&
+    !!eslintVersion &&
+    !!valid(eslintVersion) &&
+    gte(eslintVersion, '9.24.0');
+
+  let suppressionsFileExists = false;
+  let suppressionsFilePath: string | undefined;
+
+  if (hasWriteOrPruneOptions || supportsSuppressions) {
+    suppressionsFilePath = getSuppressionsFilePath(
+      normalizedOptions.suppressionsLocation,
+      systemRoot
+    );
+    suppressionsFileExists = existsSync(suppressionsFilePath);
+  }
+
+  if (hasWriteOrPruneOptions || suppressionsFileExists) {
+    const { results: suppressedResults, unusedSuppressions } =
+      await applySuppressions(lintResults, {
+        suppressAll: !!normalizedOptions.suppressAll,
+        suppressRule: normalizedOptions.suppressRule,
+        suppressionsLocation: normalizedOptions.suppressionsLocation,
+        pruneSuppressions: !!normalizedOptions.pruneSuppressions,
+        passOnUnprunedSuppressions:
+          !!normalizedOptions.passOnUnprunedSuppressions,
+        cwd: systemRoot,
+        isEslintV10,
+      });
+    lintResults = suppressedResults;
+
+    // When passOnUnprunedSuppressions is set, unused suppressions cause a failure
+    // unless force is also set (matching ESLint's --force behavior where force
+    // overrides strict failure modes).
+    if (
+      Object.keys(unusedSuppressions).length > 0 &&
+      normalizedOptions.passOnUnprunedSuppressions &&
+      !normalizedOptions.force
+    ) {
+      return { success: false };
+    }
+  }
 
   // if quiet, only show errors
   if (normalizedOptions.quiet) {
