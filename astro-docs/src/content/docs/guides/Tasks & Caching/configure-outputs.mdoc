@@ -75,15 +75,14 @@ As you configure `outputs`, keep the project details screen open and it will ref
 
 [Target Defaults](/docs/reference/nx-json#target-defaults) defined in `nx.json` apply to a set of targets. Defining `outputs` here one time will apply to a set of similar targets.
 
-```jsonc {% meta="{6}" %}
+```jsonc {% meta="{5}" %}
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "outputs": ["{projectRoot}/dist"],
     },
-  ],
+  },
 }
 ```
 

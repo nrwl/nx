@@ -25,7 +25,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('adds dependsOn ^build and the dev-remotes env input when the entry already exists', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults = {};
+      nxJson.targetDefaults ??= {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production'],
       };
@@ -61,7 +61,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('appends ^build to dependsOn while preserving other existing deps', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults = {};
+      nxJson.targetDefaults ??= {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production'],
         dependsOn: ['some-task'],
@@ -83,7 +83,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('leaves an already-correct entry alone (modulo shape upgrade)', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults = {};
+      nxJson.targetDefaults ??= {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production', NX_MF_DEV_REMOTES],
         dependsOn: ['^build'],

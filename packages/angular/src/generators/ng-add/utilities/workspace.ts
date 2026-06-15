@@ -71,49 +71,35 @@ export function createNxJson(
           : []),
       ].filter(Boolean),
     },
-    targetDefaults: [
-      {
-        target: 'build',
+    targetDefaults: {
+      build: {
         dependsOn: ['^build'],
         inputs: ['production', '^production'],
         cache: true,
       },
-      ...(targets.test
-        ? [
-            {
-              target: 'test',
-              inputs: [
-                'default',
-                '^production',
-                '{workspaceRoot}/karma.conf.js',
-              ],
-              cache: true,
-            },
-          ]
-        : []),
-      ...(targets.lint
-        ? [
-            {
-              target: 'lint',
-              inputs: [
-                'default',
-                '{workspaceRoot}/.eslintrc.json',
-                '{workspaceRoot}/eslint.config.cjs',
-              ],
-              cache: true,
-            },
-          ]
-        : []),
-      ...(targets.e2e
-        ? [
-            {
-              target: 'e2e',
-              inputs: ['default', '^production'],
-              cache: true,
-            },
-          ]
-        : []),
-    ],
+      test: targets.test
+        ? {
+            inputs: ['default', '^production', '{workspaceRoot}/karma.conf.js'],
+            cache: true,
+          }
+        : undefined,
+      lint: targets.lint
+        ? {
+            inputs: [
+              'default',
+              '{workspaceRoot}/.eslintrc.json',
+              '{workspaceRoot}/eslint.config.cjs',
+            ],
+            cache: true,
+          }
+        : undefined,
+      e2e: targets.e2e
+        ? {
+            inputs: ['default', '^production'],
+            cache: true,
+          }
+        : undefined,
+    },
     defaultProject,
   });
 }

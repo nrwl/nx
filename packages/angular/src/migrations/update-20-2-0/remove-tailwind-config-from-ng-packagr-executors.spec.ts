@@ -138,7 +138,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     'should delete "tailwindConfig" option in nx.json target defaults for a target with the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
           options: {
@@ -178,7 +178,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     'should delete empty target defaults for a target with the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
           options: {
@@ -199,7 +199,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults?.build).toBeUndefined();
+      expect(nxJson.targetDefaults.build).toBeUndefined();
     }
   );
 
@@ -207,7 +207,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     'should delete "tailwindConfig" option in nx.json target defaults for the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults[executor] = {
           options: {
             project: '{projectRoot}/ng-package.json',
@@ -247,7 +247,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
     'should delete empty target defaults for a target with the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults[executor] = {
           options: {
             tailwindConfig: '{projectRoot}/tailwind.config.js',
@@ -267,7 +267,8 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
       await migration(tree);
 
       const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
-      expect(nxJson.targetDefaults?.[executor]).toBeUndefined();
+      console.log(nxJson.targetDefaults);
+      expect(nxJson.targetDefaults[executor]).toBeUndefined();
     }
   );
 

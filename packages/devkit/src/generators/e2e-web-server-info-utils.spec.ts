@@ -14,12 +14,7 @@ jest.mock(
 );
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import {
-  type TargetDefaultEntry,
-  type Tree,
-  readNxJson,
-  updateNxJson,
-} from 'nx/src/devkit-exports';
+import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { getE2EWebServerInfo } from './e2e-web-server-info-utils';
 
@@ -172,13 +167,12 @@ describe('getE2EWebServerInfo', () => {
         previewTargetName: 'vite:preview',
       },
     });
-    nxJson.targetDefaults ??= [];
-    (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-      target: 'vite:serve',
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['vite:serve'] = {
       options: {
         port: 4400,
       },
-    });
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

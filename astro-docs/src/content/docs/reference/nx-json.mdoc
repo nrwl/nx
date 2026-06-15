@@ -207,7 +207,14 @@ Tells Nx which base branch to use when calculating affected projects.
 
 ## Target defaults
 
-Target defaults provide ways to set common options for a particular target in your workspace. When Nx builds a project's configuration, it merges each target with at most one matching entry from `targetDefaults` and uses that entry as the base for the target's configuration. To find the matching entry, Nx compares the target's name and executor against each entry and selects the most specific match.
+Target defaults provide ways to set common options for a particular target in your workspace. When building your project's configuration, we merge it with up to 1 default from this map. For a given target, we look at its name and its executor. We then check target defaults looking for a configuration whose key matches any of the following:
+
+- `` `${executor}` ``
+- `` `${targetName}` `` (if the configuration specifies the executor, this needs to match the target's executor as well)
+
+Additionally, if there is not a match for either of the above, we look for other keys that may match the target name via a glob pattern. For example, a key in the target defaults that looks like `e2e-ci--**/**` would match all of the targets created by a task atomizer plugin.
+
+Target defaults matching the executor takes precedence over those matching the target name. If we find a target default for a given target, we use it as the base for that target's configuration.
 
 `targetDefaults` is an array of entries. Each entry must specify at least one of `target` (name or glob), `executor`, `projects`, or `plugin`. Optional `projects` and `plugin` filters let you scope a default to a subset of projects or targets inferred by a particular plugin.
 
@@ -219,7 +226,7 @@ Target defaults provide ways to set common options for a particular target in yo
 | `plugin`   | `string`                                                                     | Optional. Restricts the default to targets originated by a specific plugin (e.g. `@nx/vite`). Useful when two plugins expose a target with the same name (e.g. `@nx/vite:test` and `@nx/jest:test` both as `test`). |
 | other      | any field from [Target Configuration](/docs/reference/project-configuration) | The defaults applied when the filter matches.                                                                                                                                                                       |
 
-When multiple entries match a given `(target, project)` tuple, the **most specific** entry wins (`target + projects + plugin` > `target + projects` > `target + plugin` > `target` alone). Within the same specificity tier, an entry matching both `target` and `executor` beats an executor-only match, which beats an exact `target` match, which in turn beats a glob match. Later entries in the array beat earlier ones.
+When multiple entries match a given `(target, project)` tuple, the **most specific** entry wins (`target + projects + plugin` > `target + projects` > `target + plugin` > `target` alone). Within the same specificity tier, an exact `target` match beats a glob match, and later entries in the array beat earlier ones.
 
 ```json
 // nx.json — polyglot example
@@ -937,7 +944,7 @@ You can configure [Docker release](/docs/guides/nx-release/release-docker-images
 }
 ```
 
-You can combine this with other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
+This allows you to have other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
 
 ## Sync
 

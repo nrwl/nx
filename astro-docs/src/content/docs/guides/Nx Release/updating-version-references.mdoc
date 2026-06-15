@@ -93,25 +93,24 @@ If, for example, we want to build our projects to a centralized `dist/` director
       // path structures for both the source and dist directories, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       "manifestRootsToUpdate": [
         "{projectRoot}",
-        // The object form of manifestRootsToUpdate updates the dist package.json files without preserving the local dependency references (if not using pnpm or bun)
+        // We use the object form of the manifestRootsToUpdate to specify that we want to update the dist package.json files and not preserve the local dependency references (if not using pnpm or bun)
         {
           "path": "dist/packages/{projectName}",
-          "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) ensures the dist package.json files are valid for publishing and the local dependency references such as "workspace:" and "file:" are removed
+          "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references such as "workspace:" and "file:" are removed
         },
       ],
     },
   },
-  "targetDefaults": [
+  "targetDefaults": {
     // Ensure that publishing works from the dist directory
-    // The nx-release-publish target is added implicitly behind the scenes by Nx Release, so it can be configured in targetDefaults
-    {
-      "target": "nx-release-publish",
+    // The nx-release-publish target is added implicitly behind the scenes by Nx Release, and we can therefore configure it in targetDefaults
+    "nx-release-publish": {
       "options": {
         // the packageRoot property is specific the TS/JS nx-release-publish implementation, other ecosystem plugins may have different options
         "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       },
     },
-  ],
+  },
 }
 ```
 
@@ -146,24 +145,23 @@ If the package manager we are using is not using pnpm or bun (See Scenario 4 bel
     // Ensure that versioning works only in the dist directory
     "version": {
       "manifestRootsToUpdate": ["dist/packages/{projectName}"], // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
-      "currentVersionResolver": "git-tag", // or "registry", because the source package.json is no longer the source of truth for the current version
-      "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) ensures the dist package.json files are valid for publishing and the local dependency references are removed
+      "currentVersionResolver": "git-tag", // or "registry", because we are no longer referencing our source package.json as the source of truth for the current version
+      "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) because we need to ensure our dist package.json files are valid for publishing and the local dependency references are removed
     },
   },
-  "targetDefaults": [
+  "targetDefaults": {
     // Ensure that publishing works from the dist directory
-    // The nx-release-publish target is added implicitly behind the scenes by Nx Release, so it can be configured in targetDefaults
-    {
-      "target": "nx-release-publish",
+    // The nx-release-publish target is added implicitly behind the scenes by Nx Release, and we can therefore configure it in targetDefaults
+    "nx-release-publish": {
       "options": {
         "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       },
     },
-  ],
+  },
 }
 ```
 
-After applying a patch version, the dist package.json will therefore look like this:
+After applying a patch version, our dist package.json will therefore ultimately look like this:
 
 ```jsonc
 // dist/packages/my-project/package.json

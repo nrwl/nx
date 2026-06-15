@@ -15,7 +15,6 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
-  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
@@ -247,11 +246,10 @@ describe('Cypress - Convert Executors To Plugin', () => {
       updateProjectConfiguration(tree, project.name, project);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/cypress:cypress',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
         inputs: ['default', '^default'],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -268,11 +266,10 @@ describe('Cypress - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/cypress:cypress',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
         inputs: ['default', '^default', '{workspaceRoot}/some-file.ts'],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -294,16 +291,15 @@ describe('Cypress - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/cypress:cypress',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
         inputs: [
           'default',
           '^default',
           '{workspaceRoot}/some-file.ts',
           { externalDependencies: ['some-external-dep'] },
         ],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -325,16 +321,15 @@ describe('Cypress - Convert Executors To Plugin', () => {
       const project = createTestProject(tree);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/cypress:cypress',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
         inputs: [
           'default',
           '^default',
           '{workspaceRoot}/some-file.ts',
           { externalDependencies: ['cypress', 'some-external-dep'] },
         ],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -585,13 +580,12 @@ describe('Cypress - Convert Executors To Plugin', () => {
     it('should add Cypress options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/cypress:cypress',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/cypress:cypress'] = {
         options: {
           exit: false,
         },
-      });
+      };
       updateNxJson(tree, nxJson);
       const project = createTestProject(tree);
 

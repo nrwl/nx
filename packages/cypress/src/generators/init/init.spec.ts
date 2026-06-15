@@ -119,16 +119,14 @@ describe('init', () => {
             "plugin": "@nx/cypress/plugin",
           },
         ],
-        "targetDefaults": [
-          {
+        "targetDefaults": {
+          "build": {
             "cache": true,
-            "target": "build",
           },
-          {
+          "lint": {
             "cache": true,
-            "target": "lint",
           },
-        ],
+        },
       }
     `);
   });

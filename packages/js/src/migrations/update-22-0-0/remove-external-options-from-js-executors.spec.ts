@@ -4,7 +4,6 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaultEntry,
   type TargetDefaultsRecord,
   type Tree,
 } from '@nx/devkit';
@@ -15,8 +14,7 @@ import migration, {
 } from './remove-external-options-from-js-executors';
 
 // This migration ran before targetDefaults supported the array shape, so
-// most fixtures use the legacy record shape; workspaces migrating late may
-// already be on the array shape, which is covered as well.
+// the test fixtures all use the legacy record shape.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
   targetDefaults?: TargetDefaultsRecord;
 };
@@ -171,7 +169,7 @@ describe('remove-external-options-from-js-executors migration', () => {
     'should delete "external" and "externalBuildTargets" options in nx.json target defaults for a target with the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
           options: {
@@ -225,7 +223,7 @@ describe('remove-external-options-from-js-executors migration', () => {
     'should remove empty options but keep empty configurations for a target with the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
           options: {
@@ -263,7 +261,7 @@ describe('remove-external-options-from-js-executors migration', () => {
     'should delete "external" and "externalBuildTargets" options in nx.json target defaults for the "%s" executor',
     async (executor) => {
       updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
-        json.targetDefaults = {};
+        json.targetDefaults ??= {};
         json.targetDefaults[executor] = {
           options: {
             main: '{projectRoot}/src/index.ts',
@@ -315,28 +313,21 @@ describe('remove-external-options-from-js-executors migration', () => {
   it.each(executors)(
     'should only delete target defaults for the "%s" executor when nothing remains after migration',
     async (executor) => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.targetDefaults = [
-          { target: 'build', cache: true },
-          {
-            executor,
-            options: {
-              external: ['react'],
-              externalBuildTargets: ['build'],
-            },
+      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+        json.targetDefaults ??= {};
+        json.targetDefaults[executor] = {
+          options: {
+            external: ['react'],
+            externalBuildTargets: ['build'],
           },
-        ];
+        };
         return json;
       });
 
       await migration(tree);
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(
-        (nxJson.targetDefaults as TargetDefaultEntry[]).some(
-          (td) => td.executor === executor
-        )
-      ).toBe(false);
+      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      expect(nxJson.targetDefaults[executor]).toBeUndefined();
     }
   );
 });

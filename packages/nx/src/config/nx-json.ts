@@ -791,9 +791,7 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
   /**
-   * Default configuration applied to targets across all projects. Entries
-   * match targets by target name and/or executor, optionally narrowed by
-   * the `projects` and `plugin` filters.
+   * Dependencies between different target names across all projects
    */
   targetDefaults?: TargetDefaults;
   /**
