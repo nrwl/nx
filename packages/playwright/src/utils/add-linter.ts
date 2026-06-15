@@ -13,6 +13,7 @@ import {
   addOverrideToLintConfig,
   addPluginsToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  addTypedLintingToFlatConfig,
   findEslintFile,
   isEslintConfigSupported,
   isTypedLintingEnabled,
@@ -101,6 +102,12 @@ export async function addLinterToPlaywrightProject(
         files: ['*.ts', '*.js'],
         rules: {},
       });
+      // `lintProjectGenerator` only runs when the project has no ESLint config,
+      // so an existing flat config never received the projectService block. Emit
+      // it here when typed linting is requested (idempotent if already present).
+      if (isTypedLintingEnabled(options)) {
+        addTypedLintingToFlatConfig(tree, projectConfig.root);
+      }
     } else {
       const addExtendsTask = addExtendsToLintConfig(
         tree,
