@@ -15,7 +15,6 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
-  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
@@ -385,11 +384,10 @@ describe('Playwright - Convert Executors To Plugin', () => {
       updateProjectConfiguration(tree, project.name, project);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/playwright:playwright',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/playwright:playwright'] = {
         inputs: ['default', '^default'],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -408,11 +406,10 @@ describe('Playwright - Convert Executors To Plugin', () => {
       updateProjectConfiguration(tree, project.name, project);
       createTestProject(tree, { appRoot: 'second', appName: 'second' });
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/playwright:playwright',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/playwright:playwright'] = {
         inputs: ['default', '^default', '{workspaceRoot}/some-file.ts'],
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {
@@ -614,13 +611,12 @@ describe('Playwright - Convert Executors To Plugin', () => {
     it('should add Playwright options found in targetDefaults for the executor to the project.json', async () => {
       // ARRANGE
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/playwright:playwright',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/playwright:playwright'] = {
         options: {
           globalTimeout: 100000,
         },
-      });
+      };
       updateNxJson(tree, nxJson);
       const project = createTestProject(tree);
 

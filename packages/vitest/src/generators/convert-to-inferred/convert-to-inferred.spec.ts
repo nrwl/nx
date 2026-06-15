@@ -15,7 +15,6 @@ import {
   type Tree,
   updateNxJson,
   writeJson,
-  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'node:path';
@@ -325,11 +324,10 @@ describe('@nx/vitest:convert-to-inferred', () => {
 
     it('inherits options declared in targetDefaults for the executor', async () => {
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/vitest:test',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/vitest:test'] = {
         options: { watch: false },
-      });
+      };
       updateNxJson(tree, nxJson);
       const project = createTestProject(tree);
 

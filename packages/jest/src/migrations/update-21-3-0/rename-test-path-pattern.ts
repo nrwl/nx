@@ -33,42 +33,23 @@ export default async function (tree: Tree) {
     return;
   }
 
-  if (Array.isArray(nxJson.targetDefaults)) {
-    for (const entry of nxJson.targetDefaults) {
-      if (
-        entry.target !== '@nx/jest:jest' &&
-        entry.executor !== '@nx/jest:jest'
-      ) {
-        continue;
-      }
-
-      if (entry.options) {
-        renameTestPathPattern(entry.options);
-      }
-
-      Object.values(entry.configurations ?? {}).forEach((config) => {
-        renameTestPathPattern(config);
-      });
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    if (
+      targetOrExecutor !== '@nx/jest:jest' &&
+      targetConfig.executor !== '@nx/jest:jest'
+    ) {
+      continue;
     }
-  } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== '@nx/jest:jest' &&
-        targetConfig.executor !== '@nx/jest:jest'
-      ) {
-        continue;
-      }
 
-      if (targetConfig.options) {
-        renameTestPathPattern(targetConfig.options);
-      }
-
-      Object.values(targetConfig.configurations ?? {}).forEach((config) => {
-        renameTestPathPattern(config);
-      });
+    if (targetConfig.options) {
+      renameTestPathPattern(targetConfig.options);
     }
+
+    Object.values(targetConfig.configurations ?? {}).forEach((config) => {
+      renameTestPathPattern(config);
+    });
   }
 
   updateNxJson(tree, nxJson);

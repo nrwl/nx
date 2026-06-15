@@ -18,12 +18,11 @@ You can define dependencies among tasks by using the `dependsOn` property:
 // nx.json
 {
   ...
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "dependsOn": ["^build"]
     }
-  ]
+  }
 }
 ```
 
@@ -35,12 +34,11 @@ Task dependencies can be [defined globally](/docs/reference/nx-json#target-defau
 // nx.json
 {
   ...
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "dependsOn": ["^build"]
     }
-  ]
+  }
 }
 ```
 

@@ -10,7 +10,6 @@ import {
   type ProjectConfiguration,
   type ProjectGraph,
   type Tree,
-  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
@@ -351,11 +350,10 @@ describe('Jest - Convert Executors To Plugin', () => {
       });
       const project2TestTarget = project2.targets.test;
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= [];
-      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
-        executor: '@nx/jest:jest',
+      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults['@nx/jest:jest'] = {
         options: { passWithNoTests: true },
-      });
+      };
       updateNxJson(tree, nxJson);
 
       await convertToInferred(tree, {

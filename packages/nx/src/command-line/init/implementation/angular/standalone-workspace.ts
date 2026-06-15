@@ -1,10 +1,7 @@
 import { unlinkSync } from 'fs';
 import { dirname, join, posix, relative, resolve } from 'node:path';
 import { toNewFormat } from '../../../../adapter/angular-json';
-import type {
-  NxJsonConfiguration,
-  TargetDefaultEntry,
-} from '../../../../config/nx-json';
+import type { NxJsonConfiguration } from '../../../../config/nx-json';
 import type { ProjectConfiguration } from '../../../../config/workspace-json-project-json';
 import {
   fileExists,
@@ -13,11 +10,7 @@ import {
 } from '../../../../utils/fileutils';
 import type { PackageJson } from '../../../../utils/package-json';
 import { normalizePath } from '../../../../utils/path';
-import {
-  addVsCodeRecommendedExtensions,
-  createNxJsonFile,
-  upsertTargetDefaultEntry,
-} from '../utils';
+import { addVsCodeRecommendedExtensions, createNxJsonFile } from '../utils';
 import type {
   AngularJsonConfig,
   AngularJsonProjectConfiguration,
@@ -102,26 +95,29 @@ function createNxJson(
         : []),
     ].filter(Boolean),
   };
-  const defaults: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
-    ? [...nxJson.targetDefaults]
-    : [];
+  nxJson.targetDefaults ??= {};
   if (workspaceTargets.includes('build')) {
-    upsertTargetDefaultEntry(defaults, 'build', {
+    nxJson.targetDefaults.build = {
+      ...nxJson.targetDefaults.build,
       dependsOn: ['^build'],
       inputs: ['production', '^production'],
-    });
+    };
   }
   if (workspaceTargets.includes('server')) {
-    upsertTargetDefaultEntry(defaults, 'server', {
+    nxJson.targetDefaults.server = {
+      ...nxJson.targetDefaults.server,
       inputs: ['production', '^production'],
-    });
+    };
   }
   if (workspaceTargets.includes('test')) {
     const inputs = ['default', '^production'];
     if (fileExists(join(repoRoot, 'karma.conf.js'))) {
       inputs.push('{workspaceRoot}/karma.conf.js');
     }
-    upsertTargetDefaultEntry(defaults, 'test', { inputs });
+    nxJson.targetDefaults.test = {
+      ...nxJson.targetDefaults.test,
+      inputs,
+    };
   }
   if (workspaceTargets.includes('lint')) {
     const inputs = ['default'];
@@ -131,15 +127,16 @@ function createNxJson(
     if (fileExists(join(repoRoot, 'eslint.config.cjs'))) {
       inputs.push('{workspaceRoot}/eslint.config.cjs');
     }
-    upsertTargetDefaultEntry(defaults, 'lint', { inputs });
+    nxJson.targetDefaults.lint = {
+      ...nxJson.targetDefaults.lint,
+      inputs,
+    };
   }
   if (workspaceTargets.includes('e2e')) {
-    upsertTargetDefaultEntry(defaults, 'e2e', {
+    nxJson.targetDefaults.e2e = {
+      ...nxJson.targetDefaults.e2e,
       inputs: ['default', '^production'],
-    });
-  }
-  if (defaults.length > 0) {
-    nxJson.targetDefaults = defaults;
+    };
   }
   writeJsonFile(join(repoRoot, 'nx.json'), nxJson);
 }

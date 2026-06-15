@@ -5,11 +5,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
-import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDefaultsRecord,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -17,7 +13,6 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
-import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
@@ -287,11 +282,7 @@ export function readTargetsFromPackageJson(
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
     const nxReleasePublishTargetDefaults =
-      readCompatibleTargetDefaultsForTarget(
-        'nx-release-publish',
-        nxJson?.targetDefaults,
-        '@nx/js:release-publish'
-      ) ?? {};
+      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
     res['nx-release-publish'] = {
       executor: '@nx/js:release-publish',
       ...nxReleasePublishTargetDefaults,
@@ -307,22 +298,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function readCompatibleTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults | undefined,
-  executor?: string
-): Partial<TargetConfiguration> | null {
-  if (
-    targetDefaults &&
-    !Array.isArray(targetDefaults) &&
-    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
-  ) {
-    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
-  }
-
-  return readTargetDefaultsForTarget(targetName, targetDefaults, executor);
 }
 
 /**

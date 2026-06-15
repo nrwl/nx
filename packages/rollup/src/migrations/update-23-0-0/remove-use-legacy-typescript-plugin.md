@@ -43,18 +43,17 @@ Remove `useLegacyTypescriptPlugin` from the `@nx/rollup:rollup` executor target 
 
 ##### Before
 
-```json title="nx.json" {8}
+```json title="nx.json" {7}
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/rollup:rollup",
+  "targetDefaults": {
+    "@nx/rollup:rollup": {
       "options": {
         "outputPath": "dist/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json",
         "useLegacyTypescriptPlugin": true
       }
     }
-  ]
+  }
 }
 ```
 
@@ -62,15 +61,14 @@ Remove `useLegacyTypescriptPlugin` from the `@nx/rollup:rollup` executor target 
 
 ```json title="nx.json"
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/rollup:rollup",
+  "targetDefaults": {
+    "@nx/rollup:rollup": {
       "options": {
         "outputPath": "dist/{projectRoot}",
         "tsConfig": "{projectRoot}/tsconfig.lib.json"
       }
     }
-  ]
+  }
 }
 ```
 
