@@ -291,4 +291,32 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       'npm_config_//reg-b.example.com/:_authToken': 'ancestor-token',
     });
   });
+
+  it('bridges yarn-only nerf-darted _auth, username, and _password', () => {
+    // All three credential forms live only in an ancestor .npmrc (yarn-only), so
+    // the spawned npm would hit the registry unauthenticated without the bridge.
+    files['/repo/.npmrc'] = [
+      '//reg-d.example.com/:_auth=ZmFrZS1iYXNlNjQ=',
+      '//reg-d.example.com/:username=alice',
+      '//reg-d.example.com/:_password=ZmFrZS1wYXNz',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      'npm_config_//reg-d.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//reg-d.example.com/:username': 'alice',
+      'npm_config_//reg-d.example.com/:_password': 'ZmFrZS1wYXNz',
+    });
+  });
+
+  it('bridges yarn-only bare _auth, username, and _password keys', () => {
+    files['/repo/.npmrc'] = [
+      '_auth=ZmFrZS1iYXNlNjQ=',
+      'username=alice',
+      '_password=ZmFrZS1wYXNz',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config__auth: 'ZmFrZS1iYXNlNjQ=',
+      npm_config_username: 'alice',
+      npm_config__password: 'ZmFrZS1wYXNz',
+    });
+  });
 });
