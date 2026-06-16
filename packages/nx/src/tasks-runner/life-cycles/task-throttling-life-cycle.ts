@@ -53,12 +53,22 @@ export interface ThrottleSummary {
  * Scope: discrete tasks only. Continuous tasks have no end time and are
  * excluded from every calculation.
  */
+/**
+ * The most recently constructed throttle lifecycle. `flushThrottleReport`
+ * reads this to print after the terminal/TUI has been torn down — the TUI
+ * patches `console` to a no-op during the run, so the report can't be printed
+ * from `endCommand`. Cleared on flush.
+ */
+let activeThrottleLifeCycle: TaskThrottlingLifeCycle | null = null;
+
 export class TaskThrottlingLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
   /** Thread pool size reported to startCommand (discrete + continuous). */
   private total: number | undefined;
 
-  constructor(private readonly taskGraph: TaskGraph) {}
+  constructor(private readonly taskGraph: TaskGraph) {
+    activeThrottleLifeCycle = this;
+  }
 
   startCommand(parallel?: number): void {
     this.total = parallel;
@@ -79,14 +89,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       if (task.endTime != null) {
         entry.endTime = task.endTime;
       }
-    }
-  }
-
-  endCommand(): void {
-    const summary = this.getSummary();
-    if (summary) {
-      // eslint-disable-next-line no-console
-      console.log(formatReport(summary));
     }
   }
 
@@ -243,6 +245,23 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       isCI,
       recommendation,
     };
+  }
+}
+
+/**
+ * Print the throttle report (if enabled) after the run summary. Called from
+ * run-command once the terminal has been restored, so it appears in every
+ * output mode — including the TUI, which no-ops `console` during the run.
+ */
+export function flushThrottleReport(): void {
+  const lifeCycle = activeThrottleLifeCycle;
+  activeThrottleLifeCycle = null;
+  if (!lifeCycle) {
+    return;
+  }
+  const summary = lifeCycle.getSummary();
+  if (summary) {
+    process.stdout.write(formatReport(summary) + '\n');
   }
 }
 

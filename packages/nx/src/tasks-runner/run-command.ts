@@ -59,7 +59,10 @@ import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-on
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
-import { TaskThrottlingLifeCycle } from './life-cycles/task-throttling-life-cycle';
+import {
+  TaskThrottlingLifeCycle,
+  flushThrottleReport,
+} from './life-cycles/task-throttling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -567,6 +570,10 @@ export async function runCommandForTasks(
       printSummary();
     }
 
+    // Print after the terminal is restored so it shows in all output modes
+    // (the TUI no-ops console during the run).
+    flushThrottleReport();
+
     await printConfigureAiAgentsDisclaimer();
 
     const nxKey = await nxKeyPromise;
@@ -578,6 +585,7 @@ export async function runCommandForTasks(
     };
   } catch (e) {
     restoreTerminal?.();
+    flushThrottleReport();
     throw e;
   }
 }
