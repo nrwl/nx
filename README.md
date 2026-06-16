@@ -15,6 +15,7 @@
     <a href=""><img src="https://img.shields.io/npm/l/nx.svg?style=for-the-badge" alt="License"></a>
     <a href="https://go.nx.dev/community"><img src="https://img.shields.io/discord/1143497901675401286?label=discord&style=for-the-badge" alt="Discord"></a>
     <a href="https://x.com/nxdevtools"><img src="https://img.shields.io/badge/@nxdevtools-555?style=for-the-badge&logo=x" alt="X (Twitter)"></a>
+    <a href="https://nx.dev/docs/features/ci-features/sandboxing"><img src="https://staging.nx.app/workspaces/62d013ea0852fe0a2df74438/sandbox-badge.svg?style=for-the-badge" alt="Nx Sandboxing"></a>
   </p>
 
  <br />
