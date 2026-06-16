@@ -250,8 +250,10 @@ private fun getInputsForTaskImpl(
       }
     }
 
-    // Process each tasks's input files from the tooling API
-    task.inputs.files.forEach { inputFile ->
+    // Process each tasks's input files from the tooling API. Sort by path so the
+    // emitted input list is stable across machines (FileCollection iteration order
+    // is filesystem/JVM dependent and would otherwise drift the task hash).
+    task.inputs.files.sortedBy { it.path }.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
       when {
@@ -289,12 +291,13 @@ private fun getInputsForTaskImpl(
     // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
     dependentTaskOutputExtensions
         .filterNot { nonInputDependentOutputExtensions.contains(it) }
+        .sorted()
         .forEach { extension ->
           inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
         }
 
     if (externalDependencies.isNotEmpty()) {
-      inputs.add(mapOf("externalDependencies" to externalDependencies))
+      inputs.add(mapOf("externalDependencies" to externalDependencies.sorted()))
     }
 
     inputs.ifEmpty { null }
