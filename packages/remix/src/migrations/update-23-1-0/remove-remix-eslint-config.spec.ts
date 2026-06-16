@@ -98,6 +98,18 @@ describe('remove-remix-eslint-config migration', () => {
     expect(getDeps(tree)[PACKAGE]).toBe('2.17.3');
   });
 
+  it('keeps the dependency when a project-level flat config references the preset', async () => {
+    setPackageJson(tree, {}, { [PACKAGE]: '2.17.3' });
+    tree.write(
+      'apps/my-app/eslint.config.mjs',
+      `import remix from '${PACKAGE}';\nexport default [...remix];\n`
+    );
+
+    await migration(tree);
+
+    expect(getDeps(tree)[PACKAGE]).toBe('2.17.3');
+  });
+
   it('is a no-op when the dependency is not declared', async () => {
     setPackageJson(tree, { react: '18.0.0' });
 
