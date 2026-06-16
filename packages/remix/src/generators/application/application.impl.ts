@@ -21,7 +21,6 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
-  eslintVersion,
   isbotVersion,
   nxVersion,
   reactDomVersion,
@@ -128,7 +127,6 @@ export async function remixApplicationGeneratorInternal(
     reactDomVersion,
     typesReactVersion,
     typesReactDomVersion,
-    eslintVersion,
     typescriptVersion,
     viteVersion,
   };
