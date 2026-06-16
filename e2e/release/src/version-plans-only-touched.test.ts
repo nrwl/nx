@@ -75,7 +75,7 @@ describe('nx release version plans only touched', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 

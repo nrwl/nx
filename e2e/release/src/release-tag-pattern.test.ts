@@ -53,7 +53,7 @@ describe('nx release releaseTag.pattern', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
