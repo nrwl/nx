@@ -77,6 +77,18 @@ describe('remove-remix-eslint-config migration', () => {
     expect(getDeps(tree)[PACKAGE]).toBe('2.17.3');
   });
 
+  it('keeps the dependency when a CJS flat config requires the preset', async () => {
+    setPackageJson(tree, {}, { [PACKAGE]: '2.17.3' });
+    tree.write(
+      'eslint.config.cjs',
+      `const remix = require('${PACKAGE}');\nmodule.exports = [...remix];\n`
+    );
+
+    await migration(tree);
+
+    expect(getDeps(tree)[PACKAGE]).toBe('2.17.3');
+  });
+
   it('keeps the dependency when a project-level eslintrc references the preset', async () => {
     setPackageJson(tree, {}, { [PACKAGE]: '2.17.3' });
     writeJson(tree, 'apps/my-app/.eslintrc.json', { extends: [PACKAGE] });
