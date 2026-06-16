@@ -56,7 +56,7 @@ ESLint executor uses the `stylish` output format by default. You can change this
   "outputs": ["{options.outputFile}"],
   "options": {
     "lintFilePatterns": ["apps/frontend/**/*.ts"],
-    "format": "compact"
+    "format": "json"
   }
 }
 ```
