@@ -253,36 +253,38 @@ private fun getInputsForTaskImpl(
     // Process each tasks's input files from the tooling API. Sort by path so the
     // emitted input list is stable across machines (FileCollection iteration order
     // is filesystem/JVM dependent and would otherwise drift the task hash).
-    task.inputs.files.sortedBy { it.path }.forEach { inputFile ->
-      val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
+    task.inputs.files
+        .sortedBy { it.path }
+        .forEach { inputFile ->
+          val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
-      when {
-        // File is outside workspace - treat as external dependency
-        relativePath == null -> {
-          try {
-            val externalDep =
-                getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
-            externalDep?.let { externalDependencies.add(it) }
-          } catch (e: Exception) {
-            task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
+          when {
+            // File is outside workspace - treat as external dependency
+            relativePath == null -> {
+              try {
+                val externalDep =
+                    getExternalDepFromInputFile(inputFile.path, externalNodes, task.logger)
+                externalDep?.let { externalDependencies.add(it) }
+              } catch (e: Exception) {
+                task.logger.info("Error resolving external dependency for ${inputFile.path}: $e")
+              }
+            }
+
+            // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
+            // Group by extension for glob patterns
+            gitIgnoreClassifier.isIgnored(inputFile) -> {
+              val extension = inputFile.extension
+              if (extension.isNotEmpty()) {
+                dependentTaskOutputExtensions.add(extension)
+              }
+            }
+
+            // Regular source file - add as direct input
+            else -> {
+              inputs.add(relativePath)
+            }
           }
         }
-
-        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
-        // Group by extension for glob patterns
-        gitIgnoreClassifier.isIgnored(inputFile) -> {
-          val extension = inputFile.extension
-          if (extension.isNotEmpty()) {
-            dependentTaskOutputExtensions.add(extension)
-          }
-        }
-
-        // Regular source file - add as direct input
-        else -> {
-          inputs.add(relativePath)
-        }
-      }
-    }
 
     // Supplement with extensions inferred from Gradle metadata (handles clean builds where
     // output directories exist but are empty, so file-based extension discovery misses them)
