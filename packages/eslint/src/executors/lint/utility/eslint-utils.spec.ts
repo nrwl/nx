@@ -93,6 +93,18 @@ describe('eslint-utils', () => {
     expect(LegacyESLint).not.toHaveBeenCalled();
   });
 
+  describe('quiet', () => {
+    it('should not pass the flat-config-only ruleFilter to the eslintrc (legacy) instance', async () => {
+      await resolveAndInstantiateESLint('./.eslintrc.json', <any>{
+        quiet: true,
+      });
+
+      expect(LegacyESLint).toHaveBeenCalledWith(
+        expect.not.objectContaining({ ruleFilter: expect.anything() })
+      );
+    });
+  });
+
   describe('noEslintrc', () => {
     it('should create the ESLint instance with "useEslintrc" set to false', async () => {
       await resolveAndInstantiateESLint(undefined, <any>{
