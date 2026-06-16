@@ -360,10 +360,9 @@ function processConvertedConfig(
   // save new
   tree.write(join(root, target), content);
 
-  // Once converted to flat config, the workspace is on the v9 ESLint stack —
-  // install the latest typescript-eslint v8 lane explicitly rather than
-  // routing through `versions(tree)` which would pick the legacy lane based
-  // on the pre-conversion `eslintrc` workspace state.
+  // Once converted to flat config, the workspace should use the latest ESLint
+  // stack. Install the versions directly instead of routing through
+  // `versions(tree)`, which keys off the pre-conversion declared ESLint version.
   const devDependencies: Record<string, string> = {
     eslint: eslintVersion,
     'eslint-config-prettier': eslintConfigPrettierVersion,

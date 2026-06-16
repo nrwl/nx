@@ -4,6 +4,7 @@ import {
   getInstalledPackageVersion,
 } from '@nx/devkit/internal';
 import { join } from 'path';
+import { major } from 'semver';
 
 export const nxVersion = require(join('@nx/eslint', 'package.json')).version;
 
@@ -27,7 +28,21 @@ const latestVersions: EslintVersions = {
   typescriptESLintVersion,
 };
 
-export function versions(_tree: Tree): EslintVersions {
+// Pins dependency versions for supported ESLint majors that aren't the default
+// (latest) stack so existing workspaces aren't force-bumped. Only v9 is mapped
+// for now; the v10 entry will be added alongside full v10 support.
+type CompatVersions = 9;
+const versionMap: Record<CompatVersions, EslintVersions> = {
+  9: { eslintVersion: '^9.8.0', typescriptESLintVersion: '^8.40.0' },
+};
+
+export function versions(tree: Tree): EslintVersions {
+  const installedEslintVersion = getInstalledEslintVersion(tree);
+  if (installedEslintVersion) {
+    const eslintMajorVersion = major(installedEslintVersion);
+    return versionMap[eslintMajorVersion as CompatVersions] ?? latestVersions;
+  }
+  // No ESLint declared yet, so fresh installs go to the latest supported stack.
   return latestVersions;
 }
 

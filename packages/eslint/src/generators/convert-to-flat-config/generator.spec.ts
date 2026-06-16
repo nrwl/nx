@@ -55,7 +55,11 @@ describe('convert-to-flat-config generator', () => {
   });
 
   afterEach(() => {
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    if (originalEslintUseFlatConfigVal === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
+    }
   });
 
   describe('CJS', () => {
