@@ -263,14 +263,51 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  it('bridges an ancestor .npmrc registry together with its auth token', () => {
+  it('bridges an ancestor .npmrc registry but not its auth for an unscoped fetch (yarn sends none without always-auth)', () => {
     files['/repo/.npmrc'] = [
       'registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_authToken=ancestor-token',
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config_registry: 'https://reg-d.example.com/',
+    });
+  });
+
+  it('bridges an unscoped registry auth token when global always-auth is set', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
       'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('bridges an unscoped registry auth token when a registry-scoped always-auth is set', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      '//reg-d.example.com/:always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('resolves always-auth from .yarnrc over the .npmrc chain', () => {
+    // always-auth is an option key, so .yarnrc wins; a bare `false` there keeps
+    // auth off even though an ancestor .npmrc sets it true.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    files[`${ROOT}/.yarnrc`] = 'always-auth false\n';
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
     });
   });
 
@@ -282,36 +319,40 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 
-  it('bridges a yarn-only auth token for a registry npm reads natively', () => {
-    // Registry is project-native (npm reads it), but the token lives only in an
-    // ancestor .npmrc, so npm would hit it unauthenticated without the bridge.
-    files[`${ROOT}/.npmrc`] = 'registry=https://reg-b.example.com/';
+  it('bridges a yarn-only auth token for a scoped fetch even without always-auth', () => {
+    // The scoped registry is project-native (npm reads it), but the token lives
+    // only in an ancestor .npmrc. A scoped fetch always authenticates, so npm
+    // would hit the registry unauthenticated without the bridge.
+    files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-b.example.com/';
     files['/repo/.npmrc'] = '//reg-b.example.com/:_authToken=ancestor-token';
-    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+    expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
       'npm_config_//reg-b.example.com/:_authToken': 'ancestor-token',
     });
   });
 
-  it('bridges yarn-only nerf-darted _auth, username, and _password', () => {
-    // All three credential forms live only in an ancestor .npmrc (yarn-only), so
-    // the spawned npm would hit the registry unauthenticated without the bridge.
+  it('bridges yarn-only nerf-darted _auth, username, and _password for a scoped fetch', () => {
+    // All three credential forms live only in an ancestor .npmrc (yarn-only); a
+    // scoped fetch authenticates, so they bridge for the spawned npm.
     files['/repo/.npmrc'] = [
+      '@sc:registry=https://reg-d.example.com/',
       '//reg-d.example.com/:_auth=ZmFrZS1iYXNlNjQ=',
       '//reg-d.example.com/:username=alice',
       '//reg-d.example.com/:_password=ZmFrZS1wYXNz',
     ].join('\n');
-    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+    expect(getYarnClassicSpawnRegistryEnv('@sc/pkg', ROOT)).toEqual({
+      'npm_config_@sc:registry': 'https://reg-d.example.com/',
       'npm_config_//reg-d.example.com/:_auth': 'ZmFrZS1iYXNlNjQ=',
       'npm_config_//reg-d.example.com/:username': 'alice',
       'npm_config_//reg-d.example.com/:_password': 'ZmFrZS1wYXNz',
     });
   });
 
-  it('bridges yarn-only bare _auth, username, and _password keys', () => {
+  it('bridges yarn-only bare _auth, username, and _password keys when always-auth is set', () => {
     files['/repo/.npmrc'] = [
       '_auth=ZmFrZS1iYXNlNjQ=',
       'username=alice',
       '_password=ZmFrZS1wYXNz',
+      'always-auth=true',
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
       npm_config__auth: 'ZmFrZS1iYXNlNjQ=',
