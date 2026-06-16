@@ -19,6 +19,13 @@ export interface ThrottleSummary {
   totalWork: number;
   /** Sum of `startTime − readyTime` over discrete tasks (the original ask). */
   aggregateWait: number;
+  /**
+   * Sum of `startTime − readyTime` over the critical-path tasks only — how long
+   * the tasks that actually determine the finish spent between becoming ready
+   * and starting. Dominated by slot contention when slot-bound; ~0 when there
+   * is spare slot capacity (then it's pre-start orchestration overhead).
+   */
+  criticalPathWait: number;
   /** runDuration − criticalPathDuration: savings under infinite parallelism. */
   slotContentionCost: number;
   slotContentionPct: number;
@@ -195,6 +202,16 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       this.criticalPath(durations);
     const slotContentionCost = Math.max(0, runDuration - criticalPathDuration);
 
+    // Ready→start wait summed over the critical-path tasks: how much the chain
+    // that determines the finish was delayed waiting for a slot.
+    let criticalPathWait = 0;
+    for (const id of path) {
+      const t = this.timings.get(id);
+      if (t?.startTime != null && t?.readyTime != null) {
+        criticalPathWait += Math.max(0, t.startTime - t.readyTime);
+      }
+    }
+
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
       (t) => t.continuous
     ).length;
@@ -236,6 +253,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathLongest,
       totalWork,
       aggregateWait,
+      criticalPathWait,
       slotContentionCost,
       slotContentionPct,
       parallel,
@@ -288,12 +306,15 @@ function formatReport(s: ThrottleSummary): string {
     `  Parallelism:             ${s.parallel} slots  (machine has ${s.cores} cores)`,
     `  Environment:             ${s.isCI ? 'CI' : 'local'}`,
     '',
-    `  Parallelism bottleneck:  +${fmt(
+    `  Run overhead:            +${fmt(
       s.slotContentionCost
-    )}   (${s.slotContentionPct.toFixed(1)}% of run)`,
+    )}   (${s.slotContentionPct.toFixed(1)}% over the critical-path floor)`,
+    `  Critical-path wait:      ${fmt(
+      s.criticalPathWait
+    )}   (critical tasks: ready → start)`,
     `  Aggregate task wait:     ${fmt(
       s.aggregateWait
-    )}   (sum of time tasks were ready but unscheduled)`,
+    )}   (all tasks: ready → start)`,
     `  Slot-bound floor:        ${fmt(s.slotBoundFloor)}   (totalWork / parallel)`,
     `  Bottleneck class:        ${
       s.slotBound ? 'slot-bound' : 'critical-path-bound'
