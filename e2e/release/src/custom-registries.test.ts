@@ -37,7 +37,7 @@ describe('nx release - custom npm registries', () => {
     e2eRegistryHost = e2eRegistryUrl
       .replace(/^https?:\/\//, '//')
       .replace(/\/$/, '');
-  }, 60000);
+  });
 
   afterAll(() => {
     cleanupProject();
