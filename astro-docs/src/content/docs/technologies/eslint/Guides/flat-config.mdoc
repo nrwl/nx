@@ -6,7 +6,7 @@ sidebar:
 filter: 'type:Guides'
 ---
 
-Version 8 of ESLint introduced a new configuration format called [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new). The next major version will use this config format by default. The purpose of this format is to:
+ESLint introduced a new configuration format called [Flat Config](https://eslint.org/docs/latest/use/configure/configuration-files-new) in version 8 and made it the default in version 9. Since Nx requires ESLint v9 or later, new workspaces use flat config by default. The purpose of this format is to:
 
 - push towards a single configuration format (in contrast to the existing `JSON`, `Yaml` and `JS`-based configs)
 - enforce explicit native loading (instead of the implicit imports in `JSON` and `Yaml`)
