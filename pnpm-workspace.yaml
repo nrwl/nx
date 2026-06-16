@@ -17,7 +17,7 @@ minimumReleaseAgeExclude:
   - '@nrwl/*'
   - 'create-nx-workspace'
   - 'create-nx-plugin'
-  - 'tmp@0.2.6'
+  - 'tmp@0.2.7'
 overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
@@ -25,6 +25,11 @@ overrides:
   brace-expansion: '5.0.6'
   minimatch: '^10.2.5'
   shell-quote: '^1.8.4'
+  tmp: '~0.2.7'
+  form-data: '^4.0.6'
+  # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
+  # pin to one version so expand-deps can flatten nx's published deps.
+  hasown: '2.0.4'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -53,7 +58,7 @@ catalog:
   rxjs: '^7.8.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
-  tmp: '~0.2.6'
+  tmp: '~0.2.7'
   tree-kill: '^1.2.2'
   verdaccio: '^6.3.2'
   webpack: '5.105.2'
