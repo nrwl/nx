@@ -25,6 +25,7 @@ describe('@nx/eslint:lint-file', () => {
 
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
   });
 

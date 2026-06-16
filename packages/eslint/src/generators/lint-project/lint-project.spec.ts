@@ -22,6 +22,7 @@ describe('@nx/eslint:lint-project', () => {
 
   beforeEach(() => {
     envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
     addProjectConfiguration(tree, 'test-lib', {
       root: 'libs/test-lib',

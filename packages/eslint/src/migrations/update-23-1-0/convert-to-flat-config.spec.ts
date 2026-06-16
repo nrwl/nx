@@ -69,6 +69,49 @@ describe('convert-to-flat-config migration', () => {
     ).toBe(true);
   });
 
+  it('should convert every project in a multi-project workspace (mixed JSON and YAML)', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true, rules: {} }));
+
+    const addLib = (name: string, configFile: string, content: string) => {
+      const root = `libs/${name}`;
+      addProjectConfiguration(tree, name, {
+        root,
+        targets: {
+          lint: {
+            executor: '@nx/eslint:lint',
+            options: { lintFilePatterns: [root] },
+          },
+        },
+      });
+      tree.write(`${root}/${configFile}`, content);
+    };
+
+    addLib(
+      'lib-a',
+      '.eslintrc.json',
+      JSON.stringify({ rules: { 'no-console': 'error' } })
+    );
+    addLib(
+      'lib-b',
+      '.eslintrc.json',
+      JSON.stringify({ rules: { 'no-debugger': 'error' } })
+    );
+    addLib('lib-c', '.eslintrc.yaml', dump({ rules: { 'no-alert': 'error' } }));
+
+    const result = await update(tree);
+
+    // Root and all three projects converted; every eslintrc removed.
+    expect(tree.exists('eslint.config.mjs')).toBeTruthy();
+    expect(tree.exists('.eslintrc.json')).toBeFalsy();
+    for (const name of ['lib-a', 'lib-b', 'lib-c']) {
+      expect(tree.exists(`libs/${name}/eslint.config.mjs`)).toBeTruthy();
+    }
+    expect(tree.exists('libs/lib-a/.eslintrc.json')).toBeFalsy();
+    expect(tree.exists('libs/lib-b/.eslintrc.json')).toBeFalsy();
+    expect(tree.exists('libs/lib-c/.eslintrc.yaml')).toBeFalsy();
+    expect(result).toBeDefined();
+  });
+
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(
     'should route a %s root config to the prompt without converting',
     async (jsConfig) => {
