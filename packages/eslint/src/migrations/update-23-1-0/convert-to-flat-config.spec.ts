@@ -110,6 +110,14 @@ describe('convert-to-flat-config migration', () => {
     expect(tree.exists('libs/lib-b/.eslintrc.json')).toBeFalsy();
     expect(tree.exists('libs/lib-c/.eslintrc.yaml')).toBeFalsy();
     expect(result).toBeDefined();
+    // Every project's explicit rules, including the YAML project's, reach the
+    // passing-state baseline (covers multi-project and YAML rule collection).
+    const baseline = result!.agentContext.find((entry) =>
+      entry.includes('Passing-state requirement')
+    );
+    expect(baseline).toContain('no-console');
+    expect(baseline).toContain('no-debugger');
+    expect(baseline).toContain('no-alert');
   });
 
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(

@@ -54,7 +54,6 @@ describe('@nx/eslint:lint-project', () => {
 
   describe('Eslint base config named eslint.base.config', () => {
     it('should generate a flat eslint config format based on base config (JS with CJS export)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // CJS config
@@ -77,12 +76,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config (JS with MJS export)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // MJS config
@@ -105,12 +101,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config (mjs)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // MJS config
@@ -134,12 +127,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config CJS', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // CJS config
@@ -162,14 +152,11 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
   });
 
   describe('Eslint base config named eslint.config', () => {
     it('should generate a flat eslint config format based on base config (JS with CJS export)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // CJS config
@@ -192,12 +179,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config (JS with MJS export)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // MJS config
@@ -220,12 +204,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config (mjs)', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // MJS config
@@ -249,12 +230,9 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
 
     it('should generate a flat eslint config format based on base config CJS', async () => {
-      const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
       process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
       // CJS config
@@ -277,13 +255,10 @@ describe('@nx/eslint:lint-project', () => {
         ];
         "
       `);
-
-      process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
     });
   });
 
   it('should generate a flat eslint base config ESM', async () => {
-    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
       ...defaultOptions,
@@ -351,11 +326,9 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   it('should generate a flat eslint base config CJS', async () => {
-    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
     await lintProjectGenerator(tree, {
       ...defaultOptions,
@@ -423,11 +396,9 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   it('should set parserOptions.project in flat config when enabled', async () => {
-    const originalEslintUseFlatConfigVal = process.env.ESLINT_USE_FLAT_CONFIG;
     process.env.ESLINT_USE_FLAT_CONFIG = 'true';
 
     await lintProjectGenerator(tree, {
@@ -463,8 +434,6 @@ describe('@nx/eslint:lint-project', () => {
       ];
       "
     `);
-
-    process.env.ESLINT_USE_FLAT_CONFIG = originalEslintUseFlatConfigVal;
   });
 
   it('should generate a eslint config (legacy)', async () => {
