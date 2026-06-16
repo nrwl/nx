@@ -38,12 +38,23 @@ function makeGraph(
 function run(
   graph: TaskGraph,
   total: number,
-  readyTimes: Record<string, number> = {}
+  readyTimes: Record<string, number> = {},
+  dispatchTimes: Record<string, number> = {},
+  batches: string[][] = []
 ) {
   const lc = new TaskThrottlingLifeCycle(graph);
   lc.startCommand(total);
+  for (const taskIds of batches) {
+    lc.registerRunningBatch('batch', {
+      executorName: 'e',
+      taskIds,
+    } as never);
+  }
   for (const [id, readyTime] of Object.entries(readyTimes)) {
     lc.setTaskReadyTime(id, readyTime);
+  }
+  for (const [id, dispatchTime] of Object.entries(dispatchTimes)) {
+    lc.setTaskDispatchTime(id, dispatchTime);
   }
   const results = Object.values(graph.tasks).map(
     (task) => ({ task }) as unknown as TaskResult
@@ -129,8 +140,9 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.parallel).toBe(4);
     // totalWork/parallel = 73.75 > 70 critical path → slot-bound.
     expect(s.slotBound).toBe(true);
-    // Aggregate wait: only e4..e7 waited (40+45+50+60).
-    expect(s.aggregateWait).toBe(195);
+    // Longest critical-path tasks, sorted by duration: e0 (60) then dep (10).
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['e0', 'dep']);
+    expect(s.criticalPathTop[0]).toEqual({ id: 'e0', duration: 60, wait: 0 });
   });
 
   it('excludes continuous tasks from the calculation', () => {
@@ -143,6 +155,40 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.criticalPathTasks).toEqual(['build']);
     expect(s.runDuration).toBe(20);
     expect(s.slotContentionCost).toBe(0);
+  });
+
+  it('splits critical-path wait into slot wait, hashing, and spawn', () => {
+    // a -> b. b becomes ready at 10, acquires a slot at 13 (3ms slot wait),
+    // then starts at 15 (2ms spawn/setup). No hash perf measures in the test,
+    // so hashing is 0 and the three components sum to criticalPathWait.
+    const a = makeTask('a', { start: 0, end: 10 });
+    const b = makeTask('b', { start: 15, end: 25 });
+    const graph = makeGraph([a, b], { b: ['a'] });
+
+    const s = run(graph, 1, { a: 0, b: 10 }, { a: 0, b: 13 })!;
+
+    expect(s.criticalPathTasks).toEqual(['a', 'b']);
+    expect(s.criticalPathSlotWait).toBe(3);
+    expect(s.criticalPathSpawn).toBe(2);
+    expect(s.criticalPathHashing).toBe(0);
+    expect(s.criticalPathWait).toBe(5);
+  });
+
+  it('does not count sequential batch execution as critical-path wait', () => {
+    // a and b are INDEPENDENT but run in one batch process, queued (ready) at 0.
+    // a runs 0–20, then b runs 20–50 (sequential). b is the longest task, so the
+    // critical path is [b]. Without batch awareness, b would show a 20ms "wait"
+    // that's really a executing; with it, b waited 0 (the batch reached it).
+    const a = makeTask('a', { start: 0, end: 20 });
+    const b = makeTask('b', { start: 20, end: 50 });
+    const graph = makeGraph([a, b]); // no dependency between them
+
+    const s = run(graph, 1, { a: 0, b: 0 }, {}, [['a', 'b']])!;
+
+    expect(s.criticalPathTasks).toEqual(['b']);
+    expect(s.criticalPathWait).toBe(0);
+    // Invariant: critical-path wait can never exceed run overhead.
+    expect(s.criticalPathWait).toBeLessThanOrEqual(s.slotContentionCost);
   });
 
   it('recovers discrete parallelism when continuous tasks share the pool', () => {

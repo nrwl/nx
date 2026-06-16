@@ -1,4 +1,6 @@
 import * as os from 'node:os';
+import { performance } from 'node:perf_hooks';
+import type { BatchInfo } from '../../native';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { LifeCycle, TaskResult } from '../life-cycle';
 
@@ -8,6 +10,7 @@ interface TaskTiming {
   startTime?: number;
   endTime?: number;
   readyTime?: number;
+  dispatchTime?: number;
   continuous: boolean;
 }
 
@@ -17,8 +20,6 @@ export interface ThrottleSummary {
   criticalPathTasks: string[];
   criticalPathLongest: { id: string; duration: number } | null;
   totalWork: number;
-  /** Sum of `startTime − readyTime` over discrete tasks (the original ask). */
-  aggregateWait: number;
   /**
    * Sum of `startTime − readyTime` over the critical-path tasks only — how long
    * the tasks that actually determine the finish spent between becoming ready
@@ -26,6 +27,16 @@ export interface ThrottleSummary {
    * is spare slot capacity (then it's pre-start orchestration overhead).
    */
   criticalPathWait: number;
+  /**
+   * Breakdown of `criticalPathWait` (they sum to it): time the critical-path
+   * tasks spent genuinely waiting for a slot, blocked by the coordinator
+   * hashing, and on per-task spawn/setup, respectively.
+   */
+  criticalPathSlotWait: number;
+  criticalPathHashing: number;
+  criticalPathSpawn: number;
+  /** The longest critical-path tasks, each with its own wait, for triage. */
+  criticalPathTop: Array<{ id: string; duration: number; wait: number }>;
   /** runDuration − criticalPathDuration: savings under infinite parallelism. */
   slotContentionCost: number;
   slotContentionPct: number;
@@ -72,6 +83,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
   /** Thread pool size reported to startCommand (discrete + continuous). */
   private total: number | undefined;
+  /** taskId → ids of the other tasks in its batch (batches run sequentially). */
+  private readonly batchSiblings = new Map<string, string[]>();
 
   constructor(private readonly taskGraph: TaskGraph) {
     activeThrottleLifeCycle = this;
@@ -83,6 +96,19 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 
   setTaskReadyTime(taskId: string, readyTime: number): void {
     this.entry(taskId).readyTime ??= readyTime;
+  }
+
+  setTaskDispatchTime(taskId: string, dispatchTime: number): void {
+    this.entry(taskId).dispatchTime ??= dispatchTime;
+  }
+
+  registerRunningBatch(_batchId: string, batchInfo: BatchInfo): void {
+    for (const id of batchInfo.taskIds) {
+      this.batchSiblings.set(
+        id,
+        batchInfo.taskIds.filter((other) => other !== id)
+      );
+    }
   }
 
   endTasks(taskResults: TaskResult[]): void {
@@ -171,6 +197,42 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
+   * A task can't start before all its dependencies finish, so its real ready
+   * time is the later of its stamped readyTime and the max endTime of its deps.
+   * This corrects batched tasks: they share one stamped readyTime when the
+   * batch is queued, but actually run sequentially inside the batch process, so
+   * the stamped time would count earlier batch tasks' execution as "wait".
+   */
+  private effectiveReadyTime(id: string): number | undefined {
+    const t = this.timings.get(id);
+    const ready = t?.readyTime;
+    if (ready == null) {
+      return undefined;
+    }
+    let result = ready;
+    // A task can't start before its dependencies finish.
+    for (const dep of this.taskGraph.dependencies[id] ?? []) {
+      const end = this.timings.get(dep)?.endTime;
+      if (end != null) {
+        result = Math.max(result, end);
+      }
+    }
+    // A batch runs its tasks sequentially in one process, so this task couldn't
+    // start until the previous batch task finished — even without an explicit
+    // dependency. Use the latest sibling that finished by the time this started.
+    // This makes the first batch task show batchStart − batchReady and the rest
+    // ~0, instead of counting earlier batch tasks' execution as "wait".
+    const start = t?.startTime;
+    for (const sibling of this.batchSiblings.get(id) ?? []) {
+      const end = this.timings.get(sibling)?.endTime;
+      if (end != null && start != null && end <= start) {
+        result = Math.max(result, end);
+      }
+    }
+    return result;
+  }
+
+  /**
    * Compute the structured throttle summary, or `null` when no discrete task
    * timings were recorded. Pure aside from reading `os` / `process.env.CI`.
    */
@@ -184,17 +246,12 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     let totalWork = 0;
     let runStart = Infinity;
     let runEnd = -Infinity;
-    let aggregateWait = 0;
     for (const { id, start, end } of timed) {
       const duration = Math.max(0, end - start);
       durations.set(id, duration);
       totalWork += duration;
       runStart = Math.min(runStart, start);
       runEnd = Math.max(runEnd, end);
-      const readyTime = this.timings.get(id)?.readyTime;
-      if (readyTime != null) {
-        aggregateWait += Math.max(0, start - readyTime);
-      }
     }
 
     const runDuration = Math.max(0, runEnd - runStart);
@@ -202,15 +259,51 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       this.criticalPath(durations);
     const slotContentionCost = Math.max(0, runDuration - criticalPathDuration);
 
-    // Ready→start wait summed over the critical-path tasks: how much the chain
-    // that determines the finish was delayed waiting for a slot.
-    let criticalPathWait = 0;
+    // Break the critical-path tasks' ready→start time into slot-wait, hashing,
+    // and spawn/setup. Hashing runs in the coordinator before dispatch and
+    // blocks it, so the portion of [ready, dispatch] overlapping a hash window
+    // is attributed to hashing; the rest of [ready, dispatch] is slot-wait; and
+    // [dispatch, start] is spawn/setup. The three sum to criticalPathWait.
+    const hashWindows = collectHashWindows();
+    const perTask: Array<{ id: string; duration: number; wait: number }> = [];
+    let criticalPathSlotWait = 0;
+    let criticalPathHashing = 0;
+    let criticalPathSpawn = 0;
     for (const id of path) {
       const t = this.timings.get(id);
-      if (t?.startTime != null && t?.readyTime != null) {
-        criticalPathWait += Math.max(0, t.startTime - t.readyTime);
+      const ready = this.effectiveReadyTime(id);
+      if (t?.startTime == null || ready == null) {
+        continue;
       }
+      const start = t.startTime;
+      // No dispatch stamp (e.g. cache hits never hit dispatchDiscreteWorker) →
+      // treat dispatch as start so spawn is 0 and the gap splits into wait/hash.
+      const dispatch = t.dispatchTime ?? start;
+      const preDispatch = Math.max(0, dispatch - ready);
+      let hashing = 0;
+      for (const [hs, he] of hashWindows) {
+        hashing += Math.max(0, Math.min(dispatch, he) - Math.max(ready, hs));
+      }
+      hashing = Math.min(hashing, preDispatch);
+      const slotWait = preDispatch - hashing;
+      const spawn = Math.max(0, start - dispatch);
+      criticalPathHashing += hashing;
+      criticalPathSlotWait += slotWait;
+      criticalPathSpawn += spawn;
+      perTask.push({
+        id,
+        duration: durations.get(id) ?? 0,
+        wait: slotWait + hashing + spawn,
+      });
     }
+    const criticalPathWait =
+      criticalPathSlotWait + criticalPathHashing + criticalPathSpawn;
+    // The longest critical-path tasks — the ones worth optimizing — with each
+    // one's wait, so you can see whether the longest tasks also waited most
+    // (often they don't: a long batch task runs right after its predecessor).
+    const criticalPathTop = [...perTask]
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 3);
 
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
       (t) => t.continuous
@@ -240,11 +333,15 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 
     const slotContentionPct =
       runDuration > 0 ? (slotContentionCost / runDuration) * 100 : 0;
-    const recommendation = slotBound
-      ? slotBoundRecommendation(parallel, cores)
-      : isCI
-        ? 'Consider a faster CI runner if critical-path tasks are CPU-bound.'
-        : "Raising --parallel won't shorten this run.";
+    const recommendation = buildRecommendation({
+      slotBound,
+      criticalPathSlotWait,
+      criticalPathDuration,
+      parallel,
+      cores,
+      isCI,
+      longest: criticalPathLongest,
+    });
 
     return {
       runDuration,
@@ -252,8 +349,11 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathTasks: path,
       criticalPathLongest,
       totalWork,
-      aggregateWait,
       criticalPathWait,
+      criticalPathSlotWait,
+      criticalPathHashing,
+      criticalPathSpawn,
+      criticalPathTop,
       slotContentionCost,
       slotContentionPct,
       parallel,
@@ -278,16 +378,94 @@ export function flushThrottleReport(): void {
     return;
   }
   const summary = lifeCycle.getSummary();
-  if (summary) {
-    process.stdout.write(formatReport(summary) + '\n');
+  if (!summary) {
+    return;
+  }
+  // After the TUI tears down, the terminal can still be in raw mode (no
+  // \n → \r\n translation), which staircases plain "\n" output. Use \r\n on a
+  // TTY; keep plain \n when piped so logs/files don't get stray carriage returns.
+  const eol = process.stdout.isTTY ? '\r\n' : '\n';
+  process.stdout.write(formatReport(summary).split('\n').join(eol) + eol);
+}
+
+/**
+ * Absolute-epoch [start, end] windows during which the coordinator was hashing,
+ * read from nx's existing `hashSingleTask` / `hashMultipleTasks` perf measures.
+ * Used to attribute critical-path wait to hashing vs slot contention. Returns
+ * [] if the performance API is unavailable.
+ */
+function collectHashWindows(): Array<[number, number]> {
+  try {
+    const origin = performance.timeOrigin;
+    return performance
+      .getEntriesByType('measure')
+      .filter((m) => m.name.startsWith('hash'))
+      .map((m): [number, number] => [
+        origin + m.startTime,
+        origin + m.startTime + m.duration,
+      ]);
+  } catch {
+    return [];
   }
 }
 
-function slotBoundRecommendation(parallel: number, cores: number): string {
-  if (parallel >= cores) {
-    return `Distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}`;
+/** Critical-path slot wait below this (ms) is treated as noise, not a signal. */
+const MEANINGFUL_SLOT_WAIT = 2000;
+
+/**
+ * Recommend based on whether more parallelism would actually help: it does when
+ * the run is volume-limited (slot-bound) OR the critical chain genuinely waited
+ * for a slot. Otherwise the run is at its critical-path floor and the lever is
+ * the chain itself, not more slots.
+ */
+function buildRecommendation(args: {
+  slotBound: boolean;
+  criticalPathSlotWait: number;
+  criticalPathDuration: number;
+  parallel: number;
+  cores: number;
+  isCI: boolean;
+  longest: { id: string; duration: number } | null;
+}): string {
+  const {
+    slotBound,
+    criticalPathSlotWait,
+    criticalPathDuration,
+    parallel,
+    cores,
+    isCI,
+    longest,
+  } = args;
+
+  const parallelWouldHelp =
+    slotBound || criticalPathSlotWait >= MEANINGFUL_SLOT_WAIT;
+
+  if (parallelWouldHelp) {
+    if (parallel >= cores) {
+      return `Slot-starved even at --parallel=${parallel} (machine has ${cores} cores). Distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}`;
+    }
+    // When only the critical chain waited (not volume-bound), the recoverable
+    // time is bounded by that wait, down to the critical-path floor.
+    const recover =
+      !slotBound && criticalPathSlotWait > 0
+        ? ` to recover up to ~${formatDuration(
+            criticalPathSlotWait
+          )} (down to the ${formatDuration(
+            criticalPathDuration
+          )} critical-path floor)`
+        : '';
+    return `Consider --parallel=${cores} (currently ${parallel}, machine has ${cores} cores)${recover}.`;
   }
-  return `Consider --parallel=${cores} (currently ${parallel}, machine has ${cores} cores).`;
+
+  const dominant = longest
+    ? ` — ${longest.id} dominates at ${formatDuration(longest.duration)}`
+    : '';
+  const speedUp = `This run is at its critical-path floor (${formatDuration(
+    criticalPathDuration
+  )}); raising --parallel won't shorten it. Speed up or split the critical path${dominant}.`;
+  return isCI
+    ? `${speedUp} A faster CI runner also helps if those tasks are CPU-bound.`
+    : speedUp;
 }
 
 function formatReport(s: ThrottleSummary): string {
@@ -312,9 +490,13 @@ function formatReport(s: ThrottleSummary): string {
     `  Critical-path wait:      ${fmt(
       s.criticalPathWait
     )}   (critical tasks: ready → start)`,
-    `  Aggregate task wait:     ${fmt(
-      s.aggregateWait
-    )}   (all tasks: ready → start)`,
+    `    - slot wait:           ${fmt(s.criticalPathSlotWait)}`,
+    `    - hashing:             ${fmt(s.criticalPathHashing)}`,
+    `    - spawn/setup:         ${fmt(s.criticalPathSpawn)}`,
+    `  Longest critical-path tasks (of ${s.criticalPathTasks.length}):`,
+    ...s.criticalPathTop.map(
+      (t) => `    ${t.id}  —  ${fmt(t.duration)} run, ${fmt(t.wait)} wait`
+    ),
     `  Slot-bound floor:        ${fmt(s.slotBoundFloor)}   (totalWork / parallel)`,
     `  Bottleneck class:        ${
       s.slotBound ? 'slot-bound' : 'critical-path-bound'
