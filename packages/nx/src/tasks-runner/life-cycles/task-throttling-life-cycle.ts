@@ -14,29 +14,26 @@ interface TaskTiming {
   continuous: boolean;
 }
 
+/** How a task on the finish-gating chain was unblocked. */
+type GateKind = 'root' | 'dep' | 'slot' | 'hashing' | 'other';
+
+export interface GatingLink {
+  id: string;
+  duration: number;
+  gate: GateKind;
+}
+
 export interface ThrottleSummary {
   runDuration: number;
   criticalPathDuration: number;
   criticalPathTasks: string[];
-  criticalPathLongest: { id: string; duration: number } | null;
   totalWork: number;
   /**
-   * Sum of `startTime − readyTime` over the critical-path tasks only — how long
-   * the tasks that actually determine the finish spent between becoming ready
-   * and starting. Dominated by slot contention when slot-bound; ~0 when there
-   * is spare slot capacity (then it's pre-start orchestration overhead).
+   * The actual finish-gating chain: the sequence of tasks that determined the
+   * finish (from a root to the last-finishing task), each tagged with how it
+   * was unblocked — its dependency, the task that freed its slot, hashing, etc.
    */
-  criticalPathWait: number;
-  /**
-   * Breakdown of `criticalPathWait` (they sum to it): time the critical-path
-   * tasks spent genuinely waiting for a slot, blocked by the coordinator
-   * hashing, and on per-task spawn/setup, respectively.
-   */
-  criticalPathSlotWait: number;
-  criticalPathHashing: number;
-  criticalPathSpawn: number;
-  /** The longest critical-path tasks, each with its own wait, for triage. */
-  criticalPathTop: Array<{ id: string; duration: number; wait: number }>;
+  gatingChain: GatingLink[];
   /** runDuration − criticalPathDuration: savings under infinite parallelism. */
   slotContentionCost: number;
   slotContentionPct: number;
@@ -233,6 +230,112 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
+   * The finish-gating chain: walk back from the last-finishing task, at each
+   * step following what actually gated it — its latest-finishing dependency, or
+   * (if it waited after its deps were ready) the task whose end freed the slot
+   * it took. Captures slot-gating that a pure dependency chain misses, so it's
+   * the real sequence that determined the finish. Each link records how that
+   * task was unblocked.
+   */
+  private computeGatingChain(
+    durations: Map<string, number>,
+    hashWindows: Array<[number, number]>
+  ): GatingLink[] {
+    const EPS = 50; // ms tolerance for "started right when its deps were ready"
+    let terminal: string | null = null;
+    let maxEnd = -Infinity;
+    for (const id of durations.keys()) {
+      const end = this.timings.get(id)?.endTime;
+      if (end != null && end > maxEnd) {
+        maxEnd = end;
+        terminal = id;
+      }
+    }
+
+    const chain: GatingLink[] = [];
+    const seen = new Set<string>();
+    let node: string | null = terminal;
+    while (node != null && !seen.has(node)) {
+      seen.add(node);
+      const t = this.timings.get(node);
+      const start = t?.startTime ?? 0;
+      const ready = this.effectiveReadyTime(node) ?? start;
+      let gate: GateKind;
+      let blocker: string | null;
+      if (start - ready <= EPS) {
+        blocker = this.latestFinishingDep(node, durations);
+        gate = blocker ? 'dep' : 'root';
+      } else {
+        const freer = this.slotFreer(node, ready, start, durations);
+        if (freer) {
+          gate = 'slot';
+          blocker = freer;
+        } else {
+          // Waited with free slots: the coordinator hashing, or unexplained.
+          gate =
+            overlap(ready, start, hashWindows) >= (start - ready) / 2
+              ? 'hashing'
+              : 'other';
+          blocker = this.latestFinishingDep(node, durations);
+        }
+      }
+      chain.unshift({ id: node, duration: durations.get(node) ?? 0, gate });
+      node = blocker;
+    }
+    return chain;
+  }
+
+  /** The dependency that finished latest (and thus gated this task's start). */
+  private latestFinishingDep(
+    id: string,
+    durations: Map<string, number>
+  ): string | null {
+    let best: string | null = null;
+    let bestEnd = -Infinity;
+    for (const dep of this.taskGraph.dependencies[id] ?? []) {
+      if (!durations.has(dep)) {
+        continue;
+      }
+      const end = this.timings.get(dep)?.endTime ?? -Infinity;
+      if (end > bestEnd) {
+        bestEnd = end;
+        best = dep;
+      }
+    }
+    return best;
+  }
+
+  /** The task whose end freed the slot `id` took: ran during, and ended within, [ready, start]. */
+  private slotFreer(
+    id: string,
+    ready: number,
+    start: number,
+    durations: Map<string, number>
+  ): string | null {
+    let best: string | null = null;
+    let bestEnd = -Infinity;
+    for (const other of durations.keys()) {
+      if (other === id) {
+        continue;
+      }
+      const ot = this.timings.get(other);
+      if (ot?.startTime == null || ot.endTime == null) {
+        continue;
+      }
+      if (
+        ot.startTime < start &&
+        ot.endTime > ready &&
+        ot.endTime <= start + 1 &&
+        ot.endTime > bestEnd
+      ) {
+        bestEnd = ot.endTime;
+        best = other;
+      }
+    }
+    return best;
+  }
+
+  /**
    * Compute the structured throttle summary, or `null` when no discrete task
    * timings were recorded. Pure aside from reading `os` / `process.env.CI`.
    */
@@ -259,57 +362,11 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       this.criticalPath(durations);
     const slotContentionCost = Math.max(0, runDuration - criticalPathDuration);
 
-    // Break the critical-path tasks' ready→start time into slot-wait, hashing,
-    // and spawn/setup. Hashing runs in the coordinator before dispatch and
-    // blocks it, so the portion of [ready, dispatch] overlapping a hash window
-    // is attributed to hashing; the rest of [ready, dispatch] is slot-wait; and
-    // [dispatch, start] is spawn/setup. The three sum to criticalPathWait.
-    const hashWindows = collectHashWindows();
-    const perTask: Array<{ id: string; duration: number; wait: number }> = [];
-    let criticalPathSlotWait = 0;
-    let criticalPathHashing = 0;
-    let criticalPathSpawn = 0;
-    for (const id of path) {
-      const t = this.timings.get(id);
-      const ready = this.effectiveReadyTime(id);
-      if (t?.startTime == null || ready == null) {
-        continue;
-      }
-      const start = t.startTime;
-      // No dispatch stamp (e.g. cache hits never hit dispatchDiscreteWorker) →
-      // treat dispatch as start so spawn is 0 and the gap splits into wait/hash.
-      const dispatch = t.dispatchTime ?? start;
-      const preDispatch = Math.max(0, dispatch - ready);
-      let hashing = 0;
-      for (const [hs, he] of hashWindows) {
-        hashing += Math.max(0, Math.min(dispatch, he) - Math.max(ready, hs));
-      }
-      hashing = Math.min(hashing, preDispatch);
-      const slotWait = preDispatch - hashing;
-      const spawn = Math.max(0, start - dispatch);
-      criticalPathHashing += hashing;
-      criticalPathSlotWait += slotWait;
-      criticalPathSpawn += spawn;
-      perTask.push({
-        id,
-        duration: durations.get(id) ?? 0,
-        wait: slotWait + hashing + spawn,
-      });
-    }
-    const criticalPathWait =
-      criticalPathSlotWait + criticalPathHashing + criticalPathSpawn;
-    // The longest critical-path tasks — the ones worth optimizing — with each
-    // one's wait, so you can see whether the longest tasks also waited most
-    // (often they don't: a long batch task runs right after its predecessor).
-    const criticalPathTop = [...perTask]
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, 3);
-
+    // Discrete parallelism (the total pool passed to startCommand minus
+    // continuous tasks) and machine cores.
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
       (t) => t.continuous
     ).length;
-    // startCommand receives the total pool (discrete + continuous); recover the
-    // discrete parallelism the same way getThreadPoolSize derived it.
     const parallel = Math.max(
       1,
       (this.total ?? continuousCount + 1) - continuousCount
@@ -319,41 +376,46 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
         ? os.availableParallelism()
         : os.cpus().length;
 
+    // Walk the actual finish-gating chain (see computeGatingChain): the real
+    // sequence of tasks that determined the finish, each tagged with what
+    // gated it (a dependency, the task that freed its slot, hashing, …).
+    const hashWindows = collectHashWindows();
+    const gatingChain = this.computeGatingChain(durations, hashWindows);
+
     const slotBoundFloor = totalWork / parallel;
     const slotBound = slotBoundFloor > criticalPathDuration;
     const isCI = !!process.env.CI;
-
-    const criticalPathLongest = path.reduce<{
+    const hasSlotGate = gatingChain.some((c) => c.gate === 'slot');
+    const dominant = gatingChain.reduce<{
       id: string;
       duration: number;
-    } | null>((acc, id) => {
-      const duration = durations.get(id) ?? 0;
-      return !acc || duration > acc.duration ? { id, duration } : acc;
-    }, null);
+    } | null>(
+      (acc, c) =>
+        !acc || c.duration > acc.duration
+          ? { id: c.id, duration: c.duration }
+          : acc,
+      null
+    );
 
     const slotContentionPct =
       runDuration > 0 ? (slotContentionCost / runDuration) * 100 : 0;
     const recommendation = buildRecommendation({
       slotBound,
-      criticalPathSlotWait,
+      hasSlotGate,
+      runOverhead: slotContentionCost,
       criticalPathDuration,
       parallel,
       cores,
       isCI,
-      longest: criticalPathLongest,
+      dominant,
     });
 
     return {
       runDuration,
       criticalPathDuration,
       criticalPathTasks: path,
-      criticalPathLongest,
       totalWork,
-      criticalPathWait,
-      criticalPathSlotWait,
-      criticalPathHashing,
-      criticalPathSpawn,
-      criticalPathTop,
+      gatingChain,
       slotContentionCost,
       slotContentionPct,
       parallel,
@@ -409,95 +471,103 @@ function collectHashWindows(): Array<[number, number]> {
   }
 }
 
-/** Critical-path slot wait below this (ms) is treated as noise, not a signal. */
-const MEANINGFUL_SLOT_WAIT = 2000;
+/** Total time [a, b] overlaps the given (unsorted, possibly overlapping) intervals. */
+function overlap(
+  a: number,
+  b: number,
+  intervals: Array<[number, number]>
+): number {
+  let sum = 0;
+  for (const [s, e] of intervals) {
+    sum += Math.max(0, Math.min(b, e) - Math.max(a, s));
+  }
+  return sum;
+}
+
+/** Run overhead below this (ms) means you're effectively at the critical-path floor. */
+const MEANINGFUL_OVERHEAD = 1000;
 
 /**
  * Recommend based on whether more parallelism would actually help: it does when
- * the run is volume-limited (slot-bound) OR the critical chain genuinely waited
- * for a slot. Otherwise the run is at its critical-path floor and the lever is
- * the chain itself, not more slots.
+ * the run is volume-limited (slot-bound) or the finish chain was slot-gated.
+ * Otherwise the run is at its critical-path floor and the lever is the chain.
  */
 function buildRecommendation(args: {
   slotBound: boolean;
-  criticalPathSlotWait: number;
+  hasSlotGate: boolean;
+  runOverhead: number;
   criticalPathDuration: number;
   parallel: number;
   cores: number;
   isCI: boolean;
-  longest: { id: string; duration: number } | null;
+  dominant: { id: string; duration: number } | null;
 }): string {
   const {
     slotBound,
-    criticalPathSlotWait,
+    hasSlotGate,
+    runOverhead,
     criticalPathDuration,
     parallel,
     cores,
     isCI,
-    longest,
+    dominant,
   } = args;
 
+  // You can never recover more than the run overhead; if it's negligible the run
+  // is already at its critical-path floor.
   const parallelWouldHelp =
-    slotBound || criticalPathSlotWait >= MEANINGFUL_SLOT_WAIT;
+    runOverhead >= MEANINGFUL_OVERHEAD && (slotBound || hasSlotGate);
 
   if (parallelWouldHelp) {
     if (parallel >= cores) {
-      return `Slot-starved even at --parallel=${parallel} (machine has ${cores} cores). Distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}`;
+      return `The finish chain is slot-gated even at --parallel=${parallel} (machine has ${cores} cores). Distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}`;
     }
-    // When only the critical chain waited (not volume-bound), the recoverable
-    // time is bounded by that wait, down to the critical-path floor.
-    const recover =
-      !slotBound && criticalPathSlotWait > 0
-        ? ` to recover up to ~${formatDuration(
-            criticalPathSlotWait
-          )} (down to the ${formatDuration(
-            criticalPathDuration
-          )} critical-path floor)`
-        : '';
-    return `Consider --parallel=${cores} (currently ${parallel}, machine has ${cores} cores)${recover}.`;
+    return `The finish chain is slot-gated. Consider --parallel=${cores} (currently ${parallel}, machine has ${cores} cores) to recover up to ~${formatDuration(
+      runOverhead
+    )} (down to the ${formatDuration(criticalPathDuration)} critical-path floor).`;
   }
 
-  const dominant = longest
-    ? ` — ${longest.id} dominates at ${formatDuration(longest.duration)}`
+  const dom = dominant
+    ? ` — ${dominant.id} dominates at ${formatDuration(dominant.duration)}`
     : '';
   const speedUp = `This run is at its critical-path floor (${formatDuration(
     criticalPathDuration
-  )}); raising --parallel won't shorten it. Speed up or split the critical path${dominant}.`;
+  )}); raising --parallel won't shorten it. Speed up or split the finish chain${dom}.`;
   return isCI
     ? `${speedUp} A faster CI runner also helps if those tasks are CPU-bound.`
     : speedUp;
 }
 
+const GATE_LABEL: Record<GateKind, string> = {
+  root: '',
+  dep: '',
+  slot: '  ← slot-gated (waited for a free slot)',
+  hashing: '  ← waited on hashing',
+  other: '  ← waited (scheduling/startup)',
+};
+
 function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  const longest = s.criticalPathLongest;
   return [
     '',
     'Throttle report (NX_THROTTLE_REPORT):',
     `  Run duration:            ${fmt(s.runDuration)}`,
-    `  Critical path:           ${fmt(s.criticalPathDuration)}   (${
+    `  Critical path (floor):   ${fmt(s.criticalPathDuration)}   (${
       s.criticalPathTasks.length
-    } tasks${
-      longest ? `; longest: ${longest.id} at ${fmt(longest.duration)}` : ''
-    })`,
+    } tasks)`,
     `  Total work:              ${fmt(s.totalWork)}`,
     `  Parallelism:             ${s.parallel} slots  (machine has ${s.cores} cores)`,
     `  Environment:             ${s.isCI ? 'CI' : 'local'}`,
     '',
     `  Run overhead:            +${fmt(
       s.slotContentionCost
-    )}   (${s.slotContentionPct.toFixed(1)}% over the critical-path floor)`,
-    `  Critical-path wait:      ${fmt(
-      s.criticalPathWait
-    )}   (critical tasks: ready → start)`,
-    `    - slot wait:           ${fmt(s.criticalPathSlotWait)}`,
-    `    - hashing:             ${fmt(s.criticalPathHashing)}`,
-    `    - spawn/setup:         ${fmt(s.criticalPathSpawn)}`,
-    `  Longest critical-path tasks (of ${s.criticalPathTasks.length}):`,
-    ...s.criticalPathTop.map(
-      (t) => `    ${t.id}  —  ${fmt(t.duration)} run, ${fmt(t.wait)} wait`
+    )}   (${s.slotContentionPct.toFixed(
+      1
+    )}% over floor, recoverable with infinite parallelism)`,
+    `  Finish-gating chain (what determined the ${fmt(s.runDuration)} finish):`,
+    ...s.gatingChain.map(
+      (c) => `    ${c.id}  —  ${fmt(c.duration)}${GATE_LABEL[c.gate]}`
     ),
-    `  Slot-bound floor:        ${fmt(s.slotBoundFloor)}   (totalWork / parallel)`,
     `  Bottleneck class:        ${
       s.slotBound ? 'slot-bound' : 'critical-path-bound'
     }`,

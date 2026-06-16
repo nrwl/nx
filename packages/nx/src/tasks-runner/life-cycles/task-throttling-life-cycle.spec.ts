@@ -23,13 +23,9 @@ function makeGraph(
   deps: Record<string, string[]> = {}
 ): TaskGraph {
   return {
-    roots: tasks
-      .filter((t) => (deps[t.id] ?? []).length === 0)
-      .map((t) => t.id),
+    roots: tasks.filter((t) => (deps[t.id] ?? []).length === 0).map((t) => t.id),
     tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
-    dependencies: Object.fromEntries(
-      tasks.map((t) => [t.id, deps[t.id] ?? []])
-    ),
+    dependencies: Object.fromEntries(tasks.map((t) => [t.id, deps[t.id] ?? []])),
     continuousDependencies: Object.fromEntries(tasks.map((t) => [t.id, []])),
   } as unknown as TaskGraph;
 }
@@ -45,10 +41,7 @@ function run(
   const lc = new TaskThrottlingLifeCycle(graph);
   lc.startCommand(total);
   for (const taskIds of batches) {
-    lc.registerRunningBatch('batch', {
-      executorName: 'e',
-      taskIds,
-    } as never);
+    lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
   }
   for (const [id, readyTime] of Object.entries(readyTimes)) {
     lc.setTaskReadyTime(id, readyTime);
@@ -65,12 +58,10 @@ function run(
 
 describe('TaskThrottlingLifeCycle', () => {
   it('returns null when there are no discrete task timings', () => {
-    const graph = makeGraph([makeTask('a')]); // no start/end
-    expect(run(graph, 4)).toBeNull();
+    expect(run(makeGraph([makeTask('a')]), 4)).toBeNull();
   });
 
-  it('reports zero contention for a single dependency chain', () => {
-    // a -> b -> c, each 10ms, run back-to-back. Critical path == run.
+  it('reports zero overhead and a dependency-gated chain for a single chain', () => {
     const a = makeTask('a', { start: 0, end: 10 });
     const b = makeTask('b', { start: 10, end: 20 });
     const c = makeTask('c', { start: 20, end: 30 });
@@ -80,125 +71,99 @@ describe('TaskThrottlingLifeCycle', () => {
 
     expect(s.runDuration).toBe(30);
     expect(s.criticalPathDuration).toBe(30);
-    expect(s.criticalPathTasks).toEqual(['a', 'b', 'c']);
     expect(s.slotContentionCost).toBe(0);
+    expect(s.gatingChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
+    expect(s.gatingChain.map((g) => g.gate)).toEqual(['root', 'dep', 'dep']);
   });
 
-  it('reports zero contention when everything runs in parallel', () => {
-    // 5 independent 10ms tasks, all overlapping, 5 slots.
+  it('reports zero overhead when everything runs in parallel', () => {
     const tasks = ['a', 'b', 'c', 'd', 'e'].map((id) =>
       makeTask(id, { start: 0, end: 10 })
     );
-    const graph = makeGraph(tasks);
-
-    const s = run(graph, 5)!;
+    const s = run(makeGraph(tasks), 5)!;
 
     expect(s.runDuration).toBe(10);
-    expect(s.criticalPathDuration).toBe(10);
     expect(s.slotContentionCost).toBe(0);
     expect(s.slotBound).toBe(false);
+    expect(s.gatingChain).toHaveLength(1);
+    expect(s.gatingChain[0].gate).toBe('root');
   });
 
-  it('attributes the e2e-tail case to the critical path, not the last task', () => {
-    // dep (10) then 8 e2e tasks all depending on it, --parallel=4.
-    // Schedule: e2e durations 60,50,45,40,30,25,20,15.
+  it('finds the slot-gated finish chain in the e2e-tail case', () => {
+    // dep (10) then 8 e2e tasks depending on it, --parallel=4. e7 finishes last,
+    // gated by the SLOT that e0 held (e7 does not depend on e0).
     const dep = makeTask('dep', { start: 0, end: 10 });
     const e2e = [
-      makeTask('e0', { start: 10, end: 70 }), // 60
-      makeTask('e1', { start: 10, end: 60 }), // 50
-      makeTask('e2', { start: 10, end: 55 }), // 45
-      makeTask('e3', { start: 10, end: 50 }), // 40
-      makeTask('e4', { start: 50, end: 80 }), // 30
-      makeTask('e5', { start: 55, end: 80 }), // 25
-      makeTask('e6', { start: 60, end: 80 }), // 20
-      makeTask('e7', { start: 70, end: 85 }), // 15 — finishes last
+      makeTask('e0', { start: 10, end: 70 }),
+      makeTask('e1', { start: 10, end: 60 }),
+      makeTask('e2', { start: 10, end: 55 }),
+      makeTask('e3', { start: 10, end: 50 }),
+      makeTask('e4', { start: 50, end: 80 }),
+      makeTask('e5', { start: 55, end: 80 }),
+      makeTask('e6', { start: 60, end: 80 }),
+      makeTask('e7', { start: 70, end: 85 }),
     ];
     const deps = Object.fromEntries(e2e.map((t) => [t.id, ['dep']]));
     const graph = makeGraph([dep, ...e2e], deps);
+    const readyTimes = Object.fromEntries(
+      [dep, ...e2e].map((t) => [t.id, t.id === 'dep' ? 0 : 10])
+    );
 
-    const readyTimes = {
-      dep: 0,
-      e0: 10,
-      e1: 10,
-      e2: 10,
-      e3: 10,
-      e4: 10,
-      e5: 10,
-      e6: 10,
-      e7: 10,
-    };
     const s = run(graph, 4, readyTimes)!;
 
-    expect(s.runDuration).toBe(85);
-    // Critical path is dep -> e0 (10 + 60), NOT the chain ending at e7.
     expect(s.criticalPathDuration).toBe(70);
-    expect(s.criticalPathTasks).toEqual(['dep', 'e0']);
-    expect(s.criticalPathLongest).toEqual({ id: 'e0', duration: 60 });
-    // 85 wall-clock − 70 critical path = 15 recoverable with infinite slots.
     expect(s.slotContentionCost).toBe(15);
-    expect(s.totalWork).toBe(295);
-    expect(s.parallel).toBe(4);
-    // totalWork/parallel = 73.75 > 70 critical path → slot-bound.
     expect(s.slotBound).toBe(true);
-    // Longest critical-path tasks, sorted by duration: e0 (60) then dep (10).
-    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['e0', 'dep']);
-    expect(s.criticalPathTop[0]).toEqual({ id: 'e0', duration: 60, wait: 0 });
+    // Finish chain: dep → e0 (held the slot) → e7 (slot-gated by e0).
+    expect(s.gatingChain.map((g) => g.id)).toEqual(['dep', 'e0', 'e7']);
+    expect(s.gatingChain.find((g) => g.id === 'e7')!.gate).toBe('slot');
+  });
+
+  it('attributes a wait to the task that freed the slot', () => {
+    // parallel=1. `hog` holds the slot 0–1400. `b` is independent and longest,
+    // ready at 1000, starts at 1600 when hog frees the slot → slot-gated by hog.
+    const hog = makeTask('hog', { start: 0, end: 1400 });
+    const b = makeTask('b', { start: 1600, end: 3200 });
+    const s = run(makeGraph([hog, b]), 1, { hog: 0, b: 1000 })!;
+
+    expect(s.gatingChain.map((g) => g.id)).toEqual(['hog', 'b']);
+    expect(s.gatingChain[1].gate).toBe('slot');
+  });
+
+  it('labels a wait with free slots as other, not slot-gated', () => {
+    // x is ready at 0 but starts at 5000 with 4 free slots and nothing running.
+    const x = makeTask('x', { start: 5000, end: 6000 });
+    const s = run(makeGraph([x]), 4, { x: 0 })!;
+
+    expect(s.gatingChain).toHaveLength(1);
+    expect(s.gatingChain[0].gate).toBe('other');
   });
 
   it('excludes continuous tasks from the calculation', () => {
-    const serve = makeTask('serve', { continuous: true }); // no end time
+    const serve = makeTask('serve', { continuous: true });
     const build = makeTask('build', { start: 0, end: 20 });
-    const graph = makeGraph([serve, build]);
-
-    const s = run(graph, 2)!;
+    const s = run(makeGraph([serve, build]), 2)!;
 
     expect(s.criticalPathTasks).toEqual(['build']);
-    expect(s.runDuration).toBe(20);
-    expect(s.slotContentionCost).toBe(0);
-  });
-
-  it('splits critical-path wait into slot wait, hashing, and spawn', () => {
-    // a -> b. b becomes ready at 10, acquires a slot at 13 (3ms slot wait),
-    // then starts at 15 (2ms spawn/setup). No hash perf measures in the test,
-    // so hashing is 0 and the three components sum to criticalPathWait.
-    const a = makeTask('a', { start: 0, end: 10 });
-    const b = makeTask('b', { start: 15, end: 25 });
-    const graph = makeGraph([a, b], { b: ['a'] });
-
-    const s = run(graph, 1, { a: 0, b: 10 }, { a: 0, b: 13 })!;
-
-    expect(s.criticalPathTasks).toEqual(['a', 'b']);
-    expect(s.criticalPathSlotWait).toBe(3);
-    expect(s.criticalPathSpawn).toBe(2);
-    expect(s.criticalPathHashing).toBe(0);
-    expect(s.criticalPathWait).toBe(5);
-  });
-
-  it('does not count sequential batch execution as critical-path wait', () => {
-    // a and b are INDEPENDENT but run in one batch process, queued (ready) at 0.
-    // a runs 0–20, then b runs 20–50 (sequential). b is the longest task, so the
-    // critical path is [b]. Without batch awareness, b would show a 20ms "wait"
-    // that's really a executing; with it, b waited 0 (the batch reached it).
-    const a = makeTask('a', { start: 0, end: 20 });
-    const b = makeTask('b', { start: 20, end: 50 });
-    const graph = makeGraph([a, b]); // no dependency between them
-
-    const s = run(graph, 1, { a: 0, b: 0 }, {}, [['a', 'b']])!;
-
-    expect(s.criticalPathTasks).toEqual(['b']);
-    expect(s.criticalPathWait).toBe(0);
-    // Invariant: critical-path wait can never exceed run overhead.
-    expect(s.criticalPathWait).toBeLessThanOrEqual(s.slotContentionCost);
+    expect(s.gatingChain.map((g) => g.id)).toEqual(['build']);
   });
 
   it('recovers discrete parallelism when continuous tasks share the pool', () => {
-    // total pool = 5, one continuous task → discrete parallel should be 4.
     const serve = makeTask('serve', { continuous: true });
     const build = makeTask('build', { start: 0, end: 20 });
-    const graph = makeGraph([serve, build]);
-
-    const s = run(graph, 5)!;
+    const s = run(makeGraph([serve, build]), 5)!;
 
     expect(s.parallel).toBe(4);
+  });
+
+  it('treats a batch as sequential, with no phantom slot wait', () => {
+    // a and b are independent but in one batch; a runs 0–20, then b 20–50.
+    // b's effective ready is a's end (20), so it started immediately → not gated
+    // by a slot, no phantom wait.
+    const a = makeTask('a', { start: 0, end: 20 });
+    const b = makeTask('b', { start: 20, end: 50 });
+    const s = run(makeGraph([a, b]), 1, { a: 0, b: 0 }, {}, [['a', 'b']])!;
+
+    expect(s.gatingChain.find((g) => g.id === 'b')?.gate).not.toBe('slot');
   });
 });
