@@ -26,6 +26,10 @@ import {
   eslintVersion,
   typescriptESLintVersion,
 } from '../../utils/versions';
+import {
+  BASE_ESLINT_CONFIG_FILENAMES,
+  ESLINT_FLAT_CONFIG_FILENAMES,
+} from '../../utils/config-file';
 import { ESLint } from 'eslint';
 import {
   convertEslintJsonToFlatConfig,
@@ -37,6 +41,15 @@ export async function convertToFlatConfigGenerator(
   options: ConvertToFlatConfigGeneratorSchema
 ): Promise<void | GeneratorCallback> {
   assertSupportedEslintVersion(tree);
+
+  // Already on flat config at the root? There is nothing to convert.
+  const hasRootFlatConfig = [
+    ...ESLINT_FLAT_CONFIG_FILENAMES,
+    ...BASE_ESLINT_CONFIG_FILENAMES,
+  ].some((file) => tree.exists(file));
+  if (hasRootFlatConfig) {
+    return;
+  }
 
   const eslintFile = findEslintFile(tree);
   if (!eslintFile) {
@@ -53,7 +66,12 @@ export async function convertToFlatConfigGenerator(
   const eslintIgnoreFiles = new Set<string>(['.eslintignore']);
 
   // convert root eslint config to eslint.config.cjs or eslint.base.config.mjs based on eslintConfigFormat
-  convertRootToFlatConfig(tree, eslintFile, options.eslintConfigFormat);
+  convertRootToFlatConfig(
+    tree,
+    eslintFile,
+    options.eslintConfigFormat,
+    options.keepExistingVersions
+  );
 
   // convert project eslint files to eslint.config.cjs
   const projects = getProjects(tree);
@@ -64,7 +82,8 @@ export async function convertToFlatConfigGenerator(
       projectConfig,
       readNxJson(tree),
       eslintIgnoreFiles,
-      options.eslintConfigFormat
+      options.eslintConfigFormat,
+      options.keepExistingVersions
     );
   }
 
@@ -90,7 +109,8 @@ export default convertToFlatConfigGenerator;
 function convertRootToFlatConfig(
   tree: Tree,
   eslintFile: string,
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  keepExistingVersions?: boolean
 ) {
   if (/\.base\.(js|json|yml|yaml)$/.test(eslintFile)) {
     convertConfigToFlatConfig(
@@ -98,7 +118,9 @@ function convertRootToFlatConfig(
       '',
       eslintFile,
       `eslint.base.config.${format}`,
-      format
+      format,
+      undefined,
+      keepExistingVersions
     );
   }
   convertConfigToFlatConfig(
@@ -106,7 +128,9 @@ function convertRootToFlatConfig(
     '',
     eslintFile.replace('.base.', '.'),
     `eslint.config.${format}`,
-    format
+    format,
+    undefined,
+    keepExistingVersions
   );
 }
 
@@ -125,10 +149,21 @@ function convertProjectToFlatConfig(
   projectConfig: ProjectConfiguration,
   nxJson: NxJsonConfiguration,
   eslintIgnoreFiles: Set<string>,
-  format: 'cjs' | 'mjs'
+  format: 'cjs' | 'mjs',
+  keepExistingVersions?: boolean
 ) {
   const eslintFile = findEslintFile(tree, projectConfig.root);
-  if (!eslintFile || eslintFile.endsWith('.js')) {
+  if (!eslintFile) {
+    return;
+  }
+  if (eslintFile === '.eslintrc.js' || eslintFile === '.eslintrc.cjs') {
+    logger.warn(
+      `Skipping "${project}": ${eslintFile} is a JavaScript-based ESLint config, which cannot be converted automatically. Convert it to flat config manually.`
+    );
+    return;
+  }
+  if (eslintFile.endsWith('.js')) {
+    // Already on a JavaScript-based flat config (eslint.config.js); nothing to convert.
     return;
   }
 
@@ -177,7 +212,8 @@ function convertProjectToFlatConfig(
     eslintFile,
     `eslint.config.${format}`,
     format,
-    ignorePath
+    ignorePath,
+    keepExistingVersions
   );
   eslintIgnoreFiles.add(`${projectConfig.root}/.eslintignore`);
   if (ignorePath) {
@@ -307,7 +343,8 @@ function convertConfigToFlatConfig(
   source: string,
   target: string,
   format: 'cjs' | 'mjs',
-  ignorePath?: string
+  ignorePath?: string,
+  keepExistingVersions?: boolean
 ) {
   const ignorePaths = ignorePath
     ? [ignorePath, `${root}/.eslintignore`]
@@ -323,7 +360,14 @@ function convertConfigToFlatConfig(
       ignorePaths,
       format
     );
-    return processConvertedConfig(tree, root, source, target, conversionResult);
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      conversionResult,
+      keepExistingVersions
+    );
   }
   if (source.endsWith('.yaml') || source.endsWith('.yml')) {
     const originalContent = tree.read(`${root}/${source}`, 'utf-8');
@@ -339,7 +383,14 @@ function convertConfigToFlatConfig(
       ignorePaths,
       format
     );
-    return processConvertedConfig(tree, root, source, target, conversionResult);
+    return processConvertedConfig(
+      tree,
+      root,
+      source,
+      target,
+      conversionResult,
+      keepExistingVersions
+    );
   }
 }
 
@@ -352,7 +403,8 @@ function processConvertedConfig(
     content,
     addESLintRC,
     addESLintJS,
-  }: { content: string; addESLintRC: boolean; addESLintJS: boolean }
+  }: { content: string; addESLintRC: boolean; addESLintJS: boolean },
+  keepExistingVersions?: boolean
 ) {
   // remove original config file
   tree.delete(join(root, source));
@@ -389,7 +441,15 @@ function processConvertedConfig(
     devDependencies['@eslint/js'] = eslintVersion;
   }
 
-  // Convert-to-flat-config is an opt-in "upgrade" — we intentionally overwrite
-  // existing pins to land the workspace on the latest flat-config-ready stack.
-  addDependenciesToPackageJson(tree, {}, devDependencies);
+  // Direct invocation is an opt-in upgrade, so by default existing pins are
+  // overwritten to land the workspace on the latest flat-config-ready stack.
+  // Migrations pass `keepExistingVersions` so the version bump stays owned by
+  // `packageJsonUpdates` and only newly added packages are installed here.
+  addDependenciesToPackageJson(
+    tree,
+    {},
+    devDependencies,
+    'package.json',
+    keepExistingVersions
+  );
 }
