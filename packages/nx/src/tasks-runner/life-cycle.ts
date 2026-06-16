@@ -88,6 +88,14 @@ export interface LifeCycle {
    */
   setTaskReadyTime?(taskId: string, readyTime: number): void;
 
+  /**
+   * Fired when a discrete task acquires an execution slot (is dispatched to a
+   * worker), before it starts running. The gap readyTime → dispatchTime is time
+   * the task spent waiting for a free slot (and for the coordinator to finish
+   * hashing, which blocks dispatch). `dispatchTime` is `Date.now()`.
+   */
+  setTaskDispatchTime?(taskId: string, dispatchTime: number): void;
+
   registerForcedShutdownCallback?(callback: () => void): void;
 
   setEstimatedTaskTimings?(timings: Record<string, number>): void;
@@ -225,6 +233,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setTaskReadyTime) {
         l.setTaskReadyTime(taskId, readyTime);
+      }
+    }
+  }
+
+  setTaskDispatchTime(taskId: string, dispatchTime: number): void {
+    for (let l of this.lifeCycles) {
+      if (l.setTaskDispatchTime) {
+        l.setTaskDispatchTime(taskId, dispatchTime);
       }
     }
   }
