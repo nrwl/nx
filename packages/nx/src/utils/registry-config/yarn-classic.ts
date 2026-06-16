@@ -116,16 +116,24 @@ export function getYarnClassicSpawnRegistryEnv(
   resolveRegistry(env, npmrcChain, yarnrcChain, cliRegistryChain, scope);
   // yarn tilde-expands paths against userHomeDir.default (the primary home).
   resolveOptions(env, npmrcChain, yarnrcChain, root, primary.dir);
-  resolveAuth(env, npmrcChain);
+  resolveAuth(env, npmrcChain, yarnrcChain, scope);
   return env;
 }
 
 // yarn reads registry auth only from the .npmrc chain (never .yarnrc), keyed by
 // the registry-URL nerf-dart, with the same project > home > etc > ancestors
-// precedence. npm reads the native files itself, so any auth whose winning
-// entry is a yarn-only file is bridged - otherwise the spawned npm would hit a
-// bridged ancestor registry unauthenticated.
-function resolveAuth(env: NpmConfigEnv, npmrcChain: RcFile[]): void {
+// precedence. It attaches that auth only on a scoped fetch, or on an unscoped
+// one when always-auth is set for the registry (registry-scoped key, else
+// global). npm reads the native files itself, so a yarn-only winner is bridged,
+// but only when yarn would send it; bridging unconditionally would make npm
+// authenticate where yarn stays anonymous and 401 on a registry that serves the
+// package without credentials.
+function resolveAuth(
+  env: NpmConfigEnv,
+  npmrcChain: RcFile[],
+  yarnrcChain: RcFile[],
+  scope: string | null
+): void {
   const authKeys = new Set<string>();
   for (const file of npmrcChain) {
     if (!file.map) {
@@ -139,12 +147,53 @@ function resolveAuth(env: NpmConfigEnv, npmrcChain: RcFile[]): void {
   }
   for (const key of authKeys) {
     const winner = firstString(npmrcChain, key);
+    if (!winner || winner.npmNative) {
+      continue;
+    }
+    // yarn authenticates a scoped fetch unconditionally; an unscoped one only
+    // when always-auth is set. Skip the bridge where yarn would send nothing.
+    if (!scope && !alwaysAuthFor(key, npmrcChain, yarnrcChain)) {
+      continue;
+    }
     // _password/_authToken/_auth values are stored (and consumed by npm) in the
     // same encoding yarn reads them, so they bridge verbatim.
-    if (winner && !winner.npmNative) {
-      env[`npm_config_${key}`] = winner.value;
-    }
+    env[`npm_config_${key}`] = winner.value;
   }
+}
+
+// yarn's getRegistryOrGlobalOption(registry, 'always-auth'): a registry-scoped
+// `//host/:always-auth` wins, else the global `always-auth`. Read across the
+// .yarnrc chain (precedence) then the .npmrc chain like every other yarn option,
+// then Boolean()-coerced.
+function alwaysAuthFor(
+  authKey: string,
+  npmrcChain: RcFile[],
+  yarnrcChain: RcFile[]
+): boolean {
+  const registryScoped = authKey.startsWith('//')
+    ? readOption(
+        npmrcChain,
+        yarnrcChain,
+        `${authKey.replace(/:[^:]+$/, '')}:always-auth`
+      )
+    : undefined;
+  return Boolean(
+    registryScoped || readOption(npmrcChain, yarnrcChain, 'always-auth')
+  );
+}
+
+// Resolves an option value the way yarn's getOption sees it (.yarnrc wins over
+// the .npmrc chain). Unlike resolveOption it returns the value regardless of
+// whether npm reads it natively, since it drives the auth gate, not a bridge.
+function readOption(
+  npmrcChain: RcFile[],
+  yarnrcChain: RcFile[],
+  key: string
+): YarnValue | undefined {
+  return (
+    firstDefined(yarnrcChain, key)?.value ??
+    firstDefined(npmrcChain, key)?.value
+  );
 }
 
 const BARE_AUTH_KEYS = new Set([
