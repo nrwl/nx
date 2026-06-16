@@ -185,6 +185,18 @@
           "version": "^8.40.0",
           "alwaysAddToPackageJson": false
         },
+        "@typescript-eslint/rule-tester": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/scope-manager": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@typescript-eslint/typescript-estree": {
+          "version": "^8.40.0",
+          "alwaysAddToPackageJson": false
+        },
         "eslint-config-prettier": {
           "version": "^10.0.0",
           "alwaysAddToPackageJson": false
