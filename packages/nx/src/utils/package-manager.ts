@@ -706,8 +706,8 @@ export async function packageRegistryPack(
 
   const workspacePm = detectPackageManager();
   // Run from the workspace root (not the temp dir) so npm reads the workspace
-  // .npmrc natively - the registry/auth an npm workspace configures there,
-  // which packageRegistryView already picks up; --pack-destination keeps the
+  // .npmrc natively, the registry/auth an npm workspace configures there (which
+  // packageRegistryView already picks up); --pack-destination keeps the
   // tarball in the temp dir. For non-npm package managers the env overlay
   // reproduces the config npm cannot read (pnpm-workspace.yaml, .yarnrc(.yml),
   // bunfig.toml). npm prints the tarball basename to stdout.
