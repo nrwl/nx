@@ -109,6 +109,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.0.1-happy-dom": {
+      "version": "23.0.1",
+      "requires": {
+        "happy-dom": "<=20.10.4"
+      },
+      "packages": {
+        "happy-dom": {
+          "version": "^20.10.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
