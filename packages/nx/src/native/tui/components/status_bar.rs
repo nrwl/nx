@@ -206,18 +206,23 @@ impl BarItem {
             // "⏭ N" and/or "◼ N" - render whichever counts are > 0,
             // separated by SUMMARY_CHIP_SEP. Both being zero => width 0.
             BarItem::SkipStopChips => {
-                let mut parts: Vec<u16> = Vec::new();
-                if counts.skipped > 0 {
-                    parts.push(2 + digit_width(counts.skipped));
-                }
-                if counts.stopped > 0 {
-                    parts.push(2 + digit_width(counts.stopped));
-                }
-                if parts.is_empty() {
-                    0
+                let skip = if counts.skipped > 0 {
+                    2 + digit_width(counts.skipped)
                 } else {
-                    parts.iter().sum::<u16>() + SUMMARY_CHIP_SEP * (parts.len() as u16 - 1)
-                }
+                    0
+                };
+                let stop = if counts.stopped > 0 {
+                    2 + digit_width(counts.stopped)
+                } else {
+                    0
+                };
+                // Separator only when both chips render.
+                let sep = if skip > 0 && stop > 0 {
+                    SUMMARY_CHIP_SEP
+                } else {
+                    0
+                };
+                skip + stop + sep
             }
             // Help shortcut widths are fixed.
             BarItem::QuitHelp => 7,          // "quit: q"
@@ -1257,6 +1262,17 @@ mod tests {
             sample_counts(),
             false,
             Some("View logs and run details at https://nx.app/runs/KnGk4A47qk"),
+        );
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn snapshot_cloud_no_url_message() {
+        let terminal = render_bar(
+            50,
+            sample_counts(),
+            false,
+            Some("Nx Cloud: rate limit exceeded"),
         );
         insta::assert_snapshot!(terminal.backend());
     }

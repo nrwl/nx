@@ -1511,7 +1511,7 @@ impl App {
             let bar_area = if bar_height > 0 && frame_area.height >= bar_height {
                 Some(Rect {
                     x: frame_area.x,
-                    y: frame_area.y + usable_height,
+                    y: frame_area.y.saturating_add(usable_height),
                     width: frame_area.width,
                     height: bar_height,
                 })
