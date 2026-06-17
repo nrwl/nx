@@ -1,5 +1,5 @@
-import { writeFileSync } from 'fs';
-import { dirSync } from 'tmp';
+import { mkdtempSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
 import ora from 'ora';
 import { join } from 'path';
 
@@ -24,7 +24,7 @@ export async function createSandbox(packageManager: PackageManager) {
 
   const { install, preInstall } = getPackageManagerCommand(packageManager);
 
-  const tmpDir = dirSync().name;
+  const tmpDir = mkdtempSync(join(tmpdir(), 'nx-'));
   try {
     writeFileSync(
       join(tmpDir, 'package.json'),

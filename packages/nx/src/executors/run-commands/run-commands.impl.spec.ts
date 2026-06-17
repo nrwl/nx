@@ -1,8 +1,18 @@
-import { readFileSync, writeFileSync } from 'fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'fs';
 import { env } from 'npm-run-path';
-import { relative } from 'path';
-import { dirSync, fileSync } from 'tmp';
+import { tmpdir } from 'os';
+import { join, relative } from 'path';
 import runCommands, { interpolateArgsIntoCommand } from './run-commands.impl';
+
+// Local stand-ins for the `tmp` package's dirSync/fileSync (return `{ name }`).
+function dirSync(opts?: { dir?: string }) {
+  return { name: mkdtempSync(join(opts?.dir ?? tmpdir(), 'nx-')) };
+}
+function fileSync() {
+  const name = join(mkdtempSync(join(tmpdir(), 'nx-')), 'file');
+  writeFileSync(name, '');
+  return { name };
+}
 
 function normalize(p: string) {
   return p.startsWith('/private') ? p.substring(8) : p;

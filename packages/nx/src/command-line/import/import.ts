@@ -3,7 +3,7 @@ import { existsSync, promises as fsp } from 'node:fs';
 import * as pc from 'picocolors';
 import { cloneFromUpstream, GitRepository } from '../../utils/git-utils';
 import { stat, mkdir, rm } from 'node:fs/promises';
-import { tmpdir } from 'tmp';
+import { tmpdir } from 'node:os';
 import { prompt } from 'enquirer';
 import { output } from '../../utils/output';
 const createSpinner = require('ora');
@@ -132,7 +132,7 @@ export async function importHandler(options: ImportOptions) {
     });
   }
 
-  const tempImportDirectory = join(tmpdir, 'nx-import');
+  const tempImportDirectory = join(tmpdir(), 'nx-import');
 
   if (!sourceRepository) {
     sourceRepository = (

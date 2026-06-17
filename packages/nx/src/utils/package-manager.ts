@@ -3,7 +3,7 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
 import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
-import { dirSync } from 'tmp';
+import { createTempDir } from './temp-dir';
 import { promisify } from 'util';
 import {
   Pair,
@@ -486,7 +486,7 @@ export function copyPackageManagerConfigurationFiles(
  *                   where no existing configuration files are available to copy.
  */
 export function createTempNpmDirectory(skipCopy = false) {
-  const dir = dirSync().name;
+  const dir = createTempDir();
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});

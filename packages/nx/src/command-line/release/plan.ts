@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { RELEASE_TYPES } from 'semver';
-import { dirSync } from 'tmp';
+import { createTempDir } from '../../utils/temp-dir';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { createProjectFileMapUsingProjectGraph } from '../../project-graph/file-map-utils';
 import { createProjectGraphAsync } from '../../project-graph/project-graph';
@@ -351,7 +351,7 @@ async function _promptForMessage(versionPlanName: string): Promise<string> {
     let message = reply.message.trim();
 
     if (!message.length) {
-      const tmpDir = dirSync().name;
+      const tmpDir = createTempDir('nx-version-plan-');
       const messageFilePath = join(
         tmpDir,
         `DRAFT_MESSAGE__${versionPlanName}.md`

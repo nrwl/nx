@@ -2,7 +2,7 @@ import * as pc from 'picocolors';
 import { prompt } from 'enquirer';
 import { readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { prerelease } from 'semver';
-import { dirSync } from 'tmp';
+import { createTempDir } from '../../utils/temp-dir';
 import type { DependencyBump } from '../../../release/changelog-renderer';
 import { NxReleaseConfiguration, readNxJson } from '../../config/nx-json';
 import { ProjectGraphProjectNode } from '../../config/project-graph';
@@ -1019,7 +1019,7 @@ async function generateChangelogForWorkspace({
    * in a similar style to git interactive rebases/merges.
    */
   if (interactive) {
-    const tmpDir = dirSync().name;
+    const tmpDir = createTempDir('nx-changelog-');
     const changelogPath = joinPathFragments(
       tmpDir,
       // Include the tree path in the name so that it is easier to identify which changelog file is being edited
@@ -1187,7 +1187,7 @@ async function generateChangelogForProjects({
      * in a similar style to git interactive rebases/merges.
      */
     if (interactive) {
-      const tmpDir = dirSync().name;
+      const tmpDir = createTempDir('nx-changelog-');
       const changelogPath = joinPathFragments(
         tmpDir,
         // Include the tree path in the name so that it is easier to identify which changelog file is being edited

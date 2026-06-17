@@ -41,6 +41,7 @@ import {
 } from '../../utils/fileutils';
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
+import { createTempDir } from '../../utils/temp-dir';
 import { logger } from '../../utils/logger';
 import {
   getUncommittedChangesSnapshot,
@@ -3979,8 +3980,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
 
-    const { dirSync } = require('tmp');
-    const tmpDir = dirSync().name;
+    const tmpDir = createTempDir('nx-migrate-');
     writeJsonFile(join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,
