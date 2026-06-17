@@ -181,8 +181,8 @@ function bridgeAuthIni(
     setCafile(env, resolvePnpmPath(authIni.get('cafile'), root));
   }
   // Inline `ca`/`cert`/`key` PEM material: npm reads these only as flat (global)
-  // keys - its registry-scoped TLS keys are the file-path forms
-  // (//host/:certfile / :keyfile), which can't carry inline PEM - so bridge them
+  // keys. Its registry-scoped TLS keys are the file-path forms
+  // (//host/:certfile / :keyfile), which can't carry inline PEM, so bridge them
   // flat, the same shape pnpm applies them in.
   for (const key of ['ca', 'cert', 'key'] as const) {
     if (unbridged(key)) {
@@ -190,7 +190,7 @@ function bridgeAuthIni(
     }
   }
   if (unbridged('strict-ssl')) {
-    setStrictSsl(env, authIni.get('strict-ssl') !== 'false');
+    setStrictSsl(env, npmConfigBoolean(authIni.get('strict-ssl')));
   }
   setProxies(env, {
     httpProxy: unbridged('proxy') ? authIni.get('proxy') : undefined,
@@ -202,10 +202,22 @@ function bridgeAuthIni(
 }
 
 /**
+ * npm/nopt Boolean coercion (validateBoolean): a numeric string is false only
+ * when it is zero, otherwise only 'null'/'false' are false. pnpm reads auth.ini
+ * strict-ssl through this coercion, so '0'/'' disable TLS but 'no'/'off' do not.
+ */
+function npmConfigBoolean(value: string): boolean {
+  if (!isNaN(Number(value))) {
+    return Boolean(Number(value));
+  }
+  return value !== 'null' && value !== 'false';
+}
+
+/**
  * Network settings pnpm honors from pnpm-workspace.yaml. `strictSsl` is
  * verified applied from the yaml (10.16 and 11.5); `caFile`/`cafile` in the
  * YAML is dead config in pnpm itself (it loads CA material from the
- * npmrc-family files only - .npmrc, which npm reads natively, and auth.ini,
+ * npmrc-family files only: .npmrc, which npm reads natively, and auth.ini,
  * bridged in bridgeAuthIni), so the YAML key is deliberately not bridged.
  * Proxy keys follow the same yaml surface (source-verified; not empirically
  * testable in the sandbox).

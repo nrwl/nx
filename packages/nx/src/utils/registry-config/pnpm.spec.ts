@@ -249,6 +249,13 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('coerces auth.ini strict-ssl the way npm/nopt does (numeric zero is false)', () => {
+      writeAuthIni('strict-ssl=0');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_strict_ssl: 'false',
+      });
+    });
+
     it('bridges flat ca/cert/key from auth.ini (npm has no inline scoped form)', () => {
       writeYaml('registries:\n  default: https://reg-a.example.com/\n');
       writeAuthIni(['cert=CERTPEM', 'key=KEYPEM', 'ca=CAPEM'].join('\n'));
