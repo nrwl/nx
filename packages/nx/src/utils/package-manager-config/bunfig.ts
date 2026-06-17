@@ -7,7 +7,13 @@ import { existsSync, readFileSync } from 'fs';
  * Returns null when neither is set, in which case bun reads no global config.
  */
 export function getBunGlobalConfigBase(env: NodeJS.ProcessEnv): string | null {
-  return env.XDG_CONFIG_HOME || env.HOME || null;
+  // bun's getenvZ treats a set-but-empty var as present, so an exported empty
+  // XDG_CONFIG_HOME short-circuits HOME (mirrors bun's `XDG_CONFIG_HOME orelse
+  // HOME`, where orelse only fires when the var is absent).
+  if (env.XDG_CONFIG_HOME !== undefined) {
+    return env.XDG_CONFIG_HOME;
+  }
+  return env.HOME ?? null;
 }
 
 /**
