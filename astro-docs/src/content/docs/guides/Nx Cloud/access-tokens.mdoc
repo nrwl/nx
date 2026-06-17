@@ -267,33 +267,11 @@ pipeline {
 
 We **do not recommend** that you commit an access token to your repository but older versions of Nx do support this and if you open your `nx.json`, you may see something like this:
 
-{% tabs %}
-{% tabitem label="Nx >= 17" %}
-
 ```json
 {
   "nxCloudAccessToken": "SOMETOKEN"
 }
 ```
-
-{% /tabitem %}
-{% tabitem label="Nx < 17" %}
-
-```json
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx-cloud",
-      "options": {
-        "accessToken": "SOMETOKEN"
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
 
 {% aside type="caution" title="Nx Cloud authentication is changing" %}
 From Nx 19.7 new workspaces are connected to Nx Cloud with a property called `nxCloudId` instead, and we recommend developers use [`nx login`](/docs/reference/nx-cloud-cli#npx-nxcloud-login) to provision their own local [personal access tokens](/docs/guides/nx-cloud/personal-access-tokens) for user based authentication.
