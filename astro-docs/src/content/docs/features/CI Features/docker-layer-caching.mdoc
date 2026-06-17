@@ -1,0 +1,87 @@
+---
+title: 'Docker Layer Caching'
+description: 'Cache Docker build layers across CI runs on Nx Agents to speed up image builds.'
+keywords: [docker, layer caching, buildkit, nx agents, nx cloud, add-on]
+sidebar:
+  label: Docker layer caching
+  order: 21
+  badge: new!
+filter: 'type:Features'
+---
+
+Docker layer caching reuses the intermediate layers produced by `docker build` (the result of each
+`RUN`, `COPY`, and `ADD` instruction) across CI runs. When a layer's inputs haven't changed, the
+build pulls it from a registry cache instead of rebuilding it, cutting image build times on
+[Nx Agents](/docs/features/ci-features/distribute-task-execution).
+
+## How to enable it
+
+{% aside type="note" title="Requires a dedicated compute cluster" %}
+Docker layer caching is an Nx Cloud add-on that runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Request the
+cluster, then enable this add-on under **Settings > Add-ons**.
+{% /aside %}
+
+You can enable Docker layer caching through your organization settings:
+
+1. Open **Settings > Add-ons** for your organization.
+2. Under **Dedicated compute cluster** card, find **Docker layer caching** and click **Request add-on** and confirm.
+
+When the add-on is enabled, Nx Cloud runs a registry cache inside your dedicated cluster and injects
+its address into every agent as the `NX_DOCKER_CACHE_REGISTRY` environment variable. You point your
+Docker builds at that registry using BuildKit's `--cache-to` and `--cache-from` flags. Cached layers
+are written to and read from the in-cluster registry, so they persist across CI runs.
+
+## Setup
+
+### 1. Set up Docker Buildx
+
+Layer caching requires BuildKit. Add the Buildx setup step to the `init-steps` of the launch
+template that runs your Docker builds, so it runs before any `docker build` command:
+
+```yaml
+- name: Setup Docker Buildx
+  uses: 'nrwl/nx-cloud-workflows/main/workflow-steps/setup-docker-buildx/main.yaml'
+```
+
+### 2. Add cache flags to your build commands
+
+Update your `docker build` commands to export and import layers from the cache registry:
+
+```bash
+docker build \
+  --push \
+  -t my-registry.example.com/my-app:1.2.3 \
+  --cache-to type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/my-app:main,mode=max \
+  --cache-from type=registry,ref=${NX_DOCKER_CACHE_REGISTRY}/my-app:main \
+  .
+```
+
+- **`-t my-registry.example.com/my-app:1.2.3`** - your image, tag, and destination registry. Your
+  agents must be authenticated to that registry to push images. That setup is outside the scope of
+  this guide.
+- **`${NX_DOCKER_CACHE_REGISTRY}`** - provided by Nx Cloud. It points at the in-cluster cache
+  registry, which is separate from your final image registry. Don't push your application images
+  there.
+- **`/my-app:main`** - the cache reference and tag. Use the `main` tag so subsequent builds reuse
+  the cached layers.
+- **`--cache-to mode=max`** - exports all layers for maximum reuse. `mode=min` exports fewer layers;
+  see the [Docker registry cache docs](https://docs.docker.com/build/cache/backends/registry).
+- **`--cache-from`** - imports cached layers when available.
+
+{% aside type="note" title="Use stable cache image " %}
+Use the stable tag `main` for `--cache-to` and `--cache-from`. Layers stored under the `main` tag are
+kept permanently. Other tags are removed periodically, so non-`main` tags won't persist as long-lived cache.
+
+Use distinct names per cache image (e.g. `my-app:main` and `my-api:main`) so different builds don't
+overwrite each other's layers.
+{% /aside %}
+
+See the [Docker registry cache docs](https://docs.docker.com/build/cache/backends/registry) for more details.
+
+### 3. Verify it's working
+
+After the cache is warm, subsequent builds should show:
+
+- `[CACHED]` markers in the `docker build` logs where layers were reused.
+- Shorter build times for unchanged layers.

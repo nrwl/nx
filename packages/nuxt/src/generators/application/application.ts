@@ -26,6 +26,7 @@ import { addLinting } from '../../utils/add-linting';
 import { addVitest } from './lib/add-vitest';
 import { vueTestUtilsVersion, vitePluginVueVersion } from '@nx/vue';
 import { ensureDependencies } from './lib/ensure-dependencies';
+import { assertSupportedNuxtVersion } from '../../utils/assert-supported-nuxt-version';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import {
@@ -48,6 +49,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedNuxtVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -198,7 +201,9 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
         {
           '@vue/test-utils': vueTestUtilsVersion,
           '@vitejs/plugin-vue': vitePluginVueVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
 

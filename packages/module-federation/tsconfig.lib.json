@@ -1,11 +1,19 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "outDir": "../../dist/packages/module-federation",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/module-federation/tsconfig.tsbuildinfo"
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts"],
+  "include": ["*.ts", "src/**/*.ts"],
   "references": [
     {
       "path": "../web/tsconfig.lib.json"
@@ -20,5 +28,12 @@
       "path": "../devkit/tsconfig.lib.json"
     }
   ],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "eslint.config.mjs"
+  ]
 }

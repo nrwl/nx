@@ -3,7 +3,7 @@ import {
   determineProjectNameAndRootOptions,
   ensureRootProjectName,
 } from '@nx/devkit/internal';
-import { assertValidStyle } from '@nx/react/src/utils/assertion';
+import { assertValidStyle } from '@nx/react';
 import { Schema } from '../schema';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 

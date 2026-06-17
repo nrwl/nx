@@ -115,6 +115,10 @@ module.exports = {
 
 If you're using `composePlugins` with `withNx`, you can create a `withSvgr` helper function:
 
+{% aside type="caution" title="`composePlugins` and `withNx` are deprecated" %}
+The `@nx/webpack` `composePlugins` and `withNx` helpers are deprecated and will be removed in Nx v24. They still work in v23, but using them logs a deprecation warning. Prefer a standard webpack config using `NxAppWebpackPlugin` and run `nx g @nx/webpack:convert-to-inferred` to migrate. See the [webpack config guide](/docs/technologies/build-tools/webpack/guides/webpack-config-setup) for details.
+{% /aside %}
+
 ```javascript frame="none"
 // filename: webpack.config.js
 const { composePlugins, withNx } = require('@nx/webpack');
@@ -341,7 +345,7 @@ Then, configure Vite as follows:
 /// <reference types='vitest' />
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import svgr from 'vite-plugin-svgr';
 
 export default defineConfig({
@@ -357,7 +361,7 @@ export default defineConfig({
       include: '**/*.svg',
     }),
     react(),
-    nxViteTsPaths(),
+    tsconfigPaths(),
     // ...
   ],
   //...

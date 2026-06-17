@@ -518,13 +518,13 @@
 /recipes/installation/activate-powerpack /docs/enterprise/activate-license 301
 
 # --- manualDTEUpdate ---
-/ci/recipes/enterprise/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/enterprise/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/github-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/circle-ci-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/azure-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/bitbucket-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/gitlab-dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/enterprise/dte/jenkins-dte /docs/guides/nx-cloud/bring-your-own-compute 301
 /showcase/benchmarks/dte /docs/reference/benchmarks/nx-agents 301
 
 # --- cliAndCloudLinkFixes ---
@@ -1314,8 +1314,8 @@
 /ci/recipes/set-up /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/set-up/* /docs/guides/nx-cloud/setup-ci 301
 /ci/recipes/security /docs/guides/nx-cloud 301
-/ci/recipes/dte /docs/guides/nx-cloud/manual-dte 301
-/ci/recipes/dte/* /docs/guides/nx-cloud/manual-dte 301
+/ci/recipes/dte /docs/guides/nx-cloud/bring-your-own-compute 301
+/ci/recipes/dte/* /docs/guides/nx-cloud/bring-your-own-compute 301
 /ci/recipes/other /docs/guides/nx-cloud/setup-ci 301
 /see-also /docs/getting-started/intro 301
 /see-also/sitemap /docs/getting-started/intro 301

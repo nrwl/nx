@@ -175,7 +175,7 @@ export class TaskOrchestrator {
     private readonly bail: boolean,
     private readonly daemon: DaemonClient,
     private readonly outputStyle: string,
-    private readonly taskGraphForHashing: TaskGraph = taskGraph
+    private readonly fullTaskGraph: TaskGraph = taskGraph
   ) {}
 
   async init() {
@@ -306,7 +306,7 @@ export class TaskOrchestrator {
           await hashTasks(
             this.hasher,
             this.projectGraph,
-            this.taskGraphForHashing,
+            this.fullTaskGraph,
             perTaskEnvs,
             this.taskDetails,
             unhashed
@@ -400,7 +400,7 @@ export class TaskOrchestrator {
       await hashTask(
         this.hasher,
         this.projectGraph,
-        this.taskGraphForHashing,
+        this.fullTaskGraph,
         task,
         taskSpecificEnv,
         this.taskDetails
@@ -481,7 +481,11 @@ export class TaskOrchestrator {
     const cacheHits: CacheHit[] = [];
     for (const task of tasks) {
       const cachedResult = batchResults.get(task.hash);
-      if (cachedResult && cachedResult.code === 0) {
+      // Replay a cached result only under the same condition it was cached
+      // under (shouldCacheTaskResult): successes always, failures only when
+      // NX_CACHE_FAILURES is enabled. Otherwise cached failures would be
+      // written but never read back.
+      if (cachedResult && this.shouldCacheTaskResult(task, cachedResult.code)) {
         cacheHits.push({ task, cachedResult });
       }
     }
@@ -529,11 +533,19 @@ export class TaskOrchestrator {
     const results: TaskResult[] = [];
     for (const { task, cachedResult } of cacheHits) {
       const shouldCopy = shouldCopyMap.get(task.hash) ?? false;
-      const status: TaskStatus = cachedResult.remote
-        ? 'remote-cache'
-        : shouldCopy
-          ? 'local-cache'
-          : 'local-cache-kept-existing';
+      // A cached failure (only replayed when NX_CACHE_FAILURES is enabled) is
+      // reported as a plain failure so exit codes, run summaries, and the TUI
+      // treat it as a failed run rather than a successful cache hit. Reporting
+      // it as 'failure' also ensures its terminal output is always printed,
+      // which the cache statuses suppress for non-initiating projects.
+      const status: TaskStatus =
+        cachedResult.code !== 0
+          ? 'failure'
+          : cachedResult.remote
+            ? 'remote-cache'
+            : shouldCopy
+              ? 'local-cache'
+              : 'local-cache-kept-existing';
 
       this.options.lifeCycle.printTaskTerminalOutput(
         task,
@@ -651,7 +663,8 @@ export class TaskOrchestrator {
             cachedTasks.map((task) => this.options.lifeCycle.scheduleTask(task))
           );
           await this.preRunSteps(cachedTasks, { groupId });
-          await this.postRunSteps(cacheResults, doNotSkipCache, { groupId });
+          // Replayed from the cache — don't write the results back.
+          await this.postRunSteps(cacheResults, false, groupId);
         }
 
         for (const task of eligible) {
@@ -677,7 +690,7 @@ export class TaskOrchestrator {
     await hashTasks(
       this.hasher,
       this.projectGraph,
-      this.taskGraphForHashing,
+      this.fullTaskGraph,
       perTaskEnvs,
       this.taskDetails,
       tasks
@@ -744,12 +757,18 @@ export class TaskOrchestrator {
         )
         .map((r) => r.task);
       if (tasksToRehash.length > 0) {
+        // hashTasks skips tasks that already have a hash — clear the
+        // preliminary hashes so these tasks actually get re-hashed
+        for (const task of tasksToRehash) {
+          task.hash = undefined;
+          task.hashDetails = undefined;
+        }
         await this.hashBatchTasks(tasksToRehash);
       }
     }
 
     if (batchResults.length > 0) {
-      await this.postRunSteps(batchResults, doNotSkipCache, { groupId });
+      await this.postRunSteps(batchResults, doNotSkipCache, groupId);
     }
 
     // Update batch status based on all task results
@@ -806,7 +825,7 @@ export class TaskOrchestrator {
         await this.forkedProcessTaskRunner.forkProcessForBatch(
           batch,
           this.projectGraph,
-          this.taskGraph,
+          this.fullTaskGraph,
           env
         );
 
@@ -942,7 +961,8 @@ export class TaskOrchestrator {
     const hitTasks = cacheHits.map((h) => h.task);
     await this.preRunSteps(hitTasks, { groupId });
     const results = await this.finalizeCacheHits(cacheHits);
-    await this.postRunSteps(results, doNotSkipCache, { groupId });
+    // Replayed from the cache — don't write the results back.
+    await this.postRunSteps(results, false, groupId);
     return results;
   }
 
@@ -997,7 +1017,7 @@ export class TaskOrchestrator {
     await this.postRunSteps(
       [{ task, status: 'failure', terminalOutput }],
       doNotSkipCache,
-      { groupId }
+      groupId
     );
   }
 
@@ -1078,7 +1098,7 @@ export class TaskOrchestrator {
     };
 
     try {
-      await this.postRunSteps([result], doNotSkipCache, { groupId });
+      await this.postRunSteps([result], doNotSkipCache, groupId);
     } finally {
       this.discreteTaskExitHandled.delete(task.id);
       resolveDiscreteExit!();
@@ -1400,8 +1420,8 @@ export class TaskOrchestrator {
       status: TaskStatus;
       terminalOutput?: string;
     }[],
-    doNotSkipCache: boolean,
-    { groupId }: { groupId: number }
+    shouldCache: boolean,
+    groupId: number
   ) {
     const now = Date.now();
     const tasksToRecord: { outputs: string[]; hash: string }[] = [];
@@ -1422,7 +1442,10 @@ export class TaskOrchestrator {
       await this.recordOutputsHashBatch(tasksToRecord);
     }
 
-    if (doNotSkipCache && !this.stopRequested) {
+    // Caller decides whether these results should be written to the cache.
+    // Cache replays pass false so a replayed failure (reported as 'failure' so
+    // it counts as a failed run) isn't re-written to the cache on every replay.
+    if (shouldCache && !this.stopRequested) {
       // cache the results
       performance.mark('cache-results-start');
       await Promise.all(

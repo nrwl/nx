@@ -1,4 +1,10 @@
-export const nxVersion = require('../../package.json').version;
+import { join } from 'path';
+
+export const nxVersion = require(join('@nx/vue', 'package.json')).version;
+
+// Lowest Vue major the plugin supports. Vue 2 is EOL (2023-12-31); the plugin
+// has only ever shipped Vue 3 support.
+export const minSupportedVueVersion = '3.0.0';
 
 // vue core
 export const vueVersion = '^3.5.13';

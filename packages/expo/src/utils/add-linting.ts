@@ -5,7 +5,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react/src/utils/lint';
+import { extraEslintDependencies } from '@nx/react';
 import {
   addExtendsToLintConfig,
   addIgnoresToLintConfig,
@@ -114,7 +114,9 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     const installTask = await addDependenciesToPackageJson(
       host,
       extraEslintDependencies.dependencies,
-      extraEslintDependencies.devDependencies
+      extraEslintDependencies.devDependencies,
+      undefined,
+      true
     );
     tasks.push(installTask);
   }

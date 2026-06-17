@@ -1,9 +1,5 @@
 import { formatFiles, readNxJson, type Tree, updateNxJson } from '@nx/devkit';
-import {
-  forEachExecutorOptions,
-  upsertTargetDefault,
-  normalizeTargetDefaults,
-} from '@nx/devkit/internal';
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import type { WebpackExecutorOptions } from '@nx/webpack';
 
 export default async function (tree: Tree) {
@@ -11,7 +7,7 @@ export default async function (tree: Tree) {
   forEachExecutorOptions<WebpackExecutorOptions>(
     tree,
     '@nx/angular:webpack-browser',
-    (options) => {
+    (options, projectName, targetName) => {
       const webpackConfig: string = options.webpackConfig;
       if (!webpackConfig) {
         return;
@@ -32,50 +28,46 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const nxJson = readNxJson(tree) ?? {};
+  const nxJson = readNxJson(tree);
   const nxMFDevRemotesEnvVar = 'NX_MF_DEV_REMOTES';
-  const webpackExecutor = '@nx/angular:webpack-browser';
-  const defaultInputs = [
+  const inputs = [
     ...(nxJson.namedInputs && 'production' in nxJson.namedInputs
       ? ['production', '^production']
       : ['default', '^default']),
     { env: nxMFDevRemotesEnvVar },
   ];
-
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.executor === webpackExecutor &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
-
-  if (!existing) {
-    upsertTargetDefault(tree, nxJson, {
-      executor: webpackExecutor,
+  if (
+    !nxJson.targetDefaults ||
+    !nxJson.targetDefaults?.['@nx/angular:webpack-browser']
+  ) {
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults['@nx/angular:webpack-browser'] = {
       cache: true,
-      inputs: defaultInputs,
+      inputs,
       dependsOn: ['^build'],
-    });
+    };
   } else {
-    const dependsOn = [...(existing.dependsOn ?? [])];
-    if (!dependsOn.includes('^build')) dependsOn.push('^build');
-
-    const inputs = [...(existing.inputs ?? [])];
+    nxJson.targetDefaults['@nx/angular:webpack-browser'].dependsOn ??= [];
     if (
-      !inputs.find((i) =>
+      !nxJson.targetDefaults['@nx/angular:webpack-browser'].dependsOn.includes(
+        '^build'
+      )
+    ) {
+      nxJson.targetDefaults['@nx/angular:webpack-browser'].dependsOn.push(
+        '^build'
+      );
+    }
+
+    nxJson.targetDefaults['@nx/angular:webpack-browser'].inputs ??= [];
+    if (
+      !nxJson.targetDefaults['@nx/angular:webpack-browser'].inputs.find((i) =>
         typeof i === 'string' ? false : i['env'] === nxMFDevRemotesEnvVar
       )
     ) {
-      inputs.push({ env: nxMFDevRemotesEnvVar });
+      nxJson.targetDefaults['@nx/angular:webpack-browser'].inputs.push({
+        env: nxMFDevRemotesEnvVar,
+      });
     }
-
-    upsertTargetDefault(tree, nxJson, {
-      executor: webpackExecutor,
-      ...(existing.cache !== undefined ? { cache: existing.cache } : {}),
-      inputs,
-      dependsOn,
-    });
   }
   updateNxJson(tree, nxJson);
   await formatFiles(tree);

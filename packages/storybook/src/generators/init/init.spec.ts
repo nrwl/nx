@@ -6,7 +6,6 @@ import {
   updateNxJson,
   readNxJson,
 } from '@nx/devkit';
-import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { initGenerator } from './init';
 
@@ -33,10 +32,7 @@ describe('@nx/storybook:init', () => {
       addPlugin: false,
     });
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    const buildStorybookDefault = normalizeTargetDefaults(
-      nxJson.targetDefaults
-    ).find((entry) => entry.target === 'build-storybook');
-    expect(buildStorybookDefault?.cache).toEqual(true);
+    expect(nxJson.targetDefaults['build-storybook'].cache).toEqual(true);
     delete process.env.NX_ADD_PLUGINS;
   });
 

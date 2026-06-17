@@ -80,7 +80,13 @@ export async function addLinting(
       }
     }
 
-    const installTask = addDependenciesToPackageJson(host, {}, devDependencies);
+    const installTask = addDependenciesToPackageJson(
+      host,
+      {},
+      devDependencies,
+      undefined,
+      true
+    );
     tasks.push(installTask);
   }
   return runTasksInSerial(...tasks);

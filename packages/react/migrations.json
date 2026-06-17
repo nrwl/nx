@@ -1,103 +1,43 @@
 {
   "generators": {
-    "update-20-2-0-update-module-federation-config-import": {
-      "cli": "nx",
-      "version": "20.2.0-beta.2",
-      "description": "Update the ModuleFederationConfig import use @nx/module-federation.",
-      "factory": "./src/migrations/update-20-2-0/migrate-mf-imports-to-new-package"
-    },
-    "update-20-2-0-update-with-module-federation-import": {
-      "cli": "nx",
-      "version": "20.2.0-beta.2",
-      "description": "Update the withModuleFederation import use @nx/module-federation/webpack.",
-      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
-    },
-    "ensure-nx-module-federation-package": {
-      "cli": "nx",
-      "version": "20.3.0-beta.2",
-      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
-      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
-    },
-    "add-mf-env-var-to-target-defaults": {
-      "cli": "nx",
-      "version": "20.4.0-beta.0",
-      "description": "Add NX_MF_DEV_REMOTES to inputs for task hashing when '@nx/webpack:webpack' or '@nx/rspack:rspack' is used for Module Federation.",
-      "factory": "./src/migrations/update-18-0-0/add-mf-env-var-to-target-defaults"
-    },
     "update-21-0-0-update-babel-loose": {
       "cli": "nx",
       "version": "21.0.0-beta.11",
       "description": "Replaces `classProperties.loose` option with `loose`.",
-      "factory": "./src/migrations/update-21-0-0/update-babel-loose"
+      "factory": "./dist/src/migrations/update-21-0-0/update-babel-loose",
+      "documentation": "./dist/src/migrations/update-21-0-0/update-babel-loose.md"
     },
     "update-22-0-0-add-svgr-to-webpack-config": {
       "cli": "nx",
       "version": "22.0.0-beta.0",
       "description": "Updates webpack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactWebpackPlugin.",
-      "factory": "./src/migrations/update-22-0-0/add-svgr-to-webpack-config"
+      "factory": "./dist/src/migrations/update-22-0-0/add-svgr-to-webpack-config"
     },
     "update-23-0-0-remove-nx-react-webpack-plugin-import": {
       "cli": "nx",
       "version": "23.0.0-beta.10",
       "description": "Rewrites imports of NxReactWebpackPlugin from '@nx/react' to the sub-path '@nx/react/webpack-plugin'.",
-      "factory": "./src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import"
+      "factory": "./dist/src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import",
+      "documentation": "./dist/src/migrations/update-23-0-0/remove-nx-react-webpack-plugin-import.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/react/router-plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "rewrite-react-internal-subpath-imports": {
+      "version": "23.0.0-beta.25",
+      "description": "Rewrites `@nx/react/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/react`'s exports map. Named imports/exports of public symbols are routed to `@nx/react` and the rest to the new `@nx/react/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/react/internal`.",
+      "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
     }
   },
   "packageJsonUpdates": {
-    "20.0.0": {
-      "version": "20.0.0-beta.8",
-      "packages": {
-        "eslint-plugin-import": {
-          "version": "2.31.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.1.0": {
-      "version": "20.1.0-beta.0",
-      "packages": {
-        "eslint-plugin-react-hooks": {
-          "version": "5.0.0",
-          "alwaysAddToPackageJson": false
-        },
-        "eslint-plugin-jsx-a11y": {
-          "version": "6.10.1",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.2.0": {
-      "version": "20.2.0-beta.3",
-      "packages": {
-        "@module-federation/enhanced": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/runtime": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/sdk": {
-          "version": "0.7.6",
-          "alwaysAddToPackageJson": false
-        },
-        "@module-federation/node": {
-          "version": "2.6.11",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.3.0": {
-      "version": "20.3.0-beta.0",
-      "packages": {
-        "@testing-library/react": {
-          "version": "16.1.0",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.4.0": {
       "version": "21.4.0-beta.8",
+      "requires": {
+        "http-proxy-middleware": ">=2.0.0 <3.0.0"
+      },
       "packages": {
         "http-proxy-middleware": {
           "version": "^3.0.5",
@@ -107,6 +47,9 @@
     },
     "22.2.0": {
       "version": "22.2.0-beta.0",
+      "requires": {
+        "@module-federation/enhanced": ">=0.7.0 <0.8.0"
+      },
       "packages": {
         "@module-federation/enhanced": {
           "version": "^0.21.2",
@@ -145,11 +88,22 @@
     },
     "22.3.4": {
       "version": "22.3.4-beta.0",
+      "requires": {
+        "react-router-dom": ">=6.0.0 <7.0.0"
+      },
       "packages": {
         "react-router-dom": {
           "version": "6.30.3",
           "alwaysAddToPackageJson": false
-        },
+        }
+      }
+    },
+    "22.3.4-react-router": {
+      "version": "22.3.4-beta.0",
+      "requires": {
+        "react-router": ">=7.0.0 <8.0.0"
+      },
+      "packages": {
         "react-router": {
           "version": "7.12.0",
           "alwaysAddToPackageJson": false
@@ -190,6 +144,9 @@
     },
     "22.6.0": {
       "version": "22.6.0-beta.10",
+      "requires": {
+        "@module-federation/enhanced": ">=0.21.0 <1.0.0"
+      },
       "x-prompt": "Bump @module-federation packages to v2.x to resolve koa CVE-2026-27959 (via dts-plugin)",
       "packages": {
         "@module-federation/enhanced": {
@@ -204,6 +161,9 @@
     },
     "22.7.0": {
       "version": "22.7.0-beta.18",
+      "requires": {
+        "react-router": ">=7.0.0 <8.0.0"
+      },
       "packages": {
         "react-router": {
           "version": "7.14.2",

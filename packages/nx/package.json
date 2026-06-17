@@ -80,6 +80,7 @@
     "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
+    "which": "catalog:",
     "yaml": "^2.8.3",
     "yargs": "catalog:",
     "yargs-parser": "catalog:"
@@ -158,7 +159,8 @@
         "package": "@nrwl/nx-cloud",
         "version": "latest"
       }
-    ]
+    ],
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "executors": "./executors.json",

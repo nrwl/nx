@@ -52,7 +52,14 @@ describe('release publishable libraries in workspace with ts solution setup', ()
 
   beforeAll(async () => {
     newProject({
-      packages: ['@nx/js', '@nx/react', '@nx/vue', '@nx/react-native'],
+      packages: [
+        '@nx/js',
+        '@nx/react',
+        '@nx/react-native',
+        '@nx/rollup',
+        '@nx/vite',
+        '@nx/vue',
+      ],
       preset: 'ts',
     });
 

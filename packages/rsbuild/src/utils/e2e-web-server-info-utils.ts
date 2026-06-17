@@ -1,8 +1,5 @@
 import { type Tree, readNxJson } from '@nx/devkit';
-import {
-  getE2EWebServerInfo,
-  readTargetDefaultsForTarget,
-} from '@nx/devkit/internal';
+import { getE2EWebServerInfo } from '@nx/devkit/internal';
 
 export async function getRsbuildE2EWebServerInfo(
   tree: Tree,
@@ -13,11 +10,12 @@ export async function getRsbuildE2EWebServerInfo(
 ) {
   const nxJson = readNxJson(tree);
   let e2ePort = e2ePortOverride ?? 4200;
-  const devPort = readTargetDefaultsForTarget('dev', nxJson.targetDefaults)
-    ?.options?.port;
 
-  if (devPort) {
-    e2ePort = devPort;
+  if (
+    nxJson.targetDefaults?.['dev'] &&
+    nxJson.targetDefaults?.['dev'].options?.port
+  ) {
+    e2ePort = nxJson.targetDefaults?.['dev'].options?.port;
   }
 
   return getE2EWebServerInfo(

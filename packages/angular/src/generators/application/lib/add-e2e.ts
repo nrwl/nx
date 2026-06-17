@@ -1,8 +1,5 @@
 import { Tree } from '@nx/devkit';
-import {
-  E2EWebServerDetails,
-  readTargetDefaultsForTarget,
-} from '@nx/devkit/internal';
+import { E2EWebServerDetails } from '@nx/devkit/internal';
 import {
   addProjectConfiguration,
   ensurePackage,
@@ -92,13 +89,15 @@ function getAngularE2EWebServerInfo(
 ): E2EWebServerDetails & { e2ePort: number } {
   const nxJson = readNxJson(tree);
   let e2ePort = portOverride ?? 4200;
-  const serveTargetOptions = readTargetDefaultsForTarget(
-    'serve',
-    nxJson.targetDefaults
-  )?.options;
 
-  if (serveTargetOptions?.port || serveTargetOptions?.env?.PORT) {
-    e2ePort = serveTargetOptions.port || serveTargetOptions.env.PORT;
+  if (
+    nxJson.targetDefaults?.['serve'] &&
+    (nxJson.targetDefaults?.['serve'].options?.port ||
+      nxJson.targetDefaults?.['serve'].options?.env?.PORT)
+  ) {
+    e2ePort =
+      nxJson.targetDefaults?.['serve'].options?.port ||
+      nxJson.targetDefaults?.['serve'].options?.env?.PORT;
   }
 
   const pm = getPackageManagerCommand();

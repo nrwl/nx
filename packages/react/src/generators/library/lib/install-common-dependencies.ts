@@ -53,7 +53,9 @@ export async function installCommonDependencies(
   const baseInstallTask = addDependenciesToPackageJson(
     host,
     dependencies,
-    devDependencies
+    devDependencies,
+    undefined,
+    true
   );
   tasks.push(baseInstallTask);
 
@@ -67,7 +69,9 @@ export async function installCommonDependencies(
         {
           '@babel/preset-react': babelPresetReactVersion,
           '@babel/core': babelCoreVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }

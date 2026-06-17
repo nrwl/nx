@@ -41,6 +41,8 @@ export async function ensureDependencies(
       'react-native-svg-transformer': versions.reactNativeSvgTransformer,
       'react-native-svg': versions.reactNativeSvg,
     },
-    devDependencies
+    devDependencies,
+    undefined,
+    true
   );
 }

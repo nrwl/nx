@@ -1,7 +1,6 @@
 import {
   forEachExecutorOptions,
   NoTargetsToMigrateError,
-  normalizeTargetDefaults,
 } from '@nx/devkit/internal';
 import {
   formatFiles,
@@ -14,6 +13,7 @@ import type { RollupExecutorOptions } from '../../executors/rollup/schema';
 import type { RollupPluginOptions } from '../../plugins/plugin';
 import { extractRollupConfigFromExecutorOptions } from './lib/extract-rollup-config-from-executor-options';
 import { addPluginRegistrations } from './lib/add-plugin-registrations';
+import { assertSupportedRollupVersion } from '../../utils/versions';
 
 interface Schema {
   project?: string;
@@ -21,6 +21,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedRollupVersion(tree);
+
   const migratedProjects = new Map<string, RollupPluginOptions>();
   let projects = getProjects(tree);
 
@@ -38,22 +40,9 @@ export async function convertToInferred(tree: Tree, options: Schema) {
 
       // Since targetDefaults for '@nx/rollup:rollup' will no longer apply, we want to copy them to the target options.
       const nxJson = readNxJson(tree);
-      const defaults = normalizeTargetDefaults(nxJson?.targetDefaults).find(
-        (e) =>
-          e.executor === '@nx/rollup:rollup' &&
-          e.target === undefined &&
-          e.projects === undefined &&
-          e.plugin === undefined
-      );
+      const defaults = nxJson.targetDefaults['@nx/rollup:rollup'];
       if (defaults) {
-        const {
-          target: _t,
-          executor: _e,
-          projects: _p,
-          plugin: _pl,
-          ...rest
-        } = defaults;
-        for (const [key, value] of Object.entries(rest)) {
+        for (const [key, value] of Object.entries(defaults)) {
           target[key] ??= value;
         }
       }

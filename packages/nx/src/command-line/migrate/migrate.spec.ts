@@ -1,12 +1,14 @@
 const mocks = {
   prompt: jest.fn(),
   getInstalledNxVersion: jest.fn(),
-  getInstalledNxPackageGroup: jest.fn(),
+  getInstalledVersion: jest.fn(),
+  getInstalledPackageGroup: jest.fn(),
   getInstalledLegacyNrwlWorkspaceVersion: jest.fn(),
 };
 const mockPrompt = mocks.prompt;
 const mockGetInstalledNxVersion = mocks.getInstalledNxVersion;
-const mockGetInstalledNxPackageGroup = mocks.getInstalledNxPackageGroup;
+const mockGetInstalledVersion = mocks.getInstalledVersion;
+const mockGetInstalledPackageGroup = mocks.getInstalledPackageGroup;
 const mockGetInstalledLegacyNrwlWorkspaceVersion =
   mocks.getInstalledLegacyNrwlWorkspaceVersion;
 jest.mock('enquirer', () => ({
@@ -14,24 +16,50 @@ jest.mock('enquirer', () => ({
 }));
 jest.mock('../../utils/installed-nx-version', () => ({
   getInstalledNxVersion: () => mocks.getInstalledNxVersion(),
-  getInstalledNxPackageGroup: () => mocks.getInstalledNxPackageGroup(),
+  getInstalledVersion: (pkg: string) => mocks.getInstalledVersion(pkg),
+  getInstalledPackageGroup: (pkg: string) =>
+    mocks.getInstalledPackageGroup(pkg),
   getInstalledLegacyNrwlWorkspaceVersion: () =>
     mocks.getInstalledLegacyNrwlWorkspaceVersion(),
+}));
+// These tests exercise the migrate logic, not the cooldown wrapper: delegate the
+// policy-aware resolver to the legacy registry resolution so the existing
+// `resolvePackageVersionUsingRegistry` spies keep driving the assertions.
+jest.mock('./resolve-package-version', () => ({
+  isRegistryResolutionEnabled: () => true,
+  resolvePackageVersionRespectingMinReleaseAge: (
+    packageName: string,
+    version: string
+  ) =>
+    require('../../utils/package-manager').resolvePackageVersionUsingRegistry(
+      packageName,
+      version
+    ),
 }));
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
+  formatSkippedPromptsNextStep,
+  isHybridMigration,
   isNpmPeerDepsError,
+  isPromptOnlyMigration,
   Migrator,
   normalizeVersion,
+  parseMigrationReturn,
   parseMigrationsOptions,
   ResolvedMigrationConfiguration,
   resolveCanonicalNxPackage,
-  resolveMode,
+  resolveCreateCommits,
+  resolveDocumentationFileToWorkspacePath,
+  resolveMigrationForRun,
+  resolveInclude,
 } from './migrate';
+import { applyNxJsonMigrateDefaults } from './migrate-config';
+import { MinReleaseAgeViolationError } from '../../utils/min-release-age/errors';
 import {
   readPromptFilesFromInstall,
   validateMigrationEntries,
@@ -42,11 +70,13 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
 import { dirname, join } from 'path';
+import { logger } from '../../utils/logger';
 
 const createPackageJson = (
   overrides: Partial<PackageJson> = {}
@@ -55,6 +85,28 @@ const createPackageJson = (
   version: '0.0.0',
   ...overrides,
 });
+
+// Stub fetcher driving the `--include` supportsOptionalMigrations gate without the
+// registry/install round-trip. `supportsOptionalMigrations` defaults to true; pass a
+// predicate to mark specific (package, version) targets unsupported.
+const includeGateFetch =
+  (
+    supportsOptionalMigrations:
+      | boolean
+      | ((pkg: string, version: string) => boolean) = true
+  ): ((
+    pkg: string,
+    version: string
+  ) => Promise<ResolvedMigrationConfiguration>) =>
+  (pkg, version) =>
+    Promise.resolve({
+      name: pkg,
+      version,
+      supportsOptionalMigrations:
+        typeof supportsOptionalMigrations === 'function'
+          ? supportsOptionalMigrations(pkg, version)
+          : supportsOptionalMigrations,
+    });
 
 describe('Migration', () => {
   describe('packageJson patch', () => {
@@ -1042,17 +1094,17 @@ describe('Migration', () => {
       });
     });
 
-    describe('--mode', () => {
+    describe('--include', () => {
       beforeEach(() => {
         jest.clearAllMocks();
       });
 
-      it('should keep first-party packages and drop third-party in mixed entries', async () => {
+      it('should keep required packages and drop optional ones when include is required', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              firstPartyChild: '1.0.0',
-              thirdPartyChild: '1.0.0',
+              requiredChild: '1.0.0',
+              optionalChild: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1064,39 +1116,39 @@ describe('Migration', () => {
                   mixed: {
                     version: '2.0.0',
                     packages: {
-                      firstPartyChild: { version: '3.0.0' },
-                      thirdPartyChild: { version: '3.0.0' },
+                      requiredChild: { version: '3.0.0' },
+                      optionalChild: { version: '3.0.0' },
                     },
                   },
                 },
               });
-            } else if (p === 'firstPartyChild') {
+            } else if (p === 'requiredChild') {
               return Promise.resolve({ version: '3.0.0' });
             }
             return Promise.resolve(null);
           },
           from: {},
           to: {},
-          mode: 'first-party',
-          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+          include: 'required',
+          requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result.packageUpdates).toEqual({
           mypackage: { version: '2.0.0', addToPackageJson: false },
-          firstPartyChild: { version: '3.0.0', addToPackageJson: false },
+          requiredChild: { version: '3.0.0', addToPackageJson: false },
         });
-        expect(result.packageUpdates.thirdPartyChild).toBeUndefined();
+        expect(result.packageUpdates.optionalChild).toBeUndefined();
       });
 
-      it('should drop entries that contain only third-party packages without firing their x-prompt', async () => {
+      it('should drop entries that contain only optional packages without firing their x-prompt', async () => {
         mockPrompt.mockReturnValue(Promise.resolve({ shouldApply: true }));
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              thirdPartyA: '1.0.0',
-              thirdPartyB: '1.0.0',
+              optionalA: '1.0.0',
+              optionalB: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1105,12 +1157,12 @@ describe('Migration', () => {
               return Promise.resolve({
                 version: '2.0.0',
                 packageJsonUpdates: {
-                  thirdPartyOnly: {
+                  optionalOnly: {
                     version: '2.0.0',
-                    'x-prompt': 'Update third-party packages?',
+                    'x-prompt': 'Update optional packages?',
                     packages: {
-                      thirdPartyA: { version: '3.0.0' },
-                      thirdPartyB: { version: '3.0.0' },
+                      optionalA: { version: '3.0.0' },
+                      optionalB: { version: '3.0.0' },
                     },
                   },
                 },
@@ -1121,8 +1173,8 @@ describe('Migration', () => {
           from: {},
           to: {},
           interactive: true,
-          mode: 'first-party',
-          firstPartyPackages: new Set(['mypackage']),
+          include: 'required',
+          requiredPackages: new Set(['mypackage']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
@@ -1133,9 +1185,9 @@ describe('Migration', () => {
         expect(mockPrompt).not.toHaveBeenCalled();
       });
 
-      it('should source first-party gate from the provided set, not getNxPackageGroup', async () => {
+      it('should source required gate from the provided set, not getNxPackageGroup', async () => {
         // Sanity: a name commonly returned by getNxPackageGroup() that we
-        // deliberately exclude from the first-party set should be filtered out,
+        // deliberately exclude from the required set should be filtered out,
         // and an arbitrary unrelated name that we include should be kept.
         const migrator = new Migrator({
           packageJson: createPackageJson({
@@ -1166,8 +1218,8 @@ describe('Migration', () => {
           },
           from: {},
           to: {},
-          mode: 'first-party',
-          firstPartyPackages: new Set(['nx', 'not-in-nx-package-group']),
+          include: 'required',
+          requiredPackages: new Set(['nx', 'not-in-nx-package-group']),
         });
 
         const result = await migrator.migrate('nx', '2.0.0');
@@ -1182,12 +1234,12 @@ describe('Migration', () => {
         expect(result.packageUpdates['@nx/react']).toBeUndefined();
       });
 
-      it('should drop first-party packages and keep third-party in mixed entries when mode is third-party', async () => {
+      it('should drop required packages and keep optional ones when include is optional', async () => {
         const migrator = new Migrator({
           packageJson: createPackageJson({
             dependencies: {
-              firstPartyChild: '1.0.0',
-              thirdPartyChild: '1.0.0',
+              requiredChild: '1.0.0',
+              optionalChild: '1.0.0',
             },
           }),
           getInstalledPackageVersion: () => '1.0.0',
@@ -1199,35 +1251,35 @@ describe('Migration', () => {
                   mixed: {
                     version: '2.0.0',
                     packages: {
-                      firstPartyChild: { version: '3.0.0' },
-                      thirdPartyChild: { version: '3.0.0' },
+                      requiredChild: { version: '3.0.0' },
+                      optionalChild: { version: '3.0.0' },
                     },
                   },
                 },
               });
-            } else if (p === 'firstPartyChild' || p === 'thirdPartyChild') {
+            } else if (p === 'requiredChild' || p === 'optionalChild') {
               return Promise.resolve({ version: '3.0.0' });
             }
             return Promise.resolve(null);
           },
           from: {},
           to: {},
-          mode: 'third-party',
-          firstPartyPackages: new Set(['mypackage', 'firstPartyChild']),
+          include: 'optional',
+          requiredPackages: new Set(['mypackage', 'requiredChild']),
         });
 
         const result = await migrator.migrate('mypackage', '2.0.0');
 
         expect(result.packageUpdates).toEqual({
-          thirdPartyChild: { version: '3.0.0', addToPackageJson: false },
+          optionalChild: { version: '3.0.0', addToPackageJson: false },
         });
         expect(result.packageUpdates.mypackage).toBeUndefined();
-        expect(result.packageUpdates.firstPartyChild).toBeUndefined();
+        expect(result.packageUpdates.requiredChild).toBeUndefined();
       });
 
-      it.each(['first-party', 'third-party'] as const)(
-        'should throw when constructed with mode=%s but no firstPartyPackages',
-        (mode) => {
+      it.each(['required', 'optional'] as const)(
+        'should throw when constructed with include=%s but no requiredPackages',
+        (include) => {
           // Other required callbacks are unused — constructor rejects before any
           // method runs — so stub them with the simplest valid shape.
           expect(
@@ -1238,10 +1290,10 @@ describe('Migration', () => {
                 fetch: () => Promise.resolve({ version: '0.0.0' }),
                 from: {},
                 to: {},
-                mode,
+                include,
               })
           ).toThrow(
-            `Error: 'firstPartyPackages' is required when 'mode' is '${mode}'.`
+            `Error: 'requiredPackages' is required when 'include' is '${include}'.`
           );
         }
       );
@@ -2023,9 +2075,24 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
+    // Pin non-TTY so the canPrompt-gated eligibility fetch stays off as it does
+    // on CI, instead of hitting the registry in a local TTY run.
+    let originalStdinIsTTY: boolean | undefined;
     beforeEach(() => {
+      originalStdinIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        configurable: true,
+      });
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      mockGetInstalledNxPackageGroup.mockReturnValue(
+      // `getInstalledVersion(pkg)` mirrors the installed nx version for the
+      // canonical packages so optional bound checks read the same value.
+      mockGetInstalledVersion.mockImplementation((pkg: string) =>
+        pkg === 'nx' || pkg === '@nx/workspace'
+          ? mockGetInstalledNxVersion()
+          : null
+      );
+      mockGetInstalledPackageGroup.mockReturnValue(
         new Set([
           'nx',
           'nx-cloud',
@@ -2039,8 +2106,14 @@ describe('Migration', () => {
     });
     afterEach(() => {
       mockGetInstalledNxVersion.mockReset();
-      mockGetInstalledNxPackageGroup.mockReset();
+      mockGetInstalledVersion.mockReset();
+      mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
+      jest.restoreAllMocks();
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: originalStdinIsTTY,
+        configurable: true,
+      });
     });
 
     it('should work for generating migrations', async () => {
@@ -2075,6 +2148,34 @@ describe('Migration', () => {
         type: 'runMigrations',
         runMigrations: 'migrations.json',
         ifExists: true,
+        agentic: undefined,
+        validate: undefined,
+      });
+    });
+
+    it('should propagate the agentic and validate values when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        agentic: 'claude-code',
+        validate: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        agentic: 'claude-code',
+        validate: false,
+      });
+    });
+
+    it('should propagate the interactive value when running migrations', async () => {
+      const r = await parseMigrationsOptions({
+        runMigrations: '',
+        ifExists: true,
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'runMigrations',
+        interactive: false,
       });
     });
 
@@ -2087,6 +2188,181 @@ describe('Migration', () => {
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: 'latest',
+      });
+    });
+
+    it.each([
+      {
+        desc: 'pre-v22 modern install',
+        installedNx: '21.3.0',
+        installedLegacy: null,
+      },
+      {
+        desc: 'legacy nx (<14) install',
+        installedNx: '13.5.0',
+        installedLegacy: null,
+      },
+      {
+        desc: 'legacy @nrwl/workspace install',
+        installedNx: null,
+        installedLegacy: '13.5.0',
+      },
+      { desc: 'nx not installed', installedNx: null, installedLegacy: null },
+    ])(
+      'should throw for a bare invocation on a pre-v22 install: $desc',
+      async ({ installedNx, installedLegacy }) => {
+        mockGetInstalledNxVersion.mockReturnValue(installedNx);
+        mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
+          installedLegacy
+        );
+        await expect(() => parseMigrationsOptions({})).rejects.toThrow(
+          'Provide the package and version to migrate to. E.g., `nx migrate nx@<version>`.'
+        );
+      }
+    );
+
+    it('should resolve the latest dist-tag up front for a bare invocation on v22+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockResolvedValue('23.1.0');
+      const r = await parseMigrationsOptions({});
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.1.0',
+      });
+    });
+
+    it('should accept --include=required for a target that supports optional updates', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: 'nx@23.0.0',
+          include: 'required',
+        },
+        includeGateFetch()
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        include: 'required',
+      });
+    });
+
+    it('should accept --include=required for a non-nx target that supports optional updates', async () => {
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: '@nx/react@23.0.0',
+          include: 'required',
+        },
+        includeGateFetch()
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: '@nx/react',
+        targetVersion: '23.0.0',
+        include: 'required',
+      });
+    });
+
+    it('should reject --include for a target that does not support optional updates', async () => {
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: '@nx/react@22.0.0',
+            include: 'required',
+          },
+          includeGateFetch(false)
+        )
+      ).rejects.toThrow(
+        `Error: '--include' requires the target package to support optional updates, but '@nx/react@22.0.0' does not.`
+      );
+    });
+
+    it('should accept --include combined with --interactive for a target that supports optional updates', async () => {
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: 'nx@23.0.0',
+          include: 'required',
+          interactive: true,
+        },
+        includeGateFetch()
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        include: 'required',
+        interactive: true,
+      });
+    });
+
+    it('should reject --include=optional combined with --interactive', async () => {
+      await expect(() =>
+        parseMigrationsOptions({ include: 'optional', interactive: true })
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should reject the nx.json `optional` value combined with --interactive', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@22.5.0',
+            includeFromConfig: 'optional',
+            interactive: true,
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot be combined with '--interactive'.`
+      );
+    });
+
+    it('should allow --interactive for a target that supports optional updates (resolves to "all" in non-TTY)', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@22.7.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '22.7.0',
+        interactive: true,
+        include: 'all',
+      });
+    });
+
+    it('should allow --no-interactive when migrating to v23+', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'nx@23.0.0',
+        interactive: false,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        interactive: false,
+      });
+    });
+
+    it('should allow --interactive for non-nx-equivalent targets', async () => {
+      const r = await parseMigrationsOptions({
+        packageAndVersion: 'mypackage@2.0.0',
+        interactive: true,
+      });
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'mypackage',
+        targetVersion: '2.0.0',
+        interactive: true,
+        include: 'all',
       });
     });
 
@@ -2239,60 +2515,66 @@ describe('Migration', () => {
       ).rejects.toThrow(`Incorrect 'to' section. Use --to="package@version"`);
     });
 
-    it('should reject --mode combined with --run-migrations', async () => {
+    it('should reject --include combined with --run-migrations', async () => {
       await expect(() =>
         parseMigrationsOptions({
           runMigrations: 'migrations.json',
-          mode: 'first-party',
+          include: 'required',
         })
       ).rejects.toThrow(
-        `Error: '--mode' cannot be combined with '--run-migrations'.`
+        `Error: '--include' cannot be combined with '--run-migrations'.`
       );
     });
 
-    it('should reject --mode for non-nx-equivalent target on modern versions', async () => {
+    it('should reject --include for a modern target that does not support optional updates', async () => {
       await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: '@nx/react@22.0.0',
-          mode: 'first-party',
-        })
+        parseMigrationsOptions(
+          {
+            packageAndVersion: '@nx/react@22.0.0',
+            include: 'required',
+          },
+          includeGateFetch(false)
+        )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target to be 'nx' or '@nx/workspace'. Got '@nx/react@22.0.0'.`
+        `Error: '--include' requires the target package to support optional updates, but '@nx/react@22.0.0' does not.`
       );
     });
 
-    it('should reject --mode for non-nx-equivalent target on legacy versions', async () => {
+    it('should reject --include for a legacy target that does not support optional updates', async () => {
       await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@13.0.0',
-          mode: 'first-party',
-        })
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@13.0.0',
+            include: 'required',
+          },
+          includeGateFetch(false)
+        )
       ).rejects.toThrow(
-        `Error: '--mode' requires the target to be '@nrwl/workspace' for Nx <14.0.0. Got 'nx@13.0.0'.`
+        `Error: '--include' requires the target package to support optional updates, but 'nx@13.0.0' does not.`
       );
     });
 
-    it('should reject --mode=third-party combined with --from', async () => {
+    it('should reject --include=optional combined with --from', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
+          include: 'optional',
           from: 'nx@21.0.0',
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--from'.`
+        `Error: '--include=optional' cannot be combined with '--from'.`
       );
     });
 
-    it('should reject --mode=third-party combined with --exclude-applied-migrations', async () => {
+    it('should reject --include=optional combined with --exclude-applied-migrations', async () => {
       await expect(() =>
         parseMigrationsOptions({
           packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
+          include: 'optional',
           excludeAppliedMigrations: true,
         })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot be combined with '--exclude-applied-migrations'.`
+        `Error: '--include=optional' cannot be combined with '--exclude-applied-migrations'.`
       );
     });
 
@@ -2300,116 +2582,155 @@ describe('Migration', () => {
       {
         desc: 'bare invocation, modern nx installed',
         positional: undefined,
-        installedNx: '22.5.0',
+        installedNx: '23.5.0',
         installedLegacy: null,
-        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
-      },
-      {
-        desc: 'bare invocation, only legacy @nrwl/workspace installed',
-        positional: undefined,
-        installedNx: null,
-        installedLegacy: '13.5.0',
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
-      },
-      {
-        desc: 'bare invocation, installed nx is legacy (<14)',
-        positional: undefined,
-        installedNx: '13.5.0',
-        installedLegacy: null,
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
+        expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
       {
         desc: 'bare-package-name positional `nx`, modern nx installed',
         positional: 'nx',
-        installedNx: '22.5.0',
+        installedNx: '23.5.0',
         installedLegacy: null,
-        expected: { targetPackage: 'nx', targetVersion: '22.5.0' },
-      },
-      {
-        desc: 'bare-package-name positional `nx`, installed nx is legacy (<14)',
-        positional: 'nx',
-        installedNx: '13.5.0',
-        installedLegacy: null,
-        expected: {
-          targetPackage: '@nrwl/workspace',
-          targetVersion: '13.5.0',
-        },
+        expected: { targetPackage: 'nx', targetVersion: '23.5.0' },
       },
     ])(
-      'should anchor --mode=third-party to installed canonical: $desc',
+      'should anchor --include=optional to installed canonical: $desc',
       async ({ positional, installedNx, installedLegacy, expected }) => {
         mockGetInstalledNxVersion.mockReturnValue(installedNx);
         mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(
           installedLegacy
         );
-        const r = await parseMigrationsOptions({
-          ...(positional ? { packageAndVersion: positional } : {}),
-          mode: 'third-party',
-        });
+        const r = await parseMigrationsOptions(
+          {
+            ...(positional ? { packageAndVersion: positional } : {}),
+            include: 'optional',
+          },
+          includeGateFetch()
+        );
         expect(r).toMatchObject({
           type: 'generateMigrations',
-          mode: 'third-party',
+          include: 'optional',
           ...expected,
         });
       }
     );
 
-    it('should reject --mode=third-party when nx is not installed', async () => {
+    it('should reject --include=optional when nx is not installed', async () => {
       mockGetInstalledNxVersion.mockReturnValue(null);
       await expect(() =>
-        parseMigrationsOptions({ mode: 'third-party' })
+        parseMigrationsOptions({ include: 'optional' })
       ).rejects.toThrow(
-        `Error: '--mode=third-party' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
+        `Error: '--include=optional' requires 'nx' (or '@nrwl/workspace' on Nx <14) to be installed in your workspace.`
       );
     });
 
-    it('should reject --mode=third-party when target is higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+    it('should reject --include=optional when target is higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@23.0.0',
-          mode: 'third-party',
-        })
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@24.0.0',
+            include: 'optional',
+          },
+          includeGateFetch()
+        )
       ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got 'nx@23.0.0', installed 'nx@22.0.0').`
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got 'nx@24.0.0', installed 'nx@23.0.0').`
       );
     });
 
-    it('should accept --mode=third-party when target is lower than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.5.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@22.0.0',
-        mode: 'third-party',
+    it('should accept --include=optional when target is lower than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.5.0');
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: 'nx@23.0.0',
+          include: 'optional',
+        },
+        includeGateFetch()
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        include: 'optional',
       });
+    });
+
+    it('should gate --include=optional on the installed version, not the older explicit target', async () => {
+      // Catch-up reads `supportsOptionalMigrations` at the INSTALLED version (what you
+      // have), not the older explicit target. The stub only marks 23.0.0 as
+      // supporting optional updates, so eligibility proves the gate read installed 23,
+      // even though the target 22 predates the flag.
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: 'nx@22.0.0',
+          include: 'optional',
+        },
+        includeGateFetch((_pkg, version) => version === '23.0.0')
+      );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: 'nx',
         targetVersion: '22.0.0',
-        mode: 'third-party',
+        include: 'optional',
       });
     });
 
-    it('should accept --mode=third-party with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
+    it('should reject --include=optional when the installed version does not support optional updates, naming the installed version', async () => {
+      // Reject mirror of the gate above: eligibility reads the INSTALLED
+      // version, so the rejection names installed 22 - not the older explicit
+      // target 21. The stub marks only 23.0.0 as supporting optional updates.
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@21.0.0',
+            include: 'optional',
+          },
+          includeGateFetch((_pkg, version) => version === '23.0.0')
+        )
+      ).rejects.toThrow(
+        `Error: '--include' requires the target package to support optional updates, but 'nx@22.0.0' does not.`
+      );
+    });
+
+    it('should surface a fetch failure instead of reporting the target as unsupported', async () => {
+      // The gate resolves `supportsOptionalMigrations` through the shared fetcher (registry,
+      // then install). A genuine fetch failure must surface as-is, not be
+      // swallowed into a misleading "does not support optional updates" rejection.
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      const failingFetch = () =>
+        Promise.reject(new Error('registry and install both failed'));
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@23.0.0',
+            include: 'required',
+          },
+          failingFetch as any
+        )
+      ).rejects.toThrow('registry and install both failed');
+    });
+
+    it('should accept --include=optional with @nx/workspace target, preserve typed target, and swap to nx canonical at walk time', async () => {
       // `parseMigrationsOptions` preserves the typed target verbatim; the
       // silent `@nx/workspace` → `nx` swap happens later in
       // `generateMigrationsJsonAndUpdatePackageJson` via
       // `resolveCanonicalNxPackage`.
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: '@nx/workspace@22.0.0',
-        mode: 'third-party',
-      });
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: '@nx/workspace@23.0.0',
+          include: 'optional',
+        },
+        includeGateFetch()
+      );
       expect(r).toMatchObject({
         type: 'generateMigrations',
         targetPackage: '@nx/workspace',
-        targetVersion: '22.0.0',
-        mode: 'third-party',
+        targetVersion: '23.0.0',
+        include: 'optional',
       });
       expect(
         resolveCanonicalNxPackage(
@@ -2418,95 +2739,130 @@ describe('Migration', () => {
       ).toBe('nx');
     });
 
-    it('should reject --mode=third-party with --to canonical higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
-          to: 'nx@23.0.0',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to nx@23.0.0', installed 'nx@22.0.0').`
+    it('should anchor @nx/workspace --include=optional to installed nx when only nx is installed', async () => {
+      // #2 regression: the installed lookup must normalize `@nx/workspace` ->
+      // `nx`. With @nx/workspace absent but nx present, it resolves against nx
+      // instead of failing "requires @nx/workspace to be installed".
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      mockGetInstalledVersion.mockImplementation((pkg: string) =>
+        pkg === 'nx' ? '23.0.0' : null
       );
-    });
-
-    it('should reject --mode=third-party with --to for first-party plugins higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
-          to: '@nx/js@22.6.4',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@22.6.4', installed 'nx@22.0.0').`
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: '@nx/workspace',
+          include: 'optional',
+        },
+        includeGateFetch()
       );
-    });
-
-    it('should reject --mode=third-party with --to create-nx-workspace higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
-          to: 'create-nx-workspace@22.6.4',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@22.6.4', installed 'nx@22.0.0').`
-      );
-    });
-
-    it('should reject --mode=third-party with --to @nx/workspace higher than installed', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: 'nx@22.0.0',
-          mode: 'third-party',
-          to: '@nx/workspace@23.0.0',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@23.0.0', installed 'nx@22.0.0').`
-      );
-    });
-
-    it('should accept --mode=third-party with --to for non-canonical packages', async () => {
-      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@22.0.0',
-        mode: 'third-party',
-        to: 'react@18.0.0',
-      });
       expect(r).toMatchObject({
         type: 'generateMigrations',
-        mode: 'third-party',
+        targetPackage: '@nx/workspace',
+        targetVersion: '23.0.0',
+        include: 'optional',
+      });
+    });
+
+    it('should reject --include=optional with --to canonical higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@23.0.0',
+            include: 'optional',
+            to: 'nx@24.0.0',
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to nx@24.0.0', installed 'nx@23.0.0').`
+      );
+    });
+
+    it('should reject --include=optional with --to for required packages higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@23.0.0',
+            include: 'optional',
+            to: '@nx/js@23.6.4',
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/js@23.6.4', installed 'nx@23.0.0').`
+      );
+    });
+
+    it('should reject --include=optional with --to create-nx-workspace higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@23.0.0',
+            include: 'optional',
+            to: 'create-nx-workspace@23.6.4',
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to create-nx-workspace@23.6.4', installed 'nx@23.0.0').`
+      );
+    });
+
+    it('should reject --include=optional with --to @nx/workspace higher than installed', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: 'nx@23.0.0',
+            include: 'optional',
+            to: '@nx/workspace@24.0.0',
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/workspace@24.0.0', installed 'nx@23.0.0').`
+      );
+    });
+
+    it('should cap --to against nx full group when migrating @nx/workspace in `optional` value', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      // `@nx/workspace` declares a narrow group; the bound check must use nx's
+      // full closure (which includes `@nx/jest`) to mirror the walk.
+      mockGetInstalledPackageGroup.mockImplementation((pkg: string) =>
+        pkg === '@nx/workspace'
+          ? new Set(['@nx/workspace', 'nx', 'nx-cloud'])
+          : new Set(['nx', 'nx-cloud', '@nx/js', '@nx/jest', '@nx/react'])
+      );
+      await expect(() =>
+        parseMigrationsOptions(
+          {
+            packageAndVersion: '@nx/workspace',
+            include: 'optional',
+            to: '@nx/jest@24.0.0',
+          },
+          includeGateFetch()
+        )
+      ).rejects.toThrow(
+        `Error: '--include=optional' cannot migrate to a version higher than what is currently installed (got '--to @nx/jest@24.0.0', installed 'nx@22.0.0').`
+      );
+    });
+
+    it('should accept --include=optional with --to for non-canonical packages', async () => {
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      const r = await parseMigrationsOptions(
+        {
+          packageAndVersion: 'nx@23.0.0',
+          include: 'optional',
+          to: 'react@18.0.0',
+        },
+        includeGateFetch()
+      );
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        include: 'optional',
         to: { react: '18.0.0' },
-      });
-    });
-
-    it('should reject --mode=third-party for legacy target when @nrwl/workspace is not installed', async () => {
-      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
-      await expect(() =>
-        parseMigrationsOptions({
-          packageAndVersion: '@nrwl/workspace@13.0.0',
-          mode: 'third-party',
-        })
-      ).rejects.toThrow(
-        `Error: '--mode=third-party' requires '@nrwl/workspace' to be installed in your workspace.`
-      );
-    });
-
-    it('should accept --mode=third-party for legacy target when @nrwl/workspace is installed', async () => {
-      mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue('13.5.0');
-      const r = await parseMigrationsOptions({
-        packageAndVersion: '@nrwl/workspace@13.0.0',
-        mode: 'third-party',
-      });
-      expect(r).toMatchObject({
-        type: 'generateMigrations',
-        targetPackage: '@nrwl/workspace',
-        targetVersion: '13.0.0',
-        mode: 'third-party',
       });
     });
 
@@ -2633,9 +2989,55 @@ describe('Migration', () => {
         child: { version: '2.0.0', addToPackageJson: false },
       });
     });
+
+    describe('nx.json migrate.include overlay (integration)', () => {
+      it('does not treat nx.json migrate.include as an explicit --include for a target that does not support optional updates', async () => {
+        // The original footgun: a workspace-wide migrate.include default made
+        // `nx migrate <pkg>` hard-fail with a `--include` error the user never
+        // passed. The overlay must carry it as a default, not a flag, and a
+        // target that doesn't support optional updates must fall back to 'all' with a warning.
+        const warnSpy = jest
+          .spyOn(require('../../utils/output').output, 'warn')
+          .mockImplementation(() => {});
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: '@angular/core@18.0.0' },
+            { include: 'required' }
+          ),
+          includeGateFetch(false)
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: '@angular/core',
+          include: 'all',
+        });
+        expect(warnSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: expect.stringContaining(
+              "The configured nx.json migrate.include 'required' is not available"
+            ),
+          })
+        );
+      });
+
+      it('applies nx.json migrate.include through the overlay for a target that supports optional updates', async () => {
+        const result = await parseMigrationsOptions(
+          applyNxJsonMigrateDefaults(
+            { packageAndVersion: 'nx@23.0.0' },
+            { include: 'required' }
+          ),
+          includeGateFetch()
+        );
+        expect(result).toMatchObject({
+          type: 'generateMigrations',
+          targetPackage: 'nx',
+          include: 'required',
+        });
+      });
+    });
   });
 
-  describe('resolveMode', () => {
+  describe('resolveInclude', () => {
     let originalCi: string | undefined;
     let originalTty: boolean | undefined;
 
@@ -2657,15 +3059,35 @@ describe('Migration', () => {
       });
     });
 
-    it('should return the provided mode without prompting', async () => {
+    const supportsOptionalMigrationsContext = {
+      hasFrom: false,
+      hasExcludeAppliedMigrations: false,
+      targetSupportsOptionalUpdates: true,
+    };
+
+    it('should return the provided include without prompting', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode('first-party', 'nx', '22.0.0');
-      expect(result).toBe('first-party');
+      const result = await resolveInclude(
+        'required',
+        supportsOptionalMigrationsContext
+      );
+      expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should return the provided include even when the target does not support optional updates', async () => {
+      // The `supportsOptionalMigrations` gate is enforced in `resolveTargetAndInclude`;
+      // `resolveInclude` honors an explicit include as-is.
+      const result = await resolveInclude('required', {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        targetSupportsOptionalUpdates: false,
+      });
+      expect(result).toBe('required');
     });
 
     it('should default to "all" without prompting in non-TTY environments', async () => {
@@ -2674,7 +3096,10 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalMigrationsContext
+      );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2685,18 +3110,39 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'true';
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalMigrationsContext
+      );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
-    it('should default to "all" without prompting for non-nx-equivalent target', async () => {
+    it('should default to "all" without prompting when --no-interactive is passed in a TTY', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      const result = await resolveMode(undefined, '@nx/react', '22.0.0');
+      const result = await resolveInclude(undefined, {
+        ...supportsOptionalMigrationsContext,
+        interactive: false,
+      });
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('should default to "all" without prompting when the target does not support optional updates', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveInclude(undefined, {
+        hasFrom: false,
+        hasExcludeAppliedMigrations: false,
+        targetSupportsOptionalUpdates: false,
+      });
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
@@ -2707,62 +3153,149 @@ describe('Migration', () => {
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'first-party' }));
-      const result = await resolveMode(undefined, 'nx', '22.0.0');
-      expect(result).toBe('first-party');
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalMigrationsContext
+      );
+      expect(result).toBe('required');
       expect(mockPrompt).toHaveBeenCalled();
     });
 
-    it('should include third-party in prompt choices by default', async () => {
+    it('should include optional in prompt choices by default', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0');
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, supportsOptionalMigrationsContext);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
-        'third-party',
+        'required',
+        'optional',
         'all',
       ]);
     });
 
-    it('should hide third-party from prompt choices when --from is provided', async () => {
+    it('should hide optional from prompt choices when --from is provided', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0', {
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
         hasFrom: true,
         hasExcludeAppliedMigrations: false,
+        targetSupportsOptionalUpdates: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
+        'required',
         'all',
       ]);
     });
 
-    it('should hide third-party from prompt choices when --exclude-applied-migrations is provided', async () => {
+    it('should hide optional from prompt choices when --exclude-applied-migrations is provided', async () => {
       Object.defineProperty(process.stdin, 'isTTY', {
         value: true,
         configurable: true,
       });
       process.env.CI = 'false';
-      mockPrompt.mockReturnValueOnce(Promise.resolve({ mode: 'all' }));
-      await resolveMode(undefined, 'nx', '22.0.0', {
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
         hasFrom: false,
         hasExcludeAppliedMigrations: true,
+        targetSupportsOptionalUpdates: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
-        'first-party',
+        'required',
         'all',
       ]);
+    });
+
+    it('should hide optional from prompt choices when --interactive is provided', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
+      await resolveInclude(undefined, {
+        ...supportsOptionalMigrationsContext,
+        interactive: true,
+      });
+      const choices = mockPrompt.mock.calls[0][0].choices;
+      expect(choices.map((c: { name: string }) => c.name)).toEqual([
+        'required',
+        'all',
+      ]);
+    });
+
+    it('uses the nx.json configured include for a target that supports optional updates without prompting', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalMigrationsContext,
+        'required'
+      );
+      expect(result).toBe('required');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('uses the nx.json configured include for a target that supports optional updates in CI', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'true';
+      const result = await resolveInclude(
+        undefined,
+        supportsOptionalMigrationsContext,
+        'required'
+      );
+      expect(result).toBe('required');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('lets an explicit include win over the nx.json configured include', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveInclude(
+        'all',
+        supportsOptionalMigrationsContext,
+        'required'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
+    });
+
+    it('ignores the nx.json configured include when the target does not support optional updates', async () => {
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: true,
+        configurable: true,
+      });
+      process.env.CI = 'false';
+      const result = await resolveInclude(
+        undefined,
+        {
+          hasFrom: false,
+          hasExcludeAppliedMigrations: false,
+          targetSupportsOptionalUpdates: false,
+        },
+        'required'
+      );
+      expect(result).toBe('all');
+      expect(mockPrompt).not.toHaveBeenCalled();
     });
   });
 
@@ -3002,6 +3535,49 @@ describe('Migration', () => {
     });
   });
 
+  describe('minimum-release-age violation propagation', () => {
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    function violation() {
+      return new MinReleaseAgeViolationError({
+        packageManager: 'npm',
+        packageName: 'mypackage',
+        spec: 'latest',
+        // npm's headline contains "No matching version", which the Migrator
+        // catch would otherwise rewrap into a plain Error and lose the type.
+        pmShapedDetail:
+          'No matching version found for mypackage@latest with a date before 2020.',
+        blocked: [],
+        remediation: [
+          'Wait until a matching version is older than the window.',
+        ],
+      });
+    }
+
+    it('the Migrator rethrows a cooldown violation without rewrapping it', async () => {
+      const err = violation();
+      const migrator = new Migrator({
+        packageJson: createPackageJson(),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () => Promise.reject(err),
+        from: {},
+        to: {},
+      });
+      await expect(migrator.migrate('mypackage', '2.0.0')).rejects.toBe(err);
+    });
+
+    it('the fetcher surfaces a cooldown violation instead of falling back to install', async () => {
+      const err = violation();
+      jest
+        .spyOn(packageMgrUtils, 'resolvePackageVersionUsingRegistry')
+        .mockRejectedValue(err);
+      const fetch = createFetcher({} as any);
+      await expect(fetch('mypackage', 'latest')).rejects.toBe(err);
+    });
+  });
+
   describe('multi-major migration prompt', () => {
     let originalCi: string | undefined;
     const originalTtyDescriptor = Object.getOwnPropertyDescriptor(
@@ -3014,7 +3590,12 @@ describe('Migration', () => {
       originalCi = process.env.CI;
       originalMultiMajorMode = process.env.NX_MULTI_MAJOR_MODE;
       mockGetInstalledNxVersion.mockReturnValue('21.0.0');
-      mockGetInstalledNxPackageGroup.mockReturnValue(
+      mockGetInstalledVersion.mockImplementation((pkg: string) =>
+        pkg === 'nx' || pkg === '@nx/workspace'
+          ? mockGetInstalledNxVersion()
+          : null
+      );
+      mockGetInstalledPackageGroup.mockReturnValue(
         new Set(['nx', '@nx/js', '@nx/workspace'])
       );
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReturnValue(null);
@@ -3024,7 +3605,8 @@ describe('Migration', () => {
 
     afterEach(() => {
       mockGetInstalledNxVersion.mockReset();
-      mockGetInstalledNxPackageGroup.mockReset();
+      mockGetInstalledVersion.mockReset();
+      mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
       mockPrompt.mockReset();
       if (originalCi === undefined) {
@@ -3071,6 +3653,11 @@ describe('Migration', () => {
         .mockImplementation(() => {});
     }
 
+    // Every scenario here migrates a target that supports optional updates; the stub satisfies
+    // the `--include` gate so the tests exercise multi-major resolution alone.
+    const parseWithIncludes = (options: { [k: string]: any }) =>
+      parseMigrationsOptions(options, includeGateFetch());
+
     it('should prompt and replace targetVersion with the chosen value (inferred target, TTY)', async () => {
       setTty(true);
       mockRegistry({
@@ -3082,9 +3669,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'next',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).toHaveBeenCalledWith(
@@ -3115,9 +3702,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      await parseMigrationsOptions({
+      await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
@@ -3135,14 +3722,60 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      await parseMigrationsOptions({
+      await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       const promptArgs = mockPrompt.mock.calls[0][0];
       const choices = promptArgs.choices as { name: string }[];
       expect(choices.map((c) => c.name)).toEqual(['22.5.3', '23.1.0']);
+    });
+
+    it('should omit the current-major (v22) step from the multi-major prompt', async () => {
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockRegistry({
+        latest: '24.1.0',
+        '22': '22.5.3',
+        '23': '23.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+
+      await parseWithIncludes({
+        packageAndVersion: 'latest',
+        include: 'all',
+      });
+
+      const promptArgs = mockPrompt.mock.calls[0][0];
+      const choices = promptArgs.choices as { name: string }[];
+      // The 22.x current-major step is suppressed; only next-major and direct.
+      expect(choices.map((c) => c.name)).toEqual(['23.5.3', '24.1.0']);
+    });
+
+    it('should keep --include=required valid when multi-major redirects to the next major (v22 install)', async () => {
+      // Include is resolved before multi-major; suppressing the v22 step guarantees
+      // every multi-major option stays >= v23, so a required selection can't
+      // be invalidated by the redirect.
+      setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('22.0.0');
+      mockRegistry({
+        latest: '24.1.0',
+        '22': '22.5.3',
+        '23': '23.5.3',
+      });
+      mockPrompt.mockResolvedValue({ chosen: '23.5.3' });
+
+      const r = await parseWithIncludes({
+        packageAndVersion: 'nx@24.0.0',
+        include: 'required',
+      });
+
+      expect(r).toMatchObject({
+        type: 'generateMigrations',
+        include: 'required',
+        targetVersion: '23.5.3',
+      });
     });
 
     it('should prompt (not warn) when target was explicitly typed as numeric semver', async () => {
@@ -3154,9 +3787,9 @@ describe('Migration', () => {
       mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'nx@23.1.0',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).toHaveBeenCalled();
@@ -3169,9 +3802,25 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
+      });
+
+      expect(mockPrompt).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalled();
+      expect(r).toMatchObject({ targetVersion: '23.1.0' });
+    });
+
+    it('should warn (not prompt) when --no-interactive is passed in a TTY', async () => {
+      setTty(true);
+      mockRegistry({ latest: '23.1.0' });
+      const warnSpy = spyWarn();
+
+      const r = await parseWithIncludes({
+        packageAndVersion: 'latest',
+        include: 'all',
+        interactive: false,
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3184,9 +3833,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
@@ -3201,9 +3850,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3220,9 +3869,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3241,9 +3890,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3260,9 +3909,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3287,9 +3936,9 @@ describe('Migration', () => {
       });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3306,37 +3955,38 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should bypass --multi-major-mode=gradual when --mode=third-party', async () => {
+    it('should bypass --multi-major-mode=gradual when --include=optional', async () => {
       setTty(true);
-      // third-party anchors at the installed canonical (here 21.0.0) and
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
+      // the `optional` value anchors at the installed canonical (here 23.0.0) and
       // must not be redirected to an incremental target. `maybePromptOrWarn…`
-      // early-returns on `mode === 'third-party'` before consulting gradual,
+      // early-returns on `include === 'optional'` before consulting gradual,
       // so the flag is accepted but is a no-op.
       mockRegistry({
-        latest: '23.1.0',
-        '21': '21.5.3',
-        '22': '22.5.3',
+        latest: '25.1.0',
+        '23': '23.5.3',
+        '24': '24.5.3',
       });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
-        packageAndVersion: 'nx@21.0.0',
-        mode: 'third-party',
+      const r = await parseWithIncludes({
+        packageAndVersion: 'nx@23.0.0',
+        include: 'optional',
         multiMajorMode: 'gradual',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(r).toMatchObject({ targetVersion: '21.0.0' });
+      expect(r).toMatchObject({ targetVersion: '23.0.0' });
     });
 
     it('should not prompt or warn when delta is exactly 1 major', async () => {
@@ -3344,9 +3994,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '22.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3360,9 +4010,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3370,15 +4020,16 @@ describe('Migration', () => {
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
     });
 
-    it('should not prompt or warn for --mode=third-party', async () => {
+    it('should not prompt or warn for --include=optional', async () => {
       setTty(true);
+      mockGetInstalledNxVersion.mockReturnValue('23.0.0');
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({ mode: 'third-party' });
+      const r = await parseWithIncludes({ include: 'optional' });
 
       expect(mockPrompt).not.toHaveBeenCalled();
       expect(warnSpy).not.toHaveBeenCalled();
-      expect(r).toMatchObject({ mode: 'third-party' });
+      expect(r).toMatchObject({ include: 'optional' });
     });
 
     it.each(['nx', '@nx/workspace'])(
@@ -3396,9 +4047,9 @@ describe('Migration', () => {
         });
         mockPrompt.mockResolvedValue({ chosen: '21.5.3' });
 
-        const r = await parseMigrationsOptions({
+        const r = await parseWithIncludes({
           packageAndVersion: positional,
-          mode: 'all',
+          include: 'all',
         });
 
         expect(mockPrompt).toHaveBeenCalled();
@@ -3418,9 +4069,9 @@ describe('Migration', () => {
       mockRegistry({ latest: '23.1.0', '21': '21.5.3' });
       const warnSpy = spyWarn();
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3436,9 +4087,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3457,9 +4108,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({
@@ -3477,9 +4128,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '23.1.0' });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({ targetVersion: '23.1.0' });
@@ -3496,9 +4147,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'direct',
       });
 
@@ -3517,15 +4168,15 @@ describe('Migration', () => {
       mockGetInstalledNxVersion.mockReturnValue('22.5.3');
       mockRegistry({ latest: '22.5.3' });
 
-      const bare = await parseMigrationsOptions({ mode: 'all' });
+      const bare = await parseWithIncludes({ include: 'all' });
       expect(bare).toMatchObject({ targetVersion: '22.5.3' });
       expect(
         (bare as { originalTargetVersion?: string }).originalTargetVersion
       ).toBeUndefined();
 
-      const barePkg = await parseMigrationsOptions({
+      const barePkg = await parseWithIncludes({
         packageAndVersion: 'nx',
-        mode: 'all',
+        include: 'all',
       });
       expect(barePkg).toMatchObject({ targetVersion: '22.5.3' });
       expect(
@@ -3541,9 +4192,9 @@ describe('Migration', () => {
         '22': '22.5.3',
       });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
         multiMajorMode: 'gradual',
       });
 
@@ -3563,9 +4214,9 @@ describe('Migration', () => {
       });
       mockPrompt.mockResolvedValue({ chosen: '22.5.3' });
 
-      const r = await parseMigrationsOptions({
+      const r = await parseWithIncludes({
         packageAndVersion: 'latest',
-        mode: 'all',
+        include: 'all',
       });
 
       expect(r).toMatchObject({
@@ -3613,6 +4264,38 @@ describe('Migration', () => {
       ]);
       expect(result.promptContents).toEqual({
         '@nx/expo::./files/ai-instructions.md': 'PROMPT BODY',
+      });
+    });
+
+    // Regression guard: `documentation` rides through `createMigrateJson`'s
+    // spread untyped (GeneratedMigrationDetails treats it as optional and the
+    // generated migrations.json is written via an `as any` cast), so a future
+    // refactor could silently drop it from the generated file with no type
+    // error. This test fails if that happens.
+    it('should preserve the documentation field on migration entries', async () => {
+      const migrator = new Migrator({
+        packageJson: createPackageJson({ dependencies: { pkg: '1.0.0' } }),
+        getInstalledPackageVersion: () => '1.0.0',
+        fetch: () =>
+          Promise.resolve({
+            version: '2.0.0',
+            generators: {
+              documented: {
+                version: '2.0.0',
+                description: 'documented migration',
+                implementation: './migrations/documented',
+                documentation: './src/migrations/update-2-0-0/documented.md',
+              },
+            },
+          } as ResolvedMigrationConfiguration),
+        from: {},
+        to: {},
+      });
+
+      const result = await migrator.migrate('pkg', '2.0.0');
+      expect(result.migrations[0]).toMatchObject({
+        name: 'documented',
+        documentation: './src/migrations/update-2-0-0/documented.md',
       });
     });
 
@@ -3994,6 +4677,438 @@ describe('Migration', () => {
         '1.0.0'
       );
       expect(written).toEqual(['tools/ai-migrations/pkg/1.0.0/x.md']);
+    });
+  });
+
+  describe('agentic helpers', () => {
+    const baseMigration = { package: 'p', name: 'n', version: '1.0.0' };
+
+    describe('isPromptOnlyMigration / isHybridMigration', () => {
+      it.each([
+        ['prompt only', { prompt: 'x.md' }, true, false],
+        [
+          'prompt + implementation (hybrid)',
+          { prompt: 'x.md', implementation: './impl.js' },
+          false,
+          true,
+        ],
+        [
+          'prompt + legacy factory (hybrid)',
+          { prompt: 'x.md', factory: './factory.js' },
+          false,
+          true,
+        ],
+        [
+          'implementation only (no prompt)',
+          { implementation: './impl.js' },
+          false,
+          false,
+        ],
+      ])(
+        'classifies %s correctly',
+        (_label, extra, expectedPromptOnly, expectedHybrid) => {
+          const migration = { ...baseMigration, ...extra };
+          expect(isPromptOnlyMigration(migration)).toBe(expectedPromptOnly);
+          expect(isHybridMigration(migration)).toBe(expectedHybrid);
+        }
+      );
+    });
+
+    describe('resolveCreateCommits', () => {
+      it.each<
+        [
+          string,
+          boolean | undefined,
+          'disabled' | 'inside-agent' | 'enabled',
+          { effective: boolean; agenticHasDiffContext: boolean },
+        ]
+      >([
+        [
+          'explicit true, no agentic',
+          true,
+          'disabled',
+          { effective: true, agenticHasDiffContext: false },
+        ],
+        [
+          'explicit false, no agentic',
+          false,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, no agentic',
+          undefined,
+          'disabled',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, inside-agent',
+          undefined,
+          'inside-agent',
+          { effective: false, agenticHasDiffContext: false },
+        ],
+        [
+          'unset, agentic enabled — soft-force on',
+          undefined,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+        [
+          'explicit true, agentic enabled',
+          true,
+          'enabled',
+          { effective: true, agenticHasDiffContext: true },
+        ],
+      ])('git repo: %s', (_label, createCommits, agenticKind, expected) => {
+        expect(
+          resolveCreateCommits({
+            createCommits,
+            agenticKind,
+            isGitRepo: true,
+          })
+        ).toEqual(expected);
+      });
+
+      it('warns and drops diff context when createCommits=false is explicit alongside agentic', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.warning).toMatch(/--no-create-commits/);
+      });
+
+      it('errors when --create-commits is explicit without a git repo', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.error).toMatch(
+          /`--create-commits` requires a git repository/
+        );
+      });
+
+      it('degrades agentic without git (createCommits unset): warns, no error, no diff context', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.agenticHasDiffContext).toBe(false);
+        expect(result.error).toBeUndefined();
+        expect(result.warning).toMatch(/not a git repository/);
+      });
+
+      it('notes the dropped --commit-prefix in the agentic-without-git warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('notes the dropped --commit-prefix in the --no-create-commits + agentic warning when the prefix is customized', () => {
+        const result = resolveCreateCommits({
+          createCommits: false,
+          agenticKind: 'enabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.warning).toMatch(/--no-create-commits/);
+        expect(result.warning).toMatch(/--commit-prefix/);
+        expect(result.warning).toMatch(/no effect/);
+      });
+
+      it('does not mention --commit-prefix when the prefix is unchanged', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'enabled',
+          isGitRepo: false,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).not.toMatch(/--commit-prefix/);
+      });
+
+      it('warns that a configured commit prefix has no effect when commits stay disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(false);
+        expect(result.warning).toMatch(/no effect/);
+        expect(result.warning).toMatch(/createCommits/);
+      });
+
+      it('does not warn about the commit prefix when commits are disabled and the prefix is default', () => {
+        const result = resolveCreateCommits({
+          createCommits: undefined,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: false,
+        });
+        expect(result.warning).toBeUndefined();
+      });
+
+      it('does not warn when commits are enabled even though the agentic flow is disabled', () => {
+        const result = resolveCreateCommits({
+          createCommits: true,
+          agenticKind: 'disabled',
+          isGitRepo: true,
+          commitPrefixIsCustom: true,
+        });
+        expect(result.effective).toBe(true);
+        expect(result.warning).toBeUndefined();
+      });
+    });
+
+    describe('parseMigrationReturn', () => {
+      it('reads both buckets from the object shape and tolerates partial shapes', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['a'],
+            agentContext: ['b', 'c'],
+          })
+        ).toEqual({ nextSteps: ['a'], agentContext: ['b', 'c'] });
+        expect(parseMigrationReturn({ agentContext: ['x'] })).toEqual({
+          nextSteps: [],
+          agentContext: ['x'],
+        });
+      });
+
+      it('treats a string array as legacy workspace-wide nextSteps', () => {
+        expect(parseMigrationReturn(['a', 'b'])).toEqual({
+          nextSteps: ['a', 'b'],
+          agentContext: [],
+        });
+      });
+
+      it('filters non-string entries per bucket so a single bad entry does not drop the whole array', () => {
+        expect(
+          parseMigrationReturn({
+            nextSteps: ['ok', 1, null] as any,
+            agentContext: [true, 'ok'] as any,
+          })
+        ).toEqual({ nextSteps: ['ok'], agentContext: ['ok'] });
+        expect(parseMigrationReturn(['ok', 42] as any)).toEqual({
+          nextSteps: ['ok'],
+          agentContext: [],
+        });
+      });
+    });
+
+    describe('formatSkippedPromptsNextStep', () => {
+      it('renders a parent instruction line and an indented bullet per skipped path', () => {
+        const result = formatSkippedPromptsNextStep([
+          {
+            package: '@nx/storybook',
+            name: 'migrate-css',
+            version: '9.2.0',
+            prompt: 'tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md',
+          },
+          {
+            package: '@nx/rspack',
+            name: 'perf-options',
+            version: '2.0.0',
+            prompt: 'tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md',
+          },
+        ]);
+
+        expect(result).toBe(
+          'Some prompt migrations were skipped. Review and apply each of the following prompt files to the workspace, in the listed order:\n' +
+            '  - tools/ai-migrations/@nx/storybook/9.2.0/migrate-css.md\n' +
+            '  - tools/ai-migrations/@nx/rspack/2.0.0/perf-options.md'
+        );
+      });
+    });
+  });
+
+  describe('resolveMigrationForRun', () => {
+    let tmpRoot: string;
+    let warnSpy: jest.SpyInstance;
+
+    const writeInstalledPackage = (
+      pkgName: string,
+      documentationRelToMigrationsDir: string | null
+    ) => {
+      const pkgDir = join(tmpRoot, 'node_modules', pkgName);
+      mkdirSync(pkgDir, { recursive: true });
+      writeFileSync(
+        join(pkgDir, 'package.json'),
+        JSON.stringify({
+          name: pkgName,
+          version: '1.0.0',
+          'nx-migrations': './migrations.json',
+        })
+      );
+      writeFileSync(
+        join(pkgDir, 'migrations.json'),
+        JSON.stringify({ generators: {} })
+      );
+      if (documentationRelToMigrationsDir) {
+        const docAbs = join(pkgDir, documentationRelToMigrationsDir);
+        mkdirSync(dirname(docAbs), { recursive: true });
+        writeFileSync(docAbs, '# doc');
+      }
+    };
+
+    beforeEach(() => {
+      // realpath so the workspace-relative assertion isn't defeated by the
+      // macOS /tmp -> /private/tmp symlink (require.resolve returns realpaths).
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-migration-docs-')));
+      warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      warnSpy.mockRestore();
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves the documentation file to a workspace-relative node_modules path', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        true
+      );
+      expect(documentationPath).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('returns no documentation path (and does not warn) when none is declared', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('does not resolve documentation for non-agentic runs', () => {
+      writeInstalledPackage('@nx/foo', './src/migrations/update-1-0-0/do.md');
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/do.md',
+        },
+        false
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).not.toHaveBeenCalled();
+    });
+
+    it('warns and skips when a declared documentation file is not present', () => {
+      writeInstalledPackage('@nx/foo', null);
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/foo',
+          name: 'update-1-0-0',
+          implementation: './src/migrations/update-1-0-0/do',
+          documentation: './src/migrations/update-1-0-0/missing.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain(
+        './src/migrations/update-1-0-0/missing.md'
+      );
+    });
+
+    it('throws when an implementation migration package cannot be resolved', () => {
+      expect(() =>
+        resolveMigrationForRun(
+          tmpRoot,
+          {
+            package: '@nx/not-installed',
+            name: 'update-1-0-0',
+            implementation: './x',
+            documentation: './x.md',
+          },
+          true
+        )
+      ).toThrow();
+    });
+
+    it('is non-fatal for prompt-only migrations when the package cannot be resolved', () => {
+      const { documentationPath } = resolveMigrationForRun(
+        tmpRoot,
+        {
+          package: '@nx/not-installed',
+          name: 'update-1-0-0',
+          prompt: './x.md',
+          documentation: './x.md',
+        },
+        true
+      );
+      expect(documentationPath).toBeUndefined();
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('resolveDocumentationFileToWorkspacePath', () => {
+    let tmpRoot: string;
+
+    beforeEach(() => {
+      tmpRoot = realpathSync(mkdtempSync(join(tmpdir(), 'nx-doc-resolve-')));
+    });
+
+    afterEach(() => {
+      rmSync(tmpRoot, { recursive: true, force: true });
+    });
+
+    it('resolves a package-relative documentation path to a workspace-relative path', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      const docAbs = join(migrationsDir, 'src/migrations/update-1-0-0/do.md');
+      mkdirSync(dirname(docAbs), { recursive: true });
+      writeFileSync(docAbs, '# doc');
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './src/migrations/update-1-0-0/do.md'
+        )
+      ).toBe(
+        join('node_modules', '@nx/foo', 'src/migrations/update-1-0-0/do.md')
+      );
+    });
+
+    it('returns undefined when the documentation file does not exist', () => {
+      const migrationsDir = join(tmpRoot, 'node_modules', '@nx/foo');
+      mkdirSync(migrationsDir, { recursive: true });
+      expect(
+        resolveDocumentationFileToWorkspacePath(
+          tmpRoot,
+          migrationsDir,
+          './missing.md'
+        )
+      ).toBeUndefined();
     });
   });
 });

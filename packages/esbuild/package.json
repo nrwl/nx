@@ -16,9 +16,16 @@
     "Front-end",
     "Backend"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -29,7 +36,8 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
@@ -52,5 +60,19 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "typesVersions": {
+    "*": {}
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json"
   }
 }

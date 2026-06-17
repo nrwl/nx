@@ -332,6 +332,9 @@
       "path": "./e2e/maven"
     },
     {
+      "path": "./e2e/module-federation"
+    },
+    {
       "path": "./examples/angular-rspack/module-federation/remote"
     },
     {

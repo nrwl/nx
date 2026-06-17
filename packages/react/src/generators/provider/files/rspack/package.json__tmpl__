@@ -1,0 +1,22 @@
+{
+  "name": "<%= projectName %>",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve --mode=development",
+    "build": "rspack build --mode=production"
+  },
+  "dependencies": {
+    "@module-federation/enhanced": "<%= versions.moduleFederationEnhancedVersion %>",
+    "react": "<%= versions.reactVersion %>",
+    "react-dom": "<%= versions.reactDomVersion %>"
+  },
+  "devDependencies": {
+    "@rspack/cli": "<%= versions.rspackCliVersion %>",
+    "@rspack/core": "<%= versions.rspackCoreVersion %>",
+    "@rspack/dev-server": "<%= versions.rspackDevServerVersion %>",
+    "@types/react": "<%= versions.typesReactVersion %>",
+    "@types/react-dom": "<%= versions.typesReactDomVersion %>",
+    "typescript": "<%= versions.typescriptVersion %>"
+  }
+}

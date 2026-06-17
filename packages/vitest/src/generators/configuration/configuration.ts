@@ -11,13 +11,10 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   getProjectType,
@@ -33,10 +30,9 @@ import {
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
-import {
-  getInstalledViteMajorVersion,
-  getVitestDependenciesVersionsToInstall,
-} from '../../utils/version-utils';
+import { getInstalledViteMajorVersion } from '../../utils/version-utils';
+import { versions } from '../../utils/versions';
+import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 
 /**
@@ -86,6 +82,8 @@ export async function configurationGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  assertSupportedVitestVersion(tree);
+
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
@@ -246,13 +244,14 @@ getTestBed().initTestEnvironment(
   if (isTsSolutionSetup) {
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree) ?? {};
+    const nxJson = readNxJson(tree);
     const testTarget = schema.testTarget ?? 'test';
-    const existing = findTestDefault(nxJson.targetDefaults, testTarget);
-    const dependsOn = Array.from(
-      new Set([...(existing?.dependsOn ?? []), '^build'])
+    nxJson.targetDefaults ??= {};
+    nxJson.targetDefaults[testTarget] ??= {};
+    nxJson.targetDefaults[testTarget].dependsOn ??= [];
+    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
+      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
     );
-    upsertTargetDefault(tree, nxJson, { target: testTarget, dependsOn });
     updateNxJson(tree, nxJson);
   }
 
@@ -435,24 +434,24 @@ function createFiles(
   });
 }
 
-async function getCoverageProviderDependency(
+function getCoverageProviderDependency(
   tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-): Promise<Record<string, string>> {
-  const { vitestCoverageV8, vitestCoverageIstanbul } =
-    await getVitestDependenciesVersionsToInstall(tree);
+): Record<string, string> {
+  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } =
+    versions(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
   }
 }
@@ -523,22 +522,6 @@ function findBuildTarget(project: {
   }
 
   return project.targets?.build ?? null;
-}
-
-function findTestDefault(
-  td: TargetDefaults | undefined,
-  target: string
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
-  }
-  return td[target];
 }
 
 export default configurationGenerator;

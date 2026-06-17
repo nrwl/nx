@@ -14,12 +14,15 @@ import { dirname, join, parse, relative } from 'path';
 
 import { addImport } from '../../utils/ast-utils';
 import { getInSourceVitestTestsTemplate } from '../../utils/get-in-source-vitest-tests-template';
-import { reactRouterDomVersion } from '../../utils/versions';
 import { getComponentTests } from './lib/get-component-tests';
 import { NormalizedSchema, Schema } from './schema';
 import { normalizeOptions } from './lib/normalize-options';
+import { reactRouterDomVersion } from '../../utils/versions';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 
 export async function componentGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+
   const options = await normalizeOptions(host, schema);
   createComponentFiles(host, options);
 
@@ -31,7 +34,9 @@ export async function componentGenerator(host: Tree, schema: Schema) {
     const routingTask = addDependenciesToPackageJson(
       host,
       { 'react-router-dom': reactRouterDomVersion },
-      {}
+      {},
+      undefined,
+      true
     );
     tasks.push(routingTask);
   }

@@ -737,11 +737,10 @@ If your `vitest.config.ts` or `vitest.config.mts` also uses `nxViteTsPaths`, rem
 ```ts
 // libs/ui/vite.config.ts
 import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   // ...
-  plugins: [react(), nxViteTsPaths(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react(), nxViteTsPaths()],
   build: {
     outDir: '../../dist/libs/ui',
     // ...
@@ -754,11 +753,10 @@ export default defineConfig({
 
 ```ts
 // libs/ui/vite.config.ts
-import { nxCopyAssetsPlugin } from '@nx/vite/plugins/nx-copy-assets.plugin';
 
 export default defineConfig({
   // ...
-  plugins: [react(), nxCopyAssetsPlugin(['*.md'])],
+  plugins: [react()],
   resolve: {
     conditions: ['@myorg/source'],
   },

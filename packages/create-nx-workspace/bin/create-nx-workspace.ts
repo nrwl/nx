@@ -82,6 +82,8 @@ let chosenPreset: string;
 let useCloud: boolean;
 // For stats
 let packageManager: string;
+// Analytics opt-in answer for the completion stat.
+let analyticsPrompt: 'yes' | 'no' | 'unset' = 'unset';
 
 type AngularUnitTestRunner =
   | 'none'
@@ -290,6 +292,11 @@ export const commandsObject: yargs.Argv<Arguments> = yargs
           .option('template', {
             describe: chalk.dim`GitHub template repository to use. Available templates: nrwl/empty-template, nrwl/react-template, nrwl/angular-template, nrwl/typescript-template`,
             type: 'string',
+          })
+          .option('trustThirdPartyPreset', {
+            describe: chalk.dim`Skip the confirmation prompt when installing a third-party preset. Use this when you trust the preset publisher.`,
+            type: 'boolean',
+            default: false,
           }),
         withNxCloud,
         withUseGitHub,
@@ -422,6 +429,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       setupCloudPrompt:
         messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
         messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      analyticsPrompt,
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
@@ -451,8 +459,6 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
 }
 
 async function handleError(error: unknown): Promise<void> {
-  const { version } = require('../package.json');
-
   // Record error stat for telemetry
   const errorCode = error instanceof CnwError ? error.code : 'UNKNOWN';
   const errorMessage = error instanceof Error ? error.message : String(error);
@@ -671,7 +677,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
         packageManager = argv.packageManager ?? detectInvokedPackageManager();
         Object.assign(argv, {
           nxCloud,
@@ -766,7 +773,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
 
         Object.assign(argv, {
           nxCloud,

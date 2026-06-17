@@ -1,9 +1,5 @@
-import {
-  createNodesFromFiles,
-  CreateNodesV2,
-  readJsonFile,
-  TargetConfiguration,
-} from '@nx/devkit';
+import { createNodesFromFiles, readJsonFile } from '@nx/devkit';
+import type { CreateNodes, TargetConfiguration } from '@nx/devkit';
 import {
   getAssetOutputPath,
   normalizeAssets,
@@ -23,7 +19,7 @@ interface AssetsJson {
   assets: (AssetEntry | string)[];
 }
 
-export const createNodesV2: CreateNodesV2 = [
+export const createNodes: CreateNodes = [
   'packages/*/assets.json',
   async (configFiles, _options, context) => {
     return await createNodesFromFiles(

@@ -9,8 +9,6 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
-  type TargetConfiguration,
-  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
@@ -21,8 +19,8 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { join } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
+import { nxVersion, versions } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
@@ -38,6 +36,8 @@ export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
+  assertSupportedEslintVersion(tree);
+
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion
@@ -70,9 +70,10 @@ export async function lintWorkspaceRulesProjectGenerator(
    */
   const nxJson = readNxJson(tree);
 
-  const lintEntry = findLintTargetDefault(nxJson.targetDefaults);
-  if (lintEntry?.inputs) {
-    lintEntry.inputs.push(`{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`);
+  if (nxJson.targetDefaults?.lint?.inputs) {
+    nxJson.targetDefaults.lint.inputs.push(
+      `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`
+    );
 
     updateNxJson(tree, nxJson);
   }
@@ -97,6 +98,13 @@ export async function lintWorkspaceRulesProjectGenerator(
     (json) => {
       delete json.compilerOptions?.module;
       delete json.compilerOptions?.moduleResolution;
+      // Inherits `module: node16` from the project's base `tsconfig.json`,
+      // which requires `isolatedModules: true` to reliably honor packages'
+      // `exports` maps (e.g. `@typescript-eslint/rule-tester`).
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        isolatedModules: true,
+      };
 
       if (json.include) {
         json.include = json.include.map((v) => {
@@ -121,14 +129,16 @@ export async function lintWorkspaceRulesProjectGenerator(
   // Add swc dependencies
   tasks.push(addSwcRegisterDependencies(tree));
 
-  const typescriptEslintVersion = getTypeScriptEslintVersionToInstall(tree);
+  const { typescriptESLintVersion } = versions(tree);
   tasks.push(
     addDependenciesToPackageJson(
       tree,
       {},
       {
-        '@typescript-eslint/utils': typescriptEslintVersion,
-      }
+        '@typescript-eslint/utils': typescriptESLintVersion,
+      },
+      undefined,
+      true
     )
   );
 
@@ -137,19 +147,4 @@ export async function lintWorkspaceRulesProjectGenerator(
   }
 
   return runTasksInSerial(...tasks);
-}
-
-function findLintTargetDefault(
-  td: TargetDefaults | undefined
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'lint' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
-  }
-  return td['lint'];
 }

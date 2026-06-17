@@ -90,8 +90,10 @@ For more information, see the [Webpack plugins guide](/docs/technologies/build-t
 
 ### Nx-enhanced configuration with composable plugins
 
-{% aside type="tip" title="Non-standard webpack config" %}
-Nx-enhanced configuration, via `composePlugins` and [`withNx`](/docs/technologies/build-tools/webpack/guides/webpack-plugins#withnx) functions, requires the usage of `@nx/webpack:webpack` executor in your `project.json` file. This flavor of configuration does not work with the Webpack CLI.
+{% aside type="caution" title="`composePlugins`, `withNx`, and `withWeb` are deprecated" %}
+The `composePlugins`, [`withNx`](/docs/technologies/build-tools/webpack/guides/webpack-plugins#withnx), and `withWeb` helpers are deprecated and will be removed in Nx v24. They produce a non-standard config function that only runs under the `@nx/webpack:webpack` executor, so it does not work with the Webpack CLI. They still work in v23, but using them logs a deprecation warning.
+
+Use a standard webpack config built around `NxAppWebpackPlugin` (see [Basic configuration for Nx](#basic-configuration-for-nx) above) under the inferred `@nx/webpack/plugin`. Run `nx g @nx/webpack:convert-to-inferred` to migrate existing projects.
 {% /aside %}
 
 Nx supports a function to be returned from the Webpack configuration file. This function is a composable plugin that is understood by the `@nx/webpack:webpack` executor. The enhanced configuration looks something like this:

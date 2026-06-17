@@ -13,7 +13,10 @@ import {
 
 describe('Jest', () => {
   beforeAll(() => {
-    newProject({ name: uniq('proj-jest'), packages: ['@nx/js', '@nx/node'] });
+    newProject({
+      name: uniq('proj-jest'),
+      packages: ['@nx/js', '@nx/node', '@nx/eslint', '@nx/jest'],
+    });
   });
 
   afterAll(() => cleanupProject());

@@ -107,35 +107,43 @@ let cacheHasBeenPersisted = false;
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    // Single read shared with getPluginsSeparated below. This collapses
-    // what would otherwise be two independent nx.json reads (our snap +
-    // the plugin loader's) into one, so the snap hash and the plugin
-    // set the compute uses always reflect the same disk state.
-    const nxJson = readNxJson(workspaceRoot);
-    const myPluginsHash = hashObject(nxJson.plugins ?? []);
+    // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
+    // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
+    // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
+    try {
+      // Single read shared with getPluginsSeparated below. This collapses
+      // what would otherwise be two independent nx.json reads (our snap +
+      // the plugin loader's) into one, so the snap hash and the plugin
+      // set the compute uses always reflect the same disk state.
+      const nxJson = readNxJson(workspaceRoot);
+      const myPluginsHash = hashObject(nxJson.plugins ?? []);
 
-    const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
+      const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
 
-    // Plugin set we just loaded may already be stale vs disk.
-    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      // Plugin set we just loaded may already be stale vs disk.
+      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-    const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
+      const result =
+        await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    // Compute may have run against plugins that are now stale.
-    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      // Compute may have run against plugins that are now stale.
+      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-    if (
-      cachedSerializedProjectGraphPromise === myPromise &&
-      result.projectGraph
-    ) {
-      notifyProjectGraphRecomputationListeners(
-        result.projectGraph,
-        result.sourceMaps,
-        result.error
-      );
-      persistProjectGraphToDisk(result);
+      if (
+        cachedSerializedProjectGraphPromise === myPromise &&
+        result.projectGraph
+      ) {
+        notifyProjectGraphRecomputationListeners(
+          result.projectGraph,
+          result.sourceMaps,
+          result.error
+        );
+        persistProjectGraphToDisk(result);
+      }
+      return result;
+    } catch (e) {
+      return errorResult(e);
     }
-    return result;
   })();
   cachedSerializedProjectGraphPromise = myPromise;
 }

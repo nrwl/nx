@@ -124,7 +124,8 @@ private fun processTaskImpl(
     put("taskName", "${projectBuildPath}:${task.name}")
     val providerDependencies = findProviderBasedDependencies(task)
     if (providerDependencies.isNotEmpty()) {
-      put("includeDependsOnTasks", providerDependencies.toList())
+      // sorted(): set iteration order is JVM-run-dependent; keep options hash-stable.
+      put("includeDependsOnTasks", providerDependencies.sorted())
     }
     if (continuous) {
       put("continuous", true)
@@ -285,10 +286,12 @@ private fun getInputsForTaskImpl(
     // output directories exist but are empty, so file-based extension discovery misses them)
     dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
-    // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
-    dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
-    }
+    // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
+    dependentTaskOutputExtensions
+        .filterNot { nonInputDependentOutputExtensions.contains(it) }
+        .forEach { extension ->
+          inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
+        }
 
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
@@ -578,8 +581,13 @@ fun isContinuous(task: Task): Boolean {
 private val nonCacheableTasks = setOf("bootRun", "run")
 
 fun isCacheable(task: Task): Boolean {
+  // *ToMavenLocal tasks write to ~/.m2 (outside the workspace) — a cache hit skips the real publish
+  if (task.name.endsWith("ToMavenLocal")) return false
   return !nonCacheableTasks.contains(task.name)
 }
+
+// Compiler incremental-compilation state (*.bin) — non-deterministic and not consumed downstream.
+private val nonInputDependentOutputExtensions = setOf("bin")
 
 fun findProviderBasedDependencies(task: Task): Set<String> {
   val taskInternal = task as? TaskInternal ?: return emptySet()

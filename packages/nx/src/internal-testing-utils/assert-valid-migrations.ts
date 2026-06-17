@@ -29,6 +29,9 @@ export function assertValidMigrationPaths(json: MigrationsJson, root: string) {
       if (m.prompt) {
         knownDirs.add(path.basename(path.dirname(m.prompt)));
       }
+      if (m.documentation) {
+        knownDirs.add(path.basename(path.dirname(m.documentation)));
+      }
     }
     for (const dir of dirs) {
       expect(knownDirs).toContain(dir);
@@ -57,5 +60,14 @@ function validateMigration(m: MigrationsJsonEntry, root: string) {
     // so map the published path back to its source location.
     const promptSourcePath = m.prompt.replace(/^\.?\/?dist\//, '');
     expect(fs.existsSync(path.join(root, promptSourcePath))).toBe(true);
+  }
+  if (m.documentation) {
+    // Same published-shape mapping as `prompt`: documentation paths point at
+    // the built `./dist/src/.../foo.md`, so map back to the source tree.
+    const documentationSourcePath = m.documentation.replace(
+      /^\.?\/?dist\//,
+      ''
+    );
+    expect(fs.existsSync(path.join(root, documentationSourcePath))).toBe(true);
   }
 }

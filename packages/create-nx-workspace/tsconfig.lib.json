@@ -1,18 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "../../dist/packages/create-nx-workspace",
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/create-nx-workspace/tsconfig.tsbuildinfo"
+    "composite": true,
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
   "exclude": [
+    "node_modules",
+    "dist",
     "**/*.spec.ts",
     "**/*.test.ts",
     "**/*_spec.ts",
     "**/*_test.ts",
-    "jest.config.ts"
+    "jest.config.ts",
+    "jest.config.cts",
+    "eslint.config.mjs"
   ],
-  "include": ["**/*.ts", "*.json", "migrations.json"],
+  "include": ["*.ts", "src/**/*.ts", "bin/**/*.ts"],
   "references": []
 }

@@ -37,7 +37,7 @@ describe('nx release - custom npm registries', () => {
     e2eRegistryHost = e2eRegistryUrl
       .replace(/^https?:\/\//, '//')
       .replace(/\/$/, '');
-  }, 60000);
+  });
 
   afterAll(() => {
     cleanupProject();
@@ -65,6 +65,11 @@ describe('nx release - custom npm registries', () => {
       // We can't test overriding the default registry in this file since our e2e tests override it anyway.
       // Instead, we'll just assert that the e2e registry is used anytime we expect the default registry
       '',
+      // Many publishes here target intentionally-unreachable registries. npm still
+      // does a network preflight (even for --dry-run) and retries on failure, so cap
+      // the retry backoff to keep resilience without the default ~70s sleep per call.
+      'fetch-retry-mintimeout=100',
+      'fetch-retry-maxtimeout=1000',
       // Add auth tokens for all registries (required for NPM 11)
       `${e2eRegistryHost}/:_authToken=test-auth-token`,
       '//publish-config-registry.com/:_authToken=test-auth-token',
@@ -237,6 +242,10 @@ describe('nx release - custom npm registries', () => {
       `registry=http://ignored-registry.com`,
       'tag=next',
       '',
+      // Cap retry backoff (see note on npmrcEntries) so unreachable-registry calls
+      // fail fast while reachable verdaccio reads keep their retry resilience.
+      'fetch-retry-mintimeout=100',
+      'fetch-retry-maxtimeout=1000',
       // Add auth tokens for all registries (required for NPM 11)
       `//localhost:${verdaccioPort}/:_authToken=test-auth-token`,
       `${e2eRegistryHost}/:_authToken=test-auth-token`,

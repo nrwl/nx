@@ -19,6 +19,7 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
+import { assertSupportedFrameworkVersion } from '../../utils/assert-supported-framework-version';
 import { nxVersion } from '../../utils/versions';
 import { e2eProjectGenerator } from '../e2e-project/e2e-project';
 import { initGenerator } from '../init/init';
@@ -72,6 +73,8 @@ export async function applicationGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
+  assertSupportedFrameworkVersion(tree, schema.framework);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(
@@ -139,9 +142,14 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
     });
     tasks.push(webpackInitTask);
     if (!options.skipPackageJson) {
-      const { ensureDependencies } = await import(
-        '@nx/webpack/src/utils/ensure-dependencies'
-      );
+      // Use CommonJS `require` rather than a dynamic ESM `import`:
+      // `ensurePackage` makes the on-demand-installed package available via
+      // `Module._initPaths`, which `require()` honors but ESM resolution does
+      // not. Under nodenext, a dynamic `import()` is preserved as a true ESM
+      // dynamic import, so it can't see the temp install.
+      const {
+        ensureDependencies,
+      }: typeof import('@nx/webpack/internal') = require('@nx/webpack/internal');
       tasks.push(
         ensureDependencies(tree, {
           uiFramework: options.isNest ? 'none' : 'react',

@@ -179,6 +179,15 @@ export async function retrieveProjectConfigurationsWithoutPluginInference(
   return projects;
 }
 
+/**
+ * Clears the cache backing `retrieveProjectConfigurationsWithoutPluginInference`,
+ * so a long-lived daemon picks up projects (e.g. a new local plugin) added
+ * after the first snapshot instead of serving it forever.
+ */
+export function clearProjectsWithoutPluginInferenceCache(): void {
+  projectsWithoutPluginCache.clear();
+}
+
 export function getGlobPatternsOfPlugins(
   plugins: Array<LoadedNxPlugin>
 ): string[] {

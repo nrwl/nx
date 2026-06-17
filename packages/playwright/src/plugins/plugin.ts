@@ -6,9 +6,9 @@ import {
 import {
   AggregateCreateNodesError,
   createNodesFromFiles,
-  type CreateNodesContextV2,
-  CreateNodesResultV2,
-  type CreateNodesV2,
+  type CreateNodesContext,
+  CreateNodesResultArray,
+  type CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
@@ -43,7 +43,7 @@ interface NormalizedOptions {
 type PlaywrightTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
 const playwrightConfigGlob = '**/playwright.config.{js,ts,cjs,cts,mjs,mts}';
-export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
+export const createNodes: CreateNodes<PlaywrightPluginOptions> = [
   playwrightConfigGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -70,7 +70,7 @@ export const createNodes: CreateNodesV2<PlaywrightPluginOptions> = [
         entries.map((e) => [lockFileName, ...e.externalTsconfigInputs])
       );
 
-      let results: CreateNodesResultV2 = [];
+      let results: CreateNodesResultArray = [];
       let nodeErrors: Array<[string | null, Error]> = [];
       try {
         results = await createNodesFromFiles(
@@ -113,7 +113,7 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFilePath: string,
   normalizedOptions: NormalizedOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pluginCache: PluginCache<PlaywrightTargets>,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[],
@@ -151,7 +151,7 @@ async function buildPlaywrightTargets(
   configFilePath: string,
   projectRoot: string,
   options: NormalizedOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   externalTsconfigInputs: string[]
 ): Promise<PlaywrightTargets> {
@@ -372,6 +372,7 @@ async function buildPlaywrightTargets(
     }
     targets[options.mergeReportsTargetName] = {
       executor: '@nx/playwright:merge-reports',
+      continuous: false,
       cache: true,
       inputs: ciBaseTargetConfig.inputs,
       outputs: Array.from(mergeReportsTargetOutputs),
@@ -392,7 +393,7 @@ async function buildPlaywrightTargets(
 }
 
 async function getAllTestFiles(opts: {
-  context: CreateNodesContextV2;
+  context: CreateNodesContext;
   path: string;
   config: PlaywrightTestConfig;
 }) {
@@ -651,7 +652,7 @@ interface PlaywrightEntry {
 
 async function filterPlaywrightConfigs(
   configFilePaths: readonly string[],
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<{
   entries: PlaywrightEntry[];
   preErrors: Array<[string, Error]>;

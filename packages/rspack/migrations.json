@@ -1,57 +1,26 @@
 {
   "generators": {
-    "update-20-2-0-update-with-module-federation-import": {
-      "cli": "nx",
-      "version": "20.2.0-beta.3",
-      "description": "Update the withModuleFederation import use @nx/module-federation/rspack.",
-      "factory": "./src/migrations/update-20-2-0/migrate-with-mf-import-to-new-package"
-    },
-    "ensure-nx-module-federation-package": {
-      "cli": "nx",
-      "version": "20.3.0-beta.2",
-      "description": "If workspace includes Module Federation projects, ensure the new @nx/module-federation package is installed.",
-      "factory": "./src/migrations/update-20-3-0/ensure-nx-module-federation-package"
-    },
     "remove-deprecated-rspack-options": {
       "cli": "nx",
       "version": "22.0.0-beta.1",
       "description": "Remove deprecated deleteOutputPath and sassImplementation options from rspack configurations.",
-      "factory": "./src/migrations/update-22-0-0/remove-deprecated-options"
+      "factory": "./dist/src/migrations/update-22-0-0/remove-deprecated-options"
     },
     "update-23-0-0-add-svgr-to-rspack-config": {
       "cli": "nx",
       "version": "23.0.0-beta.9",
       "description": "Updates rspack configs using React to use the new withSvgr composable function instead of the svgr option in withReact or NxReactRspackPlugin.",
-      "factory": "./src/migrations/update-23-0-0/add-svgr-to-rspack-config"
+      "factory": "./dist/src/migrations/update-23-0-0/add-svgr-to-rspack-config",
+      "documentation": "./dist/src/migrations/update-23-0-0/add-svgr-to-rspack-config.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/rspack/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     }
   },
   "packageJsonUpdates": {
-    "20.2.0": {
-      "version": "20.2.0-beta.7",
-      "packages": {
-        "@rspack/core": {
-          "version": "^1.1.5",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/dev-server": {
-          "version": "^1.0.9",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.5.0": {
-      "version": "20.5.0-beta.4",
-      "packages": {
-        "sass-loader": {
-          "version": "^16.0.4",
-          "alwaysAddToPackageJson": false
-        },
-        "@rspack/core": {
-          "version": "^1.2.2",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "21.0.1": {
       "version": "21.0.1-beta.0",
       "packages": {

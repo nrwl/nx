@@ -1,11 +1,6 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { addDependenciesToPackageJson, joinPathFragments } from '@nx/devkit';
-import {
-  nestJsVersion,
-  reflectMetadataVersion,
-  rxjsVersion,
-  tsLibVersion,
-} from './versions';
+import { tsLibVersion, versions } from './versions';
 
 export function ensureDependencies(
   tree: Tree,
@@ -15,19 +10,21 @@ export function ensureDependencies(
     ? joinPathFragments(projectRoot, 'package.json')
     : 'package.json';
 
+  const pkgVersions = versions(tree);
   return addDependenciesToPackageJson(
     tree,
     {
-      '@nestjs/common': nestJsVersion,
-      '@nestjs/core': nestJsVersion,
-      '@nestjs/platform-express': nestJsVersion,
-      'reflect-metadata': reflectMetadataVersion,
-      rxjs: rxjsVersion,
+      '@nestjs/common': pkgVersions.nestJsVersion,
+      '@nestjs/core': pkgVersions.nestJsVersion,
+      '@nestjs/platform-express': pkgVersions.nestJsVersion,
+      'reflect-metadata': pkgVersions.reflectMetadataVersion,
+      rxjs: pkgVersions.rxjsVersion,
       tslib: tsLibVersion,
     },
     {
-      '@nestjs/testing': nestJsVersion,
+      '@nestjs/testing': pkgVersions.nestJsVersion,
     },
-    packageJsonPath
+    packageJsonPath,
+    true
   );
 }

@@ -14,6 +14,7 @@ import {
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
+  readNxMigrateConfig,
   readTargetsFromPackageJson,
 } from './package-json';
 import * as pacakgeManager from './package-manager';
@@ -34,6 +35,7 @@ describe('buildTargetFromScript', () => {
 describe('installPackageToTmp', () => {
   afterEach(() => {
     jest.restoreAllMocks();
+    jest.clearAllMocks();
   });
 
   it('should always disable lifecycle scripts via environment variables', () => {
@@ -45,7 +47,6 @@ describe('installPackageToTmp', () => {
       dir: tempDir,
       cleanup,
     });
-    jest.spyOn(pacakgeManager, 'detectPackageManager').mockReturnValue('yarn');
     jest
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockReturnValue('4.0.0');
@@ -58,7 +59,7 @@ describe('installPackageToTmp', () => {
       .spyOn(childProcess, 'execSync')
       .mockReturnValue('' as any);
 
-    installPackageToTmp('nx', 'latest');
+    installPackageToTmp('nx', 'latest', 'yarn');
 
     expect(execSyncSpy).toHaveBeenCalledTimes(2);
     for (const [, options] of execSyncSpy.mock.calls) {
@@ -70,6 +71,36 @@ describe('installPackageToTmp', () => {
         })
       );
     }
+
+    cleanup();
+  });
+
+  it('should use the workspace `addDev` verbatim for pnpm (preserves `-w` when pnpm-workspace.yaml is present)', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('9.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'pnpm add -Dw',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('nx', 'latest', 'pnpm');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      'pnpm add -Dw nx@latest --ignore-scripts'
+    );
 
     cleanup();
   });
@@ -149,38 +180,6 @@ describe('readTargetsFromPackageJson', () => {
         ],
         "executor": "totally-different-executor",
         "options": {},
-      }
-    `);
-
-    const nxJson3 = {
-      targetDefaults: [
-        {
-          target: 'nx-release-publish',
-          executor: '@nx/js:release-publish',
-          dependsOn: ['build'],
-          options: {
-            dryRun: true,
-          },
-        },
-      ],
-    };
-    const result3 = readTargetsFromPackageJson(
-      packageJson,
-      nxJson3,
-      workspaceRoot,
-      '/root',
-      packageManagerCommand
-    );
-    expect(result3['nx-release-publish']).toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^nx-release-publish",
-          "build",
-        ],
-        "executor": "@nx/js:release-publish",
-        "options": {
-          "dryRun": true,
-        },
       }
     `);
   });
@@ -851,5 +850,54 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('readNxMigrateConfig', () => {
+  it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should carry supportsOptionalMigrations from the ng-update config', () => {
+    const config = readNxMigrateConfig({
+      'ng-update': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: true,
+      },
+    });
+
+    expect(config).toMatchObject({
+      migrations: './migrations.json',
+      supportsOptionalMigrations: true,
+    });
+  });
+
+  it('should not set supportsOptionalMigrations when the config omits it', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': { migrations: './migrations.json' },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
+  });
+
+  it('should not set supportsOptionalMigrations when the config sets it to false', () => {
+    const config = readNxMigrateConfig({
+      'nx-migrations': {
+        migrations: './migrations.json',
+        supportsOptionalMigrations: false,
+      },
+    });
+
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 });

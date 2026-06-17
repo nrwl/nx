@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-common",
+    "outDir": "dist",
     "types": [],
     "lib": ["DOM", "ES2022"],
     "composite": true,

@@ -39,6 +39,7 @@ import { isAiAgent } from '../../native';
 import { Agent } from '../../ai/utils';
 import { detectAiAgent } from '../../ai/detect-ai-agent';
 import { MessageOptionKey, recordStat } from '../../utils/ab-testing';
+import { ensureAnalyticsPreferenceSet } from '../../utils/analytics-prompt';
 import { isCI } from '../../utils/is-ci';
 import { detectPackageManager } from '../../utils/package-manager';
 import {
@@ -75,7 +76,11 @@ export async function initHandler(
   let cleanup: () => void | undefined;
   try {
     await ensurePackageHasProvenance('nx', 'latest');
-    const packageInstallResults = installPackageToTmp('nx', 'latest');
+    const packageInstallResults = installPackageToTmp(
+      'nx',
+      'latest',
+      detectPackageManager(process.cwd())
+    );
     cleanup = packageInstallResults.cleanup;
 
     let modulePath = require.resolve('nx/src/command-line/init/init-v2.js', {
@@ -461,6 +466,11 @@ async function runInit(
     setNeverConnectToCloud(repoRoot);
   }
 
+  const analyticsPrompt = await ensureAnalyticsPreferenceSet(
+    repoRoot,
+    options.interactive
+  );
+
   await recordStat({
     command: 'init',
     nxVersion: version,
@@ -468,6 +478,7 @@ async function runInit(
     meta: {
       type: 'complete',
       nxCloudArg: nxCloudChoice,
+      analyticsPrompt,
       nodeVersion: process.versions.node,
       os: process.platform,
       packageManager: detectPackageManager(),

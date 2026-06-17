@@ -53,7 +53,7 @@ describe('nx release source tag selection', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 

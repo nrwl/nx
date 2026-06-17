@@ -1,15 +1,15 @@
-import { CreateNodesContextV2, CreateNodesResult } from './public-api';
+import { CreateNodesContext, CreateNodesResult } from './public-api';
 import { AggregateCreateNodesError } from '../error-types';
 export async function createNodesFromFiles<T = unknown>(
   createNodes: (
     projectConfigurationFile: string,
     options: T | undefined,
-    context: CreateNodesContextV2 & { configFiles: readonly string[] },
+    context: CreateNodesContext & { configFiles: readonly string[] },
     idx: number
   ) => CreateNodesResult | Promise<CreateNodesResult>,
   configFiles: readonly string[],
   options: T,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ) {
   // Settle each file in parallel but capture per-input outcomes so the
   // returned arrays preserve `configFiles` order. Pushing into shared
