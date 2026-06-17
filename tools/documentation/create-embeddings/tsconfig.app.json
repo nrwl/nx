@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "out-tsc",
     "rootDir": "src",
+    "tsBuildInfoFile": "out-tsc/tsconfig.app.tsbuildinfo",
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "types": ["node"],
