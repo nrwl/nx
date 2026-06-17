@@ -7,22 +7,10 @@ const workspaceRoot = process.cwd();
 // Set environment variable for documentation generation
 process.env.NX_GENERATE_DOCS_PROCESS = 'true';
 
-// Register ts-node to handle TypeScript files
-require('ts-node').register({
-  project: join(workspaceRoot, 'tsconfig.base.json'),
-  transpileOnly: true,
-  compilerOptions: {
-    module: 'commonjs',
-    // TS6 requires an explicit rootDir when it cannot infer the layout (TS5011)
-    rootDir: workspaceRoot,
-    moduleResolution: 'node',
-  },
-});
-
-// TypeScript paths are now handled by pnpm workspaces, no need for tsconfig-paths
-
+// Load Nx's CLI command modules from their tsgo-compiled output instead of
+// transpiling the TypeScript source at runtime with ts-node.
 const { examples: cliExamples, cliDocsCommandMetadata } = importFresh(
-  join(workspaceRoot, 'packages/nx/src/command-line/examples')
+  join(workspaceRoot, 'packages/nx/dist/src/command-line/examples')
 );
 
 // Inline command parser functions
@@ -138,10 +126,10 @@ async function runCliParser() {
     // Look for nx-commands in the main Nx repository
     const nxCommandsPath = join(
       workspaceRoot,
-      'packages/nx/src/command-line/nx-commands'
+      'packages/nx/dist/src/command-line/nx-commands'
     );
 
-    if (!existsSync(nxCommandsPath + '.ts')) {
+    if (!existsSync(nxCommandsPath + '.js')) {
       throw new Error(`Cannot find nx-commands at ${nxCommandsPath}`);
     }
 
