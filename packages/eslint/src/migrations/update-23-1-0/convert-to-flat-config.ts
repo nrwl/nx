@@ -1,4 +1,4 @@
-import { getProjects, readJson, type Tree } from '@nx/devkit';
+import { getProjects, readJson, readNxJson, type Tree } from '@nx/devkit';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
@@ -19,6 +19,15 @@ const REMOVED_FORMATTERS = new Set([
   'tap',
 ]);
 
+// Executor options the flat-config lint executor rejects outright (it throws when
+// any is present). The generator folds project-level `ignorePath` into the flat
+// config `ignores`, so that one is reported only when inherited from targetDefaults.
+const FLAT_CONFIG_UNSUPPORTED_OPTIONS = [
+  'ignorePath',
+  'resolvePluginsRelativeTo',
+  'reportUnusedDisableDirectives',
+] as const;
+
 const ROOT_ESLINTRC_CANDIDATES = [
   '.eslintrc.base.json',
   '.eslintrc',
@@ -26,6 +35,8 @@ const ROOT_ESLINTRC_CANDIDATES = [
   '.eslintrc.yaml',
   '.eslintrc.yml',
 ];
+
+const ESLINT_LINT_EXECUTOR = '@nx/eslint:lint';
 
 type RootConfigState = 'flat' | 'js' | 'convertible' | 'none';
 
@@ -48,6 +59,7 @@ export default async function update(tree: Tree): Promise<{
   const userExplicitRules = collectUserRuleIds(tree);
   const skippedJsConfigs = findJsProjectConfigs(tree);
   const removedFormatterTargets = findRemovedFormatterTargets(tree);
+  const unsupportedOptionTargets = findUnsupportedFlatConfigOptionTargets(tree);
 
   const rootState = detectRootConfigState(tree);
   if (rootState === 'none') {
@@ -99,6 +111,19 @@ export default async function update(tree: Tree): Promise<{
     );
     nextSteps.push(
       `Update lint targets that use a removed ESLint formatter: ${removedFormatterTargets.join(
+        '; '
+      )}.`
+    );
+  }
+
+  if (unsupportedOptionTargets.length > 0) {
+    agentContext.push(
+      `These lint targets set an ESLint option that flat config no longer supports, so the flat-config executor will throw: ${unsupportedOptionTargets.join(
+        '; '
+      )}. Remove each option from its target or nx.json targetDefaults and migrate the behavior into the flat config where it applies: fold ignorePath patterns into the ignores block, set reportUnusedDisableDirectives via linterOptions. resolvePluginsRelativeTo has no flat-config equivalent. The workspace must still lint cleanly afterward.`
+    );
+    nextSteps.push(
+      `Remove ESLint executor options that flat config no longer supports: ${unsupportedOptionTargets.join(
         '; '
       )}.`
     );
@@ -179,6 +204,24 @@ function findJsProjectConfigs(tree: Tree): string[] {
 
 function findRemovedFormatterTargets(tree: Tree): string[] {
   const targets: string[] = [];
+
+  // Emits one entry per option set (default + each configuration) whose `format`
+  // names a formatter ESLint removed in v9.
+  const collectRemovedFormatters = (
+    baseLabel: string,
+    optionSets: Array<[string | null, Record<string, any> | undefined]>
+  ) => {
+    for (const [configuration, options] of optionSets) {
+      const format = options?.format;
+      if (typeof format === 'string' && REMOVED_FORMATTERS.has(format)) {
+        const label = configuration
+          ? `${baseLabel}:${configuration}`
+          : baseLabel;
+        targets.push(`${label} (format: "${format}")`);
+      }
+    }
+  };
+
   for (const [project, projectConfig] of getProjects(tree)) {
     for (const [targetName, target] of Object.entries(
       projectConfig.targets ?? {}
@@ -191,18 +234,95 @@ function findRemovedFormatterTargets(tree: Tree): string[] {
         [null, target.options],
         ...Object.entries(target.configurations ?? {}),
       ];
-      for (const [configuration, options] of optionSets) {
-        const format = options?.format;
-        if (typeof format === 'string' && REMOVED_FORMATTERS.has(format)) {
+      collectRemovedFormatters(`${project}:${targetName}`, optionSets);
+    }
+  }
+
+  // Lint options are commonly centralized in nx.json targetDefaults; a removed
+  // formatter set there is inherited by every lint target and would be missed by
+  // the per-project scan above (getProjects does not merge targetDefaults).
+  const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
+  for (const [name, target] of Object.entries(targetDefaults)) {
+    if (name !== 'lint' && name !== ESLINT_LINT_EXECUTOR) {
+      continue;
+    }
+    const optionSets: Array<[string | null, Record<string, any> | undefined]> =
+      [[null, target.options], ...Object.entries(target.configurations ?? {})];
+    collectRemovedFormatters(`targetDefaults["${name}"]`, optionSets);
+  }
+
+  return targets;
+}
+
+// Finds lint executor options that flat config rejects and that survive the
+// conversion, so they can be surfaced for manual cleanup. The flat-config executor
+// throws on these, so an inherited one fails every affected lint target.
+function findUnsupportedFlatConfigOptionTargets(tree: Tree): string[] {
+  const entries: string[] = [];
+
+  const collect = (
+    baseLabel: string,
+    optionSets: Array<[string | null, Record<string, any> | undefined]>,
+    candidates: readonly string[]
+  ) => {
+    for (const [configuration, options] of optionSets) {
+      for (const option of candidates) {
+        const value = options?.[option];
+        // reportUnusedDisableDirectives only throws when truthy; the others throw
+        // whenever they are set, matching resolveAndInstantiateESLint.
+        const present =
+          option === 'reportUnusedDisableDirectives'
+            ? !!value
+            : value !== undefined;
+        if (present) {
           const label = configuration
-            ? `${project}:${targetName}:${configuration}`
-            : `${project}:${targetName}`;
-          targets.push(`${label} (format: "${format}")`);
+            ? `${baseLabel}:${configuration}`
+            : baseLabel;
+          entries.push(`${label} (${option})`);
         }
       }
     }
+  };
+
+  // Project lint targets keep the options the generator does not strip; it already
+  // removes `eslintConfig` and `ignorePath`, so exclude ignorePath here.
+  const projectCandidates = FLAT_CONFIG_UNSUPPORTED_OPTIONS.filter(
+    (option) => option !== 'ignorePath'
+  );
+  for (const [project, projectConfig] of getProjects(tree)) {
+    for (const [targetName, target] of Object.entries(
+      projectConfig.targets ?? {}
+    )) {
+      if (target.executor !== ESLINT_LINT_EXECUTOR) {
+        continue;
+      }
+      const optionSets: Array<
+        [string | null, Record<string, any> | undefined]
+      > = [
+        [null, target.options],
+        ...Object.entries(target.configurations ?? {}),
+      ];
+      collect(`${project}:${targetName}`, optionSets, projectCandidates);
+    }
   }
-  return targets;
+
+  // targetDefaults inherit into every lint target, including `ignorePath`, which
+  // the generator only cleans up at the project level.
+  const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
+  for (const [name, target] of Object.entries(targetDefaults)) {
+    if (name !== 'lint' && name !== ESLINT_LINT_EXECUTOR) {
+      continue;
+    }
+    const optionSets: Array<[string | null, Record<string, any> | undefined]> =
+      [[null, target.options], ...Object.entries(target.configurations ?? {})];
+    collect(
+      `targetDefaults["${name}"]`,
+      optionSets,
+      FLAT_CONFIG_UNSUPPORTED_OPTIONS
+    );
+  }
+
+  return entries;
 }
 
 // Scans the generated flat configs for the FlatCompat shim so the advisory only

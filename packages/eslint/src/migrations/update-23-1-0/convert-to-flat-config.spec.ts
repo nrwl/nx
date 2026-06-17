@@ -274,4 +274,177 @@ describe('convert-to-flat-config migration', () => {
       )
     ).toBe(true);
   });
+
+  it('should surface a removed formatter set in nx.json targetDefaults', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        ...json.targetDefaults,
+        lint: { ...json.targetDefaults?.lint, options: { format: 'junit' } },
+      };
+      return json;
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    expect(
+      result!.agentContext.some(
+        (entry) =>
+          entry.includes('removed in v9') &&
+          entry.includes('targetDefaults["lint"] (format: "junit")')
+      )
+    ).toBe(true);
+    expect(
+      result!.nextSteps.some((step) =>
+        step.includes('targetDefaults["lint"] (format: "junit")')
+      )
+    ).toBe(true);
+  });
+
+  it('should surface a removed formatter set on an executor-keyed targetDefaults configuration', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        ...json.targetDefaults,
+        '@nx/eslint:lint': { configurations: { ci: { format: 'compact' } } },
+      };
+      return json;
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    expect(
+      result!.agentContext.some((entry) =>
+        entry.includes(
+          'targetDefaults["@nx/eslint:lint"]:ci (format: "compact")'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('should convert a base-only root config without a sibling .eslintrc.json', async () => {
+    tree.write(
+      '.eslintrc.base.json',
+      JSON.stringify({ root: true, rules: { 'no-console': 'error' } })
+    );
+
+    const result = await update(tree);
+
+    // The base config is converted and the original removed; no sibling root
+    // config existed, so none is fabricated (and the migration does not throw).
+    expect(tree.exists('eslint.base.config.mjs')).toBeTruthy();
+    expect(tree.exists('.eslintrc.base.json')).toBeFalsy();
+    expect(tree.exists('eslint.config.mjs')).toBeFalsy();
+    expect(result).toBeDefined();
+  });
+
+  it('should surface a flat-config-unsupported option inherited from nx.json targetDefaults', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        ...json.targetDefaults,
+        lint: {
+          ...json.targetDefaults?.lint,
+          options: { ignorePath: '.eslintignore' },
+        },
+      };
+      return json;
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    expect(
+      result!.agentContext.some(
+        (entry) =>
+          entry.includes('flat config no longer supports') &&
+          entry.includes('targetDefaults["lint"] (ignorePath)')
+      )
+    ).toBe(true);
+    expect(
+      result!.nextSteps.some((step) =>
+        step.includes('targetDefaults["lint"] (ignorePath)')
+      )
+    ).toBe(true);
+  });
+
+  it('should surface an unsupported option on an executor-keyed targetDefaults configuration', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        ...json.targetDefaults,
+        '@nx/eslint:lint': {
+          configurations: { ci: { resolvePluginsRelativeTo: '.' } },
+        },
+      };
+      return json;
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    expect(
+      result!.agentContext.some((entry) =>
+        entry.includes(
+          'targetDefaults["@nx/eslint:lint"]:ci (resolvePluginsRelativeTo)'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('should surface project lint options the generator leaves but not the ignorePath it strips', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    tree.write('libs/opt-lib/.eslintrc.json', JSON.stringify({ rules: {} }));
+    addProjectConfiguration(tree, 'opt-lib', {
+      root: 'libs/opt-lib',
+      targets: {
+        lint: {
+          executor: '@nx/eslint:lint',
+          options: {
+            lintFilePatterns: ['libs/opt-lib'],
+            ignorePath: 'libs/opt-lib/.eslintignore',
+            resolvePluginsRelativeTo: '.',
+            reportUnusedDisableDirectives: true,
+          },
+        },
+      },
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    const surfaced = result!.nextSteps.find((step) =>
+      step.includes('flat config no longer supports')
+    );
+    expect(surfaced).toContain('opt-lib:lint (resolvePluginsRelativeTo)');
+    expect(surfaced).toContain('opt-lib:lint (reportUnusedDisableDirectives)');
+    // The generator folds project-level ignorePath into the flat config ignores,
+    // so it must not be reported as an unsupported leftover.
+    expect(surfaced).not.toContain('opt-lib:lint (ignorePath)');
+  });
+
+  it('should not surface reportUnusedDisableDirectives when it is disabled', async () => {
+    tree.write('.eslintrc.json', JSON.stringify({ root: true }));
+    updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+      json.targetDefaults = {
+        ...json.targetDefaults,
+        lint: {
+          ...json.targetDefaults?.lint,
+          options: { reportUnusedDisableDirectives: false },
+        },
+      };
+      return json;
+    });
+
+    const result = await update(tree);
+
+    expect(result).toBeDefined();
+    expect(
+      result!.agentContext.some((entry) =>
+        entry.includes('reportUnusedDisableDirectives')
+      )
+    ).toBe(false);
+  });
 });

@@ -123,15 +123,20 @@ function convertRootToFlatConfig(
       keepExistingVersions
     );
   }
-  convertConfigToFlatConfig(
-    tree,
-    '',
-    eslintFile.replace('.base.', '.'),
-    `eslint.config.${format}`,
-    format,
-    undefined,
-    keepExistingVersions
-  );
+  // A workspace can ship `.eslintrc.base.json` without a sibling root config, so
+  // only convert the non-base root config when it actually exists.
+  const rootEslintFile = eslintFile.replace('.base.', '.');
+  if (tree.exists(rootEslintFile)) {
+    convertConfigToFlatConfig(
+      tree,
+      '',
+      rootEslintFile,
+      `eslint.config.${format}`,
+      format,
+      undefined,
+      keepExistingVersions
+    );
+  }
 }
 
 const ESLINT_LINT_EXECUTOR = '@nx/eslint:lint';
