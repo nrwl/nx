@@ -448,19 +448,12 @@ impl TasksList {
     /// Returns true if a task is nested under any batch group, expanded or
     /// collapsed. Unlike [`Self::is_task_nested_in_expanded_batch`] (used for
     /// rendering), this drives in-progress-list membership: a batched task is
-    /// never an independent selection target — the batch group represents it.
+    /// never an independent selection target; the batch group represents it.
     fn is_task_in_any_batch(&self, task_id: &str) -> bool {
-        let collections = [&self.display_items, &self.filtered_display_items];
-        for collection in &collections {
-            for display_item in *collection {
-                if let DisplayItem::BatchGroup(batch_group) = display_item {
-                    if batch_group.nested_tasks.contains(&task_id.to_string()) {
-                        return true;
-                    }
-                }
-            }
-        }
-        false
+        self.display_items.iter().any(|item| {
+            matches!(item, DisplayItem::BatchGroup(batch_group)
+                if batch_group.nested_tasks.contains(task_id))
+        })
     }
 
     /// Returns true if every task in the batch has reached a terminal state.
@@ -482,7 +475,7 @@ impl TasksList {
 
     /// Whether a completing batch's output is being followed by a focused output
     /// pane (spacebar mode), in which case selection should stay on the batch's
-    /// last task so its output remains visible — mirroring the standalone
+    /// last task so its output remains visible, mirroring the standalone
     /// terminal-pane exception in [`Self::is_terminal_showing_task`].
     fn is_terminal_showing_batch(&self) -> bool {
         matches!(self.focus, Focus::MultipleOutput(_)) && self.spacebar_mode
@@ -1493,7 +1486,7 @@ impl TasksList {
                 // a completed entry.
                 self.selection_manager.lock().await_next_allocation();
             } else if let Some(entry) = keep_last {
-                // Last work — keep a relevant completed entry selected.
+                // Last work, so keep a relevant completed entry selected.
                 self.selection_manager.lock().select(Some(entry));
             }
             return;
@@ -3425,7 +3418,7 @@ mod tests {
         // Regression for the reported bug: when a selected in-progress batch
         // group completes while pending tasks remain, selection must enter
         // AwaitingNextAllocation (no selection) rather than latching onto a
-        // completed batch task — then promote to the next task that starts.
+        // completed batch task. Selection then promotes to the next task that starts.
         let (mut tasks_list, test_tasks) = create_test_tasks_list_with_batches();
         let mut terminal = create_test_terminal(120, 20);
         tasks_list.update(Action::StartCommand(Some(2))).unwrap();

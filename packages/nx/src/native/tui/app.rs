@@ -626,7 +626,7 @@ impl App {
 
         // Success and failure trigger ungrouping. Route through the action queue
         // (like StartBatch) so completion is applied on the event-loop thread
-        // AFTER the nested tasks' queued status/timing updates — otherwise the
+        // AFTER the nested tasks' queued status/timing updates. Otherwise the
         // direct call races those updates and ungroups against stale component state.
         self.dispatch_action(Action::EndBatch(batch_id, status));
     }
