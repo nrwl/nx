@@ -99,6 +99,9 @@ export interface PackageJson {
     ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
+  // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
+  // or git specs; `true` approves, `false` denies.
+  allowScripts?: Record<string, boolean>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
