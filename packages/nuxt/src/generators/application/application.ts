@@ -5,11 +5,13 @@ import {
   formatFiles,
   generateFiles,
   GeneratorCallback,
+  getPackageManagerCommand,
   joinPathFragments,
   offsetFromRoot,
   runTasksInSerial,
   toJS,
   Tree,
+  workspaceRoot,
   writeJson,
 } from '@nx/devkit';
 import { Schema } from './schema';
@@ -244,11 +246,14 @@ export async function applicationGeneratorInternal(tree: Tree, schema: Schema) {
 
   tasks.push(() => {
     try {
-      execSync(`npx -y nuxi prepare`, {
-        cwd: options.appProjectRoot,
-
-        windowsHide: true,
-      });
+      // Resolve `nuxi` from the workspace root (where it's installed), not the app
+      // subdir: PM execs like `pnpm exec` don't walk up the tree the way `npx` does.
+      execSync(
+        `${getPackageManagerCommand().exec} nuxi prepare "${
+          options.appProjectRoot
+        }"`,
+        { cwd: workspaceRoot, windowsHide: true }
+      );
     } catch (e) {
       console.error(
         `Failed to run \`nuxi prepare\` in "${options.appProjectRoot}". Please run the command manually.`
