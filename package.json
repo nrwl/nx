@@ -177,7 +177,7 @@
     "convert-source-map": "^2.0.0",
     "copy-webpack-plugin": "^14.0.0",
     "css-minimizer-webpack-plugin": "^8.0.0",
-    "cypress": "15.15.0",
+    "cypress": "15.17.0",
     "cytoscape": "^3.18.2",
     "cytoscape-dagre": "^2.4.0",
     "cz-git": "^1.4.0",
