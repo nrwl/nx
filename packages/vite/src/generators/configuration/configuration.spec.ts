@@ -26,6 +26,7 @@ import { LibraryGeneratorSchema } from '@nx/js/internal';
 
 describe('@nx/vite:configuration', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   describe('transform React app to use Vite', () => {
     beforeAll(async () => {
@@ -273,7 +274,14 @@ describe('@nx/vite:configuration', () => {
     };
 
     beforeEach(() => {
+      envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
       tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
+    });
+
+    afterEach(() => {
+      if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+      else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
     });
 
     it('should add build and test targets with vite and vitest', async () => {
@@ -288,6 +296,44 @@ describe('@nx/vite:configuration', () => {
       expect(tree.read('my-lib/vite.config.mts', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/README.md', 'utf-8')).toMatchSnapshot();
       expect(tree.read('my-lib/tsconfig.lib.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
+      expect(tree.read('my-lib/eslint.config.mjs', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import baseConfig from '../eslint.config.mjs';
+
+        export default [
+          ...baseConfig,
+          {
+            files: ['**/*.json'],
+            rules: {
+              '@nx/dependency-checks': [
+                'error',
+                {
+                  ignoredFiles: [
+                    '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
+                    '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                  ],
+                },
+              ],
+            },
+            languageOptions: {
+              parser: await import('jsonc-eslint-parser'),
+            },
+          },
+        ];
+        "
+      `);
+    });
+
+    it('should add dependency-checks rule to .eslintrc.json (eslintrc mode)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await jsLibraryGenerator(tree, {
+        ...defaultOptions,
+        directory: 'my-lib',
+        bundler: 'vite',
+        unitTestRunner: 'vitest',
+      });
+
       expect(readJson(tree, 'my-lib/.eslintrc.json').overrides).toContainEqual({
         files: ['*.json'],
         parser: 'jsonc-eslint-parser',

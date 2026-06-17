@@ -16,8 +16,10 @@ jest.mock('@nx/devkit', () => ({
 
 describe('remove-angular-eslint-rules', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
     const projectConfig: ProjectConfiguration = {
@@ -45,7 +47,19 @@ describe('remove-angular-eslint-rules', () => {
     addProjectConfiguration(tree, projectConfig.name, projectConfig);
   });
 
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
+  });
+
   describe('.eslintrc.json', () => {
+    beforeEach(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    });
+
     it.each(rulesToRemove)('should remove %s rule', async (rule) => {
       writeJson(tree, 'apps/app1/.eslintrc.json', {
         overrides: [

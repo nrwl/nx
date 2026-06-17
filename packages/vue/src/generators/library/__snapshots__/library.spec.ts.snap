@@ -106,36 +106,6 @@ exports[`library should add vue and vitest to package.json when non-buildable 2`
 "
 `;
 
-exports[`library should generate files 1`] = `
-{
-  "extends": [
-    "plugin:vue/vue3-essential",
-    "eslint:recommended",
-    "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
-    "../.eslintrc.json",
-  ],
-  "ignorePatterns": [
-    "!**/*",
-    "**/vitest.config.*.timestamp*",
-  ],
-  "overrides": [
-    {
-      "files": [
-        "*.ts",
-        "*.tsx",
-        "*.js",
-        "*.jsx",
-        "*.vue",
-      ],
-      "rules": {
-        "vue/multi-word-component-names": "off",
-      },
-    },
-  ],
-}
-`;
-
 exports[`library should ignore test files in tsconfig.lib.json 1`] = `
 [
   "src/**/__tests__/*",

@@ -15,9 +15,17 @@ import { join } from 'path';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should add a .gitkeep file to the public directory', async () => {
@@ -440,7 +448,7 @@ describe('app', () => {
         });
       });
 
-      it('should install eslint-config-next@14 when an existing Next.js 14 project is detected', async () => {
+      it('should install eslint-config-next@15 when an existing Next.js 14 project is detected', async () => {
         tree.write(
           '/package.json',
           JSON.stringify({
@@ -459,15 +467,18 @@ describe('app', () => {
         });
 
         const packageJson = readJson(tree, '/package.json');
+        // Next.js 14 projects get eslint-config-next@15; config 14 only
+        // supports ESLint v8, which is no longer supported.
         expect(packageJson).toMatchObject({
           devDependencies: {
-            'eslint-config-next': '~14.2.35',
-            '@next/eslint-plugin-next': '~14.2.35',
+            'eslint-config-next': '^15.5.18',
+            '@next/eslint-plugin-next': '^15.5.18',
           },
         });
       });
 
       it('should add .eslintrc.json and dependencies', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await applicationGenerator(tree, {
           directory: 'myapp',
           style: 'css',
@@ -531,6 +542,7 @@ describe('app', () => {
 
     describe('root level', () => {
       it('should adjust eslint config for root level projects', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         const name = uniq();
 
         await applicationGenerator(tree, {
@@ -677,6 +689,7 @@ describe('app', () => {
     });
 
     it('should not ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',
@@ -983,6 +996,7 @@ describe('app', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await applicationGenerator(tree, {
         directory: 'myapp',
         style: 'css',

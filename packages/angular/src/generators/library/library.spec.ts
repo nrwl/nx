@@ -30,6 +30,7 @@ jest.mock('@nx/devkit', () => {
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
     await generateTestLibrary(tree, {
@@ -46,12 +47,22 @@ describe('lib', () => {
   }
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     projectGraph = {
       dependencies: {},
       nodes: {},
     };
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -672,72 +683,7 @@ describe('lib', () => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
-      expect(tree.read('my-dir/my-lib/.eslintrc.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": [
-            "../../.eslintrc.json"
-          ],
-          "ignorePatterns": [
-            "!**/*"
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts"
-              ],
-              "extends": [
-                "plugin:@nx/angular",
-                "plugin:@angular-eslint/template/process-inline-templates"
-              ],
-              "rules": {
-                "@angular-eslint/directive-selector": [
-                  "error",
-                  {
-                    "type": "attribute",
-                    "prefix": "lib",
-                    "style": "camelCase"
-                  }
-                ],
-                "@angular-eslint/component-selector": [
-                  "error",
-                  {
-                    "type": "element",
-                    "prefix": "lib",
-                    "style": "kebab-case"
-                  }
-                ]
-              }
-            },
-            {
-              "files": [
-                "*.html"
-              ],
-              "extends": [
-                "plugin:@nx/angular-template"
-              ],
-              "rules": {}
-            },
-            {
-              "files": [
-                "*.json"
-              ],
-              "parser": "jsonc-eslint-parser",
-              "rules": {
-                "@nx/dependency-checks": [
-                  "error",
-                  {
-                    "ignoredFiles": [
-                      "{projectRoot}/eslint.config.{js,cjs,mjs}"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }
-        "
-      `);
+      expect(tree.exists('my-dir/my-lib/eslint.config.mjs')).toBeTruthy();
 
       // Make sure these have properties
       [
@@ -760,11 +706,6 @@ describe('lib', () => {
           path: 'my-dir/my-lib/tsconfig.lib.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
-        },
-        {
-          path: 'my-dir/my-lib/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -1335,6 +1276,7 @@ describe('lib', () => {
 
       it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({ linter: 'eslint' });
 
         // ASSERT
@@ -1391,6 +1333,7 @@ describe('lib', () => {
       });
 
       it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
           setParserOptionsProject: true,
@@ -1411,70 +1354,65 @@ describe('lib', () => {
 
         // ASSERT
 
-        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        const eslintConfig = tree.read('my-lib/eslint.config.mjs', 'utf-8');
         expect(eslintConfig).toMatchInlineSnapshot(`
-          {
-            "extends": [
-              "../.eslintrc.json",
-            ],
-            "ignorePatterns": [
-              "!**/*",
-            ],
-            "overrides": [
+          "import nx from "@nx/eslint-plugin";
+          import baseConfig from "../eslint.config.mjs";
+
+          export default [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              ...baseConfig,
               {
-                "extends": [
-                  "plugin:@nx/angular",
-                  "plugin:@angular-eslint/template/process-inline-templates",
-                ],
-                "files": [
-                  "*.ts",
-                ],
-                "rules": {
-                  "@angular-eslint/component-selector": [
-                    "error",
-                    {
-                      "prefix": "lib",
-                      "style": "kebab-case",
-                      "type": "element",
-                    },
+                  files: [
+                      "**/*.json"
                   ],
-                  "@angular-eslint/directive-selector": [
-                    "error",
-                    {
-                      "prefix": "lib",
-                      "style": "camelCase",
-                      "type": "attribute",
-                    },
-                  ],
-                },
+                  rules: {
+                      "@nx/dependency-checks": [
+                          "error",
+                          {
+                              ignoredFiles: [
+                                  "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
+                              ]
+                          }
+                      ]
+                  },
+                  languageOptions: {
+                      parser: await import("jsonc-eslint-parser")
+                  }
               },
               {
-                "extends": [
-                  "plugin:@nx/angular-template",
-                ],
-                "files": [
-                  "*.html",
-                ],
-                "rules": {},
-              },
-              {
-                "files": [
-                  "*.json",
-                ],
-                "parser": "jsonc-eslint-parser",
-                "rules": {
-                  "@nx/dependency-checks": [
-                    "error",
-                    {
-                      "ignoredFiles": [
-                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                  files: [
+                      "**/*.ts"
+                  ],
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "lib",
+                              style: "camelCase"
+                          }
                       ],
-                    },
-                  ],
-                },
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "lib",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
               },
-            ],
-          }
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
+              }
+          ];
+          "
         `);
       });
     });
