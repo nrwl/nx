@@ -31,8 +31,14 @@ export interface ChainLink {
 export interface ThrottleSummary {
   runDuration: number;
   criticalPathDuration: number;
-  /** The critical path (the floor), each link annotated with how it was held up. */
-  criticalPathChain: ChainLink[];
+  /** Number of tasks on the critical path (the floor). */
+  criticalPathTaskCount: number;
+  /**
+   * The lineage of the last task to finish (root → terminal), each link tagged
+   * with how it was held up. This is what determined the run's finish, so its
+   * waits explain the overhead — and it's what we display.
+   */
+  finishChain: ChainLink[];
   totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
@@ -370,6 +376,70 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
+   * The lineage of the LAST task to finish: walk back from the max-endTime task
+   * through whatever it waited on (its latest-finishing dependency or batch
+   * predecessor). This is "what determined the finish" — and unlike the critical
+   * path (the longest-*duration* chain = the floor), it follows the task that
+   * actually finished last, which in a slot-starved run may be an off-path task
+   * that queued for a slot. Its waits are therefore what explain the overhead.
+   */
+  private finishLineage(durations: Map<string, number>): string[] {
+    let terminal: string | null = null;
+    let maxEnd = -Infinity;
+    for (const id of durations.keys()) {
+      const end = this.timings.get(id)?.endTime;
+      if (end != null && end > maxEnd) {
+        maxEnd = end;
+        terminal = id;
+      }
+    }
+    const path: string[] = [];
+    const seen = new Set<string>();
+    for (let node = terminal; node != null && !seen.has(node); ) {
+      seen.add(node);
+      path.unshift(node);
+      node = this.latestFinishingPredecessor(node, durations);
+    }
+    return path;
+  }
+
+  /**
+   * The predecessor (real dependency or earlier batch sibling) that finished
+   * latest, and thus gated this task's start. Mirrors criticalPath's predecessor
+   * set, but picks by end time (who held this one up) rather than finish
+   * estimate (who makes the floor longest).
+   */
+  private latestFinishingPredecessor(
+    id: string,
+    durations: Map<string, number>
+  ): string | null {
+    const start = this.timings.get(id)?.startTime ?? Infinity;
+    let best: string | null = null;
+    let bestEnd = -Infinity;
+    for (const dep of this.taskGraph.dependencies[id] ?? []) {
+      if (!durations.has(dep)) {
+        continue;
+      }
+      const end = this.timings.get(dep)?.endTime ?? -Infinity;
+      if (end > bestEnd) {
+        bestEnd = end;
+        best = dep;
+      }
+    }
+    for (const sibling of this.batchSiblings.get(id) ?? []) {
+      if (!durations.has(sibling)) {
+        continue;
+      }
+      const end = this.timings.get(sibling)?.endTime ?? -Infinity;
+      if (end <= start && end > bestEnd) {
+        bestEnd = end;
+        best = sibling;
+      }
+    }
+    return best;
+  }
+
+  /**
    * Compute the structured throttle summary, or `null` when no discrete task
    * timings were recorded. Pure aside from reading `os` / `process.env.CI`.
    */
@@ -423,12 +493,13 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const segments = this.buildSegments(timed, eligible, parallel);
     const hashWindows = this.hashWindows();
 
-    // The critical path (the floor), each link tagged with how it was held up.
-    // This is both what we display AND the basis for splitting the overhead: the
-    // run exceeds the floor because of the waits ON this chain, so we read the
-    // split straight off it — no separate global-occupancy number that could
-    // disagree with what we print.
-    const criticalPathChain: ChainLink[] = criticalPathTasks.map((id, idx) => {
+    // The chain that actually DETERMINED THE FINISH: the last-finishing task's
+    // lineage. We both display it and read the overhead split off it, so the
+    // buckets always agree with what's printed. In a critical-path-bound run
+    // this is the critical path; when an off-path task finishes last (it cleared
+    // its deps but queued for a slot), it's that task's lineage — which is where
+    // the overhead actually came from, and where the slot/hashing wait is shown.
+    const annotate = (id: string, idx: number): ChainLink => {
       const start = this.timings.get(id)?.startTime ?? 0;
       const ready = eligible.get(id) ?? start;
       const wait = Math.max(0, start - ready);
@@ -445,7 +516,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
           overlap(ready, start, hashWindows) >= wait / 2 ? 'hashing' : 'other';
       }
       return { id, duration: durations.get(id) ?? 0, gate, wait };
-    });
+    };
+    const finishLineageTasks = this.finishLineage(durations);
+    const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
 
     // Coordinator hashing that ran BEFORE the first task started — the task
     // window would otherwise miss it. Added to both the overhead and the
@@ -458,22 +531,21 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const runDuration = taskWindow + preDispatchHash;
     const overhead = Math.max(0, runDuration - criticalPathDuration);
 
-    // Split the overhead by CAUSE, read off the chain that determined the
-    // finish. Coordinator overhead = hashing/scheduling waits ON the critical
-    // path + the chain root's eligibility delay (e.g. waiting for a continuous
-    // `serve` to come up) + pre-dispatch hashing — none of which more
-    // parallelism removes. Everything else above the floor is slot contention.
-    // Capped so the two always sum to the overhead.
-    const coordinatorWait = criticalPathChain.reduce(
+    // Split the overhead by CAUSE, read off the finish lineage. Coordinator
+    // overhead = its hashing/scheduling waits + the lineage root's eligibility
+    // delay (e.g. waiting for a continuous `serve` to come up) + pre-dispatch
+    // hashing — none of which more parallelism removes. Everything else above the
+    // floor is slot contention. Capped so the two always sum to the overhead.
+    const coordinatorWait = finishChain.reduce(
       (sum, c) =>
         c.gate === 'hashing' || c.gate === 'other' ? sum + c.wait : sum,
       0
     );
     const rootEligibilityDelay =
-      criticalPathTasks.length > 0
+      finishLineageTasks.length > 0
         ? Math.max(
             0,
-            (eligible.get(criticalPathTasks[0]) ?? runStart) - runStart
+            (eligible.get(finishLineageTasks[0]) ?? runStart) - runStart
           )
         : 0;
     const coordinatorOverhead = Math.min(
@@ -492,16 +564,15 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
     const recoverableByParallel = recoverableBySlots - recoverableByMachines;
 
-    const dominant = criticalPathChain.reduce<{
+    // The longest task on the critical path (the floor) — the lever for lowering
+    // the floor, named in the "speed up the critical path" recommendation.
+    const dominant = criticalPathTasks.reduce<{
       id: string;
       duration: number;
-    } | null>(
-      (acc, c) =>
-        !acc || c.duration > acc.duration
-          ? { id: c.id, duration: c.duration }
-          : acc,
-      null
-    );
+    } | null>((acc, id) => {
+      const duration = durations.get(id) ?? 0;
+      return !acc || duration > acc.duration ? { id, duration } : acc;
+    }, null);
 
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
@@ -520,7 +591,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     return {
       runDuration,
       criticalPathDuration,
-      criticalPathChain,
+      criticalPathTaskCount: criticalPathTasks.length,
+      finishChain,
       totalWork,
       overhead,
       overheadPct,
@@ -707,7 +779,7 @@ export function formatReport(s: ThrottleSummary): string {
     'Throttle report (NX_THROTTLE_REPORT):',
     `  Run duration:            ${fmt(s.runDuration)}`,
     `  Critical-path floor:     ${fmt(s.criticalPathDuration)}   (${
-      s.criticalPathChain.length
+      s.criticalPathTaskCount
     } tasks)`,
     `  Total work:              ${fmt(s.totalWork)}`,
     `  Parallelism:             ${s.parallel} slots  (machine has ${
@@ -728,8 +800,8 @@ export function formatReport(s: ThrottleSummary): string {
       s.coordinatorOverhead
     ),
     '',
-    '  Critical path (speed these up to lower the floor):',
-    ...s.criticalPathChain.map(
+    `  What determined the ${fmt(s.runDuration)} finish:`,
+    ...s.finishChain.map(
       (c) => `    ${c.id}  —  ${fmt(c.duration)}${gateLabel(c)}`
     ),
     '',

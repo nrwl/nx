@@ -93,12 +93,8 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.runDuration).toBe(30);
     expect(s.criticalPathDuration).toBe(30);
     expect(s.overhead).toBe(0);
-    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
-    expect(s.criticalPathChain.map((g) => g.gate)).toEqual([
-      'root',
-      'dep',
-      'dep',
-    ]);
+    expect(s.finishChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
+    expect(s.finishChain.map((g) => g.gate)).toEqual(['root', 'dep', 'dep']);
   });
 
   it('reports zero overhead when everything runs in parallel', () => {
@@ -110,8 +106,8 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.runDuration).toBe(10);
     expect(s.overhead).toBe(0);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.criticalPathChain).toHaveLength(1);
-    expect(s.criticalPathChain[0].gate).toBe('root');
+    expect(s.finishChain).toHaveLength(1);
+    expect(s.finishChain[0].gate).toBe('root');
   });
 
   it('attributes slot queuing (spare cores) to recoverable-by-parallelism', () => {
@@ -126,6 +122,12 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
     expect(s.recommendation).toContain('queuing for slots');
+    // `b` finished last but is NOT on the critical path (`a` is, same duration).
+    // The finish lineage still surfaces b's slot wait, so the bucket has a
+    // visible source instead of "recoverable" with no slot wait shown anywhere.
+    const bLink = s.finishChain.find((g) => g.id === 'b')!;
+    expect(bLink.gate).toBe('slot');
+    expect(bLink.wait).toBe(1000);
   });
 
   it('attributes a wait with free slots to coordinator overhead', () => {
@@ -138,7 +140,7 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByParallel).toBe(0);
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
-    expect(s.criticalPathChain[0]).toMatchObject({ id: 'x', gate: 'other' });
+    expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
     expect(s.recommendation).toContain('coordinator');
   });
 
@@ -153,7 +155,7 @@ describe('TaskThrottlingLifeCycle', () => {
     const graph = makeGraph([serve, d, e2e], {}, { e2e: ['serve'] });
     const s = run(graph, 1)!;
 
-    const e2eLink = s.criticalPathChain.find((g) => g.id === 'e2e')!;
+    const e2eLink = s.finishChain.find((g) => g.id === 'e2e')!;
     expect(e2eLink.wait).toBe(0);
     expect(e2eLink.gate).toBe('root');
     expect(s.recoverableByParallel).toBe(0);
@@ -172,7 +174,7 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.overhead).toBe(0);
     expect(s.coordinatorOverhead).toBe(0);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['a', 'b']);
+    expect(s.finishChain.map((g) => g.id)).toEqual(['a', 'b']);
   });
 
   it('treats a parallelism:false task as occupying the whole pool', () => {
@@ -240,7 +242,7 @@ describe('TaskThrottlingLifeCycle', () => {
     // was hashing 1000–3000.
     const s = run(graph, 4, { hashWindows: [[1000, 3000]] })!;
 
-    const tLink = s.criticalPathChain.find((g) => g.id === 't')!;
+    const tLink = s.finishChain.find((g) => g.id === 't')!;
     expect(tLink.gate).toBe('hashing');
     expect(s.recoverableByParallel).toBe(0);
   });
@@ -258,7 +260,7 @@ describe('TaskThrottlingLifeCycle', () => {
     const build = makeTask('build', { start: 0, end: 20 });
     const s = run(makeGraph([serve, build]), 2)!;
 
-    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['build']);
+    expect(s.finishChain.map((g) => g.id)).toEqual(['build']);
   });
 
   it('recovers discrete parallelism when continuous tasks share the pool', () => {
@@ -297,9 +299,7 @@ describe('formatReport', () => {
     expect(report).toContain('Critical-path floor:');
     expect(report).toContain('recoverable by --parallel');
     expect(report).toContain('coordinator overhead (hashing/scheduling)');
-    expect(report).toContain(
-      'Critical path (speed these up to lower the floor):'
-    );
+    expect(report).toContain('What determined the');
     expect(report).toContain('Recommendation:');
   });
 });
