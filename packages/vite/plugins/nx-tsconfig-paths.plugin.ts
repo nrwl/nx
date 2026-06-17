@@ -1,5 +1,6 @@
 import {
   createProjectGraphAsync,
+  getPackageManagerCommand,
   joinPathFragments,
   workspaceRoot,
 } from '@nx/devkit';
@@ -158,7 +159,9 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
               .filter((dep) => dep.node.type === 'lib')
               .map((dep) => dep.node.name)
               .join(',');
-            const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
+            const buildCommand = `${
+              getPackageManagerCommand().exec
+            } nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
             config.plugins.push(
               nxViteBuildCoordinationPlugin({ buildCommand })
             );
