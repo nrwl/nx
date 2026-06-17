@@ -1,6 +1,5 @@
 ---
 source: packages/nx/src/native/tui/components/tasks_list.rs
-assertion_line: 4153
 expression: terminal.backend()
 ---
 "                                                                                                                        "
