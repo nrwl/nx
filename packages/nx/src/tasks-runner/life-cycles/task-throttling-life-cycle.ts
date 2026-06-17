@@ -564,15 +564,13 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
     const recoverableByParallel = recoverableBySlots - recoverableByMachines;
 
-    // The longest task on the critical path (the floor) — the lever for lowering
-    // the floor, named in the "speed up the critical path" recommendation.
-    const dominant = criticalPathTasks.reduce<{
-      id: string;
-      duration: number;
-    } | null>((acc, id) => {
-      const duration = durations.get(id) ?? 0;
-      return !acc || duration > acc.duration ? { id, duration } : acc;
-    }, null);
+    // The longest tasks on the critical path (the floor) — the real lever for
+    // going faster when no parallelism lever applies. Coordinator overhead is
+    // largely not user-actionable, so the recommendation points here instead.
+    const criticalPathTop = criticalPathTasks
+      .map((id) => ({ id, duration: durations.get(id) ?? 0 }))
+      .sort((a, b) => b.duration - a.duration)
+      .slice(0, 3);
 
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
@@ -585,7 +583,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       parallel,
       cores,
       isCI,
-      dominant,
+      criticalPathTop,
     });
 
     return {
@@ -672,11 +670,12 @@ export function overlap(
 }
 
 /**
- * Point at whichever lever recovers the most overhead, chosen by magnitude (not
- * a fixed order): raising --parallel, distributing across machines, or — when no
- * lever clears the bar — speeding up the critical path itself. The "at the floor"
- * message fires only when the overhead is genuinely small, so a slot-bound run is
- * never told parallelism won't help.
+ * Recommend the lever that actually helps: raise --parallel or distribute across
+ * machines when a slot bucket recovers meaningful time; otherwise the run is
+ * bound by its critical-path floor, so point at the biggest tasks on the path to
+ * speed up or split. Coordinator overhead (hashing/scheduling) is largely not
+ * user-actionable, so it never drives the recommendation — at most it's a
+ * footnote when it's a meaningful slice.
  */
 function buildRecommendation(args: {
   recoverableByParallel: number;
@@ -687,64 +686,51 @@ function buildRecommendation(args: {
   parallel: number;
   cores: number;
   isCI: boolean;
-  dominant: { id: string; duration: number } | null;
+  criticalPathTop: Array<{ id: string; duration: number }>;
 }): string {
   const {
     recoverableByParallel,
     recoverableByMachines,
     coordinatorOverhead,
-    overhead,
-    criticalPathDuration,
     parallel,
     cores,
     isCI,
-    dominant,
+    criticalPathTop,
   } = args;
 
-  const dom = dominant
-    ? ` — ${dominant.id} dominates at ${formatDuration(dominant.duration)}`
-    : '';
-  const floorMessage = () => {
-    const base = `This run is essentially at its critical-path floor (${formatDuration(
-      criticalPathDuration
-    )}); more parallelism won't shorten it. Speed up or split the critical path${dom}.`;
-    return isCI
-      ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
-      : base;
-  };
-
-  // Negligible overhead → already at the floor, regardless of how it splits.
-  if (overhead < MEANINGFUL_OVERHEAD) {
-    return floorMessage();
-  }
-
-  const buckets = [
-    { kind: 'parallel' as const, amount: recoverableByParallel },
-    { kind: 'machines' as const, amount: recoverableByMachines },
-    { kind: 'coordinator' as const, amount: coordinatorOverhead },
-  ];
-  const top = buckets.reduce((a, b) => (b.amount > a.amount ? b : a));
-  if (top.amount < MEANINGFUL_OVERHEAD) {
-    return floorMessage();
-  }
-
-  if (top.kind === 'parallel') {
+  // A parallelism lever recovers meaningful time → recommend it.
+  if (
+    recoverableByParallel >= MEANINGFUL_OVERHEAD &&
+    recoverableByParallel >= recoverableByMachines
+  ) {
     return `Tasks are queuing for slots with cores to spare. Raise --parallel toward ${cores} (currently ${parallel}) to recover up to ~${formatDuration(
       recoverableByParallel
     )} (the exact amount depends on how many tasks are ready at once).`;
   }
-  if (top.kind === 'machines') {
+  if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
     return `Tasks are queuing for slots even at --parallel=${parallel} (machine has ${cores} ${pluralizeCores(
       cores
     )}). If they're CPU-bound, distribute across machines with Nx Cloud Agents to recover up to ~${formatDuration(
       recoverableByMachines
     )} → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel on this machine may help instead.`;
   }
-  const base = `Most overhead (~${formatDuration(
-    coordinatorOverhead
-  )}) is coordinator work — hashing, task spawning, scheduling — which more parallelism won't fix. A warm Nx daemon and smaller/fewer task inputs (less to hash) are the levers.`;
+
+  // No parallelism lever. The run is dominated by its critical-path floor, and
+  // the user can't do much about coordinator overhead — so point at the biggest
+  // tasks on the path (speeding/splitting those is what actually lowers the run).
+  const top = criticalPathTop
+    .map((t) => `${t.id} (${formatDuration(t.duration)})`)
+    .join(', ');
+  let base = `More parallelism won't shorten this run — it's bound by its critical path. The biggest tasks to speed up or split: ${
+    top || 'n/a'
+  }.`;
+  if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
+    base += ` (~${formatDuration(
+      coordinatorOverhead
+    )} is coordinator overhead — hashing/scheduling — which a warm Nx daemon trims, but the critical path is the bigger lever.)`;
+  }
   return isCI
-    ? `${base} A faster CI runner also helps if that work is CPU-bound.`
+    ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
     : base;
 }
 

@@ -141,7 +141,25 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
+    // Coordinator overhead is footnoted, but the actionable advice names the
+    // biggest task on the critical path to speed up.
     expect(s.recommendation).toContain('coordinator');
+    expect(s.recommendation).toContain('x (1.0s)');
+  });
+
+  it('recommends the biggest critical-path tasks when no parallelism lever helps', () => {
+    // A pure dependency chain at its floor (no overhead). The advice should name
+    // the longest tasks on the path to speed up — not a parallelism lever.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 4000 });
+    const c = makeTask('c', { start: 4000, end: 5000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
+
+    expect(s.overhead).toBe(0);
+    expect(s.recommendation).toContain('speed up or split');
+    expect(s.recommendation).toContain('b (3.0s)'); // longest, listed first
+    expect(s.recommendation).not.toContain('--parallel');
+    expect(s.recommendation).not.toContain('Nx Cloud Agents');
   });
 
   it('treats a wait for a continuous dependency to start as eligibility, not contention', () => {
