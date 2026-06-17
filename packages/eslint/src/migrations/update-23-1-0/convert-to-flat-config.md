@@ -8,7 +8,7 @@ ESLint v9 makes flat config (`eslint.config.{mjs,cjs,js}`) the default config fo
 
 The migration runs in two halves:
 
-1. A deterministic pre-pass (the `@nx/eslint:convert-to-flat-config` generator) that already converted the JSON and YAML eslintrc configs and bumped the ESLint stack.
+1. A deterministic pre-pass (the `@nx/eslint:convert-to-flat-config` generator) that already converted the JSON and YAML eslintrc configs.
 2. This prompt: finish the parts that need judgment and leave the workspace lint-passing.
 
 Work systematically through each section below.
@@ -17,7 +17,6 @@ Work systematically through each section below.
 
 The pre-pass handled, mechanically:
 
-- Bumped `eslint` to `^9.8.0`, the `typescript-eslint` packages to `^8.40.0`, and `eslint-config-prettier` to `^10.0.0` (via `packageJsonUpdates`, only for packages already present).
 - Converted the root and per-project JSON/YAML eslintrc files to `eslint.config.mjs`:
   - `eslint:recommended` to `js.configs.recommended`
   - `@nx/*` presets to their flat-config equivalents
@@ -84,7 +83,7 @@ In your handoff `summary` (1 to 3 sentences per the system prompt), name the sec
 
 ## 1. Already on flat config? Verify only
 
-If the workspace already uses `eslint.config.*` at the root and in every project, with no remaining `.eslintrc.*` files, do NOT restructure it. The only required work is the passing-state check in section 4: a workspace that was just bumped from ESLint v8 to v9 can newly fail because v9 changed which rules its preset defaults enable, even when the config was already flat.
+If the workspace already uses `eslint.config.*` at the root and in every project, with no remaining `.eslintrc.*` files, do NOT restructure it. The only required work is the passing-state check in section 4: a workspace on ESLint v9 can newly fail because v9 and typescript-eslint v8 changed which rules their recommended sets enable, even when the config was already flat.
 
 ## 2. Convert JavaScript-based ESLint configs the pre-pass skipped
 
