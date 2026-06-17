@@ -106,7 +106,7 @@ describe('Maven', () => {
         nxJson.plugins[pluginIndex] = {
           plugin: '@nx/maven',
           options: {
-            targetNamePrefix: 'mvn-',
+            targetNamePrefix: 'mvn:',
           },
         };
       }
@@ -118,16 +118,16 @@ describe('Maven', () => {
 
     // Verify prefixed targets exist
     const output = runCLI('show project app --json=false');
-    expect(output).toContain('- mvn-install:');
-    expect(output).toContain('- mvn-compile:');
-    expect(output).toContain('- mvn-test:');
-    expect(output).toContain('- mvn-package:');
-    expect(output).toContain('- mvn-install-ci:');
+    expect(output).toContain('- mvn:install:');
+    expect(output).toContain('- mvn:compile:');
+    expect(output).toContain('- mvn:test:');
+    expect(output).toContain('- mvn:package:');
+    expect(output).toContain('- mvn:install-ci:');
 
     // Verify prefixed target works. Same lifecycle-fan-out concern as the
     // app:install case above — give it a 10-minute timeout so CI load
     // doesn't push us past the default 5 minutes.
-    const buildOutput = runCLI('run app:mvn-compile --no-batch', {
+    const buildOutput = runCLI('mvn:compile com.example:app --no-batch', {
       timeout: 10 * 60 * 1000,
     });
     expect(buildOutput).toContain('BUILD SUCCESS');

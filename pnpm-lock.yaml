@@ -676,6 +676,9 @@ importers:
       '@nx/key':
         specifier: 5.0.4
         version: 5.0.4
+      '@nx/maven':
+        specifier: 23.0.0-rc.4
+        version: 23.0.0-rc.4(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/next':
         specifier: 23.0.0-rc.4
         version: 23.0.0-rc.4(60549e85ad7eaa4ba0542c9fe28d4b3b)
@@ -10022,6 +10025,9 @@ packages:
   '@nx/key@5.0.4':
     resolution: {integrity: sha512-qovQhxJyC0xvM5cL+Ic2EQIU7D4J/VrDBrUMEbWItxFX9WcM46kRPS7ZASEJUgBCg5i24JlbP+ehbBwDvs9Kug==}
     engines: {node: '>= 10'}
+
+  '@nx/maven@23.0.0-rc.4':
+    resolution: {integrity: sha512-0qokReviS0Pr/wXb4XtiHGhF9KQGnktxBk3ISdapypBylQfzQWcey4/mMJ5LQ5LR93ClciONaJvUEm/N5/N7eQ==}
 
   '@nx/module-federation@23.0.0-rc.4':
     resolution: {integrity: sha512-Jeb5yIdsl7QphMQh3MBIbfJDBv6waiJD6pFPcJlHtyj5T0oBtVAl1m93LXztOITNP8XwgxaDqbyebR+kyK+vLw==}
@@ -24226,6 +24232,7 @@ packages:
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
     engines: {node: ^18 || >=20}
+    deprecated: unmaintained
     hasBin: true
     peerDependencies:
       typescript: ^5.0.0
@@ -31112,7 +31119,7 @@ snapshots:
       '@module-federation/runtime-tools': 0.21.2
       '@module-federation/sdk': 0.21.2
       btoa: 1.2.1
-      schema-utils: 4.3.3
+      schema-utils: 4.3.2
       upath: 2.0.1
     optionalDependencies:
       typescript: 5.9.2
@@ -33376,6 +33383,15 @@ snapshots:
       '@nx/key-win32-x64-msvc': 5.0.4
     transitivePeerDependencies:
       - debug
+
+  '@nx/maven@23.0.0-rc.4(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))':
+    dependencies:
+      '@nx/devkit': 23.0.0-rc.4(nx@23.0.0-rc.4(@swc-node/register@1.11.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@5.9.2))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
+      '@xmldom/xmldom': 0.8.11
+      tree-kill: 1.2.2
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - nx
 
   '@nx/module-federation@23.0.0-rc.4(32a55e7d6188877dde80be0d9336b140)':
     dependencies:
@@ -39217,9 +39233,9 @@ snapshots:
       domhandler: 5.0.3
       htmlparser2: 10.0.0
       picocolors: 1.1.1
-      postcss: 8.5.15
+      postcss: 8.5.6
       postcss-media-query-parser: 0.2.3
-      postcss-safe-parser: 7.0.1(postcss@8.5.15)
+      postcss-safe-parser: 7.0.1(postcss@8.5.6)
 
   before-after-hook@2.2.3: {}
 
@@ -49494,9 +49510,9 @@ snapshots:
       postcss: 8.5.6
       postcss-value-parser: 4.2.0
 
-  postcss-safe-parser@7.0.1(postcss@8.5.15):
+  postcss-safe-parser@7.0.1(postcss@8.5.6):
     dependencies:
-      postcss: 8.5.15
+      postcss: 8.5.6
 
   postcss-selector-parser@6.0.10:
     dependencies:
@@ -53618,7 +53634,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53638,7 +53654,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53658,7 +53674,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:
@@ -53678,7 +53694,7 @@ snapshots:
       esbuild: 0.27.3
       fdir: 6.5.0(picomatch@4.0.4)
       picomatch: 4.0.4
-      postcss: 8.5.15
+      postcss: 8.5.6
       rollup: 4.59.0
       tinyglobby: 0.2.15
     optionalDependencies:

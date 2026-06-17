@@ -93,7 +93,9 @@ export const createNodes: CreateNodes = [
         for (const asset of objectAssets) {
           const input = asset.input ?? projectRoot;
           if (asset.includeIgnoredFiles) {
-            dependentOutputGlobs.add(asset.glob);
+            // dependentTasksOutputFiles globs match against workspace-relative
+            // output paths, so the glob must be anchored to the input dir
+            dependentOutputGlobs.add(`${input}/${asset.glob}`);
           } else if (input === projectRoot) {
             positiveInputs.add(`{projectRoot}/${asset.glob}`);
             if (asset.ignore) {

@@ -3,18 +3,18 @@
   "sourceRoot": "packages/maven/src",
   "projectType": "library",
   "targets": {
-    "nx-release-publish": {
-      "dependsOn": ["^nx-release-publish", "nx-maven-plugin:_install"]
-    },
     "build": {
       "command": "node ./scripts/copy-readme.js maven packages/maven/readme-template.md packages/maven/README.md",
       "inputs": ["copyReadme"],
       "outputs": ["{projectRoot}/README.md"]
     },
     "copy-assets": {
-      "dependsOn": ["maven-batch-runner:_package"]
+      "dependsOn": ["^mvn:package"]
     }
   },
-  "tags": ["maven:dev.nx.maven"],
-  "implicitDependencies": ["maven-batch-runner", "nx-maven-plugin"]
+  "implicitDependencies": [
+    "dev.nx.maven:maven-batch-runner",
+    "dev.nx.maven:nx-maven-plugin",
+    "!@nx/nx-source"
+  ]
 }
