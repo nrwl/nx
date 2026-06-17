@@ -1,17 +1,28 @@
+import * as os from 'node:os';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { TaskResult } from '../life-cycle';
-import { TaskThrottlingLifeCycle } from './task-throttling-life-cycle';
+import {
+  TaskThrottlingLifeCycle,
+  formatDuration,
+  formatReport,
+  overlap,
+} from './task-throttling-life-cycle';
 
 function makeTask(
   id: string,
-  opts: { start?: number; end?: number; continuous?: boolean } = {}
+  opts: {
+    start?: number;
+    end?: number;
+    continuous?: boolean;
+    parallelism?: boolean;
+  } = {}
 ): Task {
   return {
     id,
     target: { project: id, target: 'build' },
     overrides: {},
     outputs: [],
-    parallelism: true,
+    parallelism: opts.parallelism ?? true,
     continuous: opts.continuous ?? false,
     startTime: opts.start,
     endTime: opts.end,
@@ -20,34 +31,46 @@ function makeTask(
 
 function makeGraph(
   tasks: Task[],
-  deps: Record<string, string[]> = {}
+  deps: Record<string, string[]> = {},
+  continuousDeps: Record<string, string[]> = {}
 ): TaskGraph {
   return {
-    roots: tasks.filter((t) => (deps[t.id] ?? []).length === 0).map((t) => t.id),
+    roots: tasks
+      .filter((t) => (deps[t.id] ?? []).length === 0)
+      .map((t) => t.id),
     tasks: Object.fromEntries(tasks.map((t) => [t.id, t])),
-    dependencies: Object.fromEntries(tasks.map((t) => [t.id, deps[t.id] ?? []])),
-    continuousDependencies: Object.fromEntries(tasks.map((t) => [t.id, []])),
+    dependencies: Object.fromEntries(
+      tasks.map((t) => [t.id, deps[t.id] ?? []])
+    ),
+    continuousDependencies: Object.fromEntries(
+      tasks.map((t) => [t.id, continuousDeps[t.id] ?? []])
+    ),
   } as unknown as TaskGraph;
+}
+
+/** A lifecycle whose hashing windows can be injected for the hashing-gate test. */
+class TestThrottle extends TaskThrottlingLifeCycle {
+  constructor(
+    graph: TaskGraph,
+    private readonly windows: Array<[number, number]>
+  ) {
+    super(graph);
+  }
+  protected hashWindows(): Array<[number, number]> {
+    return this.windows;
+  }
 }
 
 /** Feed a lifecycle a full run and return its summary. */
 function run(
   graph: TaskGraph,
   total: number,
-  readyTimes: Record<string, number> = {},
-  dispatchTimes: Record<string, number> = {},
-  batches: string[][] = []
+  opts: { batches?: string[][]; hashWindows?: Array<[number, number]> } = {}
 ) {
-  const lc = new TaskThrottlingLifeCycle(graph);
+  const lc = new TestThrottle(graph, opts.hashWindows ?? []);
   lc.startCommand(total);
-  for (const taskIds of batches) {
+  for (const taskIds of opts.batches ?? []) {
     lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
-  }
-  for (const [id, readyTime] of Object.entries(readyTimes)) {
-    lc.setTaskReadyTime(id, readyTime);
-  }
-  for (const [id, dispatchTime] of Object.entries(dispatchTimes)) {
-    lc.setTaskDispatchTime(id, dispatchTime);
   }
   const results = Object.values(graph.tasks).map(
     (task) => ({ task }) as unknown as TaskResult
@@ -65,15 +88,17 @@ describe('TaskThrottlingLifeCycle', () => {
     const a = makeTask('a', { start: 0, end: 10 });
     const b = makeTask('b', { start: 10, end: 20 });
     const c = makeTask('c', { start: 20, end: 30 });
-    const graph = makeGraph([a, b, c], { b: ['a'], c: ['b'] });
-
-    const s = run(graph, 1)!;
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
     expect(s.runDuration).toBe(30);
     expect(s.criticalPathDuration).toBe(30);
-    expect(s.slotContentionCost).toBe(0);
-    expect(s.gatingChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
-    expect(s.gatingChain.map((g) => g.gate)).toEqual(['root', 'dep', 'dep']);
+    expect(s.overhead).toBe(0);
+    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
+    expect(s.criticalPathChain.map((g) => g.gate)).toEqual([
+      'root',
+      'dep',
+      'dep',
+    ]);
   });
 
   it('reports zero overhead when everything runs in parallel', () => {
@@ -83,60 +108,149 @@ describe('TaskThrottlingLifeCycle', () => {
     const s = run(makeGraph(tasks), 5)!;
 
     expect(s.runDuration).toBe(10);
-    expect(s.slotContentionCost).toBe(0);
-    expect(s.slotBound).toBe(false);
-    expect(s.gatingChain).toHaveLength(1);
-    expect(s.gatingChain[0].gate).toBe('root');
+    expect(s.overhead).toBe(0);
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.criticalPathChain).toHaveLength(1);
+    expect(s.criticalPathChain[0].gate).toBe('root');
   });
 
-  it('finds the slot-gated finish chain in the e2e-tail case', () => {
-    // dep (10) then 8 e2e tasks depending on it, --parallel=4. e7 finishes last,
-    // gated by the SLOT that e0 held (e7 does not depend on e0).
-    const dep = makeTask('dep', { start: 0, end: 10 });
-    const e2e = [
-      makeTask('e0', { start: 10, end: 70 }),
-      makeTask('e1', { start: 10, end: 60 }),
-      makeTask('e2', { start: 10, end: 55 }),
-      makeTask('e3', { start: 10, end: 50 }),
-      makeTask('e4', { start: 50, end: 80 }),
-      makeTask('e5', { start: 55, end: 80 }),
-      makeTask('e6', { start: 60, end: 80 }),
-      makeTask('e7', { start: 70, end: 85 }),
-    ];
-    const deps = Object.fromEntries(e2e.map((t) => [t.id, ['dep']]));
-    const graph = makeGraph([dep, ...e2e], deps);
-    const readyTimes = Object.fromEntries(
-      [dep, ...e2e].map((t) => [t.id, t.id === 'dep' ? 0 : 10])
-    );
+  it('attributes slot queuing (spare cores) to recoverable-by-parallelism', () => {
+    // parallel=1. `a` holds the only slot 0–1000. `b` is independent, eligible at
+    // the run start, and queues for the slot until 1000 → recoverable by slots.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1)!;
 
-    const s = run(graph, 4, readyTimes)!;
-
-    expect(s.criticalPathDuration).toBe(70);
-    expect(s.slotContentionCost).toBe(15);
-    expect(s.slotBound).toBe(true);
-    // Finish chain: dep → e0 (held the slot) → e7 (slot-gated by e0).
-    expect(s.gatingChain.map((g) => g.id)).toEqual(['dep', 'e0', 'e7']);
-    expect(s.gatingChain.find((g) => g.id === 'e7')!.gate).toBe('slot');
+    expect(s.overhead).toBe(1000);
+    // cores-dependent split; the sum is what's robustly assertable.
+    expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
+    expect(s.coordinatorOverhead).toBe(0);
+    expect(s.recommendation).toContain('queuing for slots');
   });
 
-  it('attributes a wait to the task that freed the slot', () => {
-    // parallel=1. `hog` holds the slot 0–1400. `b` is independent and longest,
-    // ready at 1000, starts at 1600 when hog frees the slot → slot-gated by hog.
-    const hog = makeTask('hog', { start: 0, end: 1400 });
-    const b = makeTask('b', { start: 1600, end: 3200 });
-    const s = run(makeGraph([hog, b]), 1, { hog: 0, b: 1000 })!;
-
-    expect(s.gatingChain.map((g) => g.id)).toEqual(['hog', 'b']);
-    expect(s.gatingChain[1].gate).toBe('slot');
-  });
-
-  it('labels a wait with free slots as other, not slot-gated', () => {
-    // x is ready at 0 but starts at 5000 with 4 free slots and nothing running.
+  it('attributes a wait with free slots to coordinator overhead', () => {
+    // `early` defines the run start; `x` is eligible at 0 but starts at 5000 with
+    // free slots and nothing running → not slot contention, pure coordinator time.
+    const early = makeTask('early', { start: 0, end: 100 });
     const x = makeTask('x', { start: 5000, end: 6000 });
-    const s = run(makeGraph([x]), 4, { x: 0 })!;
+    const s = run(makeGraph([early, x]), 4)!;
 
-    expect(s.gatingChain).toHaveLength(1);
-    expect(s.gatingChain[0].gate).toBe('other');
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recoverableByMachines).toBe(0);
+    expect(s.coordinatorOverhead).toBe(5000);
+    expect(s.criticalPathChain[0]).toMatchObject({ id: 'x', gate: 'other' });
+    expect(s.recommendation).toContain('coordinator');
+  });
+
+  it('treats a wait for a continuous dependency to start as eligibility, not contention', () => {
+    // `serve` (continuous) comes up at 3000; `d` holds the only slot 0–3000.
+    // `e2e` depends on serve and starts at 3000 — it was never slot-blocked, it
+    // was waiting for serve. Its wait must be 0 (eligible at serve's start), so
+    // the 3000 lands in coordinator overhead, not recoverable-by-parallelism.
+    const serve = makeTask('serve', { start: 3000, continuous: true });
+    const d = makeTask('d', { start: 0, end: 3000 });
+    const e2e = makeTask('e2e', { start: 3000, end: 13000 });
+    const graph = makeGraph([serve, d, e2e], {}, { e2e: ['serve'] });
+    const s = run(graph, 1)!;
+
+    const e2eLink = s.criticalPathChain.find((g) => g.id === 'e2e')!;
+    expect(e2eLink.wait).toBe(0);
+    expect(e2eLink.gate).toBe('root');
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recoverableByMachines).toBe(0);
+    expect(s.coordinatorOverhead).toBe(3000);
+  });
+
+  it('folds batch sequencing into the floor, not coordinator overhead', () => {
+    // a and b are independent but in one batch; the batch runs them sequentially
+    // in one process (a 0–1000, then b 1000–2000). That ordering is part of the
+    // floor, so the perfectly-packed run has zero overhead.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1, { batches: [['a', 'b']] })!;
+
+    expect(s.overhead).toBe(0);
+    expect(s.coordinatorOverhead).toBe(0);
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['a', 'b']);
+  });
+
+  it('treats a parallelism:false task as occupying the whole pool', () => {
+    // `np` runs alone (parallelism:false), so while it runs the machine is
+    // saturated and `x` (eligible at 0) is genuinely slot-blocked, not idle.
+    const np = makeTask('np', { start: 0, end: 1000, parallelism: false });
+    const x = makeTask('x', { start: 1000, end: 2000 });
+    const s = run(makeGraph([np, x]), 2)!;
+
+    expect(s.overhead).toBe(1000);
+    expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
+    expect(s.coordinatorOverhead).toBe(0);
+  });
+
+  it('attributes volume beyond one machine to recoverable-by-machines even when parallel < cores', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // 3×cores independent tasks serialized at parallel=1. totalWork = 3·cores·1000,
+    // so totalWork/cores − criticalPath = 3000 − 1000 = 2000 of machine-bound
+    // volume that raising --parallel alone cannot recover.
+    const n = cores * 3;
+    const tasks = Array.from({ length: n }, (_, i) =>
+      makeTask(`t${i}`, { start: i * 1000, end: (i + 1) * 1000 })
+    );
+    const s = run(makeGraph(tasks), 1)!;
+
+    if (cores >= 2) {
+      // parallel(1) < cores → the split is by work invariant, not observed occ.
+      expect(s.recoverableByMachines).toBe(2000);
+      // ...and the rest is still recoverable by raising --parallel (both > 0,
+      // which the old observed-occupancy split could never produce).
+      expect(s.recoverableByParallel).toBeGreaterThan(0);
+    } else {
+      // single core: parallel == cores, so there is no --parallel headroom.
+      expect(s.recoverableByParallel).toBe(0);
+    }
+  });
+
+  it('recommends more machines when the machine is already at its core count', () => {
+    const cores = Math.max(
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length,
+      os.cpus().length
+    );
+    // Fill every core 0–1000, then one more task queues for a slot at full cores.
+    const fillers = Array.from({ length: cores }, (_, i) =>
+      makeTask(`f${i}`, { start: 0, end: 1000 })
+    );
+    const waiter = makeTask('w', { start: 1000, end: 2000 });
+    const s = run(makeGraph([...fillers, waiter]), cores)!;
+
+    expect(s.recoverableByMachines).toBe(1000);
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recommendation).toContain('Nx Cloud Agents');
+  });
+
+  it('classifies a free-slot wait that overlaps a hashing window as hashing', () => {
+    const core = makeTask('core', { start: 0, end: 1000 });
+    const t = makeTask('t', { start: 3000, end: 4000 });
+    const graph = makeGraph([core, t], { t: ['core'] });
+    // t is eligible at 1000 but starts at 3000 with free slots; the coordinator
+    // was hashing 1000–3000.
+    const s = run(graph, 4, { hashWindows: [[1000, 3000]] })!;
+
+    const tLink = s.criticalPathChain.find((g) => g.id === 't')!;
+    expect(tLink.gate).toBe('hashing');
+    expect(s.recoverableByParallel).toBe(0);
+  });
+
+  it('does not throw on a dependency cycle', () => {
+    const a = makeTask('a', { start: 0, end: 10 });
+    const b = makeTask('b', { start: 10, end: 20 });
+    const graph = makeGraph([a, b], { a: ['b'], b: ['a'] });
+    expect(() => run(graph, 2)).not.toThrow();
+    expect(run(graph, 2)).not.toBeNull();
   });
 
   it('excludes continuous tasks from the calculation', () => {
@@ -144,8 +258,7 @@ describe('TaskThrottlingLifeCycle', () => {
     const build = makeTask('build', { start: 0, end: 20 });
     const s = run(makeGraph([serve, build]), 2)!;
 
-    expect(s.criticalPathTasks).toEqual(['build']);
-    expect(s.gatingChain.map((g) => g.id)).toEqual(['build']);
+    expect(s.criticalPathChain.map((g) => g.id)).toEqual(['build']);
   });
 
   it('recovers discrete parallelism when continuous tasks share the pool', () => {
@@ -155,15 +268,57 @@ describe('TaskThrottlingLifeCycle', () => {
 
     expect(s.parallel).toBe(4);
   });
+});
 
-  it('treats a batch as sequential, with no phantom slot wait', () => {
-    // a and b are independent but in one batch; a runs 0–20, then b 20–50.
-    // b's effective ready is a's end (20), so it started immediately → not gated
-    // by a slot, no phantom wait.
-    const a = makeTask('a', { start: 0, end: 20 });
-    const b = makeTask('b', { start: 20, end: 50 });
-    const s = run(makeGraph([a, b]), 1, { a: 0, b: 0 }, {}, [['a', 'b']])!;
+describe('formatDuration', () => {
+  it('formats sub-10s with one decimal, 10s+ as whole seconds, 60s+ as minutes', () => {
+    expect(formatDuration(400)).toBe('0.4s');
+    expect(formatDuration(18000)).toBe('18s');
+    expect(formatDuration(90000)).toBe('1m 30s');
+  });
 
-    expect(s.gatingChain.find((g) => g.id === 'b')?.gate).not.toBe('slot');
+  it('rolls seconds up to minutes instead of emitting "60s" or "1m 60s"', () => {
+    expect(formatDuration(119500)).toBe('2m 0s');
+    expect(formatDuration(59500)).toBe('1m 0s');
+  });
+
+  it('rolls a sub-10s value that rounds to 10.0 up to the whole-second form', () => {
+    expect(formatDuration(9999)).toBe('10s');
+  });
+});
+
+describe('formatReport', () => {
+  it('renders the headline, buckets, critical path, and recommendation', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const report = formatReport(run(makeGraph([a, b]), 1)!);
+
+    expect(report).toContain('Throttle report (NX_THROTTLE_REPORT):');
+    expect(report).toContain('Critical-path floor:');
+    expect(report).toContain('recoverable by --parallel');
+    expect(report).toContain('coordinator overhead (hashing/scheduling)');
+    expect(report).toContain(
+      'Critical path (speed these up to lower the floor):'
+    );
+    expect(report).toContain('Recommendation:');
+  });
+});
+
+describe('overlap', () => {
+  it('sums the overlap of [a,b] with each interval', () => {
+    expect(overlap(0, 10, [[5, 15]])).toBe(5);
+    expect(
+      overlap(0, 10, [
+        [5, 15],
+        [20, 30],
+      ])
+    ).toBe(5);
+    expect(
+      overlap(0, 100, [
+        [10, 20],
+        [30, 35],
+      ])
+    ).toBe(15);
+    expect(overlap(0, 10, [[20, 30]])).toBe(0);
   });
 });
