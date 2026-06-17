@@ -8,7 +8,6 @@
     "declaration": true,
     "types": ["node"],
     "composite": true,
-    "module": "nodenext",
     "moduleResolution": "nodenext"
   },
   "include": ["src/**/*.ts", "plugin.ts"],

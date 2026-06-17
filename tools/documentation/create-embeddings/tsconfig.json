@@ -12,7 +12,6 @@
   ],
   "compilerOptions": {
     "esModuleInterop": true,
-    "module": "nodenext",
     "target": "esnext"
   }
 }
