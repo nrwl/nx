@@ -724,7 +724,7 @@ function buildRecommendation(args: {
           .map((t) => `\n    - ${t.id} (${formatDuration(t.duration)})`)
           .join('')
       : '\n    - (none)';
-  let base = `This run is bound by its critical path, so more parallelism won't help. To shorten it, speed up or split its longest-running tasks:${bullets}`;
+  let base = `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks on that path:${bullets}`;
   if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
     // Be precise about the lever: a warm daemon caches the project graph + file
     // hashes, so it trims the HASHING part — but scheduling and process spawning

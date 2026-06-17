@@ -156,7 +156,8 @@ describe('TaskThrottlingLifeCycle', () => {
     const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
     expect(s.overhead).toBe(0);
-    expect(s.recommendation).toContain('speed up or split');
+    expect(s.recommendation).toContain('Speed up or split');
+    expect(s.recommendation).toContain('critical path');
     expect(s.recommendation).toContain('b (3.0s)'); // longest, listed first
     expect(s.recommendation).not.toContain('--parallel');
     expect(s.recommendation).not.toContain('Nx Cloud Agents');
