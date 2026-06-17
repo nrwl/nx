@@ -14,7 +14,7 @@ The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `sta
 You don't need the plugin to use Remix with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, route scaffolding, and simplified configuration.
 
 {% aside type="note" %}
-React Router is the successor to Remix. For new projects, consider using [React Router](/docs/technologies/react/guides/react-router) instead. Existing Remix projects continue to work with `@nx/remix`.
+React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2; [`@nx/react`](/docs/technologies/react/guides/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
 {% /aside %}
 
 ## Requirements
@@ -23,7 +23,7 @@ The `@nx/remix` plugin supports the following package versions.
 
 | Package          | Supported Versions |
 | ---------------- | ------------------ |
-| `@remix-run/dev` | ^2.17.3            |
+| `@remix-run/dev` | ^2.0.0             |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 

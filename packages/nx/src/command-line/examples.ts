@@ -327,7 +327,7 @@ export const examples: Record<string, Example[]> = {
     {
       command: 'migrate latest --interactive',
       description:
-        'Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration. Only supported when migrating to Nx versions lower than v23',
+        "Collect package updates and migrations in interactive mode. In this mode, the user will be prompted whether to apply any optional package update and migration. Deprecated and slated for removal in Nx v24. Use '--include' instead.",
     },
     {
       command: 'migrate latest --from=nx@14.5.0 --exclude-applied-migrations',

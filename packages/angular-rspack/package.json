@@ -27,20 +27,28 @@
   "main": "./dist/lib/index.js",
   "types": "./dist/lib/index.d.ts",
   "typings": "./dist/lib/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.lib.tsbuildinfo"
+  ],
   "exports": {
     ".": {
+      "@nx/nx-source": "./src/lib/index.ts",
       "types": "./dist/lib/index.d.ts",
       "default": "./dist/lib/index.js"
     },
     "./loaders/angular-partial-transform-loader": {
+      "@nx/nx-source": "./src/lib/plugins/loaders/angular-partial-transform.loader.ts",
       "types": "./dist/lib/plugins/loaders/angular-partial-transform.loader.d.ts",
       "default": "./dist/lib/plugins/loaders/angular-partial-transform.loader.js"
     },
     "./loaders/angular-loader": {
+      "@nx/nx-source": "./src/lib/plugins/loaders/angular-transform.loader.ts",
       "types": "./dist/lib/plugins/loaders/angular-transform.loader.d.ts",
       "default": "./dist/lib/plugins/loaders/angular-transform.loader.js"
     },
     "./loaders/platform-server-exports-loader": {
+      "@nx/nx-source": "./src/lib/plugins/loaders/platform-server-exports.loader.ts",
       "types": "./dist/lib/plugins/loaders/platform-server-exports.loader.d.ts",
       "default": "./dist/lib/plugins/loaders/platform-server-exports.loader.js"
     }

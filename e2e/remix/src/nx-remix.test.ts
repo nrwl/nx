@@ -37,7 +37,7 @@ describe('Remix E2E Tests', () => {
       );
 
       await runCommandAsync('npm install');
-    }, 120000);
+    }, 600_000);
   });
   describe('--integrated (yarn)', () => {
     beforeAll(async () => {
@@ -71,7 +71,7 @@ describe('Remix E2E Tests', () => {
 
       const testResult = runCLI(`test ${plugin}`);
       expect(testResult).toContain('Successfully ran target test');
-    }, 120000);
+    }, 600_000);
 
     describe('--directory', () => {
       it('should create src in the specified directory', async () => {

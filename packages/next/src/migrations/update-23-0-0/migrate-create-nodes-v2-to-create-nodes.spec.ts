@@ -131,6 +131,70 @@ describe('migrate-create-nodes-v2-to-create-nodes migration', () => {
       const input = `const { createNodesV2 } = require('@nx/next/plugin');\n`;
       expect(rewrite(input)).toBe(input);
     });
+
+    it('renames value usages of a lone createNodesV2 import', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/next/plugin';\n` +
+        `export const plugin = createNodesV2;\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/next/plugin';\n` +
+          `export const plugin = createNodes;\n`
+      );
+    });
+
+    it('renames a value usage passed as a call argument', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/next/plugin';\n` +
+        `addPlugin(graph, '@nx/next/plugin', createNodesV2, {});\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/next/plugin';\n` +
+          `addPlugin(graph, '@nx/next/plugin', createNodes, {});\n`
+      );
+    });
+
+    it('renames value usages when deduped against an existing createNodes', () => {
+      const input =
+        `import { createNodes, createNodesV2 } from '@nx/next/plugin';\n` +
+        `use(createNodesV2);\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/next/plugin';\n` +
+          `use(createNodes);\n`
+      );
+    });
+
+    it('expands a shorthand property usage to preserve the key', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/next/plugin';\n` +
+        `export const plugins = { createNodesV2 };\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/next/plugin';\n` +
+          `export const plugins = { createNodesV2: createNodes };\n`
+      );
+    });
+
+    it('leaves property accesses and strings while renaming the binding', () => {
+      const input =
+        `import { createNodesV2 } from '@nx/next/plugin';\n` +
+        `const v = createNodesV2;\n` +
+        `const w = config.createNodesV2;\n` +
+        `const s = 'createNodesV2';\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes } from '@nx/next/plugin';\n` +
+          `const v = createNodes;\n` +
+          `const w = config.createNodesV2;\n` +
+          `const s = 'createNodesV2';\n`
+      );
+    });
+
+    it('does not rename usages for an aliased import (local name preserved)', () => {
+      const input =
+        `import { createNodesV2 as cn } from '@nx/next/plugin';\n` +
+        `export const plugin = cn;\n`;
+      expect(rewrite(input)).toBe(
+        `import { createNodes as cn } from '@nx/next/plugin';\n` +
+          `export const plugin = cn;\n`
+      );
+    });
   });
 
   describe('migration runner', () => {

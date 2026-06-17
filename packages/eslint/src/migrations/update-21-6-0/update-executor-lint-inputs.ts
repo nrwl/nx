@@ -1,26 +1,14 @@
 import { type Tree, formatFiles, readNxJson, updateNxJson } from '@nx/devkit';
-import {
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
 
 export default async function (tree: Tree) {
-  const nxJson = readNxJson(tree) ?? {};
+  const nxJson = readNxJson(tree);
   const executor = '@nx/eslint:lint';
 
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.executor === executor &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
-
-  if (!existing?.inputs) {
+  if (!nxJson.targetDefaults?.[executor]?.inputs) {
     return;
   }
 
-  const inputs = [...existing.inputs];
+  const inputs = nxJson.targetDefaults[executor].inputs;
 
   if (!inputs.includes('^default')) {
     // Add after 'default' if present, otherwise at the beginning
@@ -36,7 +24,6 @@ export default async function (tree: Tree) {
     inputs.push('{workspaceRoot}/tools/eslint-rules/**/*');
   }
 
-  upsertTargetDefault(tree, nxJson, { executor, inputs });
   updateNxJson(tree, nxJson);
   await formatFiles(tree);
 }

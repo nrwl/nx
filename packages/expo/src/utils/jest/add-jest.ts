@@ -34,17 +34,17 @@ export async function addJest(
     addPlugin,
   });
 
-  // Expo v54+ ships the winter runtime, which requires a different Jest
-  // configuration approach than the legacy v53 custom resolver.
-  const useWinterRuntime = !(await isExpoV53(host));
+  // Expo SDK 54+ (including 55) use the winter-runtime ImportMetaRegistry mock;
+  // only SDK 53 needs the custom Jest resolver.
+  const useModernJestSetup = !(await isExpoV53(host));
 
   // Overwrite the jest.config.ts file because react native needs to have special transform property
   // use preset from https://github.com/expo/expo/blob/main/packages/jest-expo/jest-preset.js
   // Workaround issue where Jest is not picking tyope node nor jest types from tsconfig by using <reference>.
   const configPath = `${appProjectRoot}/jest.config.${js ? 'js' : 'cts'}`;
 
-  // For Expo v54+, we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
-  const resolverLine = useWinterRuntime
+  // For SDK 54+ (modern setup), we don't use the custom resolver - instead we mock ImportMetaRegistry in test-setup
+  const resolverLine = useModernJestSetup
     ? ''
     : "resolver: require.resolve('./jest.resolver.js'),\n  ";
 
@@ -75,8 +75,8 @@ module.exports = {
 };`;
   host.write(configPath, content);
 
-  if (useWinterRuntime) {
-    // For Expo v54+, generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
+  if (useModernJestSetup) {
+    // For SDK 54+ (modern setup), generate test-setup with ImportMetaRegistry mock and structuredClone polyfill
     const testSetupPath = `${appProjectRoot}/src/test-setup.${
       js ? 'js' : 'ts'
     }`;

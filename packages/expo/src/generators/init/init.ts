@@ -11,7 +11,7 @@ import {
 } from '@nx/devkit';
 import { coerce, major } from 'semver';
 import { createNodesV2 } from '../../../plugins/plugin';
-import { nxVersion } from '../../utils/versions';
+import { assertSupportedExpoVersion, nxVersion } from '../../utils/versions';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
 
 import { addGitIgnoreEntry } from './lib/add-git-ignore-entry';
@@ -22,6 +22,8 @@ export function expoInitGenerator(tree: Tree, schema: Schema) {
 }
 
 export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedExpoVersion(host);
+
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -108,7 +110,7 @@ export async function updateDependencies(host: Tree, schema: Schema) {
           }),
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 

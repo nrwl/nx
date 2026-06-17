@@ -1209,22 +1209,7 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    const td = nxJson.targetDefaults!;
-    const buildEntry = Array.isArray(td)
-      ? td.find(
-          (e) =>
-            e.target === 'build' &&
-            e.projects === undefined &&
-            e.plugin === undefined
-        )
-      : td.build;
-    const {
-      target: _t,
-      projects: _p,
-      plugin: _pl,
-      ...buildConfig
-    } = (buildEntry as any) ?? {};
-    expect(buildConfig).toMatchInlineSnapshot(`
+    expect(nxJson.targetDefaults.build).toMatchInlineSnapshot(`
       {
         "cache": true,
         "dependsOn": [

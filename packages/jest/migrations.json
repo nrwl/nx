@@ -1,12 +1,5 @@
 {
   "generators": {
-    "replace-getJestProjects-with-getJestProjectsAsync": {
-      "cli": "nx",
-      "version": "20.0.0-beta.5",
-      "description": "Replace usage of `getJestProjects` with `getJestProjectsAsync`.",
-      "implementation": "./dist/src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync",
-      "documentation": "./dist/src/migrations/update-20-0-0/replace-getJestProjects-with-getJestProjectsAsync.md"
-    },
     "replace-getJestProjects-with-getJestProjectsAsync-v21": {
       "cli": "nx",
       "version": "21.0.0-beta.9",

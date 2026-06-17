@@ -4,7 +4,7 @@ import type { AgenticArg } from './agentic/select';
 import {
   customCommitPrefixHasNoEffect,
   DEFAULT_MIGRATION_COMMIT_PREFIX,
-  MIGRATE_MODES,
+  MIGRATE_INCLUDE_VALUES,
   type MigrateArgs,
   MULTI_MAJOR_MODES,
 } from './command-object';
@@ -16,15 +16,16 @@ const MULTI_MAJOR_MODE_ENV = 'NX_MULTI_MAJOR_MODE';
  * CLI flag always wins, then `nx.json`, then the built-in default. Returns a new
  * args object; the input is not mutated.
  *
- * Phase-aware: generate-only options (`mode`, `multiMajorMode`) are applied only
+ * Phase-aware: generate-only options (`include`, `multiMajorMode`) are applied only
  * when not running migrations; run-only options (`createCommits`,
  * `commitPrefix`, `agentic`, `validate`) only when running migrations. This
  * mirrors where each option is consumed and avoids tripping the "cannot be
  * combined with --run-migrations" guards in `parseMigrationsOptions`.
  *
- * `mode` is carried as `modeFromConfig` rather than `mode` so it is never
- * mistaken for an explicit `--mode`: `resolveMode` applies it only when the
- * target is Nx itself, leaving `nx migrate <non-nx-pkg>` unaffected.
+ * `include` is carried as `includeFromConfig` rather than `include` so it is never
+ * mistaken for an explicit `--include`: `resolveInclude` applies it only when the
+ * resolved target supports optional updates, leaving targets that don't opt in
+ * unaffected.
  */
 export function applyNxJsonMigrateDefaults(
   args: MigrateArgs,
@@ -68,9 +69,9 @@ export function applyNxJsonMigrateDefaults(
       merged.validate = migrateConfig.validate;
     }
   } else {
-    if (merged.mode === undefined && migrateConfig.mode !== undefined) {
-      assertOneOf(migrateConfig.mode, MIGRATE_MODES, 'mode');
-      merged.modeFromConfig = migrateConfig.mode;
+    if (merged.include === undefined && migrateConfig.include !== undefined) {
+      assertOneOf(migrateConfig.include, MIGRATE_INCLUDE_VALUES, 'include');
+      merged.includeFromConfig = migrateConfig.include;
     }
     // The NX_MULTI_MAJOR_MODE env var is an established per-invocation override,
     // so it takes precedence over nx.json (CLI flag > env > nx.json > default).

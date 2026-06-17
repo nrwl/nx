@@ -31,7 +31,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "typings",
     "migrations.json",
     "executors.json",
@@ -68,10 +67,14 @@
     "tslib": "catalog:typescript"
   },
   "peerDependencies": {
+    "expo": ">=53.0.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
   "peerDependenciesMeta": {
+    "expo": {
+      "optional": true
+    },
     "metro-config": {
       "optional": true
     },
@@ -89,7 +92,8 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "generators": "./generators.json",
   "publishConfig": {

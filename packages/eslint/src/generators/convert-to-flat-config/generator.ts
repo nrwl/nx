@@ -10,7 +10,6 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
-  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -120,30 +119,6 @@ function isEslintTarget(target: { executor?: string; command?: string }) {
   );
 }
 
-function hasMatchingEslintTargetDefault(
-  projectConfig: ProjectConfiguration,
-  targetDefaults: NxJsonConfiguration['targetDefaults']
-): boolean {
-  if (!projectConfig.targets || !targetDefaults) {
-    return false;
-  }
-
-  if (Array.isArray(targetDefaults)) {
-    return targetDefaults.some(
-      (entry) =>
-        entry.target !== undefined &&
-        projectConfig.targets[entry.target] !== undefined &&
-        (entry.target === ESLINT_LINT_EXECUTOR || isEslintTarget(entry))
-    );
-  }
-
-  return Object.entries(targetDefaults).some(
-    ([targetName, targetConfig]) =>
-      projectConfig.targets[targetName] !== undefined &&
-      (targetName === ESLINT_LINT_EXECUTOR || isEslintTarget(targetConfig))
-  );
-}
-
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
@@ -176,10 +151,14 @@ function convertProjectToFlatConfig(
   if (eslintTargets.length > 0) {
     updateProjectConfiguration(tree, project, projectConfig);
   }
-  const hasEslintTargetDefaults = hasMatchingEslintTargetDefault(
-    projectConfig,
-    nxJson.targetDefaults
-  );
+  const hasEslintTargetDefaults =
+    projectConfig.targets &&
+    Object.keys(nxJson.targetDefaults || {}).some(
+      (t) =>
+        (t === ESLINT_LINT_EXECUTOR ||
+          isEslintTarget(nxJson.targetDefaults[t])) &&
+        projectConfig.targets[t]
+    );
 
   if (
     eslintTargets.length === 0 &&
@@ -251,38 +230,23 @@ function ensureInputPresent(
 
 // Updates nx.json: rewrites stale eslintrc/eslintignore references across all targetDefaults
 // inputs and namedInputs, and ensures lint targets include the new flat config file as an input
-// (and `production` excludes it). Handles both the legacy record shape and the new array shape
-// of `targetDefaults`.
+// (and `production` excludes it).
 function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (!tree.exists('nx.json')) {
     return;
   }
   updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
-    const rewriteTargetInputs = (
-      target: Partial<TargetConfiguration>,
-      isLintTarget: boolean
-    ) => {
-      if (!target.inputs) return;
-      target.inputs = isLintTarget
-        ? ensureInputPresent(
-            target.inputs,
-            `{workspaceRoot}/eslint.config.${format}`,
-            format
-          )
-        : rewriteLegacyInputs(target.inputs, format);
-    };
     if (json.targetDefaults) {
-      if (Array.isArray(json.targetDefaults)) {
-        for (const entry of json.targetDefaults) {
-          const isLintTarget =
-            entry.target === 'lint' || entry.target === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(entry, isLintTarget);
-        }
-      } else {
-        for (const [name, target] of Object.entries(json.targetDefaults)) {
-          const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(target, isLintTarget);
-        }
+      for (const [name, target] of Object.entries(json.targetDefaults)) {
+        if (!target.inputs) continue;
+        const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
+        target.inputs = isLintTarget
+          ? ensureInputPresent(
+              target.inputs,
+              `{workspaceRoot}/eslint.config.${format}`,
+              format
+            )
+          : rewriteLegacyInputs(target.inputs, format);
       }
     }
     if (json.namedInputs) {

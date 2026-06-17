@@ -1,8 +1,4 @@
-import {
-  addPlugin,
-  findTargetDefault,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -10,7 +6,6 @@ import {
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
-  type TargetConfiguration,
   Tree,
   updateJson,
   updateNxJson,
@@ -48,31 +43,20 @@ function updateProductionFileset(tree: Tree, format: 'mjs' | 'cjs' = 'mjs') {
 }
 
 function addTargetDefaults(tree: Tree, format: 'mjs' | 'cjs') {
-  const nxJson = readNxJson(tree) ?? {};
-  // `@nx/eslint:lint` is an executor identifier — match defaults keyed on
-  // the executor, not on a target named that string.
-  const existing = findTargetDefault(nxJson.targetDefaults, {
-    executor: '@nx/eslint:lint',
-  });
-  const patch: Partial<TargetConfiguration> = {};
-  if (existing?.cache === undefined) patch.cache = true;
-  if (existing?.inputs === undefined) {
-    patch.inputs = [
-      'default',
-      '^default',
-      `{workspaceRoot}/.eslintrc.json`,
-      `{workspaceRoot}/.eslintignore`,
-      `{workspaceRoot}/eslint.config.${format}`,
-      '{workspaceRoot}/tools/eslint-rules/**/*',
-    ];
-  }
-  if (Object.keys(patch).length > 0) {
-    upsertTargetDefault(tree, nxJson, {
-      executor: '@nx/eslint:lint',
-      ...patch,
-    });
-    updateNxJson(tree, nxJson);
-  }
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['@nx/eslint:lint'] ??= {};
+  nxJson.targetDefaults['@nx/eslint:lint'].cache ??= true;
+  nxJson.targetDefaults['@nx/eslint:lint'].inputs ??= [
+    'default',
+    '^default',
+    `{workspaceRoot}/.eslintrc.json`,
+    `{workspaceRoot}/.eslintignore`,
+    `{workspaceRoot}/eslint.config.${format}`,
+    '{workspaceRoot}/tools/eslint-rules/**/*',
+  ];
+  updateNxJson(tree, nxJson);
 }
 
 function updateVsCodeRecommendedExtensions(host: Tree) {

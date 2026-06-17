@@ -30,8 +30,14 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "module": "./dist/index.js",
+  "files": [
+    "dist",
+    "!dist/tsconfig.lib.tsbuildinfo",
+    "patch"
+  ],
   "exports": {
     ".": {
+      "@nx/nx-source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }

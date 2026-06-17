@@ -17,6 +17,10 @@ Project graph plugins are able to add new nodes or dependencies to the project g
 When developing project graph plugins, disable the [Nx Daemon](/docs/concepts/nx-daemon) by setting `NX_DAEMON=false`. The daemon caches your plugin code, so changes to your plugin won't be reflected until the daemon restarts.
 {% /aside %}
 
+{% aside type="note" title="Writing a fast plugin" %}
+`createNodesV2` runs on every graph computation, so its cost is paid on every command. Once your plugin works, see [Write a Performant Project Graph Plugin](/docs/extending-nx/performant-project-graph-plugins) for caching and other patterns that keep graph creation fast.
+{% /aside %}
+
 ## Adding plugins to workspace
 
 You can register a plugin by adding it to the plugins array in `nx.json`:

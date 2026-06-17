@@ -31,6 +31,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
+  assertSupportedRemixVersion,
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
@@ -62,6 +63,8 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
     _options.addPlugin,

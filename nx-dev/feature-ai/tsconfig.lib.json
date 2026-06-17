@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/feature-ai",
+    "outDir": "dist",
     "types": ["node"],
     "lib": ["dom"],
     "composite": true,

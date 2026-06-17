@@ -2,11 +2,7 @@ import { Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   getInstalledExpoVersion,
-  getInstalledExpoMajorVersion,
   isExpoV53,
-  isExpoV54,
-  isExpoV55,
-  isExpoV56,
   getExpoDependenciesVersionsToInstall,
 } from './version-utils';
 
@@ -87,68 +83,6 @@ describe('version-utils', () => {
     });
   });
 
-  describe('getInstalledExpoMajorVersion', () => {
-    it('should return undefined when expo is not installed', () => {
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBeUndefined();
-    });
-
-    it('should return 53 for v53', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~53.0.10' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(53);
-    });
-
-    it('should return 54 for v54', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~54.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(54);
-    });
-
-    it('should return 55 for v55', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~55.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(55);
-    });
-
-    it('should return 56 for v56', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~56.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBe(56);
-    });
-
-    it('should return undefined for unsupported versions', () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~52.0.0' },
-        })
-      );
-      const majorVersion = getInstalledExpoMajorVersion(tree);
-      expect(majorVersion).toBeUndefined();
-    });
-  });
-
   describe('isExpoV53', () => {
     it('should return false when expo is not installed', async () => {
       const result = await isExpoV53(tree);
@@ -175,93 +109,6 @@ describe('version-utils', () => {
       );
       const result = await isExpoV53(tree);
       expect(result).toBe(false);
-    });
-  });
-
-  describe('isExpoV54', () => {
-    it('should return false when expo is not installed (default to latest v56)', async () => {
-      const result = await isExpoV54(tree);
-      expect(result).toBe(false);
-    });
-
-    it('should return false for v53', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~53.0.10' },
-        })
-      );
-      const result = await isExpoV54(tree);
-      expect(result).toBe(false);
-    });
-
-    it('should return true for v54', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~54.0.0' },
-        })
-      );
-      const result = await isExpoV54(tree);
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('isExpoV55', () => {
-    it('should return false when expo is not installed (default to latest v56)', async () => {
-      const result = await isExpoV55(tree);
-      expect(result).toBe(false);
-    });
-
-    it('should return true for v55', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~55.0.0' },
-        })
-      );
-      const result = await isExpoV55(tree);
-      expect(result).toBe(true);
-    });
-
-    it('should return false for v56', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~56.0.0' },
-        })
-      );
-      const result = await isExpoV55(tree);
-      expect(result).toBe(false);
-    });
-  });
-
-  describe('isExpoV56', () => {
-    it('should return true when expo is not installed (default to latest v56)', async () => {
-      const result = await isExpoV56(tree);
-      expect(result).toBe(true);
-    });
-
-    it('should return false for v55', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~55.0.0' },
-        })
-      );
-      const result = await isExpoV56(tree);
-      expect(result).toBe(false);
-    });
-
-    it('should return true for v56', async () => {
-      tree.write(
-        'package.json',
-        JSON.stringify({
-          dependencies: { expo: '~56.0.0' },
-        })
-      );
-      const result = await isExpoV56(tree);
-      expect(result).toBe(true);
     });
   });
 
@@ -302,12 +149,13 @@ describe('version-utils', () => {
       tree.write(
         'package.json',
         JSON.stringify({
-          dependencies: { expo: '~55.0.0' },
+          dependencies: { expo: '~55.0.26' },
         })
       );
       const versions = await getExpoDependenciesVersionsToInstall(tree);
       expect(versions.expo).toContain('55');
       expect(versions.reactNative).toContain('0.83');
+      expect(versions.react).toContain('19.2');
     });
 
     it('should return v56 versions when v56 is installed', async () => {
@@ -320,6 +168,7 @@ describe('version-utils', () => {
       const versions = await getExpoDependenciesVersionsToInstall(tree);
       expect(versions.expo).toContain('56');
       expect(versions.reactNative).toContain('0.85');
+      expect(versions.react).toContain('19.2');
     });
 
     it('should include shared versions regardless of expo version', async () => {

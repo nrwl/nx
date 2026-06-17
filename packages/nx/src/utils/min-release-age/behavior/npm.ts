@@ -9,6 +9,7 @@ import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
   classifySpec,
+  degradeTagToCompliant,
   isVersionMature,
   newestInRange,
   type PickOutcome,
@@ -288,11 +289,12 @@ function createNpmPolicy(opts: {
 }
 
 /**
- * Mirrors npm-pick-manifest@11.0.3 under an active `before` filter:
+ * npm resolution under an active `before` filter. Exact pins and ranges mirror
+ * npm-pick-manifest@11.0.3; dist-tag degrade uses the shared cross-PM rule:
  * - exact pin too new -> ETARGET (no fallback).
  * - unknown dist-tag -> ETARGET (no version to resolve against).
- * - dist-tag too new -> recurse with `<=tagTarget` (newest passing version at
- *   or below the tag target, prereleases of the same line included).
+ * - dist-tag too new -> degrade via the shared channel-aware rule (see
+ *   `degradeTagToCompliant` for the ordering); none compliant -> ENOVERSIONS.
  * - range -> filter every version by maturity FIRST; empty -> ENOVERSIONS;
  *   else newest in-range survivor; survivors but none in range -> ETARGET.
  */
@@ -327,8 +329,13 @@ export function pickNpmVersion(
     if (isVersionMature(metadata.name, tagTarget, metadata, policy)) {
       return { version: tagTarget, unconstrained };
     }
-    // npm recurses with `<=tagTarget`, which flows through the range path.
-    return pickRange(metadata, policy, `<=${tagTarget}`, spec, unconstrained);
+    const degraded = degradeTagToCompliant(tagTarget, metadata, (v) =>
+      isVersionMature(metadata.name, v, metadata, policy)
+    );
+    if (degraded) {
+      return { version: degraded, unconstrained };
+    }
+    throw enoVersions(metadata, policy, spec);
   }
 
   return pickRange(metadata, policy, spec, spec, newestInRange(metadata, spec));

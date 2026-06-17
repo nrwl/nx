@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json"
   ],
@@ -151,7 +150,8 @@
     "nx": "workspace:*"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "publishConfig": {
     "access": "public"

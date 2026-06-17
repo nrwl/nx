@@ -1,4 +1,4 @@
-import { addPlugin, upsertTargetDefault } from '@nx/devkit/internal';
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -41,7 +41,7 @@ function checkDependenciesInstalled(
 }
 
 function addCacheableOperation(tree: Tree) {
-  const nxJson = readNxJson(tree) ?? {};
+  const nxJson = readNxJson(tree);
   const cacheableOperations: string[] | null =
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations;
 
@@ -51,7 +51,10 @@ function addCacheableOperation(tree: Tree) {
     );
   }
 
-  upsertTargetDefault(tree, nxJson, { target: 'build-storybook', cache: true });
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['build-storybook'] ??= {};
+  nxJson.targetDefaults['build-storybook'].cache = true;
+
   updateNxJson(tree, nxJson);
 }
 

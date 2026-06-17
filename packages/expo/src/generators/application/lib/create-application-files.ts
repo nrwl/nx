@@ -11,7 +11,7 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
-import { getInstalledExpoMajorVersion } from '../../../utils/version-utils';
+import { getInstalledExpoMajor } from '../../../utils/version-utils';
 
 export async function createApplicationFiles(
   host: Tree,
@@ -20,11 +20,10 @@ export async function createApplicationFiles(
   const packageManager = detectPackageManager(host.root);
 
   // Expo SDK 55+ ships Metro via `@expo/metro` instead of the standalone
-  // `metro`/`metro-config`/`metro-resolver` packages. When undefined (no Expo
+  // `metro`/`metro-config`/`metro-resolver` packages. When null (no Expo
   // installed yet), default to the latest behavior (v56).
-  const installedExpoMajor = getInstalledExpoMajorVersion(host);
-  const usesExpoMetro =
-    installedExpoMajor === undefined || installedExpoMajor >= 55;
+  const installedExpoMajor = await getInstalledExpoMajor(host);
+  const usesExpoMetro = installedExpoMajor === null || installedExpoMajor >= 55;
 
   const onBoardingStatus = await createNxCloudOnboardingURLForWelcomeApp(
     host,

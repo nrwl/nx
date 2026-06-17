@@ -3,6 +3,7 @@
   "assets": [
     { "glob": "**/files/**", "input": "packages/maven/src" },
     { "glob": "**/schema.json", "input": "packages/maven/src" },
+    { "glob": "migrations/**/*.md", "input": "packages/maven/src" },
     { "glob": "@(generators|executors).json" },
     {
       "glob": "**/*.jar",

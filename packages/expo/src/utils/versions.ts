@@ -1,8 +1,19 @@
 import { join } from 'path';
+import { type Tree } from '@nx/devkit';
+import { assertSupportedPackageVersion } from '@nx/devkit/internal';
 
 export const nxVersion = require(join('@nx/expo', 'package.json')).version;
 
-// Expo v56 versions (default for new projects)
+// Lowest supported Expo SDK. Below this, generators throw via
+// assertSupportedExpoVersion. Expo Go only supports the latest SDK, but the
+// plugin keeps install lanes for the recent SDKs it has constants for (53–56).
+export const minSupportedExpoVersion = '53.0.0';
+
+export function assertSupportedExpoVersion(tree: Tree): void {
+  assertSupportedPackageVersion(tree, 'expo', minSupportedExpoVersion);
+}
+
+// Expo v56 versions (default for new projects) — RN 0.85, React 19.2
 export const expoV56Version = '~56.0.0';
 export const expoV56SplashScreenVersion = '~56.0.10';
 export const expoV56StatusBarVersion = '~56.0.4';
@@ -20,21 +31,21 @@ export const metroV56Version = '~0.84.3';
 export const reactNativeWebV56Version = '~0.21.0';
 export const reactTestRendererV56Version = '^19.2.0';
 
-// Expo v55 versions (for existing workspaces)
-export const expoV55Version = '~55.0.0';
+// Expo v55 versions (for existing workspaces) — RN 0.83, React 19.2
+export const expoV55Version = '~55.0.26';
 export const expoV55SplashScreenVersion = '~55.0.21';
 export const expoV55StatusBarVersion = '~55.0.6';
 export const expoV55SystemUiVersion = '~55.0.18';
-export const expoV55CliVersion = '~55.0.32'; // @expo/cli
-export const babelPresetExpoV55Version = '~55.0.22';
-export const expoV55MetroConfigVersion = '~55.0.23'; // @expo/metro-config
+export const expoV55CliVersion = '~55.0.11';
+export const babelPresetExpoV55Version = '~55.0.7';
+export const expoV55MetroConfigVersion = '~55.0.8';
 export const expoV55MetroRuntimeVersion = '~55.0.11';
 export const jestExpoV55Version = '~55.0.18';
 export const reactV55Version = '^19.2.0';
 export const reactDomV55Version = '^19.2.0';
 export const typesReactV55Version = '^19.2.0';
 export const reactNativeV55Version = '0.83.6';
-export const metroV55Version = '~0.83.6';
+export const metroV55Version = '~0.83.0';
 export const reactNativeWebV55Version = '~0.21.0';
 export const reactTestRendererV55Version = '^19.2.0';
 

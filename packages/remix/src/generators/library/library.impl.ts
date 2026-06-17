@@ -16,6 +16,7 @@ import {
   sortPackageJsonFields,
 } from '@nx/js/internal';
 import { updateDependencies } from '../utils/update-dependencies';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export async function remixLibraryGenerator(
   tree: Tree,
@@ -32,6 +33,8 @@ export async function remixLibraryGeneratorInternal(
   tree: Tree,
   schema: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(tree, schema.addPlugin);
