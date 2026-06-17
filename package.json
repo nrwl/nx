@@ -59,6 +59,7 @@
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^9.39.4",
     "@floating-ui/react": "0.26.6",
+    "@jest/globals": "catalog:jest",
     "@jest/reporters": "catalog:jest",
     "@jest/test-result": "catalog:jest",
     "@jest/types": "catalog:jest",

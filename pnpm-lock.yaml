@@ -227,6 +227,9 @@ catalogs:
       specifier: ^10.0.0
       version: 10.1.8
   jest:
+    '@jest/globals':
+      specifier: 30.3.0
+      version: 30.3.0
     '@jest/reporters':
       specifier: ^30.0.2
       version: 30.3.0
@@ -580,6 +583,9 @@ importers:
       '@floating-ui/react':
         specifier: 0.26.6
         version: 0.26.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@jest/globals':
+        specifier: catalog:jest
+        version: 30.3.0
       '@jest/reporters':
         specifier: catalog:jest
         version: 30.3.0

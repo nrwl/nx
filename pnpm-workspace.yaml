@@ -116,6 +116,7 @@ catalogs:
     angular-eslint: '^22.0.0'
     eslint-config-prettier: '^10.0.0'
   jest:
+    '@jest/globals': '30.3.0'
     '@jest/reporters': '^30.0.2'
     '@jest/test-result': '^30.0.2'
     '@jest/types': '30.0.1'
