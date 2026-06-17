@@ -120,7 +120,8 @@ export async function configurationGeneratorInternal(
   if (tree.exists(projectTsConfigPath)) {
     updateJson(tree, projectTsConfigPath, (json) => {
       // Cypress uses commonjs, so when the project sets a moduleResolution we
-      // pin a node-family value to avoid Cypress failing with TS5095.
+      // pin a value compatible with both Cypress and the installed TypeScript
+      // version to avoid Cypress failing.
       // See: https://github.com/cypress-io/cypress/issues/27731
       if (
         (json.compilerOptions?.module ||
