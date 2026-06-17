@@ -1,9 +1,7 @@
-import { rspackVersion } from '@rspack/core';
-
-export function getRspackMajorVersion(): number {
-  return parseInt(rspackVersion ?? '1', 10);
-}
-
 export function isRspackV2(): boolean {
-  return getRspackMajorVersion() >= 2;
+  // Lazy-require avoids loading @rspack/core (pure ESM in v2) at module load
+  // time; these call sites run at config-build time, before a compiler exists.
+  const { rspackVersion } =
+    require('@rspack/core') as typeof import('@rspack/core');
+  return parseInt(rspackVersion ?? '1', 10) >= 2;
 }
