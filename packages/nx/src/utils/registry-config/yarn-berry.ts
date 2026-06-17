@@ -143,7 +143,7 @@ export function getYarnBerrySpawnRegistryEnv(
     : undefined;
   // A *configured* scope (its key is present in npmScopes, even auth-only or
   // empty) whose npmRegistryServer is omitted routes to berry's SHAPE default
-  // (registry.yarnpkg.com), NOT the top-level npmRegistryServer - berry seeds
+  // (registry.yarnpkg.com), NOT the top-level npmRegistryServer. Berry seeds
   // the scope's npmRegistryServer to that default and returns it directly. An
   // unconfigured scope falls through to the top-level default.
   const scopeConfigured =
