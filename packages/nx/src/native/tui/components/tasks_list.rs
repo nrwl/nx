@@ -450,6 +450,8 @@ impl TasksList {
     /// rendering), this drives in-progress-list membership: a batched task is
     /// never an independent selection target; the batch group represents it.
     fn is_task_in_any_batch(&self, task_id: &str) -> bool {
+        // Batch groups live in display_items regardless of any active filter, so
+        // the filtered view is intentionally not scanned here.
         self.display_items.iter().any(|item| {
             matches!(item, DisplayItem::BatchGroup(batch_group)
                 if batch_group.nested_tasks.contains(task_id))
@@ -463,6 +465,8 @@ impl TasksList {
         match self.get_batch_group_by_id(batch_id) {
             Some(batch_group) => batch_group.nested_tasks.iter().all(|id| {
                 self.task_lookup.get(id).is_some_and(|task| {
+                    // Closed-world: any status outside the active set counts as
+                    // terminal. Revisit if a new non-terminal variant is added.
                     !matches!(
                         task.status,
                         TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
@@ -474,9 +478,9 @@ impl TasksList {
     }
 
     /// Whether a completing batch's output is being followed by a focused output
-    /// pane (spacebar mode), in which case selection should stay on the batch's
-    /// last task so its output remains visible, mirroring the standalone
-    /// terminal-pane exception in [`Self::is_terminal_showing_task`].
+    /// pane in spacebar mode, in which case selection should stay on the batch's
+    /// last task so its output remains visible. Only the spacebar case is checked
+    /// here; a pinned batch pane is preserved separately in `handle_batch_complete`.
     fn is_terminal_showing_batch(&self) -> bool {
         matches!(self.focus, Focus::MultipleOutput(_)) && self.spacebar_mode
     }
@@ -1513,8 +1517,11 @@ impl TasksList {
         let old_is_in_progress = matches!(old_status, TaskStatus::InProgress | TaskStatus::Shared);
         // Rendering nests tasks only under EXPANDED batches; the in-progress
         // selectable list excludes tasks under ANY batch (the group represents them).
-        let is_in_expanded_batch = self.is_task_nested_in_expanded_batch(task_id);
+        // A task can only be in an expanded batch if it is batched at all, so the
+        // standalone case (the common one) skips the second scan.
         let is_in_any_batch = self.is_task_in_any_batch(task_id);
+        let is_in_expanded_batch =
+            is_in_any_batch && self.is_task_nested_in_expanded_batch(task_id);
 
         // Get position BEFORE removing (for position-based selection switching)
         let old_index = if old_is_in_progress && !is_in_any_batch {
@@ -3597,10 +3604,14 @@ mod tests {
         );
 
         assert!(!tasks_list.is_batch_complete("batch1"), "both in progress");
-        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Success);
+        // Exercise the non-Success terminal variants the guard admits.
+        tasks_list.update_task_status(&test_tasks[0].id, TaskStatus::Failure);
         assert!(!tasks_list.is_batch_complete("batch1"), "one still running");
-        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Success);
-        assert!(tasks_list.is_batch_complete("batch1"), "all terminal");
+        tasks_list.update_task_status(&test_tasks[1].id, TaskStatus::Stopped);
+        assert!(
+            tasks_list.is_batch_complete("batch1"),
+            "Failure and Stopped both count as terminal"
+        );
         assert!(!tasks_list.is_batch_complete("nonexistent"));
     }
 
