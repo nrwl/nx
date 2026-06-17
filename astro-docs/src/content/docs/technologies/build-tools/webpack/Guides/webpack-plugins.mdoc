@@ -355,29 +355,16 @@ module.exports = {
 
 ### NxReactWebpackPlugin
 
-#### Options
-
-##### svgr
-
-Type: `boolean`
-
-Enables or disables [React SVGR](https://react-svgr.com/). Default is `true`.
-
-**Deprecated:** Add SVGR support in your Webpack configuration without relying on Nx. This option will be removed in Nx 22. See https://react-svgr.com/docs/webpack/
+This plugin adds React support, such as Fast Refresh, to your Webpack configuration.
 
 #### Example
 
 ```js
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
-const { join } = require('path');
 
 module.exports = {
   // ...
-  plugins: [
-    new NxReactWebpackPlugin({
-      svgr: false,
-    }),
-  ],
+  plugins: [new NxReactWebpackPlugin()],
 };
 ```
 
