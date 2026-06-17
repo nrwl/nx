@@ -66,10 +66,12 @@ export interface ThrottleSummary {
  *   overhead = runDuration − criticalPathDuration
  *
  * the total wall-clock above the floor (the critical path is the fastest the run
- * could go with unlimited slots), and a split of that overhead into the time
- * tasks spent *queued for a slot while work was waiting* (recoverable by more
- * parallelism, measured from the run's occupancy timeline) versus everything
- * else (coordinator/scheduling overhead, which parallelism can't fix).
+ * could go with unlimited slots), and a split of that overhead by CAUSE — read
+ * off the critical path's per-link waits: time a critical task spent queued for
+ * a slot (recoverable by more parallelism) versus time it spent on the
+ * coordinator — hashing, scheduling, the chain root waiting on a continuous
+ * dependency, plus any hashing before the first task — which parallelism can't
+ * fix.
  *
  * Scope: discrete tasks only. Continuous tasks (no end time) are excluded from
  * every duration calculation; a discrete task's wait for a continuous dependency
@@ -336,6 +338,38 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
+   * Coordinator hashing wall-clock that ran before the first task started — the
+   * run window would otherwise miss it. The lookback is bounded to one task
+   * window so stale perf marks from earlier work in the same process are
+   * excluded, and overlapping windows are unioned so concurrent hashes aren't
+   * double-counted.
+   */
+  private preDispatchHashTime(
+    firstTaskStart: number,
+    taskWindow: number,
+    hashWindows: Array<[number, number]>
+  ): number {
+    const lowerBound = firstTaskStart - taskWindow;
+    const clipped = hashWindows
+      .map(([s, e]): [number, number] => [
+        Math.max(s, lowerBound),
+        Math.min(e, firstTaskStart),
+      ])
+      .filter(([s, e]) => e > s)
+      .sort((a, b) => a[0] - b[0]);
+    let total = 0;
+    let cursor = -Infinity;
+    for (const [s, e] of clipped) {
+      const start = Math.max(s, cursor);
+      if (e > start) {
+        total += e - start;
+        cursor = e;
+      }
+    }
+    return total;
+  }
+
+  /**
    * Compute the structured throttle summary, or `null` when no discrete task
    * timings were recorded. Pure aside from reading `os` / `process.env.CI`.
    */
@@ -356,7 +390,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       runStart = Math.min(runStart, start);
       runEnd = Math.max(runEnd, end);
     }
-    const runDuration = Math.max(0, runEnd - runStart);
+    const taskWindow = Math.max(0, runEnd - runStart);
 
     const eligible = new Map<string, number>();
     for (const { id } of timed) {
@@ -365,7 +399,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 
     const { path: criticalPathTasks, duration: criticalPathDuration } =
       this.criticalPath(durations);
-    const overhead = Math.max(0, runDuration - criticalPathDuration);
 
     // Discrete parallelism: startCommand is handed `total = discrete +
     // continuousCount` (see getThreadPoolSize), so subtracting the continuous
@@ -385,38 +418,16 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
         ? os.availableParallelism()
         : os.cpus().length;
 
-    // Slot contention straight off the occupancy timeline: time the machine was
-    // saturated AND something was waiting to run. Split by whether the machine
-    // had spare cores (raise --parallel) or was already at the core count (more
-    // machines). Independent of any single chain or instant.
+    // Occupancy timeline + hashing windows, used to classify each chain link's
+    // wait (slot vs coordinator) over its whole window, not at a single instant.
     const segments = this.buildSegments(timed, eligible, parallel);
-    let throttled = 0;
-    for (const s of segments) {
-      if (s.occ >= parallel && s.waiting > 0) {
-        throttled += s.end - s.start;
-      }
-    }
-    // Can't recover below the critical-path floor.
-    const recoverableBySlots = Math.min(throttled, overhead);
-    // Split by lever from WORK INVARIANTS, not observed occupancy. Observed occ
-    // is capped at `parallel`, so an `occ >= cores` test would report 0
-    // machine-recoverable time whenever parallel < cores (the default) — hiding
-    // the real machine-bound residue. Instead: with spare cores, raising
-    // --parallel is the lever; the part even cores-way parallelism can't absorb
-    // — the volume that exceeds one machine, max(0, totalWork/cores − CP) —
-    // needs more machines. At parallel ≥ cores there's no --parallel headroom,
-    // so all of it is machine-bound.
-    const machineBound =
-      parallel < cores
-        ? Math.max(0, totalWork / cores - criticalPathDuration)
-        : Infinity;
-    const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
-    const recoverableByParallel = recoverableBySlots - recoverableByMachines;
-    const coordinatorOverhead = overhead - recoverableBySlots;
-
-    // Annotate the critical path for display (gate per link from the same
-    // occupancy timeline, not a single-instant sample).
     const hashWindows = this.hashWindows();
+
+    // The critical path (the floor), each link tagged with how it was held up.
+    // This is both what we display AND the basis for splitting the overhead: the
+    // run exceeds the floor because of the waits ON this chain, so we read the
+    // split straight off it — no separate global-occupancy number that could
+    // disagree with what we print.
     const criticalPathChain: ChainLink[] = criticalPathTasks.map((id, idx) => {
       const start = this.timings.get(id)?.startTime ?? 0;
       const ready = eligible.get(id) ?? start;
@@ -435,6 +446,51 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       }
       return { id, duration: durations.get(id) ?? 0, gate, wait };
     });
+
+    // Coordinator hashing that ran BEFORE the first task started — the task
+    // window would otherwise miss it. Added to both the overhead and the
+    // coordinator bucket below, so it surfaces without touching the slot split.
+    const preDispatchHash = this.preDispatchHashTime(
+      runStart,
+      taskWindow,
+      hashWindows
+    );
+    const runDuration = taskWindow + preDispatchHash;
+    const overhead = Math.max(0, runDuration - criticalPathDuration);
+
+    // Split the overhead by CAUSE, read off the chain that determined the
+    // finish. Coordinator overhead = hashing/scheduling waits ON the critical
+    // path + the chain root's eligibility delay (e.g. waiting for a continuous
+    // `serve` to come up) + pre-dispatch hashing — none of which more
+    // parallelism removes. Everything else above the floor is slot contention.
+    // Capped so the two always sum to the overhead.
+    const coordinatorWait = criticalPathChain.reduce(
+      (sum, c) =>
+        c.gate === 'hashing' || c.gate === 'other' ? sum + c.wait : sum,
+      0
+    );
+    const rootEligibilityDelay =
+      criticalPathTasks.length > 0
+        ? Math.max(
+            0,
+            (eligible.get(criticalPathTasks[0]) ?? runStart) - runStart
+          )
+        : 0;
+    const coordinatorOverhead = Math.min(
+      overhead,
+      coordinatorWait + rootEligibilityDelay + preDispatchHash
+    );
+    const recoverableBySlots = Math.max(0, overhead - coordinatorOverhead);
+    // Of the slot-recoverable part, raising --parallel helps while the machine
+    // has spare cores; the volume even cores-way parallelism can't absorb
+    // (max(0, totalWork/cores − floor)) needs more machines. At parallel ≥ cores
+    // there is no --parallel headroom, so it's all machine-bound.
+    const machineBound =
+      parallel < cores
+        ? Math.max(0, totalWork / cores - criticalPathDuration)
+        : Infinity;
+    const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
+    const recoverableByParallel = recoverableBySlots - recoverableByMachines;
 
     const dominant = criticalPathChain.reduce<{
       id: string;
@@ -614,7 +670,7 @@ function buildRecommendation(args: {
   }
   const base = `Most overhead (~${formatDuration(
     coordinatorOverhead
-  )}) is coordinator work (hashing, task spawning, scheduling), which more parallelism won't fix. Speed up or split the critical path${dom}.`;
+  )}) is coordinator work — hashing, task spawning, scheduling — which more parallelism won't fix. A warm Nx daemon and smaller/fewer task inputs (less to hash) are the levers.`;
   return isCI
     ? `${base} A faster CI runner also helps if that work is CPU-bound.`
     : base;
