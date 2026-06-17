@@ -1,4 +1,7 @@
 import type { RsbuildConfig } from '@rsbuild/core';
+import { join } from 'path';
+import { mkdir } from 'fs/promises';
+
 import {
   createAngularCompilation,
   AngularCompilation,
@@ -20,11 +23,34 @@ export async function setupCompilationWithAngularCompilation(
 ) {
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
+
+  // When a persistent cache directory is available, enable TypeScript's
+  // incremental program and persist its `.tsbuildinfo` to that directory.
+  if (
+    sourceFileCache?.persistentCachePath &&
+    compilerOptions['incremental'] !== false
+  ) {
+    // ensure path exists
+    await mkdir(sourceFileCache.persistentCachePath, { recursive: true });
+    compilerOptions['incremental'] = true;
+    compilerOptions['tsBuildInfoFile'] = join(
+      sourceFileCache.persistentCachePath,
+      '.tsbuildinfo'
+    );
+  }
   angularCompilation ??= await createAngularCompilation(
     !options.aot,
     !options.hasServer,
     false
   );
+
+  // Drop the bundler's cached results for files the watcher reported as
+  // modified so dependent stylesheets get rebuilt; skipped on the initial
+  // build when there's nothing to invalidate.
+  if (modifiedFiles) {
+    componentStylesheetBundler.invalidate(modifiedFiles);
+  }
+
   modifiedFiles ??= new Set(rootNames);
 
   const fileReplacements: Record<string, string> =

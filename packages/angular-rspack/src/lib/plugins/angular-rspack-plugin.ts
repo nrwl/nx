@@ -22,6 +22,7 @@ import {
   type RspackPluginInstance,
   sources,
 } from '@rspack/core';
+import { createRequire } from 'module';
 import { dirname, join, normalize, resolve } from 'node:path';
 import {
   type I18nOptions,
@@ -38,6 +39,26 @@ import { getStatsOptions } from '../config/config-utils/get-stats-options';
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 
+// Create a persistent cache directory for the Angular TypeScript program's
+// `.tsbuildinfo`, matching the location used by Angular's esbuild pipeline.
+
+function getPersistentCachePath(
+  options: NormalizedAngularRspackPluginOptions
+): string | undefined {
+  if (!options.projectName) {
+    return undefined;
+  }
+  const { version } = createRequire(__filename)('@angular/build/package.json');
+  const cachePath = join(
+    workspaceRoot,
+    '.angular',
+    'cache',
+    version,
+    options.projectName
+  );
+  return cachePath;
+}
+
 export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
   #i18n: I18nOptions | undefined;
@@ -53,7 +74,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    this.#sourceFileCache = new SourceFileCache();
+    this.#sourceFileCache = new SourceFileCache(
+      getPersistentCachePath(options)
+    );
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         /**
@@ -128,7 +151,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 compiler.options.resolve.tsConfig,
                 watchingModifiedFiles.size > 0
                   ? watchingModifiedFiles
-                  : undefined
+                  : undefined,
+                true
               );
 
               await buildAndAnalyze(
@@ -267,6 +291,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         }
       }
 
+      callback();
+    });
+
+    // Tear down the JavaScriptTransformer worker pool only when the compiler
+    // shuts down. Doing it per-build would respawn workers on every rebuild
+    // and discard their warm in-memory state.
+    compiler.hooks.shutdown.tapAsync(PLUGIN_NAME, async (callback) => {
       await this.#javascriptTransformer.close();
       callback();
     });
@@ -434,7 +465,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   private async setupCompilation(
     root: string,
     tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
-    modifiedFiles?: Set<string>
+    modifiedFiles?: Set<string>,
+    watch = false
   ) {
     const tsconfigPath = tsConfig
       ? typeof tsConfig === 'string'
@@ -457,6 +489,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         hasServer: this.#_options.hasServer,
         includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
         sass: this.#_options.stylePreprocessorOptions?.sass,
+        watch,
       },
       this.#sourceFileCache,
       this.#angularCompilation,
