@@ -84,7 +84,7 @@ We can also set this via project configuration as a default option.
 
 ##### Flat Config file
 
-`ESLint` provides several ways of specifying the configuration. The default one is using `.eslintrc.json` but you can override it by setting the `eslintConfig` flag. The new `Flat Config` is now also supported:
+`ESLint` provides several ways of specifying the configuration. The executor resolves the config file automatically, but you can override it by setting the `eslintConfig` flag, for example to point at a flat config file:
 
 ```json
 "lint": {
