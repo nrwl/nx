@@ -158,12 +158,9 @@ export class TasksSchedule {
       this.notScheduledTaskGraph,
       taskIds
     );
-    const readyTime = Date.now();
     for (const taskId of taskIds) {
       this.scheduledTasks.push(taskId);
       this.runningTasks.add(taskId);
-      // Task is ready to run (deps complete) but may wait for a free slot.
-      this.options.lifeCycle?.setTaskReadyTime?.(taskId, readyTime);
     }
     this.sortScheduledTasks();
   }
@@ -243,12 +240,6 @@ export class TasksSchedule {
     );
 
     this.scheduledBatches.push({ id: batchId, executorName, taskGraph });
-
-    // Batched tasks become ready together when the batch is queued.
-    const readyTime = Date.now();
-    for (const taskId of Object.keys(taskGraph.tasks)) {
-      this.options.lifeCycle?.setTaskReadyTime?.(taskId, readyTime);
-    }
   }
 
   private async processTaskForBatches(

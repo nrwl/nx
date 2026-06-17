@@ -978,9 +978,6 @@ export class TaskOrchestrator {
     task: Task,
     groupId: number
   ): void {
-    // Slot acquired (called right after closeGroup): the task waited from its
-    // readyTime until now for a free slot.
-    this.options.lifeCycle.setTaskDispatchTime?.(task.id, Date.now());
     const worker = this.runTaskDirectly(doNotSkipCache, task, groupId)
       .catch((e) =>
         this.handleDiscreteWorkerFailure(doNotSkipCache, task, groupId, e)
