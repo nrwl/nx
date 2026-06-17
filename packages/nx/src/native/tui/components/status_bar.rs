@@ -9,6 +9,8 @@ use ratatui::{
     widgets::Paragraph,
 };
 
+use hashbrown::HashSet;
+
 use crate::native::tui::theme::THEME;
 
 use super::Component;
@@ -18,7 +20,7 @@ use super::tasks_list::TaskStatus;
 /// every render. Maps `TaskStatus` variants to the chip categories used by
 /// the bar.
 ///
-/// Mapping (per NXC-3076 round 13):
+/// Mapping:
 /// - `passed`  = Success + LocalCache + LocalCacheKeptExisting + RemoteCache
 /// - `cached`  = LocalCache + LocalCacheKeptExisting + RemoteCache
 ///               (sub-count of `passed`)
@@ -43,11 +45,7 @@ pub struct StatusCounts {
 
 /// Width-of-N helper. `0` is still one digit.
 fn digit_width(n: usize) -> u16 {
-    if n == 0 {
-        1
-    } else {
-        ((n as f64).log10().floor() as u16) + 1
-    }
+    n.checked_ilog10().map_or(1, |e| e as u16 + 1)
 }
 
 impl StatusCounts {
@@ -105,25 +103,25 @@ pub enum BarSide {
 
 /// Every droppable or sticky item the bar can render. Ordering of variants
 /// is meaningful only insofar as `priority()` defines the actual drop
-/// sequence (v4 actions-first ladder, see NXC-3076 prototypes round 13).
+/// sequence (actions-first: non-critical actions drop before any chip).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum BarItem {
-    // Sticky (rungs 11–13). Always present.
-    Progress,         // rung 12 — "X/Y done"
-    FailedChip,       // rung 11 — only present when failed > 0
+    // Sticky (rungs 11-13). Always present.
+    Progress,         // rung 12 - "X/Y done"
+    FailedChip,       // rung 11 - only present when failed > 0
     QuitHelp,         // rung 13
     HelpHelp,         // rung 13
     ShowTaskListHelp, // sticky when task list is hidden; absent otherwise
     // Droppable. Lower rung number = drops first.
-    CachedBracket,  // rung 2  — "[N cached]" tail on PassedChip
-    PinHelp,        // rung 3  — "pin output: 1 or 2"
-    NavigateHelp,   // rung 4  — "navigate: ↑ ↓"
-    FilterHelp,     // rung 5  — "filter: /"
-    ShowOutputHelp, // rung 6  — "show output: <enter>"
-    PendingChip,    // rung 7  — "· N"
-    SkipStopChips,  // rung 8  — "⏭ N" and/or "◼ N"
-    PassedChip,     // rung 9  — "✔ N"
-    RunningChip,    // rung 10 — "⠋ N"
+    CachedBracket,  // rung 2  - "[N cached]" tail on PassedChip
+    PinHelp,        // rung 3  - "pin output: 1 or 2"
+    NavigateHelp,   // rung 4  - "navigate: ↑ ↓"
+    FilterHelp,     // rung 5  - "filter: /"
+    ShowOutputHelp, // rung 6  - "show output: <enter>"
+    PendingChip,    // rung 7  - "· N"
+    SkipStopChips,  // rung 8  - "⏭ N" and/or "◼ N"
+    PassedChip,     // rung 9  - "✔ N"
+    RunningChip,    // rung 10 - "⠋ N"
 }
 
 impl BarItem {
@@ -185,17 +183,17 @@ impl BarItem {
     /// as eager-zero-dropped at rung 1).
     pub fn width(self, counts: &StatusCounts) -> u16 {
         match self {
-            // Progress renders "Waiting for tasks…" while no tasks are known,
+            // Progress renders "Waiting for tasks..." while no tasks are known,
             // and "X/Y done" otherwise. Width reported must match what's
             // rendered or the fit algorithm under-budgets and the help row
             // gets clipped instead of dropping shortcuts.
             BarItem::Progress if counts.total() == 0 => "Waiting for tasks…".chars().count() as u16,
             BarItem::Progress => digit_width(counts.done()) + 1 + digit_width(counts.total()) + 5,
-            // "✖ N" — icon + space + digits
+            // "✖ N" - icon + space + digits
             BarItem::FailedChip if counts.failed > 0 => 2 + digit_width(counts.failed),
-            // "✔ N" — icon + space + digits
+            // "✔ N" - icon + space + digits
             BarItem::PassedChip if counts.passed > 0 => 2 + digit_width(counts.passed),
-            // " [N cached]" — leading space + bracket + digits + " cached]"
+            // " [N cached]" - leading space + bracket + digits + " cached]"
             //   width without leading space: 1 + digits + 8 = 9 + digits.
             //   The bracket renders as a tail on PassedChip, so its width
             //   contribution includes the leading space joining it to the
@@ -205,8 +203,8 @@ impl BarItem {
             BarItem::RunningChip if counts.running > 0 => 2 + digit_width(counts.running),
             // "· N"
             BarItem::PendingChip if counts.pending > 0 => 2 + digit_width(counts.pending),
-            // "⏭ N" and/or "◼ N" — render whichever counts are > 0,
-            // separated by SUMMARY_CHIP_SEP. Both being zero ⇒ width 0.
+            // "⏭ N" and/or "◼ N" - render whichever counts are > 0,
+            // separated by SUMMARY_CHIP_SEP. Both being zero => width 0.
             BarItem::SkipStopChips => {
                 let mut parts: Vec<u16> = Vec::new();
                 if counts.skipped > 0 {
@@ -229,13 +227,13 @@ impl BarItem {
             BarItem::PinHelp => 18,          // "pin output: 1 or 2"
             BarItem::ShowOutputHelp => 20,   // "show output: <enter>"
             BarItem::ShowTaskListHelp => 17, // "show task list: b"
-            // Any chip with count == 0 — eager-zero-dropped.
+            // Any chip with count == 0 - eager-zero-dropped.
             _ => 0,
         }
     }
 }
 
-/// Result of the layout fit pass — which items render this frame, in
+/// Result of the layout fit pass: which items render this frame, in
 /// display order on each side. Also flags whether sticky text needs
 /// compression (rung 14 fallback).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -245,7 +243,7 @@ pub struct BarLayout {
     pub compress_sticky: bool,
 }
 
-/// Fixed display order for the summary side (left → right when rendered).
+/// Fixed display order for the summary side (left -> right when rendered).
 fn summary_display_order() -> [BarItem; 7] {
     [
         BarItem::Progress,
@@ -258,7 +256,7 @@ fn summary_display_order() -> [BarItem; 7] {
     ]
 }
 
-/// Fixed display order for the help side (left → right when rendered).
+/// Fixed display order for the help side (left -> right when rendered).
 fn help_display_order() -> [BarItem; 7] {
     [
         BarItem::QuitHelp,
@@ -271,7 +269,7 @@ fn help_display_order() -> [BarItem; 7] {
     ]
 }
 
-/// Droppable items in drop order (rungs 2 → 10).
+/// Droppable items in drop order (rungs 2 -> 10).
 fn drop_order() -> [BarItem; 9] {
     [
         BarItem::CachedBracket,  // rung 2
@@ -333,7 +331,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
     // Start by collecting every renderable item: contextually applicable
     // (see `BarItem::applies_when`) and with positive width (eager
     // zero-drop at rung 1).
-    let mut kept: std::collections::HashSet<BarItem> = std::collections::HashSet::new();
+    let mut kept: HashSet<BarItem> = HashSet::new();
     for item in summary_display_order()
         .iter()
         .chain(help_display_order().iter())
@@ -347,7 +345,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
     }
 
     // Helper: total width if `kept` were rendered as-is.
-    let total_width = |kept: &std::collections::HashSet<BarItem>| -> u16 {
+    let total_width = |kept: &HashSet<BarItem>| -> u16 {
         let summary: Vec<BarItem> = summary_display_order()
             .into_iter()
             .filter(|i| kept.contains(i))
@@ -372,7 +370,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
 
     // Backward-optimize, strict priority: walk dropped items in reverse
     // (most recently dropped first = highest priority among dropped). If
-    // an un-drop fits, un-drop and continue. If it doesn't fit, stop —
+    // an un-drop fits, un-drop and continue. If it doesn't fit, stop:
     // never un-drop a lower-priority item while a higher-priority one
     // remains dropped. This is the invariant: drop order is final.
     for item in dropped.iter().rev() {
@@ -404,7 +402,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
     }
 }
 
-/// Global bottom status bar — renders a single-line summary of the run
+/// Global bottom status bar: renders a single-line summary of the run
 /// (`X/Y done`, per-status chips, cached sub-count) on the left and
 /// keyboard shortcuts on the right. When a cloud message is present it
 /// renders on the row immediately above the bar.
@@ -412,12 +410,11 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
 /// Counts are recomputed per render from the task source of truth and
 /// passed in by the parent (no shared state owned here).
 ///
-/// Drop order: actions-first (v4) — every non-critical action drops
-/// before any chip. See `NXC-3076-IMPLEMENTATION-PLAN.md` and
-/// `tmp/nxc-3076/prototypes.html` (round 13) for the full ladder.
+/// Drop order is actions-first: every non-critical action drops before any
+/// chip, so the run summary stays visible longest as the terminal narrows.
 pub struct StatusBar {
     is_dimmed: bool,
-    /// Frame snapshot — App writes this each frame before `draw` via
+    /// Frame snapshot: App writes this each frame before `draw` via
     /// `set_state`. Cloud message lives in TuiState (single source of
     /// truth); this field is just the most recent read for rendering.
     counts: StatusCounts,
@@ -439,7 +436,7 @@ impl StatusBar {
         self.is_dimmed = dimmed;
     }
 
-    /// Snapshot of run state — caller (App) writes this before `draw`.
+    /// Snapshot of run state: caller (App) writes this before `draw`.
     pub fn set_state(
         &mut self,
         counts: StatusCounts,
@@ -451,7 +448,7 @@ impl StatusBar {
         self.cloud_message = cloud_message;
     }
 
-    /// Outcome state of the run — drives the progress text color.
+    /// Outcome state of the run; drives the progress text color.
     fn run_outcome(&self) -> RunOutcome {
         let c = &self.counts;
         if c.total() == 0 {
@@ -470,7 +467,7 @@ impl StatusBar {
         }
     }
 
-    /// Base style applied to every span — dim modifier when the bar is
+    /// Base style applied to every span: dim modifier when the bar is
     /// dimmed (focus elsewhere).
     fn base_style(&self) -> Style {
         if self.is_dimmed {
@@ -490,7 +487,7 @@ impl StatusBar {
         let avail = area.width as usize;
 
         let spans: Vec<Span<'static>> = match url_start {
-            // No URL embedded — render whatever fits, truncate with ellipsis.
+            // No URL embedded - render whatever fits, truncate with ellipsis.
             None => {
                 let text = truncate_to_width(message, avail);
                 vec![Span::styled(text, base)]
@@ -511,7 +508,7 @@ impl StatusBar {
                     // Drop the prefix, render just the URL.
                     vec![Span::styled(url.to_string(), url_style)]
                 } else if avail >= 4 {
-                    // Truncate the URL itself — `truncate_to_width` adds the
+                    // Truncate the URL itself - `truncate_to_width` adds the
                     // trailing ellipsis when it cuts content.
                     let truncated = truncate_to_width(url, avail);
                     vec![Span::styled(truncated, url_style)]
@@ -534,18 +531,15 @@ impl StatusBar {
 
         // Build spans for each side based on the fit result.
         let summary_spans = self.build_summary_spans(&layout, counts, outcome);
-        let help_spans = self.build_help_spans(&layout, counts);
+        let help_spans = self.build_help_spans(&layout);
 
         let summary_width = visual_width(&summary_spans);
-        let help_width = visual_width(&help_spans);
 
         // Split the row: summary on the left (own width), the rest fills
-        // (help right-aligned). When summary can't fit at all, the help
-        // takes the whole row.
+        // (help right-aligned). When summary can't fit at all, help takes
+        // the whole row.
         let constraints = if summary_width == 0 {
             vec![Constraint::Fill(1)]
-        } else if summary_width + help_width >= area.width {
-            vec![Constraint::Length(summary_width), Constraint::Fill(1)]
         } else {
             vec![Constraint::Length(summary_width), Constraint::Fill(1)]
         };
@@ -587,7 +581,7 @@ impl StatusBar {
             RunOutcome::InProgress => THEME.primary_fg,
         };
 
-        // Special-case: total = 0 → render only "Waiting for tasks…" in
+        // Special-case: total = 0 -> render only "Waiting for tasks..." in
         // the progress slot regardless of which chips the layout includes.
         if matches!(outcome, RunOutcome::Waiting) {
             return vec![Span::styled(
@@ -601,7 +595,7 @@ impl StatusBar {
         let sep = "  ";
 
         for item in &layout.summary {
-            // Cached bracket attaches to the passed chip — handle inline.
+            // Cached bracket attaches to the passed chip - handle inline.
             if matches!(item, BarItem::CachedBracket) {
                 continue;
             }
@@ -677,7 +671,7 @@ impl StatusBar {
         spans
     }
 
-    fn build_help_spans(&self, layout: &BarLayout, _counts: &StatusCounts) -> Vec<Span<'static>> {
+    fn build_help_spans(&self, layout: &BarLayout) -> Vec<Span<'static>> {
         let base = self.base_style();
         let label_style = base.fg(THEME.secondary_fg);
         let key_style = base.fg(THEME.info);
@@ -762,7 +756,7 @@ fn visual_width(spans: &[Span<'_>]) -> u16 {
 
 /// Display-column width of a string. ASCII assumed for most of the
 /// strings rendered by the bar; for special glyphs (`✔`, `↑`, etc.) we
-/// rely on each glyph being one column on monospace terminals — matches
+/// rely on each glyph being one column on monospace terminals, matching
 /// the assumptions used by the existing TUI rendering code.
 fn display_width(s: &str) -> usize {
     s.chars()
@@ -774,7 +768,7 @@ fn display_width(s: &str) -> usize {
         .sum()
 }
 
-/// Truncate a string to fit within `max` display columns, appending `…`
+/// Truncate a string to fit within `max` display columns, appending `...`
 /// when content is cut. Returns the original string unmodified when it
 /// already fits.
 fn truncate_to_width(s: &str, max: usize) -> String {
@@ -922,11 +916,11 @@ mod tests {
     #[test]
     fn done_counts_only_terminal_states() {
         let counts = StatusCounts::from_iter([
-            TaskStatus::Success,    // +passed → done
-            TaskStatus::LocalCache, // +passed → done
-            TaskStatus::Failure,    // +failed → done
-            TaskStatus::Skipped,    // +skipped → done
-            TaskStatus::Stopped,    // +stopped → done
+            TaskStatus::Success,    // +passed -> done
+            TaskStatus::LocalCache, // +passed -> done
+            TaskStatus::Failure,    // +failed -> done
+            TaskStatus::Skipped,    // +skipped -> done
+            TaskStatus::Stopped,    // +stopped -> done
             TaskStatus::InProgress, // running, NOT done
             TaskStatus::Shared,     // running, NOT done
             TaskStatus::NotStarted, // pending, NOT done
@@ -972,12 +966,12 @@ mod tests {
         assert!(contains(&layout, BarItem::FilterHelp));
         assert!(contains(&layout, BarItem::PinHelp));
         assert!(contains(&layout, BarItem::ShowOutputHelp));
-        // Cached + SkipStop are zero in this sample → eager-zero-dropped.
+        // Cached + SkipStop are zero in this sample -> eager-zero-dropped.
         assert!(!contains(&layout, BarItem::CachedBracket));
         assert!(!contains(&layout, BarItem::SkipStopChips));
     }
 
-    /// W=100 — first to drop is pin (rung 3); all chips and other actions
+    /// W=100: first to drop is pin (rung 3); all chips and other actions
     /// stay (97-cell content fits in 100 with 3 cells of spare margin).
     #[test]
     fn w100_drops_pin_only() {
@@ -991,7 +985,7 @@ mod tests {
         assert!(contains(&layout, BarItem::PendingChip));
     }
 
-    /// W=80 — pin + navigate + filter dropped (rungs 3, 4, 5).
+    /// W=80: pin + navigate + filter dropped (rungs 3, 4, 5).
     /// show output (rung 6, the primary inspection action) is preserved;
     /// full chip set stays.
     #[test]
@@ -1006,8 +1000,8 @@ mod tests {
         assert!(contains(&layout, BarItem::PendingChip));
     }
 
-    /// W=60 — all non-critical actions dropped (rungs 3–6). Full chip set
-    /// (incl. pending) survives → actions-first invariant.
+    /// W=60: all non-critical actions dropped (rungs 3-6). Full chip set
+    /// (incl. pending) survives -> actions-first invariant.
     #[test]
     fn w60_drops_all_actions_keeps_full_chip_set() {
         let layout = fit_bar_layout(60, &sample_counts(), false);
@@ -1022,7 +1016,7 @@ mod tests {
         assert!(contains(&layout, BarItem::PendingChip));
     }
 
-    /// W=45 — pending is the first chip to drop (rung 7); passed/running
+    /// W=45: pending is the first chip to drop (rung 7); passed/running
     /// stay (rungs 9/10).
     #[test]
     fn w45_drops_pending_first_among_chips() {
@@ -1033,7 +1027,7 @@ mod tests {
         assert!(contains(&layout, BarItem::FailedChip));
     }
 
-    /// W=40 — passed (rung 9) dropped; running (rung 10) still alive as
+    /// W=40: passed (rung 9) dropped; running (rung 10) still alive as
     /// the last non-sticky chip.
     #[test]
     fn w40_drops_passed_keeps_running() {
@@ -1045,7 +1039,7 @@ mod tests {
         assert!(!contains(&layout, BarItem::PendingChip));
     }
 
-    /// W=35 — every non-sticky item dropped. Only progress + failed +
+    /// W=35: every non-sticky item dropped. Only progress + failed +
     /// quit/help remain. compress_sticky still false (33-cell content fits
     /// in 35).
     #[test]
@@ -1068,7 +1062,7 @@ mod tests {
     }
 
     /// Walks widths from 200 down and confirms each droppable item's
-    /// last-rendered width respects the v4 drop order (lower priority →
+    /// last-rendered width respects the drop order (lower priority ->
     /// drops at narrower widths first, i.e. last-rendered-width is lower).
     // ---------- Rendering tests ----------
 
@@ -1107,7 +1101,7 @@ mod tests {
     //   cargo insta accept --workspace-root packages/nx \
     //     --glob 'src/native/tui/components/snapshots/*status_bar*'
 
-    /// State with a non-zero count in every category — used by snapshots
+    /// State with a non-zero count in every category, used by snapshots
     /// that need to exercise skip/stop + cached rendering paths.
     fn full_counts() -> StatusCounts {
         StatusCounts {
@@ -1274,7 +1268,7 @@ mod tests {
     }
 
     #[test]
-    fn drop_order_respects_v4_priority() {
+    fn drop_order_respects_priority() {
         // Use a state where every droppable item has a non-zero count so
         // none get eager-zero-dropped.
         let counts = StatusCounts {
@@ -1350,12 +1344,12 @@ mod tests {
             let has_pending = contains(&layout, BarItem::PendingChip);
             let has_skip = contains(&layout, BarItem::SkipStopChips);
             if !has_pending && has_skip {
-                // Found the canonical width — assertion holds.
+                // Found the canonical width - assertion holds.
                 return;
             }
             if !has_skip && has_pending {
                 panic!(
-                    "skip/stop dropped before pending at width {} — drop order violation",
+                    "skip/stop dropped before pending at width {} - drop order violation",
                     w
                 );
             }
@@ -1377,7 +1371,7 @@ mod tests {
     #[test]
     fn hidden_task_list_drops_filter_help() {
         // Filter targets the task list. When the list is hidden, the
-        // shortcut has no useful effect — it should be elided regardless of
+        // shortcut has no useful effect - it should be elided regardless of
         // available width.
         let layout = fit_bar_layout(200, &sample_counts(), true);
         assert!(!contains(&layout, BarItem::FilterHelp));
@@ -1389,8 +1383,8 @@ mod tests {
     /// Invariant: the width the fit pass computes for a chosen layout must
     /// equal the width the renderer actually emits. Would have caught the
     /// CachedBracket separator over-charge (fix carried in this branch)
-    /// before snapshots locked it in. Exercises every interesting width ×
-    /// counts × hidden combination to keep coverage broad.
+    /// before snapshots locked it in. Exercises every interesting width x
+    /// counts x hidden combination to keep coverage broad.
     #[test]
     fn fit_pass_width_matches_rendered_width() {
         let mut completed = sample_counts();
@@ -1416,26 +1410,26 @@ mod tests {
             (45, sample_counts(), false),
             (40, sample_counts(), false),
             (35, sample_counts(), false),
-            // Cached present — exercises the separator-attachment path.
+            // Cached present - exercises the separator-attachment path.
             (200, completed, false),
             (160, completed, false),
             (140, completed, false),
             (120, completed, false),
             (100, completed, false),
-            // Full counts — every chip non-zero, including SkipStopChips.
+            // Full counts - every chip non-zero, including SkipStopChips.
             (200, full_counts(), false),
             (140, full_counts(), false),
             (120, full_counts(), false),
             (80, full_counts(), false),
-            // Stopped variant — ensures inner SkipStopChips with only one
+            // Stopped variant - ensures inner SkipStopChips with only one
             // sub-chip renders identically to fit-pass expectation.
             (140, stopped, false),
             (100, stopped, false),
-            // Hidden task list — drops `filter:`, adds `show task list: b`.
+            // Hidden task list - drops `filter:`, adds `show task list: b`.
             (200, sample_counts(), true),
             (120, sample_counts(), true),
             (80, sample_counts(), true),
-            // Empty run — only sticky help, no chips.
+            // Empty run - only sticky help, no chips.
             (100, StatusCounts::default(), false),
             (40, StatusCounts::default(), false),
         ];
@@ -1447,7 +1441,7 @@ mod tests {
             bar.set_state(counts, hidden, None);
             let outcome = bar.run_outcome();
             let summary_spans = bar.build_summary_spans(&layout, &counts, outcome);
-            let help_spans = bar.build_help_spans(&layout, &counts);
+            let help_spans = bar.build_help_spans(&layout);
 
             let summary_w = visual_width(&summary_spans);
             let help_w = visual_width(&help_spans);
