@@ -718,19 +718,23 @@ function buildRecommendation(args: {
   // No parallelism lever. The run is dominated by its critical-path floor, and
   // the user can't do much about coordinator overhead — so point at the biggest
   // tasks on the path (speeding/splitting those is what actually lowers the run).
-  const top = criticalPathTop
-    .map((t) => `${t.id} (${formatDuration(t.duration)})`)
-    .join(', ');
-  let base = `More parallelism won't shorten this run — it's bound by its critical path. The biggest tasks to speed up or split: ${
-    top || 'n/a'
-  }.`;
+  const bullets =
+    criticalPathTop.length > 0
+      ? criticalPathTop
+          .map((t) => `\n    - ${t.id} (${formatDuration(t.duration)})`)
+          .join('')
+      : '\n    - (none)';
+  let base = `This run is bound by its critical path, so more parallelism won't help. To shorten it, speed up or split its longest-running tasks:${bullets}`;
   if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
-    base += ` (~${formatDuration(
+    // Be precise about the lever: a warm daemon caches the project graph + file
+    // hashes, so it trims the HASHING part — but scheduling and process spawning
+    // run in the CLI orchestrator regardless, so the daemon doesn't touch those.
+    base += `\n    Note: ~${formatDuration(
       coordinatorOverhead
-    )} is coordinator overhead — hashing/scheduling — which a warm Nx daemon trims, but the critical path is the bigger lever.)`;
+    )} is coordinator overhead — hashing, scheduling, process spawning — not recoverable by parallelism. A warm Nx daemon and narrower task inputs trim the hashing part; the rest is fixed per-task cost.`;
   }
   return isCI
-    ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
+    ? `${base}\n    A faster CI runner also helps if those tasks are CPU-bound.`
     : base;
 }
 
