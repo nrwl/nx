@@ -8,6 +8,10 @@ Assignment rules allow you to control which tasks can run on which agents. Save 
 
 Assignment rules are defined in `yaml` files within your workspace's `.nx/workflows` directory. You can use assignment rules with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 
+{% aside type="caution" title="Assignment rules apply only if start-ci-run runs first" %}
+Assignment rules are locked in when the CI Pipeline Execution is created. If any `nx` command contacts Nx Cloud before `npx nx-cloud start-ci-run`, your rules are ignored for that run. See [`start-ci-run`](/docs/reference/nx-cloud-cli#nx-cloud-start-ci-run) for details.
+{% /aside %}
+
 ## How to define an assignment rule
 
 Each assignment rule has one of the following properties that it matches against tasks: `projects`, `targets`, and/or `configurations`. You can provide a list of globs to match against the tasks in your workspace. It also has a list of possible [agent types](/docs/reference/nx-cloud/launch-templates) that tasks with the matching properties can run on. Rules are defined in yaml like the following:

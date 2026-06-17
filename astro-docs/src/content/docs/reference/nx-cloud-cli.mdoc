@@ -354,6 +354,14 @@ At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tell
 
 This command is the same as running `nx start-ci-run`.
 
+{% aside type="caution" title="Run start-ci-run before any other Nx command" %}
+The first `nx` command that contacts Nx Cloud creates the CI Pipeline Execution (CIPE) and locks in its settings for the whole run. Those settings include the access token's scope, the distribution configuration, your [assignment rules](/docs/reference/nx-cloud/assignment-rules), and the stop-agents conditions.
+
+If another `nx` command reaches Nx Cloud before `start-ci-run`, the CIPE is created with default settings and your `start-ci-run` flags are ignored for that run. The result is assignment rules or stop conditions that appear to have no effect.
+
+Run `npx nx-cloud start-ci-run` (or the orchestrator job that runs it) before any other `nx` command, including across separate or downstream pipelines that share the same CIPE.
+{% /aside %}
+
 **Usage:**
 
 ```shell
