@@ -2751,6 +2751,13 @@ impl TuiApp for App {
     fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
     }
+
+    // Without this override a cloud message arriving after the first render
+    // would only update TuiState (the trait default) and never relayout,
+    // leaving the cloud row hidden until the next resize.
+    fn set_cloud_message(&mut self, message: Option<String>) {
+        App::set_cloud_message(self, message);
+    }
 }
 
 #[cfg(test)]
@@ -2841,6 +2848,37 @@ mod tests {
                 .expect("PTY parser should be readable")
                 .hide_cursor(),
             "append_task_output is for streaming; the cursor must remain visible"
+        );
+    }
+
+    /// A cloud message arriving after the first render must grow the status
+    /// bar from one row to two so the cloud row is drawn. Nx Cloud calls
+    /// `__setCloudMessage`, which dispatches through `&mut dyn TuiApp`; the
+    /// trait default only writes TuiState, so without the `set_cloud_message`
+    /// override the bar area stays one row and the cloud row is hidden until
+    /// an unrelated resize. Exercise that exact dynamic-dispatch path.
+    #[test]
+    fn cloud_message_via_trait_object_relayouts_status_bar() {
+        let mut app = create_test_app();
+
+        // Establish the initial layout the way the first Render action does.
+        app.frame_area = Some(Rect::new(0, 0, 100, 30));
+        app.recalculate_layout_areas();
+        assert_eq!(
+            app.status_bar_area.map(|r| r.height),
+            Some(1),
+            "no cloud message yet: the bar occupies a single row"
+        );
+
+        {
+            let app_dyn: &mut dyn TuiApp = &mut app;
+            app_dyn.set_cloud_message(Some("View logs at https://nx.app/runs/abc".to_string()));
+        }
+
+        assert_eq!(
+            app.status_bar_area.map(|r| r.height),
+            Some(2),
+            "cloud message present: the bar grows to two rows for the cloud row"
         );
     }
 
