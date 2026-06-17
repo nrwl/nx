@@ -14,11 +14,11 @@ export interface WithReactOptions extends WithWebOptions {}
  */
 export function withReact(opts: WithReactOptions = {}) {
   warnRspackComposeHelpersDeprecation();
-  return async function makeConfig(
+  return function makeConfig(
     config: Configuration,
     { options, context }: NxRspackExecutionContext
-  ): Promise<Configuration> {
-    config = await withWeb({ ...opts, cssModules: true })(config, {
+  ): Configuration {
+    config = withWeb({ ...opts, cssModules: true })(config, {
       options,
       context,
     });

@@ -1,11 +1,8 @@
-import type { Configuration } from '@rspack/core';
+import { type Configuration } from '@rspack/core';
 import { normalizeAssets } from './normalize-assets';
 import { NxAppRspackPluginOptions } from '../plugins/utils/models';
 import { applyBaseConfig } from '../plugins/utils/apply-base-config';
-import {
-  NxRspackExecutionContext,
-  AsyncNxComposableRspackPlugin,
-} from './config';
+import { NxRspackExecutionContext, NxComposableRspackPlugin } from './config';
 import { warnRspackComposeHelpersDeprecation } from './deprecation';
 
 const processed = new Set();
@@ -18,16 +15,16 @@ export type WithNxOptions = Partial<NxAppRspackPluginOptions>;
  * `nx g @nx/rspack:convert-to-inferred`. See
  * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
  * @param {WithNxOptions} pluginOptions
- * @returns {AsyncNxComposableRspackPlugin}
+ * @returns {NxComposableRspackPlugin}
  */
 export function withNx(
   pluginOptions: WithNxOptions = {}
-): AsyncNxComposableRspackPlugin {
+): NxComposableRspackPlugin {
   warnRspackComposeHelpersDeprecation();
-  return async function makeConfig(
+  return function makeConfig(
     config: Configuration,
     { options, context }: NxRspackExecutionContext
-  ): Promise<Configuration> {
+  ): Configuration {
     if (processed.has(config)) return config;
 
     applyBaseConfig(

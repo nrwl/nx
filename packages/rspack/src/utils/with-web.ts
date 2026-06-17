@@ -46,10 +46,10 @@ const processed = new Set();
  */
 export function withWeb(pluginOptions: WithWebOptions = {}) {
   warnRspackComposeHelpersDeprecation();
-  return async function makeConfig(
+  return function makeConfig(
     config: Configuration,
     { options, context }: NxRspackExecutionContext
-  ): Promise<Configuration> {
+  ): Configuration {
     if (processed.has(config)) {
       return config;
     }
