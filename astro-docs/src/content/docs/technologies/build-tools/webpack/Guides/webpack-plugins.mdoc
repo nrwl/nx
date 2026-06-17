@@ -529,18 +529,12 @@ module.exports = composePlugins(
 
 ### withReact
 
-The `withReact` plugin adds support for React JSX, [SVGR](https://react-svgr.com/),
+The `withReact` plugin adds support for React JSX
 and [Fast Refresh](https://github.com/pmmmwh/react-refresh-webpack-plugin)
 
 #### Options
 
-The options are the same as [`withWeb`](#withweb) plus the following.
-
-##### svgr
-
-Type: `undefined|false`
-
-SVGR allows SVG files to be imported as React components. Set this to `false` to disable this behavior.
+The options are the same as [`withWeb`](#withweb).
 
 #### Example
 
@@ -552,7 +546,6 @@ module.exports = composePlugins(
   withNx(), // always pass withNx() first
   withReact({
     styles: ['my-app/src/styles.css'],
-    svgr: false,
     postcssConfig: 'my-app/postcss',
   }),
   (config) => {
