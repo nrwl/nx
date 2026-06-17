@@ -2,8 +2,6 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/spec",
-    "module": "commonjs",
-    "moduleResolution": "node",
     "types": ["jest", "node"],
     "lib": ["dom", "es2019"],
     "jsx": "react"

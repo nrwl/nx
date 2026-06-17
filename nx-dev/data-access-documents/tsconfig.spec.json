@@ -5,8 +5,6 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "outDir": "dist/spec",
-    "module": "commonjs",
-    "moduleResolution": "node",
     "types": ["jest", "node"]
   },
   "include": [
