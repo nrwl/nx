@@ -17,13 +17,18 @@ minimumReleaseAgeExclude:
   - '@nrwl/*'
   - create-nx-workspace
   - create-nx-plugin
-  - tmp@0.2.6 # https://github.com/advisories/GHSA-ph9p-34f9-6g65
+  - tmp@0.2.7 # https://github.com/advisories/GHSA-ph9p-34f9-6g65
 overrides:
   handlebars: '4.7.9'
   minimist: '^1.2.6'
   underscore: '^1.13.8'
   brace-expansion: '5.0.6'
   minimatch: '^10.2.5'
+  tmp: '~0.2.7'
+  form-data: '^4.0.6'
+  # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
+  # pin to one version so expand-deps can flatten nx's published deps.
+  hasown: '2.0.4'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
@@ -38,7 +43,7 @@ catalog:
   picocolors: '^1.1.0'
   semver: '^7.6.3'
   tinyglobby: '^0.2.12'
-  tmp: '~0.2.6'
+  tmp: '~0.2.7'
   yargs: '^17.6.2'
   yargs-parser: '21.1.1'
 catalogs:
