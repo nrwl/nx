@@ -9,7 +9,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "moduleResolution": "nodenext",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },

@@ -8,7 +8,6 @@
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
     "composite": true,
-    "moduleResolution": "nodenext",
     "customConditions": ["@nx/nx-source"],
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true

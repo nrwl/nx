@@ -4,7 +4,6 @@
     "outDir": "out-tsc",
     "tsBuildInfoFile": "out-tsc/tsconfig.app.tsbuildinfo",
     "rootDir": "src",
-    "moduleResolution": "nodenext",
     "types": ["node"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
