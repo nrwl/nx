@@ -4,7 +4,7 @@ import { existsSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
-import { dirSync } from 'tmp';
+import { createTempDir } from './temp-dir';
 import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
@@ -391,10 +391,8 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
-    dir: dirSync().name,
-    cleanup: () => {},
-  };
+  const { dir: tempDir, cleanup } =
+    createTempNpmDirectory?.() ?? createTempDir();
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';

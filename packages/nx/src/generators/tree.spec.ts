@@ -1,12 +1,13 @@
 import {
   lstatSync,
   mkdirSync,
+  mkdtempSync,
   Mode,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { dirSync, file } from 'tmp';
+import { tmpdir } from 'node:os';
 import * as path from 'path';
 import {
   FileChange,
@@ -27,7 +28,7 @@ describe('tree', () => {
       console.error = jest.fn();
       console.log = jest.fn();
 
-      dir = dirSync().name;
+      dir = mkdtempSync(path.join(tmpdir(), 'nx-'));
       mkdirSync(path.join(dir, 'parent/child'), { recursive: true });
       writeFileSync(path.join(dir, 'root-file.txt'), 'root content');
       writeFileSync(

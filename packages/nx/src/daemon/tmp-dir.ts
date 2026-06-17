@@ -7,7 +7,7 @@ import { mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
-import { tmpdir } from 'tmp';
+import { tmpdir } from 'node:os';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
@@ -51,7 +51,7 @@ function socketDirName() {
   hasher.update(workspaceRoot.toLowerCase());
   hasher.update(String(process.pid));
   const unique = hasher.digest('hex').substring(0, 20);
-  return join(tmpdir, unique);
+  return join(tmpdir(), unique);
 }
 
 /**
@@ -63,7 +63,7 @@ export function getSocketDir(alreadyUnique = false) {
     const dir =
       process.env.NX_SOCKET_DIR ??
       process.env.NX_DAEMON_SOCKET_DIR ??
-      (alreadyUnique ? tmpdir : socketDirName());
+      (alreadyUnique ? tmpdir() : socketDirName());
     mkdirSync(dir, { recursive: true });
 
     return dir;

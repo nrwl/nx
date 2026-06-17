@@ -43,7 +43,6 @@
     "flat": "^5.0.2",
     "open": "^8.4.0",
     "ora": "catalog:",
-    "tmp": "catalog:",
     "tslib": "catalog:typescript",
     "yargs": "catalog:"
   },

@@ -1,9 +1,8 @@
 import { exec, execFile, execSync } from 'child_process';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'fs';
-import { rm } from 'node:fs/promises';
 import { dirname, join, relative } from 'path';
 import { gte, lt, parse, satisfies } from 'semver';
-import { dirSync } from 'tmp';
+import { createTempDir } from './temp-dir';
 import { promisify } from 'util';
 import {
   Pair,
@@ -486,7 +485,9 @@ export function copyPackageManagerConfigurationFiles(
  *                   where no existing configuration files are available to copy.
  */
 export function createTempNpmDirectory(skipCopy = false) {
-  const dir = dirSync().name;
+  // `cleanup` removes the dir now; it is also registered for removal on process
+  // exit in case the caller never gets a chance to call it.
+  const { dir, cleanup } = createTempDir();
 
   // A package.json is needed for pnpm pack and for .npmrc to resolve
   writeJsonFile(`${dir}/package.json`, {});
@@ -497,14 +498,6 @@ export function createTempNpmDirectory(skipCopy = false) {
       dir
     );
   }
-
-  const cleanup = async () => {
-    try {
-      await rm(dir, { recursive: true, force: true });
-    } catch {
-      // It's okay if this fails, the OS will clean it up eventually
-    }
-  };
 
   return { dir, cleanup };
 }

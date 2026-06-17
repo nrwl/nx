@@ -77,7 +77,6 @@
     "semver": "catalog:",
     "string-width": "^4.2.3",
     "tar-stream": "~2.2.0",
-    "tmp": "catalog:",
     "tsconfig-paths": "catalog:typescript",
     "tslib": "catalog:typescript",
     "which": "catalog:",
