@@ -1019,19 +1019,15 @@ async function generateChangelogForWorkspace({
    * in a similar style to git interactive rebases/merges.
    */
   if (interactive) {
-    const { dir: tmpDir, cleanup } = createTempDir('nx-changelog-');
-    try {
-      const changelogPath = joinPathFragments(
-        tmpDir,
-        // Include the tree path in the name so that it is easier to identify which changelog file is being edited
-        `PREVIEW__${interpolatedTreePath.replace(/\//g, '_')}`
-      );
-      writeFileSync(changelogPath, contents);
-      await launchEditor(changelogPath);
-      contents = readFileSync(changelogPath, 'utf-8');
-    } finally {
-      cleanup();
-    }
+    const tmpDir = createTempDir('nx-changelog-');
+    const changelogPath = joinPathFragments(
+      tmpDir,
+      // Include the tree path in the name so that it is easier to identify which changelog file is being edited
+      `PREVIEW__${interpolatedTreePath.replace(/\//g, '_')}`
+    );
+    writeFileSync(changelogPath, contents);
+    await launchEditor(changelogPath);
+    contents = readFileSync(changelogPath, 'utf-8');
   }
 
   if (interpolatedTreePath) {
@@ -1191,19 +1187,15 @@ async function generateChangelogForProjects({
      * in a similar style to git interactive rebases/merges.
      */
     if (interactive) {
-      const { dir: tmpDir, cleanup } = createTempDir('nx-changelog-');
-      try {
-        const changelogPath = joinPathFragments(
-          tmpDir,
-          // Include the tree path in the name so that it is easier to identify which changelog file is being edited
-          `PREVIEW__${interpolatedTreePath.replace(/\//g, '_')}`
-        );
-        writeFileSync(changelogPath, contents);
-        await launchEditor(changelogPath);
-        contents = readFileSync(changelogPath, 'utf-8');
-      } finally {
-        cleanup();
-      }
+      const tmpDir = createTempDir('nx-changelog-');
+      const changelogPath = joinPathFragments(
+        tmpDir,
+        // Include the tree path in the name so that it is easier to identify which changelog file is being edited
+        `PREVIEW__${interpolatedTreePath.replace(/\//g, '_')}`
+      );
+      writeFileSync(changelogPath, contents);
+      await launchEditor(changelogPath);
+      contents = readFileSync(changelogPath, 'utf-8');
     }
 
     if (interpolatedTreePath) {

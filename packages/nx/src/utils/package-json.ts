@@ -391,8 +391,10 @@ function preparePackageInstallation(
   requiredVersion: string,
   packageManager: PackageManager
 ) {
-  const { dir: tempDir, cleanup } =
-    createTempNpmDirectory?.() ?? createTempDir();
+  const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
+    dir: createTempDir(),
+    cleanup: () => {},
+  };
 
   console.log(`Fetching ${pkg}...`);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';

@@ -351,18 +351,14 @@ async function _promptForMessage(versionPlanName: string): Promise<string> {
     let message = reply.message.trim();
 
     if (!message.length) {
-      const { dir: tmpDir, cleanup } = createTempDir('nx-version-plan-');
-      try {
-        const messageFilePath = join(
-          tmpDir,
-          `DRAFT_MESSAGE__${versionPlanName}.md`
-        );
-        writeFileSync(messageFilePath, '');
-        await launchEditor(messageFilePath);
-        message = readFileSync(messageFilePath, 'utf-8');
-      } finally {
-        cleanup();
-      }
+      const tmpDir = createTempDir('nx-version-plan-');
+      const messageFilePath = join(
+        tmpDir,
+        `DRAFT_MESSAGE__${versionPlanName}.md`
+      );
+      writeFileSync(messageFilePath, '');
+      await launchEditor(messageFilePath);
+      message = readFileSync(messageFilePath, 'utf-8');
     }
 
     message = message.trim();

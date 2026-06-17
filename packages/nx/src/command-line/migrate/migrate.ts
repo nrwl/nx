@@ -3980,9 +3980,7 @@ export async function nxCliPath(nxWorkspaceRoot?: string) {
     const packageManager = detectPackageManager();
     const pmc = getPackageManagerCommand(packageManager);
 
-    // The dir holds the installed nx CLI used for the rest of the migration, so
-    // it must outlive this function; the exit hook removes it on process exit.
-    const { dir: tmpDir } = createTempDir('nx-migrate-');
+    const tmpDir = createTempDir('nx-migrate-');
     writeJsonFile(join(tmpDir, 'package.json'), {
       dependencies: {
         nx: version,
