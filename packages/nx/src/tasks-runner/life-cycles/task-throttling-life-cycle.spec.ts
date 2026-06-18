@@ -133,21 +133,34 @@ describe('TaskThrottlingLifeCycle', () => {
   it('displays the critical path, separate from the finish lineage, when they diverge', () => {
     // parallel=1: `a` holds the only slot 0–1000 — that's the critical path.
     // `b` is independent, queues for the slot, and finishes last — that's the
-    // finish lineage. The two diverge, and we display the critical path.
+    // finish lineage. We display the critical path; b's off-path slot wait is
+    // not shown inline (it lives in the recoverable-by-parallel bucket).
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const s = run(makeGraph([a, b]), 1)!;
 
     expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
     expect(s.criticalChain.map((c) => c.id)).toEqual(['a']); // what we display
-    expect(s.topWaits.map((w) => w.id)).toEqual(['b']); // surfaced as a wait
-    expect(s.topWaits[0].gate).toBe('slot');
-    const report = formatReport(s);
-    expect(report).toContain(
+    expect(s.criticalChain[0].gate).toBe('root'); // a started on time
+    expect(formatReport(s)).toContain(
       'Critical path (the longest chain of dependent tasks)'
     );
-    expect(report).toContain('Biggest waits before tasks could start:');
-    expect(report).toContain('waited 1.0s for a free slot');
+  });
+
+  it('annotates critical-path tasks with their own waits inline', () => {
+    // parallel=1: `a` (root) holds the slot 0–1000; `c` grabs it 1000–1500; `b`
+    // (depends on a, on the critical path) is eligible at 1000 but queues 500ms
+    // for the slot. Its wait shows inline next to it on the chain.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const c = makeTask('c', { start: 1000, end: 1500 });
+    const b = makeTask('b', { start: 1500, end: 3500 });
+    const s = run(makeGraph([a, c, b], { b: ['a'] }), 1)!;
+
+    expect(s.criticalChain.map((l) => l.id)).toEqual(['a', 'b']);
+    const bLink = s.criticalChain.find((l) => l.id === 'b')!;
+    expect(bLink.gate).toBe('slot');
+    expect(bLink.wait).toBe(500);
+    expect(formatReport(s)).toContain('waited 500ms for a free slot');
   });
 
   it('attributes a wait with free slots to coordinator overhead', () => {
@@ -377,23 +390,19 @@ describe('formatReport', () => {
     expect(report).toContain(
       'Critical path (the longest chain of dependent tasks)'
     );
-    // The critical-path chain itself is duration-only; per-task waits live in a
-    // separate callout below it (here, `b` queued 1s for a slot).
-    expect(report).toContain('Biggest waits before tasks could start:');
-    expect(report).toContain('waited 1.0s for a free slot');
     expect(report).toContain('Recommendation:');
   });
 
-  it('omits the waits callout when nothing waited', () => {
+  it('shows no wait annotations when the critical path ran without waiting', () => {
     // A pure dependency chain at its floor: every task starts the moment its
-    // dep finishes, so there are no slot/hashing waits to surface.
+    // dep finishes, so no critical-path task has a wait to annotate.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const c = makeTask('c', { start: 2000, end: 3000 });
     const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
-    expect(s.topWaits).toHaveLength(0);
-    expect(formatReport(s)).not.toContain('Biggest waits');
+    expect(s.criticalChain.map((l) => l.id)).toEqual(['a', 'b', 'c']);
+    expect(formatReport(s)).not.toContain('waited');
   });
 });
 

@@ -21,8 +21,6 @@ const MEANINGFUL_OVERHEAD = 1000;
  * a nonzero `recoverable by --parallel` — that contradiction is what this avoids.
  */
 const MINOR_OVERHEAD = 250;
-/** Cap on how many per-task waits the "Biggest waits" callout lists. */
-const MAX_WAIT_ROWS = 5;
 
 interface TaskTiming {
   startTime?: number;
@@ -56,15 +54,10 @@ export interface ThrottleSummary {
   finishChain: ChainLink[];
   /**
    * The critical path (root → terminal): the longest chain of dependent tasks by
-   * summed duration — the floor. This is the chain the report displays.
+   * summed duration — the floor. This is the chain the report displays, each task
+   * tagged with how long it waited before it could start (shown inline).
    */
-  criticalChain: Array<{ id: string; duration: number }>;
-  /**
-   * The biggest per-task waits across the run (slot/hashing/scheduling), largest
-   * first, capped at {@link MAX_WAIT_ROWS}. Displayed as a callout so the waits
-   * the critical-path chain omits stay visible. Empty when nothing waited.
-   */
-  topWaits: ChainLink[];
+  criticalChain: ChainLink[];
   totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
@@ -546,18 +539,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const finishLineageTasks = this.finishLineage(durations);
     const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
 
-    // Per-task waits across the whole run (slot/hashing/scheduling), biggest
-    // first. The critical-path chain shows pure durations, so these surface here
-    // instead — keeping the chain clean while still naming where time was lost.
-    // `idx = 1` so a zero-wait task classifies as 'dep' and is filtered out.
-    const topWaits = [...durations.keys()]
-      .map((id) => annotate(id, 1))
-      .filter(
-        (w) => w.gate === 'slot' || w.gate === 'hashing' || w.gate === 'other'
-      )
-      .sort((a, b) => b.wait - a.wait)
-      .slice(0, MAX_WAIT_ROWS);
-
     // Coordinator hashing that ran BEFORE the first task started — the task
     // window would otherwise miss it. Added to both the overhead and the
     // coordinator bucket below, so it surfaces without touching the slot split.
@@ -610,11 +591,10 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
-    // The full critical path in path order (root → terminal) — what we display.
-    const criticalChain = criticalPathTasks.map((id) => ({
-      id,
-      duration: durations.get(id) ?? 0,
-    }));
+    // The full critical path in path order (root → terminal) — what we display,
+    // each task annotated with how long it waited before it could start, so the
+    // wait shows inline next to the task rather than in a separate section.
+    const criticalChain: ChainLink[] = criticalPathTasks.map(annotate);
 
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
@@ -636,7 +616,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathTaskCount: criticalPathTasks.length,
       finishChain,
       criticalChain,
-      topWaits,
       totalWork,
       overhead,
       overheadPct,
@@ -793,15 +772,27 @@ function buildRecommendation(args: {
     : base;
 }
 
+/** The "waited …" cell for a chain row (empty when the task started on time). */
+function waitCell(link: ChainLink): string {
+  const waited = formatDuration(link.wait);
+  switch (link.gate) {
+    case 'slot':
+      return `waited ${waited} for a free slot`;
+    case 'hashing':
+      return `waited ${waited} on hashing`;
+    case 'other':
+      return `waited ${waited} (scheduling/startup)`;
+    default:
+      return ''; // root / dep — started on time, nothing to show
+  }
+}
+
 /**
- * Render the critical path as aligned columns: task (left), duration (right).
- * Column widths are sized to the chain so it reads as a table. No wait column —
- * the critical path is pure execution time; per-task waits are shown separately
- * (see `formatWaitRows`).
+ * Render the critical path as aligned columns: task (left), duration (right),
+ * and — inline — how long that task waited before it could start. Column widths
+ * are sized to the chain so it reads as a table.
  */
-function formatCriticalRows(
-  chain: Array<{ id: string; duration: number }>
-): string[] {
+function formatChainRows(chain: ChainLink[]): string[] {
   if (chain.length === 0) {
     return ['    (no tasks)'];
   }
@@ -811,30 +802,9 @@ function formatCriticalRows(
   return chain.map((c, i) => {
     const id = c.id.padEnd(idWidth);
     const dur = durations[i].padStart(durWidth);
-    return `    ${id}    ${dur}`;
+    const wait = waitCell(c);
+    return `    ${id}    ${dur}${wait ? '    ' + wait : ''}`;
   });
-}
-
-/** The "waited …" phrase for a wait row, by what gated the task's start. */
-function waitCell(link: ChainLink): string {
-  const waited = formatDuration(link.wait);
-  switch (link.gate) {
-    case 'slot':
-      return `waited ${waited} for a free slot`;
-    case 'hashing':
-      return `waited ${waited} on hashing`;
-    default:
-      return `waited ${waited} (scheduling/startup)`;
-  }
-}
-
-/**
- * Render the biggest per-task waits as aligned columns: task (left) and the wait
- * reason (right). Called only when there are waits to show.
- */
-function formatWaitRows(waits: ChainLink[]): string[] {
-  const idWidth = Math.max(...waits.map((w) => w.id.length));
-  return waits.map((w) => `    ${w.id.padEnd(idWidth)}    ${waitCell(w)}`);
 }
 
 /** A "    label   value" line for the overhead breakdown, value column-aligned. */
@@ -871,16 +841,11 @@ export function formatReport(s: ThrottleSummary): string {
     ),
     '',
     `  Critical path (the longest chain of dependent tasks):`,
-    ...formatCriticalRows(s.criticalChain),
+    ...formatChainRows(s.criticalChain),
+    '',
+    `  Recommendation: ${s.recommendation}`,
+    '',
   ];
-  if (s.topWaits.length > 0) {
-    lines.push(
-      '',
-      '  Biggest waits before tasks could start:',
-      ...formatWaitRows(s.topWaits)
-    );
-  }
-  lines.push('', `  Recommendation: ${s.recommendation}`, '');
   return lines.join('\n');
 }
 
