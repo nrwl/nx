@@ -37,10 +37,17 @@ export const testingLibraryDomVersion = '10.4.0';
 export const reduxjsToolkitVersion = '^2.5.0';
 export const reactReduxVersion = '^9.2.0';
 
+// ESLint <10 (eslintrc / flat) stack. eslint-plugin-react, -jsx-a11y and -import
+// have no ESLint v10 release, and react-hooks v5 peer-caps at v9.
 export const eslintPluginImportVersion = '2.31.0';
 export const eslintPluginJsxA11yVersion = '6.10.1';
 export const eslintPluginReactVersion = '^7.35.0';
 export const eslintPluginReactHooksVersion = '5.0.0';
+
+// ESLint v10 stack. The plugins above can't run on v10, so v10 workspaces swap
+// to eslint-plugin-import-x and react-hooks v7 (no react/jsx-a11y substitute exists).
+export const eslintPluginImportXVersion = '4.16.2';
+export const eslintPluginReactHooksV7Version = '7.1.1';
 
 export const tsLibVersion = '^2.3.0';
 
