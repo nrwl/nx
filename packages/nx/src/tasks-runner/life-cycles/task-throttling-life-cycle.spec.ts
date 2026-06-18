@@ -292,19 +292,29 @@ describe('TaskThrottlingLifeCycle', () => {
 });
 
 describe('formatDuration', () => {
-  it('formats sub-10s with one decimal, 10s+ as whole seconds, 60s+ as minutes', () => {
-    expect(formatDuration(400)).toBe('0.4s');
-    expect(formatDuration(18000)).toBe('18s');
+  it('shows whole milliseconds below a second', () => {
+    expect(formatDuration(470)).toBe('470ms');
+    expect(formatDuration(47)).toBe('47ms');
+    expect(formatDuration(999)).toBe('999ms');
+  });
+
+  it('shows one decimal from 1s up to a minute', () => {
+    expect(formatDuration(1000)).toBe('1.0s');
+    expect(formatDuration(3500)).toBe('3.5s');
+    expect(formatDuration(13400)).toBe('13.4s');
+    expect(formatDuration(18000)).toBe('18.0s');
+  });
+
+  it('is consistent across the 10s boundary (no tier jump)', () => {
+    expect(formatDuration(9999)).toBe('10.0s');
+    expect(formatDuration(10000)).toBe('10.0s');
+  });
+
+  it('switches to m/s at a minute and rolls up correctly', () => {
+    expect(formatDuration(59500)).toBe('59.5s');
+    expect(formatDuration(59950)).toBe('1m 0s'); // rounds to 60.0s → 1m 0s
     expect(formatDuration(90000)).toBe('1m 30s');
-  });
-
-  it('rolls seconds up to minutes instead of emitting "60s" or "1m 60s"', () => {
-    expect(formatDuration(119500)).toBe('2m 0s');
-    expect(formatDuration(59500)).toBe('1m 0s');
-  });
-
-  it('rolls a sub-10s value that rounds to 10.0 up to the whole-second form', () => {
-    expect(formatDuration(9999)).toBe('10s');
+    expect(formatDuration(119500)).toBe('2m 0s'); // never "1m 60s"
   });
 });
 

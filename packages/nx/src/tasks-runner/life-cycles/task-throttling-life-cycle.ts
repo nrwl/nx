@@ -813,22 +813,17 @@ export function formatReport(s: ThrottleSummary): string {
   ].join('\n');
 }
 
-/** Format a millisecond duration as e.g. "3m 30s", "18s", or "0.4s". */
+/** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */
 export function formatDuration(ms: number): string {
-  if (ms >= 10_000) {
-    // Round to whole seconds first, then carry into minutes — so 59_500 reads
-    // "1m 0s", never "60s", and 119_500 reads "2m 0s", never "1m 60s".
+  // Below a second, show whole milliseconds (precise for small waits). From 1s
+  // up, one decimal (so big numbers keep sub-second detail). At a minute, m/s.
+  if (ms < 1000) {
+    return `${Math.round(ms)}ms`;
+  }
+  const seconds = Math.round(ms / 100) / 10; // seconds, rounded to 0.1
+  if (seconds >= 60) {
     const totalSeconds = Math.round(ms / 1000);
-    if (totalSeconds >= 60) {
-      return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`;
-    }
-    return `${totalSeconds}s`;
+    return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`;
   }
-  // Sub-10s: one decimal, but roll up to the whole-seconds form if it would
-  // round to 10.0 (keeps the column consistent with the >= 10s branch).
-  const tenths = Math.round(ms / 100) / 10;
-  if (tenths >= 10) {
-    return `${Math.round(ms / 1000)}s`;
-  }
-  return `${tenths.toFixed(1)}s`;
+  return `${seconds.toFixed(1)}s`;
 }
