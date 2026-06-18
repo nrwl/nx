@@ -18,6 +18,7 @@ import {
   MessageOptionKey,
   recordStat,
   messages,
+  nxCloudHyperlink,
 } from '../../../utils/ab-testing';
 import { nxVersion } from '../../../utils/versions';
 import { isCI } from '../../../utils/is-ci';
@@ -230,7 +231,7 @@ export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
   key: MessageKey = 'setupNxCloud'
 ): Promise<MessageOptionKey> {
-  const res = await nxCloudPrompt(key);
+  const res = await nxCloudPrompt(key, utmMediumForCommand(command));
   await recordStat({
     command,
     nxVersion,
@@ -250,7 +251,10 @@ export async function connectExistingRepoToNxCloudPrompt(
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
-  const setNxCloud = await nxCloudPrompt('setupNxCloud');
+  const setNxCloud = await nxCloudPrompt(
+    'setupNxCloud',
+    utmMediumForCommand(command)
+  );
   let useCloud = false;
   if (setNxCloud === 'yes') {
     useCloud = await connectToNxCloudCommand({ generateToken: false }, command);
@@ -280,7 +284,21 @@ export async function connectToNxCloudWithPrompt(command: string) {
   });
 }
 
-async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
+function utmMediumForCommand(command: string): string {
+  switch (command) {
+    case 'migrate':
+      return 'nx-migrate';
+    case 'view-logs':
+      return 'nx-connect';
+    default:
+      return 'nx-init';
+  }
+}
+
+async function nxCloudPrompt(
+  key: MessageKey,
+  utmMedium: string
+): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
   const promptConfig = {
@@ -291,7 +309,8 @@ async function nxCloudPrompt(key: MessageKey): Promise<MessageOptionKey> {
     initial,
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
-    promptConfig.footer = () => pc.dim(footer);
+    promptConfig.footer = () =>
+      pc.dim(`${footer} ${nxCloudHyperlink(utmMedium)}`);
   }
   if (hint) {
     promptConfig.hint = () => pc.dim(hint);
