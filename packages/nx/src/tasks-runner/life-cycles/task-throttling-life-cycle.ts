@@ -785,16 +785,12 @@ export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
   return [
     '',
-    'Throttle report (NX_THROTTLE_REPORT):',
+    'Throttle report:',
     `  Run duration:            ${fmt(s.runDuration)}`,
     `  Critical-path floor:     ${fmt(s.criticalPathDuration)}   (${
       s.criticalPathTaskCount
     } tasks)`,
-    `  Total work:              ${fmt(s.totalWork)}`,
-    `  Parallelism:             ${s.parallel} slots  (machine has ${
-      s.cores
-    } ${pluralizeCores(s.cores)})`,
-    `  Environment:             ${s.isCI ? 'CI' : 'local'}`,
+    `  Parallelism:             ${s.parallel} slots (${s.cores}-core machine)`,
     '',
     `  Run overhead:            +${fmt(s.overhead)}   (${s.overheadPct.toFixed(
       1

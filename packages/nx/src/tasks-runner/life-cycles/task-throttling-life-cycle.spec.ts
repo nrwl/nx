@@ -314,7 +314,7 @@ describe('formatReport', () => {
     const b = makeTask('b', { start: 1000, end: 2000 });
     const report = formatReport(run(makeGraph([a, b]), 1)!);
 
-    expect(report).toContain('Throttle report (NX_THROTTLE_REPORT):');
+    expect(report).toContain('Throttle report:');
     expect(report).toContain('Critical-path floor:');
     expect(report).toContain('recoverable by --parallel');
     expect(report).toContain('coordinator overhead (hashing/scheduling)');
