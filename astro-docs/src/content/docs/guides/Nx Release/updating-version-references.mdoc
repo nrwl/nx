@@ -101,17 +101,16 @@ If, for example, we want to build our projects to a centralized `dist/` director
       ],
     },
   },
-  "targetDefaults": [
+  "targetDefaults": {
     // Ensure that publishing works from the dist directory
     // The nx-release-publish target is added implicitly behind the scenes by Nx Release, so it can be configured in targetDefaults
-    {
-      "target": "nx-release-publish",
+    "nx-release-publish": {
       "options": {
         // the packageRoot property is specific the TS/JS nx-release-publish implementation, other ecosystem plugins may have different options
         "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       },
     },
-  ],
+  },
 }
 ```
 
@@ -150,16 +149,15 @@ If the package manager we are using is not using pnpm or bun (See Scenario 4 bel
       "preserveLocalDependencyProtocols": false, // (NOT NEEDED WHEN USING pnpm or bun) ensures the dist package.json files are valid for publishing and the local dependency references are removed
     },
   },
-  "targetDefaults": [
+  "targetDefaults": {
     // Ensure that publishing works from the dist directory
     // The nx-release-publish target is added implicitly behind the scenes by Nx Release, so it can be configured in targetDefaults
-    {
-      "target": "nx-release-publish",
+    "nx-release-publish": {
       "options": {
         "packageRoot": "dist/packages/{projectName}", // path structure for your dist directory, where {projectRoot} and {projectName} are available placeholders that will be interpolated by Nx
       },
     },
-  ],
+  },
 }
 ```
 

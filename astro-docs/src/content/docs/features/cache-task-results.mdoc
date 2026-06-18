@@ -22,16 +22,14 @@ To enable caching for `build` and `test`, edit the `targetDefaults` property in 
 ```json
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "cache": true
     },
-    {
-      "target": "test",
+    "test": {
       "cache": true
     }
-  ]
+  }
 }
 ```
 
@@ -72,13 +70,12 @@ To achieve this, you can add `inputs` and `outputs` definitions globally for all
 ```json
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"],
       "outputs": ["{workspaceRoot}/dist/{projectName}"]
     }
-  ]
+  }
 }
 ```
 

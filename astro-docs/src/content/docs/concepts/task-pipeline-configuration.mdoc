@@ -70,16 +70,14 @@ Define task dependencies in the form of "rules", which are then followed when ru
 ```jsonc title="nx.json"
 {
   ...
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "dependsOn": ["^build", "prebuild"]
     },
-    {
-      "target": "test",
+    "test": {
       "dependsOn": ["build"]
     }
-  ]
+  }
 }
 ```
 

@@ -215,12 +215,11 @@ However, you need to specify for which targets this ordering is important. The f
 // nx.json
 {
   ...
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "dependsOn": ["^build"]
     }
-  ]
+  }
 }
 ```
 

@@ -227,15 +227,14 @@ To provide the same args for all projects in the workspace, you need to update t
 ```json
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "options": {
         "assetsInlineLimit": 2048,
         "assetsDir": "static/assets"
       }
     }
-  ]
+  }
 }
 ```
 
@@ -246,14 +245,13 @@ To provide the same args for all projects in the workspace, you need to update t
 ```json
 // nx.json
 {
-  "targetDefaults": [
-    {
-      "target": "build",
+  "targetDefaults": {
+    "build": {
       "options": {
         "args": ["--assetsInlineLimit=2048", "--assetsDir=static/assets"]
       }
     }
-  ]
+  }
 }
 ```
 
