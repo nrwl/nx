@@ -47,18 +47,17 @@ describe('getViteE2EWebServerInfo', () => {
     `);
   });
 
-  it('should use array-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
+  it('should use map-shaped serve targetDefaults when no plugin is registered and plugins are not being used', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins ??= [];
-    nxJson.targetDefaults = [
-      {
-        target: 'serve',
+    nxJson.targetDefaults = {
+      serve: {
         options: {
           port: 4400,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT
@@ -107,18 +106,17 @@ describe('getViteE2EWebServerInfo', () => {
     `);
   });
 
-  it('should use array-shaped dev targetDefaults when the plugin is just a string', async () => {
+  it('should use map-shaped dev targetDefaults when the plugin is just a string', async () => {
     // ARRANGE
     const nxJson = readNxJson(tree);
     nxJson.plugins = ['@nx/vite/plugin'];
-    nxJson.targetDefaults = [
-      {
-        target: 'dev',
+    nxJson.targetDefaults = {
+      dev: {
         options: {
           port: 4500,
         },
       },
-    ];
+    };
     updateNxJson(tree, nxJson);
 
     // ACT

@@ -4,8 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaultEntry,
-  type TargetDefaultsRecord,
+  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
@@ -14,11 +13,10 @@ import migration, {
   executors,
 } from './remove-external-options-from-js-executors';
 
-// This migration ran before targetDefaults supported the array shape, so
-// most fixtures use the legacy record shape; workspaces migrating late may
-// already be on the array shape, which is covered as well.
+// Fixtures use the record-shaped targetDefaults (keyed by target name or
+// executor) that this migration reads.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaultsRecord;
+  targetDefaults?: TargetDefaults;
 };
 
 describe('remove-external-options-from-js-executors migration', () => {
@@ -315,28 +313,25 @@ describe('remove-external-options-from-js-executors migration', () => {
   it.each(executors)(
     'should only delete target defaults for the "%s" executor when nothing remains after migration',
     async (executor) => {
-      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-        json.targetDefaults = [
-          { target: 'build', cache: true },
-          {
-            executor,
+      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+        json.targetDefaults = {
+          build: { cache: true },
+          [executor]: {
             options: {
               external: ['react'],
               externalBuildTargets: ['build'],
             },
           },
-        ];
+        };
         return json;
       });
 
       await migration(tree);
 
-      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-      expect(
-        (nxJson.targetDefaults as TargetDefaultEntry[]).some(
-          (td) => td.executor === executor
-        )
-      ).toBe(false);
+      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      expect(nxJson.targetDefaults[executor]).toBeUndefined();
+      // sibling defaults are untouched
+      expect(nxJson.targetDefaults.build).toEqual({ cache: true });
     }
   );
 });

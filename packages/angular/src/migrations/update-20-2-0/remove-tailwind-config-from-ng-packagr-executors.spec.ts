@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaultsRecord,
+  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
@@ -13,7 +13,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 // This migration ran before targetDefaults supported the array shape, so
 // the test fixtures all use the legacy record shape.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaultsRecord;
+  targetDefaults?: TargetDefaults;
 };
 import migration, {
   executors,

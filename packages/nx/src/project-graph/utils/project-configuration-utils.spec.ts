@@ -802,14 +802,15 @@ describe('project-configuration-utils', () => {
         [],
         defaultResults as any,
         {
-          targetDefaults: [
-            {
-              target: 'build',
-              projects: 'tag:scope:web',
-              cache: true,
-              inputs: ['web-only'],
-            },
-          ],
+          targetDefaults: {
+            build: [
+              {
+                filter: { projects: 'tag:scope:web' },
+                cache: true,
+                inputs: ['web-only'],
+              },
+            ],
+          },
         },
         '/tmp/test',
         errors
@@ -863,16 +864,17 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         [],
         {
-          targetDefaults: [
-            // Generic — compatible with anything (no executor set).
-            { target: 'build', cache: true, inputs: ['default'] },
-            // Specific — incompatible with the dotnet `command` target.
-            {
-              target: 'build',
-              executor: '@monodon/rust:build',
-              cache: false,
-            },
-          ],
+          targetDefaults: {
+            build: [
+              // Generic — compatible with anything (no executor set).
+              { cache: true, inputs: ['default'] },
+              // Specific — incompatible with the dotnet `command` target.
+              {
+                filter: { executor: '@monodon/rust:build' },
+                cache: false,
+              },
+            ],
+          },
         },
         '/tmp/test',
         errors
@@ -923,14 +925,15 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         [],
         {
-          targetDefaults: [
-            {
-              target: 'test-native',
-              executor: '@monodon/rust:test',
-              options: {},
-              cache: true,
-            },
-          ],
+          targetDefaults: {
+            'test-native': [
+              {
+                filter: { executor: '@monodon/rust:test' },
+                options: {},
+                cache: true,
+              },
+            ],
+          },
         },
         '/tmp/test',
         errors
@@ -1001,14 +1004,15 @@ describe('project-configuration-utils', () => {
         specifiedResults as any,
         defaultResults as any,
         {
-          targetDefaults: [
-            {
-              target: 'test-native',
-              executor: '@monodon/rust:test',
-              options: {},
-              cache: true,
-            },
-          ],
+          targetDefaults: {
+            'test-native': [
+              {
+                filter: { executor: '@monodon/rust:test' },
+                options: {},
+                cache: true,
+              },
+            ],
+          },
         },
         '/tmp/test',
         errors

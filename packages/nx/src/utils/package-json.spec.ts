@@ -184,16 +184,17 @@ describe('readTargetsFromPackageJson', () => {
     `);
 
     const nxJson3 = {
-      targetDefaults: [
-        {
-          target: 'nx-release-publish',
-          executor: '@nx/js:release-publish',
-          dependsOn: ['build'],
-          options: {
-            dryRun: true,
+      targetDefaults: {
+        'nx-release-publish': [
+          {
+            filter: { executor: '@nx/js:release-publish' },
+            dependsOn: ['build'],
+            options: {
+              dryRun: true,
+            },
           },
-        },
-      ],
+        ],
+      },
     };
     const result3 = readTargetsFromPackageJson(
       packageJson,

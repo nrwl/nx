@@ -7,6 +7,7 @@ import {
   type Tree,
   updateJson,
 } from '@nx/devkit';
+import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { jestInitGenerator } from './init';
 import { JestInitSchema } from './schema';
@@ -16,21 +17,17 @@ describe('jest', () => {
   let options: JestInitSchema;
 
   function getJestTargetDefaults(): TargetDefaultEntry[] {
-    const td =
-      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults ?? [];
-    if (!Array.isArray(td)) {
-      throw new Error('expected array-shaped targetDefaults in test');
-    }
-    return td.filter(
-      (entry): entry is TargetDefaultEntry => entry.executor === '@nx/jest:jest'
+    const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults;
+    return normalizeTargetDefaults(td).filter(
+      (entry) => entry.executor === '@nx/jest:jest'
     );
   }
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
-    // ensure targetDefaults starts as the array shape so assertions target it
+    // ensure targetDefaults starts as an empty map so assertions target it
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [];
+      json.targetDefaults = {};
       return json;
     });
     options = {
@@ -73,17 +70,15 @@ describe('jest', () => {
         '!{projectRoot}/**/?(*.)+(spec|test).[jt]s?(x)?(.snap)',
         '!{projectRoot}/**/*.md',
       ];
-      const entries = (json.targetDefaults ?? []) as TargetDefaultEntry[];
-      entries.push({
-        target: 'test',
+      json.targetDefaults ??= {};
+      json.targetDefaults['test'] = {
         inputs: [
           'default',
           '^production',
           '{workspaceRoot}/jest.preset.js',
           '{workspaceRoot}/testSetup.ts',
         ],
-      });
-      json.targetDefaults = entries;
+      };
       nxJson = json;
       return json;
     });
@@ -104,17 +99,10 @@ describe('jest', () => {
 
   it('should patch existing target-scoped and filtered jest defaults in place', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-      json.targetDefaults = [
-        {
-          target: 'test',
-          executor: '@nx/jest:jest',
-        },
-        {
-          executor: '@nx/jest:jest',
-          projects: 'tag:unit',
-          cache: false,
-        },
-      ];
+      json.targetDefaults = {
+        test: [{ filter: { executor: '@nx/jest:jest' } }],
+        '@nx/jest:jest': [{ filter: { projects: 'tag:unit' }, cache: false }],
+      };
       return json;
     });
 

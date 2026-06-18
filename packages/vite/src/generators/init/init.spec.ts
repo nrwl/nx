@@ -169,16 +169,14 @@ describe('@nx/vite:init', () => {
               "plugin": "@nx/vite/plugin",
             },
           ],
-          "targetDefaults": [
-            {
+          "targetDefaults": {
+            "build": {
               "cache": true,
-              "target": "build",
             },
-            {
+            "lint": {
               "cache": true,
-              "target": "lint",
             },
-          ],
+          },
         }
       `);
     });
