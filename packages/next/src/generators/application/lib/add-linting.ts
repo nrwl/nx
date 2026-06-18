@@ -6,7 +6,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { extraEslintDependencies } from '@nx/react';
+import { getExtraEslintDependencies } from '@nx/react';
 import { NormalizedSchema } from './normalize-options';
 import {
   addExtendsToLintConfig,
@@ -113,13 +113,14 @@ export async function addLinting(
   if (!options.skipPackageJson) {
     const eslintConfigNextVersion =
       await getEslintConfigNextDependenciesVersionsToInstall(host);
+    const eslintDependencies = getExtraEslintDependencies(host);
 
     tasks.push(
       addDependenciesToPackageJson(
         host,
-        extraEslintDependencies.dependencies,
+        eslintDependencies.dependencies,
         {
-          ...extraEslintDependencies.devDependencies,
+          ...eslintDependencies.devDependencies,
           'eslint-config-next': eslintConfigNextVersion,
           '@next/eslint-plugin-next': eslintConfigNextVersion,
         },
