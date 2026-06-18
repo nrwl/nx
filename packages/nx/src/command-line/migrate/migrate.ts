@@ -413,15 +413,20 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+          for (const [name, update] of Object.entries(packageUpdate.packages)) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            filteredUpdates[name] = update;
-            this.packageUpdates[name] = update;
-          });
+            const resolvedVersion = await this.resolveVersionForCascade(
+              name,
+              update.version
+            );
+            const resolvedUpdate = { ...update, version: resolvedVersion };
+            filteredUpdates[name] = resolvedUpdate;
+            this.packageUpdates[name] = resolvedUpdate;
+          }
         }
       }
 
@@ -431,6 +436,19 @@ export class Migrator {
         )
       );
     }
+  }
+
+  private async resolveVersionForCascade(
+    packageName: string,
+    version: string
+  ): Promise<string> {
+    // If the version is already an exact semver, no need to resolve
+    if (valid(version)) {
+      return version;
+    }
+    // Otherwise, resolve through the min-release-age policy to honor
+    // preapproved packages configured in the package manager
+    return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
