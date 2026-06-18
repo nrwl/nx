@@ -2842,7 +2842,7 @@ snapshots: {}`;
       );
     });
 
-    it('should resolve nodes without throwing when node_modules/.modules.yaml is absent', () => {
+    it('should throw an actionable error when node_modules/.modules.yaml is absent', () => {
       const lockFile = `lockfileVersion: '9.0'
 
 importers:
@@ -2864,12 +2864,7 @@ snapshots:
 
       expect(() =>
         getPnpmLockfileNodes(lockFile, '__missing_modules_yaml__')
-      ).not.toThrow();
-      const { nodes } = getPnpmLockfileNodes(
-        lockFile,
-        '__missing_modules_yaml__'
-      );
-      expect(nodes['npm:lodash']).toBeDefined();
+      ).toThrow(/was not installed with pnpm/);
     });
   });
 });

@@ -47,10 +47,10 @@ export function loadPnpmHoistedDepsDefinition() {
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
   }
-  // `.modules.yaml` is only written by `pnpm install`. It can be absent when a
-  // different package manager populated `node_modules` (e.g. `npm ci` in CI),
-  // in which case we still want the rest of the graph to resolve.
-  return {};
+
+  throw new Error(
+    `pnpm lockfile detected, but "${fullPath}" is missing. This usually means that "node_modules" was not installed with pnpm. Run "pnpm install" or use a single package manager for this workspace.`
+  );
 }
 
 /**
