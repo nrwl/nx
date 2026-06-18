@@ -43,14 +43,16 @@ function addCommonFiles(tree: Tree, addAppsAndLibsFolders: boolean): Tree {
       affected: {
         defaultBase: 'main',
       },
-      targetDefaults: {
-        build: {
+      targetDefaults: [
+        {
+          target: 'build',
           cache: true,
         },
-        lint: {
+        {
+          target: 'lint',
           cache: true,
         },
-      },
+      ],
     })
   );
   tree.write(

@@ -108,8 +108,9 @@ If the `outputs` property for a given target isn't defined in the project's `pac
 ```jsonc title="nx.json"
 {
   ...
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": [
         "^build"
       ],
@@ -119,7 +120,7 @@ If the `outputs` property for a given target isn't defined in the project's `pac
         "{projectRoot}/public/build"
       ]
     }
-  }
+  ]
 }
 ```
 
@@ -138,15 +139,17 @@ By default the cache considers all project files (e.g. `{projectRoot}/**/*`). Th
 
 ```json title="nx.json"
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "inputs": ["{projectRoot}/**/*", "!{projectRoot}/**/*.md"]
       ...
     },
-    "test": {
+    {
+      "target": "test",
       "inputs": [...]
     }
-  }
+  ]
 }
 ```
 

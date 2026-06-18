@@ -93,8 +93,9 @@ Here's the same workspace configured with both tools:
       "!{projectRoot}/jest.config.[jt]s"
     ]
   },
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"],
       "inputs": ["production", "^production"],
       "outputs": ["{projectRoot}/dist"],
@@ -103,30 +104,38 @@ Here's the same workspace configured with both tools:
         "prod": {}
       }
     },
-    "check-types": {
+    {
+      "target": "check-types",
       "dependsOn": ["^check-types"],
       "inputs": ["production", "^production"],
       "cache": true
     },
-    "test": {
+    {
+      "target": "test",
       "inputs": ["default", "^production"],
       "outputs": ["{projectRoot}/coverage"],
       "cache": true
     },
-    "lint": {
+    {
+      "target": "lint",
       "inputs": ["default", "{workspaceRoot}/eslint.config.mjs"],
       "cache": true
     },
-    "dev": {
+    {
+      "target": "dev",
       "continuous": true
     },
-    "@org/shop-e2e:test:e2e": {
+    {
+      "target": "test:e2e",
+      "projects": ["@org/shop-e2e"],
       "dependsOn": ["@org/shop:build"]
     },
-    "@org/admin-e2e:test:e2e": {
+    {
+      "target": "test:e2e",
+      "projects": ["@org/admin-e2e"],
       "dependsOn": ["@org/admin:build"]
     }
-  }
+  ]
 }
 ```
 

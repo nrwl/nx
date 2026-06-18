@@ -14,6 +14,10 @@ export { retrieveProjectConfigurationsWithAngularProjects } from './project-grap
 export { mergeTargetConfigurations } from './project-graph/utils/project-configuration/target-merging';
 export { readProjectConfigurationsFromRootMap } from './project-graph/utils/project-configuration/project-nodes-manager';
 export { findMatchingConfigFiles } from './project-graph/utils/project-configuration-utils';
+export {
+  readTargetDefaultsForTarget,
+  normalizeTargetDefaultsAgainstRootMaps,
+} from './project-graph/utils/project-configuration/target-defaults';
 export { getIgnoreObjectForTree } from './utils/ignore';
 export { splitTarget } from './utils/split-target';
 export { combineOptionsForExecutor } from './utils/params';

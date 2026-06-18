@@ -1,7 +1,10 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
 
-import { NxJsonConfiguration } from '../../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  TargetDefaultEntry,
+} from '../../../config/nx-json';
 import {
   fileExists,
   readJsonFile,
@@ -34,29 +37,36 @@ export function createNxJsonFile(
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
-  nxJson.targetDefaults ??= {};
+  const entries: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
+    ? [...nxJson.targetDefaults]
+    : [];
 
   if (topologicalTargets.length > 0) {
     for (const scriptName of topologicalTargets) {
-      nxJson.targetDefaults[scriptName] ??= {};
-      nxJson.targetDefaults[scriptName] = { dependsOn: [`^${scriptName}`] };
+      upsertTargetDefaultEntry(entries, scriptName, {
+        dependsOn: [`^${scriptName}`],
+      });
     }
   }
   for (const [scriptName, output] of Object.entries(scriptOutputs)) {
     if (!output) {
       continue;
     }
-    nxJson.targetDefaults[scriptName] ??= {};
-    nxJson.targetDefaults[scriptName].outputs = [`{projectRoot}/${output}`];
+    upsertTargetDefaultEntry(entries, scriptName, {
+      outputs: [`{projectRoot}/${output}`],
+    });
   }
 
   for (const target of cacheableOperations) {
-    nxJson.targetDefaults[target] ??= {};
-    nxJson.targetDefaults[target].cache ??= true;
+    const existing = findUnfilteredTargetEntry(entries, target);
+    if (existing) existing.cache ??= true;
+    else entries.push({ target, cache: true });
   }
 
-  if (Object.keys(nxJson.targetDefaults).length === 0) {
+  if (entries.length === 0) {
     delete nxJson.targetDefaults;
+  } else {
+    nxJson.targetDefaults = entries;
   }
 
   const defaultBase = deduceDefaultBase();
@@ -65,6 +75,31 @@ export function createNxJsonFile(
     nxJson.defaultBase ??= defaultBase;
   }
   writeJsonFile(nxJsonPath, nxJson);
+}
+
+/**
+ * Locate-by-target upsert against an in-memory `targetDefaults` array.
+ * Used by `nx init` code paths that operate on raw JSON before a Tree
+ * exists — generators should use `upsertTargetDefault` from devkit instead.
+ */
+export function upsertTargetDefaultEntry(
+  entries: TargetDefaultEntry[],
+  target: string,
+  patch: Partial<TargetDefaultEntry>
+): void {
+  const existing = findUnfilteredTargetEntry(entries, target);
+  if (existing) Object.assign(existing, patch, { target });
+  else entries.push({ ...patch, target });
+}
+
+function findUnfilteredTargetEntry(
+  entries: TargetDefaultEntry[],
+  target: string
+): TargetDefaultEntry | undefined {
+  return entries.find(
+    (e) =>
+      e.target === target && e.projects === undefined && e.plugin === undefined
+  );
 }
 
 export function createNxJsonFromTurboJson(
@@ -102,23 +137,23 @@ export function createNxJsonFromTurboJson(
 
   // Handle task configurations
   if (turboJson.tasks) {
-    nxJson.targetDefaults = {};
+    const entries: TargetDefaultEntry[] = [];
 
     for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
       // Skip project-specific tasks (containing #)
       if (taskName.includes('#')) continue;
 
       const config = taskConfig as any;
-      nxJson.targetDefaults[taskName] = {};
+      const entry: TargetDefaultEntry = { target: taskName };
 
       // Handle dependsOn
       if (config.dependsOn?.length > 0) {
-        nxJson.targetDefaults[taskName].dependsOn = config.dependsOn;
+        entry.dependsOn = config.dependsOn;
       }
 
       // Handle inputs
       if (config.inputs?.length > 0) {
-        nxJson.targetDefaults[taskName].inputs = config.inputs
+        entry.inputs = config.inputs
           .map((input) => {
             if (input === '$TURBO_DEFAULT$') {
               return '{projectRoot}/**/*';
@@ -146,21 +181,25 @@ export function createNxJsonFromTurboJson(
 
       // Handle outputs
       if (config.outputs?.length > 0) {
-        nxJson.targetDefaults[taskName].outputs = config.outputs.map(
-          (output) => {
-            // Don't add projectRoot if it's already there
-            if (output.startsWith('{projectRoot}/')) return output;
-            // Handle negated patterns by adding projectRoot after the !
-            if (output.startsWith('!')) {
-              return `!{projectRoot}/${output.slice(1)}`;
-            }
-            return `{projectRoot}/${output}`;
+        entry.outputs = config.outputs.map((output) => {
+          // Don't add projectRoot if it's already there
+          if (output.startsWith('{projectRoot}/')) return output;
+          // Handle negated patterns by adding projectRoot after the !
+          if (output.startsWith('!')) {
+            return `!{projectRoot}/${output.slice(1)}`;
           }
-        );
+          return `{projectRoot}/${output}`;
+        });
       }
 
       // Handle cache setting - true by default in Turbo
-      nxJson.targetDefaults[taskName].cache = config.cache !== false;
+      entry.cache = config.cache !== false;
+
+      entries.push(entry);
+    }
+
+    if (entries.length > 0) {
+      nxJson.targetDefaults = entries;
     }
   }
 

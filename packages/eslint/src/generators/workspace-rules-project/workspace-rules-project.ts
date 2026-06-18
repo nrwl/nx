@@ -9,6 +9,8 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
@@ -70,10 +72,9 @@ export async function lintWorkspaceRulesProjectGenerator(
    */
   const nxJson = readNxJson(tree);
 
-  if (nxJson.targetDefaults?.lint?.inputs) {
-    nxJson.targetDefaults.lint.inputs.push(
-      `{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`
-    );
+  const lintEntry = findLintTargetDefault(nxJson.targetDefaults);
+  if (lintEntry?.inputs) {
+    lintEntry.inputs.push(`{workspaceRoot}/${WORKSPACE_PLUGIN_DIR}/**/*`);
 
     updateNxJson(tree, nxJson);
   }
@@ -147,4 +148,19 @@ export async function lintWorkspaceRulesProjectGenerator(
   }
 
   return runTasksInSerial(...tasks);
+}
+
+function findLintTargetDefault(
+  td: TargetDefaults | undefined
+): Partial<TargetConfiguration> | undefined {
+  if (!td) return undefined;
+  if (Array.isArray(td)) {
+    return td.find(
+      (e) =>
+        e.target === 'lint' &&
+        e.projects === undefined &&
+        e.plugin === undefined
+    );
+  }
+  return td['lint'];
 }

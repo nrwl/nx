@@ -107,19 +107,22 @@
       }
     }
   },
-  "targetDefaults": {
-    "cleanup-tsconfig": {
+  "targetDefaults": [
+    {
+      "target": "cleanup-tsconfig",
       "executor": "nx:run-commands",
       "options": {
         "command": "node ./scripts/cleanup-tsconfig-files.js dist/packages/{projectName}"
       }
     },
-    "build": {
+    {
+      "target": "build",
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": ["production", "^production"],
       "cache": true
     },
-    "@nx/esbuild:esbuild": {
+    {
+      "executor": "@nx/esbuild:esbuild",
       "cache": true,
       "dependsOn": ["^build", "typecheck", "build-base"],
       "inputs": [
@@ -131,21 +134,25 @@
         }
       ]
     },
-    "build-native": {
+    {
+      "target": "build-native",
       "inputs": ["native"],
       "cache": true
     },
-    "build-base": {
+    {
+      "target": "build-base",
       "dependsOn": ["^build-base", "build-native", "copy-assets"],
       "cache": true
     },
-    "test-native": {
+    {
+      "target": "test-native",
       "inputs": ["native", "{projectRoot}/**/*.snap"],
       "executor": "@monodon/rust:test",
       "options": {},
       "cache": true
     },
-    "test": {
+    {
+      "target": "test",
       "dependsOn": ["test-native", "build-native", "^build-native"],
       "options": {
         "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
@@ -154,7 +161,8 @@
         }
       }
     },
-    "lint": {
+    {
+      "target": "lint",
       "dependsOn": ["build-native", "^build-native", "build"],
       "inputs": [
         "...",
@@ -166,22 +174,13 @@
         "max-warnings": 5
       }
     },
-    "e2e": {
+    {
+      "target": "e2e",
       "cache": true,
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-local": {
-      "cache": true,
-      "inputs": ["e2eInputs", "^production"],
-      "dependsOn": [
-        "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
-      ]
-    },
-    "e2e-ci": {
-      "inputs": ["e2eInputs", "^production"]
-    },
-    "e2e-macos-local": {
+    {
+      "target": "e2e-local",
       "cache": true,
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
@@ -189,10 +188,25 @@
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-macos-ci": {
+    {
+      "target": "e2e-ci",
       "inputs": ["e2eInputs", "^production"]
     },
-    "e2e-ci--**/**": {
+    {
+      "target": "e2e-macos-local",
+      "cache": true,
+      "inputs": ["e2eInputs", "^production"],
+      "dependsOn": [
+        "@nx/nx-source:populate-local-registry-storage",
+        "@nx/nx-source:local-registry"
+      ]
+    },
+    {
+      "target": "e2e-macos-ci",
+      "inputs": ["e2eInputs", "^production"]
+    },
+    {
+      "target": "e2e-ci--**/**",
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
@@ -202,17 +216,20 @@
         "args": ["--forceExit"]
       }
     },
-    "e2e-macos-ci--**/*": {
+    {
+      "target": "e2e-macos-ci--**/*",
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
         "@nx/nx-source:local-registry"
       ]
     },
-    "e2e-base": {
+    {
+      "target": "e2e-base",
       "inputs": ["default", "^production"]
     },
-    "build-storybook": {
+    {
+      "target": "build-storybook",
       "inputs": [
         "default",
         "^production",
@@ -222,16 +239,19 @@
       ],
       "cache": true
     },
-    "build-ng": {
+    {
+      "target": "build-ng",
       "cache": true
     },
-    "sitemap": {
+    {
+      "target": "sitemap",
       "cache": true
     },
-    "copy-docs": {
+    {
+      "target": "copy-docs",
       "cache": true
     }
-  },
+  ],
   "plugins": [
     "./tools/workspace-plugin/src/plugins/copy-assets-plugin.ts",
     "@monodon/rust",

@@ -115,11 +115,12 @@ Nx runs tasks in parallel by default, respecting the [task dependencies](/docs/g
 ```jsonc
 // nx.json
 {
-  "targetDefaults": {
-    "build": {
+  "targetDefaults": [
+    {
+      "target": "build",
       "dependsOn": ["^build"],
     },
-  },
+  ],
 }
 ```
 

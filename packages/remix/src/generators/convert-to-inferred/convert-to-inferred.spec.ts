@@ -10,6 +10,7 @@ import {
   type ExpandedPluginConfiguration,
   updateNxJson,
   detectPackageManager,
+  type TargetDefaultEntry,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
@@ -297,12 +298,13 @@ describe('Remix - Convert To Inferred', () => {
       const project2Targets = project2.targets;
 
       const nxJson = readNxJson(tree);
-      nxJson.targetDefaults ??= {};
-      nxJson.targetDefaults['@nx/remix:build'] = {
+      nxJson.targetDefaults ??= [];
+      (nxJson.targetDefaults as TargetDefaultEntry[]).push({
+        executor: '@nx/remix:build',
         options: {
           sourcemap: true,
         },
-      };
+      });
       updateNxJson(tree, nxJson);
 
       // ACT

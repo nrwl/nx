@@ -34,7 +34,7 @@ In a repository with many different projects and many different tools, there wil
 If you need to track down the value of a specific configuration property (say `runInBand` for `jest` on the `/apps/my-app` project) you need to look in the following locations. The configuration settings are merged with priority being given to the file higher up in the list.
 
 1. In `/apps/my-app/project.json`, the `options` listed under the `test` target that uses the `@nx/jest:jest` executor.
-2. In `/nx.json`, the `targetDefaults` listed for the `test` target.
+2. In `/nx.json`, the `targetDefaults` entries matching the `test` target.
 3. One of the `test` target options references `/apps/my-app/jest.config.ts`
 4. Which extends `/jest.config.ts`
 
