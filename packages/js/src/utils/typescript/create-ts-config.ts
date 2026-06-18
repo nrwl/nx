@@ -1,5 +1,6 @@
 import { Tree } from 'nx/src/generators/tree';
 import { readJson, updateJson, writeJson } from 'nx/src/generators/utils/json';
+import { getTsConfigModuleResolution } from '../is-typescript-version-at-least';
 
 export const tsConfigBaseOptions = {
   rootDir: '.',
@@ -14,8 +15,18 @@ export const tsConfigBaseOptions = {
   lib: ['es2020', 'dom'],
   skipLibCheck: true,
   skipDefaultLibCheck: true,
+  // TS 6.0 flips the `strict` default to true; pin false to keep this base
+  // config's behavior identical on TS 5.8 and 6.0.
+  strict: false,
   paths: {},
 };
+
+export function getTsConfigBaseOptions(tree: Tree) {
+  return {
+    ...tsConfigBaseOptions,
+    moduleResolution: getTsConfigModuleResolution(tree),
+  };
+}
 
 export function extractTsConfigBase(host: Tree) {
   if (host.exists('tsconfig.base.json')) return;

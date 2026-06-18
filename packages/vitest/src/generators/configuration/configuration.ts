@@ -295,6 +295,18 @@ getTestBed().initTestEnvironment(
   return runTasksInSerial(...tasks);
 }
 
+function addTypeIfMissing(json: any, type: string): void {
+  if (json.compilerOptions?.types?.includes(type)) {
+    return;
+  }
+  if (json.compilerOptions?.types) {
+    json.compilerOptions.types.push(type);
+  } else {
+    json.compilerOptions ??= {};
+    json.compilerOptions.types = [type];
+  }
+}
+
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
@@ -308,14 +320,10 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.spec.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        // vite/client is correct for anything vitest runs through vite;
+        // guarded so it's a no-op when react/vue already set it.
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
 
         if (setupFile) {
           json.files = [...(json.files ?? []), setupFile];
@@ -345,14 +353,8 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
         return json;
       }
     );
