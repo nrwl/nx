@@ -19,18 +19,15 @@ function getDefault(
   target: string
 ): Partial<TargetConfiguration> | undefined {
   if (!td) return undefined;
-  if (Array.isArray(td)) {
-    const found = td.find(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td[target];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
     if (!found) return undefined;
-    const { target: _t, projects: _p, plugin: _pl, ...rest } = found;
+    const { filter: _f, ...rest } = found;
     return rest;
   }
-  return td[target];
+  return value;
 }
 
 describe('init', () => {
@@ -119,16 +116,14 @@ describe('init', () => {
             "plugin": "@nx/cypress/plugin",
           },
         ],
-        "targetDefaults": [
-          {
+        "targetDefaults": {
+          "build": {
             "cache": true,
-            "target": "build",
           },
-          {
+          "lint": {
             "cache": true,
-            "target": "lint",
           },
-        ],
+        },
       }
     `);
   });
