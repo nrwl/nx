@@ -130,6 +130,23 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(bLink.wait).toBe(1000);
   });
 
+  it('displays the critical path, separate from the finish lineage, when they diverge', () => {
+    // parallel=1: `a` holds the only slot 0–1000 — that's the critical path.
+    // `b` is independent, queues for the slot, and finishes last — that's the
+    // finish lineage. The two diverge, and we display the critical path.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1)!;
+
+    expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
+    expect(s.criticalChain.map((c) => c.id)).toEqual(['a']); // what we display
+    const report = formatReport(s);
+    expect(report).toContain(
+      'Critical path (the longest chain of dependent tasks)'
+    );
+    expect(report).not.toContain('waited');
+  });
+
   it('attributes a wait with free slots to coordinator overhead', () => {
     // `early` defines the run start; `x` is eligible at 0 but starts at 5000 with
     // free slots and nothing running → not slot contention, pure coordinator time.
@@ -354,7 +371,12 @@ describe('formatReport', () => {
     expect(report).toContain('Critical-path floor:');
     expect(report).toContain('recoverable by --parallel');
     expect(report).toContain('coordinator overhead (hashing/scheduling)');
-    expect(report).toContain('What determined the');
+    expect(report).toContain(
+      'Critical path (the longest chain of dependent tasks)'
+    );
+    // The displayed chain is the critical path (task + duration), not the finish
+    // lineage — so it carries no "waited …" annotations.
+    expect(report).not.toContain('waited');
     expect(report).toContain('Recommendation:');
   });
 });

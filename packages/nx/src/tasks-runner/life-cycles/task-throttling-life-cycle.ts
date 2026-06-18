@@ -46,10 +46,17 @@ export interface ThrottleSummary {
   criticalPathTaskCount: number;
   /**
    * The lineage of the last task to finish (root → terminal), each link tagged
-   * with how it was held up. This is what determined the run's finish, so its
-   * waits explain the overhead — and it's what we display.
+   * with how it was held up. Drives the overhead split — its waits classify the
+   * coordinator vs slot buckets — but is NOT displayed. The chain we print is the
+   * critical path (`criticalChain`); slot waits surface as the recoverable-by-
+   * parallel bucket instead.
    */
   finishChain: ChainLink[];
+  /**
+   * The critical path (root → terminal): the longest chain of dependent tasks by
+   * summed duration — the floor. This is the chain the report displays.
+   */
+  criticalChain: Array<{ id: string; duration: number }>;
   totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
@@ -583,6 +590,12 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
+    // The full critical path in path order (root → terminal) — what we display.
+    const criticalChain = criticalPathTasks.map((id) => ({
+      id,
+      duration: durations.get(id) ?? 0,
+    }));
+
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
     const recommendation = buildRecommendation({
@@ -602,6 +615,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathDuration,
       criticalPathTaskCount: criticalPathTasks.length,
       finishChain,
+      criticalChain,
       totalWork,
       overhead,
       overheadPct,
@@ -758,26 +772,15 @@ function buildRecommendation(args: {
     : base;
 }
 
-/** The "waited …" cell for a chain row (empty when the task started on time). */
-function waitCell(link: ChainLink): string {
-  const waited = formatDuration(link.wait);
-  switch (link.gate) {
-    case 'slot':
-      return `waited ${waited} for a free slot`;
-    case 'hashing':
-      return `waited ${waited} on hashing`;
-    case 'other':
-      return `waited ${waited} (scheduling/startup)`;
-    default:
-      return '';
-  }
-}
-
 /**
- * Render the finish chain as aligned columns: task (left), duration (right), and
- * the wait reason. Column widths are sized to the chain so it reads as a table.
+ * Render the critical path as aligned columns: task (left), duration (right).
+ * Column widths are sized to the chain so it reads as a table. No wait column —
+ * the critical path is pure execution time; slot/hashing waits live in the
+ * overhead split, not here.
  */
-function formatChainRows(chain: ChainLink[]): string[] {
+function formatCriticalRows(
+  chain: Array<{ id: string; duration: number }>
+): string[] {
   if (chain.length === 0) {
     return ['    (no tasks)'];
   }
@@ -787,8 +790,7 @@ function formatChainRows(chain: ChainLink[]): string[] {
   return chain.map((c, i) => {
     const id = c.id.padEnd(idWidth);
     const dur = durations[i].padStart(durWidth);
-    const wait = waitCell(c);
-    return `    ${id}    ${dur}${wait ? '    ' + wait : ''}`;
+    return `    ${id}    ${dur}`;
   });
 }
 
@@ -825,8 +827,8 @@ export function formatReport(s: ThrottleSummary): string {
       s.coordinatorOverhead
     ),
     '',
-    `  What determined the ${fmt(s.runDuration)} finish:`,
-    ...formatChainRows(s.finishChain),
+    `  Critical path (the longest chain of dependent tasks):`,
+    ...formatCriticalRows(s.criticalChain),
     '',
     `  Recommendation: ${s.recommendation}`,
     '',
