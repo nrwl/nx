@@ -48,7 +48,7 @@ export async function addLinting(
     const isFlatConfig = useFlatConfig(host);
 
     // Version-aware dependencies:
-    // - Flat config (v4+): use @nuxt/eslint-config ^1.10.0 with createConfigForNuxt
+    // - Flat config (v4+): use @nuxt/eslint-config ^1.16.0 with createConfigForNuxt
     // - Legacy (.eslintrc.json): use @nuxt/eslint-config ~0.5.6 with extends
     const devDependencies: Record<string, string> = {
       '@nuxt/eslint-config': isFlatConfig

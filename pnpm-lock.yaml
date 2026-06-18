@@ -2824,6 +2824,9 @@ importers:
       confusing-browser-globals:
         specifier: ^1.0.9
         version: 1.0.11
+      eslint:
+        specifier: ^9.0.0 || ^10.0.0
+        version: 9.39.4(jiti@2.6.1)
       eslint-config-prettier:
         specifier: catalog:eslint
         version: 10.1.8(eslint@9.39.4(jiti@2.6.1))

@@ -76,7 +76,7 @@ describe('addLinting generator', () => {
     });
 
     const { devDependencies } = readJson(tree, 'package.json');
-    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.40.0');
+    expect(devDependencies['@typescript-eslint/utils']).toBe('^8.57.0');
   });
 
   it('should correctly generate the .eslintrc.json file', async () => {
