@@ -201,7 +201,10 @@ impl BarItem {
             // rendered or the fit algorithm under-budgets and the help row
             // gets clipped instead of dropping shortcuts.
             BarItem::Progress if counts.total() == 0 => "Waiting for tasks…".chars().count() as u16,
-            BarItem::Progress => digit_width(counts.done()) + 1 + digit_width(counts.total()) + 5,
+            // done is right-aligned to the width of total (fixed for the run),
+            // so "X/Y done" keeps a constant width as done grows - the leftmost
+            // item never shifts the whole bar when done crosses a digit boundary.
+            BarItem::Progress => 2 * digit_width(counts.total()) + 6,
             // "✖ N" - icon + space + digits
             BarItem::FailedChip if counts.failed > 0 => 2 + digit_width(counts.failed),
             // "✔ N" - icon + space + digits
@@ -651,10 +654,11 @@ impl StatusBar {
 
             match item {
                 BarItem::Progress => {
+                    let w = digit_width(counts.total()) as usize;
                     let text = if layout.compress_sticky {
-                        format!("{}/{}", counts.done(), counts.total())
+                        format!("{:>w$}/{}", counts.done(), counts.total(), w = w)
                     } else {
-                        format!("{}/{} done", counts.done(), counts.total())
+                        format!("{:>w$}/{} done", counts.done(), counts.total(), w = w)
                     };
                     let style = base.fg(progress_color).add_modifier(Modifier::BOLD);
                     spans.push(Span::styled(text, style));
@@ -1148,6 +1152,32 @@ mod tests {
         );
     }
 
+    /// `done` is right-aligned to total's width, so the Progress chip - the
+    /// leftmost item, which anchors the whole bar - keeps a constant width as
+    /// done grows across a digit boundary (total is fixed for the run).
+    #[test]
+    fn progress_width_stable_as_done_grows() {
+        let at9 = StatusCounts {
+            passed: 9,
+            pending: 111,
+            ..Default::default()
+        };
+        let at10 = StatusCounts {
+            passed: 10,
+            pending: 110,
+            ..Default::default()
+        };
+        assert_eq!(at9.total(), 120);
+        assert_eq!(at10.total(), 120);
+        assert_eq!(
+            BarItem::Progress.width(&at9, None),
+            BarItem::Progress.width(&at10, None),
+            "Progress width must not change as done crosses a digit boundary"
+        );
+        // 2 * digit_width(120) + 6 = 12 ("  9/120 done").
+        assert_eq!(BarItem::Progress.width(&at9, None), 12);
+    }
+
     /// W=35: every non-sticky item dropped. Only progress + failed +
     /// quit/help remain. compress_sticky still false (33-cell content fits
     /// in 35).
@@ -1344,6 +1374,20 @@ mod tests {
     #[test]
     fn snapshot_state_with_skip_stop_chips() {
         let terminal = render_bar(120, full_counts(), false, None);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn snapshot_progress_done_padded() {
+        // total is 3 digits, done is 1, so done renders right-aligned
+        // ("  9/120 done") and the bar's left origin holds as done grows.
+        let counts = StatusCounts {
+            passed: 9,
+            running: 5,
+            pending: 106,
+            ..Default::default()
+        };
+        let terminal = render_bar(120, counts, false, None);
         insta::assert_snapshot!(terminal.backend());
     }
 
