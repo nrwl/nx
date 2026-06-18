@@ -18,7 +18,7 @@ import {
   detectLinters,
   addLintingToProject,
 } from '@nx/js/internal';
-import { extraEslintDependencies } from '../../../utils/lint';
+import { getExtraEslintDependencies } from '../../../utils/lint';
 import { NormalizedSchema } from '../schema';
 import { nxVersion } from '../../../utils/versions';
 
@@ -70,10 +70,11 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
     }
 
     if (!options.skipPackageJson) {
+      const eslintDependencies = getExtraEslintDependencies(host);
       const installTask = addDependenciesToPackageJson(
         host,
-        extraEslintDependencies.dependencies,
-        extraEslintDependencies.devDependencies,
+        eslintDependencies.dependencies,
+        eslintDependencies.devDependencies,
         undefined,
         true
       );
