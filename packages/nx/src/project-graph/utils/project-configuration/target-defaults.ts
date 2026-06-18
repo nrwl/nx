@@ -395,10 +395,13 @@ function mergeMatchingEntries(
   for (const entry of entries) {
     if (!entryFilterMatches(entry.filter, ctx)) continue;
     const config = stripFilter(entry);
-    acc =
-      acc === null
-        ? mergeTargetConfigurations(config, {})
-        : mergeTargetConfigurations(config, acc);
+    // The first matching entry is returned as-is (a fresh object from
+    // `stripFilter`) — crucially WITHOUT running it through
+    // `mergeTargetConfigurations`, so deferred `'...'` spread tokens stay
+    // intact for the downstream merge against the inferred/specified target.
+    // Only when a second matching entry must layer on top do we merge, with
+    // the later entry winning.
+    acc = acc === null ? config : mergeTargetConfigurations(config, acc);
   }
   return acc;
 }
