@@ -189,10 +189,9 @@ async function resolveWithPolicy(
       );
     }
 
-    if (outcome.immature && applySideEffects) {
-      handleImmaturePick(packageName, outcome.version, policy);
-    }
-
+    // An immature loose pick is returned as-is. nx does not write the
+    // minimumReleaseAgeExclude entry here: migrate does not replace the install,
+    // so the real `pnpm install` (>=11.1.3) auto-writes it itself.
     return outcome.version;
   } catch (e) {
     // A side-effect-free probe never installs/prompts/writes, so any failure -
@@ -227,37 +226,6 @@ function reportChangedOutcome(
   reportedChangedOutcomes.add(key);
   output.log({
     title: `Resolved ${packageName}@${picked} instead of ${unconstrained}: ${policy.sourceDescription}.`,
-  });
-}
-
-// pnpm v11 loose installs an immature version; >=11.1.3 also records it as an
-// exclude in pnpm-workspace.yaml. Mirror that so a later real install agrees.
-function handleImmaturePick(
-  packageName: string,
-  version: string,
-  policy: MinReleaseAgePolicy
-): void {
-  if (
-    policy.behavior.packageManager !== 'pnpm' ||
-    !policy.behavior.writesExcludes
-  ) {
-    return;
-  }
-
-  const added = appendMinimumReleaseAgeExcludes(workspaceRoot, [
-    `${packageName}@${version}`,
-  ]);
-  // Already present (e.g. a prior pick or a pre-existing entry): nothing written,
-  // so do not claim we added it.
-  if (added.length === 0) {
-    return;
-  }
-
-  output.log({
-    title: `Added ${packageName}@${version} to minimumReleaseAgeExclude in pnpm-workspace.yaml.`,
-    bodyLines: [
-      `It is within the ${policy.sourceDescription} window; this mirrors what pnpm would write at install time.`,
-    ],
   });
 }
 

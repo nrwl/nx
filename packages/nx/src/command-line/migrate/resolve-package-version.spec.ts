@@ -268,10 +268,10 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     log.mockRestore();
   });
 
-  it('pnpm loose immature pick writes an exclude + heads-up when the PM writes excludes', async () => {
-    jest
-      .spyOn(require('../../utils/output').output, 'log')
-      .mockImplementation(() => {});
+  it('pnpm loose immature pick returns the version without writing an exclude (the real install writes it)', async () => {
+    // migrate does not replace the install, so the subsequent `pnpm install`
+    // (>=11.1.3) auto-writes the minimumReleaseAgeExclude entry itself. nx
+    // writing it here would be redundant and risks diverging from pnpm's pick.
     mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: true }));
     mockResolve.mockResolvedValue({
       version: '1.0.1',
@@ -279,51 +279,12 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
       immature: true,
     });
 
-    const result = await resolvePackageVersionRespectingMinReleaseAge(
-      'pkg-b',
-      '^1.0.0'
-    );
-    expect(result).toBe('1.0.1');
-    expect(mockWriteExcludes).toHaveBeenCalledWith(expect.any(String), [
-      'pkg-b@1.0.1',
-    ]);
-  });
-
-  it('pnpm loose immature pick on a version that does not write excludes installs silently', async () => {
-    mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: false }));
-    mockResolve.mockResolvedValue({
-      version: '1.0.1',
-      unconstrained: '1.0.1',
-      immature: true,
-    });
     const result = await resolvePackageVersionRespectingMinReleaseAge(
       'pkg-b',
       '^1.0.0'
     );
     expect(result).toBe('1.0.1');
     expect(mockWriteExcludes).not.toHaveBeenCalled();
-  });
-
-  it('does not repeat the heads-up when the exclude was already present', async () => {
-    const log = jest
-      .spyOn(require('../../utils/output').output, 'log')
-      .mockImplementation(() => {});
-    mockReadPolicy.mockResolvedValue(pnpmPolicy({ writesExcludes: true }));
-    mockResolve.mockResolvedValue({
-      version: '1.0.1',
-      unconstrained: '1.0.1',
-      immature: true,
-    });
-    // Writer reports nothing newly added (entry already present).
-    mockWriteExcludes.mockReturnValue([]);
-
-    await resolvePackageVersionRespectingMinReleaseAge('pkg-b', '^1.0.0');
-
-    const addedLogs = log.mock.calls.filter((c) =>
-      c[0].title.includes('Added pkg-b')
-    );
-    expect(addedLogs).toHaveLength(0);
-    log.mockRestore();
   });
 
   it('rethrows a violation when the policy is not pnpm strict + writesExcludes', async () => {
