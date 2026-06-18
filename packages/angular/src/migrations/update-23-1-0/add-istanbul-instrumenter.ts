@@ -61,15 +61,11 @@ export default async function (tree: Tree) {
     }
   }
 
-  // nx.json targetDefaults (array and legacy record shapes): a project's empty
-  // `test` target can inherit a Karma executor/runner from a default.
+  // nx.json targetDefaults: a project's empty `test` target can inherit a Karma
+  // executor/runner from a default.
   if (!needsInstrumenter) {
     const targetDefaults = readNxJson(tree)?.targetDefaults;
-    if (Array.isArray(targetDefaults)) {
-      needsInstrumenter = targetDefaults.some((entry) =>
-        usesKarma([entry.executor, entry.target], entry)
-      );
-    } else if (targetDefaults) {
+    if (targetDefaults) {
       needsInstrumenter = Object.entries(targetDefaults).some(
         ([targetOrExecutor, config]) =>
           usesKarma([targetOrExecutor, config.executor], config)

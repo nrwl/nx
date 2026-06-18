@@ -2,10 +2,20 @@ import * as angularVersionUtils from '../../utilities/angular-version-utils';
 import type { ApplicationExecutorOptions } from '../schema';
 import { normalizeOptions } from './normalize-options';
 
-function normalizeSsr(
-  ssr: ApplicationExecutorOptions['ssr']
-): ApplicationExecutorOptions['ssr'] {
-  return normalizeOptions({ ssr } as ApplicationExecutorOptions).ssr;
+// The builder's `ssr` type is version-specific (v22 only knows `platform`,
+// earlier majors only `experimentalPlatform`), so the helper widens to read and
+// return both, matching what `normalizeOptions` accepts and bridges.
+type SsrPlatformInput =
+  | boolean
+  | {
+      entry?: string;
+      platform?: 'node' | 'neutral';
+      experimentalPlatform?: 'node' | 'neutral';
+    };
+
+function normalizeSsr(ssr: SsrPlatformInput): SsrPlatformInput {
+  return normalizeOptions({ ssr } as ApplicationExecutorOptions)
+    .ssr as SsrPlatformInput;
 }
 
 describe('normalizeOptions', () => {

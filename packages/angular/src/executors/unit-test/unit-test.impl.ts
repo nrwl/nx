@@ -1,4 +1,4 @@
-import type { BuilderContext, BuilderOutput } from '@angular-devkit/architect';
+import type { BuilderContext } from '@angular-devkit/architect';
 import type {
   ApplicationBuilderOptions,
   NgPackagrBuilderOptions,
@@ -20,7 +20,7 @@ import type { UnitTestExecutorOptions } from './schema';
 export default async function* unitTestExecutor(
   options: UnitTestExecutorOptions,
   context: ExecutorContext
-): AsyncIterable<BuilderOutput> {
+) {
   validateOptions(options);
 
   const {

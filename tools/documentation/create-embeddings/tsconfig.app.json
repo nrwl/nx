@@ -2,10 +2,8 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc",
-    "rootDir": "src",
     "tsBuildInfoFile": "out-tsc/tsconfig.app.tsbuildinfo",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "rootDir": "src",
     "types": ["node"],
     "esModuleInterop": true,
     "resolveJsonModule": true,
@@ -13,6 +11,11 @@
     "allowJs": true,
     "composite": false
   },
-  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"],
+  "exclude": [
+    "out-tsc",
+    "jest.config.ts",
+    "src/**/*.spec.ts",
+    "src/**/*.test.ts"
+  ],
   "include": ["src/**/*.ts", "src/**/*.mts"]
 }

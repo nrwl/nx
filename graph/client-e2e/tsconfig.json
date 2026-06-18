@@ -21,10 +21,6 @@
     "src/**/*.js",
     "src/**/*.json"
   ],
-  "references": [
-    {
-      "path": "../client"
-    }
-  ],
-  "exclude": []
+  "references": [],
+  "exclude": ["out-tsc"]
 }

@@ -1,13 +1,5 @@
 module.exports = () => {
   if (global.NX_GRAPH_CREATION === undefined) {
-    // This is needed to ensure that the `@nx/angular-rspack` package can find the build artefact for `@nx/module-federation`.
-    // TODO(colum): Remove this once @nx/module-federation builds to local dist.
-    /* eslint-disable @nx/enforce-module-boundaries */
-    const {
-      patchModuleFederationRequestPath,
-    } = require('../../patch-devkit-request-path');
-    /* eslint-enable @nx/enforce-module-boundaries */
-    const cleanupModuleFederationPatch = patchModuleFederationRequestPath();
     const {
       NxModuleFederationPlugin,
       NxModuleFederationDevServerPlugin,
@@ -75,7 +67,6 @@ module.exports = () => {
         },
       }
     );
-    cleanupModuleFederationPatch();
     return config;
   }
   return {};

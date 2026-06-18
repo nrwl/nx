@@ -75,36 +75,22 @@ export default async function (tree: Tree) {
     }
   }
 
-  // nx.json targetDefaults (both the array and the legacy record shapes)
+  // nx.json targetDefaults
   const nxJson = readNxJson(tree);
   if (nxJson?.targetDefaults) {
     let isUpdated = false;
 
-    if (Array.isArray(nxJson.targetDefaults)) {
-      for (const entry of nxJson.targetDefaults) {
-        if (
-          !ssrApplicationExecutors.includes(entry.executor) &&
-          !ssrApplicationExecutors.includes(entry.target)
-        ) {
-          continue;
-        }
-        if (renameSsrPlatform(entry)) {
-          isUpdated = true;
-        }
+    for (const [targetOrExecutor, targetConfig] of Object.entries(
+      nxJson.targetDefaults
+    )) {
+      if (
+        !ssrApplicationExecutors.includes(targetOrExecutor) &&
+        !ssrApplicationExecutors.includes(targetConfig.executor)
+      ) {
+        continue;
       }
-    } else {
-      for (const [targetOrExecutor, targetConfig] of Object.entries(
-        nxJson.targetDefaults
-      )) {
-        if (
-          !ssrApplicationExecutors.includes(targetOrExecutor) &&
-          !ssrApplicationExecutors.includes(targetConfig.executor)
-        ) {
-          continue;
-        }
-        if (renameSsrPlatform(targetConfig)) {
-          isUpdated = true;
-        }
+      if (renameSsrPlatform(targetConfig)) {
+        isUpdated = true;
       }
     }
 
