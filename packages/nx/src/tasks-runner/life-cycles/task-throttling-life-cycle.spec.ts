@@ -140,11 +140,14 @@ describe('TaskThrottlingLifeCycle', () => {
 
     expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
     expect(s.criticalChain.map((c) => c.id)).toEqual(['a']); // what we display
+    expect(s.topWaits.map((w) => w.id)).toEqual(['b']); // surfaced as a wait
+    expect(s.topWaits[0].gate).toBe('slot');
     const report = formatReport(s);
     expect(report).toContain(
       'Critical path (the longest chain of dependent tasks)'
     );
-    expect(report).not.toContain('waited');
+    expect(report).toContain('Biggest waits before tasks could start:');
+    expect(report).toContain('waited 1.0s for a free slot');
   });
 
   it('attributes a wait with free slots to coordinator overhead', () => {
@@ -374,10 +377,23 @@ describe('formatReport', () => {
     expect(report).toContain(
       'Critical path (the longest chain of dependent tasks)'
     );
-    // The displayed chain is the critical path (task + duration), not the finish
-    // lineage — so it carries no "waited …" annotations.
-    expect(report).not.toContain('waited');
+    // The critical-path chain itself is duration-only; per-task waits live in a
+    // separate callout below it (here, `b` queued 1s for a slot).
+    expect(report).toContain('Biggest waits before tasks could start:');
+    expect(report).toContain('waited 1.0s for a free slot');
     expect(report).toContain('Recommendation:');
+  });
+
+  it('omits the waits callout when nothing waited', () => {
+    // A pure dependency chain at its floor: every task starts the moment its
+    // dep finishes, so there are no slot/hashing waits to surface.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const c = makeTask('c', { start: 2000, end: 3000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
+
+    expect(s.topWaits).toHaveLength(0);
+    expect(formatReport(s)).not.toContain('Biggest waits');
   });
 });
 

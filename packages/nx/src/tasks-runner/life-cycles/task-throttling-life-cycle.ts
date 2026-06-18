@@ -21,6 +21,8 @@ const MEANINGFUL_OVERHEAD = 1000;
  * a nonzero `recoverable by --parallel` — that contradiction is what this avoids.
  */
 const MINOR_OVERHEAD = 250;
+/** Cap on how many per-task waits the "Biggest waits" callout lists. */
+const MAX_WAIT_ROWS = 5;
 
 interface TaskTiming {
   startTime?: number;
@@ -57,6 +59,12 @@ export interface ThrottleSummary {
    * summed duration — the floor. This is the chain the report displays.
    */
   criticalChain: Array<{ id: string; duration: number }>;
+  /**
+   * The biggest per-task waits across the run (slot/hashing/scheduling), largest
+   * first, capped at {@link MAX_WAIT_ROWS}. Displayed as a callout so the waits
+   * the critical-path chain omits stay visible. Empty when nothing waited.
+   */
+  topWaits: ChainLink[];
   totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
@@ -538,6 +546,18 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const finishLineageTasks = this.finishLineage(durations);
     const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
 
+    // Per-task waits across the whole run (slot/hashing/scheduling), biggest
+    // first. The critical-path chain shows pure durations, so these surface here
+    // instead — keeping the chain clean while still naming where time was lost.
+    // `idx = 1` so a zero-wait task classifies as 'dep' and is filtered out.
+    const topWaits = [...durations.keys()]
+      .map((id) => annotate(id, 1))
+      .filter(
+        (w) => w.gate === 'slot' || w.gate === 'hashing' || w.gate === 'other'
+      )
+      .sort((a, b) => b.wait - a.wait)
+      .slice(0, MAX_WAIT_ROWS);
+
     // Coordinator hashing that ran BEFORE the first task started — the task
     // window would otherwise miss it. Added to both the overhead and the
     // coordinator bucket below, so it surfaces without touching the slot split.
@@ -616,6 +636,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathTaskCount: criticalPathTasks.length,
       finishChain,
       criticalChain,
+      topWaits,
       totalWork,
       overhead,
       overheadPct,
@@ -775,8 +796,8 @@ function buildRecommendation(args: {
 /**
  * Render the critical path as aligned columns: task (left), duration (right).
  * Column widths are sized to the chain so it reads as a table. No wait column —
- * the critical path is pure execution time; slot/hashing waits live in the
- * overhead split, not here.
+ * the critical path is pure execution time; per-task waits are shown separately
+ * (see `formatWaitRows`).
  */
 function formatCriticalRows(
   chain: Array<{ id: string; duration: number }>
@@ -794,6 +815,28 @@ function formatCriticalRows(
   });
 }
 
+/** The "waited …" phrase for a wait row, by what gated the task's start. */
+function waitCell(link: ChainLink): string {
+  const waited = formatDuration(link.wait);
+  switch (link.gate) {
+    case 'slot':
+      return `waited ${waited} for a free slot`;
+    case 'hashing':
+      return `waited ${waited} on hashing`;
+    default:
+      return `waited ${waited} (scheduling/startup)`;
+  }
+}
+
+/**
+ * Render the biggest per-task waits as aligned columns: task (left) and the wait
+ * reason (right). Called only when there are waits to show.
+ */
+function formatWaitRows(waits: ChainLink[]): string[] {
+  const idWidth = Math.max(...waits.map((w) => w.id.length));
+  return waits.map((w) => `    ${w.id.padEnd(idWidth)}    ${waitCell(w)}`);
+}
+
 /** A "    label   value" line for the overhead breakdown, value column-aligned. */
 function bucketLine(label: string, ms: number): string {
   return `    ${label.padEnd(43)}${formatDuration(ms)}`;
@@ -805,7 +848,7 @@ function pluralizeCores(cores: number): string {
 
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  return [
+  const lines = [
     '',
     'Throttle report:',
     `  Run duration:            ${fmt(s.runDuration)}`,
@@ -829,10 +872,16 @@ export function formatReport(s: ThrottleSummary): string {
     '',
     `  Critical path (the longest chain of dependent tasks):`,
     ...formatCriticalRows(s.criticalChain),
-    '',
-    `  Recommendation: ${s.recommendation}`,
-    '',
-  ].join('\n');
+  ];
+  if (s.topWaits.length > 0) {
+    lines.push(
+      '',
+      '  Biggest waits before tasks could start:',
+      ...formatWaitRows(s.topWaits)
+    );
+  }
+  lines.push('', `  Recommendation: ${s.recommendation}`, '');
+  return lines.join('\n');
 }
 
 /** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */
