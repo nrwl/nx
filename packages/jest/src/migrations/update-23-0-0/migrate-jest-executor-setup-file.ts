@@ -381,6 +381,11 @@ function stripSetupFileFromNxJson(
   for (const [targetOrExecutor, targetConfig] of Object.entries(
     nxJson.targetDefaults
   )) {
+    // This migration predates the filtered array value form, so values are
+    // always plain objects here; skip arrays defensively to stay type-safe.
+    if (Array.isArray(targetConfig)) {
+      continue;
+    }
     if (
       targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
       targetConfig.executor !== EXECUTOR_TO_MIGRATE

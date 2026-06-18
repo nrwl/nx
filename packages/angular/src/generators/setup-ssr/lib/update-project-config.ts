@@ -167,16 +167,15 @@ export function updateProjectConfigForBrowserBuilder(
 function findServerDefault(
   td: NxJsonConfiguration['targetDefaults']
 ): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'server' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td?.['server'];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
   }
-  return td['server'];
+  return value;
 }
 
 function getServerOptions(

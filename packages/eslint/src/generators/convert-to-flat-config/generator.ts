@@ -157,20 +157,20 @@ function hasMatchingEslintTargetDefault(
     return false;
   }
 
-  if (Array.isArray(targetDefaults)) {
-    return targetDefaults.some(
-      (entry) =>
-        entry.target !== undefined &&
-        projectConfig.targets[entry.target] !== undefined &&
-        (entry.target === ESLINT_LINT_EXECUTOR || isEslintTarget(entry))
-    );
-  }
-
-  return Object.entries(targetDefaults).some(
-    ([targetName, targetConfig]) =>
-      projectConfig.targets[targetName] !== undefined &&
-      (targetName === ESLINT_LINT_EXECUTOR || isEslintTarget(targetConfig))
-  );
+  return Object.entries(targetDefaults).some(([targetName, value]) => {
+    if (projectConfig.targets[targetName] === undefined) {
+      return false;
+    }
+    if (targetName === ESLINT_LINT_EXECUTOR) {
+      return true;
+    }
+    // A target default value can be a plain config object or an array of
+    // filtered entries; match against the filter-less (catch-all) entry.
+    const targetConfig = Array.isArray(value)
+      ? value.find((e) => e.filter === undefined)
+      : value;
+    return targetConfig ? isEslintTarget(targetConfig) : false;
+  });
 }
 
 function convertProjectToFlatConfig(
@@ -313,16 +313,16 @@ function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
         : rewriteLegacyInputs(target.inputs, format);
     };
     if (json.targetDefaults) {
-      if (Array.isArray(json.targetDefaults)) {
-        for (const entry of json.targetDefaults) {
-          const isLintTarget =
-            entry.target === 'lint' || entry.target === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(entry, isLintTarget);
-        }
-      } else {
-        for (const [name, target] of Object.entries(json.targetDefaults)) {
-          const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
-          rewriteTargetInputs(target, isLintTarget);
+      for (const [name, value] of Object.entries(json.targetDefaults)) {
+        const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
+        // A target default value can be a plain config object or an array of
+        // filtered entries; rewrite inputs on each entry in the array case.
+        if (Array.isArray(value)) {
+          for (const entry of value) {
+            rewriteTargetInputs(entry, isLintTarget);
+          }
+        } else {
+          rewriteTargetInputs(value, isLintTarget);
         }
       }
     }

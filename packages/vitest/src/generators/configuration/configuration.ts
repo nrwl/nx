@@ -532,16 +532,15 @@ function findTestDefault(
   td: TargetDefaults | undefined,
   target: string
 ): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td?.[target];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
   }
-  return td[target];
+  return value;
 }
 
 export default configurationGenerator;

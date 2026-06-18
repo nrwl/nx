@@ -1,8 +1,13 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  denormalizeTargetDefaults,
+  forEachExecutorOptions,
+  normalizeTargetDefaults,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
   readProjectConfiguration,
+  type TargetDefaultEntry,
   updateNxJson,
   updateProjectConfiguration,
   type Tree,
@@ -64,56 +69,29 @@ export default async function (tree: Tree) {
     });
   };
 
-  if (Array.isArray(nxJson.targetDefaults)) {
-    const remaining = [];
-    for (const entry of nxJson.targetDefaults) {
-      const matches =
-        executors.includes(entry.executor) || executors.includes(entry.target);
-      if (!matches) {
-        remaining.push(entry);
-        continue;
-      }
-      cleanEntry(entry as any);
-      const meaningfulKeys = Object.keys(entry).filter(
-        (k) =>
-          k !== 'target' &&
-          k !== 'executor' &&
-          k !== 'projects' &&
-          k !== 'plugin'
-      );
-      if (meaningfulKeys.length === 0) continue;
+  // Operate on the flat logical view so both the object and array value forms
+  // are handled uniformly, then collapse back to the map shape.
+  const entries = normalizeTargetDefaults(nxJson.targetDefaults);
+  const remaining: TargetDefaultEntry[] = [];
+  for (const entry of entries) {
+    const matches =
+      executors.includes(entry.executor) || executors.includes(entry.target);
+    if (!matches) {
       remaining.push(entry);
+      continue;
     }
-    if (remaining.length === 0) {
-      delete nxJson.targetDefaults;
-    } else {
-      nxJson.targetDefaults = remaining;
-    }
+    cleanEntry(entry as any);
+    const meaningfulKeys = Object.keys(entry).filter(
+      (k) =>
+        k !== 'target' && k !== 'executor' && k !== 'projects' && k !== 'plugin'
+    );
+    if (meaningfulKeys.length === 0) continue;
+    remaining.push(entry);
+  }
+  if (remaining.length === 0) {
+    delete nxJson.targetDefaults;
   } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        !executors.includes(targetOrExecutor) &&
-        !executors.includes(targetConfig.executor)
-      ) {
-        continue;
-      }
-
-      cleanEntry(targetConfig as any);
-
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
-      }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
-    }
+    nxJson.targetDefaults = denormalizeTargetDefaults(remaining);
   }
 
   updateNxJson(tree, nxJson);

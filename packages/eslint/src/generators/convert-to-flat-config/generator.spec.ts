@@ -549,7 +549,7 @@ describe('convert-to-flat-config generator', () => {
       expect(tree.exists('libs/test-lib/eslint.config.cjs')).toBeTruthy();
     });
 
-    it('should convert project if target is defined via array-shaped targetDefaults', async () => {
+    it('should convert project if target is defined via a name-keyed targetDefault', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
         linter: 'eslint',
@@ -558,13 +558,12 @@ describe('convert-to-flat-config generator', () => {
         eslintConfigFormat: 'cjs',
       });
       updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
-        json.targetDefaults = [
-          {
-            target: 'lint',
+        json.targetDefaults = {
+          lint: {
             executor: '@nx/eslint:lint',
             inputs: ['default'],
           },
-        ];
+        };
         return json;
       });
       updateJson(
