@@ -20,6 +20,15 @@
       "description": "Rename imports of `createNodesV2` from `@nx/next/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-1-0-create-ai-instructions-for-next-15": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "next": ">=15.0.0 <16.0.0"
+      },
+      "description": "Create AI instructions to help migrate workspaces from Next.js 14 to 15.",
+      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-next-15.md",
+      "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-next-15.md"
     }
   },
   "packageJsonUpdates": {
@@ -52,6 +61,22 @@
         },
         "eslint-config-next": {
           "version": "^16.1.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "next": ">=14.0.0 <15.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~15.5.18",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^15.5.18",
           "alwaysAddToPackageJson": false
         }
       }
