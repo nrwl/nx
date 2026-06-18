@@ -738,19 +738,38 @@ function buildRecommendation(args: {
     : base;
 }
 
-/** Suffix describing how a chain link was held up, including how long it waited. */
-function gateLabel(link: ChainLink): string {
+/** The "waited …" cell for a chain row (empty when the task started on time). */
+function waitCell(link: ChainLink): string {
   const waited = formatDuration(link.wait);
   switch (link.gate) {
     case 'slot':
-      return `  ← waited ${waited} for a free slot`;
+      return `waited ${waited} for a free slot`;
     case 'hashing':
-      return `  ← waited ${waited} on hashing`;
+      return `waited ${waited} on hashing`;
     case 'other':
-      return `  ← waited ${waited} (scheduling/startup)`;
+      return `waited ${waited} (scheduling/startup)`;
     default:
       return '';
   }
+}
+
+/**
+ * Render the finish chain as aligned columns: task (left), duration (right), and
+ * the wait reason. Column widths are sized to the chain so it reads as a table.
+ */
+function formatChainRows(chain: ChainLink[]): string[] {
+  if (chain.length === 0) {
+    return ['    (no tasks)'];
+  }
+  const idWidth = Math.max(...chain.map((c) => c.id.length));
+  const durations = chain.map((c) => formatDuration(c.duration));
+  const durWidth = Math.max(...durations.map((d) => d.length));
+  return chain.map((c, i) => {
+    const id = c.id.padEnd(idWidth);
+    const dur = durations[i].padStart(durWidth);
+    const wait = waitCell(c);
+    return `    ${id}    ${dur}${wait ? '    ' + wait : ''}`;
+  });
 }
 
 /** A "    label   value" line for the overhead breakdown, value column-aligned. */
@@ -791,9 +810,7 @@ export function formatReport(s: ThrottleSummary): string {
     ),
     '',
     `  What determined the ${fmt(s.runDuration)} finish:`,
-    ...s.finishChain.map(
-      (c) => `    ${c.id}  —  ${fmt(c.duration)}${gateLabel(c)}`
-    ),
+    ...formatChainRows(s.finishChain),
     '',
     `  Recommendation: ${s.recommendation}`,
     '',
