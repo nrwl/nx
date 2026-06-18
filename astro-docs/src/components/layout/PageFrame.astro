@@ -176,6 +176,15 @@ const bannerId = bannerConfig ? `${bannerConfig.title}-${bannerConfig.activeUnti
       top: calc(var(--sl-nav-height) + var(--conf-banner-h));
     }
 
+    /* The fixed mobile menu (hamburger) toggle is positioned from the viewport
+       top, so it hides under the conf banner unless we clear it too. */
+    .page.has-conf-banner :global(starlight-menu-button button) {
+      top: calc(
+        (var(--sl-nav-height) - var(--sl-menu-button-size)) / 2 +
+          var(--conf-banner-h)
+      );
+    }
+
     @media (min-width: 50rem) {
       :global([data-has-sidebar]) .header {
         padding-inline-end: var(--sl-nav-pad-x);
