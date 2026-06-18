@@ -129,7 +129,7 @@ describe('target-defaults-utils', () => {
       });
     });
 
-    it('moves an executor used with a target into filter.executor', () => {
+    it('keeps an executor used with a target as a config field (object form)', () => {
       const nxJson = readNxJson(tree);
       delete nxJson.targetDefaults;
 
@@ -141,9 +141,7 @@ describe('target-defaults-utils', () => {
       updateNxJson(tree, nxJson);
 
       expect(readNxJson(tree).targetDefaults).toEqual({
-        test: [
-          { filter: { executor: '@nx/jest:jest' }, inputs: ['jest.config.ts'] },
-        ],
+        test: { executor: '@nx/jest:jest', inputs: ['jest.config.ts'] },
       });
     });
 

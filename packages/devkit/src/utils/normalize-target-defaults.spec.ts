@@ -87,7 +87,7 @@ describe('denormalizeTargetDefaults (flat logical entries -> nested map)', () =>
     });
   });
 
-  it('moves an executor used alongside a target into filter.executor', () => {
+  it('keeps an executor used alongside a target as a config field (object form)', () => {
     expect(
       denormalizeTargetDefaults([
         {
@@ -97,9 +97,7 @@ describe('denormalizeTargetDefaults (flat logical entries -> nested map)', () =>
         },
       ])
     ).toEqual({
-      test: [
-        { filter: { executor: '@nx/jest:jest' }, inputs: ['jest.config.ts'] },
-      ],
+      test: { executor: '@nx/jest:jest', inputs: ['jest.config.ts'] },
     });
   });
 

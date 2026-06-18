@@ -133,21 +133,19 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
   it('should remove tsConfig option in nx.json target defaults for a target with the jest executor', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = {
-        test: [
-          {
-            filter: { executor: '@nx/jest:jest' },
-            options: {
-              jestConfig: '{projectRoot}/jest.config.ts',
-              tsConfig: '{projectRoot}/tsconfig.json',
-            },
-            configurations: {
-              production: {
-                tsConfig: '{projectRoot}/tsconfig.prod.json',
-                codeCoverage: true,
-              },
+        test: {
+          executor: '@nx/jest:jest',
+          options: {
+            jestConfig: '{projectRoot}/jest.config.ts',
+            tsConfig: '{projectRoot}/tsconfig.json',
+          },
+          configurations: {
+            production: {
+              tsConfig: '{projectRoot}/tsconfig.prod.json',
+              codeCoverage: true,
             },
           },
-        ],
+        },
       };
       return json;
     });
@@ -156,13 +154,11 @@ describe('remove-tsconfig-option-from-jest-executor', () => {
 
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
     expect(nxJson.targetDefaults).toEqual({
-      test: [
-        {
-          filter: { executor: '@nx/jest:jest' },
-          options: { jestConfig: '{projectRoot}/jest.config.ts' },
-          configurations: { production: { codeCoverage: true } },
-        },
-      ],
+      test: {
+        executor: '@nx/jest:jest',
+        options: { jestConfig: '{projectRoot}/jest.config.ts' },
+        configurations: { production: { codeCoverage: true } },
+      },
     });
   });
 

@@ -185,24 +185,22 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
 
     await migration(tree);
 
-    // A legacy record entry keyed by target name with an `executor` guard is
-    // rewritten to the equivalent filtered array-value form, with tsConfig and
-    // copyFiles stripped from both options and configurations.
+    // A record entry keyed by target name with an `executor` config field keeps
+    // that object form (executor stays a config field, not a filter), with
+    // tsConfig and copyFiles stripped from both options and configurations.
     const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-    expect(nxJson.targetDefaults.e2e).toStrictEqual([
-      {
-        filter: { executor: '@nx/cypress:cypress' },
-        options: {
-          cypressConfig: '{projectRoot}/cypress.config.ts',
-          devServerTarget: '{projectName}:serve',
-        },
-        configurations: {
-          production: {
-            devServerTarget: '{projectName}:serve:production',
-          },
+    expect(nxJson.targetDefaults.e2e).toStrictEqual({
+      executor: '@nx/cypress:cypress',
+      options: {
+        cypressConfig: '{projectRoot}/cypress.config.ts',
+        devServerTarget: '{projectName}:serve',
+      },
+      configurations: {
+        production: {
+          devServerTarget: '{projectName}:serve:production',
         },
       },
-    ]);
+    });
   });
 
   it('should remove tsConfig and copyFiles options in nx.json target defaults for the cypress executor', async () => {
@@ -389,15 +387,13 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
           build: {
             cache: true,
           },
-          e2e: [
-            {
-              filter: { executor: '@nx/cypress:cypress' },
-              options: {
-                tsConfig: '{projectRoot}/tsconfig.json',
-                cypressConfig: '{projectRoot}/cypress.config.ts',
-              },
+          e2e: {
+            executor: '@nx/cypress:cypress',
+            options: {
+              tsConfig: '{projectRoot}/tsconfig.json',
+              cypressConfig: '{projectRoot}/cypress.config.ts',
             },
-          ],
+          },
         };
         return json;
       });
@@ -407,12 +403,10 @@ describe('remove-tsconfig-and-copy-files-options-from-cypress-executor', () => {
       const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults).toEqual({
         build: { cache: true },
-        e2e: [
-          {
-            filter: { executor: '@nx/cypress:cypress' },
-            options: { cypressConfig: '{projectRoot}/cypress.config.ts' },
-          },
-        ],
+        e2e: {
+          executor: '@nx/cypress:cypress',
+          options: { cypressConfig: '{projectRoot}/cypress.config.ts' },
+        },
       });
     });
   });

@@ -100,7 +100,7 @@ describe('jest', () => {
   it('should patch existing target-scoped and filtered jest defaults in place', async () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = {
-        test: [{ filter: { executor: '@nx/jest:jest' } }],
+        test: { executor: '@nx/jest:jest' },
         '@nx/jest:jest': [{ filter: { projects: 'tag:unit' }, cache: false }],
       };
       return json;

@@ -86,13 +86,17 @@ export function denormalizeTargetDefaults(
         )} has neither \`target\` nor \`executor\` to use as the map key.`
       );
     }
-    // `executor` is the key itself when no `target` is set; it only becomes a
-    // filter when it narrows *within* a named target key.
-    const filterExecutor = target !== undefined ? executor : undefined;
-    const filter = buildFilter(plugin, projects, filterExecutor);
+    // `executor` is the map key when no `target` is set; when a `target` is
+    // present it is a configuration field (a default executor) that stays on
+    // the value — never normalized into a filter.
+    const valueConfig: Partial<TargetConfiguration> =
+      target !== undefined && executor !== undefined
+        ? { executor, ...(config as Partial<TargetConfiguration>) }
+        : (config as Partial<TargetConfiguration>);
+    const filter = buildFilter(plugin, projects);
     const arrayEntry: TargetDefaultArrayEntry = filter
-      ? { filter, ...(config as Partial<TargetConfiguration>) }
-      : (config as Partial<TargetConfiguration>);
+      ? { filter, ...valueConfig }
+      : valueConfig;
     const existing = grouped.get(key);
     if (existing) existing.push(arrayEntry);
     else grouped.set(key, [arrayEntry]);
@@ -110,20 +114,14 @@ export function denormalizeTargetDefaults(
 
 function buildFilter(
   plugin: string | undefined,
-  projects: string | string[] | undefined,
-  executor: string | undefined
+  projects: string | string[] | undefined
 ): TargetDefaultArrayEntry['filter'] | undefined {
-  if (
-    plugin === undefined &&
-    projects === undefined &&
-    executor === undefined
-  ) {
+  if (plugin === undefined && projects === undefined) {
     return undefined;
   }
   return {
     ...(plugin !== undefined ? { plugin } : {}),
     ...(projects !== undefined ? { projects } : {}),
-    ...(executor !== undefined ? { executor } : {}),
   };
 }
 

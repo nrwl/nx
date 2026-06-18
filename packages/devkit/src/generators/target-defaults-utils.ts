@@ -49,17 +49,21 @@ export function upsertTargetDefault(
     );
   }
 
-  // `executor` is the map key itself when no `target` is given; it only acts
-  // as a filter when narrowing *within* a named target key.
-  const filterExecutor = target !== undefined ? executor : undefined;
-  const filter = buildFilter(plugin, projects, filterExecutor);
+  // `executor` is the map key itself when no `target` is given; when a `target`
+  // is present it is a configuration field (a default executor) that stays on
+  // the value — never normalized into a filter.
+  const valueConfig: Partial<TargetConfiguration> =
+    target !== undefined && executor !== undefined
+      ? { executor, ...config }
+      : config;
+  const filter = buildFilter(plugin, projects);
 
   const targetDefaults = (nxJson.targetDefaults ??= {});
   const existing = targetDefaults[key];
 
   targetDefaults[key] = filter
-    ? upsertFilteredEntry(existing, filter, config)
-    : upsertCatchAllEntry(existing, config);
+    ? upsertFilteredEntry(existing, filter, valueConfig)
+    : upsertCatchAllEntry(existing, valueConfig);
 
   return nxJson;
 }
@@ -171,20 +175,14 @@ function upsertFilteredEntry(
 
 function buildFilter(
   plugin: string | undefined,
-  projects: string | string[] | undefined,
-  executor: string | undefined
+  projects: string | string[] | undefined
 ): NonNullable<TargetDefaultArrayEntry['filter']> | undefined {
-  if (
-    plugin === undefined &&
-    projects === undefined &&
-    executor === undefined
-  ) {
+  if (plugin === undefined && projects === undefined) {
     return undefined;
   }
   return {
     ...(plugin !== undefined ? { plugin } : {}),
     ...(projects !== undefined ? { projects } : {}),
-    ...(executor !== undefined ? { executor } : {}),
   };
 }
 
