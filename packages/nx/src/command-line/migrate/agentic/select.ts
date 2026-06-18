@@ -1,8 +1,13 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { applyEdits, modify } from 'jsonc-parser';
 import { join } from 'path';
+import * as pc from 'picocolors';
 import { output } from '../../../utils/output';
 import { workspaceRoot } from '../../../utils/workspace-root';
+import {
+  type MigratePromptChoices,
+  reportMigratePrompt,
+} from '../migrate-analytics';
 import { migratePrompt } from '../safe-prompt';
 import { detectInstalledAgents } from './detect-installed';
 import { isInsideAgent } from './inception';
@@ -164,40 +169,59 @@ async function firePromptForAgentic(
   // installed. With a single agent, "always" simply persists `true` and the
   // pin option is dropped.
   const multipleAgents = detected.length > 1;
-  const choices = [
-    { name: 'yes-once', message: 'Yes, just this time', hint: applyHint },
+  // `name` is typed so renaming a choice here fails to compile instead of
+  // silently forking the GA value-space and falling through the switch below.
+  type AgenticChoice = {
+    name: MigratePromptChoices['agentic'];
+    message: string;
+    description: string;
+  };
+  const pinChoice: AgenticChoice[] = multipleAgents
+    ? [
+        {
+          name: 'yes-pin',
+          message: 'Yes, always with the same agent',
+          description: rememberHint,
+        },
+      ]
+    : [];
+  const choices: AgenticChoice[] = [
+    {
+      name: 'yes-once',
+      message: 'Yes, just this time',
+      description: applyHint,
+    },
     {
       name: 'yes-flex',
       message: multipleAgents
         ? "Yes, always (I'll pick the agent each run)"
         : 'Yes, always',
-      hint: rememberHint,
+      description: rememberHint,
     },
-    ...(multipleAgents
-      ? [
-          {
-            name: 'yes-pin',
-            message: 'Yes, always with the same agent',
-            hint: rememberHint,
-          },
-        ]
-      : []),
-    { name: 'no-once', message: 'No, just this time', hint: skipHint },
-    { name: 'no-never', message: 'No, never', hint: rememberHint },
+    ...pinChoice,
+    { name: 'no-once', message: 'No, just this time', description: skipHint },
+    { name: 'no-never', message: 'No, never', description: rememberHint },
   ];
 
   // Blank line keeps the prompt from gluing to the previous `npm install`
   // output or any earlier orchestrator line.
   console.log();
-  // `as any` because enquirer's TS types lag the runtime (per-choice `hint`
-  // is supported but not in the .d.ts).
-  const response = await migratePrompt<{ choice: string }>({
+  // `as any`: `footer` and per-choice `description` aren't in enquirer's .d.ts.
+  const response = await migratePrompt<{
+    choice: MigratePromptChoices['agentic'];
+  }>({
     name: 'choice',
     type: 'select',
     message: 'Enable the agentic flow?',
     choices,
     initial: 0,
+    footer: function () {
+      const focused = this.focused as { description?: string };
+      return focused?.description ? pc.dim(`  ${focused.description}`) : '';
+    },
   } as any);
+
+  reportMigratePrompt('agentic', response.choice);
 
   switch (response.choice) {
     case 'yes-once':
@@ -301,5 +325,6 @@ async function selectAgent(
     message: 'Multiple AI agents detected. Which one should Nx use?',
     choices: detected.map((d) => ({ name: d.id, message: d.displayName })),
   });
+  reportMigratePrompt('agent_select', response.id);
   return detected.find((d) => d.id === response.id)!;
 }

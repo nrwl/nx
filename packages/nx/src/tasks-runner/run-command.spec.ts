@@ -115,6 +115,9 @@ describe('getRunner', () => {
     expect(runnerOptions).toMatchInlineSnapshot(`
       {
         "cacheDirectory": ".nx/cache",
+        "cacheableOperations": [
+          "build",
+        ],
         "parallel": 3,
         "useDaemonProcess": false,
       }

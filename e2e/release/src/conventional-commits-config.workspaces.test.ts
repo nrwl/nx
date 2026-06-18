@@ -101,7 +101,7 @@ describe('nx release conventional commits config', () => {
     await runCommandAsync(`git tag -a ${pkg4}@0.0.1 -m "${pkg4}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.1 -m "${pkg5}@0.0.1"`);
     await runCommandAsync(`git tag -a ${pkg6}@0.0.1 -m "${pkg6}@0.0.1"`);
-  }, 60000);
+  });
   afterEach(() => cleanupProject());
 
   it('should respect custom conventional commits configuration', async () => {

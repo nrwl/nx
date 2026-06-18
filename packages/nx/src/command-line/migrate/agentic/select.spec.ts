@@ -199,9 +199,25 @@ describe('resolveAgentic', () => {
       'no-once',
       'no-never',
     ]);
-    expect(call.choices[0].hint).toBe(
+    expect(call.choices[0].description).toBe(
       'Apply 2 prompt migrations and validate generator output with an AI agent'
     );
+  });
+
+  it("surfaces only the focused choice's description via the footer", async () => {
+    mockDetect.mockResolvedValue([detected('claude-code')]);
+    mockPrompt.mockResolvedValueOnce({ choice: 'no-once' });
+    await resolveAgentic({
+      agentic: undefined,
+      migrations: [{ prompt: 'a.md' }],
+    });
+    const call = mockPrompt.mock.calls[0][0];
+    const footer = call.footer as (this: { focused: unknown }) => string;
+    const skipChoice = call.choices.find((c: any) => c.name === 'no-once');
+    expect(footer.call({ focused: skipChoice })).toContain(
+      'Skip prompts and run generators without AI validation'
+    );
+    expect(footer.call({ focused: { description: undefined } })).toBe('');
   });
 
   it('adds the "pin the agent" choice when multiple agents are installed', async () => {
@@ -229,7 +245,7 @@ describe('resolveAgentic', () => {
       migrations: [{ prompt: 'only.md' }],
     });
     const call = mockPrompt.mock.calls[0][0];
-    expect(call.choices[0].hint).toBe(
+    expect(call.choices[0].description).toBe(
       'Apply 1 prompt migration and validate generator output with an AI agent'
     );
   });

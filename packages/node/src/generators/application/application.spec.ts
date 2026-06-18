@@ -24,11 +24,22 @@ import { applicationGenerator } from './application';
 
 describe('app', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -195,42 +206,7 @@ describe('app', () => {
         'src/**/*.spec.ts',
         'src/**/*.test.ts',
       ]);
-      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
-      expect(eslintrc).toMatchInlineSnapshot(`
-        {
-          "extends": [
-            "../.eslintrc.json",
-          ],
-          "ignorePatterns": [
-            "!**/*",
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.ts",
-                "*.tsx",
-              ],
-              "rules": {},
-            },
-            {
-              "files": [
-                "*.js",
-                "*.jsx",
-              ],
-              "rules": {},
-            },
-          ],
-        }
-      `);
+      expect(tree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
     });
 
     it('should extend from root tsconfig.json when no tsconfig.base.json', async () => {
@@ -426,12 +402,8 @@ describe('app', () => {
             'src/**/*.test.ts',
           ],
         },
-        {
-          path: 'my-dir/my-node-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
-        },
       ].forEach(hasJsonValue);
+      expect(tree.exists('my-dir/my-node-app/eslint.config.mjs')).toBeTruthy();
     });
   });
 
@@ -491,6 +463,18 @@ describe('app', () => {
         '/api': { target: 'http://localhost:3000', secure: false },
         '/billing-api': { target: 'http://localhost:3000', secure: false },
       });
+    });
+  });
+
+  describe('eslintrc (legacy)', () => {
+    it('should generate .eslintrc.json when ESLINT_USE_FLAT_CONFIG=false', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await applicationGenerator(tree, {
+        directory: 'my-node-app',
+        addPlugin: true,
+      });
+      const eslintrc = readJson(tree, 'my-node-app/.eslintrc.json');
+      expect(eslintrc.extends).toEqual(['../.eslintrc.json']);
     });
   });
 

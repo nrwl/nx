@@ -7,17 +7,13 @@ import {
 import { babelCoreVersion, babelPresetReactVersion } from '@nx/react/internal';
 import {
   babelRuntimeVersion,
-  reactNativeBabelPresetVersion,
-  reactNativeCommunityCliVersion,
-  reactNativeCommunityCliPlatformAndroidVersion,
-  reactNativeCommunityCliPlatformIosVersion,
-  reactNativeMetroConfigVersion,
   reactNativeSvgTransformerVersion,
   reactNativeSvgVersion,
   reactTestRendererVersion,
   testingLibraryReactNativeVersion,
   typesNodeVersion,
   typesReactVersion,
+  versions,
 } from './versions';
 
 export function ensureDependencies(
@@ -25,6 +21,7 @@ export function ensureDependencies(
   unitTestRunner?: 'jest' | 'none'
 ): GeneratorCallback {
   const isPnpm = detectPackageManager(tree.root) === 'pnpm';
+  const rnVersions = versions(tree);
 
   return addDependenciesToPackageJson(
     tree,
@@ -32,13 +29,13 @@ export function ensureDependencies(
     {
       '@types/node': typesNodeVersion,
       '@types/react': typesReactVersion,
-      '@react-native/babel-preset': reactNativeBabelPresetVersion,
-      '@react-native/metro-config': reactNativeMetroConfigVersion,
-      '@react-native-community/cli': reactNativeCommunityCliVersion,
+      '@react-native/babel-preset': rnVersions.reactNativeBabelPresetVersion,
+      '@react-native/metro-config': rnVersions.reactNativeMetroConfigVersion,
+      '@react-native-community/cli': rnVersions.reactNativeCommunityCliVersion,
       '@react-native-community/cli-platform-android':
-        reactNativeCommunityCliPlatformAndroidVersion,
+        rnVersions.reactNativeCommunityCliPlatformAndroidVersion,
       '@react-native-community/cli-platform-ios':
-        reactNativeCommunityCliPlatformIosVersion,
+        rnVersions.reactNativeCommunityCliPlatformIosVersion,
       'react-native-svg-transformer': reactNativeSvgTransformerVersion,
       'react-native-svg': reactNativeSvgVersion,
       '@babel/preset-react': babelPresetReactVersion,
@@ -54,6 +51,8 @@ export function ensureDependencies(
             '@babel/runtime': babelRuntimeVersion, // @babel/runtime is used by react-native-svg
           }
         : {}),
-    }
+    },
+    undefined,
+    true
   );
 }

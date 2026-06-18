@@ -257,9 +257,13 @@ async function handleMessage(socket: Socket, data: string) {
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (isDaemonMessage(payload) && payload.env) {
-    const envChanged = applyDaemonEnvFromClient(payload.env);
-    if (envChanged) {
-      serverLogger.log('Graph recompute necessary due to env variable refresh');
+    const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
+    if (changedEnvKeys.length > 0) {
+      serverLogger.log(
+        `Graph recompute necessary due to env variable refresh. Changed keys: ${changedEnvKeys.join(
+          ', '
+        )}`
+      );
       forwardEnvToPluginWorkers(payload.env);
       invalidateGraphCache();
     }

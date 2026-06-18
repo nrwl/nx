@@ -82,6 +82,8 @@ let chosenPreset: string;
 let useCloud: boolean;
 // For stats
 let packageManager: string;
+// Analytics opt-in answer for the completion stat.
+let analyticsPrompt: 'yes' | 'no' | 'unset' = 'unset';
 
 type AngularUnitTestRunner =
   | 'none'
@@ -427,6 +429,7 @@ async function main(parsedArgs: yargs.Arguments<Arguments>) {
       setupCloudPrompt:
         messages.codeOfSelectedPromptMessage('setupNxCloudV2') ||
         messages.codeOfSelectedPromptMessage('setupNxCloud'),
+      analyticsPrompt,
       nxCloudArg: parsedArgs.nxCloud ?? '',
       nxCloudArgRaw: rawArgs.nxCloud ?? '',
       pushedToVcs: workspaceInfo.pushedToVcs ?? '',
@@ -674,7 +677,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
         packageManager = argv.packageManager ?? detectInvokedPackageManager();
         Object.assign(argv, {
           nxCloud,
@@ -769,7 +773,8 @@ async function normalizeArgsMiddleware(
               : getCompletionMessageKeyForVariant();
         }
 
-        const analytics = await determineAnalytics(argv);
+        analyticsPrompt = await determineAnalytics(argv);
+        const analytics = analyticsPrompt === 'yes';
 
         Object.assign(argv, {
           nxCloud,

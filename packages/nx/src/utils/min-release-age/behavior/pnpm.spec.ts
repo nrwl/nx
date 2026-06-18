@@ -66,10 +66,30 @@ const pkgEdge = metadataFromAges(
 
 // A latest tag whose target is a too-new new-major; degrade has no same-major
 // mature candidate but a lower major does.
-const pkgNewMajor = metadataFromAges(
-  'pkg-newmajor',
-  { '1.2.0': 25, '1.2.1': 12, '2.0.0': 6 },
-  { latest: '2.0.0' }
+// Multiple prerelease channels sharing a release line, for the channel-aware
+// tag degrade: an `rc` next-target with an internal `pr` build and a `beta` of
+// the same line, plus an older cross-line `rc` and a same-line older `rc`.
+const pkgChannels = metadataFromAges(
+  'pkg-ch',
+  {
+    '22.7.0': 200,
+    '22.7.5': 6,
+    '22.7.0-rc.2': 220,
+    '23.0.0-beta.1': 100,
+    '23.0.0-pr.5': 90,
+    '23.0.0-rc.0': 2,
+    '23.1.0-rc.1': 80,
+    '23.1.0-rc.4': 4,
+  },
+  { latest: '22.7.5', next: '23.0.0-rc.0', pre: '23.1.0-rc.4' }
+);
+
+// Every version younger than the 24h window: a too-new tag has no compliant
+// degrade candidate, exercising the strict-violation / loose-immature paths.
+const pkgAllTooNew = metadataFromAges(
+  'pkg-allnew',
+  { '1.2.0': 12, '2.0.0': 6 },
+  { latest: '1.2.0', hot: '2.0.0' }
 );
 
 function basePolicy(
@@ -90,7 +110,6 @@ function basePolicy(
       packageManager: 'pnpm',
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'error',
       ...behaviorOverrides,
@@ -109,7 +128,6 @@ function v10Policy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'same-major',
       writesExcludes: false,
       missingTimeMap: 'error',
     },
@@ -127,7 +145,6 @@ function v11StrictPolicy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: true,
       missingTimeMap: 'skip',
     },
@@ -146,7 +163,6 @@ function v11SingleFormStrictPolicy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'skip',
     },
@@ -164,7 +180,6 @@ function v11LoosePolicy(
     {
       strict: false,
       looseFallback: true,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'skip',
     },
@@ -188,18 +203,11 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('latest tag degrades to newest mature any-major (tag-latest 10.20+ -> 1.2.0)', () => {
-      // pivot: pnpm 10.16-10.19 (same-major) FAIL; 10.20+ (any-major) -> 1.2.0.
+    it('latest tag (too-new stable) degrades to the newest compliant stable (2.0.0 -> 1.2.0)', () => {
       expect(pickPnpmVersion('latest', pkgA, v11StrictPolicy(24))).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',
       });
-    });
-
-    it('latest tag same-major (10.16-10.19) with no same-major mature -> violation (tag-latest)', () => {
-      expect(() => pickPnpmVersion('latest', pkgA, v10Policy(24))).toThrow(
-        MinReleaseAgeViolationError
-      );
     });
 
     it('tag pointing at an already-mature version returns it (tag-stableold)', () => {
@@ -209,7 +217,7 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('prerelease tag degrades within its line (tag-prerelease canary.3 -> canary.1)', () => {
+    it('prerelease tag keeps a compliant same-line same-channel version (canary.3 -> canary.1)', () => {
       expect(pickPnpmVersion('canary', pkgA, v10Policy(24))).toEqual({
         version: '3.0.0-canary.1',
         unconstrained: '3.0.0-canary.3',
@@ -222,6 +230,25 @@ describe('pnpm min-release-age behavior', () => {
       ).toEqual({
         version: '3.0.0-canary.1',
         unconstrained: '3.0.0-canary.3',
+      });
+    });
+
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      // next -> 23.0.0-rc.0 too new with no older same-line rc; the same-line
+      // 23.0.0-beta.1 (lower ladder rung) wins, while the newer-published
+      // internal 23.0.0-pr.5 is off the ladder and stays walled off.
+      expect(pickPnpmVersion('next', pkgChannels, v11StrictPolicy(24))).toEqual(
+        {
+          version: '23.0.0-beta.1',
+          unconstrained: '23.0.0-rc.0',
+        }
+      );
+    });
+
+    it('too-new rc tag keeps a compliant same-line rc (pre -> 23.1.0-rc.1)', () => {
+      expect(pickPnpmVersion('pre', pkgChannels, v11StrictPolicy(24))).toEqual({
+        version: '23.1.0-rc.1',
+        unconstrained: '23.1.0-rc.4',
       });
     });
   });
@@ -331,19 +358,16 @@ describe('pnpm min-release-age behavior', () => {
     // 11.0.0..11.1.2 cannot derive an immatureVersion from a tag name, so a
     // too-new non-latest tag falls back to NO_MATCHING (pivot: 11.0.4..11.1.0
     // tag-nonlatest -> ERR_PNPM_NO_MATCHING_VERSION).
-    it('v11.0.0..11.1.2 too-new non-latest tag -> NO_MATCHING fallback shape', () => {
-      const meta = metadataFromAges(
-        'pkg-hot',
-        { '1.2.0': 25, '2.0.0': 6 },
-        { latest: '1.2.0', hot: '2.0.0' }
-      );
+    it('v11.0.0..11.1.2 too-new tag with no compliant degrade -> NO_MATCHING fallback shape', () => {
       try {
-        pickPnpmVersion('hot', meta, v11SingleFormStrictPolicy(24));
+        pickPnpmVersion('hot', pkgAllTooNew, v11SingleFormStrictPolicy(24));
         throw new Error('expected throw');
       } catch (e) {
         expect(e).toBeInstanceOf(MinReleaseAgeViolationError);
         const detail = (e as MinReleaseAgeViolationError).pmShapedDetail;
-        expect(detail).toContain('No matching version found for pkg-hot@hot');
+        expect(detail).toContain(
+          'No matching version found for pkg-allnew@hot'
+        );
         expect(detail).not.toContain('does not meet the minimumReleaseAge');
       }
     });
@@ -403,131 +427,27 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('non-latest tag too-new keeps original target immature (tag-nonlatest 11.0.0 -> 2.0.0)', () => {
-      expect(pickPnpmVersion('hot', pkgA, v11LoosePolicy(24))).toEqual({
+    it('too-new tag with no compliant degrade keeps original target immature (hot -> 2.0.0)', () => {
+      expect(pickPnpmVersion('hot', pkgAllTooNew, v11LoosePolicy(24))).toEqual({
         version: '2.0.0',
         unconstrained: '2.0.0',
         immature: true,
       });
     });
-  });
 
-  describe('latest tag degrade: same-major vs any-major', () => {
-    it('v10 (<10.20) same-major: too-new new-major latest with no same-major mature -> violation', () => {
-      // latest -> 2.0.0 (too new); same-major candidates are only 2.x (all too
-      // new) -> no degrade -> hard fail.
-      expect(() =>
-        pickPnpmVersion('latest', pkgNewMajor, v10Policy(24))
-      ).toThrow(MinReleaseAgeViolationError);
-    });
-
-    it('any-major (>=10.20) degrades latest across majors (-> 1.2.0)', () => {
-      expect(
-        pickPnpmVersion('latest', pkgNewMajor, v11StrictPolicy(24))
-      ).toEqual({
-        version: '1.2.0',
-        unconstrained: '2.0.0',
-      });
-    });
-
-    it('non-latest tag never degrades across majors even on any-major rows', () => {
-      // hot -> 2.0.0 too new; non-latest stays same-major -> no 2.x mature ->
-      // strict violation.
-      const meta = metadataFromAges(
-        'pkg-hot',
-        { '1.2.0': 25, '2.0.0': 6 },
-        { latest: '1.2.0', hot: '2.0.0' }
-      );
-      expect(() => pickPnpmVersion('hot', meta, v11StrictPolicy(24))).toThrow(
+    it('tag pointing at a non-semver target -> violation, never an immature install', () => {
+      // An immature return here would make the consumer write pkg@<garbage>
+      // into minimumReleaseAgeExclude, which pnpm rejects on every later
+      // install (ERR_PNPM_INVALID_VERSION_UNION).
+      const meta: RegistryMetadata = {
+        name: 'pkg-garbage',
+        versions: ['1.0.0'],
+        time: { '1.0.0': new Date(NOW - 9600 * HOUR).toISOString() },
+        distTags: { latest: 'not-a-version' },
+      };
+      expect(() => pickPnpmVersion('latest', meta, v11LoosePolicy(24))).toThrow(
         MinReleaseAgeViolationError
       );
-    });
-  });
-
-  // pnpm 10.16 matched the degrade same-major by string prefix with NO
-  // prerelease filter; 10.17 switched to a numeric-major comparison plus a
-  // prerelease-flag filter (npm-resolver -> registry/pkg-metadata-filter). A
-  // same-major mature prerelease therefore wins the degrade on 10.16 but is
-  // excluded on 10.17+.
-  describe('same-major degrade prerelease filter (10.16 vs 10.17+)', () => {
-    // latest -> 1.5.0 (stable, too new). Same major has a mature stable 1.2.0
-    // and a mature prerelease 1.9.0-beta.1.
-    const meta = metadataFromAges(
-      'pkg-prefix',
-      { '1.2.0': 100, '1.5.0': 6, '1.9.0-beta.1': 100 },
-      { latest: '1.5.0' }
-    );
-
-    it('10.16 includes a same-major prerelease and picks the highest (-> 1.9.0-beta.1)', () => {
-      expect(pickPnpmVersion('latest', meta, v10Policy(24))).toEqual({
-        version: '1.9.0-beta.1',
-        unconstrained: '1.5.0',
-      });
-    });
-
-    it('10.17 filters the prerelease out and degrades to the stable 1.2.0', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          meta,
-          v10Policy(24, { packageManagerVersion: '10.17.0' })
-        )
-      ).toEqual({
-        version: '1.2.0',
-        unconstrained: '1.5.0',
-      });
-    });
-  });
-
-  describe('deprecation tie-break (10.18+) prefers non-deprecated', () => {
-    it('any-major skips a deprecated higher candidate when a non-deprecated lower one is mature', () => {
-      const meta: RegistryMetadata & {
-        deprecations?: Record<string, string | true>;
-      } = {
-        ...metadataFromAges(
-          'pkg-dep',
-          { '1.1.0': 100, '1.2.0': 80, '2.0.0': 6 },
-          { latest: '2.0.0' }
-        ),
-        deprecations: { '1.2.0': 'do not use' },
-      };
-      expect(pickPnpmVersion('latest', meta, v11StrictPolicy(24))).toEqual({
-        version: '1.1.0',
-        unconstrained: '2.0.0',
-      });
-    });
-
-    // pnpm applies the tie-break to same-major degrades too (since 10.18), not
-    // only the any-major latest path.
-    const sameMajorMeta: RegistryMetadata & {
-      deprecations?: Record<string, string | true>;
-    } = {
-      ...metadataFromAges(
-        'pkg-dep-same',
-        { '1.1.0': 100, '1.2.0': 80, '1.5.0': 6 },
-        { latest: '1.5.0' }
-      ),
-      deprecations: { '1.2.0': 'do not use' },
-    };
-
-    it('10.18 same-major skips the deprecated higher candidate (-> 1.1.0)', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          sameMajorMeta,
-          v10Policy(24, { packageManagerVersion: '10.18.0' })
-        )
-      ).toEqual({ version: '1.1.0', unconstrained: '1.5.0' });
-    });
-
-    it('10.17 has no tie-break and keeps the deprecated higher candidate (-> 1.2.0)', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          sameMajorMeta,
-          v10Policy(24, { packageManagerVersion: '10.17.0' })
-        )
-      ).toEqual({ version: '1.2.0', unconstrained: '1.5.0' });
     });
   });
 

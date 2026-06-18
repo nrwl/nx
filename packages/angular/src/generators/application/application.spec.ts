@@ -10,7 +10,6 @@ import {
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
-import { normalizeTargetDefaults } from '@nx/devkit/internal';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import * as enquirer from 'enquirer';
 import { backwardCompatibleVersions } from '../../utils/backward-compatible-versions';
@@ -28,17 +27,28 @@ jest.mock('enquirer');
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(null);
     // @ts-ignore
     enquirer.prompt = jest
       .fn()
       .mockReturnValue(Promise.resolve({ 'standalone-components': true }));
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should add angular dependencies', async () => {
@@ -188,10 +198,7 @@ describe('app', () => {
       );
       expect(tsconfigApp).toMatchSnapshot('tsconfig.app.json');
 
-      const eslintrcJson = parseJson(
-        appTree.read('my-app/.eslintrc.json', 'utf-8')
-      );
-      expect(eslintrcJson.extends).toEqual(['../.eslintrc.json']);
+      expect(appTree.exists('my-app/eslint.config.mjs')).toBeTruthy();
 
       expect(appTree.exists('my-app-e2e/cypress.config.ts')).toBeTruthy();
       const tsconfigE2E = parseJson(
@@ -323,6 +330,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
+        'my-dir/my-app/eslint.config.mjs',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -345,11 +353,6 @@ describe('app', () => {
             'jest.config.cts',
             'src/test-setup.ts',
           ],
-        },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -413,6 +416,7 @@ describe('app', () => {
         'my-dir/my-app/src/main.ts',
         'my-dir/my-app/src/app/app-module.ts',
         'my-dir/my-app/src/app/app.ts',
+        'my-dir/my-app/eslint.config.mjs',
         'my-dir/my-app-e2e/cypress.config.ts',
       ].forEach((path) => {
         expect(appTree.exists(path)).toBeTruthy();
@@ -435,11 +439,6 @@ describe('app', () => {
             'jest.config.cts',
             'src/test-setup.ts',
           ],
-        },
-        {
-          path: 'my-dir/my-app/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -675,6 +674,7 @@ describe('app', () => {
       });
 
       it('should add valid eslint JSON configuration which extends from Nx presets', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await generateApp(appTree, 'my-app', { linter: 'eslint' });
 
         const eslintConfig = readJson(appTree, 'my-app/.eslintrc.json');
@@ -729,6 +729,7 @@ describe('app', () => {
       });
 
       it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await generateApp(appTree, 'my-app', {
           linter: 'eslint',
           setParserOptionsProject: true,
@@ -869,13 +870,12 @@ describe('app', () => {
           },
         });
         const nxJson = readNxJson(appTree);
-        const unitTestDefault = normalizeTargetDefaults(
-          nxJson.targetDefaults
-        ).find((entry) => entry.executor === '@angular/build:unit-test');
-        expect(unitTestDefault).toMatchObject({
-          cache: true,
-          inputs: ['default', '^default'],
-        });
+        expect(nxJson.targetDefaults['@angular/build:unit-test']).toStrictEqual(
+          {
+            cache: true,
+            inputs: ['default', '^default'],
+          }
+        );
       });
 
       it('should install vitest, jsdom and @angular/build packages', async () => {

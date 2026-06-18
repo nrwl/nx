@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "sourceMap": false,
-    "outDir": "../../dist/graph/client-e2e",
+    "outDir": "out-tsc",
     "allowJs": true,
     "types": ["cypress", "node"],
     "typeRoots": [

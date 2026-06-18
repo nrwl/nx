@@ -23,6 +23,11 @@ export function readNpmrcEntries(path: string): NpmrcEntry[] | null {
   } catch {
     return null;
   }
+  return parseNpmrcContent(raw);
+}
+
+/** The parsing half of {@link readNpmrcEntries}, usable without a filesystem. */
+export function parseNpmrcContent(raw: string): NpmrcEntry[] {
   const entries: NpmrcEntry[] = [];
   for (const line of raw.split(/\r?\n/)) {
     const trimmed = line.trim();

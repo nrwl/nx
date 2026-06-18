@@ -148,6 +148,33 @@ describe('NxPlugin migration generator', () => {
     );
   });
 
+  it('should compute the $schema offset from the project depth', async () => {
+    await pluginGenerator(tree, {
+      name: 'nested-plugin',
+      directory: 'packages/group/nested-plugin',
+      unitTestRunner: 'jest',
+      linter: 'eslint',
+      compiler: 'tsc',
+    });
+
+    await migrationGenerator(tree, {
+      name: 'my-migration',
+      path: 'packages/group/nested-plugin/src/migrations/update-1.0.0/update-1.0.0',
+      packageVersion: '1.0.0',
+    });
+
+    const migrationsJson = readJson(
+      tree,
+      'packages/group/nested-plugin/migrations.json'
+    );
+
+    // Depth 3 -> '../../../'; pins the offset to the project depth so a hardcoded
+    // value (or dropping `offsetFromRoot`) would fail here.
+    expect(migrationsJson.$schema).toEqual(
+      '../../../node_modules/nx/schemas/migrations-schema.json'
+    );
+  });
+
   it('should not add a $schema reference to an existing migrations.json', async () => {
     writeJson(tree, 'packages/my-plugin/migrations.json', { generators: {} });
 

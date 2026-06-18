@@ -15,7 +15,7 @@
     "tslib": "catalog:typescript"
   },
   "type": "module",
-  "main": "./src/index.js",
-  "typings": "./src/index.d.ts",
+  "main": "./dist/src/index.js",
+  "typings": "./dist/src/index.d.ts",
   "devDependencies": {}
 }

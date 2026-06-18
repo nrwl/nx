@@ -69,7 +69,8 @@
     "access": "public"
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {

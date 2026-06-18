@@ -21,7 +21,6 @@ import {
 } from 'nx/src/nx-cloud/utilities/onboarding';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
-  eslintVersion,
   isbotVersion,
   nxVersion,
   reactDomVersion,
@@ -31,6 +30,7 @@ import {
   typesReactDomVersion,
   typesReactVersion,
   viteVersion,
+  assertSupportedRemixVersion,
 } from '../../utils/versions';
 import initGenerator from '../init/init';
 import { updateDependencies } from '../utils/update-dependencies';
@@ -62,6 +62,8 @@ export async function remixApplicationGeneratorInternal(
   tree: Tree,
   _options: NxRemixGeneratorSchema
 ) {
+  assertSupportedRemixVersion(tree);
+
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     tree,
     _options.addPlugin,
@@ -125,7 +127,6 @@ export async function remixApplicationGeneratorInternal(
     reactDomVersion,
     typesReactVersion,
     typesReactDomVersion,
-    eslintVersion,
     typescriptVersion,
     viteVersion,
   };

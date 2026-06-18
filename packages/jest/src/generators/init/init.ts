@@ -1,8 +1,4 @@
-import {
-  addPlugin,
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -12,9 +8,6 @@ import {
   runTasksInSerial,
   updateNxJson,
   type GeneratorCallback,
-  type TargetDefaultEntry,
-  type TargetConfiguration,
-  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
@@ -52,88 +45,32 @@ function updateProductionFileSet(tree: Tree) {
 }
 
 function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
-  const nxJson = readNxJson(tree) ?? {};
+  const nxJson = readNxJson(tree);
+
+  nxJson.targetDefaults ??= {};
+  nxJson.targetDefaults['@nx/jest:jest'] ??= {};
+
   const productionFileSet = nxJson.namedInputs?.production;
-  const existingEntries = findExistingJestDefaults(nxJson.targetDefaults);
 
-  if (existingEntries.length === 0) {
-    const patch = createJestDefaultPatch(
-      undefined,
-      productionFileSet,
-      presetExt
-    );
-    if (Object.keys(patch).length > 0) {
-      upsertTargetDefault(tree, nxJson, {
-        executor: '@nx/jest:jest',
-        ...patch,
-      });
-      updateNxJson(tree, nxJson);
-    }
-    return;
-  }
-
-  let didUpdate = false;
-  for (const existing of existingEntries) {
-    const patch = createJestDefaultPatch(
-      existing,
-      productionFileSet,
-      presetExt
-    );
-    if (Object.keys(patch).length === 0) {
-      continue;
-    }
-
-    upsertTargetDefault(tree, nxJson, {
-      target: existing.target,
-      executor: existing.executor,
-      projects: existing.projects,
-      plugin: existing.plugin,
-      ...patch,
-    });
-    didUpdate = true;
-  }
-
-  if (didUpdate) {
-    updateNxJson(tree, nxJson);
-  }
-}
-
-function createJestDefaultPatch(
-  existing: Partial<TargetConfiguration> | undefined,
-  productionFileSet: unknown,
-  presetExt: JestPresetExtension
-): Partial<TargetConfiguration> {
-  const patch: Partial<TargetConfiguration> = {};
-  if (existing?.cache === undefined) patch.cache = true;
+  nxJson.targetDefaults['@nx/jest:jest'].cache ??= true;
   // Test targets depend on all their project's sources + production sources of dependencies
-  if (existing?.inputs === undefined) {
-    patch.inputs = [
-      'default',
-      productionFileSet ? '^production' : '^default',
-      `{workspaceRoot}/jest.preset.${presetExt}`,
-    ];
-  }
-  if (existing?.options === undefined) {
-    patch.options = { passWithNoTests: true };
-  }
-  if (existing?.configurations === undefined) {
-    patch.configurations = {
-      ci: {
-        ci: true,
-        codeCoverage: true,
-      },
-    };
-  }
+  nxJson.targetDefaults['@nx/jest:jest'].inputs ??= [
+    'default',
+    productionFileSet ? '^production' : '^default',
+    `{workspaceRoot}/jest.preset.${presetExt}`,
+  ];
 
-  return patch;
-}
+  nxJson.targetDefaults['@nx/jest:jest'].options ??= {
+    passWithNoTests: true,
+  };
+  nxJson.targetDefaults['@nx/jest:jest'].configurations ??= {
+    ci: {
+      ci: true,
+      codeCoverage: true,
+    },
+  };
 
-function findExistingJestDefaults(
-  td: TargetDefaults | undefined
-): TargetDefaultEntry[] {
-  return normalizeTargetDefaults(td).filter(
-    (e) => e.executor === '@nx/jest:jest'
-  );
+  updateNxJson(tree, nxJson);
 }
 
 function updateDependencies(tree: Tree, options: JestInitSchema) {

@@ -59,7 +59,7 @@
         },
         "prompt": {
           "type": "string",
-          "description": "Path to a markdown prompt file with instructions for an AI agent to perform the migration, relative to `migrations.json`. The path must stay within the directory containing `migrations.json` and point at an existing file. The prompt runs under `nx migrate --agentic`."
+          "description": "Path to a markdown prompt file with instructions for an AI agent to perform the migration, relative to `migrations.json`. The path must stay within the directory containing `migrations.json` and point at an existing file. The prompt is handed to the agent when migrations are applied with the agentic flow enabled (e.g. `nx migrate --run-migrations --agentic`)."
         },
         "schema": {
           "type": "string",
@@ -117,7 +117,7 @@
         "x-prompt": {
           "type": "string",
           "description": "Message shown to users to confirm whether to apply the updates when running `nx migrate --interactive`. When not set, the updates are applied without confirmation.",
-          "deprecated": "No longer used when migrating to Nx v23 or later. The `--interactive` flag of `nx migrate` only applies when migrating to earlier versions."
+          "deprecated": "Surfaced via `nx migrate --interactive`; this confirmation behavior will be removed in Nx v24. Use `--include` to choose which packages to migrate."
         },
         "requires": {
           "type": "object",

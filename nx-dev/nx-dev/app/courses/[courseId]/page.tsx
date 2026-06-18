@@ -4,13 +4,14 @@ import { CourseDetails } from '@nx/nx-dev-ui-courses';
 import { DefaultLayout } from '@nx/nx-dev-ui-common';
 
 interface CourseDetailProps {
-  params: { courseId: string };
+  params: Promise<{ courseId: string }>;
 }
 
 export async function generateMetadata(
-  { params: { courseId } }: CourseDetailProps,
+  { params }: CourseDetailProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
+  const { courseId } = await params;
   const course = await coursesApi.getCourse(courseId);
   const previousImages = (await parent).openGraph?.images ?? [];
 
@@ -42,9 +43,8 @@ export async function generateStaticParams() {
   });
 }
 
-export default async function CourseDetail({
-  params: { courseId },
-}: CourseDetailProps) {
+export default async function CourseDetail({ params }: CourseDetailProps) {
+  const { courseId } = await params;
   const course = await coursesApi.getCourse(courseId);
   return course ? (
     <>

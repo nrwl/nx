@@ -182,6 +182,7 @@ function buildReactNativeTargets(
     },
     [options.syncDepsTargetName]: {
       executor: '@nx/react-native:sync-deps',
+      continuous: false,
     },
     [options.upgradeTargetName]: {
       command: `react-native upgrade`,
