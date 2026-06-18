@@ -53,7 +53,9 @@ fn digit_width(n: usize) -> u16 {
 /// upper bound on `running`), so the running chip keeps a constant width as
 /// the count crosses a digit boundary (e.g. 9 <-> 10) instead of shifting the
 /// pending chip back and forth. With no capacity known it falls back to the
-/// count's natural width (no padding).
+/// count's natural width (no padding). If `running` ever exceeds the capacity
+/// (e.g. continuous tasks pushing past it), the count's own width takes over
+/// via `.max()`, so the chip grows rather than truncating.
 fn running_count_width(running: usize, max_parallel: Option<u32>) -> u16 {
     let capacity_digits = max_parallel.map_or(0, |m| digit_width(m as usize));
     digit_width(running).max(capacity_digits)
@@ -1570,6 +1572,11 @@ mod tests {
     /// CachedBracket separator over-charge (fix carried in this branch)
     /// before snapshots locked it in. Exercises every interesting width x
     /// counts x hidden combination to keep coverage broad.
+    ///
+    /// All scenarios use widths wide enough to keep `compress_sticky` false.
+    /// Under compression the renderer emits shorter than the budgeted width
+    /// (blank space, not overflow), since the fit pass sets the flag from
+    /// uncompressed widths, so strict equality intentionally does not apply.
     #[test]
     fn fit_pass_width_matches_rendered_width() {
         let mut completed = sample_counts();
