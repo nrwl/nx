@@ -100,7 +100,11 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
-import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
+import {
+  type CatalogManager,
+  getCatalogManager,
+  resolveCatalogSpecifiers,
+} from '../../utils/catalog';
 import {
   classifyMigrateFetchFallback,
   hasMigrateRunStarted,
@@ -2291,9 +2295,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
     phase = 'package_updates';
+    // Resolve catalog: specifiers first so the filter compares real versions.
     const writableUpdates = filterDowngradedUpdates(
       packageUpdates,
-      originalPackageJson,
+      resolveCatalogSpecifiers(originalPackageJson),
       installedPackageVersions
     );
 

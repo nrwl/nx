@@ -36,6 +36,7 @@ jest.mock('./resolve-package-version', () => ({
       version
     ),
 }));
+import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
@@ -3484,6 +3485,58 @@ describe('Migration', () => {
       );
 
       expect(result).toEqual({});
+    });
+
+    it('should not narrow non-range specifiers (workspace:/npm:/git/file)', () => {
+      const nonSemverSpecifiers = [
+        'workspace:*',
+        'workspace:^',
+        'npm:@scope/alias@^1.0.0',
+        'git+https://github.com/owner/repo.git',
+        'file:../local-pkg',
+      ];
+
+      for (const specifier of nonSemverSpecifiers) {
+        const result = filterDowngradedUpdates(
+          { pkg: { version: '1.0.0', addToPackageJson: 'dependencies' } },
+          createPackageJson({ dependencies: { pkg: specifier } }),
+          () => '1.0.0'
+        );
+
+        expect(result).toEqual({});
+      }
+    });
+  });
+
+  describe('resolveCatalogSpecifiers', () => {
+    it('returns null when given null', () => {
+      expect(resolveCatalogSpecifiers(null)).toBeNull();
+    });
+
+    it('passes plain semver specifiers through unchanged', () => {
+      const packageJson = createPackageJson({
+        dependencies: { react: '^18.0.0' },
+        devDependencies: { vite: '~6.2.0' },
+      });
+
+      const result = resolveCatalogSpecifiers(packageJson);
+
+      expect(result?.dependencies).toEqual({ react: '^18.0.0' });
+      expect(result?.devDependencies).toEqual({ vite: '~6.2.0' });
+    });
+
+    it('leaves an unresolvable catalog reference as-is instead of throwing', () => {
+      // Unresolvable catalog entry: preserved rather than throwing.
+      const packageJson = createPackageJson({
+        dependencies: { 'nonexistent-pkg-xyz': 'catalog:does-not-exist' },
+      });
+
+      const run = () => resolveCatalogSpecifiers(packageJson);
+
+      expect(run).not.toThrow();
+      expect(run()?.dependencies).toEqual({
+        'nonexistent-pkg-xyz': 'catalog:does-not-exist',
+      });
     });
   });
 
