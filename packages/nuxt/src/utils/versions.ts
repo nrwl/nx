@@ -32,5 +32,5 @@ export const nuxtDevtoolsVersion = nuxtDevtoolsV4Version;
 export const nuxtUiTemplatesVersion = '^1.3.1';
 
 // linting deps - version-aware for flat config vs legacy
-export const nuxtEslintConfigVersion = '^1.10.0'; // For flat config (Nuxt v4+) - uses createConfigForNuxt
+export const nuxtEslintConfigVersion = '^1.16.0'; // Flat config (Nuxt v4+). >=1.16 supports ESLint v10
 export const nuxtEslintConfigLegacyVersion = '~0.5.6'; // For legacy .eslintrc.json (Nuxt v3)
