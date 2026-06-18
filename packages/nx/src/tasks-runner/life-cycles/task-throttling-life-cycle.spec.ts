@@ -163,6 +163,32 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recommendation).not.toContain('Nx Cloud Agents');
   });
 
+  it('mentions a sub-meaningful parallel win as secondary when critical-path-bound', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // parallel=1. `a` holds the only slot 0–500. `b` is independent, eligible at
+    // the run start, queues 500ms for the slot, then runs the long leg 500–3500.
+    // The floor is b's 3000ms; the 500ms slot wait is a real but minor --parallel
+    // win below the lead threshold — it should be mentioned, not flatly denied.
+    const a = makeTask('a', { start: 0, end: 500 });
+    const b = makeTask('b', { start: 500, end: 3500 });
+    const s = run(makeGraph([a, b]), 1)!;
+
+    if (cores >= 2) {
+      expect(s.recoverableByParallel).toBe(500);
+      expect(s.recommendation).toContain('mostly bound by the critical path');
+      expect(s.recommendation).toContain('Raising --parallel');
+      expect(s.recommendation).toContain('would recover ~500ms more');
+      expect(s.recommendation).toContain('b (3.0s)');
+      // Not the primary "raise --parallel" headline (that needs a >=1s win) and
+      // not the flat denial (that's only for a ~0 parallel win).
+      expect(s.recommendation).not.toContain('queuing for slots');
+      expect(s.recommendation).not.toContain("won't make this run faster");
+    }
+  });
+
   it('treats a wait for a continuous dependency to start as eligibility, not contention', () => {
     // `serve` (continuous) comes up at 3000; `d` holds the only slot 0–3000.
     // `e2e` depends on serve and starts at 3000 — it was never slot-blocked, it

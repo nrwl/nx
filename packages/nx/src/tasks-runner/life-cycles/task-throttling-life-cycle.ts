@@ -14,6 +14,13 @@ const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const EPS = 0;
 /** A bucket below this (ms) isn't worth a recommendation — effectively noise. */
 const MEANINGFUL_OVERHEAD = 1000;
+/**
+ * A parallelism lever too small to LEAD with (< MEANINGFUL_OVERHEAD) but at least
+ * this (ms) still gets a passing mention. Keeps the recommendation from flatly
+ * claiming "more parallelism won't help" while the overhead split above it shows
+ * a nonzero `recoverable by --parallel` — that contradiction is what this avoids.
+ */
+const MINOR_OVERHEAD = 250;
 
 interface TaskTiming {
   startTime?: number;
@@ -719,16 +726,25 @@ function buildRecommendation(args: {
     )} → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel on this machine may help instead.`;
   }
 
-  // No parallelism lever. The run is dominated by its critical-path floor, and
-  // the user can't do much about coordinator overhead — so point at the biggest
-  // tasks on the path (speeding/splitting those is what actually lowers the run).
+  // No parallelism lever big enough to LEAD with. The run is dominated by its
+  // critical-path floor, and the user can't do much about coordinator overhead —
+  // so point at the biggest tasks on the path (speeding/splitting those is what
+  // actually lowers the run). A smaller --parallel win can still exist below the
+  // lead threshold; mention it as secondary rather than denying it — the overhead
+  // split above would otherwise contradict a flat "parallelism won't help".
   const bullets =
     criticalPathTop.length > 0
       ? criticalPathTop
           .map((t) => `\n    - ${t.id} (${formatDuration(t.duration)})`)
           .join('')
       : '\n    - (none)';
-  let base = `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks on that path:${bullets}`;
+  const lead =
+    recoverableByParallel >= MINOR_OVERHEAD
+      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Raising --parallel toward ${cores} (currently ${parallel}) would recover ~${formatDuration(
+          recoverableByParallel
+        )} more, but the bigger lever is speeding up or splitting the longest tasks on that path:`
+      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks on that path:`;
+  let base = `${lead}${bullets}`;
   if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
     // Be precise about the lever: a warm daemon caches the project graph + file
     // hashes, so it trims the HASHING part — but scheduling and process spawning
