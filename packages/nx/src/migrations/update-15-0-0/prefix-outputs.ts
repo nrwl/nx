@@ -56,7 +56,9 @@ export default async function (tree: Tree) {
 
   if (nxJson.targetDefaults) {
     for (const [_, target] of Object.entries(nxJson.targetDefaults)) {
-      if (!target.outputs) {
+      // This migration predates the filtered array value form, so values are
+      // always plain objects here; skip arrays defensively to stay type-safe.
+      if (Array.isArray(target) || !target.outputs) {
         continue;
       }
       target.outputs = transformLegacyOutputs('{projectRoot}', target.outputs);

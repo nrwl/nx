@@ -99,8 +99,15 @@ export default async function migrate(tree: Tree) {
       } else {
         nxJson.targetDefaults ??= {};
         for (const target of options.cacheableOperations) {
-          nxJson.targetDefaults[target] ??= {};
-          nxJson.targetDefaults[target].cache ??= true;
+          const existing = nxJson.targetDefaults[target];
+          // This migration predates the filtered array value form, so values
+          // are always plain objects here; skip arrays defensively.
+          if (Array.isArray(existing)) {
+            continue;
+          }
+          const config = existing ?? {};
+          config.cache ??= true;
+          nxJson.targetDefaults[target] = config;
         }
       }
       delete options.cacheableOperations;

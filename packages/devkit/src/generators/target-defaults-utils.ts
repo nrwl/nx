@@ -2,120 +2,77 @@ import {
   type CreateNodes,
   type NxJsonConfiguration,
   type PluginConfiguration,
-  type ProjectConfiguration,
   type TargetConfiguration,
+  type TargetDefaultArrayEntry,
   type TargetDefaultEntry,
   type TargetDefaults,
-  type TargetDefaultsRecord,
+  type TargetDefaultValue,
   type Tree,
-  getProjects,
   readNxJson,
   updateNxJson,
 } from 'nx/src/devkit-exports';
 import {
   findMatchingConfigFiles,
-  normalizeTargetDefaultsAgainstRootMaps,
   readTargetDefaultsForTarget as readTargetDefaultsForTargetFromNx,
 } from 'nx/src/devkit-internals';
 import { minimatch } from 'minimatch';
-import { major, valid } from 'semver';
-import { NX_VERSION } from '../utils/package-json';
-import {
-  downgradeTargetDefaults,
-  normalizeTargetDefaults,
-} from '../utils/normalize-target-defaults';
-
-// Only write the array shape on nx >= 23 (workspace placeholder "0.0.1"
-// counts as modern); older nx can't validate it. Major-only compare so
-// pre-release tags like `23.0.0-beta.8` count as nx 23.
-const SUPPORTS_ARRAY_TARGET_DEFAULTS =
-  !valid(NX_VERSION) || NX_VERSION === '0.0.1' || major(NX_VERSION) >= 23;
+import { normalizeTargetDefaults } from '../utils/normalize-target-defaults';
 
 /**
  * Upsert a `targetDefaults` entry on the provided `nxJson`. Mutates
  * `nxJson` in place and returns it so the caller can chain or batch
  * other edits before persisting via `updateNxJson` exactly once.
  *
- * Always writes the array shape — if the underlying value still uses
- * the legacy record shape, it is upgraded in place. Finds a matching
- * entry by the `(target, executor, projects, plugin)` tuple and merges
- * the given config into it, or appends a new entry. The entry must set
- * at least one of `target` / `executor`.
+ * The input is the logical {@link TargetDefaultEntry} shape
+ * (`{ target?, executor?, projects?, plugin?, ...config }`); it is
+ * translated into the nested map storage form:
+ *
+ * - With no filter (`projects`/`plugin`/narrowing `executor`), the config is
+ *   written/merged as the plain object value of the `target`/`executor` key.
+ * - With a filter, the key's value is promoted to the ordered array form and
+ *   the `{ filter, ...config }` entry is merged or appended.
+ *
+ * The entry must set at least one of `target` / `executor`.
  */
 export function upsertTargetDefault(
-  tree: Tree,
+  // Retained for call-site compatibility; the nested-array shape no longer
+  // needs the workspace's projects to disambiguate `:`-shaped keys.
+  _tree: Tree,
   nxJson: NxJsonConfiguration,
   options: TargetDefaultEntry
 ): NxJsonConfiguration {
-  if (options.target === undefined && options.executor === undefined) {
+  const { target, executor, projects, plugin, ...config } = options;
+  const key = target ?? executor;
+  if (key === undefined) {
     throw new Error(
       'upsertTargetDefault requires at least one of `target` or `executor` to be set.'
     );
   }
 
-  const { target, executor, projects, plugin, ...config } = options;
-  const originalShape = nxJson.targetDefaults;
-  // Copy — `normalizeTargetDefaults` returns the input array as-is when
-  // it's already array shape. Without the spread, `entries[matchIndex] = ...`
-  // and `entries.push(...)` would mutate the user's array reference (and
-  // any other holders of the same `nxJson.targetDefaults` reference).
-  const entries = [...normalizeTargetDefaultsForUpsert(tree, originalShape)];
-  const matchIndex = entries.findIndex(
-    (e) =>
-      e.target === target &&
-      e.executor === executor &&
-      projectsEqual(e.projects, projects) &&
-      e.plugin === plugin
-  );
+  // `executor` is the map key itself when no `target` is given; it only acts
+  // as a filter when narrowing *within* a named target key.
+  const filterExecutor = target !== undefined ? executor : undefined;
+  const filter = buildFilter(plugin, projects, filterExecutor);
 
-  if (matchIndex >= 0) {
-    const existing = entries[matchIndex];
-    const {
-      target: et,
-      executor: ee,
-      projects: ep,
-      plugin: ep2,
-      ...existingRest
-    } = existing;
-    entries[matchIndex] = buildTargetDefaultEntry(
-      target ?? et,
-      projects ?? ep,
-      plugin ?? ep2,
-      executor ?? ee,
-      { ...existingRest, ...config }
-    );
-  } else {
-    entries.push(
-      buildTargetDefaultEntry(target, projects, plugin, executor, config)
-    );
-  }
+  const targetDefaults = (nxJson.targetDefaults ??= {});
+  const existing = targetDefaults[key];
 
-  // Preserve the record shape on pre-v23 nx when possible; promote to
-  // array if any entry can't be represented in record form.
-  if (SUPPORTS_ARRAY_TARGET_DEFAULTS || Array.isArray(originalShape)) {
-    nxJson.targetDefaults = entries;
-  } else {
-    try {
-      nxJson.targetDefaults = downgradeTargetDefaults(entries);
-    } catch {
-      nxJson.targetDefaults = entries;
-    }
-  }
+  targetDefaults[key] = filter
+    ? upsertFilteredEntry(existing, filter, config)
+    : upsertCatchAllEntry(existing, config);
+
   return nxJson;
 }
 
 /**
- * Find a `targetDefaults` entry by its locator tuple
+ * Find a `targetDefaults` entry by its logical locator tuple
  * `(target, executor, projects, plugin)`. Locator keys default to
  * `undefined`, matching only entries that also leave them unset — same
- * semantics as `upsertTargetDefault`. Accepts either array or legacy
- * record shape.
+ * semantics as `upsertTargetDefault`.
  *
  * Throws when called with an empty locator (no `target`, `executor`,
- * `projects`, or `plugin`). An empty locator is almost always a bug —
- * the caller intended to find a specific entry but forgot to populate
- * the lookup. Returning the first matching entry (or `undefined`) would
- * silently mask the mistake.
+ * `projects`, or `plugin`). An empty locator is almost always a bug — the
+ * caller intended to find a specific entry but forgot to populate the lookup.
  */
 export function findTargetDefault(
   targetDefaults: TargetDefaults | undefined,
@@ -149,14 +106,8 @@ export function readTargetDefaultsForTarget(
   executor?: string,
   opts?: Parameters<typeof readTargetDefaultsForTargetFromNx>[3]
 ): Partial<TargetConfiguration> | null {
-  if (
-    targetDefaults &&
-    !Array.isArray(targetDefaults) &&
-    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
-  ) {
-    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
-  }
-
+  // `targetDefaults` is the nested map; the nx reader resolves either the
+  // object or array value form for `targetName` natively.
   return readTargetDefaultsForTargetFromNx(
     targetName,
     targetDefaults,
@@ -165,51 +116,88 @@ export function readTargetDefaultsForTarget(
   );
 }
 
-function normalizeTargetDefaultsForUpsert(
-  tree: Tree,
-  targetDefaults: TargetDefaults | undefined
-): TargetDefaultEntry[] {
-  if (!targetDefaults) {
-    return [];
+/**
+ * Merge `config` into the catch-all (filter-less) default for a key. Returns
+ * the new value for that key.
+ */
+function upsertCatchAllEntry(
+  existing: TargetDefaultValue | undefined,
+  config: Partial<TargetConfiguration>
+): TargetDefaultValue {
+  if (existing === undefined) {
+    return { ...config };
   }
-  if (Array.isArray(targetDefaults)) {
-    return targetDefaults;
+  if (!Array.isArray(existing)) {
+    // Plain object form (today's shape) — merge, config winning.
+    return { ...existing, ...config };
   }
-
-  return normalizeTargetDefaultsAgainstRootMaps(
-    targetDefaults,
-    buildProjectRootMap(getProjects(tree))
-  );
-}
-
-function buildProjectRootMap(
-  projects: Map<string, ProjectConfiguration>
-): Record<string, ProjectConfiguration> {
-  return Object.fromEntries(
-    [...projects.values()].map((project) => [project.root, project])
-  );
+  // Array form — merge into the existing catch-all entry, or append one.
+  const next = [...existing];
+  const idx = next.findIndex((e) => e.filter === undefined);
+  if (idx >= 0) {
+    const { filter, ...rest } = next[idx];
+    next[idx] = { ...rest, ...config };
+  } else {
+    next.push({ ...config });
+  }
+  return next;
 }
 
 /**
- * Construct a `TargetDefaultEntry` with the canonical key order
- * `target → projects → plugin → executor → ...rest`. Locators land first
- * so an entry's filter shape is obvious at a glance; `executor` follows
- * because it doubles as a payload field.
+ * Merge `config` into the entry matching `filter`, promoting the key's value
+ * to the array form if needed. Returns the new array value for that key.
  */
-function buildTargetDefaultEntry(
-  target: string | undefined,
-  projects: string | string[] | undefined,
+function upsertFilteredEntry(
+  existing: TargetDefaultValue | undefined,
+  filter: NonNullable<TargetDefaultArrayEntry['filter']>,
+  config: Partial<TargetConfiguration>
+): TargetDefaultArrayEntry[] {
+  const next: TargetDefaultArrayEntry[] =
+    existing === undefined
+      ? []
+      : Array.isArray(existing)
+        ? [...existing]
+        : // Promote the existing object to a catch-all entry so the filtered
+          // entry can layer on top of it.
+          [existing];
+  const idx = next.findIndex((e) => filtersEqual(e.filter, filter));
+  if (idx >= 0) {
+    next[idx] = { ...next[idx], ...config, filter };
+  } else {
+    next.push({ filter, ...config });
+  }
+  return next;
+}
+
+function buildFilter(
   plugin: string | undefined,
-  executor: string | undefined,
-  rest: Partial<TargetConfiguration>
-): TargetDefaultEntry {
+  projects: string | string[] | undefined,
+  executor: string | undefined
+): NonNullable<TargetDefaultArrayEntry['filter']> | undefined {
+  if (
+    plugin === undefined &&
+    projects === undefined &&
+    executor === undefined
+  ) {
+    return undefined;
+  }
   return {
-    ...(target !== undefined ? { target } : {}),
-    ...(projects !== undefined ? { projects } : {}),
     ...(plugin !== undefined ? { plugin } : {}),
+    ...(projects !== undefined ? { projects } : {}),
     ...(executor !== undefined ? { executor } : {}),
-    ...rest,
   };
+}
+
+function filtersEqual(
+  a: TargetDefaultArrayEntry['filter'],
+  b: TargetDefaultArrayEntry['filter']
+): boolean {
+  if (a === undefined || b === undefined) return a === b;
+  return (
+    a.plugin === b.plugin &&
+    a.executor === b.executor &&
+    projectsEqual(a.projects, b.projects)
+  );
 }
 
 // Order-insensitive equality so re-upserts with reordered patterns

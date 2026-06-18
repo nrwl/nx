@@ -71,6 +71,11 @@ function updateDependsOnAndInputsInsideNxJson(tree: Tree) {
   for (const [target, defaults] of Object.entries(
     nxJson?.targetDefaults ?? {}
   )) {
+    // This migration predates the filtered array value form, so values are
+    // always plain objects here; skip arrays defensively to stay type-safe.
+    if (Array.isArray(defaults)) {
+      continue;
+    }
     for (const dependency of defaults.dependsOn ?? []) {
       if (typeof dependency !== 'string') {
         if (

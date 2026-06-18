@@ -1,5 +1,5 @@
 import {
-  downgradeTargetDefaults,
+  denormalizeTargetDefaults,
   forEachExecutorOptions,
   normalizeTargetDefaults,
 } from '@nx/devkit/internal';
@@ -75,9 +75,7 @@ export default async function (tree: Tree) {
     if (remaining.length === 0) {
       delete nxJson.targetDefaults;
     } else {
-      nxJson.targetDefaults = Array.isArray(originalShape)
-        ? remaining
-        : downgradeTargetDefaults(remaining);
+      nxJson.targetDefaults = denormalizeTargetDefaults(remaining);
     }
 
     updateNxJson(tree, nxJson);

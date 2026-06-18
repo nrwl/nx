@@ -4,6 +4,7 @@ import { join } from 'path';
 import {
   NxJsonConfiguration,
   TargetDefaultEntry,
+  TargetDefaults,
 } from '../../../config/nx-json';
 import {
   fileExists,
@@ -37,13 +38,11 @@ export function createNxJsonFile(
   } catch {}
 
   nxJson.$schema = './node_modules/nx/schemas/nx-schema.json';
-  const entries: TargetDefaultEntry[] = Array.isArray(nxJson.targetDefaults)
-    ? [...nxJson.targetDefaults]
-    : [];
+  const targetDefaults: TargetDefaults = { ...(nxJson.targetDefaults ?? {}) };
 
   if (topologicalTargets.length > 0) {
     for (const scriptName of topologicalTargets) {
-      upsertTargetDefaultEntry(entries, scriptName, {
+      upsertTargetDefaultEntry(targetDefaults, scriptName, {
         dependsOn: [`^${scriptName}`],
       });
     }
@@ -52,21 +51,22 @@ export function createNxJsonFile(
     if (!output) {
       continue;
     }
-    upsertTargetDefaultEntry(entries, scriptName, {
+    upsertTargetDefaultEntry(targetDefaults, scriptName, {
       outputs: [`{projectRoot}/${output}`],
     });
   }
 
   for (const target of cacheableOperations) {
-    const existing = findUnfilteredTargetEntry(entries, target);
-    if (existing) existing.cache ??= true;
-    else entries.push({ target, cache: true });
+    const existing = readUnfilteredTargetDefault(targetDefaults, target);
+    if (existing.cache === undefined) {
+      upsertTargetDefaultEntry(targetDefaults, target, { cache: true });
+    }
   }
 
-  if (entries.length === 0) {
+  if (Object.keys(targetDefaults).length === 0) {
     delete nxJson.targetDefaults;
   } else {
-    nxJson.targetDefaults = entries;
+    nxJson.targetDefaults = targetDefaults;
   }
 
   const defaultBase = deduceDefaultBase();
@@ -78,28 +78,52 @@ export function createNxJsonFile(
 }
 
 /**
- * Locate-by-target upsert against an in-memory `targetDefaults` array.
- * Used by `nx init` code paths that operate on raw JSON before a Tree
- * exists — generators should use `upsertTargetDefault` from devkit instead.
+ * Locate-by-target upsert against an in-memory `targetDefaults` map. Merges
+ * `patch`'s config into the unfiltered (catch-all) default for `target`,
+ * promoting through the array form when one already exists. Used by `nx init`
+ * code paths that operate on raw JSON before a Tree exists — generators
+ * should use `upsertTargetDefault` from devkit instead.
  */
 export function upsertTargetDefaultEntry(
-  entries: TargetDefaultEntry[],
+  targetDefaults: TargetDefaults,
   target: string,
   patch: Partial<TargetDefaultEntry>
 ): void {
-  const existing = findUnfilteredTargetEntry(entries, target);
-  if (existing) Object.assign(existing, patch, { target });
-  else entries.push({ ...patch, target });
+  // Drop locator fields — the key is `target` and `nx init` only writes
+  // unfiltered defaults.
+  const {
+    target: _t,
+    executor: _e,
+    projects: _p,
+    plugin: _pl,
+    ...config
+  } = patch;
+  const existing = targetDefaults[target];
+  if (Array.isArray(existing)) {
+    const idx = existing.findIndex((e) => e.filter === undefined);
+    if (idx >= 0) {
+      const { filter, ...rest } = existing[idx];
+      existing[idx] = { ...rest, ...config };
+    } else {
+      existing.push({ ...config });
+    }
+  } else {
+    targetDefaults[target] = { ...(existing ?? {}), ...config };
+  }
 }
 
-function findUnfilteredTargetEntry(
-  entries: TargetDefaultEntry[],
+/**
+ * Read the unfiltered (catch-all) config for `target` from a `targetDefaults`
+ * map — the object value, or the filter-less entry of an array value.
+ */
+function readUnfilteredTargetDefault(
+  targetDefaults: TargetDefaults,
   target: string
-): TargetDefaultEntry | undefined {
-  return entries.find(
-    (e) =>
-      e.target === target && e.projects === undefined && e.plugin === undefined
-  );
+): Partial<TargetDefaultEntry> {
+  const existing = targetDefaults[target];
+  if (existing === undefined) return {};
+  if (!Array.isArray(existing)) return existing;
+  return existing.find((e) => e.filter === undefined) ?? {};
 }
 
 export function createNxJsonFromTurboJson(
@@ -137,7 +161,7 @@ export function createNxJsonFromTurboJson(
 
   // Handle task configurations
   if (turboJson.tasks) {
-    const entries: TargetDefaultEntry[] = [];
+    const targetDefaults: TargetDefaults = {};
 
     for (const [taskName, taskConfig] of Object.entries(turboJson.tasks)) {
       // Skip project-specific tasks (containing #)
@@ -195,11 +219,14 @@ export function createNxJsonFromTurboJson(
       // Handle cache setting - true by default in Turbo
       entry.cache = config.cache !== false;
 
-      entries.push(entry);
+      // Each turbo task maps to a unique key, written as the plain object
+      // (unfiltered) value form.
+      const { target, ...taskDefault } = entry;
+      targetDefaults[target] = taskDefault;
     }
 
-    if (entries.length > 0) {
-      nxJson.targetDefaults = entries;
+    if (Object.keys(targetDefaults).length > 0) {
+      nxJson.targetDefaults = targetDefaults;
     }
   }
 

@@ -5,11 +5,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
-import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDefaultsRecord,
-} from '../config/nx-json';
+import { NxJsonConfiguration, TargetDefaults } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -317,14 +313,11 @@ function readCompatibleTargetDefaultsForTarget(
   targetDefaults: TargetDefaults | undefined,
   executor?: string
 ): Partial<TargetConfiguration> | null {
-  if (
-    targetDefaults &&
-    !Array.isArray(targetDefaults) &&
-    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
-  ) {
-    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
-  }
-
+  // `targetDefaults` is a map keyed by target name / executor / glob whose
+  // values are either a plain config object or an array of filtered entries.
+  // `readTargetDefaultsForTarget` resolves either form for `targetName`,
+  // applying only catch-all entries when (as here) there is no project or
+  // plugin context to match a `filter` against.
   return readTargetDefaultsForTarget(targetName, targetDefaults, executor);
 }
 

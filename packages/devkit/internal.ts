@@ -49,7 +49,7 @@ export {
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
 export {
-  downgradeTargetDefaults,
+  denormalizeTargetDefaults,
   normalizeTargetDefaults,
 } from './src/utils/normalize-target-defaults';
 

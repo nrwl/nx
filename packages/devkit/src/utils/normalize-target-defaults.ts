@@ -1,7 +1,8 @@
 import type {
+  TargetConfiguration,
+  TargetDefaultArrayEntry,
   TargetDefaultEntry,
   TargetDefaults,
-  TargetDefaultsRecord,
 } from 'nx/src/devkit-exports';
 
 // Mirrors `GLOB_CHARACTERS` / `isGlobPattern` from
@@ -13,87 +14,121 @@ import type {
 const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);
 
 /**
- * Convert an nx.json `targetDefaults` value (either the legacy record shape
- * or the new array shape) into the normalized array shape.
+ * Expand an nx.json `targetDefaults` map into a flat list of logical
+ * {@link TargetDefaultEntry}s — the shape generators and migrations find,
+ * filter, and read. Each map key contributes one entry per value (a bare
+ * object value yields a single entry; an array value yields one per element),
+ * with the key projected onto `target` (or `executor` for executor-shaped
+ * keys) and any `filter` un-nested back into the flat `projects`/`plugin`/
+ * `executor` siblings.
  *
- * Record entries become `{ target: key, ...value }` preserving insertion
- * order — except executor-shaped keys (e.g. `@nx/vite:test`,
- * `nx:run-commands`), which become `{ executor: key, ...value }`.
+ * This is the inverse of {@link denormalizeTargetDefaults}. The flattened
+ * shape keeps existing call sites (`.find((e) => e.target === 'build')`)
+ * working without them having to understand the nested storage form.
  *
- * Returns the array directly when already normalized — callers must not
- * mutate the result if they want to preserve the underlying nx.json.
+ * Callers must not mutate the returned entries if they want to preserve the
+ * underlying nx.json — the config payload is shallow-copied per entry.
  */
 export function normalizeTargetDefaults(
   raw: TargetDefaults | undefined
 ): TargetDefaultEntry[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
   const out: TargetDefaultEntry[] = [];
-  const record = raw as TargetDefaultsRecord;
-  for (const key of Object.keys(record)) {
-    const value = record[key] ?? {};
-    out.push(
-      isExecutorLikeKey(key)
-        ? { ...value, executor: key }
-        : { ...value, target: key }
-    );
+  for (const key of Object.keys(raw)) {
+    const locator: Pick<TargetDefaultEntry, 'target' | 'executor'> =
+      isExecutorLikeKey(key) ? { executor: key } : { target: key };
+    const value = raw[key];
+    const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
+      ? value
+      : [value ?? {}];
+    for (const entry of entries) {
+      const { filter, ...config } = entry;
+      out.push({
+        ...locator,
+        ...(filter?.projects !== undefined
+          ? { projects: filter.projects }
+          : {}),
+        ...(filter?.plugin !== undefined ? { plugin: filter.plugin } : {}),
+        ...(filter?.executor !== undefined
+          ? { executor: filter.executor }
+          : {}),
+        ...config,
+      });
+    }
   }
   return out;
+}
+
+/**
+ * Collapse a flat list of logical {@link TargetDefaultEntry}s back into the
+ * nested `targetDefaults` map — the inverse of {@link normalizeTargetDefaults}.
+ *
+ * Entries are grouped by their key (`target`, else `executor`). A key with a
+ * single unfiltered entry is written as a plain object (today's shape); a key
+ * with any filtered entry — or more than one entry — is written as an ordered
+ * array of `{ filter?, ...config }` entries, preserving input order.
+ *
+ * Throws when an entry has neither `target` nor `executor` (no key to group
+ * under). Silently dropping it would corrupt nx.json without the user
+ * noticing.
+ */
+export function denormalizeTargetDefaults(
+  entries: TargetDefaultEntry[]
+): TargetDefaults {
+  const grouped = new Map<string, TargetDefaultArrayEntry[]>();
+  for (const entry of entries) {
+    const { target, executor, projects, plugin, ...config } = entry;
+    const key = target ?? executor;
+    if (key === undefined) {
+      throw new Error(
+        `Cannot write targetDefaults: entry ${JSON.stringify(
+          entry
+        )} has neither \`target\` nor \`executor\` to use as the map key.`
+      );
+    }
+    // `executor` is the key itself when no `target` is set; it only becomes a
+    // filter when it narrows *within* a named target key.
+    const filterExecutor = target !== undefined ? executor : undefined;
+    const filter = buildFilter(plugin, projects, filterExecutor);
+    const arrayEntry: TargetDefaultArrayEntry = filter
+      ? { filter, ...(config as Partial<TargetConfiguration>) }
+      : (config as Partial<TargetConfiguration>);
+    const existing = grouped.get(key);
+    if (existing) existing.push(arrayEntry);
+    else grouped.set(key, [arrayEntry]);
+  }
+
+  const out: TargetDefaults = {};
+  for (const [key, group] of grouped) {
+    // A lone unfiltered entry is equivalent to (and tidier as) the plain
+    // object form; anything else needs the ordered array form.
+    out[key] =
+      group.length === 1 && group[0].filter === undefined ? group[0] : group;
+  }
+  return out;
+}
+
+function buildFilter(
+  plugin: string | undefined,
+  projects: string | string[] | undefined,
+  executor: string | undefined
+): TargetDefaultArrayEntry['filter'] | undefined {
+  if (
+    plugin === undefined &&
+    projects === undefined &&
+    executor === undefined
+  ) {
+    return undefined;
+  }
+  return {
+    ...(plugin !== undefined ? { plugin } : {}),
+    ...(projects !== undefined ? { projects } : {}),
+    ...(executor !== undefined ? { executor } : {}),
+  };
 }
 
 function isExecutorLikeKey(key: string): boolean {
   if (!key.includes(':')) return false;
   for (const c of key) if (GLOB_CHARACTERS.has(c)) return false;
   return true;
-}
-
-/**
- * Project an array of `TargetDefaultEntry` back into the legacy
- * record shape. The intended caller is a pre-v23 migration that
- * normalized to array internally but wants to preserve the original
- * on-disk record shape so it remains valid against pre-v23 nx.json
- * schemas.
- *
- * Each entry's key is its `target` (if set) or `executor`. Entries that
- * have both keep the locator role on `target` and retain `executor` as
- * a value field.
- *
- * Throws when the input contains entries that the record shape cannot
- * represent — `projects`/`plugin` filters, two entries that would collapse
- * to the same key, or entries with neither `target` nor `executor`. The
- * caller must keep array shape in those cases (or refuse to write the
- * change). Silently dropping these entries would corrupt nx.json without
- * the user noticing.
- */
-export function downgradeTargetDefaults(
-  entries: TargetDefaultEntry[]
-): TargetDefaultsRecord {
-  const out: TargetDefaultsRecord = {};
-  for (const entry of entries) {
-    if (entry.projects !== undefined || entry.plugin !== undefined) {
-      throw new Error(
-        `Cannot downgrade targetDefaults to legacy record shape: entry ${JSON.stringify(
-          entry
-        )} uses a \`projects\`/\`plugin\` filter, which is only supported in the array shape.`
-      );
-    }
-    const { target, executor, projects, plugin, ...rest } = entry;
-    const key = target ?? executor;
-    if (key === undefined) {
-      throw new Error(
-        `Cannot downgrade targetDefaults to legacy record shape: entry ${JSON.stringify(
-          entry
-        )} has neither \`target\` nor \`executor\` to use as the record key.`
-      );
-    }
-    if (Object.prototype.hasOwnProperty.call(out, key)) {
-      throw new Error(
-        `Cannot downgrade targetDefaults to legacy record shape: two entries collapse to the same key \`${key}\`. Keep the array shape so both can coexist.`
-      );
-    }
-    const value: Partial<TargetDefaultEntry> = { ...rest };
-    if (target && executor) value.executor = executor;
-    out[key] = value;
-  }
-  return out;
 }

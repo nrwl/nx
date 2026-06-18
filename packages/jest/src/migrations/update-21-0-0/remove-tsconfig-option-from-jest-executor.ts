@@ -1,4 +1,8 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  denormalizeTargetDefaults,
+  forEachExecutorOptions,
+  normalizeTargetDefaults,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -40,62 +44,32 @@ export default async function (tree: Tree) {
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
   if (nxJson.targetDefaults) {
-    if (Array.isArray(nxJson.targetDefaults)) {
-      const next: TargetDefaultEntry[] = [];
-      for (const entry of nxJson.targetDefaults) {
-        if (
-          entry.target !== EXECUTOR_TO_MIGRATE &&
-          entry.executor !== EXECUTOR_TO_MIGRATE
-        ) {
-          next.push(entry);
-          continue;
-        }
-
-        if (entry.options) updateOptions(entry);
-        Object.keys(entry.configurations ?? {}).forEach((config) => {
-          updateConfiguration(entry, config);
-        });
-
-        if (!isEntryEmpty(entry)) {
-          next.push(entry);
-        }
+    // Operate on the flat logical view so both the object and array value
+    // forms are handled uniformly, then collapse back to the map shape.
+    const entries = normalizeTargetDefaults(nxJson.targetDefaults);
+    const remaining: TargetDefaultEntry[] = [];
+    for (const entry of entries) {
+      if (
+        entry.target !== EXECUTOR_TO_MIGRATE &&
+        entry.executor !== EXECUTOR_TO_MIGRATE
+      ) {
+        remaining.push(entry);
+        continue;
       }
-      if (next.length === 0) {
-        delete nxJson.targetDefaults;
-      } else {
-        nxJson.targetDefaults = next;
+
+      if (entry.options) updateOptions(entry as TargetConfiguration);
+      Object.keys(entry.configurations ?? {}).forEach((config) => {
+        updateConfiguration(entry as TargetConfiguration, config);
+      });
+
+      if (!isEntryEmpty(entry)) {
+        remaining.push(entry);
       }
+    }
+    if (remaining.length === 0) {
+      delete nxJson.targetDefaults;
     } else {
-      for (const [targetOrExecutor, targetConfig] of Object.entries(
-        nxJson.targetDefaults
-      )) {
-        if (
-          targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-          targetConfig.executor !== EXECUTOR_TO_MIGRATE
-        ) {
-          continue;
-        }
-
-        if (targetConfig.options) {
-          updateOptions(targetConfig);
-        }
-
-        Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
-          updateConfiguration(targetConfig, config);
-        });
-
-        if (
-          !Object.keys(targetConfig).length ||
-          (Object.keys(targetConfig).length === 1 &&
-            Object.keys(targetConfig)[0] === 'executor')
-        ) {
-          delete nxJson.targetDefaults[targetOrExecutor];
-        }
-
-        if (!Object.keys(nxJson.targetDefaults).length) {
-          delete nxJson.targetDefaults;
-        }
-      }
+      nxJson.targetDefaults = denormalizeTargetDefaults(remaining);
     }
 
     updateNxJson(tree, nxJson);

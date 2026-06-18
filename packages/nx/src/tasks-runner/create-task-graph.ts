@@ -11,6 +11,7 @@ import {
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
 import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { getUnfilteredTargetDefault } from '../project-graph/utils/project-configuration/target-defaults';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
@@ -455,7 +456,7 @@ export function mapTargetDefaultsToDependencies(
 ): TargetDependencies {
   const res = {};
   Object.keys(defaults ?? {}).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
+    res[k] = getUnfilteredTargetDefault(defaults[k]).dependsOn;
   });
 
   return res;
