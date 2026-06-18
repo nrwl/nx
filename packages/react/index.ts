@@ -1,5 +1,6 @@
 export {
   extraEslintDependencies,
+  getExtraEslintDependencies,
   extendReactEslintJson,
 } from './src/utils/lint';
 export { assertValidStyle } from './src/utils/assertion';
