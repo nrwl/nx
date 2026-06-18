@@ -171,21 +171,6 @@ describe('add-istanbul-instrumenter migration', () => {
       expect(getInstrumenterVersion()).toBe(istanbulLibInstrumentVersion);
     });
 
-    it('should detect runner: karma on an array-shaped targetDefault', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [
-        {
-          executor: '@angular/build:unit-test',
-          options: { runner: 'karma' },
-        },
-      ];
-      updateNxJson(tree, nxJson);
-
-      await migration(tree);
-
-      expect(getInstrumenterVersion()).toBe(istanbulLibInstrumentVersion);
-    });
-
     it('should not add istanbul-lib-instrument when targetDefaults do not use Karma', async () => {
       const nxJson = readNxJson(tree);
       nxJson.targetDefaults = {

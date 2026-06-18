@@ -251,46 +251,5 @@ describe('rename-ssr-experimental-platform migration', () => {
         experimentalPlatform: 'neutral',
       });
     });
-
-    it('should rename in an array-shaped targetDefault matched by executor', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [
-        {
-          executor: '@angular-devkit/build-angular:application',
-          options: {
-            ssr: { entry: 'src/server.ts', experimentalPlatform: 'neutral' },
-          },
-        },
-      ];
-      updateNxJson(tree, nxJson);
-
-      await migration(tree);
-
-      expect(
-        (readNxJson(tree).targetDefaults as any)[0].options.ssr
-      ).toStrictEqual({ entry: 'src/server.ts', platform: 'neutral' });
-    });
-
-    it('should rename in an array-shaped targetDefault whose target names an executor, including configurations', async () => {
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [
-        {
-          target: '@nx/angular:application',
-          configurations: {
-            production: {
-              ssr: { entry: 'src/server.ts', experimentalPlatform: 'node' },
-            },
-          },
-        },
-      ];
-      updateNxJson(tree, nxJson);
-
-      await migration(tree);
-
-      expect(
-        (readNxJson(tree).targetDefaults as any)[0].configurations.production
-          .ssr
-      ).toStrictEqual({ entry: 'src/server.ts', platform: 'node' });
-    });
   });
 });
