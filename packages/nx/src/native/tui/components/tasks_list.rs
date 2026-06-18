@@ -305,6 +305,12 @@ impl TasksList {
         self.max_parallel = requested.min(self.task_lookup.len());
     }
 
+    /// Run capacity (`parallel` + continuous tasks, capped to the task count):
+    /// an upper bound on the number of concurrently running tasks.
+    pub fn max_parallel(&self) -> usize {
+        self.max_parallel
+    }
+
     /// Returns the display items visible to the renderer: the filtered subset when a
     /// filter is active, or the full canonical list when no filter is applied.
     /// Callers should always use this instead of accessing `filtered_display_items` directly.

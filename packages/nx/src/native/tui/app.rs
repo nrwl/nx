@@ -1365,12 +1365,17 @@ impl App {
                         // per-frame is fine. Cloud message comes off the
                         // shared state lock — same source set_cloud_message
                         // writes to.
-                        let counts = self
+                        let (counts, max_parallel) = self
                             .components
                             .iter()
                             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
                             .map(|tl| {
-                                StatusCounts::from_iter(tl.task_lookup.values().map(|t| t.status))
+                                (
+                                    StatusCounts::from_iter(
+                                        tl.task_lookup.values().map(|t| t.status),
+                                    ),
+                                    Some(tl.max_parallel() as u32),
+                                )
                             })
                             .unwrap_or_default();
                         let task_list_hidden = self.is_task_list_hidden();
@@ -1386,7 +1391,12 @@ impl App {
                             .iter_mut()
                             .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
                         {
-                            status_bar.set_state(counts, task_list_hidden, cloud_message);
+                            status_bar.set_state(
+                                counts,
+                                task_list_hidden,
+                                cloud_message,
+                                max_parallel,
+                            );
                             let _ = status_bar.draw(f, status_bar_area);
                         }
                     }

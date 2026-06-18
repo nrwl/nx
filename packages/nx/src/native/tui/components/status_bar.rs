@@ -48,6 +48,17 @@ fn digit_width(n: usize) -> u16 {
     n.checked_ilog10().map_or(1, |e| e as u16 + 1)
 }
 
+/// Digit columns reserved for the running count. The larger of the current
+/// count's width and the run's capacity (`parallel` + continuous tasks, an
+/// upper bound on `running`), so the running chip keeps a constant width as
+/// the count crosses a digit boundary (e.g. 9 <-> 10) instead of shifting the
+/// pending chip back and forth. With no capacity known it falls back to the
+/// count's natural width (no padding).
+fn running_count_width(running: usize, max_parallel: Option<u32>) -> u16 {
+    let capacity_digits = max_parallel.map_or(0, |m| digit_width(m as usize));
+    digit_width(running).max(capacity_digits)
+}
+
 impl StatusCounts {
     /// Build counts from any iterator of statuses (e.g.
     /// `tasks_list.task_lookup.values().map(|t| t.status)`).
@@ -180,8 +191,10 @@ impl BarItem {
 
     /// Display width when rendered, given the current run counts.
     /// Returns 0 for items whose underlying count is 0 (caller treats those
-    /// as eager-zero-dropped at rung 1).
-    pub fn width(self, counts: &StatusCounts) -> u16 {
+    /// as eager-zero-dropped at rung 1). `max_parallel` is the run's capacity
+    /// (`parallel` + continuous tasks); it only affects the running chip,
+    /// which reserves a stable digit width from it.
+    pub fn width(self, counts: &StatusCounts, max_parallel: Option<u32>) -> u16 {
         match self {
             // Progress renders "Waiting for tasks..." while no tasks are known,
             // and "X/Y done" otherwise. Width reported must match what's
@@ -199,8 +212,14 @@ impl BarItem {
             //   contribution includes the leading space joining it to the
             //   number: " [N cached]" = 1 + 9 + digits = 10 + digits.
             BarItem::CachedBracket if counts.cached > 0 => 10 + digit_width(counts.cached),
-            // "⠋ N"
-            BarItem::RunningChip if counts.running > 0 => 2 + digit_width(counts.running),
+            // "⠋ N" - pinned while the run is live (running or pending > 0)
+            // so the chip doesn't flicker in and out as tasks hand off and
+            // the running count momentarily hits 0. Width is reserved from the
+            // run capacity so it also stays put as the count crosses a digit
+            // boundary.
+            BarItem::RunningChip if counts.running > 0 || counts.pending > 0 => {
+                2 + running_count_width(counts.running, max_parallel)
+            }
             // "· N"
             BarItem::PendingChip if counts.pending > 0 => 2 + digit_width(counts.pending),
             // "⏭ N" and/or "◼ N" - render whichever counts are > 0,
@@ -294,7 +313,12 @@ fn drop_order() -> [BarItem; 9] {
 /// its width but no preceding separator (the renderer glues it onto
 /// `PassedChip` directly, and `CachedBracket.width(counts)` already
 /// accounts for the joining space).
-fn side_width(side: BarSide, items: &[BarItem], counts: &StatusCounts) -> u16 {
+fn side_width(
+    side: BarSide,
+    items: &[BarItem],
+    counts: &StatusCounts,
+    max_parallel: Option<u32>,
+) -> u16 {
     if items.is_empty() {
         return 0;
     }
@@ -302,7 +326,7 @@ fn side_width(side: BarSide, items: &[BarItem], counts: &StatusCounts) -> u16 {
         BarSide::Summary => SUMMARY_CHIP_SEP,
         BarSide::Help => HELP_SHORTCUT_SEP,
     };
-    let content: u16 = items.iter().map(|i| i.width(counts)).sum();
+    let content: u16 = items.iter().map(|i| i.width(counts, max_parallel)).sum();
     let sep_count = items
         .iter()
         .filter(|i| !matches!(i, BarItem::CachedBracket))
@@ -313,9 +337,14 @@ fn side_width(side: BarSide, items: &[BarItem], counts: &StatusCounts) -> u16 {
 /// Total rendered width of a bar layout (summary + inter-side gap + help).
 /// Shared between the fit pass (deciding whether a candidate set fits) and
 /// the parity test (verifying it matches what the renderer actually emits).
-fn layout_total_width(summary: &[BarItem], help: &[BarItem], counts: &StatusCounts) -> u16 {
-    let s = side_width(BarSide::Summary, summary, counts);
-    let h = side_width(BarSide::Help, help, counts);
+fn layout_total_width(
+    summary: &[BarItem],
+    help: &[BarItem],
+    counts: &StatusCounts,
+    max_parallel: Option<u32>,
+) -> u16 {
+    let s = side_width(BarSide::Summary, summary, counts, max_parallel);
+    let h = side_width(BarSide::Help, help, counts, max_parallel);
     let gap = if s > 0 && h > 0 { SUMMARY_HELP_GAP } else { 0 };
     s + h + gap
 }
@@ -332,7 +361,12 @@ fn layout_total_width(summary: &[BarItem], help: &[BarItem], counts: &StatusCoun
 ///    (most-recently-dropped first); un-drop any that still fits.
 /// 5. **Compress sticky** (rung 14): set the flag if step 4 still
 ///    overflows. Renderer will shrink sticky text to fit.
-pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool) -> BarLayout {
+pub fn fit_bar_layout(
+    width: u16,
+    counts: &StatusCounts,
+    hidden_task_list: bool,
+    max_parallel: Option<u32>,
+) -> BarLayout {
     // Start by collecting every renderable item: contextually applicable
     // (see `BarItem::applies_when`) and with positive width (eager
     // zero-drop at rung 1).
@@ -344,7 +378,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
         if !item.applies_when(hidden_task_list) {
             continue;
         }
-        if item.width(counts) > 0 {
+        if item.width(counts, max_parallel) > 0 {
             kept.insert(*item);
         }
     }
@@ -359,7 +393,7 @@ pub fn fit_bar_layout(width: u16, counts: &StatusCounts, hidden_task_list: bool)
             .into_iter()
             .filter(|i| kept.contains(i))
             .collect();
-        layout_total_width(&summary, &help, counts)
+        layout_total_width(&summary, &help, counts, max_parallel)
     };
 
     // Greedy drop until it fits or we run out of droppable items.
@@ -425,6 +459,9 @@ pub struct StatusBar {
     counts: StatusCounts,
     task_list_hidden: bool,
     cloud_message: Option<String>,
+    /// Run capacity (`parallel` + continuous tasks) used to reserve a stable
+    /// width for the running chip. `None` until the run starts.
+    max_parallel: Option<u32>,
 }
 
 impl StatusBar {
@@ -434,6 +471,7 @@ impl StatusBar {
             counts: StatusCounts::default(),
             task_list_hidden: false,
             cloud_message: None,
+            max_parallel: None,
         }
     }
 
@@ -447,10 +485,12 @@ impl StatusBar {
         counts: StatusCounts,
         task_list_hidden: bool,
         cloud_message: Option<String>,
+        max_parallel: Option<u32>,
     ) {
         self.counts = counts;
         self.task_list_hidden = task_list_hidden;
         self.cloud_message = cloud_message;
+        self.max_parallel = max_parallel;
     }
 
     /// Outcome state of the run; drives the progress text color.
@@ -532,7 +572,7 @@ impl StatusBar {
     fn render_bar_row(&self, f: &mut Frame<'_>, area: Rect) {
         let counts = &self.counts;
         let outcome = self.run_outcome();
-        let layout = fit_bar_layout(area.width, counts, self.task_list_hidden);
+        let layout = fit_bar_layout(area.width, counts, self.task_list_hidden, self.max_parallel);
 
         // Build spans for each side based on the fit result.
         let summary_spans = self.build_summary_spans(&layout, counts, outcome);
@@ -638,8 +678,9 @@ impl StatusBar {
                     }
                 }
                 BarItem::RunningChip => {
+                    let w = running_count_width(counts.running, self.max_parallel) as usize;
                     spans.push(Span::styled(
-                        format!("⠋ {}", counts.running),
+                        format!("⠋ {:>w$}", counts.running, w = w),
                         base.fg(THEME.info),
                     ));
                 }
@@ -957,7 +998,7 @@ mod tests {
 
     #[test]
     fn wide_terminal_keeps_everything() {
-        let layout = fit_bar_layout(160, &sample_counts(), false);
+        let layout = fit_bar_layout(160, &sample_counts(), false, None);
         assert!(!layout.compress_sticky);
         // All non-zero chips + all help shortcuts present.
         assert!(contains(&layout, BarItem::Progress));
@@ -980,7 +1021,7 @@ mod tests {
     /// stay (97-cell content fits in 100 with 3 cells of spare margin).
     #[test]
     fn w100_drops_pin_only() {
-        let layout = fit_bar_layout(100, &sample_counts(), false);
+        let layout = fit_bar_layout(100, &sample_counts(), false, None);
         assert!(!contains(&layout, BarItem::PinHelp));
         assert!(contains(&layout, BarItem::NavigateHelp));
         assert!(contains(&layout, BarItem::FilterHelp));
@@ -995,7 +1036,7 @@ mod tests {
     /// full chip set stays.
     #[test]
     fn w80_keeps_show_output_as_last_action() {
-        let layout = fit_bar_layout(80, &sample_counts(), false);
+        let layout = fit_bar_layout(80, &sample_counts(), false, None);
         assert!(!contains(&layout, BarItem::PinHelp));
         assert!(!contains(&layout, BarItem::NavigateHelp));
         assert!(!contains(&layout, BarItem::FilterHelp));
@@ -1009,7 +1050,7 @@ mod tests {
     /// (incl. pending) survives -> actions-first invariant.
     #[test]
     fn w60_drops_all_actions_keeps_full_chip_set() {
-        let layout = fit_bar_layout(60, &sample_counts(), false);
+        let layout = fit_bar_layout(60, &sample_counts(), false, None);
         assert!(!contains(&layout, BarItem::PinHelp));
         assert!(!contains(&layout, BarItem::NavigateHelp));
         assert!(!contains(&layout, BarItem::FilterHelp));
@@ -1025,7 +1066,7 @@ mod tests {
     /// stay (rungs 9/10).
     #[test]
     fn w45_drops_pending_first_among_chips() {
-        let layout = fit_bar_layout(45, &sample_counts(), false);
+        let layout = fit_bar_layout(45, &sample_counts(), false, None);
         assert!(!contains(&layout, BarItem::PendingChip));
         assert!(contains(&layout, BarItem::PassedChip));
         assert!(contains(&layout, BarItem::RunningChip));
@@ -1036,7 +1077,7 @@ mod tests {
     /// the last non-sticky chip.
     #[test]
     fn w40_drops_passed_keeps_running() {
-        let layout = fit_bar_layout(40, &sample_counts(), false);
+        let layout = fit_bar_layout(40, &sample_counts(), false, None);
         assert!(contains(&layout, BarItem::Progress));
         assert!(contains(&layout, BarItem::FailedChip));
         assert!(contains(&layout, BarItem::RunningChip));
@@ -1044,12 +1085,75 @@ mod tests {
         assert!(!contains(&layout, BarItem::PendingChip));
     }
 
+    /// The running chip stays pinned while work is still pending, even when
+    /// the running count momentarily drops to 0 as tasks hand off. This
+    /// keeps it (and the pending chip to its right) from flickering in and
+    /// out. It only disappears once the run is done (running and pending
+    /// both 0).
+    #[test]
+    fn running_chip_pinned_while_pending() {
+        let mut counts = sample_counts();
+        counts.running = 0; // momentary lull, work still queued (pending = 12)
+        let layout = fit_bar_layout(160, &counts, false, None);
+        assert!(
+            contains(&layout, BarItem::RunningChip),
+            "running chip should stay visible at running=0 while pending > 0"
+        );
+
+        counts.pending = 0; // run finished
+        let layout = fit_bar_layout(160, &counts, false, None);
+        assert!(
+            !contains(&layout, BarItem::RunningChip),
+            "running chip should drop once running and pending are both 0"
+        );
+    }
+
+    /// With a known capacity, the running chip reserves a constant width, so
+    /// its rendered width doesn't change as the count crosses a digit boundary
+    /// (the source of back-and-forth jitter when parallelism or continuous
+    /// tasks straddle 10/100). Without capacity it falls back to natural width.
+    #[test]
+    fn running_chip_width_stable_across_digit_boundary() {
+        let mut at9 = sample_counts();
+        at9.running = 9;
+        let mut at10 = sample_counts();
+        at10.running = 10;
+        let cap = Some(12);
+
+        let w9 = BarItem::RunningChip.width(&at9, cap);
+        let w10 = BarItem::RunningChip.width(&at10, cap);
+        assert_eq!(w9, w10, "running chip width must not change across 9->10");
+        assert_eq!(w9, 4, "icon + space + 2 reserved digits");
+
+        // No capacity -> natural width, no padding.
+        assert_eq!(BarItem::RunningChip.width(&at9, None), 3);
+        assert_eq!(BarItem::RunningChip.width(&at10, None), 4);
+    }
+
+    /// The chosen layout is identical on both sides of the running digit
+    /// boundary when capacity reserves the wider width - nothing relayouts or
+    /// shifts as the count ticks across 9 <-> 10.
+    #[test]
+    fn running_digit_crossing_does_not_relayout() {
+        let cap = Some(12);
+        let mut at9 = sample_counts();
+        at9.running = 9;
+        let mut at10 = sample_counts();
+        at10.running = 10;
+
+        assert_eq!(
+            fit_bar_layout(160, &at9, false, cap),
+            fit_bar_layout(160, &at10, false, cap),
+            "layout must be identical across the running digit boundary"
+        );
+    }
+
     /// W=35: every non-sticky item dropped. Only progress + failed +
     /// quit/help remain. compress_sticky still false (33-cell content fits
     /// in 35).
     #[test]
     fn w35_only_sticky_remains() {
-        let layout = fit_bar_layout(35, &sample_counts(), false);
+        let layout = fit_bar_layout(35, &sample_counts(), false, None);
         assert!(contains(&layout, BarItem::Progress));
         assert!(contains(&layout, BarItem::FailedChip));
         assert!(contains(&layout, BarItem::QuitHelp));
@@ -1062,7 +1166,7 @@ mod tests {
 
     #[test]
     fn extreme_narrow_flags_compression() {
-        let layout = fit_bar_layout(20, &sample_counts(), false);
+        let layout = fit_bar_layout(20, &sample_counts(), false, None);
         assert!(layout.compress_sticky);
     }
 
@@ -1080,13 +1184,23 @@ mod tests {
         hidden: bool,
         cloud: Option<&str>,
     ) -> ratatui::Terminal<ratatui::backend::TestBackend> {
+        render_bar_with_parallel(width, counts, hidden, cloud, None)
+    }
+
+    fn render_bar_with_parallel(
+        width: u16,
+        counts: StatusCounts,
+        hidden: bool,
+        cloud: Option<&str>,
+        max_parallel: Option<u32>,
+    ) -> ratatui::Terminal<ratatui::backend::TestBackend> {
         use ratatui::Terminal;
         use ratatui::backend::TestBackend;
         let height: u16 = if cloud.is_some() { 2 } else { 1 };
         let backend = TestBackend::new(width, height);
         let mut terminal = Terminal::new(backend).unwrap();
         let mut bar = StatusBar::new();
-        bar.set_state(counts, hidden, cloud.map(|s| s.to_string()));
+        bar.set_state(counts, hidden, cloud.map(|s| s.to_string()), max_parallel);
         terminal
             .draw(|f| {
                 let area = Rect::new(0, 0, width, height);
@@ -1234,6 +1348,17 @@ mod tests {
     }
 
     #[test]
+    fn snapshot_running_chip_padded_to_capacity() {
+        // A capacity of 12 reserves 2 digits, so a single-digit running count
+        // renders right-aligned ("⠋  5") and holds the pending chip's position
+        // steady as the count later crosses 9 <-> 10.
+        let mut counts = sample_counts();
+        counts.running = 5;
+        let terminal = render_bar_with_parallel(120, counts, false, None, Some(12));
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
     fn snapshot_cloud_full_message_fits() {
         let terminal = render_bar(
             80,
@@ -1313,7 +1438,7 @@ mod tests {
             droppable.iter().map(|i| (*i, 0)).collect();
 
         for w in (20..=200).rev() {
-            let layout = fit_bar_layout(w, &counts, false);
+            let layout = fit_bar_layout(w, &counts, false, None);
             for item in &droppable {
                 if contains(&layout, *item) {
                     last_seen.insert(*item, w);
@@ -1343,7 +1468,7 @@ mod tests {
         let mut counts = sample_counts();
         counts.skipped = 3;
         counts.stopped = 2;
-        let layout = fit_bar_layout(120, &counts, false);
+        let layout = fit_bar_layout(120, &counts, false, None);
         assert!(contains(&layout, BarItem::SkipStopChips));
     }
 
@@ -1356,7 +1481,7 @@ mod tests {
         // Build a tight width where everything fits except one of the two.
         // Cycle widths until the algorithm has to make that choice.
         for w in (45..=100).rev() {
-            let layout = fit_bar_layout(w, &counts, false);
+            let layout = fit_bar_layout(w, &counts, false, None);
             let has_pending = contains(&layout, BarItem::PendingChip);
             let has_skip = contains(&layout, BarItem::SkipStopChips);
             if !has_pending && has_skip {
@@ -1374,13 +1499,13 @@ mod tests {
 
     #[test]
     fn hidden_task_list_includes_show_task_list_help() {
-        let layout = fit_bar_layout(160, &sample_counts(), true);
+        let layout = fit_bar_layout(160, &sample_counts(), true, None);
         assert!(contains(&layout, BarItem::ShowTaskListHelp));
     }
 
     #[test]
     fn visible_task_list_omits_show_task_list_help() {
-        let layout = fit_bar_layout(160, &sample_counts(), false);
+        let layout = fit_bar_layout(160, &sample_counts(), false, None);
         assert!(!contains(&layout, BarItem::ShowTaskListHelp));
     }
 
@@ -1389,10 +1514,10 @@ mod tests {
         // Filter targets the task list. When the list is hidden, the
         // shortcut has no useful effect - it should be elided regardless of
         // available width.
-        let layout = fit_bar_layout(200, &sample_counts(), true);
+        let layout = fit_bar_layout(200, &sample_counts(), true, None);
         assert!(!contains(&layout, BarItem::FilterHelp));
         // Sanity: filter is still present when the list is visible.
-        let layout = fit_bar_layout(200, &sample_counts(), false);
+        let layout = fit_bar_layout(200, &sample_counts(), false, None);
         assert!(contains(&layout, BarItem::FilterHelp));
     }
 
@@ -1415,46 +1540,62 @@ mod tests {
             pending: 13,
         };
 
-        let scenarios: Vec<(u16, StatusCounts, bool)> = vec![
+        // Running chip padded to a reserved capacity: the rendered count is
+        // right-aligned, so the fit pass must budget the same padded width.
+        let mut run5 = sample_counts();
+        run5.running = 5; // pads to 2 digits under capacity 12
+        let mut run12 = sample_counts();
+        run12.running = 12; // fills the 2-digit reservation
+        let mut run7 = sample_counts();
+        run7.running = 7; // pads to 3 digits under capacity 130
+
+        let scenarios: Vec<(u16, StatusCounts, bool, Option<u32>)> = vec![
             // Width sweep with sample state (cached=0).
-            (160, sample_counts(), false),
-            (120, sample_counts(), false),
-            (100, sample_counts(), false),
-            (80, sample_counts(), false),
-            (65, sample_counts(), false),
-            (50, sample_counts(), false),
-            (45, sample_counts(), false),
-            (40, sample_counts(), false),
-            (35, sample_counts(), false),
+            (160, sample_counts(), false, None),
+            (120, sample_counts(), false, None),
+            (100, sample_counts(), false, None),
+            (80, sample_counts(), false, None),
+            (65, sample_counts(), false, None),
+            (50, sample_counts(), false, None),
+            (45, sample_counts(), false, None),
+            (40, sample_counts(), false, None),
+            (35, sample_counts(), false, None),
             // Cached present - exercises the separator-attachment path.
-            (200, completed, false),
-            (160, completed, false),
-            (140, completed, false),
-            (120, completed, false),
-            (100, completed, false),
+            (200, completed, false, None),
+            (160, completed, false, None),
+            (140, completed, false, None),
+            (120, completed, false, None),
+            (100, completed, false, None),
             // Full counts - every chip non-zero, including SkipStopChips.
-            (200, full_counts(), false),
-            (140, full_counts(), false),
-            (120, full_counts(), false),
-            (80, full_counts(), false),
+            (200, full_counts(), false, None),
+            (140, full_counts(), false, None),
+            (120, full_counts(), false, None),
+            (80, full_counts(), false, None),
             // Stopped variant - ensures inner SkipStopChips with only one
             // sub-chip renders identically to fit-pass expectation.
-            (140, stopped, false),
-            (100, stopped, false),
+            (140, stopped, false, None),
+            (100, stopped, false, None),
+            // Padded running chip - count narrower than, equal to, and under a
+            // 3-digit capacity. Guards parity for the right-aligned count.
+            (160, run5, false, Some(12)),
+            (120, run5, false, Some(12)),
+            (80, run5, false, Some(12)),
+            (160, run12, false, Some(12)),
+            (160, run7, false, Some(130)),
             // Hidden task list - drops `filter:`, adds `show task list: b`.
-            (200, sample_counts(), true),
-            (120, sample_counts(), true),
-            (80, sample_counts(), true),
+            (200, sample_counts(), true, None),
+            (120, sample_counts(), true, None),
+            (80, sample_counts(), true, None),
             // Empty run - only sticky help, no chips.
-            (100, StatusCounts::default(), false),
-            (40, StatusCounts::default(), false),
+            (100, StatusCounts::default(), false, None),
+            (40, StatusCounts::default(), false, None),
         ];
 
-        for (w, counts, hidden) in scenarios {
-            let layout = fit_bar_layout(w, &counts, hidden);
+        for (w, counts, hidden, max_parallel) in scenarios {
+            let layout = fit_bar_layout(w, &counts, hidden, max_parallel);
 
             let mut bar = StatusBar::new();
-            bar.set_state(counts, hidden, None);
+            bar.set_state(counts, hidden, None, max_parallel);
             let outcome = bar.run_outcome();
             let summary_spans = bar.build_summary_spans(&layout, &counts, outcome);
             let help_spans = bar.build_help_spans(&layout);
@@ -1468,12 +1609,12 @@ mod tests {
             };
             let rendered = summary_w + gap + help_w;
 
-            let computed = layout_total_width(&layout.summary, &layout.help, &counts);
+            let computed = layout_total_width(&layout.summary, &layout.help, &counts, max_parallel);
 
             assert_eq!(
                 computed, rendered,
-                "fit-pass width != rendered width at W={} hidden={} counts={:?} layout={:?}",
-                w, hidden, counts, layout
+                "fit-pass width != rendered width at W={} hidden={} max_parallel={:?} counts={:?} layout={:?}",
+                w, hidden, max_parallel, counts, layout
             );
         }
     }
@@ -1481,7 +1622,7 @@ mod tests {
     #[test]
     fn empty_run_renders_only_sticky_help() {
         let counts = StatusCounts::default();
-        let layout = fit_bar_layout(80, &counts, false);
+        let layout = fit_bar_layout(80, &counts, false, None);
         assert!(contains(&layout, BarItem::QuitHelp));
         assert!(contains(&layout, BarItem::HelpHelp));
         // Progress chip has width when total=0 too ("0/0 done").
