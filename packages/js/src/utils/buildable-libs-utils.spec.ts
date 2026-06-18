@@ -8,7 +8,7 @@ import {
   DependentBuildableProjectNode,
   updatePaths,
 } from './buildable-libs-utils';
-import { join } from 'path';
+import { dirname, isAbsolute, join, resolve } from 'path';
 
 describe('updatePaths', () => {
   const deps: DependentBuildableProjectNode[] = [
@@ -863,5 +863,59 @@ describe('createTmpTsConfig', () => {
     expect(JSON.parse(tmpTsConfig).extends).toBe(
       '../../../../packages/foo/tsconfig.json'
     );
+  });
+
+  it('should rewrite path mappings relative to the generated tsconfig instead of absolute', () => {
+    const fs = new TempFs('buildable-libs-utils#createTmpTsConfig');
+    // Cover both a relative path value and an already-absolute one (the latter
+    // exercises the isAbsolute branch in readTsConfigWithRemappedPaths).
+    const absoluteValue = join(fs.tempDir, 'external/src/index.ts');
+    fs.createFileSync(
+      'tsconfig.base.json',
+      JSON.stringify({
+        compilerOptions: {
+          paths: {
+            '@proj/foo': ['./packages/foo/src/index.ts'],
+            '@proj/foo/sub': ['./packages/foo/sub/src/index.ts'],
+            '@proj/abs': [absoluteValue],
+          },
+        },
+      })
+    );
+    fs.createFileSync(
+      'packages/foo/tsconfig.json',
+      JSON.stringify({ extends: '../../tsconfig.base.json' })
+    );
+
+    const tmpTsConfigPath = createTmpTsConfig(
+      'packages/foo/tsconfig.json',
+      fs.tempDir,
+      'packages/foo',
+      []
+    );
+
+    const { paths } = JSON.parse(
+      readFileSync(tmpTsConfigPath, 'utf8')
+    ).compilerOptions;
+    const tmpDir = dirname(tmpTsConfigPath);
+
+    // Path values must be relative (drive-agnostic), never absolute. Absolute
+    // values keep the Windows drive letter while Nx strips it from rootDir,
+    // putting resolved files outside rootDir (TS6059).
+    for (const values of Object.values<string[]>(paths)) {
+      for (const value of values) {
+        expect(isAbsolute(value)).toBe(false);
+        expect(value.startsWith('.')).toBe(true);
+      }
+    }
+    // ...and must still resolve to the real targets from the tmp location,
+    // for both relative and absolute inputs.
+    expect(resolve(tmpDir, paths['@proj/foo'][0])).toBe(
+      join(fs.tempDir, 'packages/foo/src/index.ts')
+    );
+    expect(resolve(tmpDir, paths['@proj/foo/sub'][0])).toBe(
+      join(fs.tempDir, 'packages/foo/sub/src/index.ts')
+    );
+    expect(resolve(tmpDir, paths['@proj/abs'][0])).toBe(absoluteValue);
   });
 });

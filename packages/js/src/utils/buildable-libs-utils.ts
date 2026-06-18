@@ -214,16 +214,25 @@ function readTsConfigWithRemappedPaths(
     normalizedTsConfig
   );
   const paths = computeCompilerOptionsPaths(normalizedTsConfig, dependencies);
-  // Resolve paths to absolute so they work regardless of the tmp tsconfig
-  // location and without needing baseUrl (deprecated in TS 6, removed in TS 7).
+  // Rewrite every path relative to the generated tsconfig's directory so it
+  // resolves without baseUrl (deprecated in TS 6, removed in TS 7) regardless
+  // of where the tmp tsconfig lives. Absolute paths break tsc builds on
+  // Windows: Nx normalizes rootDir via joinPathFragments, which strips the
+  // drive letter, so an absolute drive-full mapping resolves files outside
+  // rootDir (TS6059). Relative values are drive-agnostic and TS resolves them
+  // in the consuming compilation's own path spelling.
   const pathsBase = resolvePathsBaseUrl(normalizedTsConfig);
   for (const key of Object.keys(paths)) {
     paths[key] = paths[key].map((p) => {
-      if (isAbsolute(p)) {
-        return p;
+      const absolute = isAbsolute(p) ? p : resolve(pathsBase, p);
+      const rel = relative(normalizedGeneratedTsConfigDir, absolute);
+      // A path on a different Windows drive can't be expressed relatively;
+      // relative() returns an absolute path in that case, so keep it as-is.
+      if (isAbsolute(rel)) {
+        return rel.replace(/\\/g, '/');
       }
-      const stripped = p.startsWith('./') ? p.slice(2) : p;
-      return resolve(pathsBase, stripped).replace(/\\/g, '/');
+      const normalized = rel.replace(/\\/g, '/');
+      return normalized.startsWith('.') ? normalized : `./${normalized}`;
     });
   }
   generatedTsConfig.compilerOptions.paths = paths;
