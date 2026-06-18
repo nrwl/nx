@@ -6,8 +6,12 @@ import { LifeCycle, TaskResult } from '../life-cycle';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 
-/** ms tolerance for "this task started right when it became eligible". */
-const EPS = 50;
+/**
+ * ms tolerance for "this task started right when it became eligible" — below
+ * this, a wait is treated as on-time and not annotated. 0 = annotate every
+ * non-zero wait (durations now render in ms, so even small waits are legible).
+ */
+const EPS = 0;
 /** A bucket below this (ms) isn't worth a recommendation — effectively noise. */
 const MEANINGFUL_OVERHEAD = 1000;
 
