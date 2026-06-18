@@ -144,21 +144,9 @@ describe('Angular Projects - Buildable Libraries', () => {
         '@nx/angular:webpack-browser',
         '@nx/angular:browser-esbuild',
       ];
-      if (Array.isArray(config.targetDefaults)) {
-        for (const target of targets) {
-          if (
-            !config.targetDefaults.some(
-              (e: { executor?: string }) => e.executor === target
-            )
-          ) {
-            config.targetDefaults.push({ executor: target, ...defaults });
-          }
-        }
-      } else {
-        config.targetDefaults ??= {};
-        for (const target of targets) {
-          config.targetDefaults[target] ??= defaults;
-        }
+      config.targetDefaults ??= {};
+      for (const target of targets) {
+        config.targetDefaults[target] ??= defaults;
       }
       return config;
     });
