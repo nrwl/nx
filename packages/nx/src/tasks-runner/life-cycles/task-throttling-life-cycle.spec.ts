@@ -215,7 +215,9 @@ describe('TaskThrottlingLifeCycle', () => {
     // (there's nothing meaningful to "speed up").
     expect(s.coordinatorDominated).toBe(true);
     expect(s.recommendation).toContain('coordinator overhead');
-    expect(s.recommendation).toContain('warm Nx daemon');
+    expect(s.recommendation).toContain('per-task hashing');
+    // Don't claim a warm daemon fixes it — it doesn't (redone each wave).
+    expect(s.recommendation).not.toContain('warm');
     expect(s.recommendation).not.toContain('longest tasks shown above');
     expect(formatReport(s)).not.toContain('Longest tasks on the critical path');
   });

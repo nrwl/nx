@@ -841,11 +841,13 @@ function buildRecommendation(args: {
     )} → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel on this machine may help instead.`;
   }
   // Hashing/scheduling outweighs the actual work (tasks were fast or cached), so
-  // there's nothing to "speed up". Point at what shrinks the coordinator instead.
+  // there's nothing to "speed up". This is mostly Nx's per-task hashing cost,
+  // which a warm daemon does NOT reduce (it's redone each scheduling wave) — so
+  // we don't suggest it; the only real lever is fewer/larger tasks.
   if (coordinatorDominated) {
     return `Most of this run was coordinator overhead (${formatDuration(
       coordinatorOverhead
-    )} of hashing/scheduling) — the tasks themselves were fast or cached, so there's little to speed up. A warm Nx daemon and narrower task inputs cut the hashing.`;
+    )} of hashing/scheduling) — the tasks themselves were fast or cached, so there's little to speed up. It's mostly Nx's per-task hashing, which grows with the number of tasks.`;
   }
 
   // No parallelism lever big enough to LEAD with. The run is dominated by its
