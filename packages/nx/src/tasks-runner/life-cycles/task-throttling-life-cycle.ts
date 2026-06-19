@@ -893,52 +893,47 @@ function formatTopTaskRows(
   });
 }
 
-/** A "    label   value" line for the overhead breakdown, value column-aligned. */
-function bucketLine(label: string, ms: number): string {
-  return `    ${label.padEnd(43)}${formatDuration(ms)}`;
-}
-
 function pluralizeCores(cores: number): string {
   return cores === 1 ? 'core' : 'cores';
 }
 
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  // The two non-recoverable components of the run, shown up top: the critical
-  // path (the longest dependent chain this run) and coordinator overhead
-  // (hashing/scheduling — fixed per-task cost). What's left is recoverable. Note
+  // Run duration decomposes into three parts shown up top: the critical path (the
+  // longest dependent work chain), non-recoverable overhead (hashing/scheduling —
+  // parallelism can't touch it), and recoverable time (slot contention). Note
   // it's "critical path", not "floor": the chain's task durations shift with
   // --parallel (CPU contention), so it isn't a fixed theoretical minimum.
   const recoverable = s.recoverableByParallel + s.recoverableByMachines;
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
+  const stat = (label: string, value: string) =>
+    `  ${`${label}:`.padEnd(25)}  ${value}`;
   const lines = [
     '',
-    `  Run duration:            ${fmt(s.runDuration)}`,
-    `  Critical path:           ${fmt(s.criticalPathDuration)}   (${
-      s.criticalPathTaskCount
-    } tasks)`,
-    `  Coordinator overhead:    ${fmt(
-      s.coordinatorOverhead
-    )}   (non-recoverable — hashing, scheduling)`,
+    stat('Run duration', fmt(s.runDuration)),
+    stat(
+      'Critical path',
+      `${fmt(s.criticalPathDuration)}   (${s.criticalPathTaskCount} tasks)`
+    ),
+    stat(
+      'Non-recoverable overhead',
+      `${fmt(s.coordinatorOverhead)}   (hashing, scheduling)`
+    ),
+    stat(
+      'Recoverable time',
+      recoverable > 0
+        ? `${fmt(recoverable)}   (${recoverablePct}% of the run)`
+        : fmt(recoverable)
+    ),
     // Resource-utilization stats grouped together: how the run used the two big
     // speedups available to it — parallelism and caching.
     '',
-    `  Parallelism:             ${s.parallel} slots (${s.cores}-core machine)`,
+    stat('Parallelism', `${s.parallel} slots (${s.cores}-core machine)`),
   ];
   const cache = cacheStat(s);
   if (cache) {
-    lines.push(`  Cache:                   ${cache}`);
-  }
-  if (recoverable > 0) {
-    lines.push(
-      '',
-      `  Recoverable by parallelism:  +${fmt(
-        recoverable
-      )}   (${recoverablePct}% of the run)`,
-      bucketLine('by raising --parallel (ceiling)', s.recoverableByParallel),
-      bucketLine('by more machines', s.recoverableByMachines)
-    );
+    lines.push(stat('Cache', cache));
   }
   // The longest tasks are only a lever when actual work dominates. When the run
   // is coordinator-dominated (e.g. cached), they're just restore times — skip it.

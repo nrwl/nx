@@ -411,7 +411,7 @@ describe('cache reporting', () => {
     expect(s.cacheHits).toBe(1);
     expect(s.cacheableCount).toBe(3);
     expect(s.cacheMissTime).toBe(2000); // a + b ran (1000 + 1000)
-    expect(formatReport(s)).toContain('Cache:                   1/3 hit (33%)');
+    expect(formatReport(s)).toMatch(/Cache:\s+1\/3 hit \(33%\)/);
   });
 
   it('recommends Nx Cloud when the hit rate is ~0 and remote cache is off', () => {
@@ -460,9 +460,7 @@ describe('cache reporting', () => {
     expect(s.cacheSkipped).toBe(true);
     const report = formatReport(s);
     // Stat shows the skip state; advice says how to fix it. No hit-rate noise.
-    expect(report).toContain(
-      'Cache:                   skipped (--skip-nx-cache)'
-    );
+    expect(report).toMatch(/Cache:\s+skipped \(--skip-nx-cache\)/);
     expect(report).toContain('drop --skip-nx-cache');
     expect(report).not.toContain('hit (');
   });
@@ -511,10 +509,9 @@ describe('formatReport', () => {
     const report = formatReport(run(makeGraph([a, b]), 1)!);
 
     expect(report).toContain('Critical path:');
-    expect(report).toContain('Coordinator overhead:');
-    expect(report).toContain('non-recoverable');
-    expect(report).toContain('Recoverable by parallelism:');
-    expect(report).toContain('by raising --parallel');
+    // Run duration decomposes into non-recoverable + recoverable stats up top.
+    expect(report).toContain('Non-recoverable overhead:');
+    expect(report).toContain('Recoverable time:');
     expect(report).toContain('Longest tasks on the critical path');
     // Single recommendation (no cache advice here) stays a plain line.
     expect(report).toContain('Recommendation:');
