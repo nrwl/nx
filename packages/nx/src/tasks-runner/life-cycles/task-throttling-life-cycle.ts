@@ -8,6 +8,13 @@ import { LifeCycle, TaskResult } from '../life-cycle';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
+/**
+ * At or below this local-cache hit rate, a run is barely reusing anything — so if
+ * remote cache (Nx Cloud) is also off, recommend setting it up (builds from CI and
+ * teammates would turn many of those misses into hits). Above it, local cache is
+ * already doing its job, so no nudge.
+ */
+const LOW_CACHE_HIT_RATE = 0.1;
 /** Task statuses that mean the result came from cache (didn't re-run). */
 const CACHE_HIT_STATUSES = new Set([
   'local-cache',
@@ -930,9 +937,13 @@ function buildCacheNote(s: ThrottleSummary): string | null {
     (s.cacheMissTime > 0
       ? ` (the rest ran for ${formatDuration(s.cacheMissTime)})`
       : '');
-  return s.remoteCacheEnabled
-    ? `${metric}.`
-    : `${metric}. Turn on Nx Cloud remote cache to reuse builds from CI and teammates → ${NX_REMOTE_CACHE_URL}.`;
+  // Only nudge toward Nx Cloud when local caching is barely helping AND remote
+  // cache is off — a high local hit rate means caching is already working.
+  const hitRate = s.cacheHits / s.cacheableCount;
+  if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
+    return `${metric}. Nx Cloud isn't set up — set it up so builds from CI and teammates are reused → ${NX_REMOTE_CACHE_URL}.`;
+  }
+  return `${metric}.`;
 }
 
 /** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */

@@ -414,25 +414,40 @@ describe('cache reporting', () => {
     expect(report).toContain('the rest ran for 2.0s');
   });
 
-  it('recommends enabling remote cache when it is off', () => {
+  it('recommends Nx Cloud when the hit rate is ~0 and remote cache is off', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, {
-      statuses: { a: 'success' },
+      statuses: { a: 'success' }, // 0/1 hit
       remoteCacheEnabled: false,
     })!;
 
     expect(s.remoteCacheEnabled).toBe(false);
-    expect(formatReport(s)).toContain('Nx Cloud remote cache');
+    const report = formatReport(s);
+    expect(report).toContain("Nx Cloud isn't set up");
+    expect(report).toContain('set it up');
   });
 
-  it('does not nag about remote cache when it is already on', () => {
+  it('does not nag about Nx Cloud when local hit rate is high (even if remote is off)', () => {
+    const tasks = ['a', 'b', 'c'].map((id) =>
+      makeTask(id, { start: 0, end: 10 })
+    );
+    const s = run(makeGraph(tasks), 3, {
+      statuses: { a: 'local-cache', b: 'local-cache', c: 'local-cache' }, // 3/3 hit
+      remoteCacheEnabled: false,
+    })!;
+
+    expect(s.cacheHits).toBe(3);
+    expect(formatReport(s)).not.toContain("Nx Cloud isn't set up");
+  });
+
+  it('does not nag about Nx Cloud when remote cache is already on', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, {
       statuses: { a: 'success' },
       remoteCacheEnabled: true,
     })!;
 
-    expect(formatReport(s)).not.toContain('Nx Cloud remote cache');
+    expect(formatReport(s)).not.toContain("Nx Cloud isn't set up");
   });
 
   it('warns (and only warns) when the cache was skipped', () => {
