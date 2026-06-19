@@ -131,19 +131,8 @@ function getRecursiveImportOrder(
 export function postcss(pluginOptions: PostCSSPluginOptions = {}): Plugin {
   const options: NormalizedPostCSSOptions = normalizeOptions(pluginOptions);
 
-  // Create file filter
-  const defaultExtensions = [
-    '.css',
-    '.sss',
-    '.pcss', // CSS formats
-    '.scss',
-    '.sass', // Sass
-    '.less', // Less
-    '.styl',
-    '.stylus', // Stylus
-  ];
-
-  const extensions = options.extensions ?? defaultExtensions;
+  // Create file filter — extensions always set by normalizeOptions
+  const extensions = options.extensions;
 
   const filter = createFilter(
     options.include ?? extensions.map((ext) => `**/*${ext}`),
