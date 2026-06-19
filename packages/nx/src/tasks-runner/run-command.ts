@@ -993,7 +993,7 @@ export async function invokeTasksRunner({
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle, taskGraph),
+    ...constructLifeCycles(lifeCycle, taskGraph, nxArgs.skipNxCache),
     taskResultsLifecycle,
   ]);
 
@@ -1089,7 +1089,8 @@ export async function invokeTasksRunner({
 
 export function constructLifeCycles(
   lifeCycle: LifeCycle,
-  taskGraph?: TaskGraph
+  taskGraph?: TaskGraph,
+  skipNxCache?: boolean
 ): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
@@ -1101,7 +1102,7 @@ export function constructLifeCycles(
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   if (process.env.NX_THROTTLE_REPORT && taskGraph) {
-    lifeCycles.push(new TaskThrottlingLifeCycle(taskGraph));
+    lifeCycles.push(new TaskThrottlingLifeCycle(taskGraph, skipNxCache));
   }
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();

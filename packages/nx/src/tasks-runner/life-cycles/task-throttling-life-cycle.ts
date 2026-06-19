@@ -2,9 +2,18 @@ import * as os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import type { BatchInfo } from '../../native';
 import { TaskGraph } from '../../config/task-graph';
+import { readNxJson } from '../../config/nx-json';
+import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { LifeCycle, TaskResult } from '../life-cycle';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
+const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
+/** Task statuses that mean the result came from cache (didn't re-run). */
+const CACHE_HIT_STATUSES = new Set([
+  'local-cache',
+  'local-cache-kept-existing',
+  'remote-cache',
+]);
 
 /**
  * ms tolerance for "this task started right when it became eligible" — below
@@ -84,6 +93,16 @@ export interface ThrottleSummary {
   cores: number;
   isCI: boolean;
   recommendation: string;
+  /** Tasks whose result was read from cache (didn't re-run). */
+  cacheHits: number;
+  /** Tasks that had a cache outcome at all (hits + tasks that ran). */
+  cacheableCount: number;
+  /** Total duration of the tasks that ran instead of hitting the cache. */
+  cacheMissTime: number;
+  /** The run bypassed the cache (`--skip-nx-cache`). */
+  cacheSkipped: boolean;
+  /** A remote (Nx Cloud) cache was active for this run. */
+  remoteCacheEnabled: boolean;
 }
 
 /**
@@ -110,12 +129,18 @@ export interface ThrottleSummary {
  */
 export class TaskThrottlingLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
+  /** taskId → its terminal status (cache hit vs ran), for the cache summary. */
+  private readonly statuses = new Map<string, TaskResult['status']>();
   /** Thread pool size reported to startCommand (discrete + continuous). */
   private total: number | undefined;
   /** taskId → ids of the other tasks in its batch (batches run sequentially). */
   private readonly batchSiblings = new Map<string, string[]>();
 
-  constructor(private readonly taskGraph: TaskGraph) {
+  constructor(
+    private readonly taskGraph: TaskGraph,
+    /** The run's `--skip-nx-cache` flag (the env-var forms are checked too). */
+    private readonly skipNxCacheOption = false
+  ) {
     activeThrottleLifeCycle = this;
   }
 
@@ -135,7 +160,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   endTasks(taskResults: TaskResult[]): void {
     // endTasks is called incrementally (per group/batch), not once at the end;
     // we accumulate into the map so the last call sees every timing.
-    for (const { task } of taskResults) {
+    for (const { task, status } of taskResults) {
       const entry = this.entry(task.id);
       // Use `!= null` (not truthiness): a real epoch timestamp is never 0, but
       // synthetic/relative timelines can legitimately start at 0.
@@ -144,6 +169,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       }
       if (task.endTime != null) {
         entry.endTime = task.endTime;
+      }
+      if (status != null) {
+        this.statuses.set(task.id, status);
       }
     }
   }
@@ -163,6 +191,24 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
    */
   protected hashWindows(): Array<[number, number]> {
     return collectHashWindows();
+  }
+
+  /** Whether the cache was bypassed this run (`--skip-nx-cache`). Overridable in tests. */
+  protected cacheSkipped(): boolean {
+    return (
+      this.skipNxCacheOption ||
+      process.env.NX_SKIP_NX_CACHE === 'true' ||
+      process.env.NX_DISABLE_NX_CACHE === 'true'
+    );
+  }
+
+  /** Whether a remote (Nx Cloud) cache is active for this run. Overridable in tests. */
+  protected remoteCacheEnabled(): boolean {
+    try {
+      return isNxCloudUsed(readNxJson());
+    } catch {
+      return false;
+    }
   }
 
   /** Discrete tasks that actually executed and have a start + end timestamp. */
@@ -597,6 +643,24 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
+    // Cache outcome: how many tasks were restored from cache vs ran, and how
+    // much time the ones that ran spent. Tasks with no recorded status (e.g.
+    // synthetic test runs) don't count toward either.
+    let cacheHits = 0;
+    let cacheRan = 0;
+    let cacheMissTime = 0;
+    for (const [id, status] of this.statuses) {
+      if (CACHE_HIT_STATUSES.has(status)) {
+        cacheHits++;
+      } else if (status === 'success') {
+        cacheRan++;
+        cacheMissTime += durations.get(id) ?? 0;
+      }
+    }
+    const cacheableCount = cacheHits + cacheRan;
+    const cacheSkipped = this.cacheSkipped();
+    const remoteCacheEnabled = this.remoteCacheEnabled();
+
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
     const recommendation = buildRecommendation({
@@ -626,6 +690,11 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       cores,
       isCI,
       recommendation,
+      cacheHits,
+      cacheableCount,
+      cacheMissTime,
+      cacheSkipped,
+      remoteCacheEnabled,
     };
   }
 }
@@ -833,10 +902,37 @@ export function formatReport(s: ThrottleSummary): string {
     `  Longest tasks on the critical path:`,
     ...formatTopTaskRows(s.criticalPathTop),
     '',
-    `  Recommendation: ${s.recommendation}`,
-    ''
+    `  Recommendation: ${s.recommendation}`
   );
+  const cacheNote = buildCacheNote(s);
+  if (cacheNote) {
+    lines.push('', `  ${cacheNote}`);
+  }
+  lines.push('');
   return lines.join('\n');
+}
+
+/**
+ * One-line cache verdict + advice. Caching avoids work entirely, so it's the
+ * highest lever when it's being left on the table: a skipped cache means every
+ * task re-ran; a missing remote cache means CI/teammates' builds couldn't be
+ * reused. Returns null when there's nothing to report (no cache outcomes).
+ */
+function buildCacheNote(s: ThrottleSummary): string | null {
+  if (s.cacheSkipped) {
+    return `Cache: skipped this run (--skip-nx-cache) — every task re-ran. Drop the flag to restore unchanged tasks instantly.`;
+  }
+  if (s.cacheableCount === 0) {
+    return null;
+  }
+  const metric =
+    `Cache: ${s.cacheHits}/${s.cacheableCount} tasks read from cache` +
+    (s.cacheMissTime > 0
+      ? ` (the rest ran for ${formatDuration(s.cacheMissTime)})`
+      : '');
+  return s.remoteCacheEnabled
+    ? `${metric}.`
+    : `${metric}. Turn on Nx Cloud remote cache to reuse builds from CI and teammates → ${NX_REMOTE_CACHE_URL}.`;
 }
 
 /** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */

@@ -48,16 +48,26 @@ function makeGraph(
   } as unknown as TaskGraph;
 }
 
-/** A lifecycle whose hashing windows can be injected for the hashing-gate test. */
+/** A lifecycle whose env-dependent signals can be injected for tests. */
 class TestThrottle extends TaskThrottlingLifeCycle {
   constructor(
     graph: TaskGraph,
-    private readonly windows: Array<[number, number]>
+    private readonly env: {
+      windows?: Array<[number, number]>;
+      skipped?: boolean;
+      remoteCache?: boolean;
+    } = {}
   ) {
     super(graph);
   }
   protected hashWindows(): Array<[number, number]> {
-    return this.windows;
+    return this.env.windows ?? [];
+  }
+  protected cacheSkipped(): boolean {
+    return this.env.skipped ?? false;
+  }
+  protected remoteCacheEnabled(): boolean {
+    return this.env.remoteCache ?? true;
   }
 }
 
@@ -65,15 +75,26 @@ class TestThrottle extends TaskThrottlingLifeCycle {
 function run(
   graph: TaskGraph,
   total: number,
-  opts: { batches?: string[][]; hashWindows?: Array<[number, number]> } = {}
+  opts: {
+    batches?: string[][];
+    hashWindows?: Array<[number, number]>;
+    statuses?: Record<string, TaskResult['status']>;
+    cacheSkipped?: boolean;
+    remoteCacheEnabled?: boolean;
+  } = {}
 ) {
-  const lc = new TestThrottle(graph, opts.hashWindows ?? []);
+  const lc = new TestThrottle(graph, {
+    windows: opts.hashWindows,
+    skipped: opts.cacheSkipped,
+    remoteCache: opts.remoteCacheEnabled,
+  });
   lc.startCommand(total);
   for (const taskIds of opts.batches ?? []) {
     lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
   }
   const results = Object.values(graph.tasks).map(
-    (task) => ({ task }) as unknown as TaskResult
+    (task) =>
+      ({ task, status: opts.statuses?.[task.id] }) as unknown as TaskResult
   );
   lc.endTasks(results);
   return lc.getSummary();
@@ -373,6 +394,68 @@ describe('TaskThrottlingLifeCycle', () => {
     const s = run(makeGraph([serve, build]), 5)!;
 
     expect(s.parallel).toBe(4);
+  });
+});
+
+describe('cache reporting', () => {
+  it('reports cache hits and the time the misses ran', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const c = makeTask('c', { start: 2000, end: 2010 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1, {
+      statuses: { a: 'success', b: 'success', c: 'local-cache' },
+    })!;
+
+    expect(s.cacheHits).toBe(1);
+    expect(s.cacheableCount).toBe(3);
+    expect(s.cacheMissTime).toBe(2000); // a + b ran (1000 + 1000)
+    const report = formatReport(s);
+    expect(report).toContain('1/3 tasks read from cache');
+    expect(report).toContain('the rest ran for 2.0s');
+  });
+
+  it('recommends enabling remote cache when it is off', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, {
+      statuses: { a: 'success' },
+      remoteCacheEnabled: false,
+    })!;
+
+    expect(s.remoteCacheEnabled).toBe(false);
+    expect(formatReport(s)).toContain('Nx Cloud remote cache');
+  });
+
+  it('does not nag about remote cache when it is already on', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, {
+      statuses: { a: 'success' },
+      remoteCacheEnabled: true,
+    })!;
+
+    expect(formatReport(s)).not.toContain('Nx Cloud remote cache');
+  });
+
+  it('warns (and only warns) when the cache was skipped', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, {
+      statuses: { a: 'success' },
+      cacheSkipped: true,
+    })!;
+
+    expect(s.cacheSkipped).toBe(true);
+    const report = formatReport(s);
+    expect(report).toContain('skipped this run (--skip-nx-cache)');
+    // The skip warning replaces the hit-rate metric (which would be 0/N noise).
+    expect(report).not.toContain('read from cache');
+  });
+
+  it('omits the cache note when no task has a recorded status', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1)!; // no statuses
+
+    expect(s.cacheableCount).toBe(0);
+    expect(formatReport(s)).not.toContain('Cache:');
   });
 });
 
