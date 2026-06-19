@@ -406,7 +406,7 @@ describe('formatReport', () => {
     const report = formatReport(run(makeGraph([a, b]), 1)!);
 
     expect(report).toContain('Throttle report:');
-    expect(report).toContain('Critical-path floor:');
+    expect(report).toContain('Critical path:');
     expect(report).toContain('Coordinator overhead:');
     expect(report).toContain('non-recoverable');
     expect(report).toContain('Recoverable by parallelism:');

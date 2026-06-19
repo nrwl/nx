@@ -792,9 +792,11 @@ function pluralizeCores(cores: number): string {
 
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  // The two non-recoverable components of the run, shown up top: the critical-path
-  // floor (unavoidable work) and coordinator overhead (hashing/scheduling — fixed
-  // per-task cost that parallelism can't touch). What's left is recoverable.
+  // The two non-recoverable components of the run, shown up top: the critical
+  // path (the longest dependent chain this run) and coordinator overhead
+  // (hashing/scheduling — fixed per-task cost). What's left is recoverable. Note
+  // it's "critical path", not "floor": the chain's task durations shift with
+  // --parallel (CPU contention), so it isn't a fixed theoretical minimum.
   const recoverable = s.recoverableByParallel + s.recoverableByMachines;
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
@@ -802,7 +804,7 @@ export function formatReport(s: ThrottleSummary): string {
     '',
     'Throttle report:',
     `  Run duration:            ${fmt(s.runDuration)}`,
-    `  Critical-path floor:     ${fmt(s.criticalPathDuration)}   (${
+    `  Critical path:           ${fmt(s.criticalPathDuration)}   (${
       s.criticalPathTaskCount
     } tasks)`,
     `  Coordinator overhead:    ${fmt(
