@@ -398,7 +398,7 @@ describe('TaskThrottlingLifeCycle', () => {
 });
 
 describe('cache reporting', () => {
-  it('reports cache hits and the time the misses ran', () => {
+  it('reports the cache hit rate as a top-of-report stat', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const c = makeTask('c', { start: 2000, end: 2010 });
@@ -409,9 +409,7 @@ describe('cache reporting', () => {
     expect(s.cacheHits).toBe(1);
     expect(s.cacheableCount).toBe(3);
     expect(s.cacheMissTime).toBe(2000); // a + b ran (1000 + 1000)
-    const report = formatReport(s);
-    expect(report).toContain('1/3 tasks read from cache');
-    expect(report).toContain('the rest ran for 2.0s');
+    expect(formatReport(s)).toContain('Cache:                   1/3 hit (33%)');
   });
 
   it('recommends Nx Cloud when the hit rate is ~0 and remote cache is off', () => {
@@ -459,9 +457,12 @@ describe('cache reporting', () => {
 
     expect(s.cacheSkipped).toBe(true);
     const report = formatReport(s);
-    expect(report).toContain('skipped this run (--skip-nx-cache)');
-    // The skip warning replaces the hit-rate metric (which would be 0/N noise).
-    expect(report).not.toContain('read from cache');
+    // Stat shows the skip state; advice says how to fix it. No hit-rate noise.
+    expect(report).toContain(
+      'Cache:                   skipped (--skip-nx-cache)'
+    );
+    expect(report).toContain('drop --skip-nx-cache');
+    expect(report).not.toContain('hit (');
   });
 
   it('omits the cache note when no task has a recorded status', () => {

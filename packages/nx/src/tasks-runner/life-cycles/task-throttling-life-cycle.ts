@@ -892,8 +892,15 @@ export function formatReport(s: ThrottleSummary): string {
     `  Coordinator overhead:    ${fmt(
       s.coordinatorOverhead
     )}   (non-recoverable — hashing, scheduling)`,
+    // Resource-utilization stats grouped together: how the run used the two big
+    // speedups available to it — parallelism and caching.
+    '',
     `  Parallelism:             ${s.parallel} slots (${s.cores}-core machine)`,
   ];
+  const cache = cacheStat(s);
+  if (cache) {
+    lines.push(`  Cache:                   ${cache}`);
+  }
   if (recoverable > 0) {
     lines.push(
       '',
@@ -911,39 +918,48 @@ export function formatReport(s: ThrottleSummary): string {
     '',
     `  Recommendation: ${s.recommendation}`
   );
-  const cacheNote = buildCacheNote(s);
-  if (cacheNote) {
-    lines.push('', `  ${cacheNote}`);
+  const cacheAdvice = buildCacheAdvice(s);
+  if (cacheAdvice) {
+    lines.push('', `  ${cacheAdvice}`);
   }
   lines.push('');
   return lines.join('\n');
 }
 
 /**
- * One-line cache verdict + advice. Caching avoids work entirely, so it's the
- * highest lever when it's being left on the table: a skipped cache means every
- * task re-ran; a missing remote cache means CI/teammates' builds couldn't be
- * reused. Returns null when there's nothing to report (no cache outcomes).
+ * The top-of-report cache stat (grouped with parallelism): the local+remote hit
+ * rate, or a skip marker. Returns null when there's no cache outcome to show.
  */
-function buildCacheNote(s: ThrottleSummary): string | null {
+function cacheStat(s: ThrottleSummary): string | null {
   if (s.cacheSkipped) {
-    return `Cache: skipped this run (--skip-nx-cache) — every task re-ran. Drop the flag to restore unchanged tasks instantly.`;
+    return 'skipped (--skip-nx-cache)';
   }
   if (s.cacheableCount === 0) {
     return null;
   }
-  const metric =
-    `Cache: ${s.cacheHits}/${s.cacheableCount} tasks read from cache` +
-    (s.cacheMissTime > 0
-      ? ` (the rest ran for ${formatDuration(s.cacheMissTime)})`
-      : '');
+  const pct = Math.round((s.cacheHits / s.cacheableCount) * 100);
+  return `${s.cacheHits}/${s.cacheableCount} hit (${pct}%)`;
+}
+
+/**
+ * Bottom-of-report cache advice — only when there's a lever to pull: a skipped
+ * cache (drop the flag) or a barely-used cache with no remote (set up Nx Cloud).
+ * The hit rate itself is already shown up top by {@link cacheStat}.
+ */
+function buildCacheAdvice(s: ThrottleSummary): string | null {
+  if (s.cacheSkipped) {
+    return `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`;
+  }
+  if (s.cacheableCount === 0) {
+    return null;
+  }
   // Only nudge toward Nx Cloud when local caching is barely helping AND remote
-  // cache is off — a high local hit rate means caching is already working.
+  // cache is off — a high hit rate means caching is already working.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    return `${metric}. Nx Cloud isn't set up — set it up so builds from CI and teammates are reused → ${NX_REMOTE_CACHE_URL}.`;
+    return `Cache: Nx Cloud isn't set up — set it up so builds from CI and teammates are reused → ${NX_REMOTE_CACHE_URL}.`;
   }
-  return `${metric}.`;
+  return null;
 }
 
 /** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */
