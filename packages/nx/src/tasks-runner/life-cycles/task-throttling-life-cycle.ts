@@ -916,10 +916,7 @@ export function formatReport(s: ThrottleSummary): string {
       'Critical path',
       `${fmt(s.criticalPathDuration)}   (${s.criticalPathTaskCount} tasks)`
     ),
-    stat(
-      'Non-recoverable overhead',
-      `${fmt(s.coordinatorOverhead)}   (hashing, scheduling)`
-    ),
+    stat('Non-recoverable overhead', fmt(s.coordinatorOverhead)),
     stat(
       'Recoverable time',
       recoverable > 0
