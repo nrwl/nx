@@ -65,6 +65,33 @@
       },
       "description": "Create AI migration instructions for Expo SDK 56 upgrade",
       "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-expo-56.md"
+    },
+    "update-23-1-0-update-metro-config-for-expo-56": {
+      "version": "23.1.0-beta.1",
+      "cli": "nx",
+      "requires": {
+        "expo": ">= 56.0.0"
+      },
+      "description": "Update generated metro.config.js to use @expo/metro for Expo SDK 56",
+      "factory": "./dist/src/migrations/update-23-1-0/update-metro-config-for-expo-56"
+    },
+    "update-23-1-0-replace-standalone-metro-for-expo-56": {
+      "version": "23.1.0-beta.1",
+      "cli": "nx",
+      "requires": {
+        "expo": ">= 56.0.0"
+      },
+      "description": "Replace standalone metro-config/metro-resolver with @expo/metro for Expo SDK 56",
+      "factory": "./dist/src/migrations/update-23-1-0/replace-standalone-metro-for-expo-56"
+    },
+    "update-23-1-0-update-jest-winter-runtime-for-expo-56": {
+      "version": "23.1.0-beta.1",
+      "cli": "nx",
+      "requires": {
+        "expo": ">= 56.0.0"
+      },
+      "description": "Update Jest test-setup for the Expo SDK 56 winter runtime",
+      "factory": "./dist/src/migrations/update-23-1-0/update-jest-winter-runtime-for-expo-56"
     }
   },
   "packageJsonUpdates": {
