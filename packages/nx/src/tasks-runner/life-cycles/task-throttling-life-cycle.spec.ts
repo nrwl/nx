@@ -146,15 +146,13 @@ describe('TaskThrottlingLifeCycle', () => {
     // cores-dependent split; the sum is what's robustly assertable.
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
-    expect(s.recommendation).toContain('slot');
+    expect(s.recommendation).toContain('Nx Cloud Agents');
     if (cores >= 2) {
-      // 50% of the run is slot wait (>20%), so --parallel leads — framed as a
-      // share of the run, and flagging machines as the contention-free
-      // alternative for CPU-bound work.
-      expect(s.recommendation).toMatch(/\d+% of the run/);
+      // 50% of the run is slot wait (>20%), so --parallel leads — don't jump to
+      // all cores, with machines as the contention-free fallback. The share % is
+      // a header stat now, not restated in the recommendation.
       expect(s.recommendation).toContain('Step --parallel up');
       expect(s.recommendation).toContain("don't jump straight to all");
-      expect(s.recommendation).toContain('machines');
     }
     // `b` finished last but is NOT on the critical path (`a` is, same duration).
     // The finish lineage still surfaces b's slot wait, so the bucket has a
@@ -211,13 +209,13 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
     // Coordinator (5s) dwarfs the actual work (1s critical path) → dominated:
-    // recommend the hashing/daemon lever and drop the longest-tasks section
-    // (there's nothing meaningful to "speed up").
+    // the machine is maxed, so recommend Nx Agents and drop the longest-tasks
+    // section (nothing meaningful to "speed up"). The recommendation doesn't
+    // restate the coordinator-overhead number — that's a header stat.
     expect(s.coordinatorDominated).toBe(true);
-    expect(s.recommendation).toContain('coordinator overhead');
-    expect(s.recommendation).toContain('per-task hashing');
-    // Don't claim a warm daemon fixes it — it doesn't (redone each wave).
-    expect(s.recommendation).not.toContain('warm');
+    expect(s.recommendation).toContain('about as fast as this machine');
+    expect(s.recommendation).toContain('Nx Cloud Agents');
+    expect(s.recommendation).not.toContain('coordinator overhead');
     expect(s.recommendation).not.toContain('longest tasks shown above');
     expect(formatReport(s)).not.toContain('Longest tasks on the critical path');
   });
@@ -231,8 +229,8 @@ describe('TaskThrottlingLifeCycle', () => {
     const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
     expect(s.overhead).toBe(0);
-    expect(s.recommendation).toContain('speed up or split');
-    expect(s.recommendation).toContain('critical path');
+    expect(s.recommendation).toContain('Speed up or split');
+    expect(s.recommendation).toContain('critical-path');
     // Points at the section above instead of re-listing the tasks.
     expect(s.recommendation).toContain('longest tasks shown above');
     expect(s.criticalPathTop[0].id).toBe('b'); // longest, shown first there
@@ -241,33 +239,25 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recommendation).not.toContain('--parallel');
   });
 
-  it('mentions a sub-meaningful parallel win as secondary when critical-path-bound', () => {
+  it('keeps a small --parallel win in the header, not the recommendation', () => {
     const cores =
       typeof os.availableParallelism === 'function'
         ? os.availableParallelism()
         : os.cpus().length;
-    // parallel=1. `a` holds the only slot 0–500. `b` is independent, eligible at
-    // the run start, queues 500ms for the slot, then runs the long leg 500–3500.
-    // The floor is b's 3000ms; the 500ms slot wait is a real but minor --parallel
-    // win below the lead threshold — it should be mentioned, not flatly denied.
+    // parallel=1. `a` holds the only slot 0–500; `b` queues 500ms then runs the
+    // long leg 500–3500. 500ms recoverable is below the 20% lead threshold, so the
+    // advice is critical-path (not slot), and the small win shows as a header stat.
     const a = makeTask('a', { start: 0, end: 500 });
     const b = makeTask('b', { start: 500, end: 3500 });
     const s = run(makeGraph([a, b]), 1)!;
 
     if (cores >= 2) {
       expect(s.recoverableByParallel).toBe(500);
-      expect(s.recommendation).toContain('mostly bound by the critical path');
-      // The small --parallel win is acknowledged as a parenthetical, not led with.
-      expect(s.recommendation).toContain(
-        'Raising --parallel here recovers at most'
-      );
-      expect(s.recommendation).toContain('~500ms');
-      expect(s.recommendation).toContain('longest tasks shown above');
+      expect(s.recommendation).toContain('Speed up or split');
       expect(s.recommendation).toContain('Nx Cloud Agents');
-      expect(s.criticalPathTop[0].id).toBe('b');
-      // Not the primary "raise --parallel" headline and not the flat denial.
-      expect(s.recommendation).not.toContain('queuing for slots');
-      expect(s.recommendation).not.toContain("won't make this run faster");
+      expect(s.recommendation).not.toContain('--parallel');
+      // The 500ms win is a header stat, not restated in the recommendation.
+      expect(formatReport(s)).toMatch(/Recoverable time:\s+500ms/);
     }
   });
 
@@ -530,7 +520,7 @@ describe('formatReport', () => {
 
     expect(report).toContain('Recommendations:');
     expect(report).toContain("- Cache: Nx Cloud isn't set up");
-    expect(report).toMatch(/- .*critical path/); // the speed recommendation
+    expect(report).toMatch(/- Speed up or split/); // the speed recommendation
   });
 
   it('lists the critical-path tasks by duration, without wait annotations', () => {

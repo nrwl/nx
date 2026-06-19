@@ -31,13 +31,6 @@ const EPS = 0;
 /** A bucket below this (ms) isn't worth a recommendation — effectively noise. */
 const MEANINGFUL_OVERHEAD = 1000;
 /**
- * A parallelism lever too small to LEAD with but at least this (ms) still gets a
- * passing mention. Keeps the recommendation from flatly claiming "more
- * parallelism won't help" while the overhead split above it shows a nonzero
- * `recoverable by --parallel` — that contradiction is what this avoids.
- */
-const MINOR_OVERHEAD = 250;
-/**
  * The --parallel lever LEADS the recommendation when the slot time it would
  * recover is at least this fraction of the run — a relative bar (scales with run
  * size) rather than a fixed millisecond count. Below it, a smaller win is still
@@ -687,11 +680,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const recommendation = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
-      coordinatorOverhead,
       coordinatorDominated,
-      overhead,
       runDuration,
-      criticalPathDuration,
       parallel,
       cores,
       isCI,
@@ -788,21 +778,15 @@ export function overlap(
 }
 
 /**
- * Recommend the lever that actually helps: raise --parallel or distribute across
- * machines when a slot bucket recovers meaningful time; otherwise the run is
- * bound by its critical-path floor, so point at the biggest tasks on the path to
- * speed up or split. Coordinator overhead (hashing/scheduling) is largely not
- * user-actionable, so it never drives the recommendation — at most it's a
- * footnote when it's a meaningful slice.
+ * The single actionable lever to go faster. The header stats already diagnose the
+ * run (critical path / non-recoverable overhead / recoverable time), so this is
+ * pure advice — it doesn't restate those numbers.
  */
 function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
-  coordinatorOverhead: number;
   coordinatorDominated: boolean;
-  overhead: number;
   runDuration: number;
-  criticalPathDuration: number;
   parallel: number;
   cores: number;
   isCI: boolean;
@@ -810,7 +794,6 @@ function buildRecommendation(args: {
   const {
     recoverableByParallel,
     recoverableByMachines,
-    coordinatorOverhead,
     coordinatorDominated,
     runDuration,
     parallel,
@@ -818,56 +801,29 @@ function buildRecommendation(args: {
     isCI,
   } = args;
 
-  // The --parallel lever LEADS when the slot time it would recover is a
-  // meaningful fraction of the run (relative bar, scales with run size). We point
-  // at --parallel first (cheap, no setup) but flag machines as the
-  // contention-free alternative — raising --parallel oversubscribes the cores for
-  // CPU-bound work, so past the sweet spot more machines is the real lever.
+  // Slot-bound: raising --parallel would recover a meaningful share of the run.
   if (
     runDuration > 0 &&
     recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
     recoverableByParallel >= recoverableByMachines
   ) {
-    const pct = Math.round((recoverableByParallel / runDuration) * 100);
-    return `~${pct}% of the run (~${formatDuration(
-      recoverableByParallel
-    )}) was tasks waiting for a free slot. Step --parallel up from ${parallel} and measure — don't jump straight to all ${cores} cores; CPU-bound tasks slow as they share cores, so the sweet spot is often lower. If raising it stops helping, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}.`;
+    return `Step --parallel up from ${parallel} and measure — don't jump straight to all ${cores} cores; CPU-bound tasks slow as they share cores, so the sweet spot is often lower. If that stops helping, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}.`;
   }
+  // Machine-bound: already at the core count and still queuing for slots.
   if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
-    return `Tasks are queuing for slots even at --parallel=${parallel} (machine has ${cores} ${pluralizeCores(
+    return `You're at this machine's ${cores} ${pluralizeCores(
       cores
-    )}). If they're CPU-bound, distribute across machines with Nx Cloud Agents to recover up to ~${formatDuration(
-      recoverableByMachines
-    )} → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel on this machine may help instead.`;
+    )} and tasks are still queuing for a slot. If they're CPU-bound, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel may help instead.`;
   }
-  // Hashing/scheduling outweighs the actual work (tasks were fast or cached), so
-  // there's nothing to "speed up". This is mostly Nx's per-task hashing cost,
-  // which a warm daemon does NOT reduce (it's redone each scheduling wave) — so
-  // we don't suggest it; the only real lever is fewer/larger tasks.
+  // Coordinator-dominated (tasks fast or cached): this machine is about maxed out,
+  // so the lever is more machines, not "speed up these tasks".
   if (coordinatorDominated) {
-    return `Most of this run was coordinator overhead (${formatDuration(
-      coordinatorOverhead
-    )} of hashing/scheduling) — the tasks themselves were fast or cached, so there's little to speed up. It's mostly Nx's per-task hashing, which grows with the number of tasks.`;
+    return `This run was about as fast as this machine can do it — the tasks were fast or cached. Distribute the work across multiple machines with Nx Cloud Agents to make it faster → ${NX_AGENTS_URL}.`;
   }
-
-  // No parallelism lever big enough to LEAD with. The run is dominated by its
-  // critical-path floor — point at the biggest tasks on the path (already listed
-  // in the "Longest tasks" section above, so reference it rather than re-listing).
-  // Coordinator overhead is reported up top as non-recoverable, so it needs no
-  // footnote here. A smaller --parallel win can still exist below the lead
-  // threshold; mention it as secondary rather than denying it.
-  // Critical-path-bound: local --parallel is tapped out. Two real levers — make
-  // the chain's tasks shorter, or distribute the REST of the work to Nx Cloud
-  // Agents so it runs on other machines and stops competing with the
-  // critical-path tasks for CPU here (agents can't parallelize the chain itself,
-  // but they free up cores for it).
-  const agents = `distribute the rest of the work across machines with Nx Cloud Agents → ${NX_AGENTS_URL}, so the critical-path tasks aren't competing with it for CPU`;
-  const base =
-    recoverableByParallel >= MINOR_OVERHEAD
-      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Two levers: speed up or split the longest tasks shown above, or ${agents}. (Raising --parallel here recovers at most ~${formatDuration(
-          recoverableByParallel
-        )}.)`
-      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Two levers: speed up or split the longest tasks shown above, or ${agents}.`;
+  // Critical-path-bound: shorten the chain's tasks, or move the REST of the work
+  // off this machine so it stops competing with the critical path for CPU (agents
+  // can't parallelize the chain itself, but they free up cores for it).
+  const base = `Speed up or split the longest tasks shown above, or distribute the rest of the work across multiple machines with Nx Cloud Agents → ${NX_AGENTS_URL} so the critical-path tasks aren't competing for CPU.`;
   return isCI
     ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
     : base;
