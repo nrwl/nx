@@ -405,6 +405,13 @@ async function createRecorder(
       ? event.path.slice(1)
       : event.path;
 
+    // Angular Tsurge migrations report paths relative to the project root, not
+    // the workspace root (see NxScopeHostUsedForWrappedSchematics). Re-anchor
+    // so the printed log and recorded changes point at the real file.
+    if (host instanceof NxScopeHostUsedForWrappedSchematics) {
+      eventPath = host.resolveReportedPath(eventPath);
+    }
+
     if (event.kind === 'error') {
       record.error = true;
       logger.warn(
@@ -434,7 +441,10 @@ async function createRecorder(
       // Surface as DELETE source + CREATE destination so downstream consumers
       // (e.g. the agentic validation prompt's `<files_changed>` block) see
       // both endpoints.
-      const toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
+      let toPath = event.to.startsWith('/') ? event.to.slice(1) : event.to;
+      if (host instanceof NxScopeHostUsedForWrappedSchematics) {
+        toPath = host.resolveReportedPath(toPath);
+      }
       record.changes?.push({ type: 'DELETE', path: eventPath, content: null });
       record.changes?.push(emptyFileChange('CREATE', toPath));
     }
@@ -862,11 +872,12 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
         })
       );
     } else {
-      const match = findMatchingFileChange(this.host, path);
+      const resolvedPath = this.resolveProjectRootRelativePath(path) ?? path;
+      const match = findMatchingFileChange(this.host, resolvedPath);
       if (match) {
         return of(bufferToArrayBuffer(Buffer.from(match.content)));
       } else {
-        return super.read(path);
+        return super.read(resolvedPath);
       }
     }
   }
@@ -875,6 +886,8 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
     if (this.host.exists(path)) {
       return of(true);
     } else if (path === 'angular.json' || path === '/angular.json') {
+      return of(true);
+    } else if (this.resolveProjectRootRelativePath(path)) {
       return of(true);
     } else {
       return super.exists(path);
@@ -896,14 +909,87 @@ export class NxScopeHostUsedForWrappedSchematics extends NxScopedHost {
       return of(true);
     } else if (path === 'angular.json' || path === '/angular.json') {
       return of(true);
+    } else if (this.resolveProjectRootRelativePath(path)) {
+      return of(true);
     } else {
       return super.isFile(path);
     }
   }
 
+  write(path: Path, content: FileBuffer): Observable<void> {
+    if (path === 'angular.json' || path === '/angular.json') {
+      return super.write(path, content);
+    }
+    return super.write(
+      this.resolveProjectRootRelativePath(path) ?? path,
+      content
+    );
+  }
+
   list(path: Path): Observable<PathFragment[]> {
     const fragments = this.host.children(path).map((child) => fragment(child));
     return of(fragments);
+  }
+
+  /**
+   * Resolve a (possibly project-root-relative) schematic path to its real
+   * workspace-relative path for change reporting. Returns the input unchanged
+   * when it already resolves at the workspace root or cannot be re-anchored.
+   */
+  resolveReportedPath(path: string): string {
+    const resolved = this.resolveProjectRootRelativePath(normalize(path));
+    return resolved ? (resolved as string) : path;
+  }
+
+  /**
+   * Angular's Tsurge migration framework (used by `@angular/*` ng-update
+   * migrations and several `ng generate` codemods) addresses files relative to
+   * the project's `rootDir` - e.g. `app/app.component.ts` - but the schematic
+   * Tree is rooted at the workspace root. In a nested workspace those differ,
+   * so the path the migration hands to `tree.beginUpdate()` does not resolve
+   * and the migration throws `Path "..." does not exist`. When a path is not
+   * found at the workspace root, re-anchor it under a project's root/sourceRoot
+   * and use it only if exactly one project matches (otherwise fall through to
+   * the normal not-found behavior - never guess).
+   */
+  private resolveProjectRootRelativePath(path: Path): Path | null {
+    if (this.host.exists(path)) {
+      return null;
+    }
+    const relativePath = path.startsWith('/')
+      ? path.substring(1)
+      : path.toString();
+    if (!relativePath || relativePath === 'angular.json') {
+      return null;
+    }
+
+    const roots = new Set<string>();
+    for (const node of Object.values(this._projectGraph?.nodes ?? {})) {
+      const data = node.data as ProjectConfiguration;
+      if (data?.root && data.root !== '.') {
+        roots.add(data.root);
+      }
+      if (data?.sourceRoot) {
+        roots.add(data.sourceRoot);
+      }
+    }
+
+    // Already a real workspace path under a project (e.g. a file a generator is
+    // about to create) - never re-anchor it.
+    for (const root of roots) {
+      if (relativePath === root || relativePath.startsWith(`${root}/`)) {
+        return null;
+      }
+    }
+
+    const matches = new Set<string>();
+    for (const root of roots) {
+      const candidate = normalize(`${root}/${relativePath}`);
+      if (this.host.exists(candidate)) {
+        matches.add(candidate);
+      }
+    }
+    return matches.size === 1 ? (normalize([...matches][0]) as Path) : null;
   }
 }
 
