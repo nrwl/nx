@@ -15,12 +15,19 @@ const EPS = 0;
 /** A bucket below this (ms) isn't worth a recommendation — effectively noise. */
 const MEANINGFUL_OVERHEAD = 1000;
 /**
- * A parallelism lever too small to LEAD with (< MEANINGFUL_OVERHEAD) but at least
- * this (ms) still gets a passing mention. Keeps the recommendation from flatly
- * claiming "more parallelism won't help" while the overhead split above it shows
- * a nonzero `recoverable by --parallel` — that contradiction is what this avoids.
+ * A parallelism lever too small to LEAD with but at least this (ms) still gets a
+ * passing mention. Keeps the recommendation from flatly claiming "more
+ * parallelism won't help" while the overhead split above it shows a nonzero
+ * `recoverable by --parallel` — that contradiction is what this avoids.
  */
 const MINOR_OVERHEAD = 250;
+/**
+ * The --parallel lever LEADS the recommendation when the slot time it would
+ * recover is at least this fraction of the run — a relative bar (scales with run
+ * size) rather than a fixed millisecond count. Below it, a smaller win is still
+ * mentioned as a secondary note (see {@link MINOR_OVERHEAD}).
+ */
+const PARALLEL_LEAD_FRACTION = 0.2;
 
 interface TaskTiming {
   startTime?: number;
@@ -603,6 +610,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       recoverableByMachines,
       coordinatorOverhead,
       overhead,
+      runDuration,
       criticalPathDuration,
       parallel,
       cores,
@@ -707,6 +715,7 @@ function buildRecommendation(args: {
   recoverableByMachines: number;
   coordinatorOverhead: number;
   overhead: number;
+  runDuration: number;
   criticalPathDuration: number;
   parallel: number;
   cores: number;
@@ -717,20 +726,27 @@ function buildRecommendation(args: {
     recoverableByParallel,
     recoverableByMachines,
     coordinatorOverhead,
+    runDuration,
     parallel,
     cores,
     isCI,
     criticalPathTop,
   } = args;
 
-  // A parallelism lever recovers meaningful time → recommend it.
+  // The --parallel lever LEADS when the slot time it would recover is a
+  // meaningful fraction of the run (relative bar, scales with run size). We point
+  // at --parallel first (cheap, no setup) but flag machines as the
+  // contention-free alternative — raising --parallel oversubscribes the cores for
+  // CPU-bound work, so past the sweet spot more machines is the real lever.
   if (
-    recoverableByParallel >= MEANINGFUL_OVERHEAD &&
+    runDuration > 0 &&
+    recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
     recoverableByParallel >= recoverableByMachines
   ) {
-    return `Tasks are queuing for slots with cores to spare. Raise --parallel toward ${cores} (currently ${parallel}) to recover up to ~${formatDuration(
+    const pct = Math.round((recoverableByParallel / runDuration) * 100);
+    return `~${pct}% of the run (~${formatDuration(
       recoverableByParallel
-    )} — an upper bound, since CPU-bound tasks slow as they share cores, so the real gain is usually less. Try a few values to find the fastest.`;
+    )}) was tasks waiting for a free slot. Raise --parallel (currently ${parallel}) toward ${cores} and try a few values — CPU-bound tasks slow as they share cores. If raising it stops helping, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}.`;
   }
   if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
     return `Tasks are queuing for slots even at --parallel=${parallel} (machine has ${cores} ${pluralizeCores(

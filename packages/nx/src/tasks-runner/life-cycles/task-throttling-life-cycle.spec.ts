@@ -125,11 +125,14 @@ describe('TaskThrottlingLifeCycle', () => {
     // cores-dependent split; the sum is what's robustly assertable.
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
-    expect(s.recommendation).toContain('queuing for slots');
+    expect(s.recommendation).toContain('slot');
     if (cores >= 2) {
-      // The --parallel branch flags its recover number as an upper bound,
-      // since CPU contention erodes it.
-      expect(s.recommendation).toContain('upper bound');
+      // 50% of the run is slot wait (>20%), so --parallel leads — framed as a
+      // share of the run, and flagging machines as the contention-free
+      // alternative for CPU-bound work.
+      expect(s.recommendation).toMatch(/\d+% of the run/);
+      expect(s.recommendation).toContain('Raise --parallel');
+      expect(s.recommendation).toContain('machines');
     }
     // `b` finished last but is NOT on the critical path (`a` is, same duration).
     // The finish lineage still surfaces b's slot wait, so the bucket has a
