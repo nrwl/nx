@@ -12,6 +12,7 @@ import {
   expoV56SystemUiVersion,
   expoV56CliVersion,
   babelPresetExpoV56Version,
+  expoV56MetroVersion,
   expoV56MetroConfigVersion,
   expoV56MetroRuntimeVersion,
   jestExpoV56Version,
@@ -29,6 +30,7 @@ import {
   expoV55SystemUiVersion,
   expoV55CliVersion,
   babelPresetExpoV55Version,
+  expoV55MetroVersion,
   expoV55MetroConfigVersion,
   expoV55MetroRuntimeVersion,
   jestExpoV55Version,
@@ -87,6 +89,7 @@ export type ExpoDependenciesVersions = {
   expoSystemUi: string;
   expoCli: string;
   babelPresetExpo: string;
+  expoMetro?: string;
   expoMetroConfig: string;
   expoMetroRuntime: string;
   jestExpo: string;
@@ -162,6 +165,7 @@ const expoVersionsByMajor: Record<53 | 54 | 55 | 56, ExpoDependenciesVersions> =
       expoSystemUi: expoV55SystemUiVersion,
       expoCli: expoV55CliVersion,
       babelPresetExpo: babelPresetExpoV55Version,
+      expoMetro: expoV55MetroVersion,
       expoMetroConfig: expoV55MetroConfigVersion,
       expoMetroRuntime: expoV55MetroRuntimeVersion,
       jestExpo: jestExpoV55Version,
@@ -181,6 +185,7 @@ const expoVersionsByMajor: Record<53 | 54 | 55 | 56, ExpoDependenciesVersions> =
       expoSystemUi: expoV56SystemUiVersion,
       expoCli: expoV56CliVersion,
       babelPresetExpo: babelPresetExpoV56Version,
+      expoMetro: expoV56MetroVersion,
       expoMetroConfig: expoV56MetroConfigVersion,
       expoMetroRuntime: expoV56MetroRuntimeVersion,
       jestExpo: jestExpoV56Version,

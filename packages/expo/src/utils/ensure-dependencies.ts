@@ -14,10 +14,19 @@ export async function ensureDependencies(
 ): Promise<GeneratorCallback> {
   const versions = await getExpoDependenciesVersionsToInstall(host);
 
-  // Expo SDK 55+ exposes Metro config via the `expo/metro-config` sub-export,
-  // so `@expo/metro-config` should not be installed directly (expo-doctor flags
-  // it). Older SDKs (53/54) still require the direct dependency.
+  // Expo SDK 55+ ships Metro via `@expo/metro` and exposes its config through
+  // the `expo/metro-config` sub-export, so `@expo/metro-config` should not be
+  // installed directly (expo-doctor flags it). Instead `@expo/metro` must be a
+  // direct dependency, because the generated `metro.config.js` and `withNxMetro`
+  // require `@expo/metro/metro-config` — package managers like pnpm don't allow
+  // requiring into transitive dependencies. Older SDKs (53/54) keep the
+  // standalone `@expo/metro-config`.
   const usesExpoMetro = major(coerce(versions.expo) ?? '0.0.0') >= 55;
+  const metroDeps: Record<string, string> = usesExpoMetro
+    ? versions.expoMetro
+      ? { '@expo/metro': versions.expoMetro }
+      : {}
+    : { '@expo/metro-config': versions.expoMetroConfig };
 
   const devDependencies: Record<string, string> = {
     '@types/react': versions.typesReact,
@@ -44,9 +53,7 @@ export async function ensureDependencies(
       'expo-status-bar': versions.expoStatusBar,
       'expo-system-ui': versions.expoSystemUi,
       'react-native-web': versions.reactNativeWeb,
-      ...(usesExpoMetro
-        ? {}
-        : { '@expo/metro-config': versions.expoMetroConfig }),
+      ...metroDeps,
       '@expo/metro-runtime': versions.expoMetroRuntime,
       'react-native-svg-transformer': versions.reactNativeSvgTransformer,
       'react-native-svg': versions.reactNativeSvg,

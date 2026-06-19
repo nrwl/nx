@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
-    "@expo/vector-icons": "*",<% if (!usesExpoMetro) { %>
+    "@expo/vector-icons": "*",<% if (usesExpoMetro) { %>
+    "@expo/metro": "*",<% } else { %>
     "@expo/metro-config": "*",<% } %>
     "@testing-library/react-native": "*",
     "expo": "*",

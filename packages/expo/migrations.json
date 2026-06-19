@@ -1,11 +1,5 @@
 {
   "generators": {
-    "update-23-0-0-create-ai-instructions-for-expo-56": {
-      "version": "23.0.0-beta.25",
-      "cli": "nx",
-      "description": "Create AI migration instructions for Expo SDK 56 upgrade",
-      "prompt": "./src/migrations/update-23-0-0/ai-instructions-for-expo-56.md"
-    },
     "update-21-4-0-remove-deprecated-deps": {
       "requires": {
         "expo": ">= 53.0.0"
@@ -62,6 +56,15 @@
       "description": "Rename imports of `createNodesV2` from `@nx/expo/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-0-0-create-ai-instructions-for-expo-56": {
+      "version": "23.1.0-beta.1",
+      "cli": "nx",
+      "requires": {
+        "expo": ">=55.0.0 <56.0.0"
+      },
+      "description": "Create AI migration instructions for Expo SDK 56 upgrade",
+      "prompt": "./dist/src/migrations/update-23-0-0/ai-instructions-for-expo-56.md"
     }
   },
   "packageJsonUpdates": {
@@ -313,6 +316,94 @@
         },
         "metro-resolver": {
           "version": "~0.83.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.1",
+      "requires": {
+        "expo": ">=55.0.0 <56.0.0"
+      },
+      "packages": {
+        "expo": {
+          "version": "~56.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-splash-screen": {
+          "version": "~56.0.10",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-status-bar": {
+          "version": "~56.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "expo-system-ui": {
+          "version": "~56.0.5",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/cli": {
+          "version": "~56.1.14",
+          "alwaysAddToPackageJson": false
+        },
+        "babel-preset-expo": {
+          "version": "~56.0.14",
+          "alwaysAddToPackageJson": false
+        },
+        "react": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "^19.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native": {
+          "version": "0.85.3",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-web": {
+          "version": "~0.21.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro": {
+          "version": "~56.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-config": {
+          "version": "~56.0.13",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/metro-runtime": {
+          "version": "~56.0.14",
+          "alwaysAddToPackageJson": false
+        },
+        "@expo/vector-icons": {
+          "version": "~15.1.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg-transformer": {
+          "version": "~1.5.1",
+          "alwaysAddToPackageJson": false
+        },
+        "react-native-svg": {
+          "version": "15.12.1",
+          "alwaysAddToPackageJson": false
+        },
+        "@testing-library/react-native": {
+          "version": "~13.2.0",
+          "alwaysAddToPackageJson": false
+        },
+        "jest-expo": {
+          "version": "~56.0.4",
+          "alwaysAddToPackageJson": false
+        },
+        "@babel/runtime": {
+          "version": "~7.27.6",
           "alwaysAddToPackageJson": false
         }
       }

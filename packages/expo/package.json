@@ -68,11 +68,15 @@
   },
   "peerDependencies": {
     "expo": ">=53.0.0",
+    "@expo/metro": ">= 55.0.0",
     "metro-config": ">= 0.82.0",
     "metro-resolver": ">= 0.82.0"
   },
   "peerDependenciesMeta": {
     "expo": {
+      "optional": true
+    },
+    "@expo/metro": {
       "optional": true
     },
     "metro-config": {
