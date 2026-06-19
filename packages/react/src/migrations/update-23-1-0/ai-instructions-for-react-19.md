@@ -11,6 +11,13 @@ npx types-react-codemod@latest preset-19 ./PROJECT_PATH
 
 First handles API changes, second handles `@types/react` 19 types. Review the diffs.
 
+`preset-19` is interactive (prompts per codemod). For a non-interactive run, the two that clear the most common type errors are:
+
+```bash
+npx types-react-codemod@latest useRef-required-initial ./PROJECT_PATH  # useRef() -> useRef(initialValue); 19 dropped the zero-arg overload
+npx types-react-codemod@latest refobject-defaults ./PROJECT_PATH       # RefObject<T> -> RefObject<T | null>; covers both ref sites and helper param signatures
+```
+
 ## Step 2: Removed APIs (fix by hand if codemod misses)
 
 - `ReactDOM.render` / `hydrate` -> `createRoot` / `hydrateRoot` from `react-dom/client`. Note `hydrateRoot(container, element)` swaps the arg order vs `hydrate`.
