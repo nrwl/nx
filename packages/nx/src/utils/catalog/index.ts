@@ -1,5 +1,6 @@
 import type { Tree } from '../../generators/tree';
 import { readJson } from '../../generators/utils/json';
+import type { PackageJson } from '../package-json';
 import { workspaceRoot } from '../workspace-root';
 import type { CatalogManager } from './manager';
 import { getCatalogManager } from './manager-factory';
@@ -32,6 +33,42 @@ export function resolveCatalogReferenceIfNeeded(
   }
 
   return resolvedVersion;
+}
+
+/**
+ * Resolves a package.json's `catalog:` dependency / devDependency specifiers to
+ * their declared version range. Non-catalog or unresolvable specifiers are
+ * returned unchanged.
+ */
+export function resolveCatalogSpecifiers(
+  packageJson: PackageJson | null
+): PackageJson | null {
+  if (!packageJson) {
+    return packageJson;
+  }
+
+  const resolveSection = (
+    section: Record<string, string>
+  ): Record<string, string> => {
+    const resolved: Record<string, string> = {};
+    for (const [name, specifier] of Object.entries(section)) {
+      try {
+        resolved[name] = resolveCatalogReferenceIfNeeded(name, specifier);
+      } catch {
+        resolved[name] = specifier;
+      }
+    }
+    return resolved;
+  };
+
+  const result: PackageJson = { ...packageJson };
+  if (packageJson.dependencies) {
+    result.dependencies = resolveSection(packageJson.dependencies);
+  }
+  if (packageJson.devDependencies) {
+    result.devDependencies = resolveSection(packageJson.devDependencies);
+  }
+  return result;
 }
 
 /**
