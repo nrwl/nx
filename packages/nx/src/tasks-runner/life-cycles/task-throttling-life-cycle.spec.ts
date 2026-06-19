@@ -210,14 +210,14 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
-    // Coordinator overhead is reported up top as non-recoverable (not in the
-    // recommendation); the advice points at the longest tasks shown above.
-    const report = formatReport(s);
-    expect(report).toContain('Coordinator overhead:');
-    expect(report).toContain('non-recoverable');
-    expect(s.recommendation).not.toContain('coordinator');
-    expect(s.recommendation).toContain('longest tasks shown above');
-    expect(s.criticalPathTop[0].id).toBe('x');
+    // Coordinator (5s) dwarfs the actual work (1s critical path) → dominated:
+    // recommend the hashing/daemon lever and drop the longest-tasks section
+    // (there's nothing meaningful to "speed up").
+    expect(s.coordinatorDominated).toBe(true);
+    expect(s.recommendation).toContain('coordinator overhead');
+    expect(s.recommendation).toContain('warm Nx daemon');
+    expect(s.recommendation).not.toContain('longest tasks shown above');
+    expect(formatReport(s)).not.toContain('Longest tasks on the critical path');
   });
 
   it('recommends the biggest critical-path tasks (and agents) when no parallelism lever helps', () => {

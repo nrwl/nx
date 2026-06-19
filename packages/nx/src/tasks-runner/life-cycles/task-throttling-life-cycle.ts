@@ -100,6 +100,12 @@ export interface ThrottleSummary {
   cores: number;
   isCI: boolean;
   recommendation: string;
+  /**
+   * Coordinator overhead (hashing/scheduling) outweighs the actual task work —
+   * so the longest tasks aren't the lever and aren't shown. Typical of a cached
+   * run, where tasks restore instantly and hashing dominates.
+   */
+  coordinatorDominated: boolean;
   /** Tasks whose result was read from cache (didn't re-run). */
   cacheHits: number;
   /** Tasks that had a cache outcome at all (hits + tasks that ran). */
@@ -668,11 +674,21 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const cacheSkipped = this.cacheSkipped();
     const remoteCacheEnabled = this.remoteCacheEnabled();
 
+    // Coordinator-dominated: hashing/scheduling outweighs the actual task work
+    // (e.g. a heavily-cached run — tasks restore instantly, so the "critical
+    // path" is tiny and the longest tasks aren't a real lever). Surface the
+    // coordinator angle instead of "speed up these tasks".
+    const coordinatorDominated =
+      coordinatorOverhead >= MEANINGFUL_OVERHEAD &&
+      coordinatorOverhead > criticalPathDuration;
+
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
     const recommendation = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
+      coordinatorOverhead,
+      coordinatorDominated,
       overhead,
       runDuration,
       criticalPathDuration,
@@ -697,6 +713,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       cores,
       isCI,
       recommendation,
+      coordinatorDominated,
       cacheHits,
       cacheableCount,
       cacheMissTime,
@@ -781,6 +798,8 @@ export function overlap(
 function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
+  coordinatorOverhead: number;
+  coordinatorDominated: boolean;
   overhead: number;
   runDuration: number;
   criticalPathDuration: number;
@@ -791,6 +810,8 @@ function buildRecommendation(args: {
   const {
     recoverableByParallel,
     recoverableByMachines,
+    coordinatorOverhead,
+    coordinatorDominated,
     runDuration,
     parallel,
     cores,
@@ -818,6 +839,13 @@ function buildRecommendation(args: {
     )}). If they're CPU-bound, distribute across machines with Nx Cloud Agents to recover up to ~${formatDuration(
       recoverableByMachines
     )} → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel on this machine may help instead.`;
+  }
+  // Hashing/scheduling outweighs the actual work (tasks were fast or cached), so
+  // there's nothing to "speed up". Point at what shrinks the coordinator instead.
+  if (coordinatorDominated) {
+    return `Most of this run was coordinator overhead (${formatDuration(
+      coordinatorOverhead
+    )} of hashing/scheduling) — the tasks themselves were fast or cached, so there's little to speed up. A warm Nx daemon and narrower task inputs cut the hashing.`;
   }
 
   // No parallelism lever big enough to LEAD with. The run is dominated by its
@@ -910,11 +938,15 @@ export function formatReport(s: ThrottleSummary): string {
       bucketLine('by more machines', s.recoverableByMachines)
     );
   }
-  lines.push(
-    '',
-    `  Longest tasks on the critical path:`,
-    ...formatTopTaskRows(s.criticalPathTop)
-  );
+  // The longest tasks are only a lever when actual work dominates. When the run
+  // is coordinator-dominated (e.g. cached), they're just restore times — skip it.
+  if (!s.coordinatorDominated) {
+    lines.push(
+      '',
+      `  Longest tasks on the critical path:`,
+      ...formatTopTaskRows(s.criticalPathTop)
+    );
+  }
   // One recommendation per lever — speed (parallelism/agents/critical path) and,
   // when there's something to do about it, cache. Listed as bullets when there's
   // more than one; a single recommendation stays a plain line.
