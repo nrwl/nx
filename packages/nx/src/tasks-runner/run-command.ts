@@ -1101,7 +1101,7 @@ export function constructLifeCycles(
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  if (process.env.NX_THROTTLE_REPORT && taskGraph) {
+  if (taskGraph) {
     lifeCycles.push(new TaskThrottlingLifeCycle(taskGraph, skipNxCache));
   }
   lifeCycles.push(new TaskTelemetryLifeCycle());
