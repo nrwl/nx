@@ -609,7 +609,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       parallel,
       cores,
       isCI,
-      criticalPathTop,
     });
 
     return {
@@ -714,7 +713,6 @@ function buildRecommendation(args: {
   parallel: number;
   cores: number;
   isCI: boolean;
-  criticalPathTop: Array<{ id: string; duration: number }>;
 }): string {
   const {
     recoverableByParallel,
@@ -724,7 +722,6 @@ function buildRecommendation(args: {
     parallel,
     cores,
     isCI,
-    criticalPathTop,
   } = args;
 
   // The --parallel lever LEADS when the slot time it would recover is a
@@ -752,23 +749,17 @@ function buildRecommendation(args: {
 
   // No parallelism lever big enough to LEAD with. The run is dominated by its
   // critical-path floor, and the user can't do much about coordinator overhead —
-  // so point at the biggest tasks on the path (speeding/splitting those is what
-  // actually lowers the run). A smaller --parallel win can still exist below the
-  // lead threshold; mention it as secondary rather than denying it — the overhead
-  // split above would otherwise contradict a flat "parallelism won't help".
-  const bullets =
-    criticalPathTop.length > 0
-      ? criticalPathTop
-          .map((t) => `\n    - ${t.id} (${formatDuration(t.duration)})`)
-          .join('')
-      : '\n    - (none)';
-  const lead =
+  // so point at the biggest tasks on the path (already listed in the "Longest
+  // tasks" section above, so reference it rather than re-listing). A smaller
+  // --parallel win can still exist below the lead threshold; mention it as
+  // secondary rather than denying it — the overhead split above would otherwise
+  // contradict a flat "parallelism won't help".
+  let base =
     recoverableByParallel >= MINOR_OVERHEAD
       ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Raising --parallel toward ${cores} (currently ${parallel}) could recover up to ~${formatDuration(
           recoverableByParallel
-        )} more (less if those tasks are CPU-bound), but the bigger lever is speeding up or splitting the longest tasks on that path:`
-      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks on that path:`;
-  let base = `${lead}${bullets}`;
+        )} more (less if those tasks are CPU-bound), but the bigger lever is speeding up or splitting the longest tasks shown above.`
+      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks shown above.`;
   if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
     // Be precise about the lever: a warm daemon caches the project graph + file
     // hashes, so it trims the HASHING part — but scheduling and process spawning

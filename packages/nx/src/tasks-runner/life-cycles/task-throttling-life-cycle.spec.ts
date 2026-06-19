@@ -188,10 +188,11 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
-    // Coordinator overhead is footnoted, but the actionable advice names the
-    // biggest task on the critical path to speed up.
+    // Coordinator overhead is footnoted, but the actionable advice points at the
+    // longest critical-path tasks shown above (here `x` is the longest).
     expect(s.recommendation).toContain('coordinator');
-    expect(s.recommendation).toContain('x (1.0s)');
+    expect(s.recommendation).toContain('longest tasks shown above');
+    expect(s.criticalPathTop[0].id).toBe('x');
   });
 
   it('recommends the biggest critical-path tasks when no parallelism lever helps', () => {
@@ -205,7 +206,9 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.overhead).toBe(0);
     expect(s.recommendation).toContain('Speed up or split');
     expect(s.recommendation).toContain('critical path');
-    expect(s.recommendation).toContain('b (3.0s)'); // longest, listed first
+    // Points at the section above instead of re-listing the tasks.
+    expect(s.recommendation).toContain('longest tasks shown above');
+    expect(s.criticalPathTop[0].id).toBe('b'); // longest, shown first there
     expect(s.recommendation).not.toContain('--parallel');
     expect(s.recommendation).not.toContain('Nx Cloud Agents');
   });
@@ -228,7 +231,8 @@ describe('TaskThrottlingLifeCycle', () => {
       expect(s.recommendation).toContain('mostly bound by the critical path');
       expect(s.recommendation).toContain('Raising --parallel');
       expect(s.recommendation).toContain('could recover up to ~500ms more');
-      expect(s.recommendation).toContain('b (3.0s)');
+      expect(s.recommendation).toContain('longest tasks shown above');
+      expect(s.criticalPathTop[0].id).toBe('b');
       // Not the primary "raise --parallel" headline (that needs a >=1s win) and
       // not the flat denial (that's only for a ~0 parallel win).
       expect(s.recommendation).not.toContain('queuing for slots');
