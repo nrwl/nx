@@ -220,6 +220,24 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(formatReport(s)).not.toContain('Longest tasks on the critical path');
   });
 
+  it('stays critical-path-bound (shows tasks) when coordinator only slightly exceeds the work', () => {
+    // critical path = `a` (2s of real work); `x` finishes last after a 4.8s
+    // coordinator wait → coordinator ~3s, only ~1.5x the critical path (not >3x).
+    // A cold run with real work like this should NOT be called "maxed" — it stays
+    // critical-path-bound so the slowest tasks are shown to look into.
+    const early = makeTask('early', { start: 0, end: 100 });
+    const a = makeTask('a', { start: 0, end: 2000 });
+    const x = makeTask('x', { start: 4800, end: 5000 });
+    const s = run(makeGraph([early, a, x]), 4)!;
+
+    expect(s.criticalPathDuration).toBe(2000);
+    expect(s.coordinatorOverhead).toBeGreaterThan(2000); // > critical path...
+    expect(s.coordinatorDominated).toBe(false); // ...but not >3x → not dominated
+    const report = formatReport(s);
+    expect(report).toContain('Longest tasks on the critical path');
+    expect(report).toContain('Speed up or split');
+  });
+
   it('recommends the biggest critical-path tasks (and agents) when no parallelism lever helps', () => {
     // A pure dependency chain at its floor (no overhead). The advice should name
     // the longest tasks to speed up, and offer agents — not a higher --parallel.

@@ -669,11 +669,14 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 
     // Coordinator-dominated: hashing/scheduling outweighs the actual task work
     // (e.g. a heavily-cached run — tasks restore instantly, so the "critical
-    // path" is tiny and the longest tasks aren't a real lever). Surface the
-    // coordinator angle instead of "speed up these tasks".
+    // path" is tiny and the longest tasks aren't a real lever). Require the
+    // coordinator to CLEARLY dominate (>3x): a cached run's coordinator is many
+    // times its critical path, whereas a cold run with real work has a big
+    // critical path too and should stay critical-path-bound (it has tasks worth
+    // looking at), even if hashing nudges past it.
     const coordinatorDominated =
       coordinatorOverhead >= MEANINGFUL_OVERHEAD &&
-      coordinatorOverhead > criticalPathDuration;
+      coordinatorOverhead > 3 * criticalPathDuration;
 
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
@@ -818,7 +821,7 @@ function buildRecommendation(args: {
   // Coordinator-dominated (tasks fast or cached): this machine is about maxed out,
   // so the lever is more machines, not "speed up these tasks".
   if (coordinatorDominated) {
-    return `This run was about as fast as this machine can do it — the tasks were fast or cached. Distribute the work across multiple machines with Nx Cloud Agents to make it faster → ${NX_AGENTS_URL}.`;
+    return `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Cloud Agents to make it faster → ${NX_AGENTS_URL}.`;
   }
   // Critical-path-bound: shorten the chain's tasks, or move the REST of the work
   // off this machine so it stops competing with the critical path for CPU (agents
