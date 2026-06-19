@@ -54,17 +54,16 @@ export interface ThrottleSummary {
   /**
    * The lineage of the last task to finish (root → terminal), each link tagged
    * with how it was held up. Drives the overhead split — its waits classify the
-   * coordinator vs slot buckets — but is NOT displayed. The chain we print is the
-   * critical path (`criticalChain`); slot waits surface as the recoverable-by-
-   * parallel bucket instead.
+   * coordinator vs slot buckets — but is NOT displayed. Slot waits surface as the
+   * recoverable-by-parallel bucket instead.
    */
   finishChain: ChainLink[];
   /**
-   * The critical path (root → terminal): the longest chain of dependent tasks by
-   * summed duration — the floor. This is the chain the report displays, each task
-   * tagged with how long it waited before it could start (shown inline).
+   * The longest tasks on the critical path (by duration, descending), capped at a
+   * few. These are the floor's heavy hitters — the real lever for going faster —
+   * and what the report displays in place of the full chain.
    */
-  criticalChain: ChainLink[];
+  criticalPathTop: Array<{ id: string; duration: number }>;
   totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
@@ -598,11 +597,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
-    // The full critical path in path order (root → terminal) — what we display,
-    // each task annotated with how long it waited before it could start, so the
-    // wait shows inline next to the task rather than in a separate section.
-    const criticalChain: ChainLink[] = criticalPathTasks.map(annotate);
-
     const isCI = !!process.env.CI;
     const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
     const recommendation = buildRecommendation({
@@ -623,7 +617,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathDuration,
       criticalPathTaskCount: criticalPathTasks.length,
       finishChain,
-      criticalChain,
+      criticalPathTop,
       totalWork,
       overhead,
       overheadPct,
@@ -788,38 +782,23 @@ function buildRecommendation(args: {
     : base;
 }
 
-/** The "waited …" cell for a chain row (empty when the task started on time). */
-function waitCell(link: ChainLink): string {
-  const waited = formatDuration(link.wait);
-  switch (link.gate) {
-    case 'slot':
-      return `waited ${waited} for a free slot`;
-    case 'hashing':
-      return `waited ${waited} on hashing`;
-    case 'other':
-      return `waited ${waited} (scheduling/startup)`;
-    default:
-      return ''; // root / dep — started on time, nothing to show
-  }
-}
-
 /**
- * Render the critical path as aligned columns: task (left), duration (right),
- * and — inline — how long that task waited before it could start. Column widths
- * are sized to the chain so it reads as a table.
+ * Render the longest critical-path tasks as aligned columns: task (left),
+ * duration (right). Column widths are sized to the rows so it reads as a table.
  */
-function formatChainRows(chain: ChainLink[]): string[] {
-  if (chain.length === 0) {
+function formatTopTaskRows(
+  tasks: Array<{ id: string; duration: number }>
+): string[] {
+  if (tasks.length === 0) {
     return ['    (no tasks)'];
   }
-  const idWidth = Math.max(...chain.map((c) => c.id.length));
-  const durations = chain.map((c) => formatDuration(c.duration));
+  const idWidth = Math.max(...tasks.map((t) => t.id.length));
+  const durations = tasks.map((t) => formatDuration(t.duration));
   const durWidth = Math.max(...durations.map((d) => d.length));
-  return chain.map((c, i) => {
-    const id = c.id.padEnd(idWidth);
+  return tasks.map((t, i) => {
+    const id = t.id.padEnd(idWidth);
     const dur = durations[i].padStart(durWidth);
-    const wait = waitCell(c);
-    return `    ${id}    ${dur}${wait ? '    ' + wait : ''}`;
+    return `    ${id}    ${dur}`;
   });
 }
 
@@ -856,8 +835,8 @@ export function formatReport(s: ThrottleSummary): string {
       s.coordinatorOverhead
     ),
     '',
-    `  Critical path (the longest chain of dependent tasks):`,
-    ...formatChainRows(s.criticalChain),
+    `  Longest tasks on the critical path:`,
+    ...formatTopTaskRows(s.criticalPathTop),
     '',
     `  Recommendation: ${s.recommendation}`,
     '',

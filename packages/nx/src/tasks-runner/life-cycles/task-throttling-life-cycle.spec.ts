@@ -145,34 +145,36 @@ describe('TaskThrottlingLifeCycle', () => {
   it('displays the critical path, separate from the finish lineage, when they diverge', () => {
     // parallel=1: `a` holds the only slot 0–1000 — that's the critical path.
     // `b` is independent, queues for the slot, and finishes last — that's the
-    // finish lineage. We display the critical path; b's off-path slot wait is
-    // not shown inline (it lives in the recoverable-by-parallel bucket).
+    // finish lineage. We display the critical path's longest tasks (`a`); b's
+    // off-path slot wait lives in the recoverable-by-parallel bucket.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const s = run(makeGraph([a, b]), 1)!;
 
     expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
-    expect(s.criticalChain.map((c) => c.id)).toEqual(['a']); // what we display
-    expect(s.criticalChain[0].gate).toBe('root'); // a started on time
-    expect(formatReport(s)).toContain(
-      'Critical path (the longest chain of dependent tasks)'
-    );
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a']); // what we display
+    expect(formatReport(s)).toContain('Longest tasks on the critical path');
   });
 
-  it('annotates critical-path tasks with their own waits inline', () => {
-    // parallel=1: `a` (root) holds the slot 0–1000; `c` grabs it 1000–1500; `b`
-    // (depends on a, on the critical path) is eligible at 1000 but queues 500ms
-    // for the slot. Its wait shows inline next to it on the chain.
-    const a = makeTask('a', { start: 0, end: 1000 });
-    const c = makeTask('c', { start: 1000, end: 1500 });
-    const b = makeTask('b', { start: 1500, end: 3500 });
-    const s = run(makeGraph([a, c, b], { b: ['a'] }), 1)!;
+  it('displays only the longest few critical-path tasks, not the whole chain', () => {
+    // A contiguous dependency chain of five tasks of increasing length (no gaps →
+    // zero overhead). The display shows the top three by duration, not all five.
+    const durs = [100, 200, 300, 400, 500];
+    let offset = 0;
+    const tasks = durs.map((d, i) => {
+      const t = makeTask(`t${i}`, { start: offset, end: offset + d });
+      offset += d;
+      return t;
+    });
+    const deps = { t1: ['t0'], t2: ['t1'], t3: ['t2'], t4: ['t3'] };
+    const s = run(makeGraph(tasks, deps), 1)!;
 
-    expect(s.criticalChain.map((l) => l.id)).toEqual(['a', 'b']);
-    const bLink = s.criticalChain.find((l) => l.id === 'b')!;
-    expect(bLink.gate).toBe('slot');
-    expect(bLink.wait).toBe(500);
-    expect(formatReport(s)).toContain('waited 500ms for a free slot');
+    expect(s.overhead).toBe(0);
+    expect(s.criticalPathTaskCount).toBe(5);
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['t4', 't3', 't2']);
+    const report = formatReport(s);
+    expect(report).toContain('t4'); // longest, shown
+    expect(report).not.toContain('t0'); // shortest, trimmed
   });
 
   it('attributes a wait with free slots to coordinator overhead', () => {
@@ -399,21 +401,19 @@ describe('formatReport', () => {
     expect(report).toContain('Critical-path floor:');
     expect(report).toContain('recoverable by --parallel');
     expect(report).toContain('coordinator overhead (hashing/scheduling)');
-    expect(report).toContain(
-      'Critical path (the longest chain of dependent tasks)'
-    );
+    expect(report).toContain('Longest tasks on the critical path');
     expect(report).toContain('Recommendation:');
   });
 
-  it('shows no wait annotations when the critical path ran without waiting', () => {
-    // A pure dependency chain at its floor: every task starts the moment its
-    // dep finishes, so no critical-path task has a wait to annotate.
+  it('lists the critical-path tasks by duration, without wait annotations', () => {
+    // The section shows tasks + durations only; waits never appear there (they
+    // live in the overhead buckets / recommendation).
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const c = makeTask('c', { start: 2000, end: 3000 });
     const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
-    expect(s.criticalChain.map((l) => l.id)).toEqual(['a', 'b', 'c']);
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a', 'b', 'c']);
     expect(formatReport(s)).not.toContain('waited');
   });
 });
