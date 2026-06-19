@@ -149,6 +149,13 @@ describe('application generator', () => {
   });
 
   it('should configure tsconfig correctly', async () => {
+    // pin TS<6 to exercise the 'node10' branch deterministically
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~5.9.2';
+      return json;
+    });
+
     await applicationGenerator(tree, {
       directory: appDirectory,
       addPlugin: true,
@@ -157,13 +164,30 @@ describe('application generator', () => {
     const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
     expect(tsConfig.compilerOptions.emitDecoratorMetadata).toBe(true);
     expect(tsConfig.compilerOptions.target).toBe('es2021');
-    expect(tsConfig.compilerOptions.moduleResolution).toBe('node');
+    // commonjs context: 'node10' is valid on TS<6, deprecated on TS>=6
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('node10');
     expect(tsConfig.exclude).toEqual([
       'jest.config.ts',
       'jest.config.cts',
       'src/**/*.spec.ts',
       'src/**/*.test.ts',
     ]);
+  });
+
+  it('should set moduleResolution to "bundler" when typescript is >=6', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies ??= {};
+      json.devDependencies.typescript = '~6.0.3';
+      return json;
+    });
+
+    await applicationGenerator(tree, {
+      directory: appDirectory,
+      addPlugin: true,
+    });
+
+    const tsConfig = readJson(tree, `${appDirectory}/tsconfig.app.json`);
+    expect(tsConfig.compilerOptions.moduleResolution).toBe('bundler');
   });
 
   it('should add strict checks with --strict', async () => {

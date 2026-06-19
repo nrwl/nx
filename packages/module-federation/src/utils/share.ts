@@ -21,7 +21,17 @@ import {
 } from '@nx/devkit';
 import { existsSync } from 'fs';
 import type { PackageJson } from 'nx/src/utils/package-json';
-import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+
+// Deferred so a top-level import of @rspack/core (pure ESM in v2) doesn't
+// crash Jest's CJS loading of any test that imports this module.
+function loadNormalModuleReplacementPlugin(
+  bundler: 'rspack' | 'webpack'
+): new (...args: any[]) => any {
+  if (bundler === 'rspack') {
+    return require('@rspack/core').NormalModuleReplacementPlugin;
+  }
+  return require('webpack').NormalModuleReplacementPlugin;
+}
 
 /**
  * Checks if a version string is a workspace protocol version that needs normalization.
@@ -141,11 +151,6 @@ export function shareWorkspaceLibraries(
     }
   }
 
-  const normalModuleReplacementPluginImpl =
-    bundler === 'rspack'
-      ? RspackNormalModuleReplacementPlugin
-      : require('webpack').NormalModuleReplacementPlugin;
-
   return {
     getAliases: () =>
       pathMappings.reduce(
@@ -248,7 +253,7 @@ export function shareWorkspaceLibraries(
       return libraries as Record<string, SharedLibraryConfig>;
     },
     getReplacementPlugin: () =>
-      new normalModuleReplacementPluginImpl(/./, (req) => {
+      new (loadNormalModuleReplacementPlugin(bundler))(/./, (req) => {
         if (!req.request.startsWith('.')) {
           return;
         }
@@ -446,14 +451,10 @@ function addStringDependencyToSharedConfig(
 function getEmptySharedLibrariesConfig(
   bundler: 'rspack' | 'webpack' = 'rspack'
 ) {
-  const normalModuleReplacementPluginImpl =
-    bundler === 'rspack'
-      ? RspackNormalModuleReplacementPlugin
-      : require('webpack').NormalModuleReplacementPlugin;
   return {
     getAliases: () => ({}),
     getLibraries: () => ({}),
     getReplacementPlugin: () =>
-      new normalModuleReplacementPluginImpl(/./, () => {}),
+      new (loadNormalModuleReplacementPlugin(bundler))(/./, () => {}),
   };
 }

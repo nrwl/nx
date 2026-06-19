@@ -3,7 +3,6 @@ import {
   DependencyType,
   joinPathFragments,
   ProjectGraph,
-  readJson,
   readProjectConfiguration,
   Tree,
   updateJson,
@@ -451,60 +450,6 @@ describe('Cypress Component Testing Configuration', () => {
     expect(
       tree.read('my-lib/cypress/support/component.ts', 'utf-8')
     ).toMatchSnapshot('component.ts');
-  });
-
-  it('should exclude Cypress-related files from tsconfig.editor.json for applications', async () => {
-    // the tsconfig.editor.json is only generated for versions lower than v20
-    updateJson(tree, 'package.json', (json) => {
-      json.dependencies = {
-        ...json.dependencies,
-        '@angular/core': '~19.2.0',
-      };
-      return json;
-    });
-    await generateTestApplication(tree, {
-      directory: 'fancy-app',
-      bundler: 'webpack',
-      zoneless: false,
-      skipFormat: true,
-    });
-    await componentGenerator(tree, {
-      name: 'fancy-cmp',
-      path: 'fancy-app/src/app/fancy-cmp/fancy-cmp',
-      export: true,
-      skipFormat: true,
-    });
-    projectGraph = {
-      nodes: {
-        'fancy-app': {
-          name: 'fancy-app',
-          type: 'app',
-          data: {
-            ...readProjectConfiguration(tree, 'fancy-app'),
-          } as any,
-        },
-      },
-      dependencies: {},
-    };
-
-    useVite7ForCypressCT(tree);
-    await cypressComponentConfiguration(tree, {
-      project: 'fancy-app',
-      generateTests: false,
-      skipFormat: true,
-    });
-
-    const tsConfig = readJson(tree, 'fancy-app/tsconfig.editor.json');
-    expect(tsConfig.exclude).toStrictEqual(
-      expect.arrayContaining([
-        'cypress/**/*',
-        'cypress.config.ts',
-        '**/*.cy.ts',
-        '**/*.cy.js',
-        '**/*.cy.tsx',
-        '**/*.cy.jsx',
-      ])
-    );
   });
 
   it('should work with simple components', async () => {

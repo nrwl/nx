@@ -23,6 +23,7 @@ jest.mock('@nx/cypress/internal', () => ({
 }));
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   let mockedInstalledCypressVersion: jest.Mock<
     ReturnType<typeof getInstalledCypressMajorVersion>
   > = getInstalledCypressMajorVersion as never;
@@ -39,6 +40,8 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     mockedInstalledCypressVersion.mockReturnValue(10);
     tree = createTreeWithEmptyWorkspace();
     updateJson(tree, '/package.json', (json) => {
@@ -51,6 +54,14 @@ describe('lib', () => {
       };
       return json;
     });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should update project configuration', async () => {
@@ -205,43 +216,7 @@ describe('lib', () => {
     expect(tree.exists('my-lib/src/lib/my-lib.module.css')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.spec.tsx')).toBeTruthy();
 
-    const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
-    expect(eslintJson).toMatchInlineSnapshot(`
-      {
-        "extends": [
-          "plugin:@nx/react",
-          "../.eslintrc.json",
-        ],
-        "ignorePatterns": [
-          "!**/*",
-        ],
-        "overrides": [
-          {
-            "files": [
-              "*.ts",
-              "*.tsx",
-              "*.js",
-              "*.jsx",
-            ],
-            "rules": {},
-          },
-          {
-            "files": [
-              "*.ts",
-              "*.tsx",
-            ],
-            "rules": {},
-          },
-          {
-            "files": [
-              "*.js",
-              "*.jsx",
-            ],
-            "rules": {},
-          },
-        ],
-      }
-    `);
+    expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
   });
   it('should update jest.config.cts for babel', async () => {
     await libraryGenerator(tree, {
@@ -788,6 +763,7 @@ module.exports = withNx(
 
   describe('--setParserOptionsProject', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
         setParserOptionsProject: true,
@@ -818,6 +794,7 @@ module.exports = withNx(
   });
 
   it('should not ignore "out-tsc" from eslint', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
     await libraryGenerator(tree, {
       ...defaultSchema,
       directory: 'libs/mylib',
@@ -1289,6 +1266,7 @@ module.exports = withNx(
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
         directory: 'libs/mylib',

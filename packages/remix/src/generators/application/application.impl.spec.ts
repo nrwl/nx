@@ -16,10 +16,31 @@ import { join } from 'path';
 import { PackageManagerCommands } from 'nx/src/utils/package-manager';
 
 describe('Remix Application', () => {
+  let envBackup: string | undefined;
+
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     jest
       .spyOn(devkitExports, 'getPackageManagerCommand')
       .mockReturnValue({ exec: 'npx' } as PackageManagerCommands);
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
+  it('throws when the workspace declares TypeScript 6', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = { ...json.devDependencies, typescript: '~6.0.3' };
+      return json;
+    });
+
+    await expect(
+      applicationGenerator(tree, { directory: 'test', addPlugin: true })
+    ).rejects.toThrow(/does not support TypeScript 6/);
   });
 
   describe('Standalone Project Repo', () => {
@@ -44,10 +65,11 @@ describe('Remix Application', () => {
         tree.read('tests/routes/_index.spec.tsx', 'utf-8')
       ).toMatchSnapshot();
       expect(tree.read('vite.config.mts', 'utf-8')).toMatchSnapshot();
-      expect(tree.read('.eslintrc.json', 'utf-8')).toMatchSnapshot();
+      expect(tree.exists('eslint.config.mjs')).toBeTruthy();
     });
 
-    it('should ignore vite temp files', async () => {
+    it('should ignore vite temp files (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
@@ -221,7 +243,8 @@ describe('Remix Application', () => {
       ).toMatchSnapshot();
     });
 
-    it('should ignore vite temp files', async () => {
+    it('should ignore vite temp files (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       const tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
       await applicationGenerator(tree, {
@@ -832,5 +855,5 @@ function expectTargetsToBeCorrect(tree: Tree, projectRoot: string) {
     tree,
     joinPathFragments(projectRoot === '.' ? '/' : projectRoot, 'project.json')
   );
-  expect(tree.exists(join(projectRoot, '.eslintrc.json'))).toBeTruthy();
+  expect(tree.exists(join(projectRoot, 'eslint.config.mjs'))).toBeTruthy();
 }

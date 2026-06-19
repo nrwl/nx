@@ -11,10 +11,21 @@ import { libraryGenerator } from './library';
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   describe('not nested', () => {
@@ -159,6 +170,15 @@ describe('lib', () => {
       expect(tree.exists(`my-lib/jest.config.cts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/index.ts`)).toBeTruthy();
       expect(tree.exists(`my-lib/src/lib/my-lib.spec.ts`)).toBeFalsy();
+      expect(tree.exists(`my-lib/eslint.config.mjs`)).toBeTruthy();
+    });
+
+    it('should generate the .eslintrc.json file (eslintrc)', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+      await libraryGenerator(tree, {
+        directory: 'my-lib',
+      });
+
       expect(readJson(tree, `my-lib/.eslintrc.json`)).toMatchSnapshot();
     });
   });

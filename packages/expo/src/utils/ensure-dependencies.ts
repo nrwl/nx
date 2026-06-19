@@ -6,6 +6,7 @@ import {
 } from '@nx/devkit';
 import { coerce, major } from 'semver';
 import { getExpoDependenciesVersionsToInstall } from './version-utils';
+import { expoVectorIconsVersion } from './versions';
 
 export async function ensureDependencies(
   host: Tree,
@@ -38,6 +39,7 @@ export async function ensureDependencies(
   return addDependenciesToPackageJson(
     host,
     {
+      '@expo/vector-icons': expoVectorIconsVersion,
       'expo-splash-screen': versions.expoSplashScreen,
       'expo-status-bar': versions.expoStatusBar,
       'expo-system-ui': versions.expoSystemUi,

@@ -39,9 +39,15 @@ export async function getOptions(
     );
   }
 
+  // Vitest derives the Vite config mode as `options.mode || runMode`, where
+  // runMode defaults to 'test' (or 'benchmark'). Resolve it once and reuse it
+  // for both this pre-load and the value forwarded to vitest below, so the
+  // config file resolves its mode-based branches identically on both loads.
+  const mode = options.mode ?? options.runMode ?? 'test';
+
   const resolved = await loadConfigFromFile(
     {
-      mode: options?.mode ?? 'test',
+      mode,
       command: 'serve',
     },
     viteConfigPath
@@ -98,6 +104,10 @@ export async function getOptions(
     // but leaving it here in case someone did not migrate correctly
     root: resolved?.config?.root ?? root,
     config: viteConfigPath,
+    // Forward the resolved mode so vitest reloads the config file with it;
+    // otherwise it falls back to its run-mode default and drops mode-based
+    // settings the pre-load above resolved (e.g. outputFile, coverage.reporter).
+    mode,
     // Vitest's resolveConfig processes reporters in two steps:
     // 1. options.reporters (plural) sets resolved.reporters
     // 2. resolved.reporter (singular, from config) overwrites resolved.reporters

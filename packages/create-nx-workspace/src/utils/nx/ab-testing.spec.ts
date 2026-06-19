@@ -2,6 +2,8 @@ import {
   isEnterpriseCloudUrl,
   getBannerVariant,
   getFlowVariant,
+  NX_CLOUD_HYPERLINK,
+  NX_CLOUD_URL,
   PromptMessages,
 } from './ab-testing';
 
@@ -140,4 +142,65 @@ describe('ab-testing', () => {
       );
     });
   });
+});
+
+describe('NX_CLOUD_HYPERLINK', () => {
+  const BEL = '\u0007';
+  const OSC = '\u001B]';
+  const originalEnv = process.env;
+
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...originalEnv };
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+  });
+
+  it('embeds UTM attribution in the link target while keeping the visible text clean', () => {
+    process.env.FORCE_HYPERLINK = '1';
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } = jest.requireActual(
+      './ab-testing'
+    ) as typeof import('./ab-testing');
+
+    expect(link).toContain(`${BEL}${url}${OSC}`);
+    expect(link).toContain(
+      `${url}?utm_source=nx-cli&utm_medium=create-nx-workspace`
+    );
+  });
+
+  it('falls back to the bare URL when hyperlinks are unsupported', () => {
+    process.env.FORCE_HYPERLINK = '0';
+    const { NX_CLOUD_HYPERLINK: link, NX_CLOUD_URL: url } = jest.requireActual(
+      './ab-testing'
+    ) as typeof import('./ab-testing');
+
+    expect(link).toBe(url);
+  });
+});
+
+describe('cloud prompt footers', () => {
+  let originalDocs: string | undefined;
+
+  beforeAll(() => {
+    originalDocs = process.env.NX_GENERATE_DOCS_PROCESS;
+    process.env.NX_GENERATE_DOCS_PROCESS = 'true';
+  });
+
+  afterAll(() => {
+    if (originalDocs === undefined) delete process.env.NX_GENERATE_DOCS_PROCESS;
+    else process.env.NX_GENERATE_DOCS_PROCESS = originalDocs;
+  });
+
+  // Drift guard: every cloud prompt footer must embed the baked hyperlink so a
+  // future footer edit that drops it fails loudly instead of silently losing
+  // attribution.
+  it.each(['setupCI', 'setupNxCloud', 'setupNxCloudV2'] as const)(
+    'embeds the Nx Cloud hyperlink in %s',
+    (key) => {
+      const { footer } = new PromptMessages().getPrompt(key);
+      expect(footer).toContain(NX_CLOUD_HYPERLINK);
+    }
+  );
 });

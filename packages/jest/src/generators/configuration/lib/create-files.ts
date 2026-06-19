@@ -4,7 +4,7 @@ import {
   readProjectConfiguration,
   Tree,
 } from '@nx/devkit';
-import { addSwcTestConfig } from '@nx/js/internal';
+import { addSwcTestConfig, getTsConfigModuleResolution } from '@nx/js/internal';
 import { join } from 'path';
 import type { JestPresetExtension } from '../../../utils/config/config-file';
 import { getInstalledJestMajorVersion } from '../../../utils/versions';
@@ -81,6 +81,10 @@ export function createFiles(
     module:
       !options.isTsSolutionSetup || transformer === 'ts-jest'
         ? 'commonjs'
+        : undefined,
+    moduleResolution:
+      !options.isTsSolutionSetup || transformer === 'ts-jest'
+        ? getTsConfigModuleResolution(tree)
         : undefined,
   });
 

@@ -1,69 +1,80 @@
 // Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
 
 exports[`application generator should set up project correctly for cypress 1`] = `
-"{
-  "root": true,
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@nx"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              }
-            ]
-          }
-        ]
-      }
+"import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: [
+      '**/dist',
+      '**/out-tsc',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+    ],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
     },
-    {
-      "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nx/typescript"],
-      "rules": {}
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nx/javascript"],
-      "rules": {}
-    }
-  ]
-}
+  },
+  {
+    files: [
+      '**/*.ts',
+      '**/*.tsx',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.js',
+      '**/*.jsx',
+      '**/*.cjs',
+      '**/*.mjs',
+    ],
+    // Override or add rules here
+    rules: {},
+  },
+];
 "
 `;
 
 exports[`application generator should set up project correctly for cypress 2`] = `null`;
 
 exports[`application generator should set up project correctly for cypress 3`] = `
-"{
-  "extends": [
-    "plugin:vue/vue3-essential",
-    "eslint:recommended",
-    "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
-    "../.eslintrc.json"
-  ],
-  "ignorePatterns": [
-    "!**/*",
-    "**/vite.config.*.timestamp*",
-    "**/vitest.config.*.timestamp*"
-  ],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
-    }
-  ]
-}
+"import vue from 'eslint-plugin-vue';
+import baseConfig from '../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+];
 "
 `;
 
@@ -135,20 +146,19 @@ export default defineConfig(() => ({
 
 exports[`application generator should set up project correctly for rsbuild 3`] = `
 [
-  ".eslintignore",
-  ".eslintrc.json",
   ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
+  "eslint.config.mjs",
   "nx.json",
   "package.json",
-  "test-e2e/.eslintrc.json",
+  "test-e2e/eslint.config.mjs",
   "test-e2e/playwright.config.mts",
   "test-e2e/project.json",
   "test-e2e/src/example.spec.ts",
   "test-e2e/tsconfig.json",
-  "test/.eslintrc.json",
+  "test/eslint.config.mjs",
   "test/index.html",
   "test/project.json",
   "test/rsbuild.config.ts",
@@ -168,69 +178,80 @@ exports[`application generator should set up project correctly for rsbuild 3`] =
 `;
 
 exports[`application generator should set up project correctly with given options 1`] = `
-"{
-  "root": true,
-  "ignorePatterns": ["**/*"],
-  "plugins": ["@nx"],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "@nx/enforce-module-boundaries": [
-          "error",
-          {
-            "enforceBuildableLibDependency": true,
-            "allow": [],
-            "depConstraints": [
-              {
-                "sourceTag": "*",
-                "onlyDependOnLibsWithTags": ["*"]
-              }
-            ]
-          }
-        ]
-      }
+"import nx from '@nx/eslint-plugin';
+
+export default [
+  ...nx.configs['flat/base'],
+  ...nx.configs['flat/typescript'],
+  ...nx.configs['flat/javascript'],
+  {
+    ignores: [
+      '**/dist',
+      '**/out-tsc',
+      '**/vite.config.*.timestamp*',
+      '**/vitest.config.*.timestamp*',
+    ],
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      '@nx/enforce-module-boundaries': [
+        'error',
+        {
+          enforceBuildableLibDependency: true,
+          allow: ['^.*/eslint(\\\\.base)?\\\\.config\\\\.[cm]?[jt]s$'],
+          depConstraints: [
+            {
+              sourceTag: '*',
+              onlyDependOnLibsWithTags: ['*'],
+            },
+          ],
+        },
+      ],
     },
-    {
-      "files": ["*.ts", "*.tsx"],
-      "extends": ["plugin:@nx/typescript"],
-      "rules": {}
-    },
-    {
-      "files": ["*.js", "*.jsx"],
-      "extends": ["plugin:@nx/javascript"],
-      "rules": {}
-    }
-  ]
-}
+  },
+  {
+    files: [
+      '**/*.ts',
+      '**/*.tsx',
+      '**/*.cts',
+      '**/*.mts',
+      '**/*.js',
+      '**/*.jsx',
+      '**/*.cjs',
+      '**/*.mjs',
+    ],
+    // Override or add rules here
+    rules: {},
+  },
+];
 "
 `;
 
 exports[`application generator should set up project correctly with given options 2`] = `null`;
 
 exports[`application generator should set up project correctly with given options 3`] = `
-"{
-  "extends": [
-    "plugin:vue/vue3-essential",
-    "eslint:recommended",
-    "@vue/eslint-config-typescript",
-    "@vue/eslint-config-prettier/skip-formatting",
-    "../.eslintrc.json"
-  ],
-  "ignorePatterns": [
-    "!**/*",
-    "**/vite.config.*.timestamp*",
-    "**/vitest.config.*.timestamp*"
-  ],
-  "overrides": [
-    {
-      "files": ["*.ts", "*.tsx", "*.js", "*.jsx", "*.vue"],
-      "rules": {
-        "vue/multi-word-component-names": "off"
-      }
-    }
-  ]
-}
+"import vue from 'eslint-plugin-vue';
+import baseConfig from '../eslint.config.mjs';
+
+export default [
+  ...baseConfig,
+  ...vue.configs['flat/recommended'],
+  {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: await import('@typescript-eslint/parser'),
+      },
+    },
+  },
+  {
+    files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx', '**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
+];
 "
 `;
 
@@ -329,20 +350,19 @@ export default defineConfig({
 
 exports[`application generator should set up project correctly with given options 6`] = `
 [
-  ".eslintignore",
-  ".eslintrc.json",
   ".gitignore",
   ".prettierignore",
   ".prettierrc",
   ".vscode/extensions.json",
+  "eslint.config.mjs",
   "nx.json",
   "package.json",
-  "test-e2e/.eslintrc.json",
+  "test-e2e/eslint.config.mjs",
   "test-e2e/playwright.config.mts",
   "test-e2e/project.json",
   "test-e2e/src/example.spec.ts",
   "test-e2e/tsconfig.json",
-  "test/.eslintrc.json",
+  "test/eslint.config.mjs",
   "test/index.html",
   "test/project.json",
   "test/src/app/App.spec.ts",

@@ -107,3 +107,6 @@ export const reactNativeSvgTransformerVersion = '~1.5.1';
 export const reactNativeSvgVersion = '15.12.1';
 export const testingLibraryReactNativeVersion = '~13.2.0';
 export const babelRuntimeVersion = '~7.27.6';
+// jest-expo's preset maps `react-native-vector-icons` to `@expo/vector-icons`,
+// so it must be installed for the Jest preset to resolve.
+export const expoVectorIconsVersion = '~15.1.0';

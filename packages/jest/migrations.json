@@ -229,6 +229,33 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.1.0-ts-jest": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "ts-jest": ">=29.0.0 <29.4.7"
+      },
+      "packages": {
+        "ts-jest": {
+          "version": "^29.4.7",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-jest-preset-angular": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "@angular/compiler-cli": ">=22.0.0 <23.0.0",
+        "@angular/core": ">=22.0.0 <23.0.0",
+        "@angular/platform-browser": ">=22.0.0 <23.0.0",
+        "jest": "^30.0.0"
+      },
+      "packages": {
+        "jest-preset-angular": {
+          "version": "~17.0.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

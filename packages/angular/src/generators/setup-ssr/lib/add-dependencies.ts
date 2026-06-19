@@ -5,7 +5,6 @@ import {
 } from '@nx/devkit';
 import {
   getInstalledAngularDevkitVersion,
-  getInstalledAngularVersionInfo,
   versions,
 } from '../../utils/version-utils';
 
@@ -33,10 +32,7 @@ export function addDependencies(
   if (!isUsingApplicationBuilder) {
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
   } else {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    if (angularMajorVersion >= 20) {
-      dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
-    }
+    dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
   }
 
   addDependenciesToPackageJson(

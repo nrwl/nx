@@ -13,12 +13,10 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { coerce, major } from 'semver';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
 import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
-import { useFlatConfig } from '../../utils/flat-config';
 import { versions } from '../../utils/versions';
 
 export interface LintWorkspaceRuleGeneratorOptions {
@@ -34,16 +32,10 @@ export async function lintWorkspaceRuleGenerator(
 
   const tasks: GeneratorCallback[] = [];
 
-  const flatConfig = useFlatConfig(tree);
   // ESLint v9 dropped the eslintrc-style `RuleTester` API. typescript-eslint's
-  // recommended replacement for any v9 workspace (flat or eslintrc) is the
-  // separate `@typescript-eslint/rule-tester` package, which has a flat-style
-  // API that works with ESLint v8.57+ and v9 alike. We resolve the effective
-  // major from `versions(tree)` to cover both declared workspaces and fresh
-  // installs that will be bumped to v9.
-  const { eslintVersion, typescriptESLintVersion } = versions(tree);
-  const effectiveEslintMajor = major(coerce(eslintVersion));
-  const useFlatRuleTester = flatConfig || effectiveEslintMajor >= 9;
+  // recommended replacement is the separate `@typescript-eslint/rule-tester`
+  // package, whose flat-style API works for both flat and eslintrc workspaces.
+  const { typescriptESLintVersion } = versions(tree);
 
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
@@ -56,17 +48,15 @@ export async function lintWorkspaceRuleGenerator(
     })
   );
 
-  if (useFlatRuleTester) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        { '@typescript-eslint/rule-tester': typescriptESLintVersion },
-        undefined,
-        true
-      )
-    );
-  }
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@typescript-eslint/rule-tester': typescriptESLintVersion },
+      undefined,
+      true
+    )
+  );
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
@@ -77,7 +67,6 @@ export async function lintWorkspaceRuleGenerator(
   generateFiles(tree, join(__dirname, 'files'), ruleDir, {
     tmpl: '',
     name: options.name,
-    useFlatRuleTester,
   });
 
   const nameCamelCase = camelize(options.name);

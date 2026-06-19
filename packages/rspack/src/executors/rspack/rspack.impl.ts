@@ -2,7 +2,7 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import { createAsyncIterable } from '@nx/devkit/internal';
 import { printDiagnostics, runTypeCheck } from '@nx/js';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import {
+import type {
   Compiler,
   MultiCompiler,
   MultiStats,
@@ -52,9 +52,9 @@ export default async function* runExecutor(
     outfile?: string;
   }>(async ({ next, done }) => {
     const watch =
-      (compiler instanceof Compiler
-        ? compiler.options.watch
-        : compiler.options[0].watch) ?? options.watch;
+      (isMultiCompiler(compiler)
+        ? compiler.options[0].watch
+        : compiler.options.watch) ?? options.watch;
 
     if (watch) {
       const watcher = compiler.watch(

@@ -10,6 +10,9 @@ export const NG_RSPACK_SYMBOL_NAME = 'NG_RSPACK_BUILD';
 export type NG_RSPACK_COMPILATION_STATE = {
   javascriptTransformer: JavaScriptTransformer;
   typescriptFileCache: SourceFileCache['typeScriptFileCache'];
+  // True when the Angular compilation failed to initialize or emit, meaning
+  // the typescript file cache cannot be relied on for this build.
+  angularCompilationFailed: boolean;
   i18n?: I18nOptions;
 };
 export type NgRspackCompilation = Compilation & {

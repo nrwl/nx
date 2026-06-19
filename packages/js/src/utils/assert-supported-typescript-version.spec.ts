@@ -15,6 +15,18 @@ describe('assertSupportedTypescriptVersion', () => {
     );
   });
 
+  it('throws when typescript is right below the supported floor', () => {
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'package.json', (json) => ({
+      ...json,
+      devDependencies: { typescript: '~5.7.3' },
+    }));
+
+    expect(() => assertSupportedTypescriptVersion(tree)).toThrow(
+      'Unsupported version of `typescript` detected'
+    );
+  });
+
   it('does not throw when typescript is not installed (fresh-install path)', () => {
     const tree = createTreeWithEmptyWorkspace();
     expect(() => assertSupportedTypescriptVersion(tree)).not.toThrow();

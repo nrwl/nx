@@ -30,6 +30,15 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/react/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/react`'s exports map. Named imports/exports of public symbols are routed to `@nx/react` and the rest to the new `@nx/react/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/react/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
+    },
+    "update-23-1-0-create-ai-instructions-for-react-19": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "react": ">=19.0.0"
+      },
+      "description": "Create AI instructions to help migrate workspaces from React 18 to 19.",
+      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-react-19.md",
+      "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-react-19.md"
     }
   },
   "packageJsonUpdates": {
@@ -199,6 +208,38 @@
         },
         "@react-router/remix-routes-option-adapter": {
           "version": "7.14.2",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "react": ">=18.0.0 <19.0.0"
+      },
+      "packages": {
+        "react": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-dom": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "react-is": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-dom": {
+          "version": "^19.0.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@types/react-is": {
+          "version": "^19.0.0",
           "alwaysAddToPackageJson": false
         }
       }

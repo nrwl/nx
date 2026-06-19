@@ -601,7 +601,7 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -624,70 +624,6 @@ exports[`app --strict should enable strict type checking: e2e tsconfig.json 1`] 
     "**/*.d.ts",
   ],
 }
-`;
-
-exports[`app angular compat support should generate components with the "component" type for versions lower than v20 1`] = `
-"import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { NxWelcomeComponent } from './nx-welcome.component';
-
-@Component({
-  imports: [NxWelcomeComponent, RouterModule],
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrl: './app.component.css',
-})
-export class AppComponent {
-  title = 'myapp';
-}
-"
-`;
-
-exports[`app angular compat support should generate components with the "component" type for versions lower than v20 2`] = `
-"<app-nx-welcome></app-nx-welcome>
-<router-outlet></router-outlet>
-"
-`;
-
-exports[`app angular compat support should generate components with the "component" type for versions lower than v20 3`] = `
-"import { TestBed } from '@angular/core/testing';
-import { AppComponent } from './app.component';
-import { NxWelcomeComponent } from './nx-welcome.component';
-
-describe('AppComponent', () => {
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [AppComponent, NxWelcomeComponent],
-    }).compileComponents();
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain(
-      'Welcome myapp'
-    );
-  });
-
-  it(\`should have as title 'myapp'\`, () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    const app = fixture.componentInstance;
-    expect(app.title).toEqual('myapp');
-  });
-});
-"
-`;
-
-exports[`app angular compat support should generate components with the "component" type for versions lower than v20 4`] = `
-"import { bootstrapApplication } from '@angular/platform-browser';
-import { appConfig } from './app/app.config';
-import { AppComponent } from './app/app.component';
-
-bootstrapApplication(AppComponent, appConfig).catch((err) =>
-  console.error(err)
-);
-"
 `;
 
 exports[`app angular compat support vitest-analog & angular < 21 should add tsconfig.spec.json 1`] = `
@@ -1062,7 +998,7 @@ exports[`app not nested should generate files: e2e tsconfig.json 1`] = `
   "compilerOptions": {
     "allowJs": true,
     "module": "commonjs",
-    "moduleResolution": "node10",
+    "moduleResolution": "bundler",
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,

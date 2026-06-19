@@ -151,6 +151,8 @@ export interface AngularRspackPluginOptions extends PluginUnsupportedOptions {
     | boolean
     | {
         entry: string;
+        platform?: 'node' | 'neutral';
+        // Deprecated. Use `platform` instead.
         experimentalPlatform?: 'node' | 'neutral';
       };
   stylePreprocessorOptions?: StylePreprocessorOptions;
@@ -347,8 +349,8 @@ Controls generation of source maps for debugging. Can be boolean or detailed con
 
 ### ssr
 
-`boolean | { entry: string; experimentalPlatform?: 'node' | 'neutral' }`
-Configuration for Server-Side Rendering. Can be boolean or object with specific SSR settings.
+`boolean | { entry: string; platform?: 'node' | 'neutral' }`
+Configuration for Server-Side Rendering. Can be boolean or object with specific SSR settings. The `experimentalPlatform` option is deprecated; use `platform` instead.
 
 ### stylePreprocessorOptions
 

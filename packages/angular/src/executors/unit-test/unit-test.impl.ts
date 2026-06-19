@@ -1,4 +1,4 @@
-import type { BuilderContext, BuilderOutput } from '@angular-devkit/architect';
+import type { BuilderContext } from '@angular-devkit/architect';
 import type {
   ApplicationBuilderOptions,
   NgPackagrBuilderOptions,
@@ -20,7 +20,7 @@ import type { UnitTestExecutorOptions } from './schema';
 export default async function* unitTestExecutor(
   options: UnitTestExecutorOptions,
   context: ExecutorContext
-): AsyncIterable<BuilderOutput> {
+) {
   validateOptions(options);
 
   const {
@@ -77,6 +77,20 @@ function validateOptions(options: UnitTestExecutorOptions): void {
     if (options.headless !== undefined) {
       throw new Error(
         `The "headless" option requires Angular version 21.2.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+  }
+
+  if (lt(angularVersion, '22.0.0')) {
+    if (options.isolate !== undefined) {
+      throw new Error(
+        `The "isolate" option requires Angular version 22.0.0 or greater. You are currently using version ${angularVersion}.`
+      );
+    }
+
+    if (options.quiet !== undefined) {
+      throw new Error(
+        `The "quiet" option requires Angular version 22.0.0 or greater. You are currently using version ${angularVersion}.`
       );
     }
   }

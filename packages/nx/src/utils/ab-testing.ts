@@ -2,7 +2,22 @@ import { execSync } from 'node:child_process';
 import { isCI } from './is-ci';
 import { getPackageManagerCommand } from './package-manager';
 import { getCloudUrl } from '../nx-cloud/utilities/get-cloud-options';
+import { terminalLink } from './terminal-link';
 import * as pc from 'picocolors';
+
+export const NX_CLOUD_URL = 'https://nx.dev/nx-cloud';
+
+/**
+ * Clickable Nx Cloud marketing link for cloud prompt footers. The visible text
+ * stays the clean `NX_CLOUD_URL` while clicks carry UTM attribution; terminals
+ * without OSC 8 support just render the bare URL (CLOUD-4642). The medium is
+ * per-command because `nx init` and `nx migrate` share a footer but report
+ * different mediums.
+ */
+export function nxCloudHyperlink(utmMedium: string): string {
+  const tracked = `${NX_CLOUD_URL}?utm_source=nx-cli&utm_medium=${utmMedium}`;
+  return terminalLink(NX_CLOUD_URL, tracked);
+}
 
 /**
  * Meta payload types for recordStat telemetry (matches CNW format).
@@ -52,7 +67,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'never', name: pc.dim("No, don't ask again") },
       ],
       footer:
-        '\nFree for small teams. Remote caching and task distribution. 2-minute setup: https://nx.dev/nx-cloud',
+        '\nFree for small teams. Remote caching and task distribution. 2-minute setup:',
     },
     {
       code: 'cloud-self-healing-remote-cache',
@@ -63,7 +78,7 @@ const messageOptions: Record<string, MessageData[]> = {
         { value: 'skip', name: 'Skip for now' },
         { value: 'never', name: pc.dim("No, don't ask again") },
       ],
-      footer: '\nLearn about it at https://nx.dev/nx-cloud',
+      footer: '\nLearn about it at',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],
@@ -80,7 +95,7 @@ const messageOptions: Record<string, MessageData[]> = {
         },
         { value: 'skip', name: 'No' },
       ],
-      footer: '\nRead more about Nx Cloud at https://nx.dev/nx-cloud',
+      footer: '\nRead more about Nx Cloud at',
       hint: `\n(it's free and can be disabled any time)`,
     },
   ],

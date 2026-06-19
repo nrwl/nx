@@ -576,6 +576,11 @@ export function getTranspiler(
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
+  // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
+  // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
+  if (parseInt(ts.versionMajorMinor, 10) >= 6) {
+    compilerOptions.ignoreDeprecations = '6.0';
+  }
   // These options are different per project, and since they are not needed for transpilation, we can remove them so we have more cache hits.
   compilerOptions.outDir = undefined;
   compilerOptions.outFile = undefined;

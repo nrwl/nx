@@ -2,7 +2,8 @@
   "name": "<%= projectName %>",
   "version": "0.0.1",
   "private": true,
-  "dependencies": {<% if (!usesExpoMetro) { %>
+  "dependencies": {
+    "@expo/vector-icons": "*",<% if (!usesExpoMetro) { %>
     "@expo/metro-config": "*",<% } %>
     "@testing-library/react-native": "*",
     "expo": "*",
