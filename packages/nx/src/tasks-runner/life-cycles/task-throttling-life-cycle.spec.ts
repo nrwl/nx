@@ -508,14 +508,30 @@ describe('formatReport', () => {
     const b = makeTask('b', { start: 1000, end: 2000 });
     const report = formatReport(run(makeGraph([a, b]), 1)!);
 
-    expect(report).toContain('Throttle report:');
     expect(report).toContain('Critical path:');
     expect(report).toContain('Coordinator overhead:');
     expect(report).toContain('non-recoverable');
     expect(report).toContain('Recoverable by parallelism:');
     expect(report).toContain('by raising --parallel');
     expect(report).toContain('Longest tasks on the critical path');
+    // Single recommendation (no cache advice here) stays a plain line.
     expect(report).toContain('Recommendation:');
+  });
+
+  it('lists recommendations as bullets when there is more than one', () => {
+    // A run with a cache lever (low hits, remote off) gets both a speed and a
+    // cache recommendation — rendered as a bulleted list.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const report = formatReport(
+      run(makeGraph([a]), 1, {
+        statuses: { a: 'success' }, // 0/1 hit
+        remoteCacheEnabled: false,
+      })!
+    );
+
+    expect(report).toContain('Recommendations:');
+    expect(report).toContain("- Cache: Nx Cloud isn't set up");
+    expect(report).toMatch(/- .*critical path/); // the speed recommendation
   });
 
   it('lists the critical-path tasks by duration, without wait annotations', () => {

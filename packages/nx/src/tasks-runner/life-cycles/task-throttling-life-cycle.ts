@@ -884,7 +884,6 @@ export function formatReport(s: ThrottleSummary): string {
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const lines = [
     '',
-    'Throttle report:',
     `  Run duration:            ${fmt(s.runDuration)}`,
     `  Critical path:           ${fmt(s.criticalPathDuration)}   (${
       s.criticalPathTaskCount
@@ -914,13 +913,24 @@ export function formatReport(s: ThrottleSummary): string {
   lines.push(
     '',
     `  Longest tasks on the critical path:`,
-    ...formatTopTaskRows(s.criticalPathTop),
-    '',
-    `  Recommendation: ${s.recommendation}`
+    ...formatTopTaskRows(s.criticalPathTop)
   );
+  // One recommendation per lever — speed (parallelism/agents/critical path) and,
+  // when there's something to do about it, cache. Listed as bullets when there's
+  // more than one; a single recommendation stays a plain line.
+  const recommendations = [s.recommendation];
   const cacheAdvice = buildCacheAdvice(s);
   if (cacheAdvice) {
-    lines.push('', `  ${cacheAdvice}`);
+    recommendations.push(cacheAdvice);
+  }
+  if (recommendations.length === 1) {
+    lines.push('', `  Recommendation: ${recommendations[0]}`);
+  } else {
+    lines.push(
+      '',
+      '  Recommendations:',
+      ...recommendations.map((r) => `    - ${r}`)
+    );
   }
   lines.push('');
   return lines.join('\n');
