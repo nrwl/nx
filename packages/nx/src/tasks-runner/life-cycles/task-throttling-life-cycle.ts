@@ -730,7 +730,7 @@ function buildRecommendation(args: {
   ) {
     return `Tasks are queuing for slots with cores to spare. Raise --parallel toward ${cores} (currently ${parallel}) to recover up to ~${formatDuration(
       recoverableByParallel
-    )} (the exact amount depends on how many tasks are ready at once).`;
+    )} — an upper bound, since CPU-bound tasks slow as they share cores, so the real gain is usually less. Try a few values to find the fastest.`;
   }
   if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
     return `Tasks are queuing for slots even at --parallel=${parallel} (machine has ${cores} ${pluralizeCores(
@@ -754,9 +754,9 @@ function buildRecommendation(args: {
       : '\n    - (none)';
   const lead =
     recoverableByParallel >= MINOR_OVERHEAD
-      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Raising --parallel toward ${cores} (currently ${parallel}) would recover ~${formatDuration(
+      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Raising --parallel toward ${cores} (currently ${parallel}) could recover up to ~${formatDuration(
           recoverableByParallel
-        )} more, but the bigger lever is speeding up or splitting the longest tasks on that path:`
+        )} more (less if those tasks are CPU-bound), but the bigger lever is speeding up or splitting the longest tasks on that path:`
       : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks on that path:`;
   let base = `${lead}${bullets}`;
   if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {

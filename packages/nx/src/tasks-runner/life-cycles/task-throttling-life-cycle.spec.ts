@@ -111,6 +111,10 @@ describe('TaskThrottlingLifeCycle', () => {
   });
 
   it('attributes slot queuing (spare cores) to recoverable-by-parallelism', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
     // parallel=1. `a` holds the only slot 0–1000. `b` is independent, eligible at
     // the run start, and queues for the slot until 1000 → recoverable by slots.
     const a = makeTask('a', { start: 0, end: 1000 });
@@ -122,6 +126,11 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
     expect(s.recommendation).toContain('queuing for slots');
+    if (cores >= 2) {
+      // The --parallel branch flags its recover number as an upper bound,
+      // since CPU contention erodes it.
+      expect(s.recommendation).toContain('upper bound');
+    }
     // `b` finished last but is NOT on the critical path (`a` is, same duration).
     // The finish lineage still surfaces b's slot wait, so the bucket has a
     // visible source instead of "recoverable" with no slot wait shown anywhere.
@@ -213,7 +222,7 @@ describe('TaskThrottlingLifeCycle', () => {
       expect(s.recoverableByParallel).toBe(500);
       expect(s.recommendation).toContain('mostly bound by the critical path');
       expect(s.recommendation).toContain('Raising --parallel');
-      expect(s.recommendation).toContain('would recover ~500ms more');
+      expect(s.recommendation).toContain('could recover up to ~500ms more');
       expect(s.recommendation).toContain('b (3.0s)');
       // Not the primary "raise --parallel" headline (that needs a >=1s win) and
       // not the flat denial (that's only for a ~0 parallel win).
