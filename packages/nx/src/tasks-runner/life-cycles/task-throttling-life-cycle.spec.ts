@@ -199,22 +199,23 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.criticalPathTop[0].id).toBe('x');
   });
 
-  it('recommends the biggest critical-path tasks when no parallelism lever helps', () => {
+  it('recommends the biggest critical-path tasks (and agents) when no parallelism lever helps', () => {
     // A pure dependency chain at its floor (no overhead). The advice should name
-    // the longest tasks on the path to speed up — not a parallelism lever.
+    // the longest tasks to speed up, and offer agents — not a higher --parallel.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 4000 });
     const c = makeTask('c', { start: 4000, end: 5000 });
     const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
 
     expect(s.overhead).toBe(0);
-    expect(s.recommendation).toContain('Speed up or split');
+    expect(s.recommendation).toContain('speed up or split');
     expect(s.recommendation).toContain('critical path');
     // Points at the section above instead of re-listing the tasks.
     expect(s.recommendation).toContain('longest tasks shown above');
     expect(s.criticalPathTop[0].id).toBe('b'); // longest, shown first there
+    // Offers agents (free up CPU for the chain), but not a higher --parallel.
+    expect(s.recommendation).toContain('Nx Cloud Agents');
     expect(s.recommendation).not.toContain('--parallel');
-    expect(s.recommendation).not.toContain('Nx Cloud Agents');
   });
 
   it('mentions a sub-meaningful parallel win as secondary when critical-path-bound', () => {
@@ -233,12 +234,15 @@ describe('TaskThrottlingLifeCycle', () => {
     if (cores >= 2) {
       expect(s.recoverableByParallel).toBe(500);
       expect(s.recommendation).toContain('mostly bound by the critical path');
-      expect(s.recommendation).toContain('Stepping --parallel up');
-      expect(s.recommendation).toContain('could recover up to ~500ms more');
+      // The small --parallel win is acknowledged as a parenthetical, not led with.
+      expect(s.recommendation).toContain(
+        'Raising --parallel here recovers at most'
+      );
+      expect(s.recommendation).toContain('~500ms');
       expect(s.recommendation).toContain('longest tasks shown above');
+      expect(s.recommendation).toContain('Nx Cloud Agents');
       expect(s.criticalPathTop[0].id).toBe('b');
-      // Not the primary "raise --parallel" headline (that needs a >=1s win) and
-      // not the flat denial (that's only for a ~0 parallel win).
+      // Not the primary "raise --parallel" headline and not the flat denial.
       expect(s.recommendation).not.toContain('queuing for slots');
       expect(s.recommendation).not.toContain("won't make this run faster");
     }

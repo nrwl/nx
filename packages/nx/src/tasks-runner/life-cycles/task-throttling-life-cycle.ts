@@ -750,12 +750,18 @@ function buildRecommendation(args: {
   // Coordinator overhead is reported up top as non-recoverable, so it needs no
   // footnote here. A smaller --parallel win can still exist below the lead
   // threshold; mention it as secondary rather than denying it.
+  // Critical-path-bound: local --parallel is tapped out. Two real levers — make
+  // the chain's tasks shorter, or distribute the REST of the work to Nx Cloud
+  // Agents so it runs on other machines and stops competing with the
+  // critical-path tasks for CPU here (agents can't parallelize the chain itself,
+  // but they free up cores for it).
+  const agents = `distribute the rest of the work across machines with Nx Cloud Agents → ${NX_AGENTS_URL}, so the critical-path tasks aren't competing with it for CPU`;
   const base =
     recoverableByParallel >= MINOR_OVERHEAD
-      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Stepping --parallel up from ${parallel} could recover up to ~${formatDuration(
+      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Two levers: speed up or split the longest tasks shown above, or ${agents}. (Raising --parallel here recovers at most ~${formatDuration(
           recoverableByParallel
-        )} more (less if those tasks are CPU-bound), but the bigger lever is speeding up or splitting the longest tasks shown above.`
-      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks shown above.`;
+        )}.)`
+      : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Two levers: speed up or split the longest tasks shown above, or ${agents}.`;
   return isCI
     ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
     : base;
