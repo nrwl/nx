@@ -214,6 +214,9 @@
     },
     "23.1.0": {
       "version": "23.1.0-beta.0",
+      "incompatibleWith": {
+        "@remix-run/react": "*"
+      },
       "requires": {
         "react": ">=18.0.0 <19.0.0"
       },
