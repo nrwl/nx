@@ -602,7 +602,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const recommendation = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
-      coordinatorOverhead,
       overhead,
       runDuration,
       criticalPathDuration,
@@ -706,7 +705,6 @@ export function overlap(
 function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
-  coordinatorOverhead: number;
   overhead: number;
   runDuration: number;
   criticalPathDuration: number;
@@ -717,7 +715,6 @@ function buildRecommendation(args: {
   const {
     recoverableByParallel,
     recoverableByMachines,
-    coordinatorOverhead,
     runDuration,
     parallel,
     cores,
@@ -737,7 +734,7 @@ function buildRecommendation(args: {
     const pct = Math.round((recoverableByParallel / runDuration) * 100);
     return `~${pct}% of the run (~${formatDuration(
       recoverableByParallel
-    )}) was tasks waiting for a free slot. Raise --parallel (currently ${parallel}) toward ${cores} and try a few values — CPU-bound tasks slow as they share cores. If raising it stops helping, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}.`;
+    )}) was tasks waiting for a free slot. Step --parallel up from ${parallel} and measure — don't jump straight to all ${cores} cores; CPU-bound tasks slow as they share cores, so the sweet spot is often lower. If raising it stops helping, distribute across machines with Nx Cloud Agents → ${NX_AGENTS_URL}.`;
   }
   if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
     return `Tasks are queuing for slots even at --parallel=${parallel} (machine has ${cores} ${pluralizeCores(
@@ -748,28 +745,19 @@ function buildRecommendation(args: {
   }
 
   // No parallelism lever big enough to LEAD with. The run is dominated by its
-  // critical-path floor, and the user can't do much about coordinator overhead —
-  // so point at the biggest tasks on the path (already listed in the "Longest
-  // tasks" section above, so reference it rather than re-listing). A smaller
-  // --parallel win can still exist below the lead threshold; mention it as
-  // secondary rather than denying it — the overhead split above would otherwise
-  // contradict a flat "parallelism won't help".
-  let base =
+  // critical-path floor — point at the biggest tasks on the path (already listed
+  // in the "Longest tasks" section above, so reference it rather than re-listing).
+  // Coordinator overhead is reported up top as non-recoverable, so it needs no
+  // footnote here. A smaller --parallel win can still exist below the lead
+  // threshold; mention it as secondary rather than denying it.
+  const base =
     recoverableByParallel >= MINOR_OVERHEAD
-      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Raising --parallel toward ${cores} (currently ${parallel}) could recover up to ~${formatDuration(
+      ? `This run is mostly bound by the critical path (the longest chain of dependent tasks). Stepping --parallel up from ${parallel} could recover up to ~${formatDuration(
           recoverableByParallel
         )} more (less if those tasks are CPU-bound), but the bigger lever is speeding up or splitting the longest tasks shown above.`
       : `More parallelism won't make this run faster — it's bound by the critical path (the longest chain of dependent tasks). Speed up or split the longest tasks shown above.`;
-  if (coordinatorOverhead >= MEANINGFUL_OVERHEAD) {
-    // Be precise about the lever: a warm daemon caches the project graph + file
-    // hashes, so it trims the HASHING part — but scheduling and process spawning
-    // run in the CLI orchestrator regardless, so the daemon doesn't touch those.
-    base += `\n    Note: ~${formatDuration(
-      coordinatorOverhead
-    )} is coordinator overhead — hashing, scheduling, process spawning — not recoverable by parallelism. A warm Nx daemon and narrower task inputs trim the hashing part; the rest is fixed per-task cost.`;
-  }
   return isCI
-    ? `${base}\n    A faster CI runner also helps if those tasks are CPU-bound.`
+    ? `${base} A faster CI runner also helps if those tasks are CPU-bound.`
     : base;
 }
 
@@ -804,6 +792,12 @@ function pluralizeCores(cores: number): string {
 
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
+  // The two non-recoverable components of the run, shown up top: the critical-path
+  // floor (unavoidable work) and coordinator overhead (hashing/scheduling — fixed
+  // per-task cost that parallelism can't touch). What's left is recoverable.
+  const recoverable = s.recoverableByParallel + s.recoverableByMachines;
+  const recoverablePct =
+    s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const lines = [
     '',
     'Throttle report:',
@@ -811,27 +805,29 @@ export function formatReport(s: ThrottleSummary): string {
     `  Critical-path floor:     ${fmt(s.criticalPathDuration)}   (${
       s.criticalPathTaskCount
     } tasks)`,
-    `  Parallelism:             ${s.parallel} slots (${s.cores}-core machine)`,
-    '',
-    `  Run overhead:            +${fmt(s.overhead)}   (${s.overheadPct.toFixed(
-      1
-    )}% above the floor)`,
-    bucketLine(
-      `recoverable by --parallel (→${s.cores})`,
-      s.recoverableByParallel
-    ),
-    bucketLine('recoverable by more machines', s.recoverableByMachines),
-    bucketLine(
-      'coordinator overhead (hashing/scheduling)',
+    `  Coordinator overhead:    ${fmt(
       s.coordinatorOverhead
-    ),
+    )}   (non-recoverable — hashing, scheduling)`,
+    `  Parallelism:             ${s.parallel} slots (${s.cores}-core machine)`,
+  ];
+  if (recoverable > 0) {
+    lines.push(
+      '',
+      `  Recoverable by parallelism:  +${fmt(
+        recoverable
+      )}   (${recoverablePct}% of the run)`,
+      bucketLine('by raising --parallel (ceiling)', s.recoverableByParallel),
+      bucketLine('by more machines', s.recoverableByMachines)
+    );
+  }
+  lines.push(
     '',
     `  Longest tasks on the critical path:`,
     ...formatTopTaskRows(s.criticalPathTop),
     '',
     `  Recommendation: ${s.recommendation}`,
-    '',
-  ];
+    ''
+  );
   return lines.join('\n');
 }
 

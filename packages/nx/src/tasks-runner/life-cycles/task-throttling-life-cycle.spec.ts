@@ -131,7 +131,8 @@ describe('TaskThrottlingLifeCycle', () => {
       // share of the run, and flagging machines as the contention-free
       // alternative for CPU-bound work.
       expect(s.recommendation).toMatch(/\d+% of the run/);
-      expect(s.recommendation).toContain('Raise --parallel');
+      expect(s.recommendation).toContain('Step --parallel up');
+      expect(s.recommendation).toContain("don't jump straight to all");
       expect(s.recommendation).toContain('machines');
     }
     // `b` finished last but is NOT on the critical path (`a` is, same duration).
@@ -188,9 +189,12 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
-    // Coordinator overhead is footnoted, but the actionable advice points at the
-    // longest critical-path tasks shown above (here `x` is the longest).
-    expect(s.recommendation).toContain('coordinator');
+    // Coordinator overhead is reported up top as non-recoverable (not in the
+    // recommendation); the advice points at the longest tasks shown above.
+    const report = formatReport(s);
+    expect(report).toContain('Coordinator overhead:');
+    expect(report).toContain('non-recoverable');
+    expect(s.recommendation).not.toContain('coordinator');
     expect(s.recommendation).toContain('longest tasks shown above');
     expect(s.criticalPathTop[0].id).toBe('x');
   });
@@ -229,7 +233,7 @@ describe('TaskThrottlingLifeCycle', () => {
     if (cores >= 2) {
       expect(s.recoverableByParallel).toBe(500);
       expect(s.recommendation).toContain('mostly bound by the critical path');
-      expect(s.recommendation).toContain('Raising --parallel');
+      expect(s.recommendation).toContain('Stepping --parallel up');
       expect(s.recommendation).toContain('could recover up to ~500ms more');
       expect(s.recommendation).toContain('longest tasks shown above');
       expect(s.criticalPathTop[0].id).toBe('b');
@@ -403,8 +407,10 @@ describe('formatReport', () => {
 
     expect(report).toContain('Throttle report:');
     expect(report).toContain('Critical-path floor:');
-    expect(report).toContain('recoverable by --parallel');
-    expect(report).toContain('coordinator overhead (hashing/scheduling)');
+    expect(report).toContain('Coordinator overhead:');
+    expect(report).toContain('non-recoverable');
+    expect(report).toContain('Recoverable by parallelism:');
+    expect(report).toContain('by raising --parallel');
     expect(report).toContain('Longest tasks on the critical path');
     expect(report).toContain('Recommendation:');
   });
