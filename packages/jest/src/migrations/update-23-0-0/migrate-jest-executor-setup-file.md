@@ -106,18 +106,17 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 
 ##### Before
 
-```json title="nx.json" {8}
+```json title="nx.json" {7}
 {
-  "targetDefaults": [
-    {
-      "target": "test",
+  "targetDefaults": {
+    "test": {
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "setupFile": "{projectRoot}/src/test-setup.ts"
       }
     }
-  ]
+  }
 }
 ```
 
@@ -125,15 +124,14 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 
 ```json title="nx.json"
 {
-  "targetDefaults": [
-    {
-      "target": "test",
+  "targetDefaults": {
+    "test": {
       "executor": "@nx/jest:jest",
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts"
       }
     }
-  ]
+  }
 }
 ```
 
@@ -143,17 +141,16 @@ Remove the option from a target default entry matching on the `@nx/jest:jest` ex
 
 ##### Before
 
-```json title="nx.json" {7}
+```json title="nx.json" {6}
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/jest:jest",
+  "targetDefaults": {
+    "@nx/jest:jest": {
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts",
         "setupFile": "{projectRoot}/src/test-setup.ts"
       }
     }
-  ]
+  }
 }
 ```
 
@@ -161,13 +158,12 @@ Remove the option from a target default entry matching on the `@nx/jest:jest` ex
 
 ```json title="nx.json"
 {
-  "targetDefaults": [
-    {
-      "executor": "@nx/jest:jest",
+  "targetDefaults": {
+    "@nx/jest:jest": {
       "options": {
         "jestConfig": "{projectRoot}/jest.config.ts"
       }
     }
-  ]
+  }
 }
 ```

@@ -46,9 +46,12 @@ The following is an expanded example showing all options. Your `nx.json` will li
     },
     "test": [
       {
-        "filter": { "executor": "@nx/jest:jest" },
         "cache": true,
-        "inputs": ["default", "^production", "{workspaceRoot}/jest.preset.js"],
+        "inputs": ["default", "^production"]
+      },
+      {
+        "filter": { "executor": "@nx/jest:jest" },
+        "inputs": ["{workspaceRoot}/jest.preset.js"],
         "outputs": ["{workspaceRoot}/coverage/{projectRoot}"]
       }
     ]
@@ -944,7 +947,7 @@ You can configure [Docker release](/docs/guides/nx-release/release-docker-images
 }
 ```
 
-You can combine this with other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
+This allows you to have other releases such as [NPM](/docs/guides/nx-release/release-npm-packages) or [Rust crates](/docs/guides/nx-release/publish-rust-crates) in the same workspace.
 
 ## Sync
 

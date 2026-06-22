@@ -48,6 +48,15 @@ repo/
 └── nx.json
 ```
 
+{% aside type="tip" title="Let Nx resolve it for you" %}
+Instead of tracing these files by hand, run `nx show target` to print the fully merged configuration for a target — for example `nx show target my-app:test`. Add `--verbose` to also see where each value came from (which file or plugin contributed it):
+
+```shell
+nx show target my-app:test --verbose
+```
+
+{% /aside %}
+
 ## More information
 
 {% aside type="tip" title="Learn by doing" %}

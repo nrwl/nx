@@ -120,16 +120,12 @@ Here's the same workspace configured with both tools:
     "dev": {
       "continuous": true
     },
-    "test:e2e": [
-      {
-        "filter": { "projects": ["@org/shop-e2e"] },
-        "dependsOn": ["@org/shop:build"]
-      },
-      {
-        "filter": { "projects": ["@org/admin-e2e"] },
-        "dependsOn": ["@org/admin:build"]
-      }
-    ]
+    "@org/shop-e2e:test:e2e": {
+      "dependsOn": ["@org/shop:build"]
+    },
+    "@org/admin-e2e:test:e2e": {
+      "dependsOn": ["@org/admin:build"]
+    }
   }
 }
 ```
