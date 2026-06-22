@@ -1,7 +1,7 @@
 import {
   addPlugin,
   upsertTargetDefault,
-  normalizeTargetDefaults,
+  findTargetDefault,
 } from '@nx/devkit/internal';
 import {
   type Tree,
@@ -74,13 +74,9 @@ export function updateNxJsonSettings(tree: Tree) {
   );
 
   if (!hasPlugin) {
-    const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-      (e) =>
-        e.executor === '@nx/vitest:test' &&
-        e.target === undefined &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+    const existing = findTargetDefault(nxJson.targetDefaults, {
+      executor: '@nx/vitest:test',
+    });
     upsertTargetDefault(tree, nxJson, {
       executor: '@nx/vitest:test',
       cache: existing?.cache ?? true,

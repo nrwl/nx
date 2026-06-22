@@ -2,11 +2,7 @@ import type {
   BrowserBuilderOptions,
   ServerBuilderOptions,
 } from '@angular-devkit/build-angular';
-import type {
-  NxJsonConfiguration,
-  TargetConfiguration,
-  Tree,
-} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   logger,
@@ -15,7 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
@@ -157,25 +153,13 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  const existing = findServerDefault(nxJson.targetDefaults);
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'server',
+  });
   if (!existing || existing.cache === undefined) {
     upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
   }
   updateNxJson(tree, nxJson);
-}
-
-function findServerDefault(
-  td: NxJsonConfiguration['targetDefaults']
-): Partial<TargetConfiguration> | undefined {
-  const value = td?.['server'];
-  if (value === undefined) return undefined;
-  if (Array.isArray(value)) {
-    const found = value.find((e) => e.filter === undefined);
-    if (!found) return undefined;
-    const { filter: _f, ...rest } = found;
-    return rest;
-  }
-  return value;
 }
 
 function getServerOptions(

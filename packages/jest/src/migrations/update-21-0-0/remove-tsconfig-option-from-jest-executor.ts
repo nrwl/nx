@@ -1,21 +1,16 @@
-import {
-  denormalizeTargetDefaults,
-  forEachExecutorOptions,
-  normalizeTargetDefaults,
-} from '@nx/devkit/internal';
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
   readProjectConfiguration,
   type TargetConfiguration,
-  type TargetDefaultEntry,
+  type TargetDefaultArrayEntry,
   type Tree,
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
 
 const EXECUTOR_TO_MIGRATE = '@nx/jest:jest';
-const ENTRY_META_KEYS = new Set(['target', 'executor', 'projects', 'plugin']);
 
 export default async function (tree: Tree) {
   // update options from project configs
@@ -44,44 +39,48 @@ export default async function (tree: Tree) {
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
   if (nxJson.targetDefaults) {
-    // Operate on the flat logical view so both the object and array value
-    // forms are handled uniformly, then collapse back to the map shape.
-    const entries = normalizeTargetDefaults(nxJson.targetDefaults);
-    const remaining: TargetDefaultEntry[] = [];
-    for (const entry of entries) {
-      if (
-        entry.target !== EXECUTOR_TO_MIGRATE &&
-        entry.executor !== EXECUTOR_TO_MIGRATE
-      ) {
-        remaining.push(entry);
-        continue;
-      }
+    const targetDefaults = nxJson.targetDefaults;
+    for (const key of Object.keys(targetDefaults)) {
+      const value = targetDefaults[key];
+      const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
+        ? value
+        : [value];
 
-      if (entry.options) updateOptions(entry as TargetConfiguration);
-      Object.keys(entry.configurations ?? {}).forEach((config) => {
-        updateConfiguration(entry as TargetConfiguration, config);
+      const usesExecutor = (entry: TargetDefaultArrayEntry) =>
+        key === EXECUTOR_TO_MIGRATE ||
+        entry.executor === EXECUTOR_TO_MIGRATE ||
+        entry.filter?.executor === EXECUTOR_TO_MIGRATE;
+
+      const kept = entries.filter((entry) => {
+        if (usesExecutor(entry)) {
+          if (entry.options) updateOptions(entry as TargetConfiguration);
+          Object.keys(entry.configurations ?? {}).forEach((config) => {
+            updateConfiguration(entry as TargetConfiguration, config);
+          });
+        }
+        // Drop entries left with nothing but their `filter`/`executor` locator.
+        return Object.keys(entry).some(
+          (k) => k !== 'filter' && k !== 'executor'
+        );
       });
 
-      if (!isEntryEmpty(entry)) {
-        remaining.push(entry);
+      if (kept.length === 0) {
+        delete targetDefaults[key];
+      } else if (kept.length === 1 && kept[0].filter === undefined) {
+        // A lone unfiltered entry is stored as the plain object form.
+        targetDefaults[key] = kept[0];
+      } else {
+        targetDefaults[key] = kept;
       }
     }
-    if (remaining.length === 0) {
+    if (Object.keys(targetDefaults).length === 0) {
       delete nxJson.targetDefaults;
-    } else {
-      nxJson.targetDefaults = denormalizeTargetDefaults(remaining);
     }
 
     updateNxJson(tree, nxJson);
   }
 
   await formatFiles(tree);
-}
-
-// An entry is "empty" once only filter/meta keys remain (target, executor,
-// projects, plugin) — nothing else worth keeping around.
-function isEntryEmpty(entry: TargetDefaultEntry): boolean {
-  return Object.keys(entry).every((k) => ENTRY_META_KEYS.has(k));
 }
 
 function updateOptions(target: TargetConfiguration) {

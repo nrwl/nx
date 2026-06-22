@@ -7,7 +7,7 @@ import {
   type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
-import { normalizeTargetDefaults } from '@nx/devkit/internal';
+import { findTargetDefault } from '@nx/devkit/internal';
 import ensureDependsOnForMf from './ensure-depends-on-for-mf';
 
 const WEBPACK_EXECUTOR = '@nx/angular:webpack-browser';
@@ -104,14 +104,9 @@ describe('ensure-depends-on-for-mf', () => {
 });
 
 function findWebpackEntry(tree: Tree) {
-  const entries = normalizeTargetDefaults(readNxJson(tree).targetDefaults);
-  return entries.find(
-    (e) =>
-      e.executor === WEBPACK_EXECUTOR &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  return findTargetDefault(readNxJson(tree).targetDefaults, {
+    executor: WEBPACK_EXECUTOR,
+  });
 }
 
 function addProject(tree: Tree) {
