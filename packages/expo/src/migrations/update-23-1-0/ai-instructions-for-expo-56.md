@@ -35,9 +35,8 @@ When updating an app's `package.json`, align to these versions:
 - `@types/react`: `^19.2.0`
 - `react-native`: `0.85.3`
 - `react-native-web`: `~0.21.0`
-- `@expo/metro-config`: `~56.0.13`
+- `@expo/metro`: `~56.0.0`
 - `@expo/metro-runtime`: `~56.0.14`
-- `metro` / `metro-config` / `metro-resolver`: `~0.84.3`
 - `babel-preset-expo`: `~56.0.14`
 - `jest-expo`: `~56.0.4`
 - `expo-splash-screen`: `~56.0.10`
@@ -66,9 +65,10 @@ Starting with SDK 55, Expo bundles Metro through the `@expo/metro` package famil
 
 **Action Items**:
 
-- [ ] Keep using `@expo/metro-config`'s `getDefaultConfig(__dirname)` as the base config
+- [ ] Add `@expo/metro` (`~56.0.0`) as a direct dependency — the generated `metro.config.js` and `withNxMetro` require `@expo/metro/metro-config`, which package managers like pnpm won't resolve from a transitive dependency
+- [ ] Source the Metro config from the Expo-provided instance: `getDefaultConfig` from `expo/metro-config` and `mergeConfig` from `@expo/metro/metro-config`
+- [ ] Remove direct dependencies on standalone `metro` / `metro-config` / `metro-resolver`, and do not install `@expo/metro-config` directly (expo-doctor flags it) — `@expo/metro` replaces them
 - [ ] If you wrap config with `withNxMetro` from `@nx/expo`, leave it in place — it continues to merge Nx workspace resolution
-- [ ] Remove any direct dependency on standalone `metro` packages from app `package.json` unless a custom transformer requires it
 - [ ] Clear the Metro cache after upgrading: `npx expo start --clear`
 
 ### 3. Babel preset
