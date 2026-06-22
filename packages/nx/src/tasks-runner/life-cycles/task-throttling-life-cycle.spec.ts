@@ -3,11 +3,10 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { TaskResult } from '../life-cycle';
 import {
   TaskThrottlingLifeCycle,
-  ThrottleExitSummaryPayload,
   formatDuration,
   formatReport,
+  getThrottleExitSummaryPayload,
   overlap,
-  setThrottleExitSummarySink,
 } from './task-throttling-life-cycle';
 
 function makeTask(
@@ -619,7 +618,7 @@ describe('cache reporting', () => {
     );
   });
 
-  it('renders the remote-cache rec as a labelled OSC 8 link (no raw URL) on a hyperlink terminal', () => {
+  it('renders the remote-cache rec as a whole-phrase OSC 8 link (no raw URL) on a hyperlink terminal', () => {
     // FORCE_HYPERLINK takes precedence over the TTY/CI checks in
     // supportsHyperlinks, so it flips linkify on inside the no-TTY jest env.
     const prev = process.env.FORCE_HYPERLINK;
@@ -632,12 +631,12 @@ describe('cache reporting', () => {
       })!;
 
       const report = formatReport(s);
-      // The OSC 8 link wraps the descriptive LABEL (visible text), with the
-      // utm-tagged page as the hidden target — never a raw URL in the text.
-      // Sequence (see terminalLink): ESC]8;; <target> BEL <label> ...
+      // The whole sentence is the OSC 8 link (visible text), with the utm-tagged
+      // page as the hidden target — never a raw URL in the text. Sequence (see
+      // terminalLink): ESC]8;; <target> BEL <phrase> ...
       const OSC8 = ']8;;';
       expect(report).toContain(
-        `${OSC8}https://nx.dev/ci/features/remote-cache?utm=performance-reportNx Cloud remote cache`
+        `${OSC8}https://nx.dev/ci/features/remote-cache?utm=performance-reportDrastically reduce your run duration by sharing a cache across your team and CI`
       );
       // The remote-cache URL must NOT appear as plain visible text: every
       // occurrence is immediately preceded by the OSC 8 target preamble.
@@ -706,9 +705,7 @@ describe('cache reporting', () => {
   });
 });
 
-describe('exit summary sink (TUI countdown)', () => {
-  afterEach(() => setThrottleExitSummarySink(null));
-
+describe('exit summary payload (TUI countdown)', () => {
   function feed(lc: TestThrottle, graph: TaskGraph) {
     lc.startCommand(1);
     lc.endTasks(
@@ -716,30 +713,31 @@ describe('exit summary sink (TUI countdown)', () => {
         (task) => ({ task }) as unknown as TaskResult
       )
     );
-    lc.endCommand();
   }
 
-  it('hands the structured summary payload to the sink on endCommand (TUI path)', () => {
-    let received: ThrottleExitSummaryPayload | null = null;
-    setThrottleExitSummarySink((p) => (received = p));
-
+  it('builds the structured payload the TUI pulls at endCommand', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const graph = makeGraph([a, b], { b: ['a'] });
     feed(new TestThrottle(graph), graph);
 
-    expect(received).not.toBeNull();
+    const payload = getThrottleExitSummaryPayload();
+    expect(payload).not.toBeNull();
     // The TUI builds the visual from these stats (not a pre-formatted string).
-    expect(received!.runDurationMs).toBe(2000);
-    expect(received!.criticalPathMs).toBe(2000);
-    expect(received!.criticalPathTaskCount).toBe(2);
-    expect(Array.isArray(received!.recommendations)).toBe(true);
+    expect(payload!.runDurationMs).toBe(2000);
+    expect(payload!.criticalPathMs).toBe(2000);
+    expect(payload!.criticalPathTaskCount).toBe(2);
+    expect(Array.isArray(payload!.recommendations)).toBe(true);
   });
 
-  it('does nothing on endCommand when no sink is set (non-TUI path)', () => {
+  it('clears the active lifecycle once consumed, so a later flush gets nothing', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const graph = makeGraph([a]);
-    expect(() => feed(new TestThrottle(graph), graph)).not.toThrow();
+    feed(new TestThrottle(graph), graph);
+
+    expect(getThrottleExitSummaryPayload()).not.toBeNull();
+    // The popup now owns the report; the terminal flush path must not re-render it.
+    expect(getThrottleExitSummaryPayload()).toBeNull();
   });
 });
 

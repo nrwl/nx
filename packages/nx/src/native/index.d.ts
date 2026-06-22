@@ -34,7 +34,7 @@ export declare class AppLifeCycle {
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
-  endCommand(): void
+  endCommand(summary?: ThrottleExitSummary | undefined | null): void
   __init(doneCallback: (() => unknown)): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
@@ -43,7 +43,6 @@ export declare class AppLifeCycle {
   setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
-  __setExitSummary(summary: ThrottleExitSummary): void
   setEstimatedTaskTimings(timings: Record<string, number>): void
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void

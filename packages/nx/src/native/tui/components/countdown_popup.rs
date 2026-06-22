@@ -32,11 +32,18 @@ const PERF_URL_LABEL: &str = "Learn how to improve your run's performance";
 const PERF_URL_HREF: &str =
     "https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report";
 
+/// The remote-cache recommendation is a WHOLE-PHRASE link: the entire sentence is
+/// clickable with no URL shown (see the TS `NX_REMOTE_CACHE_CTA` / `linkify` — this
+/// label must stay byte-identical to that phrase so the popup can find it). The
+/// sentence wraps across rows, so the OSC 8 injection links it per rendered row.
+const REMOTE_CACHE_LABEL: &str =
+    "Drastically reduce your run duration by sharing a cache across your team and CI";
+const REMOTE_CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
+
 /// Word-wrapped row count for `lines` at `width`, using the SAME wrapping the
-/// Paragraph applies (`Wrap { trim: false }`). Keeps the popup sizing, the
-/// scrollbar height, and the OSC 8 link row all consistent with what actually
-/// renders — a hand-rolled character-wrap estimate diverges from ratatui's word
-/// wrapping and lands the injected link on the wrong row.
+/// Paragraph applies (`Wrap { trim: false }`). Keeps the popup sizing and the
+/// scrollbar height consistent with what actually renders — a hand-rolled
+/// character-wrap estimate diverges from ratatui's word wrapping.
 fn wrapped_rows(lines: &[Line], width: u16) -> usize {
     if lines.is_empty() {
         return 0;
@@ -44,6 +51,94 @@ fn wrapped_rows(lines: &[Line], width: u16) -> usize {
     Paragraph::new(lines.to_vec())
         .wrap(Wrap { trim: false })
         .line_count(width.max(1))
+}
+
+/// Make `visible` — as the Paragraph rendered it into `inner_area`, possibly
+/// wrapped across rows — a clickable OSC 8 hyperlink to `href`. ratatui's text
+/// path strips the escape framing from cells (ratatui#1028), so instead we find
+/// the rendered text and replace each per-row run with one self-contained OSC 8
+/// cell (sequence + `CellDiffOption::ForcedWidth` = the run's width), blanking the
+/// rest of the run. One self-contained cell per row keeps every link fragment
+/// robust to incremental diffing. Locating is by SCANNING the buffer (not
+/// re-deriving ratatui's wrap/scroll), matching with whitespace collapsed so a
+/// wrap point — its space turned into trailing padding plus a row break — still
+/// matches; if `visible` isn't found (scrolled out of view, or its rec isn't
+/// shown) nothing is injected. Requires ratatui-core >= 0.1.2 for ForcedWidth.
+fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
+    if visible.is_empty() {
+        return;
+    }
+    // Flatten the inner area, recording each kept char's (col, row); runs of
+    // whitespace (incl. row breaks) collapse to a single space.
+    let mut flat = String::new();
+    let mut pos: Vec<(u16, u16)> = Vec::new();
+    let mut prev_space = true; // collapse + trim leading
+    for row in inner_area.y..inner_area.bottom() {
+        for col in inner_area.x..inner_area.right() {
+            let ch = f
+                .buffer_mut()
+                .cell((col, row))
+                .and_then(|c| c.symbol().chars().next())
+                .unwrap_or(' ');
+            if ch == ' ' {
+                if !prev_space {
+                    flat.push(' ');
+                    pos.push((u16::MAX, u16::MAX)); // sentinel: collapsed space
+                    prev_space = true;
+                }
+            } else {
+                flat.push(ch);
+                pos.push((col, row));
+                prev_space = false;
+            }
+        }
+        if !prev_space {
+            flat.push(' '); // a row break wraps like a space
+            pos.push((u16::MAX, u16::MAX));
+            prev_space = true;
+        }
+    }
+    let target: String = visible.split_whitespace().collect::<Vec<_>>().join(" ");
+    let Some(byte_idx) = flat.find(&target) else {
+        return;
+    };
+    let char_start = flat[..byte_idx].chars().count();
+    let target_len = target.chars().count();
+
+    // Group the matched chars into per-row [first_col, last_col] segments.
+    let mut segments: Vec<(u16, u16, u16)> = Vec::new();
+    for (col, row) in pos.iter().skip(char_start).take(target_len).copied() {
+        if col == u16::MAX {
+            continue; // collapsed space between rows/words
+        }
+        match segments.last_mut() {
+            Some((r, _first, last)) if *r == row => *last = col,
+            _ => segments.push((row, col, col)),
+        }
+    }
+
+    for (row, first_col, last_col) in segments {
+        let mut segment_text = String::new();
+        for col in first_col..=last_col {
+            if let Some(cell) = f.buffer_mut().cell((col, row)) {
+                segment_text.push_str(cell.symbol());
+            }
+        }
+        let seq = format!("\x1b]8;;{href}\x07{segment_text}\x1b]8;;\x07");
+        if let Some(cell) = f.buffer_mut().cell_mut((first_col, row)) {
+            cell.set_symbol(&seq);
+            cell.set_style(Style::default().fg(THEME.info));
+            if let Some(width) = NonZeroU16::new(last_col - first_col + 1) {
+                cell.set_diff_option(CellDiffOption::ForcedWidth(width));
+            }
+        }
+        // The ForcedWidth cell owns the run's columns; blank the rest.
+        for col in (first_col + 1)..=last_col {
+            if let Some(cell) = f.buffer_mut().cell_mut((col, row)) {
+                cell.set_symbol(" ");
+            }
+        }
+    }
 }
 
 /// Format a millisecond duration like the TS `formatDuration` (e.g. "470ms",
@@ -526,47 +621,17 @@ impl CountdownPopup {
         f.render_widget(Clear, popup_area);
         f.render_widget(popup, popup_area);
 
-        // Turn the docs label into a real OSC 8 hyperlink. ratatui's normal text
-        // path can't carry it: control bytes (the ESC/BEL framing of an OSC 8
-        // sequence) are filtered out of cells, so the escape never reaches the
-        // terminal (ratatui#1028). The workaround is to write the whole sequence
-        // straight into the label's first cell and use CellDiffOption::ForcedWidth
-        // to tell the diff/cursor that the cell really spans the VISIBLE text's
-        // width — so layout and diffing stay aligned. Requires ratatui-core >=
-        // 0.1.2. The visible glyphs equal the plain fallback text, so the
-        // buffer↔terminal stay consistent.
-        //
-        // We locate the label by SCANNING the just-rendered buffer for the (unique)
-        // label text rather than re-deriving where it landed from the wrap/scroll
-        // math — a hand-rolled row estimate diverged from ratatui's word wrapping
-        // and put the escape on a wrapped recommendation row. The scan also gives
-        // scrolling/clipping for free: if the label scrolled out of view it simply
-        // isn't found and no link is injected.
+        // Turn the report's links into real OSC 8 hyperlinks. ratatui's normal
+        // text path can't carry them: the ESC/BEL framing is filtered out of cells
+        // (ratatui#1028), so we locate each link's rendered text in the buffer and
+        // replace it (see inject_osc8). Only with a report shown.
         if url_line_index.is_some() {
-            let visible_width = PERF_URL_LABEL.chars().count() as u16;
-            if visible_width > 0 && visible_width <= inner_area.width {
-                'find: for row in inner_area.y..inner_area.bottom() {
-                    let mut text = String::new();
-                    for col in inner_area.x..inner_area.right() {
-                        if let Some(cell) = f.buffer_mut().cell((col, row)) {
-                            text.push_str(cell.symbol());
-                        }
-                    }
-                    if let Some(byte_idx) = text.find(PERF_URL_LABEL) {
-                        let col = inner_area.x + text[..byte_idx].chars().count() as u16;
-                        let seq =
-                            format!("\x1b]8;;{PERF_URL_HREF}\x07{PERF_URL_LABEL}\x1b]8;;\x07");
-                        if let Some(cell) = f.buffer_mut().cell_mut((col, row)) {
-                            cell.set_symbol(&seq);
-                            cell.set_style(Style::default().fg(THEME.info));
-                            cell.set_diff_option(CellDiffOption::ForcedWidth(
-                                NonZeroU16::new(visible_width).unwrap(),
-                            ));
-                        }
-                        break 'find;
-                    }
-                }
-            }
+            // The docs footer link (its label fits one row).
+            inject_osc8(f, inner_area, PERF_URL_LABEL, PERF_URL_HREF);
+            // The remote-cache recommendation: the whole sentence is the link, so
+            // it spans multiple rows when wrapped. Only present when that rec is
+            // shown; otherwise the scan finds nothing and injects nothing.
+            inject_osc8(f, inner_area, REMOTE_CACHE_LABEL, REMOTE_CACHE_HREF);
         }
 
         // Render scrollbar if needed
@@ -757,6 +822,65 @@ mod tests {
             assert!(
                 !text.contains(PERF_URL_LABEL),
                 "label left as plain text on row {yy} — link misplaced"
+            );
+        }
+    }
+
+    #[test]
+    fn remote_cache_rec_links_the_whole_phrase_across_rows() {
+        // The remote-cache recommendation is the whole sentence as a link; it
+        // wraps to multiple rows, so each rendered row-segment must be linked (no
+        // raw URL, nothing left unlinked).
+        let rec = format!("{REMOTE_CACHE_LABEL}.");
+        let mut popup = CountdownPopup::new();
+        popup.set_summary(summary_with(vec![rec]));
+
+        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                popup.render(f, area);
+            })
+            .unwrap();
+        let buffer = terminal.backend().buffer().clone();
+
+        // Every OSC 8 cell targets a known page; at least one targets remote cache.
+        let mut cache_links = 0;
+        for y in 0..buffer.area.height {
+            for x in 0..buffer.area.width {
+                let sym = buffer.cell((x, y)).unwrap().symbol();
+                if sym.contains("\x1b]8;;") {
+                    assert!(
+                        sym.contains(REMOTE_CACHE_HREF) || sym.contains(PERF_URL_HREF),
+                        "unexpected OSC 8 target"
+                    );
+                    if sym.contains(REMOTE_CACHE_HREF) {
+                        cache_links += 1;
+                    }
+                }
+            }
+        }
+        assert!(cache_links >= 1, "the cache phrase should be linked");
+
+        // The raw URL is never visible plain text, and the phrase (start AND end,
+        // i.e. every wrapped row) is consumed by the links rather than left plain.
+        for y in 0..buffer.area.height {
+            let mut text = String::new();
+            for x in 0..buffer.area.width {
+                let s = buffer.cell((x, y)).unwrap().symbol();
+                text.push_str(if s.contains('\x1b') { "\u{0}" } else { s });
+            }
+            assert!(
+                !text.contains("https://nx.dev/ci/features/remote-cache"),
+                "raw remote-cache URL visible on row {y}"
+            );
+            assert!(
+                !text.contains("Drastically reduce"),
+                "phrase start left unlinked on row {y}"
+            );
+            assert!(
+                !text.contains("team and CI"),
+                "phrase end (wrapped row) left unlinked on row {y}"
             );
         }
     }

@@ -62,7 +62,7 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import {
   TaskThrottlingLifeCycle,
   flushThrottleReport,
-  setThrottleExitSummarySink,
+  getThrottleExitSummaryPayload,
 } from './life-cycles/task-throttling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
@@ -228,14 +228,15 @@ async function getTerminalOutputLifeCycle(
 
       // In the TUI, render the throttle report inside the exit-countdown popup
       // (while the TUI is still up) instead of printing it to the terminal after
-      // teardown. The throttle lifecycle calls this at endCommand. Guard against
-      // a native binding without the method (older/WASM build) so a run is never
-      // crashed by a missing optional method.
-      setThrottleExitSummarySink((payload) => {
-        if (typeof (appLifeCycle as any).__setExitSummary === 'function') {
-          (appLifeCycle as any).__setExitSummary(payload);
-        }
-      });
+      // teardown. Deliver it through endCommand itself — which runs once every
+      // task timing is in — by wrapping appLifeCycle.endCommand to pull the
+      // structured report and forward it to the native endCommand. napi ignores
+      // the extra arg on an older binding, so a run is never crashed by it.
+      const nativeEndCommand = (appLifeCycle as any).endCommand.bind(
+        appLifeCycle
+      );
+      (appLifeCycle as any).endCommand = () =>
+        nativeEndCommand(getThrottleExitSummaryPayload() ?? undefined);
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
@@ -587,7 +588,6 @@ export async function runCommandForTasks(
     if (!isTuiEnabled()) {
       flushThrottleReport();
     }
-    setThrottleExitSummarySink(null);
 
     await printConfigureAiAgentsDisclaimer();
 
@@ -601,10 +601,10 @@ export async function runCommandForTasks(
   } catch (e) {
     restoreTerminal?.();
     // Print the report to the restored terminal. No-ops if the popup already
-    // delivered it (the TUI path clears the active lifecycle once the sink
-    // fires), so this won't double-print; it's fail-safe and never masks `e`.
+    // delivered it (the TUI's endCommand clears the active lifecycle once it
+    // pulls the report), so this won't double-print; it's fail-safe and never
+    // masks `e`.
     flushThrottleReport();
-    setThrottleExitSummarySink(null);
     throw e;
   }
 }

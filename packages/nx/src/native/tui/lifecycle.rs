@@ -419,8 +419,13 @@ impl AppLifeCycle {
     }
 
     #[napi(async_runtime)]
-    pub fn end_command(&self) -> napi::Result<()> {
-        self.with_app(|app| app.end_command());
+    pub fn end_command(&self, summary: Option<ThrottleExitSummary>) -> napi::Result<()> {
+        self.with_app(|app| {
+            if let Some(summary) = summary {
+                app.set_exit_summary(summary);
+            }
+            app.end_command();
+        });
         Ok(())
     }
 
@@ -700,12 +705,6 @@ impl AppLifeCycle {
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
         self.with_app(|app| app.set_cloud_message(Some(message)));
-        Ok(())
-    }
-
-    #[napi(js_name = "__setExitSummary")]
-    pub fn __set_exit_summary(&self, summary: ThrottleExitSummary) -> napi::Result<()> {
-        self.with_app(|app| app.set_exit_summary(summary));
         Ok(())
     }
 

@@ -25,15 +25,25 @@ const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
 /**
- * Visible text ⇄ tagged target pairs, for {@link linkify} (href = url + UTM).
- * The perf/agents pages show the clean URL; the remote-cache page shows a
- * descriptive label instead (its rec reads naturally as "→ Nx Cloud remote
- * cache" once the URL is hidden behind the OSC 8 link).
+ * Visible URL ⇄ tagged target pairs, for {@link linkify} (href = url + UTM): on an
+ * OSC 8 terminal the tagged URL in the text is swapped for a hyperlink whose
+ * visible text is the clean URL.
  */
 const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
   { visible: NX_PERFORMANCE_URL, href: NX_PERFORMANCE_LINK },
   { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
-  { visible: 'Nx Cloud remote cache', href: NX_REMOTE_CACHE_LINK },
+];
+/**
+ * Whole-phrase links: the entire sentence is the clickable text — no label and no
+ * URL on an OSC 8 terminal or in the TUI popup. {@link linkify} appends the URL
+ * only when OSC 8 isn't available (CI, pipes) so it stays reachable. The popup
+ * re-creates the same link natively by scanning for this exact phrase, so the
+ * Rust REMOTE_CACHE_LABEL constant must stay in sync with it.
+ */
+const NX_REMOTE_CACHE_CTA =
+  'Drastically reduce your run duration by sharing a cache across your team and CI';
+const PHRASE_LINKS: ReadonlyArray<{ phrase: string; href: string }> = [
+  { phrase: NX_REMOTE_CACHE_CTA, href: NX_REMOTE_CACHE_LINK },
 ];
 /**
  * At or below this hit rate the cache is barely helping; if remote cache is also
@@ -197,30 +207,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       if (status != null) {
         this.statuses.set(task.id, status);
       }
-    }
-  }
-
-  endCommand(): void {
-    // In TUI mode the report is rendered inside the exit-countdown popup rather
-    // than printed to the terminal. The sink (set by run-command when the TUI is
-    // active) pushes the formatted report into the live TUI here, while it's still
-    // up; non-TUI runs leave the sink unset and print via flushThrottleReport.
-    if (!exitSummarySink) {
-      return;
-    }
-    // endCommand runs in the tasks-runner's `finally`, so a throw here would
-    // replace the real task results. The report is cosmetic — degrade to no
-    // report rather than ever crash the run (same stance as remoteCacheEnabled).
-    try {
-      const summary = this.getSummary();
-      if (summary) {
-        exitSummarySink(buildExitSummaryPayload(summary));
-        // The popup now owns the report; drop the active lifecycle so a later
-        // terminal flush (e.g. on the error path) can't re-print it.
-        activeThrottleLifeCycle = null;
-      }
-    } catch {
-      // best-effort report; never let it affect the run
     }
   }
 
@@ -767,25 +753,36 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 }
 
 /**
- * The most recently constructed throttle lifecycle, so `flushThrottleReport` can
- * print after the TUI tears down (the TUI no-ops `console` during the run, so the
- * report can't come from `endCommand`). Cleared on flush.
+ * The most recently constructed throttle lifecycle, so the report can be read
+ * after the run: the TUI pulls it in `endCommand` (see
+ * {@link getThrottleExitSummaryPayload}) and non-TUI runs print it via
+ * {@link flushThrottleReport}. Cleared once consumed.
  */
 let activeThrottleLifeCycle: TaskThrottlingLifeCycle | null = null;
 
 /**
- * When set, the throttle report is handed to this sink at `endCommand` (while the
- * TUI is still up) instead of being printed to the terminal. run-command wires
- * this to the TUI's exit-countdown popup for local runs; non-TUI runs leave it
- * unset and the report is printed via {@link flushThrottleReport}.
+ * The structured report for the TUI's exit-countdown popup, or null when there's
+ * nothing to show. run-command calls this from the TUI's `endCommand` (every task
+ * timing is in by then) and passes the result to the native `endCommand`, instead
+ * of a separate push channel. Clears the active lifecycle so the popup owns the
+ * report and a later terminal flush can't re-print it. Best-effort: a throw here
+ * must never affect the run, so it degrades to null.
  */
-let exitSummarySink: ((payload: ThrottleExitSummaryPayload) => void) | null =
-  null;
-
-export function setThrottleExitSummarySink(
-  sink: ((payload: ThrottleExitSummaryPayload) => void) | null
-): void {
-  exitSummarySink = sink;
+export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | null {
+  const lifeCycle = activeThrottleLifeCycle;
+  if (!lifeCycle) {
+    return null;
+  }
+  try {
+    const summary = lifeCycle.getSummary();
+    if (!summary) {
+      return null;
+    }
+    activeThrottleLifeCycle = null;
+    return buildExitSummaryPayload(summary);
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -1029,21 +1026,29 @@ function buildExitSummaryPayload(
 }
 
 /**
- * Make the report's docs links clickable on terminals that support OSC 8, while
- * leaving the plain (utm-tagged) URL everywhere else. The recommendation strings
- * embed the tagged target; here we swap it for an OSC 8 hyperlink whose visible
- * text is the clean URL and whose target keeps the tag. When OSC 8 isn't
- * supported (CI, pipes) the text is returned untouched — the tagged URL prints
- * verbatim and GitHub etc. auto-link it. Terminal-only: never run this over the
- * strings handed to the TUI popup (ratatui's cell grid strips the escape bytes).
+ * Make the report's docs links clickable on terminals that support OSC 8. Two
+ * kinds: URL-links, where a tagged URL embedded in the text becomes a hyperlink
+ * whose visible text is the clean URL; and phrase-links, where a whole sentence
+ * becomes the hyperlink with no URL shown. When OSC 8 isn't supported (CI, pipes)
+ * URL-links print their tagged URL verbatim (auto-linked) and phrase-links get the
+ * URL appended so they stay reachable. Terminal-only: never run this over the
+ * strings handed to the TUI popup (ratatui's cell grid strips the escape bytes;
+ * the popup re-creates the links natively).
  */
 function linkify(text: string): string {
-  if (!supportsHyperlinks()) {
-    return text;
-  }
   let out = text;
+  if (!supportsHyperlinks()) {
+    // No clickable target: surface each phrase-link's URL inline so it's reachable.
+    for (const { phrase, href } of PHRASE_LINKS) {
+      out = out.split(phrase).join(`${phrase} → ${href}`);
+    }
+    return out;
+  }
   for (const { visible, href } of REPORT_LINKS) {
     out = out.split(href).join(terminalLink(visible, href));
+  }
+  for (const { phrase, href } of PHRASE_LINKS) {
+    out = out.split(phrase).join(terminalLink(phrase, href));
   }
   return out;
 }
@@ -1147,7 +1152,9 @@ function buildCacheAdvice(s: ThrottleSummary): string | null {
   // cache is off — a high hit rate means caching is already working.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    return `Drastically reduce your run duration by sharing a cache across your team and CI with ${NX_REMOTE_CACHE_LINK}.`;
+    // The whole sentence is the link (see PHRASE_LINKS / linkify): clickable with
+    // no URL on an OSC 8 terminal and in the TUI popup, URL appended otherwise.
+    return `${NX_REMOTE_CACHE_CTA}.`;
   }
   return null;
 }
