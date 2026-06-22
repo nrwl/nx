@@ -140,6 +140,7 @@ Similar to the Nx CLI, Nx Cloud also uses the `NX_VERBOSE_LOGGING` environment v
 | `NX_CLOUD_ORCHESTRATOR_TIMEOUT_MS`    | number  | Timeout in milliseconds the orchestrator (main job) waits for a completed task response from Nx Cloud. Defaults to `3600000` (60 minutes).                                                                                 |
 | `NX_CLOUD_NUMBER_OF_RETRIES`          | number  | How many times Nx Cloud retries HTTP requests that fail with a transient error. Defaults to `10` on CI and `0` locally.                                                                                                    |
 | `NX_CLOUD_DISTRIBUTED_EXECUTION`      | boolean | Typically not needed. When set to `false`, disables distributed task execution. Prefer the `--no-dte` or `--no-agents` flags.                                                                                              |
+| `NX_CLOUD_DISTRIBUTED_EXECUTION_ID`   | string  | Set by Nx Cloud to identify the current distributed execution run. Used internally to detect whether the run is already distributing tasks across machines (Nx Agents), so Nx can omit redundant agent recommendations.    |
 
 ### Deprecated Nx Cloud environment variables
 
