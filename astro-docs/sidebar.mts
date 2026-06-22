@@ -10,12 +10,15 @@ type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 /**
  * Tab configuration for the sidebar. Each tab directly owns its sidebar groups,
  * making the tab ↔ content relationship explicit and impossible to drift.
+ * A tab may instead be a direct `link` (renders as a nav link, not a panel).
  */
 export interface SidebarTab {
   id: string;
   label: string;
   icon?: string;
   groups: SidebarItems;
+  /** If set, the tab navigates straight to this slug instead of opening a panel. */
+  link?: string;
 }
 
 const learnGroups: SidebarItems = [
@@ -1278,6 +1281,13 @@ export const sidebarTabs: SidebarTab[] = [
     label: 'Reference',
     icon: 'document',
     groups: referenceGroups,
+  },
+  {
+    id: 'tab-templates',
+    label: 'Templates',
+    icon: 'rocket',
+    link: 'templates',
+    groups: [],
   },
 ];
 
