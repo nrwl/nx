@@ -12,12 +12,24 @@ const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
 /** Docs guide on speeding up runs (parallelism, distribution, caching). */
 const NX_PERFORMANCE_URL =
   'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
+/** utm tag attributing all clicks from this report back to it. */
+const UTM = '?utm=performance-report';
 /**
- * The clickable target for the performance guide — same page, tagged so we can
- * attribute the traffic to this report. Kept separate from {@link
- * NX_PERFORMANCE_URL} so the visible text stays the clean, copy-pasteable URL.
+ * The clickable *targets* for the report's docs links — same pages, utm-tagged so
+ * we can attribute the traffic to this report. The recommendation strings embed
+ * these tagged links (so the value is preserved even where they render as plain
+ * text — the TUI popup and CI logs); on an OSC 8 terminal {@link linkify} swaps
+ * the visible text back to the clean URL while keeping the tagged href.
  */
-const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}?utm=performance-report`;
+const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
+const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
+const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
+/** Clean URL ⇄ tagged target pairs, for {@link linkify} (href = url + UTM). */
+const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
+  NX_PERFORMANCE_URL,
+  NX_AGENTS_URL,
+  NX_REMOTE_CACHE_URL,
+].map((url) => ({ visible: url, href: `${url}${UTM}` }));
 /**
  * At or below this hit rate the cache is barely helping; if remote cache is also
  * off, recommend it. Above it, caching is working — no recommendation.
@@ -49,9 +61,8 @@ interface TaskTiming {
 /** How a task on the critical path was held up before it started. */
 type GateKind = 'root' | 'dep' | 'slot' | 'hashing' | 'other';
 
-export interface ChainLink {
+interface ChainLink {
   id: string;
-  duration: number;
   gate: GateKind;
   /** How long this task waited after becoming eligible before it started. */
   wait: number;
@@ -75,10 +86,8 @@ export interface ThrottleSummary {
    * empty when the critical path was fully cached.
    */
   criticalPathTop: Array<{ id: string; duration: number }>;
-  totalWork: number;
   /** runDuration − criticalPathDuration: total overhead above the floor. */
   overhead: number;
-  overheadPct: number;
   /**
    * The overhead split by recovering lever; these three sum to `overhead`:
    * `--parallel` (spare cores), more machines (at core count), and coordinator
@@ -86,6 +95,8 @@ export interface ThrottleSummary {
    */
   recoverableByParallel: number;
   recoverableByMachines: number;
+  /** recoverableByParallel + recoverableByMachines — the slot-contention time. */
+  recoverable: number;
   coordinatorOverhead: number;
   parallel: number;
   cores: number;
@@ -102,8 +113,6 @@ export interface ThrottleSummary {
   cacheHits: number;
   /** Tasks that had a cache outcome at all (hits + tasks that ran). */
   cacheableCount: number;
-  /** Total duration of the tasks that ran instead of hitting the cache. */
-  cacheMissTime: number;
   /** The run bypassed the cache (`--skip-nx-cache`). */
   cacheSkipped: boolean;
   /** A remote (Nx Cloud) cache was active for this run. */
@@ -238,10 +247,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
    * DTE). When it is, recommending agents is pointless. Overridable in tests.
    */
   protected distributingTasks(): boolean {
-    return (
-      !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_ID ||
-      !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT
-    );
+    return !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
   }
 
   /** Discrete tasks that actually executed and have a start + end timestamp. */
@@ -618,7 +624,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
         gate =
           overlap(ready, start, hashWindows) >= wait / 2 ? 'hashing' : 'other';
       }
-      return { id, duration: durations.get(id) ?? 0, gate, wait };
+      return { id, gate, wait };
     };
     const finishLineageTasks = this.finishLineage(durations);
     const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
@@ -656,6 +662,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
         : Infinity;
     const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
     const recoverableByParallel = recoverableBySlots - recoverableByMachines;
+    // The slot-contention total. Computed once here so the payload and the
+    // terminal report read one number instead of re-summing the two halves.
+    const recoverable = recoverableByParallel + recoverableByMachines;
 
     // The longest critical-path tasks that actually RAN — the real lever for going
     // faster when no parallelism lever applies. Cache hits are excluded: their
@@ -670,18 +679,15 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
-    // Cache outcome: how many tasks were restored from cache vs ran, and how
-    // much time the ones that ran spent. Tasks with no recorded status (e.g.
-    // synthetic test runs) don't count toward either.
+    // Cache outcome: how many tasks were restored from cache vs ran. Tasks with
+    // no recorded status (e.g. synthetic test runs) don't count toward either.
     let cacheHits = 0;
     let cacheRan = 0;
-    let cacheMissTime = 0;
-    for (const [id, status] of this.statuses) {
+    for (const status of this.statuses.values()) {
       if (CACHE_HIT_STATUSES.has(status)) {
         cacheHits++;
       } else if (status === 'success') {
         cacheRan++;
-        cacheMissTime += durations.get(id) ?? 0;
       }
     }
     const cacheableCount = cacheHits + cacheRan;
@@ -699,7 +705,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const distributing = this.distributingTasks();
     // We can only recommend STARTING to distribute in CI when not already doing so.
     const canDistribute = isCI && !distributing;
-    const overheadPct = runDuration > 0 ? (overhead / runDuration) * 100 : 0;
     const recommendations = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
@@ -717,11 +722,10 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       criticalPathTaskCount: criticalPathTasks.length,
       finishChain,
       criticalPathTop,
-      totalWork,
       overhead,
-      overheadPct,
       recoverableByParallel,
       recoverableByMachines,
+      recoverable,
       coordinatorOverhead,
       parallel,
       cores,
@@ -730,7 +734,6 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       coordinatorDominated,
       cacheHits,
       cacheableCount,
-      cacheMissTime,
       cacheSkipped,
       remoteCacheEnabled,
     };
@@ -877,7 +880,7 @@ function buildRecommendation(args: {
       )} and tasks are still queuing for a slot.`;
       return [
         canDistribute
-          ? `${base} If they're CPU-bound, distribute across machines with Nx Agents → ${NX_AGENTS_URL}; if they're I/O-bound, a higher --parallel may help instead.`
+          ? `${base} If they're CPU-bound, distribute across machines with Nx Agents → ${NX_AGENTS_LINK}; if they're I/O-bound, a higher --parallel may help instead.`
           : `${base} If they're I/O-bound, a higher --parallel may help.`,
       ];
     }
@@ -887,7 +890,7 @@ function buildRecommendation(args: {
     if (coordinatorDominated) {
       return canDistribute
         ? [
-            `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → ${NX_AGENTS_URL}.`,
+            `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → ${NX_AGENTS_LINK}.`,
           ]
         : [];
     }
@@ -906,7 +909,7 @@ function buildRecommendation(args: {
   const recommendations = [speedUp];
   if (canDistribute) {
     recommendations.push(
-      `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → ${NX_AGENTS_URL}.`
+      `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → ${NX_AGENTS_LINK}.`
     );
   }
   return recommendations;
@@ -921,9 +924,8 @@ function buildRecommendation(args: {
 function formatTopTaskRows(
   tasks: Array<{ id: string; duration: number }>
 ): string[] {
-  if (tasks.length === 0) {
-    return ['  (no tasks)'];
-  }
+  // The only caller (buildRecommendation's speed-up lever) returns early when
+  // criticalPathTop is empty, so `tasks` is always non-empty here.
   const idWidth = Math.max(...tasks.map((t) => t.id.length));
   const durations = tasks.map((t) => formatDuration(t.duration));
   const durWidth = Math.max(...durations.map((d) => d.length));
@@ -968,10 +970,7 @@ export interface ThrottleExitSummaryPayload {
   runDurationMs: number;
   criticalPathMs: number;
   criticalPathTaskCount: number;
-  nonRecoverableMs: number;
   recoverableMs: number;
-  parallel: number;
-  cores: number;
   /** Omitted when there's no cache outcome to show. */
   cacheHits?: number;
   cacheableCount?: number;
@@ -988,10 +987,7 @@ function buildExitSummaryPayload(
     runDurationMs: s.runDuration,
     criticalPathMs: s.criticalPathDuration,
     criticalPathTaskCount: s.criticalPathTaskCount,
-    nonRecoverableMs: s.coordinatorOverhead,
-    recoverableMs: s.recoverableByParallel + s.recoverableByMachines,
-    parallel: s.parallel,
-    cores: s.cores,
+    recoverableMs: s.recoverable,
     cacheHits: hasCache ? s.cacheHits : undefined,
     cacheableCount: hasCache ? s.cacheableCount : undefined,
     cacheSkipped: s.cacheSkipped,
@@ -999,12 +995,34 @@ function buildExitSummaryPayload(
   };
 }
 
+/**
+ * Make the report's docs links clickable on terminals that support OSC 8, while
+ * leaving the plain (utm-tagged) URL everywhere else. The recommendation strings
+ * embed the tagged target; here we swap it for an OSC 8 hyperlink whose visible
+ * text is the clean URL and whose target keeps the tag. When OSC 8 isn't
+ * supported (CI, pipes) the text is returned untouched — the tagged URL prints
+ * verbatim and GitHub etc. auto-link it. Terminal-only: never run this over the
+ * strings handed to the TUI popup (ratatui's cell grid strips the escape bytes).
+ */
+function linkify(text: string): string {
+  if (!supportsHyperlinks()) {
+    return text;
+  }
+  let out = text;
+  for (const { visible, href } of REPORT_LINKS) {
+    out = out.split(href).join(terminalLink(visible, href));
+  }
+  return out;
+}
+
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  // Run duration decomposes into the critical path (longest dependent chain) and
-  // recoverable time (slot contention). It's "critical path", not "floor" — the
-  // durations shift with --parallel, so it's not a fixed minimum.
-  const recoverable = s.recoverableByParallel + s.recoverableByMachines;
+  // The report shows two of run duration's three parts — the critical path
+  // (longest dependent chain) and recoverable time (slot contention); the third,
+  // coordinator/non-recoverable overhead, is computed but no longer displayed, so
+  // the two shown stats don't sum to run duration. It's "critical path", not
+  // "floor" — the durations shift with --parallel, so it's not a fixed minimum.
+  const recoverable = s.recoverable;
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const stat = (label: string, value: string) =>
@@ -1041,27 +1059,25 @@ export function formatReport(s: ThrottleSummary): string {
     const onlySingleLine =
       recommendations.length === 1 && !recommendations[0].includes('\n');
     if (onlySingleLine) {
-      lines.push('', `  Recommendation: ${recommendations[0]}`);
+      lines.push('', `  Recommendation: ${linkify(recommendations[0])}`);
     } else {
       lines.push(
         '',
         '  Recommendations:',
-        ...recommendations.flatMap(renderRec)
+        ...recommendations.flatMap((r) => renderRec(linkify(r)))
       );
     }
   }
   // Footer: a guide on improving run performance, always carrying the utm tag.
-  // On a terminal that supports OSC 8 we keep the visible text the CLEAN URL and
-  // hide the utm in the clickable target. Without OSC 8 (CI, pipes — GitHub
-  // Actions doesn't render OSC 8, it auto-links plain URLs) there's no target to
-  // hide it behind, so we print the utm'd URL inline; GitHub then auto-links it
-  // with the tag intact. Either way no escape bytes reach a non-capable log.
-  const performanceLink = supportsHyperlinks()
-    ? terminalLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK)
-    : NX_PERFORMANCE_LINK;
+  // `linkify` keeps the visible text the CLEAN URL and hides the utm in the OSC 8
+  // target where supported; without OSC 8 (CI, pipes — GitHub Actions doesn't
+  // render it, it auto-links plain URLs) the tagged URL prints verbatim and is
+  // auto-linked. Either way no escape bytes reach a non-capable log.
   lines.push(
     '',
-    `  Learn how to improve your run's performance → ${performanceLink}`
+    linkify(
+      `  Learn how to improve your run's performance → ${NX_PERFORMANCE_LINK}`
+    )
   );
   lines.push('');
   return lines.join('\n');
@@ -1098,7 +1114,7 @@ function buildCacheAdvice(s: ThrottleSummary): string | null {
   // cache is off — a high hit rate means caching is already working.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    return `Drastically reduce your run duration by leveraging Nx Cloud's remote cache to share a cache across your team and CI → ${NX_REMOTE_CACHE_URL}.`;
+    return `Drastically reduce your run duration by leveraging Nx Cloud's remote cache to share a cache across your team and CI → ${NX_REMOTE_CACHE_LINK}.`;
   }
   return null;
 }

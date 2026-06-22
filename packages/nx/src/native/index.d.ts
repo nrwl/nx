@@ -739,10 +739,7 @@ export interface ThrottleExitSummary {
   runDurationMs: number
   criticalPathMs: number
   criticalPathTaskCount: number
-  nonRecoverableMs: number
   recoverableMs: number
-  parallel: number
-  cores: number
   cacheHits?: number
   cacheableCount?: number
   cacheSkipped: boolean

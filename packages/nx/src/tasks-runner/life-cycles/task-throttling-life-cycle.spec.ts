@@ -565,7 +565,6 @@ describe('cache reporting', () => {
 
     expect(s.cacheHits).toBe(1);
     expect(s.cacheableCount).toBe(3);
-    expect(s.cacheMissTime).toBe(2000); // a + b ran (1000 + 1000)
     expect(formatReport(s)).toMatch(/Cache:\s+1\/3 hit \(33%\)/);
   });
 
@@ -657,7 +656,6 @@ describe('exit summary sink (TUI countdown)', () => {
     expect(received!.runDurationMs).toBe(2000);
     expect(received!.criticalPathMs).toBe(2000);
     expect(received!.criticalPathTaskCount).toBe(2);
-    expect(received!.parallel).toBe(1);
     expect(Array.isArray(received!.recommendations)).toBe(true);
   });
 
