@@ -600,7 +600,9 @@ export async function runCommandForTasks(
     };
   } catch (e) {
     restoreTerminal?.();
-    // On error the TUI has been torn down (no countdown popup), so always print.
+    // Print the report to the restored terminal. No-ops if the popup already
+    // delivered it (the TUI path clears the active lifecycle once the sink
+    // fires), so this won't double-print; it's fail-safe and never masks `e`.
     flushThrottleReport();
     setThrottleExitSummarySink(null);
     throw e;

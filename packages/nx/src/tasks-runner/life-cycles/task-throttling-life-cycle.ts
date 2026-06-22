@@ -19,17 +19,22 @@ const UTM = '?utm=performance-report';
  * we can attribute the traffic to this report. The recommendation strings embed
  * these tagged links (so the value is preserved even where they render as plain
  * text — the TUI popup and CI logs); on an OSC 8 terminal {@link linkify} swaps
- * the visible text back to the clean URL while keeping the tagged href.
+ * the visible text back to the clean URL (or a label) while keeping the tagged href.
  */
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
-/** Clean URL ⇄ tagged target pairs, for {@link linkify} (href = url + UTM). */
+/**
+ * Visible text ⇄ tagged target pairs, for {@link linkify} (href = url + UTM).
+ * The perf/agents pages show the clean URL; the remote-cache page shows a
+ * descriptive label instead (its rec reads naturally as "→ Nx Cloud remote
+ * cache" once the URL is hidden behind the OSC 8 link).
+ */
 const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
-  NX_PERFORMANCE_URL,
-  NX_AGENTS_URL,
-  NX_REMOTE_CACHE_URL,
-].map((url) => ({ visible: url, href: `${url}${UTM}` }));
+  { visible: NX_PERFORMANCE_URL, href: NX_PERFORMANCE_LINK },
+  { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
+  { visible: 'Nx Cloud remote cache', href: NX_REMOTE_CACHE_LINK },
+];
 /**
  * At or below this hit rate the cache is barely helping; if remote cache is also
  * off, recommend it. Above it, caching is working — no recommendation.
@@ -51,6 +56,13 @@ const MEANINGFUL_OVERHEAD = 1000;
  * least this fraction of the run (a relative bar that scales with run size).
  */
 const PARALLEL_LEAD_FRACTION = 0.2;
+/**
+ * Gap (ms) that still counts as the same pre-dispatch hashing phase. Hash
+ * measures back-to-back before the first task (and the scheduling gap before
+ * dispatch) sit well under this; a larger gap means older, unrelated hashing in
+ * the same process (e.g. a daemon's previous run) that we exclude.
+ */
+const PRE_DISPATCH_HASH_GAP = 1000;
 
 interface TaskTiming {
   startTime?: number;
@@ -196,9 +208,19 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     if (!exitSummarySink) {
       return;
     }
-    const summary = this.getSummary();
-    if (summary) {
-      exitSummarySink(buildExitSummaryPayload(summary));
+    // endCommand runs in the tasks-runner's `finally`, so a throw here would
+    // replace the real task results. The report is cosmetic — degrade to no
+    // report rather than ever crash the run (same stance as remoteCacheEnabled).
+    try {
+      const summary = this.getSummary();
+      if (summary) {
+        exitSummarySink(buildExitSummaryPayload(summary));
+        // The popup now owns the report; drop the active lifecycle so a later
+        // terminal flush (e.g. on the error path) can't re-print it.
+        activeThrottleLifeCycle = null;
+      }
+    } catch {
+      // best-effort report; never let it affect the run
     }
   }
 
@@ -455,32 +477,40 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
 
   /**
    * Coordinator hashing wall-clock that ran before the first task started — the
-   * run window would otherwise miss it. The lookback is bounded to one task
-   * window so stale perf marks from earlier work in the same process are
-   * excluded, and overlapping windows are unioned so concurrent hashes aren't
-   * double-counted.
+   * run window would otherwise miss it. We count the contiguous hashing phase
+   * leading up to dispatch: union the hash windows into disjoint intervals, then
+   * walk back from the first task start, summing each interval whose end reaches
+   * within {@link PRE_DISPATCH_HASH_GAP} of the previous one, and stop at the
+   * first larger gap (older, unrelated hashing in the same process). This counts
+   * the full phase regardless of how fast the tasks then ran — a task-window
+   * bound collapsed on a cached run, where hashing dominates but the tasks
+   * restore in milliseconds.
    */
   private preDispatchHashTime(
     firstTaskStart: number,
-    taskWindow: number,
     hashWindows: Array<[number, number]>
   ): number {
-    const lowerBound = firstTaskStart - taskWindow;
-    const clipped = hashWindows
-      .map(([s, e]): [number, number] => [
-        Math.max(s, lowerBound),
-        Math.min(e, firstTaskStart),
-      ])
+    const merged: Array<[number, number]> = [];
+    for (const [s, e] of hashWindows
+      .map(([s, e]): [number, number] => [s, Math.min(e, firstTaskStart)])
       .filter(([s, e]) => e > s)
-      .sort((a, b) => a[0] - b[0]);
-    let total = 0;
-    let cursor = -Infinity;
-    for (const [s, e] of clipped) {
-      const start = Math.max(s, cursor);
-      if (e > start) {
-        total += e - start;
-        cursor = e;
+      .sort((a, b) => a[0] - b[0])) {
+      const last = merged[merged.length - 1];
+      if (last && s <= last[1]) {
+        last[1] = Math.max(last[1], e);
+      } else {
+        merged.push([s, e]);
       }
+    }
+    let total = 0;
+    let boundary = firstTaskStart;
+    for (let i = merged.length - 1; i >= 0; i--) {
+      const [s, e] = merged[i];
+      if (e < boundary - PRE_DISPATCH_HASH_GAP) {
+        break; // a real gap: everything earlier is stale
+      }
+      total += e - s;
+      boundary = s;
     }
     return total;
   }
@@ -632,11 +662,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     // Coordinator hashing that ran BEFORE the first task started — the task
     // window would otherwise miss it. Added to both the overhead and the
     // coordinator bucket below, so it surfaces without touching the slot split.
-    const preDispatchHash = this.preDispatchHashTime(
-      runStart,
-      taskWindow,
-      hashWindows
-    );
+    const preDispatchHash = this.preDispatchHashTime(runStart, hashWindows);
     const runDuration = taskWindow + preDispatchHash;
     const overhead = Math.max(0, runDuration - criticalPathDuration);
 
@@ -773,15 +799,22 @@ export function flushThrottleReport(): void {
   if (!lifeCycle) {
     return;
   }
-  const summary = lifeCycle.getSummary();
-  if (!summary) {
-    return;
+  // The report is cosmetic; a throw here (e.g. EPIPE writing to a closed pipe)
+  // must never mask the real task error on the failure path or fail an otherwise
+  // successful run. Degrade to no report.
+  try {
+    const summary = lifeCycle.getSummary();
+    if (!summary) {
+      return;
+    }
+    // After the TUI tears down, the terminal can still be in raw mode (no
+    // \n → \r\n translation), which staircases plain "\n" output. Use \r\n on a
+    // TTY; keep plain \n when piped so logs/files don't get stray carriage returns.
+    const eol = process.stdout.isTTY ? '\r\n' : '\n';
+    process.stdout.write(formatReport(summary).split('\n').join(eol) + eol);
+  } catch {
+    // best-effort report; never let it affect the run's exit behavior
   }
-  // After the TUI tears down, the terminal can still be in raw mode (no
-  // \n → \r\n translation), which staircases plain "\n" output. Use \r\n on a
-  // TTY; keep plain \n when piped so logs/files don't get stray carriage returns.
-  const eol = process.stdout.isTTY ? '\r\n' : '\n';
-  process.stdout.write(formatReport(summary).split('\n').join(eol) + eol);
 }
 
 /**
@@ -1114,7 +1147,7 @@ function buildCacheAdvice(s: ThrottleSummary): string | null {
   // cache is off — a high hit rate means caching is already working.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    return `Drastically reduce your run duration by leveraging Nx Cloud's remote cache to share a cache across your team and CI → ${NX_REMOTE_CACHE_LINK}.`;
+    return `Drastically reduce your run duration by sharing a cache across your team and CI with ${NX_REMOTE_CACHE_LINK}.`;
   }
   return null;
 }

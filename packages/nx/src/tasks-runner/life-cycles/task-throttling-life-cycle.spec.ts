@@ -529,6 +529,41 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.recoverableByParallel).toBe(0);
   });
 
+  it('counts pre-dispatch hashing that ran before the first task (cached/fast run)', () => {
+    // A fast run: the one task restores in 100ms (1000→1100), but the coordinator
+    // hashed 200→800 before dispatching it. That 600ms of pre-dispatch hashing is
+    // coordinator overhead the task window alone would miss.
+    const a = makeTask('a', { start: 1000, end: 1100 });
+    const s = run(makeGraph([a]), 1, { hashWindows: [[200, 800]] })!;
+    // runDuration = taskWindow (100) + pre-dispatch hashing (600)
+    expect(s.runDuration).toBe(700);
+  });
+
+  it('unions overlapping pre-dispatch hash windows (no double count)', () => {
+    const a = makeTask('a', { start: 1100, end: 1200 });
+    // [200,800] and [600,1000] overlap → 800ms of hashing, not 1000.
+    const s = run(makeGraph([a]), 1, {
+      hashWindows: [
+        [200, 800],
+        [600, 1000],
+      ],
+    })!;
+    expect(s.runDuration).toBe(900); // taskWindow 100 + unioned hashing 800
+  });
+
+  it('excludes stale pre-dispatch hashing separated by a large gap', () => {
+    const a = makeTask('a', { start: 3000, end: 3100 });
+    // Real pre-dispatch hashing 2000→2800; an older [0,500] mark from earlier
+    // work in the same process is >1s away and excluded.
+    const s = run(makeGraph([a]), 1, {
+      hashWindows: [
+        [0, 500],
+        [2000, 2800],
+      ],
+    })!;
+    expect(s.runDuration).toBe(900); // taskWindow 100 + contiguous hashing 800
+  });
+
   it('does not throw on a dependency cycle', () => {
     const a = makeTask('a', { start: 0, end: 10 });
     const b = makeTask('b', { start: 10, end: 20 });
@@ -577,8 +612,50 @@ describe('cache reporting', () => {
 
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
-    expect(report).toContain("leveraging Nx Cloud's remote cache");
-    expect(report).toContain('share a cache across your team and CI');
+    // No-TTY jest env → linkify is a no-op → the tagged URL prints verbatim.
+    expect(report).toContain('sharing a cache across your team and CI');
+    expect(report).toContain(
+      'https://nx.dev/ci/features/remote-cache?utm=performance-report'
+    );
+  });
+
+  it('renders the remote-cache rec as a labelled OSC 8 link (no raw URL) on a hyperlink terminal', () => {
+    // FORCE_HYPERLINK takes precedence over the TTY/CI checks in
+    // supportsHyperlinks, so it flips linkify on inside the no-TTY jest env.
+    const prev = process.env.FORCE_HYPERLINK;
+    process.env.FORCE_HYPERLINK = '1';
+    try {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const s = run(makeGraph([a]), 1, {
+        statuses: { a: 'success' }, // 0/1 hit
+        remoteCacheEnabled: false,
+      })!;
+
+      const report = formatReport(s);
+      // The OSC 8 link wraps the descriptive LABEL (visible text), with the
+      // utm-tagged page as the hidden target — never a raw URL in the text.
+      // Sequence (see terminalLink): ESC]8;; <target> BEL <label> ...
+      const OSC8 = ']8;;';
+      expect(report).toContain(
+        `${OSC8}https://nx.dev/ci/features/remote-cache?utm=performance-reportNx Cloud remote cache`
+      );
+      // The remote-cache URL must NOT appear as plain visible text: every
+      // occurrence is immediately preceded by the OSC 8 target preamble.
+      const url = 'https://nx.dev/ci/features/remote-cache';
+      for (
+        let i = report.indexOf(url);
+        i !== -1;
+        i = report.indexOf(url, i + 1)
+      ) {
+        expect(report.slice(i - OSC8.length, i)).toBe(OSC8);
+      }
+    } finally {
+      if (prev === undefined) {
+        delete process.env.FORCE_HYPERLINK;
+      } else {
+        process.env.FORCE_HYPERLINK = prev;
+      }
+    }
   });
 
   it('omits the cache recommendation when local hit rate is high (even if remote is off)', () => {
@@ -591,7 +668,7 @@ describe('cache reporting', () => {
     })!;
 
     expect(s.cacheHits).toBe(3);
-    expect(formatReport(s)).not.toContain("leveraging Nx Cloud's remote cache");
+    expect(formatReport(s)).not.toContain('sharing a cache across your team');
   });
 
   it('omits the cache recommendation when remote cache is already on', () => {
@@ -601,7 +678,7 @@ describe('cache reporting', () => {
       remoteCacheEnabled: true,
     })!;
 
-    expect(formatReport(s)).not.toContain("leveraging Nx Cloud's remote cache");
+    expect(formatReport(s)).not.toContain('sharing a cache across your team');
   });
 
   it('warns (and only warns) when the cache was skipped', () => {
