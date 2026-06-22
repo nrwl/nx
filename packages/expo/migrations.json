@@ -57,15 +57,6 @@
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
     },
-    "update-23-1-0-create-ai-instructions-for-expo-56": {
-      "version": "23.1.0-beta.1",
-      "cli": "nx",
-      "requires": {
-        "expo": ">=55.0.0 <56.0.0"
-      },
-      "description": "Create AI migration instructions for Expo SDK 56 upgrade",
-      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-expo-56.md"
-    },
     "update-23-1-0-update-metro-config-for-expo-56": {
       "version": "23.1.0-beta.1",
       "cli": "nx",
@@ -73,7 +64,8 @@
         "expo": ">= 56.0.0"
       },
       "description": "Update generated metro.config.js to use @expo/metro for Expo SDK 56",
-      "factory": "./dist/src/migrations/update-23-1-0/update-metro-config-for-expo-56"
+      "factory": "./dist/src/migrations/update-23-1-0/update-metro-config-for-expo-56",
+      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-expo-56.md"
     },
     "update-23-1-0-replace-standalone-metro-for-expo-56": {
       "version": "23.1.0-beta.1",
