@@ -252,6 +252,7 @@ pub struct TasksList {
     terminal_width: Option<u16>, // Cached terminal width for column visibility calculation
     in_progress_tasks: Vec<String>, // Standalone in-progress tasks for selection (excludes batched)
     needs_sort: bool,            // Deferred sort flag - sort once per render frame
+    perf_report_available: bool, // Whether the performance report exists yet (run finished)
 }
 
 impl TasksList {
@@ -299,12 +300,19 @@ impl TasksList {
             terminal_width: None,
             in_progress_tasks: Vec::new(),
             needs_sort: false,
+            perf_report_available: false,
         };
 
         // Sort tasks to populate task selection list
         s.sort_tasks();
 
         s
+    }
+
+    /// Marks the performance report as available (the run finished), so the help
+    /// bar can start advertising the `p` shortcut to reopen it.
+    pub fn set_perf_report_available(&mut self, v: bool) {
+        self.perf_report_available = v;
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
@@ -2422,7 +2430,7 @@ impl TasksList {
         is_collapsed: bool,
         is_dimmed: bool,
     ) {
-        let help_text = HelpText::new(is_collapsed, is_dimmed, false);
+        let help_text = HelpText::new(is_collapsed, is_dimmed, false, self.perf_report_available);
         help_text.render(f, help_text_area);
     }
 

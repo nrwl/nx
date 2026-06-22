@@ -729,10 +729,18 @@ impl App {
 
                 // Reopen the run report popup ('p' for performance) while exploring
                 // the TUI after a run. Only meaningful once the report exists (run
-                // finished); a no-op otherwise. Skipped in interactive mode or while
-                // another popup is up.
+                // finished); a no-op otherwise. Skipped in interactive mode, while
+                // another popup is up, or while typing into the filter (so 'p' types
+                // into the filter text instead of reopening the report).
+                let is_filtering = self
+                    .components
+                    .iter()
+                    .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                    .map(|tasks_list| tasks_list.filter_mode)
+                    .unwrap_or(false);
                 if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P'))
                     && !self.is_interactive_mode()
+                    && !is_filtering
                     && !matches!(self.focus, Focus::CountdownPopup | Focus::HelpPopup)
                 {
                     if let Some(countdown_popup) = self
@@ -2617,6 +2625,14 @@ impl TuiApp for App {
             .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
         {
             countdown_popup.set_summary(summary);
+        }
+        // The report now exists, so let the help bar advertise the `p` shortcut.
+        if let Some(tasks_list) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+        {
+            tasks_list.set_perf_report_available(true);
         }
     }
 
