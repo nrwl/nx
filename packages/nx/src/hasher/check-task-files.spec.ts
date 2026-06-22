@@ -249,6 +249,19 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
         ['libs/myproj/src/index.ts']
       );
     });
+
+    it('propagates errors instead of reporting every file as unmatched when the plan fails to build', async () => {
+      // A failure to build the hash plan must surface as a thrown error so a
+      // validation tool sees "could not determine" rather than a confident-but-
+      // wrong "not an input" verdict for legitimate inputs.
+      mockGetPlansReferenceForTask.mockImplementation(() => {
+        throw new Error('task graph failed to construct');
+      });
+
+      await expect(
+        checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts'])
+      ).rejects.toThrow('task graph failed to construct');
+    });
   });
 
   // ── checkFilesAreOutputs ─────────────────────────────────────────────────

@@ -55,7 +55,7 @@ interface TaskIdentity {
 type PlansReference = ExternalObject<Record<string, Array<HashInstruction>>>;
 
 const identityCache = new Map<string, TaskIdentity>();
-const plansReferenceCache = new Map<string, PlansReference | null>();
+const plansReferenceCache = new Map<string, PlansReference>();
 const hashInputsCache = new Map<string, HashInputs | null>();
 const outputsCache = new Map<string, string[]>();
 
@@ -100,32 +100,27 @@ function resolveIdentity(
  * Builds the native hash plan for a task (and its dependency subtree) exactly
  * once per taskId and caches the opaque reference. Both the structured-inputs
  * lookup and the dependent-task-output matching derive from this single plan,
- * so the (relatively expensive) plan is never rebuilt per file. Returns null
- * when the plan cannot be built (e.g. the task graph fails to construct).
+ * so the (relatively expensive) plan is never rebuilt per file. Throws when the
+ * plan cannot be built (e.g. the task graph fails to construct) so callers get
+ * a real error rather than a silently-empty result.
  */
 function getPlansReference(
   taskId: string,
   { projectGraph, inspector }: LoadedContext
-): PlansReference | null {
-  if (plansReferenceCache.has(taskId)) {
-    return plansReferenceCache.get(taskId) ?? null;
-  }
+): PlansReference {
+  const cached = plansReferenceCache.get(taskId);
+  if (cached !== undefined) return cached;
 
   const { project, target, configuration } = resolveIdentity(
     taskId,
     projectGraph
   );
 
-  let reference: PlansReference | null = null;
-  try {
-    reference = inspector.getPlansReferenceForTask({
-      project,
-      target,
-      configuration,
-    });
-  } catch {
-    reference = null;
-  }
+  const reference = inspector.getPlansReferenceForTask({
+    project,
+    target,
+    configuration,
+  });
   plansReferenceCache.set(taskId, reference);
   return reference;
 }
@@ -138,15 +133,8 @@ function getRawInputs(taskId: string, ctx: LoadedContext): HashInputs | null {
   const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
   const reference = getPlansReference(taskId, ctx);
 
-  let result: HashInputs | null = null;
-  if (reference) {
-    try {
-      result =
-        ctx.inspector.inspectInputsFromPlan(reference)[canonicalTaskId] ?? null;
-    } catch {
-      result = null;
-    }
-  }
+  const result =
+    ctx.inspector.inspectInputsFromPlan(reference)[canonicalTaskId] ?? null;
 
   hashInputsCache.set(taskId, result);
   return result;
@@ -167,18 +155,12 @@ function getDependentTaskOutputMatches(
   if (normalizedFiles.length === 0) return new Set();
 
   const reference = getPlansReference(taskId, ctx);
-  if (!reference) return new Set();
-
   const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
-  try {
-    const matches = ctx.inspector.checkDependentTaskOutputFiles(
-      reference,
-      normalizedFiles
-    );
-    return new Set(matches[canonicalTaskId] ?? []);
-  } catch {
-    return new Set();
-  }
+  const matches = ctx.inspector.checkDependentTaskOutputFiles(
+    reference,
+    normalizedFiles
+  );
+  return new Set(matches[canonicalTaskId] ?? []);
 }
 
 function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
