@@ -7,7 +7,7 @@ use ratatui::{
     text::{Line, Span},
     widgets::{
         Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState,
+        ScrollbarState, Wrap,
     },
 };
 use std::any::Any;
@@ -31,6 +31,20 @@ const PERF_URL_LABEL: &str = "Learn how to improve your run's performance";
 // visible label (PERF_URL_LABEL) stays clean.
 const PERF_URL_HREF: &str =
     "https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report";
+
+/// Word-wrapped row count for `lines` at `width`, using the SAME wrapping the
+/// Paragraph applies (`Wrap { trim: false }`). Keeps the popup sizing, the
+/// scrollbar height, and the OSC 8 link row all consistent with what actually
+/// renders — a hand-rolled character-wrap estimate diverges from ratatui's word
+/// wrapping and lands the injected link on the wrong row.
+fn wrapped_rows(lines: &[Line], width: u16) -> usize {
+    if lines.is_empty() {
+        return 0;
+    }
+    Paragraph::new(lines.to_vec())
+        .wrap(Wrap { trim: false })
+        .line_count(width.max(1))
+}
 
 /// Format a millisecond duration like the TS `formatDuration` (e.g. "470ms",
 /// "13.4s", "1m 30s"), so the popup matches the terminal report.
@@ -355,21 +369,18 @@ impl CountdownPopup {
             ]));
         }
 
-        // Size the popup to fit the content. Chrome = 2 border rows + 2 padding
-        // rows (Padding::proportional(1)). Estimate wrapped rows using the inner
-        // width so a long report gets a taller popup; overflow scrolls.
-        let inner_width = popup_width.saturating_sub(4).max(1);
-        let estimated_rows: usize = content
-            .iter()
-            .map(|line| {
-                let line_width = line.width() as u16;
-                if line_width == 0 {
-                    1
-                } else {
-                    (line_width.saturating_sub(1) / inner_width).saturating_add(1) as usize
-                }
-            })
-            .sum();
+        // Size the popup to fit the content. The inner width is whatever the
+        // block's borders + Padding::proportional(1) leave — derive it from a
+        // matching chrome block so it tracks the real inner_area width used below
+        // (rather than hard-coding the padding arithmetic). Vertical chrome is the
+        // 2 border rows + 2 padding rows added back as +4. Overflow scrolls.
+        let inner_width = Block::default()
+            .borders(Borders::ALL)
+            .padding(Padding::proportional(1))
+            .inner(Rect::new(0, 0, popup_width, 1))
+            .width
+            .max(1);
+        let estimated_rows = wrapped_rows(&content, inner_width);
         let popup_height = ((estimated_rows as u16).saturating_add(4))
             .min(safe_area.height.saturating_sub(4))
             .max(5);
@@ -481,19 +492,9 @@ impl CountdownPopup {
         let inner_area = block.inner(popup_area);
         self.viewport_height = inner_area.height as usize;
 
-        // Calculate content height based on line wrapping
-        let wrapped_height = content
-            .iter()
-            .map(|line| {
-                let line_width = line.width() as u16;
-                if line_width == 0 {
-                    1 // Empty lines still take up one row
-                } else {
-                    (line_width.saturating_sub(1) / inner_area.width).saturating_add(1) as usize
-                }
-            })
-            .sum();
-        self.content_height = wrapped_height;
+        // Content height in wrapped rows (same word wrapping as the Paragraph
+        // below), driving the scrollbar and the scroll bound in scroll_down.
+        self.content_height = wrapped_rows(&content, inner_area.width);
 
         // Calculate scrollbar state
         let scrollable_rows = self.content_height.saturating_sub(self.viewport_height);
@@ -509,64 +510,60 @@ impl CountdownPopup {
             ScrollbarState::default()
         };
 
-        // Create scrollable paragraph
-        let scroll_start = self.scroll_offset;
-        let scroll_end = (self.scroll_offset + self.viewport_height).min(content.len());
-        let visible_content = content[scroll_start..scroll_end].to_vec();
-
-        let popup = Paragraph::new(visible_content)
+        // Scroll by visual (wrapped) ROWS over the full content. scroll_offset is
+        // bounded in wrapped rows by scroll_down's max_scroll, which matches
+        // Paragraph::scroll's row-based offset — so a wrapped report scrolls one
+        // row per keypress, and we never index the unwrapped `content` out of
+        // range (slicing it with a wrapped-row offset panicked the process).
+        let popup = Paragraph::new(content.clone())
             .block(block.clone())
             // trim: false preserves leading whitespace so the report's indentation
             // (e.g. the longest-tasks list nested under its recommendation) renders.
-            .wrap(ratatui::widgets::Wrap { trim: false });
+            .wrap(Wrap { trim: false })
+            .scroll((self.scroll_offset as u16, 0));
 
         // Render popup
         f.render_widget(Clear, popup_area);
         f.render_widget(popup, popup_area);
 
-        // Turn the docs URL into a real OSC 8 hyperlink. ratatui's normal text
+        // Turn the docs label into a real OSC 8 hyperlink. ratatui's normal text
         // path can't carry it: control bytes (the ESC/BEL framing of an OSC 8
         // sequence) are filtered out of cells, so the escape never reaches the
         // terminal (ratatui#1028). The workaround is to write the whole sequence
-        // straight into the line's first cell and use CellDiffOption::ForcedWidth
+        // straight into the label's first cell and use CellDiffOption::ForcedWidth
         // to tell the diff/cursor that the cell really spans the VISIBLE text's
         // width — so layout and diffing stay aligned. Requires ratatui-core >=
-        // 0.1.2. The visible glyphs equal the plain fallback text, so when the
-        // line scrolls the buffer↔terminal stay consistent.
-        if let Some(url_index) = url_line_index {
-            let inner_width = inner_area.width;
-            let bullet_width = PERF_URL_BULLET.chars().count() as u16;
+        // 0.1.2. The visible glyphs equal the plain fallback text, so the
+        // buffer↔terminal stay consistent.
+        //
+        // We locate the label by SCANNING the just-rendered buffer for the (unique)
+        // label text rather than re-deriving where it landed from the wrap/scroll
+        // math — a hand-rolled row estimate diverged from ratatui's word wrapping
+        // and put the escape on a wrapped recommendation row. The scan also gives
+        // scrolling/clipping for free: if the label scrolled out of view it simply
+        // isn't found and no link is injected.
+        if url_line_index.is_some() {
             let visible_width = PERF_URL_LABEL.chars().count() as u16;
-            // Single-cell hyperlink only works when the label fits one row after the
-            // bullet; otherwise fall back to the plain text the Paragraph drew.
-            if url_index >= scroll_start
-                && url_index < scroll_end
-                && visible_width > 0
-                && bullet_width.saturating_add(visible_width) <= inner_width
-            {
-                // Screen row where the Paragraph placed the label line: the inner-area
-                // top plus the wrapped height of every visible line before it.
-                let mut row = inner_area.y;
-                for line in &content[scroll_start..url_index] {
-                    let line_width = line.width() as u16;
-                    let rows = if line_width == 0 {
-                        1
-                    } else {
-                        (line_width.saturating_sub(1) / inner_width).saturating_add(1)
-                    };
-                    row = row.saturating_add(rows);
-                }
-                // Only inject when the line is actually within the visible viewport.
-                if row < inner_area.y.saturating_add(inner_area.height) {
-                    let seq = format!("\x1b]8;;{PERF_URL_HREF}\x07{PERF_URL_LABEL}\x1b]8;;\x07");
-                    // The link starts after the (non-linked) bullet prefix.
-                    let col = inner_area.x.saturating_add(bullet_width);
-                    if let Some(cell) = f.buffer_mut().cell_mut((col, row)) {
-                        cell.set_symbol(&seq);
-                        cell.set_style(Style::default().fg(THEME.info));
-                        cell.set_diff_option(CellDiffOption::ForcedWidth(
-                            NonZeroU16::new(visible_width).unwrap(),
-                        ));
+            if visible_width > 0 && visible_width <= inner_area.width {
+                'find: for row in inner_area.y..inner_area.bottom() {
+                    let mut text = String::new();
+                    for col in inner_area.x..inner_area.right() {
+                        if let Some(cell) = f.buffer_mut().cell((col, row)) {
+                            text.push_str(cell.symbol());
+                        }
+                    }
+                    if let Some(byte_idx) = text.find(PERF_URL_LABEL) {
+                        let col = inner_area.x + text[..byte_idx].chars().count() as u16;
+                        let seq =
+                            format!("\x1b]8;;{PERF_URL_HREF}\x07{PERF_URL_LABEL}\x1b]8;;\x07");
+                        if let Some(cell) = f.buffer_mut().cell_mut((col, row)) {
+                            cell.set_symbol(&seq);
+                            cell.set_style(Style::default().fg(THEME.info));
+                            cell.set_diff_option(CellDiffOption::ForcedWidth(
+                                NonZeroU16::new(visible_width).unwrap(),
+                            ));
+                        }
+                        break 'find;
                     }
                 }
             }
@@ -636,5 +633,131 @@ impl Component for CountdownPopup {
 
     fn as_any_mut(&mut self) -> &mut dyn Any {
         self
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+
+    fn summary_with(recommendations: Vec<String>) -> ThrottleExitSummary {
+        ThrottleExitSummary {
+            run_duration_ms: 100_000.0,
+            critical_path_ms: 50_000.0,
+            critical_path_task_count: 5,
+            recoverable_ms: 0.0,
+            cache_hits: None,
+            cacheable_count: None,
+            cache_skipped: false,
+            recommendations,
+        }
+    }
+
+    // Kept in lockstep with the TS formatDuration (see its spec); a drift between
+    // the two would make the popup and the terminal report disagree.
+    #[test]
+    fn format_duration_matches_ts() {
+        assert_eq!(format_duration(470.0), "470ms");
+        assert_eq!(format_duration(999.0), "999ms");
+        assert_eq!(format_duration(1000.0), "1.0s");
+        assert_eq!(format_duration(1500.0), "1.5s");
+        assert_eq!(format_duration(9999.0), "10.0s");
+        assert_eq!(format_duration(10000.0), "10.0s");
+        assert_eq!(format_duration(59950.0), "1m 0s");
+        assert_eq!(format_duration(60000.0), "1m 0s");
+        assert_eq!(format_duration(90000.0), "1m 30s");
+        assert_eq!(format_duration(119500.0), "2m 0s");
+    }
+
+    #[test]
+    fn cache_label_matches_ts() {
+        let mut skipped = summary_with(vec![]);
+        skipped.cache_skipped = true;
+        assert_eq!(
+            cache_label(&skipped).as_deref(),
+            Some("Skipped (--skip-nx-cache)")
+        );
+
+        let mut partial = summary_with(vec![]);
+        partial.cache_hits = Some(1);
+        partial.cacheable_count = Some(3);
+        assert_eq!(cache_label(&partial).as_deref(), Some("1/3 hit (33%)"));
+
+        let mut full = summary_with(vec![]);
+        full.cache_hits = Some(1);
+        full.cacheable_count = Some(1);
+        assert_eq!(cache_label(&full).as_deref(), Some("1/1 hit (100%)"));
+
+        // Nothing cacheable → no cache line.
+        assert_eq!(cache_label(&summary_with(vec![])), None);
+        let mut zero = summary_with(vec![]);
+        zero.cache_hits = Some(0);
+        zero.cacheable_count = Some(0);
+        assert_eq!(cache_label(&zero), None);
+    }
+
+    #[test]
+    fn osc8_link_lands_on_the_url_line_even_when_a_prior_rec_wraps() {
+        // A long single-line recommendation that wraps to several rows sits right
+        // before the docs-link line. The OSC 8 escape must be injected on the link
+        // line (word-wrap aware) — not on a wrapped tail of the recommendation,
+        // which a character-wrap row estimate did at the default width.
+        let long_rec = "You're at this machine's 8 cores and tasks are still \
+            queuing for a slot. If they're CPU-bound, distribute across machines \
+            with Nx Agents → https://nx.dev/ci/features/distribute-task-execution; \
+            if they're I/O-bound, a higher --parallel may help instead."
+            .to_string();
+        let mut popup = CountdownPopup::new();
+        popup.set_summary(summary_with(vec![long_rec]));
+
+        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                popup.render(f, area);
+            })
+            .unwrap();
+
+        let buffer = terminal.backend().buffer().clone();
+        // Exactly one cell carries the OSC 8 sequence — a complete hyperlink
+        // (tagged target + label), injected onto the docs-link line.
+        let mut escape: Option<(u16, u16)> = None;
+        for y in 0..buffer.area.height {
+            for x in 0..buffer.area.width {
+                if let Some(cell) = buffer.cell((x, y)) {
+                    if cell.symbol().contains("\x1b]8;;") {
+                        assert!(escape.is_none(), "more than one OSC 8 cell injected");
+                        escape = Some((x, y));
+                    }
+                }
+            }
+        }
+        let (x, y) = escape.expect("OSC 8 link cell should be injected");
+        let sym = buffer.cell((x, y)).unwrap().symbol();
+        assert!(sym.contains(PERF_URL_HREF), "link target missing");
+        assert!(sym.contains(PERF_URL_LABEL), "link label missing");
+        // It sits at the start of the docs-link line's text, right after the "- "
+        // bullet — not buried inside a recommendation row.
+        assert_eq!(buffer.cell((x - 2, y)).unwrap().symbol(), "-");
+        assert_eq!(buffer.cell((x - 1, y)).unwrap().symbol(), " ");
+        // The key regression check: the label must NOT remain rendered as plain
+        // text anywhere (the ForcedWidth escape cell replaces it). In the
+        // misplaced-link bug the escape landed on a wrapped recommendation row
+        // while the Paragraph still drew the label plainly on the real link row —
+        // which this would catch.
+        for yy in 0..buffer.area.height {
+            let mut text = String::new();
+            for xx in 0..buffer.area.width {
+                let s = buffer.cell((xx, yy)).unwrap().symbol();
+                // Mask the escape cell so its embedded label isn't counted.
+                text.push_str(if s.contains('\x1b') { "\u{0}" } else { s });
+            }
+            assert!(
+                !text.contains(PERF_URL_LABEL),
+                "label left as plain text on row {yy} — link misplaced"
+            );
+        }
     }
 }
