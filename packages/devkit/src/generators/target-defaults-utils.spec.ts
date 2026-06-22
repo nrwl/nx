@@ -10,7 +10,12 @@ jest.mock(
 );
 
 import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
-import { readNxJson, updateNxJson, type Tree } from 'nx/src/devkit-exports';
+import {
+  addProjectConfiguration,
+  readNxJson,
+  updateNxJson,
+  type Tree,
+} from 'nx/src/devkit-exports';
 import {
   addBuildTargetDefaults,
   findTargetDefault,
@@ -66,7 +71,7 @@ describe('target-defaults-utils', () => {
       });
     });
 
-    it('promotes an object value to the array form when a filter is added', () => {
+    it('merges a context filter with no matching entry into the generic (never authors a filtered entry)', () => {
       const nxJson = readNxJson(tree);
       nxJson.targetDefaults = { test: { cache: false } };
 
@@ -77,11 +82,10 @@ describe('target-defaults-utils', () => {
       });
       updateNxJson(tree, nxJson);
 
+      // No entry matches the `@nx/vite` context, so the config merges into the
+      // generic; upsert never writes a new filtered entry.
       expect(readNxJson(tree).targetDefaults).toEqual({
-        test: [
-          { cache: false },
-          { filter: { plugin: '@nx/vite' }, inputs: ['vite.config.ts'] },
-        ],
+        test: { cache: false, inputs: ['vite.config.ts'] },
       });
     });
 
@@ -126,6 +130,130 @@ describe('target-defaults-utils', () => {
           { filter: { plugin: '@nx/vite' }, cache: true },
           { inputs: ['default'] },
         ],
+      });
+    });
+
+    it('updates the matching filtered entry (not the generic) when the context filter matches', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['old'] },
+        ],
+      };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        plugin: '@nx/vite',
+        inputs: ['vite.config.ts'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite.config.ts'] },
+        ],
+      });
+    });
+
+    it('updates the generic when the context filter matches no existing entry', () => {
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite'] },
+        ],
+      };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        plugin: '@nx/jest',
+        inputs: ['jest'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true, inputs: ['jest'] },
+          { filter: { plugin: '@nx/vite' }, inputs: ['vite'] },
+        ],
+      });
+    });
+
+    it('updates a `projects` filtered entry that covers the configured project (by tag)', () => {
+      addProjectConfiguration(tree, 'app-a', {
+        root: 'apps/app-a',
+        tags: ['unit'],
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      };
+
+      // Configuring `app-a` (which has `tag:unit`) — the filtered entry covers
+      // it, so it is the one updated.
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        projects: 'app-a',
+        inputs: ['new'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['new'] },
+        ],
+      });
+    });
+
+    it('updates the generic when no `projects` filtered entry covers the configured project', () => {
+      addProjectConfiguration(tree, 'app-b', {
+        root: 'apps/app-b',
+        tags: ['e2e'],
+      });
+      const nxJson = readNxJson(tree);
+      nxJson.targetDefaults = {
+        test: [
+          { cache: true },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      };
+
+      // `app-b` lacks `tag:unit`, so the filtered entry does not cover it.
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        projects: 'app-b',
+        inputs: ['new'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: [
+          { cache: true, inputs: ['new'] },
+          { filter: { projects: ['tag:unit'] }, inputs: ['old'] },
+        ],
+      });
+    });
+
+    it('downgrades a single unfiltered array entry back to the object form', () => {
+      const nxJson = readNxJson(tree);
+      // A hand-authored single-element array with no filter is equivalent to
+      // the plain object form; merging into it should collapse it back.
+      nxJson.targetDefaults = { test: [{ cache: true }] };
+
+      upsertTargetDefault(tree, nxJson, {
+        target: 'test',
+        inputs: ['default'],
+      });
+      updateNxJson(tree, nxJson);
+
+      expect(readNxJson(tree).targetDefaults).toEqual({
+        test: { cache: true, inputs: ['default'] },
       });
     });
 

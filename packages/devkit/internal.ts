@@ -48,10 +48,6 @@ export {
   readTargetDefaultsForTarget,
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
-export {
-  denormalizeTargetDefaults,
-  normalizeTargetDefaults,
-} from './src/utils/normalize-target-defaults';
 
 // Utils
 export { addPlugin } from './src/utils/add-plugin';
