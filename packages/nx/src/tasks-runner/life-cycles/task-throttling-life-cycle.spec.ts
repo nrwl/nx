@@ -3,9 +3,11 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { TaskResult } from '../life-cycle';
 import {
   TaskThrottlingLifeCycle,
+  ThrottleExitSummaryPayload,
   formatDuration,
   formatReport,
   overlap,
+  setThrottleExitSummarySink,
 } from './task-throttling-life-cycle';
 
 function makeTask(
@@ -56,6 +58,8 @@ class TestThrottle extends TaskThrottlingLifeCycle {
       windows?: Array<[number, number]>;
       skipped?: boolean;
       remoteCache?: boolean;
+      isCI?: boolean;
+      distributing?: boolean;
     } = {}
   ) {
     super(graph);
@@ -69,6 +73,12 @@ class TestThrottle extends TaskThrottlingLifeCycle {
   protected remoteCacheEnabled(): boolean {
     return this.env.remoteCache ?? true;
   }
+  protected isCI(): boolean {
+    return this.env.isCI ?? false;
+  }
+  protected distributingTasks(): boolean {
+    return this.env.distributing ?? false;
+  }
 }
 
 /** Feed a lifecycle a full run and return its summary. */
@@ -81,12 +91,16 @@ function run(
     statuses?: Record<string, TaskResult['status']>;
     cacheSkipped?: boolean;
     remoteCacheEnabled?: boolean;
+    isCI?: boolean;
+    distributing?: boolean;
   } = {}
 ) {
   const lc = new TestThrottle(graph, {
     windows: opts.hashWindows,
     skipped: opts.cacheSkipped,
     remoteCache: opts.remoteCacheEnabled,
+    isCI: opts.isCI,
+    distributing: opts.distributing,
   });
   lc.startCommand(total);
   for (const taskIds of opts.batches ?? []) {
@@ -140,19 +154,24 @@ describe('TaskThrottlingLifeCycle', () => {
     // the run start, and queues for the slot until 1000 → recoverable by slots.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
-    const s = run(makeGraph([a, b]), 1)!;
+    const s = run(makeGraph([a, b]), 1, { isCI: true })!;
 
     expect(s.overhead).toBe(1000);
     // cores-dependent split; the sum is what's robustly assertable.
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
-    expect(s.recommendation).toContain('Nx Cloud Agents');
+    const recs = s.recommendations.join('\n');
     if (cores >= 2) {
-      // 50% of the run is slot wait (>20%), so --parallel leads — don't jump to
-      // all cores, with machines as the contention-free fallback. The share % is
-      // a header stat now, not restated in the recommendation.
-      expect(s.recommendation).toContain('Step --parallel up');
-      expect(s.recommendation).toContain("don't jump straight to all");
+      // 50% of the run is slot wait (>20%), so --parallel leads. There are still
+      // spare cores, so step up local parallelism — and DON'T point at agents
+      // yet. The recommendation quotes the recoverable-by-parallel amount (1.0s
+      // here) as the concrete payoff.
+      expect(recs).toContain('Increase parallelism');
+      expect(recs).toMatch(/recover up to 1\.0s/);
+      expect(recs).not.toContain('Nx Agents');
+    } else {
+      // Single core → no --parallel headroom, so agents is the lever (CI run).
+      expect(recs).toContain('Nx Agents');
     }
     // `b` finished last but is NOT on the critical path (`a` is, same duration).
     // The finish lineage still surfaces b's slot wait, so the bucket has a
@@ -172,8 +191,7 @@ describe('TaskThrottlingLifeCycle', () => {
     const s = run(makeGraph([a, b]), 1)!;
 
     expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
-    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a']); // what we display
-    expect(formatReport(s)).toContain('Longest tasks on the critical path');
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a']); // the critical path
   });
 
   it('displays only the longest few critical-path tasks, not the whole chain', () => {
@@ -202,22 +220,42 @@ describe('TaskThrottlingLifeCycle', () => {
     // free slots and nothing running → not slot contention, pure coordinator time.
     const early = makeTask('early', { start: 0, end: 100 });
     const x = makeTask('x', { start: 5000, end: 6000 });
-    const s = run(makeGraph([early, x]), 4)!;
+    const s = run(makeGraph([early, x]), 4, { isCI: true })!;
 
     expect(s.recoverableByParallel).toBe(0);
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
     // Coordinator (5s) dwarfs the actual work (1s critical path) → dominated:
-    // the machine is maxed, so recommend Nx Agents and drop the longest-tasks
-    // section (nothing meaningful to "speed up"). The recommendation doesn't
-    // restate the coordinator-overhead number — that's a header stat.
+    // the machine is maxed, so recommend Nx Agents (CI run) and drop the
+    // longest-tasks section (nothing meaningful to "speed up"). The recommendation
+    // doesn't restate the coordinator-overhead number — that's a header stat.
     expect(s.coordinatorDominated).toBe(true);
-    expect(s.recommendation).toContain('about as fast as this machine');
-    expect(s.recommendation).toContain('Nx Cloud Agents');
-    expect(s.recommendation).not.toContain('coordinator overhead');
-    expect(s.recommendation).not.toContain('longest tasks shown above');
-    expect(formatReport(s)).not.toContain('Longest tasks on the critical path');
+    const recs = s.recommendations.join('\n');
+    expect(recs).toContain('about as fast as this machine');
+    expect(recs).toContain('Nx Agents');
+    expect(recs).not.toContain('coordinator overhead');
+    // Dominated → only the agents lever; no "speed up these tasks" list.
+    expect(recs).not.toContain('Speed up or split');
+    expect(formatReport(s)).not.toContain('longest tasks on the critical path');
+  });
+
+  it('recovers slot contention at low parallelism even when an idle gap follows it', () => {
+    // Regression: at low --parallel, a long coordinator gap after a burst of slot
+    // contention used to swallow the WHOLE overhead into "non-recoverable",
+    // reporting 0 recoverable. Here `c0`/`c1` saturate both slots 0–1000 while
+    // `w` queues behind them (real slot contention), then the coordinator sits
+    // idle 1000–5000 before `w` runs. The 1s of contention is recoverable; only
+    // the 4s idle gap is non-recoverable coordinator overhead.
+    const c0 = makeTask('c0', { start: 0, end: 1000 });
+    const c1 = makeTask('c1', { start: 0, end: 1000 });
+    const w = makeTask('w', { start: 5000, end: 6000 });
+    const s = run(makeGraph([c0, c1, w]), 2)!;
+
+    expect(s.overhead).toBe(5000);
+    // cores-dependent parallel/machines split; assert the robust sum + remainder.
+    expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
+    expect(s.coordinatorOverhead).toBe(4000);
   });
 
   it('stays critical-path-bound (shows tasks) when coordinator only slightly exceeds the work', () => {
@@ -234,27 +272,33 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(s.coordinatorOverhead).toBeGreaterThan(2000); // > critical path...
     expect(s.coordinatorDominated).toBe(false); // ...but not >3x → not dominated
     const report = formatReport(s);
-    expect(report).toContain('Longest tasks on the critical path');
-    expect(report).toContain('Speed up or split');
+    expect(report).toContain('Speed up or split the longest tasks');
+    expect(report).toContain('on the critical path');
   });
 
-  it('recommends the biggest critical-path tasks (and agents) when no parallelism lever helps', () => {
+  it('recommends the biggest critical-path tasks (and agents in CI) when no parallelism lever helps', () => {
     // A pure dependency chain at its floor (no overhead). The advice should name
-    // the longest tasks to speed up, and offer agents — not a higher --parallel.
+    // the longest tasks to speed up, and (in CI) offer agents — not a higher
+    // --parallel.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 4000 });
     const c = makeTask('c', { start: 4000, end: 5000 });
-    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1)!;
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1, {
+      isCI: true,
+    })!;
 
     expect(s.overhead).toBe(0);
-    expect(s.recommendation).toContain('Speed up or split');
-    expect(s.recommendation).toContain('critical-path');
-    // Points at the section above instead of re-listing the tasks.
-    expect(s.recommendation).toContain('longest tasks shown above');
-    expect(s.criticalPathTop[0].id).toBe('b'); // longest, shown first there
-    // Offers agents (free up CPU for the chain), but not a higher --parallel.
-    expect(s.recommendation).toContain('Nx Cloud Agents');
-    expect(s.recommendation).not.toContain('--parallel');
+    const recs = s.recommendations.join('\n');
+    expect(recs).toContain('Speed up or split');
+    // Names the tasks inline (own recommendation), longest first.
+    expect(recs).toContain('longest tasks on the critical path');
+    expect(recs).toContain('b'); // the longest task, listed inline
+    expect(s.criticalPathTop[0].id).toBe('b');
+    // A separate recommendation offers Nx Agents (free up CPU for the chain), but
+    // neither recommendation suggests a higher --parallel.
+    expect(recs).toContain('Nx Agents');
+    expect(recs).not.toContain('--parallel');
+    expect(s.recommendations.length).toBe(2); // speed-up + distribute, separate
   });
 
   it('keeps a small --parallel win in the header, not the recommendation', () => {
@@ -271,12 +315,55 @@ describe('TaskThrottlingLifeCycle', () => {
 
     if (cores >= 2) {
       expect(s.recoverableByParallel).toBe(500);
-      expect(s.recommendation).toContain('Speed up or split');
-      expect(s.recommendation).toContain('Nx Cloud Agents');
-      expect(s.recommendation).not.toContain('--parallel');
+      const recs = s.recommendations.join('\n');
+      expect(recs).toContain('Speed up or split');
+      expect(recs).not.toContain('--parallel');
       // The 500ms win is a header stat, not restated in the recommendation.
       expect(formatReport(s)).toMatch(/Recoverable time:\s+500ms/);
     }
+  });
+
+  it('omits the distribute (agents) recommendation outside CI', () => {
+    // Same critical-path chain as the CI case, but local: agents distribute across
+    // CI machines, so the only lever shown is speeding up the longest tasks.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 4000 });
+    const c = makeTask('c', { start: 4000, end: 5000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1, {
+      isCI: false,
+    })!;
+
+    expect(s.recommendations.length).toBe(1); // just speed-up, no distribute
+    expect(s.recommendations[0]).toContain('Speed up or split');
+    expect(s.recommendations.join('\n')).not.toContain('Nx Agents');
+  });
+
+  it('omits the distribute recommendation when already distributing (CI)', () => {
+    // Already on Nx Agents and no slot contention → nothing to suggest but the
+    // critical-path speed-up; no "start distributing" recommendation.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 4000 });
+    const c = makeTask('c', { start: 4000, end: 5000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1, {
+      isCI: true,
+      distributing: true,
+    })!;
+
+    expect(s.recommendations.length).toBe(1); // just speed-up
+    expect(s.recommendations.join('\n')).not.toContain('Nx Agents');
+  });
+
+  it('recommends more agents (with the recoverable figure) when distributing', () => {
+    // Slot contention on a distributed run → the lever is more agents, not local
+    // --parallel. The figure is the total recoverable slot-contention time (1.0s).
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1, { distributing: true })!;
+
+    const recs = s.recommendations.join('\n');
+    expect(recs).toContain('Add more Nx Agents to recover up to');
+    expect(recs).toMatch(/recover up to 1\.0s/);
+    expect(recs).not.toContain('Increase parallelism');
   });
 
   it('treats a wait for a continuous dependency to start as eligibility, not contention', () => {
@@ -362,11 +449,71 @@ describe('TaskThrottlingLifeCycle', () => {
       makeTask(`f${i}`, { start: 0, end: 1000 })
     );
     const waiter = makeTask('w', { start: 1000, end: 2000 });
-    const s = run(makeGraph([...fillers, waiter]), cores)!;
+    const s = run(makeGraph([...fillers, waiter]), cores, { isCI: true })!;
 
     expect(s.recoverableByMachines).toBe(1000);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.recommendation).toContain('Nx Cloud Agents');
+    expect(s.recommendations.join('\n')).toContain('Nx Agents');
+  });
+
+  it('drops agents (keeps the --parallel tip) for a machine-bound run outside CI', () => {
+    const cores = Math.max(
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length,
+      os.cpus().length
+    );
+    const fillers = Array.from({ length: cores }, (_, i) =>
+      makeTask(`f${i}`, { start: 0, end: 1000 })
+    );
+    const waiter = makeTask('w', { start: 1000, end: 2000 });
+    const s = run(makeGraph([...fillers, waiter]), cores, { isCI: false })!;
+
+    const recs = s.recommendations.join('\n');
+    expect(recs).not.toContain('Nx Agents');
+    expect(recs).toContain('a higher --parallel may help');
+  });
+
+  it('makes no recommendation (and lists no tasks) when the critical path was fully cached', () => {
+    // A small fully-cached run: the "longest tasks" are cache restores, so there's
+    // nothing to speed up — don't recommend it, and don't list restore times.
+    const a = makeTask('a', { start: 0, end: 30 });
+    const b = makeTask('b', { start: 30, end: 50 });
+    const c = makeTask('c', { start: 50, end: 60 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 4, {
+      statuses: { a: 'local-cache', b: 'local-cache', c: 'remote-cache' },
+    })!;
+
+    expect(s.cacheHits).toBe(3);
+    expect(s.criticalPathTop).toHaveLength(0); // all cached → nothing to show
+    expect(s.recommendations).toHaveLength(0);
+    expect(formatReport(s)).not.toContain('Speed up or split');
+  });
+
+  it('lists only the critical-path tasks that ran (not cache hits) in the speed-up', () => {
+    // `b` ran (cache miss); `a` and `c` were cached → only `b` is worth speeding up.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 4000 });
+    const c = makeTask('c', { start: 4000, end: 5000 });
+    const s = run(makeGraph([a, b, c], { b: ['a'], c: ['b'] }), 1, {
+      statuses: { a: 'local-cache', b: 'success', c: 'local-cache' },
+    })!;
+
+    // Only `b` (the task that ran) is a speed-up candidate; `a` and `c` are cached.
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['b']);
+    expect(formatReport(s)).toContain('Speed up or split');
+  });
+
+  it('makes no recommendation for a dominated run outside CI (nothing actionable)', () => {
+    // Fully maxed for this machine with no agents lever (e.g. a 100%-cached run) →
+    // nothing to suggest, so the report omits the recommendation entirely.
+    const early = makeTask('early', { start: 0, end: 100 });
+    const x = makeTask('x', { start: 5000, end: 6000 });
+    const s = run(makeGraph([early, x]), 4, { isCI: false })!;
+
+    expect(s.coordinatorDominated).toBe(true);
+    expect(s.recommendations).toHaveLength(0);
+    expect(formatReport(s)).not.toContain('Recommendation');
   });
 
   it('classifies a free-slot wait that overlaps a hashing window as hashing', () => {
@@ -431,11 +578,11 @@ describe('cache reporting', () => {
 
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
-    expect(report).toContain("Nx Cloud isn't set up");
-    expect(report).toContain('set it up');
+    expect(report).toContain("leveraging Nx Cloud's remote cache");
+    expect(report).toContain('share a cache across your team and CI');
   });
 
-  it('does not nag about Nx Cloud when local hit rate is high (even if remote is off)', () => {
+  it('omits the cache recommendation when local hit rate is high (even if remote is off)', () => {
     const tasks = ['a', 'b', 'c'].map((id) =>
       makeTask(id, { start: 0, end: 10 })
     );
@@ -445,17 +592,17 @@ describe('cache reporting', () => {
     })!;
 
     expect(s.cacheHits).toBe(3);
-    expect(formatReport(s)).not.toContain("Nx Cloud isn't set up");
+    expect(formatReport(s)).not.toContain("leveraging Nx Cloud's remote cache");
   });
 
-  it('does not nag about Nx Cloud when remote cache is already on', () => {
+  it('omits the cache recommendation when remote cache is already on', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, {
       statuses: { a: 'success' },
       remoteCacheEnabled: true,
     })!;
 
-    expect(formatReport(s)).not.toContain("Nx Cloud isn't set up");
+    expect(formatReport(s)).not.toContain("leveraging Nx Cloud's remote cache");
   });
 
   it('warns (and only warns) when the cache was skipped', () => {
@@ -468,7 +615,7 @@ describe('cache reporting', () => {
     expect(s.cacheSkipped).toBe(true);
     const report = formatReport(s);
     // Stat shows the skip state; advice says how to fix it. No hit-rate noise.
-    expect(report).toMatch(/Cache:\s+skipped \(--skip-nx-cache\)/);
+    expect(report).toMatch(/Cache:\s+Skipped \(--skip-nx-cache\)/);
     expect(report).toContain('drop --skip-nx-cache');
     expect(report).not.toContain('hit (');
   });
@@ -480,6 +627,44 @@ describe('cache reporting', () => {
 
     expect(s.cacheableCount).toBe(0);
     expect(formatReport(s)).not.toContain('Cache:');
+  });
+});
+
+describe('exit summary sink (TUI countdown)', () => {
+  afterEach(() => setThrottleExitSummarySink(null));
+
+  function feed(lc: TestThrottle, graph: TaskGraph) {
+    lc.startCommand(1);
+    lc.endTasks(
+      Object.values(graph.tasks).map(
+        (task) => ({ task }) as unknown as TaskResult
+      )
+    );
+    lc.endCommand();
+  }
+
+  it('hands the structured summary payload to the sink on endCommand (TUI path)', () => {
+    let received: ThrottleExitSummaryPayload | null = null;
+    setThrottleExitSummarySink((p) => (received = p));
+
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const graph = makeGraph([a, b], { b: ['a'] });
+    feed(new TestThrottle(graph), graph);
+
+    expect(received).not.toBeNull();
+    // The TUI builds the visual from these stats (not a pre-formatted string).
+    expect(received!.runDurationMs).toBe(2000);
+    expect(received!.criticalPathMs).toBe(2000);
+    expect(received!.criticalPathTaskCount).toBe(2);
+    expect(received!.parallel).toBe(1);
+    expect(Array.isArray(received!.recommendations)).toBe(true);
+  });
+
+  it('does nothing on endCommand when no sink is set (non-TUI path)', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const graph = makeGraph([a]);
+    expect(() => feed(new TestThrottle(graph), graph)).not.toThrow();
   });
 });
 
@@ -517,33 +702,64 @@ describe('formatReport', () => {
     const report = formatReport(run(makeGraph([a, b]), 1)!);
 
     expect(report).toContain('Critical path:');
-    // Run duration decomposes into non-recoverable + recoverable stats up top.
-    expect(report).toContain('Non-recoverable overhead:');
+    // Run duration is shown alongside the recoverable (slot-contention) time.
     expect(report).toContain('Recoverable time:');
-    expect(report).toContain('Longest tasks on the critical path');
     // Single recommendation (no cache advice here) stays a plain line.
     expect(report).toContain('Recommendation:');
   });
 
-  it('lists recommendations as bullets when there is more than one', () => {
-    // A run with a cache lever (low hits, remote off) gets both a speed and a
-    // cache recommendation — rendered as a bulleted list.
+  it('lists the parallelism lever before the cache recommendation', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // Slot-bound run (spare cores) with a cold cache and no remote → both a
+    // parallelism rec and a cache recommendation. Parallelism (the immediate local
+    // lever) comes first, then cache.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const report = formatReport(
+      run(makeGraph([a, b]), 1, {
+        statuses: { a: 'success', b: 'success' }, // 0/2 hit
+        remoteCacheEnabled: false,
+      })!
+    );
+
+    if (cores >= 2) {
+      const parallelAt = report.indexOf('Increase parallelism');
+      const cacheAt = report.indexOf('Drastically reduce');
+      expect(parallelAt).toBeGreaterThanOrEqual(0);
+      expect(cacheAt).toBeGreaterThan(parallelAt);
+    }
+  });
+
+  it('lists recommendations as bullets in priority order (cache, agents, then tasks)', () => {
+    // A CI run with a cache lever (low hits, remote off) yields all three: cache,
+    // agents, and the longest-tasks advice — rendered as a bulleted list, ordered
+    // cache → distribute(agents) → speed-up (the deep manual work) LAST.
     const a = makeTask('a', { start: 0, end: 1000 });
     const report = formatReport(
       run(makeGraph([a]), 1, {
         statuses: { a: 'success' }, // 0/1 hit
         remoteCacheEnabled: false,
+        isCI: true,
       })!
     );
 
     expect(report).toContain('Recommendations:');
-    expect(report).toContain("- Cache: Nx Cloud isn't set up");
+    expect(report).toContain('- Drastically reduce your run duration');
     expect(report).toMatch(/- Speed up or split/); // the speed recommendation
+    const cacheAt = report.indexOf('Drastically reduce');
+    const distributeAt = report.indexOf('Distribute tasks');
+    const speedUpAt = report.indexOf('Speed up or split');
+    expect(cacheAt).toBeGreaterThanOrEqual(0);
+    expect(cacheAt).toBeLessThan(distributeAt);
+    expect(distributeAt).toBeLessThan(speedUpAt);
   });
 
   it('lists the critical-path tasks by duration, without wait annotations', () => {
-    // The section shows tasks + durations only; waits never appear there (they
-    // live in the overhead buckets / recommendation).
+    // The inline list in the speed-up recommendation shows tasks + durations
+    // only; waits never appear there (they live in the overhead buckets).
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const c = makeTask('c', { start: 2000, end: 3000 });

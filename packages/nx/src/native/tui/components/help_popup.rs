@@ -143,6 +143,7 @@ impl HelpPopup {
             // Misc
             ("?", "Toggle this popup"),
             ("q or <ctrl>+c", "Quit the TUI"),
+            ("p", "Open performance report"),
             ("", ""),
             // Navigation
             ("↑ or k", "Navigate/scroll task output up"),
@@ -306,6 +307,13 @@ impl HelpPopup {
                 Span::styled("  Help  ", Style::default().fg(THEME.primary_fg)),
             ]))
             .title_alignment(Alignment::Left)
+            .title_top(
+                Line::from(vec![
+                    Span::styled(" (esc) ", Style::default().fg(THEME.secondary_fg)),
+                    Span::styled("✕  ", Style::default().fg(THEME.info)),
+                ])
+                .alignment(Alignment::Right),
+            )
             .borders(Borders::ALL)
             .border_type(BorderType::Plain)
             .border_style(Style::default().fg(THEME.info))

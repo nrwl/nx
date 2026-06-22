@@ -95,6 +95,26 @@ pub enum BatchStatus {
     Failure,
 }
 
+/// Structured run report shown in the exit-countdown popup. The TUI builds the
+/// visual from these numbers (durations are formatted, columns aligned, and
+/// recommendations bulleted natively) rather than receiving a pre-formatted string.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct ThrottleExitSummary {
+    pub run_duration_ms: f64,
+    pub critical_path_ms: f64,
+    pub critical_path_task_count: u32,
+    pub non_recoverable_ms: f64,
+    pub recoverable_ms: f64,
+    pub parallel: u32,
+    pub cores: u32,
+    pub cache_hits: Option<u32>,
+    pub cacheable_count: Option<u32>,
+    pub cache_skipped: bool,
+    /// Already in display order; a multi-line entry embeds a task list.
+    pub recommendations: Vec<String>,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TuiMode {
     FullScreen,
@@ -683,6 +703,12 @@ impl AppLifeCycle {
     #[napi(js_name = "__setCloudMessage")]
     pub async fn __set_cloud_message(&self, message: String) -> napi::Result<()> {
         self.with_app(|app| app.set_cloud_message(Some(message)));
+        Ok(())
+    }
+
+    #[napi(js_name = "__setExitSummary")]
+    pub fn __set_exit_summary(&self, summary: ThrottleExitSummary) -> napi::Result<()> {
+        self.with_app(|app| app.set_exit_summary(summary));
         Ok(())
     }
 

@@ -40,7 +40,7 @@ use super::components::task_selection_manager::{
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::{BatchStatus, RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, ThrottleExitSummary, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -727,6 +727,27 @@ impl App {
                     return Ok(false);
                 }
 
+                // Reopen the run report popup ('p' for performance) while exploring
+                // the TUI after a run. Only meaningful once the report exists (run
+                // finished); a no-op otherwise. Skipped in interactive mode or while
+                // another popup is up.
+                if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P'))
+                    && !self.is_interactive_mode()
+                    && !matches!(self.focus, Focus::CountdownPopup | Focus::HelpPopup)
+                {
+                    if let Some(countdown_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                    {
+                        if countdown_popup.has_summary() {
+                            countdown_popup.reopen();
+                            self.update_focus(Focus::CountdownPopup);
+                        }
+                    }
+                    return Ok(false);
+                }
+
                 // If countdown popup is open, handle its keyboard events
                 if matches!(self.focus, Focus::CountdownPopup) {
                     // Any key pressed (other than scroll keys if the popup is scrollable) will cancel the countdown
@@ -748,14 +769,39 @@ impl App {
                                 self.core.state().lock().quit_immediately();
                                 return Ok(false);
                             }
-                            KeyCode::Up | KeyCode::Char('k') if countdown_popup.is_scrollable() => {
-                                countdown_popup.scroll_up();
+                            KeyCode::Up | KeyCode::Char('k') => {
+                                // ↑/↓ pins the popup open (stops the auto-exit) so
+                                // the report stays up to read; it also scrolls when
+                                // the report is taller than the popup.
+                                countdown_popup.pin_open();
+                                if countdown_popup.is_scrollable() {
+                                    countdown_popup.scroll_up();
+                                }
+                                self.core.state().lock().cancel_quit();
                                 return Ok(false);
                             }
-                            KeyCode::Down | KeyCode::Char('j')
-                                if countdown_popup.is_scrollable() =>
-                            {
-                                countdown_popup.scroll_down();
+                            KeyCode::Down | KeyCode::Char('j') => {
+                                countdown_popup.pin_open();
+                                if countdown_popup.is_scrollable() {
+                                    countdown_popup.scroll_down();
+                                }
+                                self.core.state().lock().cancel_quit();
+                                return Ok(false);
+                            }
+                            KeyCode::Esc => {
+                                // The performance report uses a two-stage Esc: the
+                                // first press pins it open (stops the auto-exit) so it
+                                // can be read, the second closes it. The mid-run exit
+                                // dialog has nothing to read, so Esc dismisses it at
+                                // once (cancelling the pending quit), like any other key.
+                                if countdown_popup.has_summary() && !countdown_popup.is_pinned() {
+                                    countdown_popup.pin_open();
+                                    self.core.state().lock().cancel_quit();
+                                } else {
+                                    countdown_popup.cancel_countdown();
+                                    self.core.state().lock().cancel_quit();
+                                    self.update_focus(self.previous_focus);
+                                }
                                 return Ok(false);
                             }
                             _ => {
@@ -2562,6 +2608,16 @@ impl TuiApp for App {
 
     fn end_command(&mut self) {
         App::end_command(self);
+    }
+
+    fn set_exit_summary(&mut self, summary: ThrottleExitSummary) {
+        if let Some(countdown_popup) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            countdown_popup.set_summary(summary);
+        }
     }
 
     // === PTY Registration (hooks for trait defaults) ===

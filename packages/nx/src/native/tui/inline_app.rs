@@ -29,7 +29,7 @@ use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchStatus, RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, RunMode, ThrottleExitSummary, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -352,6 +352,10 @@ impl TuiApp for InlineApp {
         &mut self.core
     }
 
+    fn set_exit_summary(&mut self, summary: ThrottleExitSummary) {
+        self.countdown_popup.set_summary(summary);
+    }
+
     // === Event Handling ===
 
     fn handle_event(
@@ -378,18 +382,39 @@ impl TuiApp for InlineApp {
                             self.quit_immediately();
                             return Ok(false);
                         }
-                        KeyCode::Up | KeyCode::Char('k')
-                            if self.countdown_popup.is_scrollable() =>
-                        {
-                            // Scroll up in countdown popup if scrollable
-                            self.countdown_popup.scroll_up();
+                        KeyCode::Up | KeyCode::Char('k') => {
+                            // ↑/↓ pins the popup open (stops the auto-exit) so the
+                            // report stays up to read; it also scrolls on overflow.
+                            self.countdown_popup.pin_open();
+                            if self.countdown_popup.is_scrollable() {
+                                self.countdown_popup.scroll_up();
+                            }
+                            self.core.cancel_quit();
                             return Ok(false);
                         }
-                        KeyCode::Down | KeyCode::Char('j')
-                            if self.countdown_popup.is_scrollable() =>
-                        {
-                            // Scroll down in countdown popup if scrollable
-                            self.countdown_popup.scroll_down();
+                        KeyCode::Down | KeyCode::Char('j') => {
+                            self.countdown_popup.pin_open();
+                            if self.countdown_popup.is_scrollable() {
+                                self.countdown_popup.scroll_down();
+                            }
+                            self.core.cancel_quit();
+                            return Ok(false);
+                        }
+                        KeyCode::Esc => {
+                            // The performance report uses a two-stage Esc: the first
+                            // press pins it open (stops the auto-exit) so it can be
+                            // read, the second closes it. The mid-run exit dialog has
+                            // nothing to read, so Esc dismisses it at once (cancelling
+                            // the pending quit), like any other key.
+                            if self.countdown_popup.has_summary()
+                                && !self.countdown_popup.is_pinned()
+                            {
+                                self.countdown_popup.pin_open();
+                                self.core.cancel_quit();
+                            } else {
+                                self.countdown_popup.cancel_countdown();
+                                self.core.cancel_quit();
+                            }
                             return Ok(false);
                         }
                         _ => {
@@ -418,6 +443,15 @@ impl TuiApp for InlineApp {
                 }
 
                 // === Non-Interactive Mode Handling ===
+
+                // Reopen the run report popup ('p' for performance) after the run
+                // finished (it carries the final stats); a no-op mid-run.
+                if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P')) {
+                    if self.countdown_popup.has_summary() {
+                        self.countdown_popup.reopen();
+                    }
+                    return Ok(false);
+                }
 
                 // 'i' enters interactive mode if task supports it
                 if matches!(key.code, KeyCode::Char('i')) && key.modifiers.is_empty() {

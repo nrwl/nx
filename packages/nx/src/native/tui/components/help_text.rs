@@ -93,6 +93,9 @@ impl HelpText {
                 Span::styled("  ", label_style),
                 Span::styled("show output: ", label_style),
                 Span::styled("<enter>", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("perf report: ", label_style),
+                Span::styled("p", key_style),
             ];
 
             f.render_widget(

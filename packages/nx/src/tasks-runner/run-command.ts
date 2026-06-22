@@ -62,6 +62,7 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import {
   TaskThrottlingLifeCycle,
   flushThrottleReport,
+  setThrottleExitSummarySink,
 } from './life-cycles/task-throttling-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
@@ -224,6 +225,17 @@ async function getTerminalOutputLifeCycle(
         taskGraph
       );
       lifeCycles.unshift(appLifeCycle);
+
+      // In the TUI, render the throttle report inside the exit-countdown popup
+      // (while the TUI is still up) instead of printing it to the terminal after
+      // teardown. The throttle lifecycle calls this at endCommand. Guard against
+      // a native binding without the method (older/WASM build) so a run is never
+      // crashed by a missing optional method.
+      setThrottleExitSummarySink((payload) => {
+        if (typeof (appLifeCycle as any).__setExitSummary === 'function') {
+          (appLifeCycle as any).__setExitSummary(payload);
+        }
+      });
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
@@ -570,9 +582,12 @@ export async function runCommandForTasks(
       printSummary();
     }
 
-    // Print after the terminal is restored so it shows in all output modes
-    // (the TUI no-ops console during the run).
-    flushThrottleReport();
+    // In the TUI the report was rendered in the exit-countdown popup during the
+    // run; otherwise print it to the terminal now that it's been restored.
+    if (!isTuiEnabled()) {
+      flushThrottleReport();
+    }
+    setThrottleExitSummarySink(null);
 
     await printConfigureAiAgentsDisclaimer();
 
@@ -585,7 +600,9 @@ export async function runCommandForTasks(
     };
   } catch (e) {
     restoreTerminal?.();
+    // On error the TUI has been torn down (no countdown popup), so always print.
     flushThrottleReport();
+    setThrottleExitSummarySink(null);
     throw e;
   }
 }

@@ -43,6 +43,7 @@ export declare class AppLifeCycle {
   setTaskTiming(taskId: string, startTime: number, endTime: number): void
   registerForcedShutdownCallback(forcedShutdownCallback: (() => unknown)): void
   __setCloudMessage(message: string): Promise<void>
+  __setExitSummary(summary: ThrottleExitSummary): void
   setEstimatedTaskTimings(timings: Record<string, number>): void
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void
@@ -728,6 +729,26 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
+
+/**
+ * Structured run report shown in the exit-countdown popup. The TUI builds the
+ * visual from these numbers (durations are formatted, columns aligned, and
+ * recommendations bulleted natively) rather than receiving a pre-formatted string.
+ */
+export interface ThrottleExitSummary {
+  runDurationMs: number
+  criticalPathMs: number
+  criticalPathTaskCount: number
+  nonRecoverableMs: number
+  recoverableMs: number
+  parallel: number
+  cores: number
+  cacheHits?: number
+  cacheableCount?: number
+  cacheSkipped: boolean
+  /** Already in display order; a multi-line entry embeds a task list. */
+  recommendations: Array<string>
+}
 
 /** Track an event using the global telemetry instance */
 export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void
