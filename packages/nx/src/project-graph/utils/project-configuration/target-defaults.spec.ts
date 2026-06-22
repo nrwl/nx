@@ -1,5 +1,6 @@
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
+  createTargetDefaultsResults,
   getUnfilteredTargetDefault,
   normalizeTargetDefaults,
   readTargetDefaultsForTarget,
@@ -209,5 +210,80 @@ describe('getUnfilteredTargetDefault', () => {
         { filter: { plugin: '@nx/vite' }, cache: true },
       ])
     ).toEqual({});
+  });
+});
+
+describe('createTargetDefaultsResults (plugin filter)', () => {
+  // Drives the real source-map attribution path (`resolveSourcePlugin`) rather
+  // than injecting `sourcePlugin` directly, so it would catch a regression in
+  // the source-map key the matcher reads the source plugin from.
+  it('applies a plugin-filtered default when the target is attributed to that plugin', () => {
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/vite:build', options: {} } },
+      },
+    };
+    const defaultSourceMaps = {
+      'apps/app': {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
+          string,
+          string,
+        ],
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        build: [
+          { filter: { plugin: '@nx/vite/plugin' }, options: { foo: 'bar' } },
+          { filter: { plugin: '@nx/webpack/plugin' }, options: { foo: 'baz' } },
+        ],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any,
+      undefined,
+      defaultSourceMaps
+    );
+
+    const synthetic = results[0]?.[2]?.projects?.['apps/app']?.targets?.build;
+    expect(synthetic?.options).toEqual({ foo: 'bar' });
+  });
+
+  it('does not apply a plugin-filtered default when the plugin does not match', () => {
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/vite:build', options: {} } },
+      },
+    };
+    const defaultSourceMaps = {
+      'apps/app': {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
+          string,
+          string,
+        ],
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        build: [
+          { filter: { plugin: '@nx/webpack/plugin' }, options: { foo: 'baz' } },
+        ],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any,
+      undefined,
+      defaultSourceMaps
+    );
+
+    expect(results).toEqual([]);
   });
 });

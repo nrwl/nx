@@ -5,7 +5,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
-import { NxJsonConfiguration, TargetDefaults } from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -285,8 +285,11 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      readCompatibleTargetDefaultsForTarget(
+      readTargetDefaultsForTarget(
         'nx-release-publish',
         nxJson?.targetDefaults,
         '@nx/js:release-publish'
@@ -306,19 +309,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function readCompatibleTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults | undefined,
-  executor?: string
-): Partial<TargetConfiguration> | null {
-  // `targetDefaults` is a map keyed by target name / executor / glob whose
-  // values are either a plain config object or an array of filtered entries.
-  // `readTargetDefaultsForTarget` resolves either form for `targetName`,
-  // applying only catch-all entries when (as here) there is no project or
-  // plugin context to match a `filter` against.
-  return readTargetDefaultsForTarget(targetName, targetDefaults, executor);
 }
 
 /**

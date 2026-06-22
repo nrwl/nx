@@ -56,8 +56,7 @@ export default async function (tree: Tree) {
 
   if (nxJson.targetDefaults) {
     for (const [_, target] of Object.entries(nxJson.targetDefaults)) {
-      // This migration predates the filtered array value form, so values are
-      // always plain objects here; skip arrays defensively to stay type-safe.
+      // Array value form carries filters this migration doesn't handle.
       if (Array.isArray(target) || !target.outputs) {
         continue;
       }

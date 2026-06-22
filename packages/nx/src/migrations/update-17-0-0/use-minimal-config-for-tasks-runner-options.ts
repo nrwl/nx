@@ -81,34 +81,17 @@ export default async function migrate(tree: Tree) {
       delete options.cacheDirectory;
     }
     if (Array.isArray(options.cacheableOperations)) {
-      if (Array.isArray(nxJson.targetDefaults)) {
-        for (const target of options.cacheableOperations) {
-          const idx = nxJson.targetDefaults.findIndex(
-            (e) =>
-              e.target === target &&
-              e.executor === undefined &&
-              e.projects === undefined &&
-              e.plugin === undefined
-          );
-          if (idx >= 0) {
-            nxJson.targetDefaults[idx].cache ??= true;
-          } else {
-            nxJson.targetDefaults.push({ target, cache: true });
-          }
+      nxJson.targetDefaults ??= {};
+      for (const target of options.cacheableOperations) {
+        const existing = nxJson.targetDefaults[target];
+        // A pre-existing array value carries filters this migration can't
+        // reason about; leave it untouched.
+        if (Array.isArray(existing)) {
+          continue;
         }
-      } else {
-        nxJson.targetDefaults ??= {};
-        for (const target of options.cacheableOperations) {
-          const existing = nxJson.targetDefaults[target];
-          // This migration predates the filtered array value form, so values
-          // are always plain objects here; skip arrays defensively.
-          if (Array.isArray(existing)) {
-            continue;
-          }
-          const config = existing ?? {};
-          config.cache ??= true;
-          nxJson.targetDefaults[target] = config;
-        }
+        const config = existing ?? {};
+        config.cache ??= true;
+        nxJson.targetDefaults[target] = config;
       }
       delete options.cacheableOperations;
     }
