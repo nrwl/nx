@@ -2,12 +2,12 @@ import * as os from 'node:os';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { TaskResult } from '../life-cycle';
 import {
-  TaskThrottlingLifeCycle,
+  PerformanceLifeCycle,
   formatDuration,
   formatReport,
-  getThrottleExitSummaryPayload,
+  getPerformanceSummaryPayload,
   overlap,
-} from './task-throttling-life-cycle';
+} from './performance-life-cycle';
 
 function makeTask(
   id: string,
@@ -50,7 +50,7 @@ function makeGraph(
 }
 
 /** A lifecycle whose env-dependent signals can be injected for tests. */
-class TestThrottle extends TaskThrottlingLifeCycle {
+class TestPerformanceLifeCycle extends PerformanceLifeCycle {
   constructor(
     graph: TaskGraph,
     private readonly env: {
@@ -94,7 +94,7 @@ function run(
     distributing?: boolean;
   } = {}
 ) {
-  const lc = new TestThrottle(graph, {
+  const lc = new TestPerformanceLifeCycle(graph, {
     windows: opts.hashWindows,
     skipped: opts.cacheSkipped,
     remoteCache: opts.remoteCacheEnabled,
@@ -113,7 +113,7 @@ function run(
   return lc.getSummary();
 }
 
-describe('TaskThrottlingLifeCycle', () => {
+describe('PerformanceLifeCycle', () => {
   it('returns null when there are no discrete task timings', () => {
     expect(run(makeGraph([makeTask('a')]), 4)).toBeNull();
   });
@@ -729,7 +729,7 @@ describe('cache reporting', () => {
 });
 
 describe('exit summary payload (TUI countdown)', () => {
-  function feed(lc: TestThrottle, graph: TaskGraph) {
+  function feed(lc: TestPerformanceLifeCycle, graph: TaskGraph) {
     lc.startCommand(1);
     lc.endTasks(
       Object.values(graph.tasks).map(
@@ -742,9 +742,9 @@ describe('exit summary payload (TUI countdown)', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const graph = makeGraph([a, b], { b: ['a'] });
-    feed(new TestThrottle(graph), graph);
+    feed(new TestPerformanceLifeCycle(graph), graph);
 
-    const payload = getThrottleExitSummaryPayload();
+    const payload = getPerformanceSummaryPayload();
     expect(payload).not.toBeNull();
     // The TUI builds the visual from these stats (not a pre-formatted string).
     expect(payload!.runDurationMs).toBe(2000);
@@ -758,11 +758,11 @@ describe('exit summary payload (TUI countdown)', () => {
     // surfaced as a link for the popup to hyperlink in place.
     const a = makeTask('a', { start: 0, end: 1000 });
     const graph = makeGraph([a]);
-    const lc = new TestThrottle(graph, { remoteCache: false });
+    const lc = new TestPerformanceLifeCycle(graph, { remoteCache: false });
     lc.startCommand(1);
     lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
 
-    const payload = getThrottleExitSummaryPayload()!;
+    const payload = getPerformanceSummaryPayload()!;
     // The docs footer link travels as data (label + tagged href).
     expect(payload.footer).toEqual({
       text: "Learn how to improve your run's performance",
@@ -785,11 +785,11 @@ describe('exit summary payload (TUI countdown)', () => {
   it('clears the active lifecycle once consumed, so a later flush gets nothing', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const graph = makeGraph([a]);
-    feed(new TestThrottle(graph), graph);
+    feed(new TestPerformanceLifeCycle(graph), graph);
 
-    expect(getThrottleExitSummaryPayload()).not.toBeNull();
+    expect(getPerformanceSummaryPayload()).not.toBeNull();
     // The popup now owns the report; the terminal flush path must not re-render it.
-    expect(getThrottleExitSummaryPayload()).toBeNull();
+    expect(getPerformanceSummaryPayload()).toBeNull();
   });
 });
 

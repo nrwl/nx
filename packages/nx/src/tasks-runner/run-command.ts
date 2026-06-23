@@ -60,10 +60,10 @@ import { StoreRunInformationLifeCycle } from './life-cycles/store-run-informatio
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
 import {
-  TaskThrottlingLifeCycle,
-  flushThrottleReport,
-  getThrottleExitSummaryPayload,
-} from './life-cycles/task-throttling-life-cycle';
+  PerformanceLifeCycle,
+  flushPerformanceReport,
+  getPerformanceSummaryPayload,
+} from './life-cycles/performance-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -226,7 +226,7 @@ async function getTerminalOutputLifeCycle(
       );
       lifeCycles.unshift(appLifeCycle);
 
-      // In the TUI, render the throttle report inside the exit-countdown popup
+      // In the TUI, render the performance report inside the exit-countdown popup
       // (while the TUI is still up) instead of printing it to the terminal after
       // teardown. Deliver it through endCommand itself — which runs once every
       // task timing is in — by wrapping appLifeCycle.endCommand to pull the
@@ -236,7 +236,7 @@ async function getTerminalOutputLifeCycle(
         appLifeCycle
       );
       (appLifeCycle as any).endCommand = () =>
-        nativeEndCommand(getThrottleExitSummaryPayload() ?? undefined);
+        nativeEndCommand(getPerformanceSummaryPayload() ?? undefined);
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
@@ -586,7 +586,7 @@ export async function runCommandForTasks(
     // In the TUI the report was rendered in the exit-countdown popup during the
     // run; otherwise print it to the terminal now that it's been restored.
     if (!isTuiEnabled()) {
-      flushThrottleReport();
+      flushPerformanceReport();
     }
 
     await printConfigureAiAgentsDisclaimer();
@@ -604,7 +604,7 @@ export async function runCommandForTasks(
     // delivered it (the TUI's endCommand clears the active lifecycle once it
     // pulls the report), so this won't double-print; it's fail-safe and never
     // masks `e`.
-    flushThrottleReport();
+    flushPerformanceReport();
     throw e;
   }
 }
@@ -1121,7 +1121,7 @@ export function constructLifeCycles(
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
   if (taskGraph) {
-    lifeCycles.push(new TaskThrottlingLifeCycle(taskGraph, skipNxCache));
+    lifeCycles.push(new PerformanceLifeCycle(taskGraph, skipNxCache));
   }
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();

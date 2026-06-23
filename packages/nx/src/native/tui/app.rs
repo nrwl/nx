@@ -40,7 +40,7 @@ use super::components::task_selection_manager::{
 use super::components::tasks_list::{TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::{BatchStatus, RunMode, ThrottleExitSummary, TuiMode};
+use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -2618,7 +2618,7 @@ impl TuiApp for App {
         App::end_command(self);
     }
 
-    fn set_exit_summary(&mut self, summary: ThrottleExitSummary) {
+    fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
         if let Some(countdown_popup) = self
             .components
             .iter_mut()

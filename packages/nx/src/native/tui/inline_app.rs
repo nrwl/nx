@@ -29,7 +29,7 @@ use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchStatus, RunMode, ThrottleExitSummary, TuiMode};
+use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -352,7 +352,7 @@ impl TuiApp for InlineApp {
         &mut self.core
     }
 
-    fn set_exit_summary(&mut self, summary: ThrottleExitSummary) {
+    fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
         self.countdown_popup.set_summary(summary);
     }
 

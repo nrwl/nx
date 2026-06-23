@@ -14,7 +14,7 @@ use std::any::Any;
 use std::num::NonZeroU16;
 use std::time::{Duration, Instant};
 
-use crate::native::tui::lifecycle::ThrottleExitSummary;
+use crate::native::tui::lifecycle::PerformanceSummaryPayload;
 use crate::native::tui::theme::THEME;
 
 use super::Component;
@@ -136,7 +136,7 @@ fn format_duration(ms: f64) -> String {
 
 /// The cache stat label from the counts, or None when there's nothing to show
 /// (mirrors the TS `cacheStat`).
-fn cache_label(s: &ThrottleExitSummary) -> Option<String> {
+fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
     if s.cache_skipped {
         return Some("Skipped (--skip-nx-cache)".to_string());
     }
@@ -170,7 +170,7 @@ pub struct CountdownPopup {
     content_height: usize,
     viewport_height: usize,
     /// The run report shown above the hint text (None until set).
-    summary: Option<ThrottleExitSummary>,
+    summary: Option<PerformanceSummaryPayload>,
     /// When pinned, the auto-exit countdown is stopped and the popup stays open
     /// (e.g. the user scrolled the report) until they explicitly quit.
     pinned: bool,
@@ -193,7 +193,7 @@ impl CountdownPopup {
 
     /// Set the run report shown above the hint text. The visual is built from
     /// these stats in {@link build_report_lines}.
-    pub fn set_summary(&mut self, summary: ThrottleExitSummary) {
+    pub fn set_summary(&mut self, summary: PerformanceSummaryPayload) {
         self.summary = Some(summary);
     }
 
@@ -704,8 +704,8 @@ mod tests {
         "Drastically reduce your run duration by sharing a cache across your team and CI";
     const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
 
-    fn summary_with(recommendations: Vec<String>) -> ThrottleExitSummary {
-        ThrottleExitSummary {
+    fn summary_with(recommendations: Vec<String>) -> PerformanceSummaryPayload {
+        PerformanceSummaryPayload {
             run_duration_ms: 100_000.0,
             critical_path_ms: 50_000.0,
             critical_path_task_count: 5,

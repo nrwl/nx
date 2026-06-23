@@ -110,7 +110,7 @@ pub struct Link {
 /// recommendations bulleted natively) rather than receiving a pre-formatted string.
 #[napi(object)]
 #[derive(Debug, Clone, Default)]
-pub struct ThrottleExitSummary {
+pub struct PerformanceSummaryPayload {
     pub run_duration_ms: f64,
     pub critical_path_ms: f64,
     pub critical_path_task_count: u32,
@@ -434,7 +434,7 @@ impl AppLifeCycle {
     }
 
     #[napi(async_runtime)]
-    pub fn end_command(&self, summary: Option<ThrottleExitSummary>) -> napi::Result<()> {
+    pub fn end_command(&self, summary: Option<PerformanceSummaryPayload>) -> napi::Result<()> {
         self.with_app(|app| {
             if let Some(summary) = summary {
                 app.set_exit_summary(summary);

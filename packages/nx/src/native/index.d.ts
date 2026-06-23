@@ -34,7 +34,7 @@ export declare class AppLifeCycle {
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
-  endCommand(summary?: ThrottleExitSummary | undefined | null): void
+  endCommand(summary?: PerformanceSummaryPayload | undefined | null): void
   __init(doneCallback: (() => unknown)): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
@@ -574,6 +574,30 @@ export interface NxWorkspaceFilesExternals {
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
+/**
+ * Structured run report shown in the exit-countdown popup. The TUI builds the
+ * visual from these numbers (durations are formatted, columns aligned, and
+ * recommendations bulleted natively) rather than receiving a pre-formatted string.
+ */
+export interface PerformanceSummaryPayload {
+  runDurationMs: number
+  criticalPathMs: number
+  criticalPathTaskCount: number
+  recoverableMs: number
+  cacheHits?: number
+  cacheableCount?: number
+  cacheSkipped: boolean
+  /** Already in display order; a multi-line entry embeds a task list. */
+  recommendations: Array<string>
+  /** The docs footer link, rendered as a bullet and hyperlinked. */
+  footer: Link
+  /**
+   * Phrases already in `recommendations` to hyperlink in place (e.g. the
+   * remote-cache CTA); empty when none apply.
+   */
+  links: Array<Link>
+}
+
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
   ppid: number
@@ -738,30 +762,6 @@ export interface TaskTarget {
 }
 
 export declare function testOnlyTransferFileMap(projectFiles: Record<string, Array<FileData>>, nonProjectFiles: Array<FileData>): NxWorkspaceFilesExternals
-
-/**
- * Structured run report shown in the exit-countdown popup. The TUI builds the
- * visual from these numbers (durations are formatted, columns aligned, and
- * recommendations bulleted natively) rather than receiving a pre-formatted string.
- */
-export interface ThrottleExitSummary {
-  runDurationMs: number
-  criticalPathMs: number
-  criticalPathTaskCount: number
-  recoverableMs: number
-  cacheHits?: number
-  cacheableCount?: number
-  cacheSkipped: boolean
-  /** Already in display order; a multi-line entry embeds a task list. */
-  recommendations: Array<string>
-  /** The docs footer link, rendered as a bullet and hyperlinked. */
-  footer: Link
-  /**
-   * Phrases already in `recommendations` to hyperlink in place (e.g. the
-   * remote-cache CTA); empty when none apply.
-   */
-  links: Array<Link>
-}
 
 /** Track an event using the global telemetry instance */
 export declare function trackEvent(eventName: string, parameters?: Record<string, string> | undefined | null): void

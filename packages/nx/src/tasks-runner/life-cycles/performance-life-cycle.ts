@@ -67,7 +67,7 @@ interface ChainLink {
   wait: number;
 }
 
-export interface ThrottleSummary {
+export interface PerformanceSummary {
   runDuration: number;
   criticalPathDuration: number;
   criticalPathTaskCount: number;
@@ -117,7 +117,7 @@ export interface ThrottleSummary {
  * every duration calculation; a discrete task's wait for a continuous dependency
  * to start is treated as eligibility, not contention.
  */
-export class TaskThrottlingLifeCycle implements LifeCycle {
+export class PerformanceLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
   /** taskId → terminal status (cache hit vs ran), for the cache summary. */
   private readonly statuses = new Map<string, TaskResult['status']>();
@@ -130,7 +130,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     private readonly taskGraph: TaskGraph,
     private readonly skipNxCacheOption = false
   ) {
-    activeThrottleLifeCycle = this;
+    activePerformanceLifeCycle = this;
   }
 
   startCommand(total?: number): void {
@@ -499,8 +499,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     return best;
   }
 
-  /** The structured throttle summary, or `null` when no discrete task timings were recorded. */
-  getSummary(): ThrottleSummary | null {
+  /** The structured performance summary, or `null` when no discrete task timings were recorded. */
+  getSummary(): PerformanceSummary | null {
     const timed = this.timedTasks();
     if (timed.length === 0) {
       return null;
@@ -681,16 +681,16 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 }
 
-/** The most recently constructed throttle lifecycle, read after the run. Cleared once consumed. */
-let activeThrottleLifeCycle: TaskThrottlingLifeCycle | null = null;
+/** The most recently constructed performance lifecycle, read after the run. Cleared once consumed. */
+let activePerformanceLifeCycle: PerformanceLifeCycle | null = null;
 
 /**
  * Structured report for the TUI's exit-countdown popup, or null when nothing to
  * show. Clears the active lifecycle so the popup owns the report and a later
  * terminal flush can't re-print it. Best-effort: a throw degrades to null.
  */
-export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | null {
-  const lifeCycle = activeThrottleLifeCycle;
+export function getPerformanceSummaryPayload(): PerformanceSummaryPayload | null {
+  const lifeCycle = activePerformanceLifeCycle;
   if (!lifeCycle) {
     return null;
   }
@@ -699,7 +699,7 @@ export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | nu
     if (!summary) {
       return null;
     }
-    activeThrottleLifeCycle = null;
+    activePerformanceLifeCycle = null;
     return buildExitSummaryPayload(summary);
   } catch {
     return null;
@@ -707,12 +707,12 @@ export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | nu
 }
 
 /**
- * Print the throttle report (if enabled) after the run summary. Called once the
+ * Print the performance report (if enabled) after the run summary. Called once the
  * terminal is restored, so it appears in every output mode including the TUI.
  */
-export function flushThrottleReport(): void {
-  const lifeCycle = activeThrottleLifeCycle;
-  activeThrottleLifeCycle = null;
+export function flushPerformanceReport(): void {
+  const lifeCycle = activePerformanceLifeCycle;
+  activePerformanceLifeCycle = null;
   if (!lifeCycle) {
     return;
   }
@@ -880,7 +880,7 @@ function pluralizeCores(cores: number): string {
  * lever → remote-cache rec → other levers → "speed up / split" LAST (deepest manual
  * work, the only multi-line rec). Shared by the report and TUI payload.
  */
-function orderedRecommendations(s: ThrottleSummary): string[] {
+function orderedRecommendations(s: PerformanceSummary): string[] {
   const levers = [...s.recommendations];
   const cacheAdvice = buildCacheAdvice(s);
   const isRecoverLever = (r: string) => r.includes('recover up to');
@@ -896,9 +896,9 @@ function orderedRecommendations(s: ThrottleSummary): string[] {
 /**
  * Structured payload for the TUI's exit-countdown popup, which builds the visual
  * natively in Rust (the terminal path uses {@link formatReport}). Field names map
- * to the napi object's camelCase (see `ThrottleExitSummary`).
+ * to the napi object's camelCase (see `PerformanceSummaryPayload`).
  */
-export interface ThrottleExitSummaryPayload {
+export interface PerformanceSummaryPayload {
   runDurationMs: number;
   criticalPathMs: number;
   criticalPathTaskCount: number;
@@ -921,8 +921,8 @@ export interface ThrottleExitSummaryPayload {
 }
 
 function buildExitSummaryPayload(
-  s: ThrottleSummary
-): ThrottleExitSummaryPayload {
+  s: PerformanceSummary
+): PerformanceSummaryPayload {
   const hasCache = s.cacheableCount > 0;
   const recommendations = orderedRecommendations(s);
   return {
@@ -968,7 +968,7 @@ function linkify(text: string): string {
   return out;
 }
 
-export function formatReport(s: ThrottleSummary): string {
+export function formatReport(s: PerformanceSummary): string {
   const fmt = formatDuration;
   // Shows two of run duration's three parts (critical path + recoverable); the third,
   // coordinator overhead, is computed but not displayed, so the two don't sum to run
@@ -1023,7 +1023,7 @@ export function formatReport(s: ThrottleSummary): string {
 }
 
 /** Top-of-report cache stat: hit rate or skip marker. Null when there's no cache outcome. */
-function cacheStat(s: ThrottleSummary): string | null {
+function cacheStat(s: PerformanceSummary): string | null {
   if (s.cacheSkipped) {
     return 'Skipped (--skip-nx-cache)';
   }
@@ -1038,7 +1038,7 @@ function cacheStat(s: ThrottleSummary): string | null {
  * Bottom-of-report cache advice, only when there's a lever: a skipped cache (drop
  * the flag) or a barely-used cache with no remote (set up Nx Cloud).
  */
-function buildCacheAdvice(s: ThrottleSummary): string | null {
+function buildCacheAdvice(s: PerformanceSummary): string | null {
   if (s.cacheSkipped) {
     return `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`;
   }
