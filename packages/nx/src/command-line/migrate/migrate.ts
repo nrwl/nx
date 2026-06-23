@@ -413,20 +413,31 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          for (const [name, update] of Object.entries(packageUpdate.packages)) {
+          const updateEntries = Object.entries(packageUpdate.packages);
+          // Validate up front so invalid metadata still fails fast.
+          for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            const resolvedVersion = await this.resolveVersionForCascade(
-              name,
-              update.version
-            );
-            const resolvedUpdate = { ...update, version: resolvedVersion };
+          }
+          // Each version resolves independently, so resolve them concurrently
+          // instead of awaiting one registry/install round-trip at a time.
+          const resolvedVersions = await Promise.all(
+            updateEntries.map(([name, update]) =>
+              this.resolveVersionForCascade(name, update.version)
+            )
+          );
+          // Assign in the original order so packageUpdates ordering is stable.
+          updateEntries.forEach(([name, update], index) => {
+            const resolvedUpdate = {
+              ...update,
+              version: resolvedVersions[index],
+            };
             filteredUpdates[name] = resolvedUpdate;
             this.packageUpdates[name] = resolvedUpdate;
-          }
+          });
         }
       }
 
