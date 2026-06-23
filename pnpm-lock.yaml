@@ -2855,6 +2855,9 @@ importers:
 
   packages/expo:
     dependencies:
+      '@expo/metro':
+        specifier: '>= 55.0.0'
+        version: 56.0.0
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
