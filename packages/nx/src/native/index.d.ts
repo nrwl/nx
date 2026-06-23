@@ -524,6 +524,16 @@ export declare function killProcessTree(rootPid: number, signal?: string | numbe
  */
 export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
+/**
+ * A docs link the popup renders and turns into an OSC 8 hyperlink. Both `text`
+ * and `href` come from TS, so the popup never hardcodes a URL or has to match a
+ * label byte-for-byte.
+ */
+export interface Link {
+  text: string
+  href: string
+}
+
 export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */
@@ -744,6 +754,13 @@ export interface ThrottleExitSummary {
   cacheSkipped: boolean
   /** Already in display order; a multi-line entry embeds a task list. */
   recommendations: Array<string>
+  /** The docs footer link, rendered as a bullet and hyperlinked. */
+  footer: Link
+  /**
+   * Phrases already in `recommendations` to hyperlink in place (e.g. the
+   * remote-cache CTA); empty when none apply.
+   */
+  links: Array<Link>
 }
 
 /** Track an event using the global telemetry instance */

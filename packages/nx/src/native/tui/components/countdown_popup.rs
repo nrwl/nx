@@ -19,27 +19,6 @@ use crate::native::tui::theme::THEME;
 
 use super::Component;
 
-/// The docs link shown at the bottom of the report. OSC 8 lets the visible text
-/// be a short human label while the link points at the full URL — so we show the
-/// sentence (not the raw URL) and hide the href behind it (see the OSC 8 injection
-/// in `render`). The bullet prefix is not part of the clickable link — it uses
-/// the same "- " marker as the recommendation items, since this link is itself a
-/// (generic) recommendation.
-const PERF_URL_BULLET: &str = "- ";
-const PERF_URL_LABEL: &str = "Learn how to improve your run's performance";
-// Clickable target carries a utm tag to attribute traffic to this report; the
-// visible label (PERF_URL_LABEL) stays clean.
-const PERF_URL_HREF: &str =
-    "https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report";
-
-/// The remote-cache recommendation is a WHOLE-PHRASE link: the entire sentence is
-/// clickable with no URL shown (see the TS `NX_REMOTE_CACHE_CTA` / `linkify` — this
-/// label must stay byte-identical to that phrase so the popup can find it). The
-/// sentence wraps across rows, so the OSC 8 injection links it per rendered row.
-const REMOTE_CACHE_LABEL: &str =
-    "Drastically reduce your run duration by sharing a cache across your team and CI";
-const REMOTE_CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
-
 /// Word-wrapped row count for `lines` at `width`, using the SAME wrapping the
 /// Paragraph applies (`Wrap { trim: false }`). Keeps the popup sizing and the
 /// scrollbar height consistent with what actually renders — a hand-rolled
@@ -434,8 +413,11 @@ impl CountdownPopup {
             // the popup is too narrow for the label), this stays as plain text.
             url_line_index = Some(content.len());
             content.push(Line::from(vec![
-                Span::styled(PERF_URL_BULLET, Style::default().fg(THEME.secondary_fg)),
-                Span::styled(PERF_URL_LABEL, Style::default().fg(THEME.info)),
+                Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled(
+                    self.summary.as_ref().unwrap().footer.text.clone(),
+                    Style::default().fg(THEME.info),
+                ),
             ]));
             // The detailed "speed up the longest tasks" rec goes LAST, so its task
             // list ends the report.
@@ -626,12 +608,18 @@ impl CountdownPopup {
         // (ratatui#1028), so we locate each link's rendered text in the buffer and
         // replace it (see inject_osc8). Only with a report shown.
         if url_line_index.is_some() {
-            // The docs footer link (its label fits one row).
-            inject_osc8(f, inner_area, PERF_URL_LABEL, PERF_URL_HREF);
-            // The remote-cache recommendation: the whole sentence is the link, so
-            // it spans multiple rows when wrapped. Only present when that rec is
-            // shown; otherwise the scan finds nothing and injects nothing.
-            inject_osc8(f, inner_area, REMOTE_CACHE_LABEL, REMOTE_CACHE_HREF);
+            if let Some(s) = self.summary.as_ref() {
+                // The docs footer link (its label fits one row), then any
+                // recommendation phrases to hyperlink in place — e.g. the
+                // remote-cache CTA, whose whole sentence is the link and spans
+                // multiple rows when wrapped. A phrase not shown (scrolled out, or
+                // its rec absent) simply isn't found and nothing is injected. All
+                // labels/hrefs come from the payload; none are hardcoded here.
+                inject_osc8(f, inner_area, &s.footer.text, &s.footer.href);
+                for link in &s.links {
+                    inject_osc8(f, inner_area, &link.text, &link.href);
+                }
+            }
         }
 
         // Render scrollbar if needed
@@ -704,8 +692,17 @@ impl Component for CountdownPopup {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::native::tui::lifecycle::Link;
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
+
+    // The footer + remote-cache link text/hrefs the payload carries (built in TS);
+    // the popup must render and hyperlink exactly these.
+    const FOOTER_LABEL: &str = "Learn how to improve your run's performance";
+    const FOOTER_HREF: &str = "https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report";
+    const CACHE_PHRASE: &str =
+        "Drastically reduce your run duration by sharing a cache across your team and CI";
+    const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
 
     fn summary_with(recommendations: Vec<String>) -> ThrottleExitSummary {
         ThrottleExitSummary {
@@ -717,6 +714,11 @@ mod tests {
             cacheable_count: None,
             cache_skipped: false,
             recommendations,
+            footer: Link {
+                text: FOOTER_LABEL.to_string(),
+                href: FOOTER_HREF.to_string(),
+            },
+            links: Vec::new(),
         }
     }
 
@@ -801,8 +803,8 @@ mod tests {
         }
         let (x, y) = escape.expect("OSC 8 link cell should be injected");
         let sym = buffer.cell((x, y)).unwrap().symbol();
-        assert!(sym.contains(PERF_URL_HREF), "link target missing");
-        assert!(sym.contains(PERF_URL_LABEL), "link label missing");
+        assert!(sym.contains(FOOTER_HREF), "link target missing");
+        assert!(sym.contains(FOOTER_LABEL), "link label missing");
         // It sits at the start of the docs-link line's text, right after the "- "
         // bullet — not buried inside a recommendation row.
         assert_eq!(buffer.cell((x - 2, y)).unwrap().symbol(), "-");
@@ -820,7 +822,7 @@ mod tests {
                 text.push_str(if s.contains('\x1b') { "\u{0}" } else { s });
             }
             assert!(
-                !text.contains(PERF_URL_LABEL),
+                !text.contains(FOOTER_LABEL),
                 "label left as plain text on row {yy} — link misplaced"
             );
         }
@@ -831,9 +833,14 @@ mod tests {
         // The remote-cache recommendation is the whole sentence as a link; it
         // wraps to multiple rows, so each rendered row-segment must be linked (no
         // raw URL, nothing left unlinked).
-        let rec = format!("{REMOTE_CACHE_LABEL}.");
+        let rec = format!("{CACHE_PHRASE}.");
         let mut popup = CountdownPopup::new();
-        popup.set_summary(summary_with(vec![rec]));
+        let mut s = summary_with(vec![rec]);
+        s.links = vec![Link {
+            text: CACHE_PHRASE.to_string(),
+            href: CACHE_HREF.to_string(),
+        }];
+        popup.set_summary(s);
 
         let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
         terminal
@@ -851,10 +858,10 @@ mod tests {
                 let sym = buffer.cell((x, y)).unwrap().symbol();
                 if sym.contains("\x1b]8;;") {
                     assert!(
-                        sym.contains(REMOTE_CACHE_HREF) || sym.contains(PERF_URL_HREF),
+                        sym.contains(CACHE_HREF) || sym.contains(FOOTER_HREF),
                         "unexpected OSC 8 target"
                     );
-                    if sym.contains(REMOTE_CACHE_HREF) {
+                    if sym.contains(CACHE_HREF) {
                         cache_links += 1;
                     }
                 }

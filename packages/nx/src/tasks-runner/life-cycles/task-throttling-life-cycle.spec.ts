@@ -730,6 +730,35 @@ describe('exit summary payload (TUI countdown)', () => {
     expect(Array.isArray(payload!.recommendations)).toBe(true);
   });
 
+  it('carries the footer + remote-cache links as data (popup hardcodes no URLs)', () => {
+    // Cold cache, remote off → the remote-cache CTA is recommended, so it must be
+    // surfaced as a link for the popup to hyperlink in place.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const graph = makeGraph([a]);
+    const lc = new TestThrottle(graph, { remoteCache: false });
+    lc.startCommand(1);
+    lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
+
+    const payload = getThrottleExitSummaryPayload()!;
+    // The docs footer link travels as data (label + tagged href).
+    expect(payload.footer).toEqual({
+      text: "Learn how to improve your run's performance",
+      href: 'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report',
+    });
+    // The remote-cache CTA is surfaced as a link whose text matches the phrase in
+    // the recommendation — so the popup links the text it was handed, with no
+    // byte-identical constant of its own.
+    expect(payload.links).toEqual([
+      {
+        text: 'Drastically reduce your run duration by sharing a cache across your team and CI',
+        href: 'https://nx.dev/ci/features/remote-cache?utm=performance-report',
+      },
+    ]);
+    expect(
+      payload.recommendations.some((r) => r.includes(payload.links[0].text))
+    ).toBe(true);
+  });
+
   it('clears the active lifecycle once consumed, so a later flush gets nothing', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const graph = makeGraph([a]);

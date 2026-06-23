@@ -16,14 +16,17 @@ const UTM = '?utm=performance-report';
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
+/** Visible label for the footer docs link; the href is {@link NX_PERFORMANCE_LINK}. */
+const NX_PERFORMANCE_LABEL = `Learn how to improve your run's performance`;
 /** Visible URL ⇄ tagged target pairs for {@link linkify}. */
 const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
   { visible: NX_PERFORMANCE_URL, href: NX_PERFORMANCE_LINK },
   { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
 ];
 /**
- * Whole-phrase CTA: the popup re-creates this link natively by scanning for this
- * exact phrase, so the Rust REMOTE_CACHE_LABEL constant must stay byte-identical.
+ * Whole-phrase CTA: the whole sentence is the link. {@link linkify} hyperlinks it
+ * on a terminal; the TUI popup hyperlinks it from the phrase + href carried in the
+ * exit payload's `links`, so the Rust side keeps no copy of this string.
  */
 const NX_REMOTE_CACHE_CTA =
   'Drastically reduce your run duration by sharing a cache across your team and CI';
@@ -887,12 +890,22 @@ export interface ThrottleExitSummaryPayload {
   cacheSkipped: boolean;
   /** Already in display order; a multi-line entry embeds the task list. */
   recommendations: string[];
+  /** The docs footer link the popup renders and hyperlinks (label + tagged href). */
+  footer: { text: string; href: string };
+  /**
+   * Recommendation phrases the popup should hyperlink in place (currently just the
+   * remote-cache CTA). The popup links the text it was given to the href — no
+   * hardcoded URLs or byte-identical label constants on the Rust side. Empty when
+   * none apply.
+   */
+  links: Array<{ text: string; href: string }>;
 }
 
 function buildExitSummaryPayload(
   s: ThrottleSummary
 ): ThrottleExitSummaryPayload {
   const hasCache = s.cacheableCount > 0;
+  const recommendations = orderedRecommendations(s);
   return {
     runDurationMs: s.runDuration,
     criticalPathMs: s.criticalPathDuration,
@@ -901,7 +914,13 @@ function buildExitSummaryPayload(
     cacheHits: hasCache ? s.cacheHits : undefined,
     cacheableCount: hasCache ? s.cacheableCount : undefined,
     cacheSkipped: s.cacheSkipped,
-    recommendations: orderedRecommendations(s),
+    recommendations,
+    footer: { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
+    // The remote-cache CTA is a whole-phrase link; surface it for the popup only
+    // when that rec is actually shown (matches the terminal report).
+    links: recommendations.some((r) => r.includes(NX_REMOTE_CACHE_CTA))
+      ? [{ text: NX_REMOTE_CACHE_CTA, href: NX_REMOTE_CACHE_LINK }]
+      : [],
   };
 }
 
@@ -979,12 +998,7 @@ export function formatReport(s: ThrottleSummary): string {
   }
   // Footer guide, utm-tagged. linkify shows the clean URL and hides the utm in the
   // OSC 8 target; without OSC 8 the tagged URL prints verbatim (auto-linked).
-  lines.push(
-    '',
-    linkify(
-      `  Learn how to improve your run's performance → ${NX_PERFORMANCE_LINK}`
-    )
-  );
+  lines.push('', linkify(`  ${NX_PERFORMANCE_LABEL} → ${NX_PERFORMANCE_LINK}`));
   lines.push('');
   return lines.join('\n');
 }

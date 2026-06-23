@@ -95,6 +95,16 @@ pub enum BatchStatus {
     Failure,
 }
 
+/// A docs link the popup renders and turns into an OSC 8 hyperlink. Both `text`
+/// and `href` come from TS, so the popup never hardcodes a URL or has to match a
+/// label byte-for-byte.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct Link {
+    pub text: String,
+    pub href: String,
+}
+
 /// Structured run report shown in the exit-countdown popup. The TUI builds the
 /// visual from these numbers (durations are formatted, columns aligned, and
 /// recommendations bulleted natively) rather than receiving a pre-formatted string.
@@ -110,6 +120,11 @@ pub struct ThrottleExitSummary {
     pub cache_skipped: bool,
     /// Already in display order; a multi-line entry embeds a task list.
     pub recommendations: Vec<String>,
+    /// The docs footer link, rendered as a bullet and hyperlinked.
+    pub footer: Link,
+    /// Phrases already in `recommendations` to hyperlink in place (e.g. the
+    /// remote-cache CTA); empty when none apply.
+    pub links: Vec<Link>,
 }
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
