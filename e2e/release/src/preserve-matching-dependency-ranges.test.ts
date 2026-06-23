@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCommandAsync,
@@ -17,7 +18,7 @@ import { setupWorkspaces } from './utils';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -136,6 +137,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 361ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied explicit semver value "1.1.0", from the given specifier, to get new version 1.1.0
@@ -187,7 +190,10 @@ describe('nx release preserve matching dependency ranges', () => {
         }
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });
@@ -214,6 +220,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 363ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied explicit semver value "1.1.0", from the given specifier, to get new version 1.1.0
@@ -247,7 +255,10 @@ describe('nx release preserve matching dependency ranges', () => {
         "exports": {
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });
@@ -275,6 +286,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 355ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 1.0.1
@@ -316,7 +329,10 @@ describe('nx release preserve matching dependency ranges', () => {
         "exports": {
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
 
@@ -338,6 +354,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 360ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "minor", from the given specifier, to get new version 1.1.0
@@ -389,7 +407,10 @@ describe('nx release preserve matching dependency ranges', () => {
         }
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });
@@ -413,6 +434,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 345ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 1.0.1
@@ -446,7 +469,10 @@ describe('nx release preserve matching dependency ranges', () => {
         "exports": {
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });
@@ -478,6 +504,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 401ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "patch", from the given specifier, to get new version 1.0.1
@@ -515,7 +543,10 @@ describe('nx release preserve matching dependency ranges', () => {
         },
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });
@@ -562,6 +593,8 @@ describe('nx release preserve matching dependency ranges', () => {
           cwd: workspacePath,
         })
       ).toMatchInlineSnapshot(`
+        Already up to date
+        Done in 348ms using pnpm v11.2.2
         NX   Running release version for project: {project-name}
         {project-name} 📄 Resolved the current version as 1.0.0 from manifest: {project-name}/package.json
         {project-name} ❓ Applied semver relative bump "major", from the given specifier, to get new version 2.0.0
@@ -593,7 +626,10 @@ describe('nx release preserve matching dependency ranges', () => {
         "exports": {
         }
         +
+        PM lock file update because pnpm workspaces are not enabled.
         NX   Staging changed files with git
+        Staging files in git with the following command:
+        git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
       `);
     });
   });

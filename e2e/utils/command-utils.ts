@@ -418,6 +418,28 @@ export function runNgAdd(
   }
 }
 
+/**
+ * Nx prints a performance report at the end of every task run. Its wall-clock
+ * durations (and, when shown, the machine core count) change every run, so they
+ * can't live in a snapshot verbatim. Normalize those values to stable
+ * placeholders so the report itself can stay in snapshots. Scoped to the report
+ * block — between the `Run duration:` header and the `Learn how to improve …`
+ * footer — so durations/numbers elsewhere in the output are untouched. No-op when
+ * no report is present.
+ */
+export function normalizePerformanceReport(output: string): string {
+  return output.replace(
+    /\n[ \t]*Run duration:[\s\S]*?Learn how to improve your run's performance → \S+/g,
+    (block) =>
+      block
+        // durations: "1m 30s" | "3.4s" | "470ms" | "0ms" (minute form first so
+        // the "30s" of "1m 30s" isn't matched on its own)
+        .replace(/\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b/g, '{DURATION}')
+        // "8 cores" / "1 core" in the machine-bound recommendation
+        .replace(/\b\d+(?= cores?\b)/g, '{CORES}')
+  );
+}
+
 export function runCLI(
   command: string,
   opts: RunCmdOpts = {

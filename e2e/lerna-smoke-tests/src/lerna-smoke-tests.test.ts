@@ -6,6 +6,7 @@
 import {
   cleanupProject,
   newLernaWorkspace,
+  normalizePerformanceReport,
   runLernaCLI,
   tmpProjPath,
   updateJson,
@@ -13,7 +14,7 @@ import {
 
 expect.addSnapshotSerializer({
   serialize(str: string) {
-    return str
+    return normalizePerformanceReport(str)
       .replace(/(\r\n|\n)+/g, '\n')
       .replace(/\n\s+/g, '\n')
       .replace(/\s+\n/g, '\n')
@@ -73,6 +74,16 @@ describe('Lerna Smoke Tests', () => {
                 > echo test-package-1
                 test-package-1
                 Lerna (powered by Nx)   Successfully ran target print-name for project package-1
+                Run duration:              {DURATION}
+                Cache:                     0/1 hit (0%)
+                Critical path:             {DURATION}   (1 tasks)
+                Recoverable time:          {DURATION}
+                Recommendations:
+                - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
+                - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+                - Speed up or split the longest tasks on the critical path:
+                package-1:print-name    {DURATION}
+                Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
             `);
     }, 1000000);

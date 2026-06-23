@@ -1,4 +1,5 @@
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import { execSync } from 'child_process';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(`/private/${tmpProjPath()}`, '')
         .replaceAll(tmpProjPath(), '')
@@ -146,6 +147,18 @@ describe('nx release - private JS packages', () => {
       NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
+      Run duration:              {DURATION}
+      Cache:                     0/1 hit (0%)
+      Critical path:             {DURATION}   (1 tasks)
+      Recoverable time:          {DURATION}
+
+      Recommendations:
+      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
+      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+      - Speed up or split the longest tasks on the critical path:
+      {public-project-name}:nx-release-publish    {DURATION}
+
+      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
     `);
 
@@ -190,6 +203,18 @@ describe('nx release - private JS packages', () => {
       NX   Successfully ran target nx-release-publish for project {public-project-name}
 
 
+      Run duration:              {DURATION}
+      Cache:                     0/1 hit (0%)
+      Critical path:             {DURATION}   (1 tasks)
+      Recoverable time:          {DURATION}
+
+      Recommendations:
+      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
+      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+      - Speed up or split the longest tasks on the critical path:
+      {public-project-name}:nx-release-publish    {DURATION}
+
+      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
     `);
 
@@ -301,6 +326,18 @@ describe('nx release - private JS packages', () => {
       NX   Successfully ran target nx-release-publish for 2 projects
 
 
+      Run duration:              {DURATION}
+      Cache:                     0/2 hit (0%)
+      Critical path:             {DURATION}   (1 tasks)
+      Recoverable time:          {DURATION}
+
+      Recommendations:
+      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
+      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+      - Speed up or split the longest tasks on the critical path:
+      {public-project-name}:nx-release-publish    {DURATION}
+
+      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
     `);
 
