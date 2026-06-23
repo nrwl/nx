@@ -287,3 +287,47 @@ describe('createTargetDefaultsResults (plugin filter)', () => {
     expect(results).toEqual([]);
   });
 });
+
+describe('createTargetDefaultsResults (source attribution)', () => {
+  it('emits one synthetic result per resolving key with a key-specific file', () => {
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: {
+          build: { executor: '@nx/js:tsc', options: {} },
+          test: { executor: '@nx/jest:jest', options: {} },
+        },
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        // resolves for `build` via the target-name key
+        build: { cache: true },
+        // resolves for `test` via the executor key
+        '@nx/jest:jest': { cache: true },
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any
+    );
+
+    // The `file` reuses nx.json as a location id pointing at the originating
+    // `targetDefaults` key, so attribution is per-key rather than whole-file.
+    const byFile = Object.fromEntries(results.map((r) => [r[1], r[2]]));
+    expect(Object.keys(byFile).sort()).toEqual([
+      'nx.json#targetDefaults.@nx/jest:jest',
+      'nx.json#targetDefaults.build',
+    ]);
+    expect(
+      byFile['nx.json#targetDefaults.build'].projects['apps/app'].targets.build
+        .cache
+    ).toBe(true);
+    expect(
+      byFile['nx.json#targetDefaults.@nx/jest:jest'].projects['apps/app']
+        .targets.test.cache
+    ).toBe(true);
+  });
+});

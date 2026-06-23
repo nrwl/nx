@@ -85,7 +85,14 @@ export function createTargetDefaultsResults(
       )
     : undefined;
 
-  const syntheticProjects: Record<string, ProjectConfiguration> = {};
+  // Bucketed by the resolving `targetDefaults` key so each key becomes its own
+  // synthetic result with a key-specific `file`. A given (root, target)
+  // resolves from exactly one key (see `resolveTargetDefault`), so the buckets
+  // never overlap and merge order is irrelevant.
+  const syntheticProjectsByKey: Record<
+    string,
+    Record<string, ProjectConfiguration>
+  > = {};
 
   const allRoots = new Set<string>([
     ...Object.keys(specifiedPluginRootMap),
@@ -132,24 +139,32 @@ export function createTargetDefaultsResults(
 
       if (!syntheticTarget) continue;
 
-      syntheticProjects[root] ??= { root, targets: {} };
-      syntheticProjects[root].targets[targetName] = syntheticTarget;
+      const projectsForKey = (syntheticProjectsByKey[syntheticTarget.key] ??=
+        {});
+      projectsForKey[root] ??= { root, targets: {} };
+      projectsForKey[root].targets[targetName] = syntheticTarget.target;
     }
   }
 
-  if (Object.keys(syntheticProjects).length === 0) {
-    return [];
-  }
-
-  return [
-    [
+  // One synthetic result per key, each carrying a `file` that points at the
+  // originating `targetDefaults` key so source maps attribute fields to
+  // `nx.json#targetDefaults.<key>` rather than the whole nx.json file.
+  const results: CreateNodesResultEntry[] = [];
+  for (const key of Object.keys(syntheticProjectsByKey)) {
+    results.push([
       'nx/target-defaults',
-      'nx.json',
-      {
-        projects: syntheticProjects,
-      },
-    ],
-  ];
+      targetDefaultSourceFile(key),
+      { projects: syntheticProjectsByKey[key] },
+    ]);
+  }
+  return results;
+}
+
+// Encode the originating nx.json location into a synthetic result's `file`,
+// reusing the `file` field as a location id (`nx.json#targetDefaults.build`)
+// rather than widening `SourceInformation` to carry a separate path.
+function targetDefaultSourceFile(key: string): string {
+  return `nx.json#targetDefaults.${key}`;
 }
 
 // Returns the (executor, command) pair the real merge will land on at
@@ -213,18 +228,18 @@ function buildSyntheticTargetForRoot(
   projectName: string | undefined,
   projectNode: MatcherProjectNode | undefined,
   sourcePlugin: string | undefined
-): TargetConfiguration | undefined {
-  const rawTargetDefaults = resolveTargetDefault(targetDefaults, targetName, {
+): { key: string; target: TargetConfiguration } | undefined {
+  const resolved = resolveTargetDefaultEntry(targetDefaults, targetName, {
     executor: effective.executor,
     projectName,
     projectNode,
     sourcePlugin,
     command: effective.command,
   });
-  if (!rawTargetDefaults) return undefined;
+  if (!resolved) return undefined;
 
   const synthetic = resolveCommandSyntacticSugar(
-    deepClone(rawTargetDefaults),
+    deepClone(resolved.config),
     root
   );
 
@@ -246,7 +261,7 @@ function buildSyntheticTargetForRoot(
   if (effective.executor !== undefined) synthetic.executor = effective.executor;
   if (effective.command !== undefined) synthetic.command = effective.command;
 
-  return synthetic;
+  return { key: resolved.key, target: synthetic };
 }
 
 /**
@@ -345,9 +360,22 @@ function resolveTargetDefault(
   targetName: string,
   ctx: MatchContext
 ): Partial<TargetConfiguration> | null {
+  return resolveTargetDefaultEntry(normalized, targetName, ctx)?.config ?? null;
+}
+
+/**
+ * Like {@link resolveTargetDefault} but also returns the `targetDefaults` map
+ * key the merged config resolved from, so synthesis can attribute the result
+ * back to its nx.json location in source maps.
+ */
+function resolveTargetDefaultEntry(
+  normalized: NormalizedTargetDefaults,
+  targetName: string,
+  ctx: MatchContext
+): { key: string; config: Partial<TargetConfiguration> } | null {
   for (const key of orderedMatchingKeys(normalized, targetName, ctx.executor)) {
     const merged = mergeMatchingEntries(normalized[key], ctx);
-    if (merged) return merged;
+    if (merged) return { key, config: merged };
   }
   return null;
 }
