@@ -403,9 +403,12 @@ export function modifyYarnRcToFitNewDirectory(contents: string): string {
 /**
  * We copy pnpm-workspace.yaml to the temporary directory so the workspace's
  * registry, auth and release-age settings still apply, and so `pnpm add -w`
- * recognizes the directory as a workspace root. `packages` (member globs) and
- * `patchedDependencies` (relative patch paths) only resolve in the real
- * workspace, so they are dropped.
+ * recognizes the directory as a workspace root. `patchedDependencies` (relative
+ * patch paths) only resolves in the real workspace, so it is dropped. The
+ * `packages` member globs don't resolve in the temp dir either, but pnpm <10.5
+ * (and corepack's bundled default pnpm) reject a workspace manifest whose
+ * `packages` field is missing or empty, so they are replaced with a
+ * self-reference rather than deleted.
  *
  * Exported for testing - not meant to be used outside of this file.
  *
@@ -417,7 +420,9 @@ export function modifyPnpmWorkspaceYamlToFitNewDirectory(
 ): string {
   const doc = parseDocument(contents);
   if (doc.contents) {
-    doc.delete('packages');
+    // The temp dir is a single-package workspace; '.' keeps `packages` non-empty
+    // for older pnpm while matching only the temp root.
+    doc.set('packages', ['.']);
     doc.delete('patchedDependencies');
   }
   return doc.toString();
