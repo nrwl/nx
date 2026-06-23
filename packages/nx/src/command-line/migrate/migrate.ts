@@ -2206,7 +2206,8 @@ function readNxVersion(packageJson: PackageJson, root: string) {
   );
 }
 
-async function generateMigrationsJsonAndUpdatePackageJson(
+// Exported for testing the optional-include orchestration seam (see NXC-4590).
+export async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: GenerateMigrations,
   fetch?: MigratorOptions['fetch']
@@ -2308,11 +2309,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       writableUpdates
     );
 
+    // Under `--include=optional` the target's own entry is filtered out of
+    // `packageUpdates` (it's a required package), so resolve the version
+    // defensively. Also reused by the completion analytics below.
+    const resolvedTargetVersion =
+      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+
     const promptMigrationFiles = writePromptMigrationFiles(
       root,
       migrations,
       promptContents ?? {},
-      packageUpdates[walkedTargetPackage].version
+      resolvedTargetVersion
     );
 
     if (migrations.length > 0) {
@@ -2329,8 +2336,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
-    const resolvedTargetVersion =
-      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
     // The param expressions below evaluate before the report function is
     // entered; `safeReport` keeps them inside the analytics boundary so a
     // param-building throw can't surface here and convert an already
