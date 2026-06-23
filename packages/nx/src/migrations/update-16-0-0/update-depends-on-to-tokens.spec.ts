@@ -38,7 +38,6 @@ describe('update-depends-on-to-tokens', () => {
     });
     await update(tree);
     const nxJson = readNxJson(tree);
-    // Migration ran before targetDefaults supported the array shape.
     const td = nxJson.targetDefaults as Record<string, any>;
     const buildDependencyConfiguration = td.build.dependsOn[0] as any;
     const testDependencyConfiguration = td.test.dependsOn[0] as any;
@@ -135,6 +134,34 @@ describe('update-depends-on-to-tokens', () => {
     expect(testEntry.inputs[0].projects).not.toBeDefined();
     expect(testEntry.inputs[0].dependencies).toEqual(true);
     expect(otherEntry.dependsOn).toEqual(['^deps']);
+  });
+
+  it('should update the filtered array value form and preserve filters', async () => {
+    // `nx repair` can't assume migration order, so a default may already be
+    // array-shaped (e.g. authored manually or by an already-migrated plugin).
+    const tree = createTreeWithEmptyWorkspace();
+    updateJson(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        build: [
+          {
+            filter: { projects: ['tag:foo'] },
+            dependsOn: [{ projects: 'self' }],
+            inputs: [{ projects: 'dependencies', input: 'someInput' }],
+          },
+          { dependsOn: [{ projects: 'dependencies' }] },
+        ],
+      };
+      return json;
+    });
+    await update(tree);
+    const build = (readNxJson(tree).targetDefaults as any).build;
+    expect(build[0].filter).toEqual({ projects: ['tag:foo'] });
+    expect(build[0].dependsOn[0].projects).not.toBeDefined();
+    expect(build[0].dependsOn[0].dependencies).not.toBeDefined();
+    expect(build[0].inputs[0].projects).not.toBeDefined();
+    expect(build[0].inputs[0].dependencies).toEqual(true);
+    expect(build[1].dependsOn[0].projects).not.toBeDefined();
+    expect(build[1].dependsOn[0].dependencies).toEqual(true);
   });
 
   it('should not throw on nulls', async () => {

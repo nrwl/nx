@@ -10,6 +10,7 @@ import {
 } from '../../nx-cloud/update-manager';
 import { getRunnerOptions } from '../../tasks-runner/run-command';
 import { output } from '../../utils/output';
+import { ensureCatchAllTargetDefaultConfig } from '../utils/target-defaults';
 
 export default async function migrate(tree: Tree) {
   if (!tree.exists('nx.json')) {
@@ -83,15 +84,13 @@ export default async function migrate(tree: Tree) {
     if (Array.isArray(options.cacheableOperations)) {
       nxJson.targetDefaults ??= {};
       for (const target of options.cacheableOperations) {
-        const existing = nxJson.targetDefaults[target];
-        // A pre-existing array value carries filters this migration can't
-        // reason about; leave it untouched.
-        if (Array.isArray(existing)) {
-          continue;
-        }
-        const config = existing ?? {};
+        // Set the workspace-wide `cache: true` baseline on the unfiltered
+        // catch-all entry, handling both the object and filtered array forms.
+        const { config, value } = ensureCatchAllTargetDefaultConfig(
+          nxJson.targetDefaults[target]
+        );
         config.cache ??= true;
-        nxJson.targetDefaults[target] = config;
+        nxJson.targetDefaults[target] = value;
       }
       delete options.cacheableOperations;
     }
