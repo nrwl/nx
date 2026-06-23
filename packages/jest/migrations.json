@@ -77,6 +77,15 @@
       "description": "Rename imports of `createNodesV2` from `@nx/jest/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "set-ts-jest-isolated-modules": {
+      "version": "23.1.0-beta.3",
+      "requires": {
+        "ts-jest": ">=29.2.0"
+      },
+      "description": "Set `isolatedModules: true` in `tsconfig.spec.json` for ts-jest projects on TypeScript < 6. ts-jest 29.2+ forces `moduleResolution: node10` on the CommonJS path, which ignores package `exports` maps and breaks (TS2307) resolution of exports-only workspace libraries; transpiling per file avoids the type-resolution failure.",
+      "implementation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules",
+      "documentation": "./dist/src/migrations/update-23-1-0/set-ts-jest-isolated-modules.md"
     }
   },
   "packageJsonUpdates": {
