@@ -46,6 +46,7 @@ export {
   addE2eCiTargetDefaults,
   findTargetDefault,
   readTargetDefaultsForTarget,
+  updateTargetDefault,
   upsertTargetDefault,
 } from './src/generators/target-defaults-utils';
 

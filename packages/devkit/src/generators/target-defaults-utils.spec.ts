@@ -14,11 +14,13 @@ import {
   addProjectConfiguration,
   readNxJson,
   updateNxJson,
+  type NxJsonConfiguration,
   type Tree,
 } from 'nx/src/devkit-exports';
 import {
   addBuildTargetDefaults,
   findTargetDefault,
+  updateTargetDefault,
   upsertTargetDefault,
 } from './target-defaults-utils';
 
@@ -354,6 +356,262 @@ describe('target-defaults-utils', () => {
       expect(readNxJson(tree).targetDefaults).toEqual({
         '@nx/esbuild:esbuild': { cache: true },
       });
+    });
+  });
+
+  describe('updateTargetDefault', () => {
+    // Strips the bad option, mirroring the jest tsConfig-removal migration.
+    const removeTsConfig = (config: { options?: Record<string, unknown> }) => {
+      if (config.options) {
+        delete config.options.tsConfig;
+        if (Object.keys(config.options).length === 0) delete config.options;
+      }
+    };
+
+    it('runs the callback for object, executor-key, field, and filter forms that reference the executor', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          // target-key with the executor as a config field
+          build: {
+            executor: '@nx/jest:jest',
+            options: { tsConfig: 'x', a: 1 },
+          },
+          // executor-key form
+          '@nx/jest:jest': { options: { tsConfig: 'y', b: 2 } },
+          test: [
+            // target-key with the executor in the filter
+            {
+              filter: { executor: '@nx/jest:jest' },
+              options: { tsConfig: 'z', c: 3 },
+            },
+            // unrelated entry — untouched
+            { options: { keep: true } },
+          ],
+          // unrelated key — untouched
+          lint: { options: { tsConfig: 'should-stay' } },
+        },
+      };
+
+      updateTargetDefault(
+        nxJson,
+        { executor: '@nx/jest:jest' },
+        removeTsConfig
+      );
+
+      expect(nxJson.targetDefaults).toEqual({
+        build: { executor: '@nx/jest:jest', options: { a: 1 } },
+        '@nx/jest:jest': { options: { b: 2 } },
+        test: [
+          { filter: { executor: '@nx/jest:jest' }, options: { c: 3 } },
+          { options: { keep: true } },
+        ],
+        lint: { options: { tsConfig: 'should-stay' } },
+      });
+    });
+
+    it('passes the right info (target/executor/filter) per entry form', () => {
+      const seen: Array<Record<string, unknown>> = [];
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          build: { executor: '@nx/jest:jest', cache: true },
+          '@nx/jest:jest': { cache: true },
+          test: [{ filter: { executor: '@nx/jest:jest' }, cache: true }],
+        },
+      };
+
+      updateTargetDefault(
+        nxJson,
+        { executor: '@nx/jest:jest' },
+        (_config, info) => {
+          seen.push({
+            key: info.key,
+            target: info.target,
+            executor: info.executor,
+            filter: info.filter,
+          });
+        }
+      );
+
+      expect(seen).toEqual([
+        {
+          key: 'build',
+          target: 'build',
+          executor: '@nx/jest:jest',
+          filter: undefined,
+        },
+        {
+          key: '@nx/jest:jest',
+          target: undefined,
+          executor: '@nx/jest:jest',
+          filter: undefined,
+        },
+        {
+          key: 'test',
+          target: 'test',
+          executor: '@nx/jest:jest',
+          filter: { executor: '@nx/jest:jest' },
+        },
+      ]);
+    });
+
+    it('drops an array entry whose callback returns null and collapses to the object form', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          test: [
+            {
+              filter: { executor: '@nx/jest:jest' },
+              options: { tsConfig: 'z' },
+            },
+            { cache: true },
+          ],
+        },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
+
+      // The filtered jest entry is dropped; the lone unfiltered entry collapses
+      // back to the plain object form.
+      expect(nxJson.targetDefaults).toEqual({ test: { cache: true } });
+    });
+
+    it('deletes the key when an object-form value callback returns null', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          '@nx/jest:jest': { options: { tsConfig: 'z' } },
+          build: { cache: true },
+        },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
+
+      expect(nxJson.targetDefaults).toEqual({ build: { cache: true } });
+    });
+
+    it('removes targetDefaults entirely when the last key is deleted', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: { '@nx/jest:jest': { options: { tsConfig: 'z' } } },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null);
+
+      expect(nxJson.targetDefaults).toBeUndefined();
+    });
+
+    it('replaces the entry payload when the callback returns a new config', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: { '@nx/jest:jest': { cache: true } },
+      };
+
+      updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, (config) => ({
+        ...config,
+        cache: false,
+        inputs: ['production'],
+      }));
+
+      expect(nxJson.targetDefaults).toEqual({
+        '@nx/jest:jest': { cache: false, inputs: ['production'] },
+      });
+    });
+
+    it('narrows to project-filtered entries that cover the scoped projects', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          build: [
+            { filter: { projects: ['app-a'] }, options: { a: 1 } },
+            { filter: { projects: ['tag:unit'] }, options: { b: 2 } },
+            { filter: { projects: ['other'] }, options: { c: 3 } },
+            { options: { d: 4 } },
+          ],
+        },
+      };
+
+      updateTargetDefault(
+        nxJson,
+        {
+          projects: {
+            'app-a': { data: { root: 'apps/app-a', tags: ['unit'] } },
+          },
+        },
+        (config) => {
+          (config.options as Record<string, unknown>).touched = true;
+        }
+      );
+
+      // app-a is matched by name and by `tag:unit`, and the unfiltered entry
+      // always applies; the `other`-scoped entry is left alone.
+      expect(nxJson.targetDefaults).toEqual({
+        build: [
+          { filter: { projects: ['app-a'] }, options: { a: 1, touched: true } },
+          {
+            filter: { projects: ['tag:unit'] },
+            options: { b: 2, touched: true },
+          },
+          { filter: { projects: ['other'] }, options: { c: 3 } },
+          { options: { d: 4, touched: true } },
+        ],
+      });
+    });
+
+    it('combines executor selection with project narrowing', () => {
+      const nxJson: NxJsonConfiguration = {
+        targetDefaults: {
+          test: [
+            {
+              filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+              options: { a: 1 },
+            },
+            {
+              filter: { executor: '@nx/jest:jest', projects: ['other'] },
+              options: { b: 2 },
+            },
+            { filter: { executor: '@nx/jest:jest' }, options: { c: 3 } },
+            { filter: { executor: '@nx/vite:test' }, options: { d: 4 } },
+          ],
+        },
+      };
+
+      updateTargetDefault(
+        nxJson,
+        {
+          executor: '@nx/jest:jest',
+          projects: { 'app-a': { data: { root: 'apps/app-a' } } },
+        },
+        (config) => {
+          (config.options as Record<string, unknown>).touched = true;
+        }
+      );
+
+      expect(nxJson.targetDefaults).toEqual({
+        test: [
+          {
+            filter: { executor: '@nx/jest:jest', projects: ['app-a'] },
+            options: { a: 1, touched: true },
+          },
+          {
+            filter: { executor: '@nx/jest:jest', projects: ['other'] },
+            options: { b: 2 },
+          },
+          {
+            filter: { executor: '@nx/jest:jest' },
+            options: { c: 3, touched: true },
+          },
+          { filter: { executor: '@nx/vite:test' }, options: { d: 4 } },
+        ],
+      });
+    });
+
+    it('throws when neither executor nor projects is provided', () => {
+      expect(() =>
+        updateTargetDefault({ targetDefaults: {} }, {}, () => null)
+      ).toThrow(/at least one of `executor` or `projects`/);
+    });
+
+    it('is a no-op when nx.json has no targetDefaults', () => {
+      const nxJson: NxJsonConfiguration = {};
+      expect(
+        updateTargetDefault(nxJson, { executor: '@nx/jest:jest' }, () => null)
+      ).toBe(nxJson);
+      expect(nxJson.targetDefaults).toBeUndefined();
     });
   });
 });

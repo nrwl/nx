@@ -5,6 +5,7 @@ import {
   type TargetConfiguration,
   type TargetDefaultArrayEntry,
   type TargetDefaultEntry,
+  type TargetDefaultFilter,
   type TargetDefaults,
   type TargetDefaultValue,
   type Tree,
@@ -278,6 +279,191 @@ const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);
 function isExecutorLikeKey(key: string): boolean {
   if (!key.includes(':')) return false;
   for (const c of key) if (GLOB_CHARACTERS.has(c)) return false;
+  return true;
+}
+
+/**
+ * The subset of a project graph node that the `projects` narrowing reads —
+ * names come from the map keys, `root`/`tags` drive `findMatchingProjects`.
+ * Mirrors `MatcherProjectNode` without importing it, so the signature stays
+ * stable across the supported nx version range.
+ */
+type ContextProjectNode = { data: { root: string; tags?: string[] } };
+
+/**
+ * What the caller is updating, used to pick which `targetDefaults` entries the
+ * callback runs against. At least one of `executor` / `projects` is required.
+ */
+export interface UpdateTargetDefaultContext {
+  /**
+   * Visit only entries that resolve to this executor — matched against the map
+   * key (executor-keyed form), an entry's `executor` field, or its
+   * `filter.executor`. When omitted, entries are not filtered by executor.
+   */
+  executor?: string;
+  /**
+   * Project nodes the update is scoped to, keyed by project name. When set, a
+   * project-filtered entry is visited only if its `filter.projects` covers
+   * *every* one of these projects; unfiltered entries always match. When
+   * omitted, project filters are not a constraint and every (executor-matching)
+   * entry is visited — the workspace-wide case.
+   */
+  projects?: Record<string, ContextProjectNode>;
+}
+
+/**
+ * Describes the entry a callback invocation is operating on, so the callback
+ * can tell the executor-keyed form from the target-keyed form and read the
+ * entry's filter.
+ */
+export interface UpdateTargetDefaultEntryInfo {
+  /** The `targetDefaults` map key the entry lives under. */
+  key: string;
+  /** Logical target name — `undefined` for executor-keyed entries. */
+  target?: string;
+  /** Executor the entry resolves to (from the key, `executor` field, or filter). */
+  executor?: string;
+  /** The entry's filter, present only for filtered array entries. */
+  filter?: TargetDefaultFilter;
+}
+
+/**
+ * Called once per matching entry. Receives the entry's flat config (everything
+ * but `filter`) and may mutate it in place. Return a new config to replace the
+ * entry's payload, return `null` to drop the entry, or return nothing to keep
+ * the (possibly mutated) config.
+ */
+export type UpdateTargetDefaultCallback = (
+  config: Partial<TargetConfiguration>,
+  info: UpdateTargetDefaultEntryInfo
+) => Partial<TargetConfiguration> | null | void;
+
+/**
+ * Walk the `targetDefaults` entries matching `context` and run `callback`
+ * against each, mutating `nxJson` in place and returning it. This is the
+ * read-modify-write counterpart to {@link upsertTargetDefault}, meant for
+ * generators and migrations that need to edit *existing* defaults across both
+ * value forms (plain object and filtered array) without re-implementing the
+ * normalize → edit → collapse dance by hand.
+ *
+ * Matching, per the `context`:
+ * - `executor` selects entries that reference it as the map key, an `executor`
+ *   config field, or `filter.executor`.
+ * - `projects` narrows to entries whose `filter.projects` covers the scoped
+ *   projects (unfiltered entries always match). With no `projects` context,
+ *   project filters are ignored and every executor-matching entry is visited.
+ *
+ * Removal and collapsing follow the storage-form rules:
+ * - Array entry whose callback returns `null` → dropped from the array.
+ * - An array that collapses to a single unfiltered entry → stored as the plain
+ *   object form; an emptied array → the whole key is deleted.
+ * - Object-form value whose callback returns `null` → the whole key is deleted.
+ * - An emptied `targetDefaults` map → removed from `nxJson` entirely.
+ *
+ * Throws when neither `executor` nor `projects` is provided — an empty context
+ * would match everything and is almost always a bug.
+ */
+export function updateTargetDefault(
+  nxJson: NxJsonConfiguration,
+  context: UpdateTargetDefaultContext,
+  callback: UpdateTargetDefaultCallback
+): NxJsonConfiguration {
+  const { executor, projects } = context;
+  if (executor === undefined && projects === undefined) {
+    throw new Error(
+      'updateTargetDefault requires at least one of `executor` or `projects` on the context to locate entries to update.'
+    );
+  }
+
+  const targetDefaults = nxJson.targetDefaults;
+  if (!targetDefaults) {
+    return nxJson;
+  }
+
+  const projectNames = projects ? Object.keys(projects) : [];
+
+  for (const key of Object.keys(targetDefaults)) {
+    const value = targetDefaults[key];
+    const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
+      ? value
+      : [value];
+
+    const kept: TargetDefaultArrayEntry[] = [];
+    for (const entry of entries) {
+      if (!entryMatchesContext(key, entry, executor, projects, projectNames)) {
+        kept.push(entry);
+        continue;
+      }
+
+      const { filter, ...config } = entry;
+      const result = callback(config, {
+        key,
+        target: isExecutorLikeKey(key) ? undefined : key,
+        executor: isExecutorLikeKey(key)
+          ? key
+          : (config.executor ?? filter?.executor),
+        filter,
+      }) as Partial<TargetConfiguration> | null | undefined;
+
+      // `null` drops the entry; anything else keeps the (mutated or replaced)
+      // config, re-attaching the filter so a filtered entry stays filtered.
+      if (result === null) {
+        continue;
+      }
+      const nextConfig = result ?? config;
+      kept.push(filter !== undefined ? { filter, ...nextConfig } : nextConfig);
+    }
+
+    if (kept.length === 0) {
+      delete targetDefaults[key];
+    } else {
+      targetDefaults[key] = collapse(kept);
+    }
+  }
+
+  if (Object.keys(targetDefaults).length === 0) {
+    delete nxJson.targetDefaults;
+  }
+
+  return nxJson;
+}
+
+/**
+ * Whether `callback` should run against this entry: it must reference the
+ * context's `executor` (when given), and — when the context is scoped to
+ * `projects` — any `filter.projects` it carries must cover every scoped
+ * project. Unfiltered entries always pass the project check.
+ */
+function entryMatchesContext(
+  key: string,
+  entry: TargetDefaultArrayEntry,
+  executor: string | undefined,
+  projects: Record<string, ContextProjectNode> | undefined,
+  projectNames: string[]
+): boolean {
+  if (executor !== undefined) {
+    const referencesExecutor =
+      key === executor ||
+      entry.executor === executor ||
+      entry.filter?.executor === executor;
+    if (!referencesExecutor) {
+      return false;
+    }
+  }
+
+  if (projects !== undefined && entry.filter?.projects !== undefined) {
+    const patterns = Array.isArray(entry.filter.projects)
+      ? [...entry.filter.projects]
+      : [entry.filter.projects];
+    const matched = findMatchingProjects(patterns, projects);
+    if (
+      projectNames.length === 0 ||
+      !projectNames.every((name) => matched.includes(name))
+    ) {
+      return false;
+    }
+  }
+
   return true;
 }
 
