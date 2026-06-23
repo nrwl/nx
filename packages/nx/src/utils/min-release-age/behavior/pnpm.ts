@@ -485,8 +485,9 @@ function readNpmrcSurface(
         windowMinutes = num;
       }
     } else if (key === 'minimum-release-age-exclude') {
-      // npm-conf accumulates repeated ini keys into an array.
-      (excludes ??= []).push(value);
+      // npm-conf accumulates repeated ini keys AND comma-splits each value, so
+      // `a,b` on one line and two separate `=` lines are equivalent.
+      (excludes ??= []).push(...splitNpmConfList(value));
     }
   }
   return { windowMinutes, excludes };
@@ -589,7 +590,7 @@ function readEnvArray(
     return undefined;
   }
   // pnpm v11's [String, Array] env schema tries a JSON array first, then falls
-  // back to the raw value as a single entry. v10 (nopt) never JSON-parses.
+  // back to the raw value as a single entry - never comma-split.
   if (keySet.prefix === 'pnpm_config_') {
     try {
       const parsed = JSON.parse(raw);
@@ -602,8 +603,11 @@ function readEnvArray(
           : 'invalid';
       }
     } catch {}
+    return [raw];
   }
-  return [raw];
+  // v10 reads npm_config_* via @pnpm/npm-conf, which comma-splits array-typed
+  // values (the same parsing it applies to .npmrc).
+  return splitNpmConfList(raw);
 }
 
 // --- value helpers ----------------------------------------------------------
@@ -621,6 +625,16 @@ function toNumber(value: unknown): number | null {
     return Number.isFinite(num) ? num : null;
   }
   return null;
+}
+
+// @pnpm/npm-conf (pnpm v10's .npmrc / npm_config_* reader) treats array-typed
+// settings as comma-separated lists, trimming each entry. Mirror that so a value
+// like `nx,@nx/*` becomes two patterns instead of one invalid entry.
+function splitNpmConfList(value: string): string[] {
+  return value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
 }
 
 function stripQuotes(value: string): string {

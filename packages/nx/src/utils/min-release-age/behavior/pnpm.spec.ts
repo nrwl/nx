@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { MinReleaseAgeViolationError } from '../errors';
 import type { RegistryMetadata } from '../packument';
 import type { MinReleaseAgePolicy, PmMinReleaseAgeBehavior } from '../policy';
@@ -559,6 +560,19 @@ describe('pnpm min-release-age behavior', () => {
         .mockImplementation(() => require('@zkochan/js-yaml').dump(doc ?? {}));
     }
 
+    // Only the project .npmrc exists, with the given contents.
+    function mockProjectNpmrc(contents: string) {
+      jest.resetModules();
+      const fs = require('fs');
+      const npmrcPath = join('/root', '.npmrc');
+      jest
+        .spyOn(fs, 'existsSync')
+        .mockImplementation((p: any) => p === npmrcPath);
+      jest
+        .spyOn(fs, 'readFileSync')
+        .mockImplementation((p: any) => (p === npmrcPath ? contents : ''));
+    }
+
     // Workspace yaml present but unparseable (unterminated flow collection).
     function mockCorruptWorkspaceYaml() {
       jest.resetModules();
@@ -871,6 +885,32 @@ describe('pnpm min-release-age behavior', () => {
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(1440 * MINUTE);
         expect(result.policy.isExcluded('pkg-a', '1.0.0')).toBe(true);
+      }
+    });
+
+    it('v10 npm_config_ env exclude comma-splits and trims (matches @pnpm/npm-conf)', async () => {
+      mockYaml({ minimumReleaseAge: 1440 });
+      process.env.npm_config_minimum_release_age_exclude = 'nx, @nx/*';
+      const result = await readPnpmPolicy('/root', '10.20.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('other', '1.0.0')).toBe(false);
+      }
+    });
+
+    it('v10 .npmrc exclude comma-splits (matches @pnpm/npm-conf)', async () => {
+      mockProjectNpmrc(
+        'minimum-release-age=1440\nminimum-release-age-exclude=nx,@nx/*\n'
+      );
+      const result = await readPnpmPolicy('/root', '10.20.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(1440 * MINUTE);
+        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('other', '1.0.0')).toBe(false);
       }
     });
 
