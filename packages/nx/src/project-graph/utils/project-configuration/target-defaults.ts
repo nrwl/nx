@@ -85,13 +85,14 @@ export function createTargetDefaultsResults(
       )
     : undefined;
 
-  // Bucketed by the resolving `targetDefaults` key so each key becomes its own
-  // synthetic result with a key-specific `file`. A given (root, target)
-  // resolves from exactly one key (see `resolveTargetDefault`), so the buckets
-  // never overlap and merge order is irrelevant.
-  const syntheticProjectsByKey: Record<
+  // Bucketed by the resolving `targetDefaults` key and the matching entry's
+  // array index, so each array element becomes its own synthetic result with an
+  // element-specific `file`. A given (root, target) resolves from exactly one
+  // key, and that key's entries merge downstream in ascending index order
+  // (document order, later winning) — matching the in-key merge the reader does.
+  const syntheticProjectsByKeyIndex: Record<
     string,
-    Record<string, ProjectConfiguration>
+    Record<number, Record<string, ProjectConfiguration>>
   > = {};
 
   const allRoots = new Set<string>([
@@ -127,7 +128,7 @@ export function createTargetDefaultsResults(
           )
         : undefined;
 
-      const syntheticTarget = buildSyntheticTargetForRoot(
+      const syntheticTargets = buildSyntheticTargetsForRoot(
         targetName,
         root,
         effective,
@@ -137,34 +138,45 @@ export function createTargetDefaultsResults(
         sourcePlugin
       );
 
-      if (!syntheticTarget) continue;
-
-      const projectsForKey = (syntheticProjectsByKey[syntheticTarget.key] ??=
-        {});
-      projectsForKey[root] ??= { root, targets: {} };
-      projectsForKey[root].targets[targetName] = syntheticTarget.target;
+      for (const { key, index, target } of syntheticTargets) {
+        const byIndex = (syntheticProjectsByKeyIndex[key] ??= {});
+        const projectsForEntry = (byIndex[index] ??= {});
+        projectsForEntry[root] ??= { root, targets: {} };
+        projectsForEntry[root].targets[targetName] = target;
+      }
     }
   }
 
-  // One synthetic result per key, each carrying a `file` that points at the
-  // originating `targetDefaults` key so source maps attribute fields to
-  // `nx.json#targetDefaults.<key>` rather than the whole nx.json file.
+  // One synthetic result per matching array element, each carrying a `file`
+  // that points at that element so source maps attribute fields to
+  // `nx.json#targetDefaults.<key>[<index>]` (or `.<key>` for the object form).
+  // Emitted in ascending index order within a key so the downstream merge
+  // layers a key's entries in document order, later winning.
   const results: CreateNodesResultEntry[] = [];
-  for (const key of Object.keys(syntheticProjectsByKey)) {
-    results.push([
-      'nx/target-defaults',
-      targetDefaultSourceFile(key),
-      { projects: syntheticProjectsByKey[key] },
-    ]);
+  for (const key of Object.keys(syntheticProjectsByKeyIndex)) {
+    const isArrayForm = Array.isArray(targetDefaultsConfig[key]);
+    const indices = Object.keys(syntheticProjectsByKeyIndex[key])
+      .map(Number)
+      .sort((a, b) => a - b);
+    for (const index of indices) {
+      results.push([
+        'nx/target-defaults',
+        targetDefaultSourceFile(key, isArrayForm ? index : undefined),
+        { projects: syntheticProjectsByKeyIndex[key][index] },
+      ]);
+    }
   }
   return results;
 }
 
 // Encode the originating nx.json location into a synthetic result's `file`,
-// reusing the `file` field as a location id (`nx.json#targetDefaults.build`)
-// rather than widening `SourceInformation` to carry a separate path.
-function targetDefaultSourceFile(key: string): string {
-  return `nx.json#targetDefaults.${key}`;
+// reusing the `file` field as a location id rather than widening
+// `SourceInformation` to carry a separate path. The object value form has no
+// meaningful index (`nx.json#targetDefaults.build`); the array form points at
+// the specific element (`nx.json#targetDefaults.build[3]`).
+function targetDefaultSourceFile(key: string, index?: number): string {
+  const location = index === undefined ? key : `${key}[${index}]`;
+  return `nx.json#targetDefaults.${location}`;
 }
 
 // Returns the (executor, command) pair the real merge will land on at
@@ -211,16 +223,18 @@ function effectiveTargetForLookup(
 }
 
 /**
- * Returns the synthetic defaults target to insert for `targetName` at
- * `root`, or undefined if no defaults apply. The synthetic stamps the
- * effective executor/command so neither merge neighbor can
- * incompatible-replace it and drop its contributions.
+ * Returns one synthetic defaults target per matching `targetDefaults` entry for
+ * `targetName` at `root` (empty when no defaults apply). Emitting per entry
+ * rather than a single pre-merged target lets source maps attribute fields to
+ * the specific array element they came from; the entries merge downstream in
+ * document order. Each synthetic stamps the effective executor/command so
+ * neither merge neighbor can incompatible-replace it and drop its contributions.
  *
  * @param effective The `(executor, command)` shape the real merge will
  *   land on. Used both as the executor filter context and as the locked
  *   shape stamped onto the synthetic.
  */
-function buildSyntheticTargetForRoot(
+function buildSyntheticTargetsForRoot(
   targetName: string,
   root: string,
   effective: { executor: string | undefined; command: string | undefined },
@@ -228,40 +242,49 @@ function buildSyntheticTargetForRoot(
   projectName: string | undefined,
   projectNode: MatcherProjectNode | undefined,
   sourcePlugin: string | undefined
-): { key: string; target: TargetConfiguration } | undefined {
-  const resolved = resolveTargetDefaultEntry(targetDefaults, targetName, {
+): { key: string; index: number; target: TargetConfiguration }[] {
+  const resolved = resolveTargetDefaultMatches(targetDefaults, targetName, {
     executor: effective.executor,
     projectName,
     projectNode,
     sourcePlugin,
     command: effective.command,
   });
-  if (!resolved) return undefined;
+  if (!resolved) return [];
 
-  const synthetic = resolveCommandSyntacticSugar(
-    deepClone(resolved.config),
-    root
-  );
+  const synthetics: {
+    key: string;
+    index: number;
+    target: TargetConfiguration;
+  }[] = [];
+  for (const { index, config } of resolved.matches) {
+    const synthetic = resolveCommandSyntacticSugar(deepClone(config), root);
 
-  // Compatibility guard: an applicable default that is incompatible with the
-  // effective target shape (e.g. it sets a foreign `executor`) would
-  // wholesale-replace the inferred/specified target during the real merge.
-  // Skip it rather than corrupt the target.
-  if (
-    !isCompatibleTarget(
-      { executor: effective.executor, command: effective.command },
-      synthetic
-    )
-  ) {
-    return undefined;
+    // Compatibility guard, per entry: an entry incompatible with the effective
+    // target shape (e.g. it sets a foreign `executor`) would wholesale-replace
+    // the inferred/specified target during the real merge. Drop just that
+    // entry rather than corrupt the target; compatible siblings still apply.
+    if (
+      !isCompatibleTarget(
+        { executor: effective.executor, command: effective.command },
+        synthetic
+      )
+    ) {
+      continue;
+    }
+
+    // Pre-stamp executor/command from the effective shape so the
+    // synthetic can't be incompatible-replaced during the real merge.
+    if (effective.executor !== undefined) {
+      synthetic.executor = effective.executor;
+    }
+    if (effective.command !== undefined) {
+      synthetic.command = effective.command;
+    }
+
+    synthetics.push({ key: resolved.key, index, target: synthetic });
   }
-
-  // Pre-stamp executor/command from the effective shape so the
-  // synthetic can't be incompatible-replaced during the real merge.
-  if (effective.executor !== undefined) synthetic.executor = effective.executor;
-  if (effective.command !== undefined) synthetic.command = effective.command;
-
-  return { key: resolved.key, target: synthetic };
+  return synthetics;
 }
 
 /**
@@ -360,22 +383,40 @@ function resolveTargetDefault(
   targetName: string,
   ctx: MatchContext
 ): Partial<TargetConfiguration> | null {
-  return resolveTargetDefaultEntry(normalized, targetName, ctx)?.config ?? null;
+  for (const key of orderedMatchingKeys(normalized, targetName, ctx.executor)) {
+    const merged = mergeMatchingEntries(normalized[key], ctx);
+    if (merged) return merged;
+  }
+  return null;
 }
 
 /**
- * Like {@link resolveTargetDefault} but also returns the `targetDefaults` map
- * key the merged config resolved from, so synthesis can attribute the result
- * back to its nx.json location in source maps.
+ * For synthesis: the matching entries — with their original array indices — of
+ * the first key that has any match (same key precedence as
+ * {@link resolveTargetDefault}). Unlike that reader, the entries are NOT merged
+ * here: each becomes its own synthetic node so source maps attribute fields to
+ * the specific `targetDefaults` array element they came from, and the in-key
+ * merge happens downstream in document (index) order.
  */
-function resolveTargetDefaultEntry(
+function resolveTargetDefaultMatches(
   normalized: NormalizedTargetDefaults,
   targetName: string,
   ctx: MatchContext
-): { key: string; config: Partial<TargetConfiguration> } | null {
+): {
+  key: string;
+  matches: { index: number; config: Partial<TargetConfiguration> }[];
+} | null {
   for (const key of orderedMatchingKeys(normalized, targetName, ctx.executor)) {
-    const merged = mergeMatchingEntries(normalized[key], ctx);
-    if (merged) return { key, config: merged };
+    const entries = normalized[key];
+    const matches: { index: number; config: Partial<TargetConfiguration> }[] =
+      [];
+    for (let index = 0; index < entries.length; index++) {
+      if (!entryFilterMatches(entries[index].filter, ctx)) continue;
+      matches.push({ index, config: stripFilter(entries[index]) });
+    }
+    if (matches.length > 0) {
+      return { key, matches };
+    }
   }
   return null;
 }

@@ -330,4 +330,53 @@ describe('createTargetDefaultsResults (source attribution)', () => {
         .targets.test.cache
     ).toBe(true);
   });
+
+  it('emits one result per matching array element with an indexed file', () => {
+    const defaultRootMap = {
+      'apps/app': {
+        root: 'apps/app',
+        targets: { build: { executor: '@nx/vite:build', options: {} } },
+      },
+    };
+    const defaultSourceMaps = {
+      'apps/app': {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'] as [
+          string,
+          string,
+        ],
+      },
+    };
+    const nxJson = {
+      targetDefaults: {
+        build: [
+          { cache: true },
+          { filter: { plugin: '@nx/vite/plugin' }, inputs: ['vite.config.ts'] },
+        ],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any,
+      undefined,
+      defaultSourceMaps
+    );
+
+    // Both the catch-all (index 0) and the matching plugin-filtered entry
+    // (index 1) apply, so each becomes its own result attributed to its element.
+    const byFile = Object.fromEntries(results.map((r) => [r[1], r[2]]));
+    expect(Object.keys(byFile).sort()).toEqual([
+      'nx.json#targetDefaults.build[0]',
+      'nx.json#targetDefaults.build[1]',
+    ]);
+    expect(
+      byFile['nx.json#targetDefaults.build[0]'].projects['apps/app'].targets
+        .build.cache
+    ).toBe(true);
+    expect(
+      byFile['nx.json#targetDefaults.build[1]'].projects['apps/app'].targets
+        .build.inputs
+    ).toEqual(['vite.config.ts']);
+  });
 });
