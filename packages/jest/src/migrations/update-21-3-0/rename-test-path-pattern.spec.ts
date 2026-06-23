@@ -134,4 +134,39 @@ describe('rename-test-path-pattern migration', () => {
       },
     });
   });
+
+  it('should rename "testPathPattern" inside the filtered array value form, leaving unrelated entries untouched', async () => {
+    // Migration order isn't guaranteed, so a default may already be array-shaped.
+    updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
+      json.targetDefaults = {
+        test: [
+          {
+            filter: { executor: '@nx/jest:jest' },
+            options: { testPathPattern: 'some-regex' },
+          },
+          {
+            filter: { executor: '@nx/vite:test' },
+            options: { testPathPattern: 'leave-me' },
+          },
+        ],
+      };
+      return json;
+    });
+
+    await migration(tree);
+
+    const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
+    expect(nxJson.targetDefaults).toEqual({
+      test: [
+        {
+          filter: { executor: '@nx/jest:jest' },
+          options: { testPathPatterns: 'some-regex' },
+        },
+        {
+          filter: { executor: '@nx/vite:test' },
+          options: { testPathPattern: 'leave-me' },
+        },
+      ],
+    });
+  });
 });
