@@ -13,7 +13,9 @@ const defineGlobal = (name, value) => {
       configurable: true,
       writable: true,
     });
-  } catch {}
+  } catch {
+    // Ignore environments that don't allow redefining these globals.
+  }
 };
 defineGlobal('fetch', globalThis.fetch);
 defineGlobal('Headers', globalThis.Headers);
