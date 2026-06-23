@@ -610,7 +610,9 @@ describe('preapproved packages with min-release-age', () => {
     });
 
     // A non-preapproved package hitting a violation should still be gated
-    const blocked = [{ version: '2.0.0-rc.0', publishedAt: new Date().toISOString() }];
+    const blocked = [
+      { version: '2.0.0-rc.0', publishedAt: new Date().toISOString() },
+    ];
     mockResolve.mockRejectedValue(
       new MinReleaseAgeViolationError({
         packageManager: 'yarn',
@@ -623,7 +625,10 @@ describe('preapproved packages with min-release-age', () => {
     );
 
     await expect(
-      resolvePackageVersionRespectingMinReleaseAge('some-other-pkg', '2.0.0-rc.0')
+      resolvePackageVersionRespectingMinReleaseAge(
+        'some-other-pkg',
+        '2.0.0-rc.0'
+      )
     ).rejects.toThrow(MinReleaseAgeViolationError);
   });
 });
