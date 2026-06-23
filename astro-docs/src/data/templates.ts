@@ -19,9 +19,7 @@ export type TemplateCategory =
   | 'Module Federation'
   | 'Documentation'
   | 'Packages'
-  | 'Media'
-  | 'Mobile'
-  | 'SaaS';
+  | 'Media';
 
 export interface TemplateStep {
   label: string;
@@ -678,8 +676,6 @@ export const categories: TemplateCategory[] = [
   'Fullstack',
   'Backend',
   'Module Federation',
-  'SaaS',
-  'Mobile',
   'Documentation',
   'Packages',
   'Media',
