@@ -144,4 +144,28 @@ describe('buildSystemPrompt', () => {
       expect(prompt).not.toContain(AUTHOR_MARKER);
     });
   });
+
+  describe('formatting the agent’s changes (author mode)', () => {
+    it('directs the agent to format the files it changed before handoff, via nx format:write', () => {
+      const prompt = buildSystemPrompt(ctx);
+      expect(prompt).toMatch(
+        /format the files you created or modified .* run `nx format:write`/
+      );
+    });
+
+    it('carves nx format:write out of the mutating-nx-command prohibition', () => {
+      const prompt = buildSystemPrompt(ctx);
+      expect(prompt).toMatch(
+        /mutate workspace state .*, except `nx format:write` to format the files you changed/
+      );
+    });
+
+    it('no longer blanket-forbids reformatting, only reformatting untouched files', () => {
+      const prompt = buildSystemPrompt(ctx);
+      expect(prompt).not.toContain(
+        'Do not refactor, reformat, or update dependencies'
+      );
+      expect(prompt).toMatch(/do not reformat files you did not change/);
+    });
+  });
 });
