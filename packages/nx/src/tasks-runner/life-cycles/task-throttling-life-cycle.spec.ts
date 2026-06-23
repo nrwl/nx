@@ -841,6 +841,44 @@ describe('formatReport', () => {
     expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a', 'b', 'c']);
     expect(formatReport(s)).not.toContain('waited');
   });
+
+  it('renders the full report deterministically (snapshot)', () => {
+    // Layout/wording safety net for the formatter. A CI run with a cold cache and
+    // no remote yields the richest report: cache CTA + agents + the speed-up table
+    // + footer. FORCE_HYPERLINK=0 pins clean text (no OSC 8 escape bytes) so the
+    // snapshot is stable regardless of the runner's TTY.
+    const prev = process.env.FORCE_HYPERLINK;
+    process.env.FORCE_HYPERLINK = '0';
+    try {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const s = run(makeGraph([a]), 1, {
+        statuses: { a: 'success' }, // 0/1 hit, cold cache
+        remoteCacheEnabled: false,
+        isCI: true,
+      })!;
+      expect(formatReport(s)).toMatchInlineSnapshot(`
+        "  Run duration:              1.0s
+          Cache:                     0/1 hit (0%)
+          Critical path:             1.0s   (1 tasks)
+          Recoverable time:          0ms
+
+          Recommendations:
+            - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
+            - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+            - Speed up or split the longest tasks on the critical path:
+                a    1.0s
+
+          Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
+        "
+      `);
+    } finally {
+      if (prev === undefined) {
+        delete process.env.FORCE_HYPERLINK;
+      } else {
+        process.env.FORCE_HYPERLINK = prev;
+      }
+    }
+  });
 });
 
 describe('overlap', () => {
