@@ -1,0 +1,79 @@
+---
+title: Use Bun Workspaces with Nx
+description: Learn what a Bun workspace is, how to set one up with the package.json workspaces field, and how to add Nx for caching, affected commands, and faster CI.
+filter: 'type:Guides'
+---
+
+A Bun workspace lets you manage multiple packages in a single repository. You list the folders that contain packages in the `workspaces` field of your root `package.json`, and Bun installs their dependencies and links your internal packages together. This recipe shows how to set up a Bun workspace and then add Nx on top to get caching, affected commands, and faster CI.
+
+## What is a Bun workspace?
+
+A Bun workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files:
+
+```jsonc
+// package.json
+{
+  "name": "my-workspace",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+}
+```
+
+A common layout separates applications from shared packages:
+
+{% filetree %}
+
+- my-workspace/
+  - apps/
+    - web/
+      - package.json
+  - packages/
+    - shared-ui/
+      - package.json
+  - package.json
+
+{% /filetree %}
+
+## Link internal packages
+
+To depend on another package in the workspace, reference it with the `workspace:` protocol. Bun resolves it to the local package instead of fetching from a registry:
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+Run `bun install` once at the root to install every package's dependencies and link the internal ones.
+
+## Run tasks across the workspace
+
+Bun runs a script across every package with `--filter`, and targets a single package by name. Place `--filter` before the script:
+
+```shell
+bun run --filter '*' build
+bun run --filter web build
+```
+
+This works, but Bun runs every task every time. As the workspace grows, that gets slow, and Bun has no notion of which packages a change affects.
+
+## Add Nx for caching and faster CI
+
+Nx layers task orchestration on top of your existing Bun workspace. It does not replace Bun: Bun still installs and resolves packages, while Nx caches task results and runs only what is needed. Add it with:
+
+```shell
+npx nx@latest init
+```
+
+On an existing Bun workspace you gain:
+
+- [Task caching](/docs/features/cache-task-results) so unchanged work is restored from cache instead of rebuilt
+- [Affected commands](/docs/features/ci-features/affected) that run tasks only for packages touched by a change
+- [Remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to speed up CI
+
+For a full walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
