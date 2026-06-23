@@ -9,48 +9,29 @@ import { LifeCycle, TaskResult } from '../life-cycle';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
-/** Docs guide on speeding up runs (parallelism, distribution, caching). */
 const NX_PERFORMANCE_URL =
   'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
-/** utm tag attributing all clicks from this report back to it. */
+/** utm tag attributing report clicks back to it. */
 const UTM = '?utm=performance-report';
-/**
- * The clickable *targets* for the report's docs links — same pages, utm-tagged so
- * we can attribute the traffic to this report. The recommendation strings embed
- * these tagged links (so the value is preserved even where they render as plain
- * text — the TUI popup and CI logs); on an OSC 8 terminal {@link linkify} swaps
- * the visible text back to the clean URL (or a label) while keeping the tagged href.
- */
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
-/**
- * Visible URL ⇄ tagged target pairs, for {@link linkify} (href = url + UTM): on an
- * OSC 8 terminal the tagged URL in the text is swapped for a hyperlink whose
- * visible text is the clean URL.
- */
+/** Visible URL ⇄ tagged target pairs for {@link linkify}. */
 const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
   { visible: NX_PERFORMANCE_URL, href: NX_PERFORMANCE_LINK },
   { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
 ];
 /**
- * Whole-phrase links: the entire sentence is the clickable text — no label and no
- * URL on an OSC 8 terminal or in the TUI popup. {@link linkify} appends the URL
- * only when OSC 8 isn't available (CI, pipes) so it stays reachable. The popup
- * re-creates the same link natively by scanning for this exact phrase, so the
- * Rust REMOTE_CACHE_LABEL constant must stay in sync with it.
+ * Whole-phrase CTA: the popup re-creates this link natively by scanning for this
+ * exact phrase, so the Rust REMOTE_CACHE_LABEL constant must stay byte-identical.
  */
 const NX_REMOTE_CACHE_CTA =
   'Drastically reduce your run duration by sharing a cache across your team and CI';
 const PHRASE_LINKS: ReadonlyArray<{ phrase: string; href: string }> = [
   { phrase: NX_REMOTE_CACHE_CTA, href: NX_REMOTE_CACHE_LINK },
 ];
-/**
- * At or below this hit rate the cache is barely helping; if remote cache is also
- * off, recommend it. Above it, caching is working — no recommendation.
- */
+/** At/below this hit rate, recommend remote cache (if off); above it caching works. */
 const LOW_CACHE_HIT_RATE = 0.1;
-/** Task statuses that mean the result came from cache (didn't re-run). */
 const CACHE_HIT_STATUSES = new Set([
   'local-cache',
   'local-cache-kept-existing',
@@ -59,18 +40,13 @@ const CACHE_HIT_STATUSES = new Set([
 
 /** Wait (ms) below which a task counts as starting on time. 0 = flag every wait. */
 const EPS = 0;
-/** A bucket below this (ms) isn't worth a recommendation — effectively noise. */
+/** Below this (ms) overhead is noise, not worth a recommendation. */
 const MEANINGFUL_OVERHEAD = 1000;
-/**
- * The --parallel lever is recommended when the slot time it would recover is at
- * least this fraction of the run (a relative bar that scales with run size).
- */
+/** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
 /**
- * Gap (ms) that still counts as the same pre-dispatch hashing phase. Hash
- * measures back-to-back before the first task (and the scheduling gap before
- * dispatch) sit well under this; a larger gap means older, unrelated hashing in
- * the same process (e.g. a daemon's previous run) that we exclude.
+ * Gap (ms) still counted as the same pre-dispatch hashing phase. A larger gap means
+ * older, unrelated hashing in the same process (e.g. a daemon's previous run) — excluded.
  */
 const PRE_DISPATCH_HASH_GAP = 1000;
 
@@ -80,41 +56,28 @@ interface TaskTiming {
   continuous: boolean;
 }
 
-/** How a task on the critical path was held up before it started. */
 type GateKind = 'root' | 'dep' | 'slot' | 'hashing' | 'other';
 
 interface ChainLink {
   id: string;
   gate: GateKind;
-  /** How long this task waited after becoming eligible before it started. */
   wait: number;
 }
 
 export interface ThrottleSummary {
   runDuration: number;
   criticalPathDuration: number;
-  /** Number of tasks on the critical path (the floor). */
   criticalPathTaskCount: number;
-  /**
-   * The lineage of the last task to finish (root → terminal), each link tagged
-   * with how it was held up. Diagnostic only — the overhead split is read from
-   * the occupancy timeline, not this chain. Not displayed.
-   */
+  /** Diagnostic only, not displayed; the overhead split comes from the occupancy timeline. */
   finishChain: ChainLink[];
   /**
-   * The longest critical-path tasks that actually ran (by duration, descending),
-   * capped at a few. Cache hits are excluded (their duration is just restore
-   * time). These are what the "speed up or split" recommendation names inline;
-   * empty when the critical path was fully cached.
+   * Longest critical-path tasks that ran (desc, capped at a few), cache hits excluded.
+   * Named inline by the "speed up or split" rec; empty when the path was fully cached.
    */
   criticalPathTop: Array<{ id: string; duration: number }>;
-  /** runDuration − criticalPathDuration: total overhead above the floor. */
+  /** runDuration − criticalPathDuration. */
   overhead: number;
-  /**
-   * The overhead split by recovering lever; these three sum to `overhead`:
-   * `--parallel` (spare cores), more machines (at core count), and coordinator
-   * overhead (hashing/scheduling — not recoverable by parallelism).
-   */
+  /** Overhead split by lever; these + coordinatorOverhead sum to `overhead`. */
   recoverableByParallel: number;
   recoverableByMachines: number;
   /** recoverableByParallel + recoverableByMachines — the slot-contention time. */
@@ -123,39 +86,23 @@ export interface ThrottleSummary {
   parallel: number;
   cores: number;
   isCI: boolean;
-  /** One actionable recommendation per lever; rendered as a list when >1. */
+  /** One rec per lever; rendered as a list when >1. */
   recommendations: string[];
-  /**
-   * Coordinator overhead (hashing/scheduling) outweighs the actual task work —
-   * so the longest tasks aren't the lever and aren't shown. Typical of a cached
-   * run, where tasks restore instantly and hashing dominates.
-   */
+  /** Coordinator overhead outweighs task work, so the longest tasks aren't the lever (typical cached run). */
   coordinatorDominated: boolean;
-  /** Tasks whose result was read from cache (didn't re-run). */
   cacheHits: number;
-  /** Tasks that had a cache outcome at all (hits + tasks that ran). */
+  /** Tasks with any cache outcome (hits + tasks that ran). */
   cacheableCount: number;
-  /** The run bypassed the cache (`--skip-nx-cache`). */
   cacheSkipped: boolean;
-  /** A remote (Nx Cloud) cache was active for this run. */
   remoteCacheEnabled: boolean;
 }
 
 /**
- * Measures how much wall-clock time a run loses to parallelism contention versus
- * the lower bound imposed by the task graph (its critical path), and prints a
- * report at the end of every run (see `constructLifeCycles`).
- *
- * Two headline quantities, both derived purely from task start/end times:
- *
- *   overhead = runDuration − criticalPathDuration
- *
- * the total wall-clock above the floor (the critical path is the fastest the run
- * could go with unlimited slots), and a split of that overhead by CAUSE — read
- * off the occupancy timeline: time tasks spent queued for a slot while every slot
- * was busy (recoverable by more parallelism or more machines) versus everything
- * else — hashing, scheduling, the chain root waiting on a continuous dependency,
- * plus any hashing before the first task — which parallelism can't fix.
+ * Measures how much wall-clock a run loses to parallelism contention versus its
+ * critical-path floor, and prints a report at the end of every run (see
+ * `constructLifeCycles`). overhead = runDuration − criticalPathDuration, split by
+ * CAUSE off the occupancy timeline: slot-queued time (recoverable by parallelism /
+ * machines) versus coordinator time (hashing, scheduling, continuous-dep waits).
  *
  * Scope: discrete tasks only. Continuous tasks (no end time) are excluded from
  * every duration calculation; a discrete task's wait for a continuous dependency
@@ -163,16 +110,15 @@ export interface ThrottleSummary {
  */
 export class TaskThrottlingLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
-  /** taskId → its terminal status (cache hit vs ran), for the cache summary. */
+  /** taskId → terminal status (cache hit vs ran), for the cache summary. */
   private readonly statuses = new Map<string, TaskResult['status']>();
   /** Thread pool size reported to startCommand (discrete + continuous). */
   private total: number | undefined;
-  /** taskId → ids of the other tasks in its batch (batches run sequentially). */
+  /** taskId → other tasks in its batch (batches run sequentially). */
   private readonly batchSiblings = new Map<string, string[]>();
 
   constructor(
     private readonly taskGraph: TaskGraph,
-    /** The run's `--skip-nx-cache` flag (the env-var forms are checked too). */
     private readonly skipNxCacheOption = false
   ) {
     activeThrottleLifeCycle = this;
@@ -192,12 +138,10 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   endTasks(taskResults: TaskResult[]): void {
-    // endTasks is called incrementally (per group/batch), not once at the end;
-    // we accumulate into the map so the last call sees every timing.
+    // Called incrementally (per group/batch); accumulate so the last call sees every timing.
     for (const { task, status } of taskResults) {
       const entry = this.entry(task.id);
-      // Use `!= null` (not truthiness): a real epoch timestamp is never 0, but
-      // synthetic/relative timelines can legitimately start at 0.
+      // `!= null`, not truthiness: synthetic/relative timelines can legitimately start at 0.
       if (task.startTime != null) {
         entry.startTime = task.startTime;
       }
@@ -219,15 +163,12 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     return entry;
   }
 
-  /**
-   * Hashing windows used to attribute free-slot waits to hashing. Overridable in
-   * tests (the real source is the process-global `performance` measures).
-   */
+  /** Hashing windows used to attribute waits to hashing. Overridable in tests. */
   protected hashWindows(): Array<[number, number]> {
     return collectHashWindows();
   }
 
-  /** Whether the cache was bypassed this run (`--skip-nx-cache`). Overridable in tests. */
+  /** Whether the cache was bypassed this run. Overridable in tests. */
   protected cacheSkipped(): boolean {
     return (
       this.skipNxCacheOption ||
@@ -236,7 +177,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     );
   }
 
-  /** Whether a remote (Nx Cloud) cache is active for this run. Overridable in tests. */
+  /** Whether a remote (Nx Cloud) cache is active. Overridable in tests. */
   protected remoteCacheEnabled(): boolean {
     try {
       return isNxCloudUsed(readNxJson());
@@ -250,15 +191,12 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     return !!process.env.CI;
   }
 
-  /**
-   * Whether this run is already distributing tasks across machines (Nx Agents /
-   * DTE). When it is, recommending agents is pointless. Overridable in tests.
-   */
+  /** Whether the run is already distributing across machines (Agents/DTE). Overridable in tests. */
   protected distributingTasks(): boolean {
     return !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
   }
 
-  /** Discrete tasks that actually executed and have a start + end timestamp. */
+  /** Discrete tasks that ran and have a start + end timestamp. */
   private timedTasks(): Array<{ id: string; start: number; end: number }> {
     const result: Array<{ id: string; start: number; end: number }> = [];
     for (const [id, t] of this.timings) {
@@ -270,16 +208,14 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * Longest-duration chain through the dependency DAG — the floor on how fast
-   * the run could go with unlimited slots. `finishEst[t] = duration[t] +
-   * max(finishEst[p] for predecessors p)`.
+   * Longest-duration chain through the dependency DAG — the floor with unlimited
+   * slots. `finishEst[t] = duration[t] + max(finishEst[p] for predecessors p)`.
    *
-   * Predecessors are real dependencies *plus* earlier batch siblings: a batch
-   * runs its tasks sequentially in one process, so that ordering is part of the
-   * floor too (otherwise unavoidable batch-sequencing time would look like
-   * recoverable overhead). On equal finish estimates we keep the longer-running
-   * predecessor so the path matches the tasks that actually gate the finish.
-   * An in-progress guard makes it terminate on a (malformed) cyclic graph.
+   * Predecessors are real dependencies *plus* earlier batch siblings: a batch runs
+   * sequentially in one process, so that ordering is part of the floor too (else
+   * unavoidable batch-sequencing time would look recoverable). On equal finish
+   * estimates keep the longer-running predecessor. An in-progress guard terminates
+   * on a malformed cyclic graph.
    */
   private criticalPath(durations: Map<string, number>): {
     path: string[];
@@ -294,10 +230,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       const deps = (this.taskGraph.dependencies[id] ?? []).filter((d) =>
         durations.has(d)
       );
-      // Only a batch sibling that actually FINISHED before this task started was
-      // a real sequencing predecessor. Batch executors may run tasks
-      // concurrently and stamp merely-staggered starts; chaining those would
-      // inflate the floor and hide real overhead. (Matches earliestStart's rule.)
+      // Only a batch sibling that FINISHED before this task started is a real
+      // sequencing predecessor; batch executors may run concurrently with staggered
+      // starts, and chaining those would inflate the floor. (Matches earliestStart.)
       const siblings = (this.batchSiblings.get(id) ?? []).filter((s) => {
         const sEnd = this.timings.get(s)?.endTime;
         return durations.has(s) && sEnd != null && sEnd <= start;
@@ -346,9 +281,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       }
     }
 
-    // Walk predecessors back to the root. Guard against a `pred` cycle: the
-    // finishEst guard above keeps the recurrence finite, but on a malformed
-    // cyclic graph `pred` can still form a loop, which would spin this walk.
+    // Walk predecessors back to the root; onPath guards a `pred` cycle on a
+    // malformed graph (the finishEst guard alone doesn't keep `pred` acyclic).
     const path: string[] = [];
     const onPath = new Set<string>();
     for (
@@ -363,11 +297,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * The earliest this task could have started — the moment it became eligible,
-   * independent of slots. The latest of: the run's start; its dependencies'
-   * ends; the *start* of any continuous dependency (a discrete task can't run
-   * until its `serve` is up, but that's an ordering constraint, not contention);
-   * and any earlier batch sibling's end. Derived from start/end times only.
+   * Earliest this task became eligible, independent of slots: the latest of run
+   * start, dependency ends, any continuous dependency's *start* (an ordering
+   * constraint, not contention), and any earlier batch sibling's end.
    */
   private earliestStart(id: string, runStart: number): number {
     const start = this.timings.get(id)?.startTime;
@@ -394,11 +326,10 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * Occupancy timeline: contiguous segments over the run, each carrying how many
-   * slots were busy (`occ`) and how many tasks were eligible-but-not-running
-   * (`waiting`). A `parallelism: false` task occupies the whole pool. This is the
-   * single source of truth for slot contention — it integrates over time rather
-   * than sampling one instant, so it's robust to exactly *when* tasks hand off.
+   * Occupancy timeline: contiguous segments, each carrying slots busy (`occ`) and
+   * tasks eligible-but-not-running (`waiting`). A `parallelism: false` task occupies
+   * the whole pool. Single source of truth for slot contention; integrates over time
+   * rather than sampling one instant, so it's robust to when tasks hand off.
    */
   private buildSegments(
     timed: Array<{ id: string; start: number; end: number }>,
@@ -462,15 +393,12 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * Coordinator hashing wall-clock that ran before the first task started — the
-   * run window would otherwise miss it. We count the contiguous hashing phase
-   * leading up to dispatch: union the hash windows into disjoint intervals, then
-   * walk back from the first task start, summing each interval whose end reaches
-   * within {@link PRE_DISPATCH_HASH_GAP} of the previous one, and stop at the
-   * first larger gap (older, unrelated hashing in the same process). This counts
-   * the full phase regardless of how fast the tasks then ran — a task-window
-   * bound collapsed on a cached run, where hashing dominates but the tasks
-   * restore in milliseconds.
+   * Coordinator hashing wall-clock before the first task started (the run window
+   * would otherwise miss it). Union the hash windows, walk back from the first task
+   * start, summing each interval within {@link PRE_DISPATCH_HASH_GAP} of the previous,
+   * and stop at the first larger gap (older, unrelated hashing). Counts the full
+   * phase regardless of how fast tasks then ran — matters on a cached run where
+   * hashing dominates but tasks restore in milliseconds.
    */
   private preDispatchHashTime(
     firstTaskStart: number,
@@ -502,12 +430,10 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * The lineage of the LAST task to finish: walk back from the max-endTime task
-   * through whatever it waited on (its latest-finishing dependency or batch
-   * predecessor). This is "what determined the finish" — and unlike the critical
-   * path (the longest-*duration* chain = the floor), it follows the task that
-   * actually finished last, which in a slot-starved run may be an off-path task
-   * that queued for a slot. Its waits are therefore what explain the overhead.
+   * Lineage of the LAST task to finish: walk back from max-endTime through whatever
+   * it waited on. Unlike the critical path (longest-duration chain), this follows
+   * the task that finished last — in a slot-starved run an off-path task that queued
+   * for a slot — so its waits explain the overhead.
    */
   private finishLineage(durations: Map<string, number>): string[] {
     let terminal: string | null = null;
@@ -530,10 +456,9 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 
   /**
-   * The predecessor (real dependency or earlier batch sibling) that finished
-   * latest, and thus gated this task's start. Mirrors criticalPath's predecessor
-   * set, but picks by end time (who held this one up) rather than finish
-   * estimate (who makes the floor longest).
+   * The predecessor (dependency or earlier batch sibling) that finished latest, and
+   * thus gated this task's start. Mirrors criticalPath's predecessor set, but picks
+   * by end time (who held this up) not finish estimate (who makes the floor longest).
    */
   private latestFinishingPredecessor(
     id: string,
@@ -565,10 +490,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     return best;
   }
 
-  /**
-   * Compute the structured throttle summary, or `null` when no discrete task
-   * timings were recorded. Pure aside from reading `os` / `process.env.CI`.
-   */
+  /** The structured throttle summary, or `null` when no discrete task timings were recorded. */
   getSummary(): ThrottleSummary | null {
     const timed = this.timedTasks();
     if (timed.length === 0) {
@@ -596,9 +518,8 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const { path: criticalPathTasks, duration: criticalPathDuration } =
       this.criticalPath(durations);
 
-    // Discrete parallelism: startCommand is handed `total = discrete +
-    // continuousCount` (see getThreadPoolSize), so subtracting the continuous
-    // count recovers the `--parallel` value exactly.
+    // startCommand gets `total = discrete + continuousCount` (see getThreadPoolSize),
+    // so subtracting the continuous count recovers the `--parallel` value exactly.
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
       (t) => t.continuous
     ).length;
@@ -606,24 +527,18 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       1,
       (this.total ?? continuousCount + 1) - continuousCount
     );
-    // Use the cgroup-aware core count so a quota-capped CI container gets the
-    // right lever (more machines, not a higher --parallel it can't use). Fall
-    // back to cpus().length only when availableParallelism is unavailable.
+    // cgroup-aware core count so a quota-capped CI container gets the right lever
+    // (more machines, not a --parallel it can't use). cpus() only as fallback.
     const cores =
       typeof os.availableParallelism === 'function'
         ? os.availableParallelism()
         : os.cpus().length;
 
-    // Occupancy timeline + hashing windows, used to classify each chain link's
-    // wait (slot vs coordinator) over its whole window, not at a single instant.
     const segments = this.buildSegments(timed, eligible, parallel);
     const hashWindows = this.hashWindows();
 
-    // The chain that DETERMINED THE FINISH: the last-finishing task's lineage,
-    // with each link's wait classified (slot vs hashing vs dep). Surfaced in the
-    // summary for diagnostics — e.g. to explain why an off-path task that queued
-    // for a slot ended up finishing last. The overhead split itself is read from
-    // the occupancy timeline below, not from this chain.
+    // Last-finishing task's lineage, each link's wait classified (slot/hashing/dep).
+    // Diagnostic only; the overhead split is read from the occupancy timeline below.
     const annotate = (id: string, idx: number): ChainLink => {
       const start = this.timings.get(id)?.startTime ?? 0;
       const ready = eligible.get(id) ?? start;
@@ -645,18 +560,14 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const finishLineageTasks = this.finishLineage(durations);
     const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
 
-    // Coordinator hashing that ran BEFORE the first task started — the task
-    // window would otherwise miss it. Added to both the overhead and the
-    // coordinator bucket below, so it surfaces without touching the slot split.
+    // Pre-dispatch hashing, added to overhead and the coordinator bucket (not the slot split).
     const preDispatchHash = this.preDispatchHashTime(runStart, hashWindows);
     const runDuration = taskWindow + preDispatchHash;
     const overhead = Math.max(0, runDuration - criticalPathDuration);
 
-    // Split the overhead by CAUSE off the occupancy timeline: slot contention is
-    // wall-clock where every slot was busy AND tasks were queued (occ ≥ parallel
-    // with a backlog) — exactly what more slots would remove. Everything else
-    // (hashing, scheduling gaps, waiting on a continuous dep) is coordinator time.
-    // Capped by the overhead so the two always sum to it.
+    // Split overhead by CAUSE off the occupancy timeline: slot contention = wall-clock
+    // where every slot was busy AND tasks were queued (occ ≥ parallel with a backlog);
+    // everything else is coordinator time. Capped by overhead so the two sum to it.
     const slotContendedTime = segments.reduce(
       (sum, s) =>
         s.occ >= parallel && s.waiting > 0 ? sum + (s.end - s.start) : sum,
@@ -664,24 +575,21 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     );
     const recoverableBySlots = Math.min(overhead, slotContendedTime);
     const coordinatorOverhead = overhead - recoverableBySlots;
-    // Of the slot-recoverable part, raising --parallel helps while the machine
-    // has spare cores; the volume even cores-way parallelism can't absorb
-    // (max(0, totalWork/cores − floor)) needs more machines. At parallel ≥ cores
-    // there is no --parallel headroom, so it's all machine-bound.
+    // Of the slot-recoverable part, --parallel helps while there are spare cores;
+    // the volume cores-way parallelism can't absorb (max(0, totalWork/cores − floor))
+    // needs more machines. At parallel ≥ cores there's no --parallel headroom.
     const machineBound =
       parallel < cores
         ? Math.max(0, totalWork / cores - criticalPathDuration)
         : Infinity;
     const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
     const recoverableByParallel = recoverableBySlots - recoverableByMachines;
-    // The slot-contention total. Computed once here so the payload and the
-    // terminal report read one number instead of re-summing the two halves.
+    // Slot-contention total, computed once so payload and report read one number.
     const recoverable = recoverableByParallel + recoverableByMachines;
 
-    // The longest critical-path tasks that actually RAN — the real lever for going
-    // faster when no parallelism lever applies. Cache hits are excluded: their
-    // duration is just restore time, so "speed these up" wouldn't apply. Tasks
-    // with no recorded status (e.g. synthetic test runs) are kept.
+    // Longest critical-path tasks that RAN — the lever when no parallelism lever
+    // applies. Cache hits excluded (their duration is just restore time); tasks with
+    // no recorded status (e.g. synthetic test runs) are kept.
     const criticalPathTop = criticalPathTasks
       .filter((id) => {
         const status = this.statuses.get(id);
@@ -691,8 +599,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
 
-    // Cache outcome: how many tasks were restored from cache vs ran. Tasks with
-    // no recorded status (e.g. synthetic test runs) don't count toward either.
+    // Cache outcome: restored vs ran. No-status tasks (synthetic test runs) count for neither.
     let cacheHits = 0;
     let cacheRan = 0;
     for (const status of this.statuses.values()) {
@@ -706,16 +613,16 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     const cacheSkipped = this.cacheSkipped();
     const remoteCacheEnabled = this.remoteCacheEnabled();
 
-    // Coordinator-dominated: hashing/scheduling clearly outweighs the task work
-    // (>3x the critical path) — e.g. a heavily-cached run. The >3x bar keeps cold
-    // runs with real work critical-path-bound even when hashing edges past them.
+    // Coordinator-dominated when hashing/scheduling outweighs task work >3x the
+    // critical path. The >3x bar keeps cold runs critical-path-bound when hashing
+    // merely edges past them.
     const coordinatorDominated =
       coordinatorOverhead >= MEANINGFUL_OVERHEAD &&
       coordinatorOverhead > 3 * criticalPathDuration;
 
     const isCI = this.isCI();
     const distributing = this.distributingTasks();
-    // We can only recommend STARTING to distribute in CI when not already doing so.
+    // Can only recommend starting to distribute in CI when not already doing so.
     const canDistribute = isCI && !distributing;
     const recommendations = buildRecommendation({
       recoverableByParallel,
@@ -752,21 +659,13 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
   }
 }
 
-/**
- * The most recently constructed throttle lifecycle, so the report can be read
- * after the run: the TUI pulls it in `endCommand` (see
- * {@link getThrottleExitSummaryPayload}) and non-TUI runs print it via
- * {@link flushThrottleReport}. Cleared once consumed.
- */
+/** The most recently constructed throttle lifecycle, read after the run. Cleared once consumed. */
 let activeThrottleLifeCycle: TaskThrottlingLifeCycle | null = null;
 
 /**
- * The structured report for the TUI's exit-countdown popup, or null when there's
- * nothing to show. run-command calls this from the TUI's `endCommand` (every task
- * timing is in by then) and passes the result to the native `endCommand`, instead
- * of a separate push channel. Clears the active lifecycle so the popup owns the
- * report and a later terminal flush can't re-print it. Best-effort: a throw here
- * must never affect the run, so it degrades to null.
+ * Structured report for the TUI's exit-countdown popup, or null when nothing to
+ * show. Clears the active lifecycle so the popup owns the report and a later
+ * terminal flush can't re-print it. Best-effort: a throw degrades to null.
  */
 export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | null {
   const lifeCycle = activeThrottleLifeCycle;
@@ -786,9 +685,8 @@ export function getThrottleExitSummaryPayload(): ThrottleExitSummaryPayload | nu
 }
 
 /**
- * Print the throttle report (if enabled) after the run summary. Called from
- * run-command once the terminal has been restored, so it appears in every output
- * mode — including the TUI, which no-ops `console` during the run.
+ * Print the throttle report (if enabled) after the run summary. Called once the
+ * terminal is restored, so it appears in every output mode including the TUI.
  */
 export function flushThrottleReport(): void {
   const lifeCycle = activeThrottleLifeCycle;
@@ -796,17 +694,15 @@ export function flushThrottleReport(): void {
   if (!lifeCycle) {
     return;
   }
-  // The report is cosmetic; a throw here (e.g. EPIPE writing to a closed pipe)
-  // must never mask the real task error on the failure path or fail an otherwise
-  // successful run. Degrade to no report.
+  // Cosmetic report; a throw (e.g. EPIPE to a closed pipe) must never mask the
+  // real task error or fail an otherwise successful run.
   try {
     const summary = lifeCycle.getSummary();
     if (!summary) {
       return;
     }
-    // After the TUI tears down, the terminal can still be in raw mode (no
-    // \n → \r\n translation), which staircases plain "\n" output. Use \r\n on a
-    // TTY; keep plain \n when piped so logs/files don't get stray carriage returns.
+    // Post-TUI the terminal can still be in raw mode (no \n → \r\n translation),
+    // which staircases plain "\n". Use \r\n on a TTY; plain \n when piped.
     const eol = process.stdout.isTTY ? '\r\n' : '\n';
     process.stdout.write(formatReport(summary).split('\n').join(eol) + eol);
   } catch {
@@ -815,9 +711,8 @@ export function flushThrottleReport(): void {
 }
 
 /**
- * Absolute-epoch [start, end] windows during which the coordinator was hashing,
- * read from nx's existing `hashSingleTask` / `hashMultipleTasks` perf measures.
- * Returns [] if the performance API is unavailable.
+ * Absolute-epoch [start, end] hashing windows, read from nx's existing `hash*` perf
+ * measures. Returns [] if the performance API is unavailable.
  */
 function collectHashWindows(): Array<[number, number]> {
   try {
@@ -848,11 +743,9 @@ export function overlap(
 }
 
 /**
- * The actionable levers to go faster, one recommendation per lever. The header
- * stats already diagnose the run, so these are pure advice — they don't restate
- * those numbers. Most cases have one lever; the critical-path case has two
- * (shorten the chain, and distribute the rest). `canDistribute` is false outside
- * CI and when the run is already distributing, so agents advice is omitted then.
+ * Actionable levers to go faster, one rec per lever (pure advice; the header stats
+ * already diagnose the run). The critical-path case has two (shorten the chain,
+ * distribute the rest). Agents advice is omitted unless `canDistribute`.
  */
 function buildRecommendation(args: {
   recoverableByParallel: number;
@@ -876,9 +769,9 @@ function buildRecommendation(args: {
   } = args;
 
   if (distributing) {
-    // Already on agents: more agents (not local --parallel) is the parallelism
-    // lever, sized by the total recoverable slot-contention time. The local
-    // cores / machine-bound framing below doesn't apply to a distributed run.
+    // Already on agents: more agents (not local --parallel) is the parallelism lever,
+    // sized by total recoverable slot-contention. The cores/machine framing below
+    // doesn't apply to a distributed run.
     const recoverable = recoverableByParallel + recoverableByMachines;
     if (
       runDuration > 0 &&
@@ -889,8 +782,7 @@ function buildRecommendation(args: {
       ];
     }
   } else {
-    // Slot-bound: raising --parallel would recover a meaningful share, and there
-    // are still spare cores — so the lever is local parallelism, not agents.
+    // Slot-bound with spare cores: the lever is local --parallel, not agents.
     if (
       runDuration > 0 &&
       recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
@@ -902,8 +794,8 @@ function buildRecommendation(args: {
         )}.`,
       ];
     }
-    // Machine-bound: at the core count and still queuing. Agents are the lever for
-    // CPU-bound work; otherwise only the I/O-bound --parallel tip applies.
+    // Machine-bound: at the core count and still queuing. Agents for CPU-bound work;
+    // otherwise only the I/O-bound --parallel tip applies.
     if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
       const base = `You're at this machine's ${cores} ${pluralizeCores(
         cores
@@ -914,9 +806,8 @@ function buildRecommendation(args: {
           : `${base} If they're I/O-bound, a higher --parallel may help.`,
       ];
     }
-    // Coordinator-dominated (tasks fast or cached): the machine is about maxed
-    // out. In CI, agents are the only lever; locally there's nothing actionable,
-    // so make no recommendation — the header stats already say it all.
+    // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are
+    // the only lever; locally nothing actionable, so no recommendation.
     if (coordinatorDominated) {
       return canDistribute
         ? [
@@ -925,10 +816,8 @@ function buildRecommendation(args: {
         : [];
     }
   }
-  // Critical-path-bound: shorten the chain's longest tasks (named inline, since
-  // they ARE the lever), and distribute the rest to free cores for the chain. If
-  // nothing ran on the critical path (a fully-cached run), there's nothing to
-  // speed up — make no recommendation.
+  // Critical-path-bound: shorten the chain's longest tasks (named inline, they ARE
+  // the lever) and distribute the rest. Nothing ran (fully cached) → no rec.
   if (criticalPathTop.length === 0) {
     return [];
   }
@@ -945,17 +834,11 @@ function buildRecommendation(args: {
   return recommendations;
 }
 
-/**
- * Render the longest critical-path tasks as aligned columns: task (left),
- * duration (right). Column widths are sized to the rows so it reads as a table.
- * Lightly indented (2 spaces) — these rows nest inside a recommendation bullet,
- * which adds its own continuation indent.
- */
+/** Render the longest critical-path tasks as aligned columns: task (left), duration (right). */
 function formatTopTaskRows(
   tasks: Array<{ id: string; duration: number }>
 ): string[] {
-  // The only caller (buildRecommendation's speed-up lever) returns early when
-  // criticalPathTop is empty, so `tasks` is always non-empty here.
+  // The only caller returns early when empty, so `tasks` is non-empty here.
   const idWidth = Math.max(...tasks.map((t) => t.id.length));
   const durations = tasks.map((t) => formatDuration(t.duration));
   const durWidth = Math.max(...durations.map((d) => d.length));
@@ -971,11 +854,9 @@ function pluralizeCores(cores: number): string {
 }
 
 /**
- * The recommendations in display order, cheapest action first: the "recover up to
- * X" parallelism lever (raise --parallel, or add agents when distributing) →
- * remote-cache rec → other levers → "speed up / split the longest tasks" LAST
- * (deepest manual work; the only multi-line rec). Shared by the terminal report
- * and the TUI payload so both order identically.
+ * Recommendations in display order, cheapest first: "recover up to X" parallelism
+ * lever → remote-cache rec → other levers → "speed up / split" LAST (deepest manual
+ * work, the only multi-line rec). Shared by the report and TUI payload.
  */
 function orderedRecommendations(s: ThrottleSummary): string[] {
   const levers = [...s.recommendations];
@@ -991,10 +872,9 @@ function orderedRecommendations(s: ThrottleSummary): string[] {
 }
 
 /**
- * Structured payload handed to the TUI's exit-countdown popup. The popup builds
- * the visual natively in Rust from these numbers (so it can style the columns
- * and recommendations); the terminal path uses {@link formatReport} instead.
- * Field names map to the napi object's camelCase (see `ThrottleExitSummary`).
+ * Structured payload for the TUI's exit-countdown popup, which builds the visual
+ * natively in Rust (the terminal path uses {@link formatReport}). Field names map
+ * to the napi object's camelCase (see `ThrottleExitSummary`).
  */
 export interface ThrottleExitSummaryPayload {
   runDurationMs: number;
@@ -1026,19 +906,16 @@ function buildExitSummaryPayload(
 }
 
 /**
- * Make the report's docs links clickable on terminals that support OSC 8. Two
- * kinds: URL-links, where a tagged URL embedded in the text becomes a hyperlink
- * whose visible text is the clean URL; and phrase-links, where a whole sentence
- * becomes the hyperlink with no URL shown. When OSC 8 isn't supported (CI, pipes)
- * URL-links print their tagged URL verbatim (auto-linked) and phrase-links get the
- * URL appended so they stay reachable. Terminal-only: never run this over the
- * strings handed to the TUI popup (ratatui's cell grid strips the escape bytes;
- * the popup re-creates the links natively).
+ * Make the report's docs links clickable on OSC 8 terminals (URL-links → clean-URL
+ * hyperlink; phrase-links → whole sentence hyperlinks). Without OSC 8 (CI, pipes)
+ * URLs print verbatim and phrase-links get the URL appended. Terminal-only: never
+ * run this over the TUI popup strings — ratatui strips the escape bytes, so the
+ * popup re-creates the links natively.
  */
 function linkify(text: string): string {
   let out = text;
   if (!supportsHyperlinks()) {
-    // No clickable target: surface each phrase-link's URL inline so it's reachable.
+    // No clickable target: surface each phrase-link's URL inline.
     for (const { phrase, href } of PHRASE_LINKS) {
       out = out.split(phrase).join(`${phrase} → ${href}`);
     }
@@ -1055,20 +932,15 @@ function linkify(text: string): string {
 
 export function formatReport(s: ThrottleSummary): string {
   const fmt = formatDuration;
-  // The report shows two of run duration's three parts — the critical path
-  // (longest dependent chain) and recoverable time (slot contention); the third,
-  // coordinator/non-recoverable overhead, is computed but no longer displayed, so
-  // the two shown stats don't sum to run duration. It's "critical path", not
-  // "floor" — the durations shift with --parallel, so it's not a fixed minimum.
+  // Shows two of run duration's three parts (critical path + recoverable); the third,
+  // coordinator overhead, is computed but not displayed, so the two don't sum to run
+  // duration. "Critical path", not "floor" — durations shift with --parallel.
   const recoverable = s.recoverable;
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const stat = (label: string, value: string) =>
     `  ${`${label}:`.padEnd(25)}  ${value}`;
-  // No leading blank line: nx's run summary (`output.success`) already prints
-  // trailing blank lines before this report, so adding our own just stacks up.
-  // Cache sits right under run duration (same section) — the report is short
-  // enough that giving cache its own section just looked stranded.
+  // No leading blank line: nx's run summary already prints trailing blanks before this.
   const cache = cacheStat(s);
   const lines = [
     stat('Run duration', fmt(s.runDuration)),
@@ -1085,14 +957,13 @@ export function formatReport(s: ThrottleSummary): string {
     ),
   ];
   const recommendations = orderedRecommendations(s);
-  // A recommendation may be multi-line (the critical-path one embeds a task
-  // list); indent continuation lines so they sit under the bullet's text.
+  // A rec may be multi-line (the critical-path one embeds a task list); indent
+  // continuation lines under the bullet.
   const renderRec = (r: string): string[] => {
     const [first, ...rest] = r.split('\n');
     return [`    - ${first}`, ...rest.map((l) => `      ${l}`)];
   };
-  // Nothing actionable (e.g. a fully-cached run that's maxed for this machine) →
-  // no recommendation section; the header stats stand on their own.
+  // Nothing actionable → no recommendation section.
   if (recommendations.length > 0) {
     const onlySingleLine =
       recommendations.length === 1 && !recommendations[0].includes('\n');
@@ -1106,11 +977,8 @@ export function formatReport(s: ThrottleSummary): string {
       );
     }
   }
-  // Footer: a guide on improving run performance, always carrying the utm tag.
-  // `linkify` keeps the visible text the CLEAN URL and hides the utm in the OSC 8
-  // target where supported; without OSC 8 (CI, pipes — GitHub Actions doesn't
-  // render it, it auto-links plain URLs) the tagged URL prints verbatim and is
-  // auto-linked. Either way no escape bytes reach a non-capable log.
+  // Footer guide, utm-tagged. linkify shows the clean URL and hides the utm in the
+  // OSC 8 target; without OSC 8 the tagged URL prints verbatim (auto-linked).
   lines.push(
     '',
     linkify(
@@ -1121,10 +989,7 @@ export function formatReport(s: ThrottleSummary): string {
   return lines.join('\n');
 }
 
-/**
- * The top-of-report cache stat (grouped with parallelism): the local+remote hit
- * rate, or a skip marker. Returns null when there's no cache outcome to show.
- */
+/** Top-of-report cache stat: hit rate or skip marker. Null when there's no cache outcome. */
 function cacheStat(s: ThrottleSummary): string | null {
   if (s.cacheSkipped) {
     return 'Skipped (--skip-nx-cache)';
@@ -1137,9 +1002,8 @@ function cacheStat(s: ThrottleSummary): string | null {
 }
 
 /**
- * Bottom-of-report cache advice — only when there's a lever to pull: a skipped
- * cache (drop the flag) or a barely-used cache with no remote (set up Nx Cloud).
- * The hit rate itself is already shown up top by {@link cacheStat}.
+ * Bottom-of-report cache advice, only when there's a lever: a skipped cache (drop
+ * the flag) or a barely-used cache with no remote (set up Nx Cloud).
  */
 function buildCacheAdvice(s: ThrottleSummary): string | null {
   if (s.cacheSkipped) {
@@ -1148,12 +1012,10 @@ function buildCacheAdvice(s: ThrottleSummary): string | null {
   if (s.cacheableCount === 0) {
     return null;
   }
-  // Only recommend Nx Cloud when local caching is barely helping AND remote
-  // cache is off — a high hit rate means caching is already working.
+  // Recommend Nx Cloud only when local caching is barely helping AND remote is off.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    // The whole sentence is the link (see PHRASE_LINKS / linkify): clickable with
-    // no URL on an OSC 8 terminal and in the TUI popup, URL appended otherwise.
+    // Whole sentence is the link (see PHRASE_LINKS / linkify).
     return `${NX_REMOTE_CACHE_CTA}.`;
   }
   return null;
@@ -1161,8 +1023,6 @@ function buildCacheAdvice(s: ThrottleSummary): string | null {
 
 /** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */
 export function formatDuration(ms: number): string {
-  // Below a second, show whole milliseconds (precise for small waits). From 1s
-  // up, one decimal (so big numbers keep sub-second detail). At a minute, m/s.
   if (ms < 1000) {
     return `${Math.round(ms)}ms`;
   }
