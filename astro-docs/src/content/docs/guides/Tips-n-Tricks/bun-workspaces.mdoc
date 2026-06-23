@@ -1,12 +1,12 @@
 ---
 title: Use Bun Workspaces with Nx
-description: Learn what a Bun workspace is, how to set one up with the package.json workspaces field, and how to add Nx for caching, affected commands, and faster CI.
+description: Set up a Bun workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.
 filter: 'type:Guides'
 ---
 
-A Bun workspace lets you manage multiple packages in a single repository. You list the folders that contain packages in the `workspaces` field of your root `package.json`, and Bun installs their dependencies and links your internal packages together. This recipe shows how to set up a Bun workspace and then add Nx on top to get caching, affected commands, and faster CI.
+A Bun workspace lets you manage multiple packages in a single repository. Adding Nx to a Bun workspace gives you cached tasks, affected-only builds, and faster CI, while Bun keeps managing installs. This recipe sets up a Bun workspace and then adds Nx.
 
-## What is a Bun workspace?
+## Set up a Bun workspace
 
 A Bun workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files:
 
@@ -34,9 +34,7 @@ A common layout separates applications from shared packages:
 
 {% /filetree %}
 
-## Link internal packages
-
-To depend on another package in the workspace, reference it with the `workspace:` protocol. Bun resolves it to the local package instead of fetching from a registry:
+To depend on another package in the workspace, reference it with the `workspace:` protocol so Bun resolves it to the local package:
 
 ```jsonc
 // apps/web/package.json
@@ -51,29 +49,51 @@ To depend on another package in the workspace, reference it with the `workspace:
 
 Run `bun install` once at the root to install every package's dependencies and link the internal ones.
 
-## Run tasks across the workspace
+## Add Nx in one command
 
-Bun runs a script across every package with `--filter`, and targets a single package by name. Place `--filter` before the script:
-
-```shell
-bun run --filter '*' build
-bun run --filter web build
-```
-
-This works, but Bun runs every task every time. As the workspace grows, that gets slow, and Bun has no notion of which packages a change affects.
-
-## Add Nx for caching and faster CI
-
-Nx layers task orchestration on top of your existing Bun workspace. It does not replace Bun: Bun still installs and resolves packages, while Nx caches task results and runs only what is needed. Add it with:
+Nx layers task running and caching on top of your existing Bun workspace. Bun still installs and resolves packages; Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
 
 ```shell
 npx nx@latest init
 ```
 
-On an existing Bun workspace you gain:
+Your existing `package.json` scripts keep working. Nx infers a project for each `package.json` in your workspace and runs its scripts with caching, with no `project.json` or extra configuration required.
 
-- [Task caching](/docs/features/cache-task-results) so unchanged work is restored from cache instead of rebuilt
-- [Affected commands](/docs/features/ci-features/affected) that run tasks only for packages touched by a change
-- [Remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to speed up CI
+## Run tasks before and after Nx
 
-For a full walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
+Before Nx, Bun runs a script across packages, but it runs every task every time and has no notion of which packages a change affects. Place `--filter` before the script:
+
+```shell
+bun run --filter '*' build   # every package
+bun run --filter web build   # a single package
+```
+
+After `nx init`, run the same scripts through Nx:
+
+```shell
+nx run-many -t build   # every project
+nx build web           # a single project
+nx affected -t build   # only projects touched by your changes
+```
+
+The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results) instantly, and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
+
+## How task caching works
+
+`nx init` writes an `nx.json` with `targetDefaults` that control which targets are cached:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
+
+In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks. For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
