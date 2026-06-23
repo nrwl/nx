@@ -86,6 +86,12 @@ export interface ThrottleSummary {
   /** recoverableByParallel + recoverableByMachines — the slot-contention time. */
   recoverable: number;
   coordinatorOverhead: number;
+  /**
+   * Diagnostic: dispatch/scheduling latency — time a task was eligible with a free
+   * slot but not yet started (hashing excluded). A measured slice of the
+   * coordinator residual; never displayed in the report.
+   */
+  schedulingOverhead: number;
   parallel: number;
   cores: number;
   isCI: boolean;
@@ -590,6 +596,18 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
     // Slot-contention total, computed once so payload and report read one number.
     const recoverable = recoverableByParallel + recoverableByMachines;
 
+    // Dispatch/scheduling latency: wall-clock where a slot was free (occ < parallel)
+    // AND a task was eligible but unstarted (waiting > 0), minus any hashing in that
+    // window — ready work that simply wasn't dispatched yet. A measured view into the
+    // coordinator residual; tracked for diagnostics, never displayed.
+    const schedulingOverhead = segments.reduce((sum, s) => {
+      if (s.occ >= parallel || s.waiting === 0) {
+        return sum;
+      }
+      const stalled = s.end - s.start;
+      return sum + Math.max(0, stalled - overlap(s.start, s.end, hashWindows));
+    }, 0);
+
     // Longest critical-path tasks that RAN — the lever when no parallelism lever
     // applies. Cache hits excluded (their duration is just restore time); tasks with
     // no recorded status (e.g. synthetic test runs) are kept.
@@ -649,6 +667,7 @@ export class TaskThrottlingLifeCycle implements LifeCycle {
       recoverableByMachines,
       recoverable,
       coordinatorOverhead,
+      schedulingOverhead,
       parallel,
       cores,
       isCI,

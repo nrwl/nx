@@ -180,6 +180,29 @@ describe('TaskThrottlingLifeCycle', () => {
     expect(bLink.wait).toBe(1000);
   });
 
+  it('measures scheduling latency: a ready task idle while a slot is free', () => {
+    // parallel=2, both independent. `a` runs 0–10; `b` is eligible at the run start
+    // but doesn't start until 100 — 100ms of ready work sitting on a free slot
+    // (occ < parallel, waiting > 0). That's pure dispatch latency, not slot
+    // contention, so it lands in schedulingOverhead and NOT in the recoverable split.
+    const a = makeTask('a', { start: 0, end: 10 });
+    const b = makeTask('b', { start: 100, end: 110 });
+    const s = run(makeGraph([a, b]), 2)!;
+
+    expect(s.schedulingOverhead).toBe(100);
+    expect(s.recoverableByParallel + s.recoverableByMachines).toBe(0);
+  });
+
+  it('excludes hashing from scheduling latency', () => {
+    // Same free-slot stall, but the coordinator was hashing for [10,60] of it — that
+    // 50ms is hashing, not scheduling, so it's subtracted: 100 − 50 = 50.
+    const a = makeTask('a', { start: 0, end: 10 });
+    const b = makeTask('b', { start: 100, end: 110 });
+    const s = run(makeGraph([a, b]), 2, { hashWindows: [[10, 60]] })!;
+
+    expect(s.schedulingOverhead).toBe(50);
+  });
+
   it('displays the critical path, separate from the finish lineage, when they diverge', () => {
     // parallel=1: `a` holds the only slot 0–1000 — that's the critical path.
     // `b` is independent, queues for the slot, and finishes last — that's the
