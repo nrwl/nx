@@ -458,8 +458,14 @@ describe('package-manager', () => {
       expect(result).toContain('minimumReleaseAge: 1440');
     });
 
-    it('should not throw on an empty file', () => {
-      expect(() => modifyPnpmWorkspaceYamlToFitNewDirectory('')).not.toThrow();
+    it('should add a packages field to an empty or comments-only manifest', () => {
+      // An empty/comments-only source has null doc contents; older pnpm still
+      // rejects a packages-less manifest, so `packages: ['.']` must be added.
+      for (const src of ['', '   \n', '# only a comment\n']) {
+        expect(
+          parse(modifyPnpmWorkspaceYamlToFitNewDirectory(src)).packages
+        ).toEqual(['.']);
+      }
     });
   });
 
