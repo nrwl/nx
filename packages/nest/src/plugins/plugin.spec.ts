@@ -1,8 +1,9 @@
 import * as childProcess from 'node:child_process';
 import * as devkitModule from '@nx/devkit';
-import { CreateNodesContextV2 } from '@nx/devkit';
+import type { CreateNodesContext } from '@nx/devkit';
+import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
-import { createNodesV2 } from './plugin';
+import { createNodes } from './plugin';
 
 const defaultNestCliConfig = {
   $schema: 'https://json.schemastore.org/nest-cli',
@@ -11,8 +12,8 @@ const defaultNestCliConfig = {
 };
 
 describe('@nx/nest/plugin', () => {
-  const createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  const createNodesFunction = createNodes[1];
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd: string;
 
@@ -78,6 +79,7 @@ describe('@nx/nest/plugin', () => {
                     {
                       externalDependencies: ['@nestjs/cli'],
                     },
+                    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
                   ],
                   metadata: {
                     description: 'Build the Nest project.',
@@ -88,11 +90,11 @@ describe('@nx/nest/plugin', () => {
                   },
                   outputs: ['{projectRoot}/dist'],
                 },
-                serve: {
-                  command: 'nest start --watch',
+                start: {
+                  command: 'nest start',
                   continuous: true,
                   metadata: {
-                    description: 'Run the Nest project in watch mode.',
+                    description: 'Run the Nest project.',
                     technologies: ['nest'],
                   },
                   options: {
@@ -149,12 +151,12 @@ describe('@nx/nest/plugin', () => {
     expect(project.targets.build).toBeDefined();
   });
 
-  it('infers a serve target', async () => {
+  it('infers a start target', async () => {
     await tempFs.createFiles(createNestProjectFiles('apps/api'));
 
     const project = await createProject('apps/api/nest-cli.json');
 
-    expect(project.targets.serve).toBeDefined();
+    expect(project.targets.start).toBeDefined();
   });
 
   it('build target uses the Nest CLI command', async () => {
@@ -170,18 +172,28 @@ describe('@nx/nest/plugin', () => {
     });
   });
 
-  it('serve target uses the Nest CLI command', async () => {
+  it('start target uses the Nest CLI command', async () => {
     await tempFs.createFiles(createNestProjectFiles('apps/api'));
 
     const project = await createProject('apps/api/nest-cli.json');
 
-    expect(project.targets.serve).toMatchObject({
-      command: 'nest start --watch',
+    expect(project.targets.start).toMatchObject({
+      command: 'nest start',
       continuous: true,
       options: {
         cwd: 'apps/api',
       },
     });
+  });
+
+  it('build target includes the root tsconfig input', async () => {
+    await tempFs.createFiles(createNestProjectFiles('apps/api'));
+
+    const project = await createProject('apps/api/nest-cli.json');
+
+    expect(project.targets.build.inputs).toContainEqual(
+      TS_SOLUTION_SETUP_TSCONFIG_INPUT
+    );
   });
 
   it('build target has conservative outputs', async () => {
@@ -212,7 +224,21 @@ describe('@nx/nest/plugin', () => {
     expect(project.targets.build).toBeUndefined();
   });
 
-  it('custom serveTargetName works', async () => {
+  it('custom startTargetName works', async () => {
+    await tempFs.createFiles(createNestProjectFiles('apps/api'));
+
+    const project = await createProject('apps/api/nest-cli.json', {
+      startTargetName: 'dev',
+    });
+
+    expect(project.targets.dev).toMatchObject({
+      command: 'nest start',
+      continuous: true,
+    });
+    expect(project.targets.start).toBeUndefined();
+  });
+
+  it('deprecated serveTargetName still works', async () => {
     await tempFs.createFiles(createNestProjectFiles('apps/api'));
 
     const project = await createProject('apps/api/nest-cli.json', {
@@ -220,10 +246,10 @@ describe('@nx/nest/plugin', () => {
     });
 
     expect(project.targets.dev).toMatchObject({
-      command: 'nest start --watch',
+      command: 'nest start',
       continuous: true,
     });
-    expect(project.targets.serve).toBeUndefined();
+    expect(project.targets.start).toBeUndefined();
   });
 
   it('detects a Nest project when project.json is present', async () => {
