@@ -95,9 +95,8 @@ pub enum BatchStatus {
     Failure,
 }
 
-/// A docs link the popup renders and turns into an OSC 8 hyperlink. Both `text`
-/// and `href` come from TS, so the popup never hardcodes a URL or has to match a
-/// label byte-for-byte.
+/// A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+/// popup never hardcodes a URL.
 #[napi(object)]
 #[derive(Debug, Clone, Default)]
 pub struct Link {
@@ -105,10 +104,8 @@ pub struct Link {
     pub href: String,
 }
 
-/// Cache outcome for the report: tasks restored vs the total that had a cache
-/// outcome. Present only when there was a cache outcome to show; a bypassed cache
-/// is signalled separately by `cache_skipped`. One field instead of a
-/// hits/total pair makes "one set, the other not" unrepresentable.
+/// Cache hits vs total; present only when there was a cache outcome. A bypassed
+/// cache is signalled separately by `cache_skipped`.
 #[napi(object)]
 #[derive(Debug, Clone, Default)]
 pub struct CacheStat {
@@ -117,8 +114,7 @@ pub struct CacheStat {
 }
 
 /// Structured run report shown in the exit-countdown popup. The TUI builds the
-/// visual from these numbers (durations are formatted, columns aligned, and
-/// recommendations bulleted natively) rather than receiving a pre-formatted string.
+/// visual from these numbers rather than receiving a pre-formatted string.
 #[napi(object)]
 #[derive(Debug, Clone, Default)]
 pub struct PerformanceSummaryPayload {

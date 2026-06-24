@@ -276,10 +276,8 @@ export interface CachedResult {
 }
 
 /**
- * Cache outcome for the report: tasks restored vs the total that had a cache
- * outcome. Present only when there was a cache outcome to show; a bypassed cache
- * is signalled separately by `cache_skipped`. One field instead of a
- * hits/total pair makes "one set, the other not" unrepresentable.
+ * Cache hits vs total; present only when there was a cache outcome. A bypassed
+ * cache is signalled separately by `cache_skipped`.
  */
 export interface CacheStat {
   hits: number
@@ -536,9 +534,8 @@ export declare function killProcessTree(rootPid: number, signal?: string | numbe
 export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
 /**
- * A docs link the popup renders and turns into an OSC 8 hyperlink. Both `text`
- * and `href` come from TS, so the popup never hardcodes a URL or has to match a
- * label byte-for-byte.
+ * A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+ * popup never hardcodes a URL.
  */
 export interface Link {
   text: string
@@ -587,8 +584,7 @@ export declare function parseTaskStatus(stringStatus: string): TaskStatus
 
 /**
  * Structured run report shown in the exit-countdown popup. The TUI builds the
- * visual from these numbers (durations are formatted, columns aligned, and
- * recommendations bulleted natively) rather than receiving a pre-formatted string.
+ * visual from these numbers rather than receiving a pre-formatted string.
  */
 export interface PerformanceSummaryPayload {
   runDurationMs: number

@@ -19,10 +19,9 @@ use crate::native::tui::theme::THEME;
 
 use super::Component;
 
-/// Word-wrapped row count for `lines` at `width`, using the SAME wrapping the
-/// Paragraph applies (`Wrap { trim: false }`). Keeps the popup sizing and the
-/// scrollbar height consistent with what actually renders — a hand-rolled
-/// character-wrap estimate diverges from ratatui's word wrapping.
+/// Word-wrapped row count for `lines` at `width`, using the same wrapping the
+/// Paragraph applies — a hand-rolled character-wrap estimate diverges from
+/// ratatui's word wrapping.
 fn wrapped_rows(lines: &[Line], width: u16) -> usize {
     if lines.is_empty() {
         return 0;
@@ -32,23 +31,21 @@ fn wrapped_rows(lines: &[Line], width: u16) -> usize {
         .line_count(width.max(1))
 }
 
-/// Make `visible` — as the Paragraph rendered it into `inner_area`, possibly
-/// wrapped across rows — a clickable OSC 8 hyperlink to `href`. ratatui's text
-/// path strips the escape framing from cells (ratatui#1028), so instead we find
-/// the rendered text and replace each per-row run with one self-contained OSC 8
-/// cell (sequence + `CellDiffOption::ForcedWidth` = the run's width), blanking the
-/// rest of the run. One self-contained cell per row keeps every link fragment
-/// robust to incremental diffing. Locating is by SCANNING the buffer (not
-/// re-deriving ratatui's wrap/scroll), matching with whitespace collapsed so a
-/// wrap point — its space turned into trailing padding plus a row break — still
-/// matches; if `visible` isn't found (scrolled out of view, or its rec isn't
-/// shown) nothing is injected. Requires ratatui-core >= 0.1.2 for ForcedWidth.
+/// Make `visible` (as the Paragraph rendered it, possibly wrapped across rows) a
+/// clickable OSC 8 hyperlink to `href`. ratatui's text path strips the escape
+/// framing from cells (ratatui#1028), so instead we scan the buffer for the
+/// rendered text and replace each per-row run with one self-contained OSC 8 cell
+/// (sequence + `CellDiffOption::ForcedWidth` = the run's width), blanking the
+/// rest — one cell per row keeps every link fragment robust to incremental
+/// diffing. Matching collapses whitespace so a wrap point still matches; if
+/// `visible` isn't found nothing is injected. Requires ratatui-core >= 0.1.2 for
+/// ForcedWidth.
 fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
     if visible.is_empty() {
         return;
     }
-    // Flatten the inner area, recording each kept char's (col, row); runs of
-    // whitespace (incl. row breaks) collapse to a single space.
+    // Flatten the inner area, recording each kept char's (col, row); whitespace
+    // runs (incl. row breaks) collapse to a single space.
     let mut flat = String::new();
     let mut pos: Vec<(u16, u16)> = Vec::new();
     let mut prev_space = true; // collapse + trim leading
@@ -78,10 +75,8 @@ fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
         }
     }
     let target: String = visible.split_whitespace().collect::<Vec<_>>().join(" ");
-    // Injects at the FIRST whitespace-collapsed match of `visible` in the popup
-    // body. Invariant: each linked phrase (footer label, remote-cache CTA) must be
-    // unique within the popup's rendered text — if a phrase ever appears as a
-    // substring of another line, the link would land on the wrong run.
+    // Injects at the FIRST match. Invariant: each linked phrase must be unique
+    // within the popup's rendered text, else the link lands on the wrong run.
     let Some(byte_idx) = flat.find(&target) else {
         return;
     };
@@ -125,7 +120,7 @@ fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
 }
 
 /// Format a millisecond duration like the TS `formatDuration` (e.g. "470ms",
-/// "13.4s", "1m 30s"), so the popup matches the terminal report.
+/// "1m 30s"), so the popup matches the terminal report.
 fn format_duration(ms: f64) -> String {
     if ms < 1000.0 {
         return format!("{}ms", ms.round() as i64);
@@ -138,7 +133,7 @@ fn format_duration(ms: f64) -> String {
     format!("{:.1}s", seconds)
 }
 
-/// Append "s" unless `count` is 1 (mirrors the TS `pluralize`; regular plurals).
+/// Append "s" unless `count` is 1 (mirrors the TS `pluralize`).
 fn pluralize(count: u32, noun: &str) -> String {
     if count == 1 {
         noun.to_string()
@@ -147,8 +142,8 @@ fn pluralize(count: u32, noun: &str) -> String {
     }
 }
 
-/// The cache stat label from the counts, or None when there's nothing to show
-/// (mirrors the TS `cacheStat`).
+/// The cache stat label, or None when there's nothing to show (mirrors the TS
+/// `cacheStat`).
 fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
     if s.cache_skipped {
         return Some("Skipped (--skip-nx-cache)".to_string());
@@ -161,8 +156,7 @@ fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
     Some(format!("{}/{} hit ({}%)", cache.hits, cache.total, pct))
 }
 
-/// A stat row — left-aligned label (padded), then the value. No leading indent:
-/// the popup's border + padding already provide the margin.
+/// A stat row — left-aligned padded label, then the value.
 fn stat_line(label: &str, value: String) -> Line<'static> {
     Line::from(vec![
         Span::styled(
@@ -184,7 +178,7 @@ pub struct CountdownPopup {
     /// The run report shown above the hint text (None until set).
     summary: Option<PerformanceSummaryPayload>,
     /// When pinned, the auto-exit countdown is stopped and the popup stays open
-    /// (e.g. the user scrolled the report) until they explicitly quit.
+    /// until the user explicitly quits.
     pinned: bool,
 }
 
@@ -203,14 +197,13 @@ impl CountdownPopup {
         }
     }
 
-    /// Set the run report shown above the hint text. The visual is built from
-    /// these stats in {@link build_report_lines}.
+    /// Set the run report shown above the hint text.
     pub fn set_summary(&mut self, summary: PerformanceSummaryPayload) {
         self.summary = Some(summary);
     }
 
-    /// Build the styled report lines (header stats, cache, recommendations) from
-    /// the structured summary — the native equivalent of the TS `formatReport`.
+    /// Build the styled report lines from the structured summary — the native
+    /// equivalent of the TS `formatReport`.
     fn build_report_lines(&self) -> Vec<Line<'static>> {
         let Some(s) = self.summary.as_ref() else {
             return Vec::new();
@@ -221,8 +214,6 @@ impl CountdownPopup {
             "Run duration",
             format_duration(s.run_duration_ms),
         ));
-        // Cache sits right under run duration (same section): the report is short
-        // enough that a separate cache section just looked stranded.
         if let Some(cache) = cache_label(s) {
             lines.push(stat_line("Cache", cache));
         }
@@ -247,11 +238,10 @@ impl CountdownPopup {
         };
         lines.push(stat_line("Recoverable time", recoverable));
 
-        // Recommendations. The header is always shown because the docs link that
-        // `render` adds below is itself a (generic) recommendation. Only the
-        // single-line, actionable levers (parallelism/cache/agents) go here; the
-        // multi-line "speed up the longest tasks" rec is rendered LAST — after the
-        // link — by `longest_tasks_lines`, so its task list ends the report.
+        // Header always shown: the docs link `render` adds below is itself a
+        // recommendation. Only single-line recs go here; the multi-line
+        // "speed up the longest tasks" rec is rendered LAST (after the link) by
+        // `longest_tasks_lines`, so its task list ends the report.
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
             "Recommendations:",
@@ -267,9 +257,9 @@ impl CountdownPopup {
         lines
     }
 
-    /// The "speed up / split the longest tasks" recommendation — the one multi-line
-    /// rec, which embeds the task list. Rendered LAST in the report (after the docs
-    /// link) so the detailed task list ends it. Empty when there's no such rec.
+    /// The "speed up / split the longest tasks" recommendation — the one
+    /// multi-line rec, embedding the task list. Rendered LAST so the task list
+    /// ends the report. Empty when there's no such rec.
     fn longest_tasks_lines(&self) -> Vec<Line<'static>> {
         let mut lines: Vec<Line<'static>> = Vec::new();
         let Some(s) = self.summary.as_ref() else {
@@ -284,8 +274,8 @@ impl CountdownPopup {
                 )));
             }
             for rest in parts {
-                // rest already carries its own 2-space indent from
-                // formatTopTaskRows; add 2 more so it nests under the bullet.
+                // rest already carries a 2-space indent from formatTopTaskRows;
+                // add 2 more so it nests under the bullet.
                 lines.push(Line::from(Span::styled(
                     format!("  {rest}"),
                     Style::default().fg(THEME.secondary_fg),
@@ -314,26 +304,24 @@ impl CountdownPopup {
         self.pinned = false;
     }
 
-    /// Stop the auto-exit countdown but keep the popup open. Used when the user
-    /// interacts with the report (e.g. scrolls) so it doesn't close while reading.
+    /// Stop the auto-exit countdown but keep the popup open — used when the user
+    /// interacts with the report so it doesn't close while reading.
     pub fn pin_open(&mut self) {
         self.pinned = true;
     }
 
-    /// Whether the auto-exit countdown has been pinned/stopped while the popup
-    /// stays open (distinct from `cancel_countdown`, which hides it entirely).
+    /// Whether the countdown has been pinned/stopped while the popup stays open
+    /// (distinct from `cancel_countdown`, which hides it entirely).
     pub fn is_pinned(&self) -> bool {
         self.pinned
     }
 
-    /// Whether a run report has been set (i.e. the run has finished and there's
-    /// something to show). Used to gate the "reopen report" key.
+    /// Whether a run report has been set. Used to gate the "reopen report" key.
     pub fn has_summary(&self) -> bool {
         self.summary.is_some()
     }
 
-    /// Re-open the report popup on demand, with no countdown — e.g. the user
-    /// pressed a key to bring it back while exploring the TUI after the run.
+    /// Re-open the report popup on demand, with no countdown.
     pub fn reopen(&mut self) {
         self.visible = true;
         self.pinned = true;
@@ -365,7 +353,6 @@ impl CountdownPopup {
     pub fn scroll_up(&mut self) {
         if self.scroll_offset > 0 {
             self.scroll_offset -= 1;
-            // Update scrollbar state with new position
             self.scrollbar_state = self
                 .scrollbar_state
                 .content_length(self.content_height)
@@ -378,7 +365,6 @@ impl CountdownPopup {
         let max_scroll = self.content_height.saturating_sub(self.viewport_height);
         if self.scroll_offset < max_scroll {
             self.scroll_offset += 1;
-            // Update scrollbar state with new position
             self.scrollbar_state = self
                 .scrollbar_state
                 .content_length(self.content_height)
@@ -388,16 +374,16 @@ impl CountdownPopup {
     }
 
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
-        // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
+        // Guard against rendering outside buffer bounds (can happen while the
+        // user resizes the window before it stabilizes).
         if area.height == 0
             || area.width == 0
             || area.x >= f.area().width
             || area.y >= f.area().height
         {
-            return; // Area is out of bounds, don't try to render
+            return;
         }
 
-        // Ensure area is entirely within frame bounds
         let safe_area = Rect {
             x: area.x,
             y: area.y,
@@ -408,24 +394,20 @@ impl CountdownPopup {
         let popup_width: u16 = 70;
         let popup_width = popup_width.min(safe_area.width.saturating_sub(4));
 
-        // Two modes. With a report (run finished) → the Performance Report: the
-        // stats + a docs link, with the keybinding actions in the bottom border.
-        // Without one (e.g. the user pressed q mid-run, before the report exists) →
-        // the original exit dialog: just the interactive hints.
+        // Two modes: with a report (run finished) → the Performance Report;
+        // without one (e.g. q pressed mid-run) → the original exit dialog with
+        // just the interactive hints.
         let mut content: Vec<Line> = Vec::new();
-        // Whether the report includes the docs-link line — used only as a flag
-        // (`is_some()` below) to gate the OSC 8 injection after the Paragraph lays
-        // the content out. (The stored index is not used; presence is what matters.)
+        // Flag (via `is_some()` below) to gate the OSC 8 injection. The stored
+        // index is unused; presence is what matters.
         let mut url_line_index: Option<usize> = None;
         let report = self.build_report_lines();
         let has_report = !report.is_empty();
         if has_report {
             content.extend(report);
-            // The docs link is a generic recommendation, rendered as a "- " item
-            // directly under the same "Recommendations:" header (no blank line).
-            // A non-linked bullet prefix, then the label which the OSC 8 injection
-            // below turns into a clickable hyperlink. If injection is skipped (e.g.
-            // the popup is too narrow for the label), this stays as plain text.
+            // The docs link is a "- " recommendation item; the label is turned
+            // into a clickable hyperlink by the OSC 8 injection below, or stays
+            // plain text if injection is skipped (e.g. popup too narrow).
             url_line_index = Some(content.len());
             content.push(Line::from(vec![
                 Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
@@ -434,8 +416,8 @@ impl CountdownPopup {
                     Style::default().fg(THEME.info),
                 ),
             ]));
-            // The detailed "speed up the longest tasks" rec goes LAST, so its task
-            // list ends the report.
+            // The "speed up the longest tasks" rec goes LAST so its task list
+            // ends the report.
             content.extend(self.longest_tasks_lines());
         } else {
             content.push(Line::from(vec![
@@ -461,11 +443,10 @@ impl CountdownPopup {
             ]));
         }
 
-        // Size the popup to fit the content. The inner width is whatever the
-        // block's borders + Padding::proportional(1) leave — derive it from a
+        // Size the popup to fit the content. Derive the inner width from a
         // matching chrome block so it tracks the real inner_area width used below
-        // (rather than hard-coding the padding arithmetic). Vertical chrome is the
-        // 2 border rows + 2 padding rows added back as +4. Overflow scrolls.
+        // rather than hard-coding the padding arithmetic. Vertical chrome (2
+        // border + 2 padding rows) is added back as +4; overflow scrolls.
         let inner_width = Block::default()
             .borders(Borders::ALL)
             .padding(Padding::proportional(1))
@@ -477,14 +458,12 @@ impl CountdownPopup {
             .min(safe_area.height.saturating_sub(4))
             .max(5);
 
-        // Calculate the top-left position to center the popup
+        // Center the popup within the safe area.
         let popup_x = safe_area.x + (safe_area.width.saturating_sub(popup_width)) / 2;
         let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
 
-        // Create popup area
         let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
 
-        // Calculate seconds remaining
         let seconds_remaining = if let Some(start_time) = self.start_time {
             let elapsed = start_time.elapsed();
             if elapsed >= self.duration {
@@ -498,10 +477,9 @@ impl CountdownPopup {
 
         let time_remaining = seconds_remaining + 1;
 
-        // Title. With a report it names the dialog ("Performance Report"); while
-        // the auto-exit countdown runs it adds "— exiting in N..." (dropped once
-        // pinned). Without a report (mid-run quit) it's the original countdown
-        // dialog: just "Exiting in N...".
+        // Title: with a report, "Performance Report" plus "— exiting in N..."
+        // while the countdown runs (dropped once pinned); without one, just
+        // "Exiting in N...".
         let mut title_spans = vec![
             Span::raw("  "),
             Span::styled(
@@ -555,9 +533,9 @@ impl CountdownPopup {
             .border_style(Style::default().fg(THEME.info))
             .padding(Padding::proportional(1));
 
-        // Keybinding actions in the bottom border (help-bar style, like the
-        // terminal pane) — only with a report, where there's a pane to reopen and
-        // possibly scroll. Scroll is offered only when the report overflows.
+        // Keybinding actions in the bottom border — only with a report, where
+        // there's a pane to reopen and possibly scroll. Scroll is offered only
+        // when the report overflows.
         if has_report {
             let mut footer = vec![
                 Span::raw("  "),
@@ -580,19 +558,16 @@ impl CountdownPopup {
             block = block.title_bottom(Line::from(footer).alignment(Alignment::Right));
         }
 
-        // Get the inner area
         let inner_area = block.inner(popup_area);
         self.viewport_height = inner_area.height as usize;
 
-        // Content height in wrapped rows (same word wrapping as the Paragraph
-        // below), driving the scrollbar and the scroll bound in scroll_down.
+        // Content height in wrapped rows, driving the scrollbar and the scroll
+        // bound in scroll_down.
         self.content_height = wrapped_rows(&content, inner_area.width);
 
-        // Calculate scrollbar state
         let scrollable_rows = self.content_height.saturating_sub(self.viewport_height);
         let needs_scrollbar = scrollable_rows > 0;
 
-        // Update scrollbar state
         self.scrollbar_state = if needs_scrollbar {
             self.scrollbar_state
                 .content_length(scrollable_rows)
@@ -602,34 +577,28 @@ impl CountdownPopup {
             ScrollbarState::default()
         };
 
-        // Scroll by visual (wrapped) ROWS over the full content. scroll_offset is
-        // bounded in wrapped rows by scroll_down's max_scroll, which matches
-        // Paragraph::scroll's row-based offset — so a wrapped report scrolls one
-        // row per keypress, and we never index the unwrapped `content` out of
-        // range (slicing it with a wrapped-row offset panicked the process).
+        // Scroll by visual (wrapped) ROWS. scroll_offset is bounded in wrapped
+        // rows by scroll_down's max_scroll, matching Paragraph::scroll's row-based
+        // offset — slicing the unwrapped `content` with a wrapped-row offset
+        // panicked the process.
         let popup = Paragraph::new(content.clone())
             .block(block.clone())
-            // trim: false preserves leading whitespace so the report's indentation
-            // (e.g. the longest-tasks list nested under its recommendation) renders.
+            // trim: false preserves leading whitespace so the report's
+            // indentation renders.
             .wrap(Wrap { trim: false })
             .scroll((self.scroll_offset as u16, 0));
 
-        // Render popup
         f.render_widget(Clear, popup_area);
         f.render_widget(popup, popup_area);
 
-        // Turn the report's links into real OSC 8 hyperlinks. ratatui's normal
-        // text path can't carry them: the ESC/BEL framing is filtered out of cells
-        // (ratatui#1028), so we locate each link's rendered text in the buffer and
-        // replace it (see inject_osc8). Only with a report shown.
+        // Turn the report's links into real OSC 8 hyperlinks. ratatui's text path
+        // can't carry them — the ESC/BEL framing is filtered out of cells
+        // (ratatui#1028) — so inject_osc8 locates and replaces them in the buffer.
         if url_line_index.is_some() {
             if let Some(s) = self.summary.as_ref() {
-                // The docs footer link (its label fits one row), then any
-                // recommendation phrases to hyperlink in place — e.g. the
-                // remote-cache CTA, whose whole sentence is the link and spans
-                // multiple rows when wrapped. A phrase not shown (scrolled out, or
-                // its rec absent) simply isn't found and nothing is injected. All
-                // labels/hrefs come from the payload; none are hardcoded here.
+                // The docs footer link, then any recommendation phrases (e.g. the
+                // remote-cache CTA spanning multiple wrapped rows). All labels and
+                // hrefs come from the payload; a phrase not shown isn't found.
                 inject_osc8(f, inner_area, &s.footer.text, &s.footer.href);
                 for link in &s.links {
                     inject_osc8(f, inner_area, &link.text, &link.href);
@@ -637,15 +606,14 @@ impl CountdownPopup {
             }
         }
 
-        // Render scrollbar if needed
         if needs_scrollbar {
-            // Add padding text at top and bottom of scrollbar
+            // Blank out the corners so the scrollbar arrows don't collide with
+            // the border.
             let top_text = Line::from(vec![Span::raw("  ")]);
             let bottom_text = Line::from(vec![Span::raw("  ")]);
 
-            let text_width = 2; // Width of "  "
+            let text_width = 2;
 
-            // Top right padding
             let top_right_area = Rect {
                 x: popup_area.x + popup_area.width - text_width as u16 - 3,
                 y: popup_area.y,
@@ -653,7 +621,6 @@ impl CountdownPopup {
                 height: 1,
             };
 
-            // Bottom right padding
             let bottom_right_area = Rect {
                 x: popup_area.x + popup_area.width - text_width as u16 - 3,
                 y: popup_area.y + popup_area.height - 1,
@@ -661,7 +628,6 @@ impl CountdownPopup {
                 height: 1,
             };
 
-            // Render padding text
             f.render_widget(
                 Paragraph::new(top_text)
                     .alignment(Alignment::Right)
@@ -736,8 +702,8 @@ mod tests {
         }
     }
 
-    // Kept in lockstep with the TS formatDuration (see its spec); a drift between
-    // the two would make the popup and the terminal report disagree.
+    // Kept in lockstep with the TS formatDuration; drift would make the popup and
+    // the terminal report disagree.
     #[test]
     fn format_duration_matches_ts() {
         assert_eq!(format_duration(470.0), "470ms");
@@ -776,7 +742,6 @@ mod tests {
         full.cache = Some(CacheStat { hits: 1, total: 1 });
         assert_eq!(cache_label(&full).as_deref(), Some("1/1 hit (100%)"));
 
-        // Nothing cacheable → no cache line.
         assert_eq!(cache_label(&summary_with(vec![])), None);
         let mut zero = summary_with(vec![]);
         zero.cache = Some(CacheStat { hits: 0, total: 0 });
@@ -805,9 +770,8 @@ mod tests {
 
     #[test]
     fn renders_singular_task_count() {
-        // The grammar fix must hold at the RENDER level, not just in `pluralize`:
-        // a hardcoded "tasks" back in the format string would slip past the
-        // helper-only test, so assert the rendered critical-path line.
+        // Assert at the RENDER level, not just in `pluralize`: a hardcoded "tasks"
+        // in the format string would slip past a helper-only test.
         let mut popup = CountdownPopup::new();
         let mut s = summary_with(vec![]);
         s.critical_path_task_count = 1;
@@ -824,7 +788,7 @@ mod tests {
     #[test]
     fn renders_zero_duration_without_nan_or_inf() {
         // A zero run duration must hit the recoverable-percentage guard rather
-        // than divide by zero and leak NaN/inf into the rendered report.
+        // than divide by zero and leak NaN/inf.
         let mut popup = CountdownPopup::new();
         let mut s = summary_with(vec![]);
         s.run_duration_ms = 0.0;
@@ -839,10 +803,10 @@ mod tests {
 
     #[test]
     fn osc8_link_lands_on_the_url_line_even_when_a_prior_rec_wraps() {
-        // A long single-line recommendation that wraps to several rows sits right
-        // before the docs-link line. The OSC 8 escape must be injected on the link
-        // line (word-wrap aware) — not on a wrapped tail of the recommendation,
-        // which a character-wrap row estimate did at the default width.
+        // A long recommendation wrapping to several rows sits right before the
+        // docs-link line. The OSC 8 escape must land on the link line (word-wrap
+        // aware), not on a wrapped tail of the recommendation as a character-wrap
+        // estimate did.
         let long_rec = "You're at this machine's 8 cores and tasks are still \
             queuing for a slot. If they're CPU-bound, distribute across machines \
             with Nx Agents → https://nx.dev/ci/features/distribute-task-execution; \
@@ -860,8 +824,7 @@ mod tests {
             .unwrap();
 
         let buffer = terminal.backend().buffer().clone();
-        // Exactly one cell carries the OSC 8 sequence — a complete hyperlink
-        // (tagged target + label), injected onto the docs-link line.
+        // Exactly one cell carries the OSC 8 sequence.
         let mut escape: Option<(u16, u16)> = None;
         for y in 0..buffer.area.height {
             for x in 0..buffer.area.width {
@@ -877,15 +840,12 @@ mod tests {
         let sym = buffer.cell((x, y)).unwrap().symbol();
         assert!(sym.contains(FOOTER_HREF), "link target missing");
         assert!(sym.contains(FOOTER_LABEL), "link label missing");
-        // It sits at the start of the docs-link line's text, right after the "- "
-        // bullet — not buried inside a recommendation row.
+        // It sits right after the "- " bullet, not inside a recommendation row.
         assert_eq!(buffer.cell((x - 2, y)).unwrap().symbol(), "-");
         assert_eq!(buffer.cell((x - 1, y)).unwrap().symbol(), " ");
-        // The key regression check: the label must NOT remain rendered as plain
-        // text anywhere (the ForcedWidth escape cell replaces it). In the
-        // misplaced-link bug the escape landed on a wrapped recommendation row
-        // while the Paragraph still drew the label plainly on the real link row —
-        // which this would catch.
+        // Regression check: the label must NOT remain as plain text anywhere (the
+        // ForcedWidth escape cell replaces it). The misplaced-link bug left the
+        // label drawn plainly on the real link row.
         for yy in 0..buffer.area.height {
             let mut text = String::new();
             for xx in 0..buffer.area.width {
@@ -902,9 +862,8 @@ mod tests {
 
     #[test]
     fn remote_cache_rec_links_the_whole_phrase_across_rows() {
-        // The remote-cache recommendation is the whole sentence as a link; it
-        // wraps to multiple rows, so each rendered row-segment must be linked (no
-        // raw URL, nothing left unlinked).
+        // The remote-cache rec is the whole sentence as a link; it wraps to
+        // multiple rows, so each rendered row-segment must be linked.
         let rec = format!("{CACHE_PHRASE}.");
         let mut popup = CountdownPopup::new();
         let mut s = summary_with(vec![rec]);
@@ -923,7 +882,7 @@ mod tests {
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
 
-        // Every OSC 8 cell targets a known page; at least one targets remote cache.
+        // Every OSC 8 cell targets a known page; at least one the remote cache.
         let mut cache_links = 0;
         for y in 0..buffer.area.height {
             for x in 0..buffer.area.width {
@@ -941,8 +900,8 @@ mod tests {
         }
         assert!(cache_links >= 1, "the cache phrase should be linked");
 
-        // The raw URL is never visible plain text, and the phrase (start AND end,
-        // i.e. every wrapped row) is consumed by the links rather than left plain.
+        // The raw URL is never visible, and the phrase (start AND end, i.e. every
+        // wrapped row) is consumed by the links rather than left plain.
         for y in 0..buffer.area.height {
             let mut text = String::new();
             for x in 0..buffer.area.width {

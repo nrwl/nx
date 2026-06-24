@@ -1,16 +1,13 @@
 // Keep in sync with packages/create-nx-workspace/src/utils/terminal-link.ts.
-// create-nx-workspace cannot depend on nx, so this generic OSC 8 helper is
-// intentionally duplicated (same reasoning as output.ts / package-manager.ts).
+// Duplicated because create-nx-workspace cannot depend on nx (cf. output.ts / package-manager.ts).
 
 const OSC = '\u001B]';
 const BEL = '\u0007';
 const SEP = ';';
 
 /**
- * Wrap `text` in an OSC 8 hyperlink that points at `url`. Supported terminals
- * render `text` as a clickable link to `url`; everywhere else `text` prints
- * unchanged. This lets us keep tracking querystrings out of the visible output
- * while still attaching them to the link target (CLOUD-4642).
+ * Wrap `text` in an OSC 8 hyperlink to `url` (unchanged `text` where unsupported).
+ * Lets us keep tracking querystrings out of the visible output (CLOUD-4642).
  */
 export function terminalLink(text: string, url: string): string {
   if (!supportsHyperlinks()) {
@@ -20,11 +17,9 @@ export function terminalLink(text: string, url: string): string {
 }
 
 /**
- * Best-effort detection of OSC 8 hyperlink support, adapted from the
- * `supports-hyperlinks` package. Defaults to false when in doubt so we never
- * print raw escape sequences to a terminal that can't render them. Exported so
- * callers can vary the *visible* text by support (e.g. show a tracking
- * querystring inline when there's no clickable target to hide it behind).
+ * OSC 8 support detection, adapted from `supports-hyperlinks`. Defaults to false
+ * so we never print raw escape sequences to a terminal that can't render them.
+ * Exported so callers can vary the *visible* text by support.
  */
 export function supportsHyperlinks(): boolean {
   const env = process.env;
@@ -86,8 +81,8 @@ export function supportsHyperlinks(): boolean {
 }
 
 /**
- * Exported for testing. VTE reports versions as a packed integer, e.g. "5402"
- * means 0.54.2; everything else is dot-separated.
+ * Exported for testing. VTE packs versions as an integer (e.g. "5402" = 0.54.2);
+ * everything else is dot-separated.
  */
 export function parseVersion(versionString = ''): {
   major: number;
