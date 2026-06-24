@@ -414,7 +414,8 @@ export class Migrator {
             )))
         ) {
           const updateEntries = Object.entries(packageUpdate.packages);
-          // Validate up front so invalid metadata still fails fast.
+          // Validate all up front so invalid metadata fails fast, before any
+          // resolution does I/O.
           for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
@@ -422,22 +423,20 @@ export class Migrator {
               update
             );
           }
-          // Each version resolves independently, so resolve them concurrently
-          // instead of awaiting one registry/install round-trip at a time.
-          const resolvedVersions = await Promise.all(
-            updateEntries.map(([name, update]) =>
-              this.resolveVersionForCascade(name, update.version)
-            )
-          );
-          // Assign in the original order so packageUpdates ordering is stable.
-          updateEntries.forEach(([name, update], index) => {
+          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
+          // append to minimumReleaseAgeExclude, so a serial loop avoids
+          // overlapping prompts and keeps packageUpdates ordering stable.
+          for (const [name, update] of updateEntries) {
             const resolvedUpdate = {
               ...update,
-              version: resolvedVersions[index],
+              version: await this.resolveVersionForCascade(
+                name,
+                update.version
+              ),
             };
             filteredUpdates[name] = resolvedUpdate;
             this.packageUpdates[name] = resolvedUpdate;
-          });
+          }
         }
       }
 
@@ -453,12 +452,12 @@ export class Migrator {
     packageName: string,
     version: string
   ): Promise<string> {
-    // If the version is already an exact semver, no need to resolve
+    // Already a fully-qualified semver (incl. prereleases) - nothing to resolve.
     if (valid(version)) {
       return version;
     }
-    // Otherwise, resolve through the min-release-age policy to honor
-    // preapproved packages configured in the package manager
+    // Otherwise resolve the spec (range/tag) through the min-release-age policy,
+    // which also honors any configured minimumReleaseAgeExclude entries.
     return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
