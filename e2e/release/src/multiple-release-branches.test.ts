@@ -1,6 +1,5 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
-  normalizePerformanceReport,
   cleanupProject,
   getSelectedPackageManager,
   newProject,
@@ -14,7 +13,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      normalizePerformanceReport(str)
+      str
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(`/private/${tmpProjPath()}`, '')
         .replaceAll(tmpProjPath(), '')
@@ -122,8 +121,6 @@ describe('nx release multiple release branches', () => {
     const versionResult0x = runCLI(`release version patch`);
 
     expect(initialVersionResult).toMatchInlineSnapshot(`
-      Already up to date
-      Done in 433ms using {package-manager} v11.2.2
 
       NX   Running release version for project: {project-name}
 
@@ -162,25 +159,14 @@ describe('nx release multiple release branches', () => {
       "exports": {
 
 
-      Skipped lock file update because {package-manager} workspaces are not enabled.
-
       NX   Committing changes with git
 
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-      Committing files in git with the following command:
-      git commit --message chore(release): publish 0.0.7
 
       NX   Tagging commit with git
 
-      Tagging the current commit in git with the following command:
-      git tag --annotate v0.0.7 --message v0.0.7
 
     `);
     expect(versionResult1x).toMatchInlineSnapshot(`
-      Already up to date
-      Done in 351ms using {package-manager} v11.2.2
 
       NX   Running release version for project: {project-name}
 
@@ -222,25 +208,14 @@ describe('nx release multiple release branches', () => {
       "exports": {
 
 
-      Skipped lock file update because {package-manager} workspaces are not enabled.
-
       NX   Committing changes with git
 
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-      Committing files in git with the following command:
-      git commit --message chore(release): publish 0.1.0
 
       NX   Tagging commit with git
 
-      Tagging the current commit in git with the following command:
-      git tag --annotate v0.1.0 --message v0.1.0
 
     `);
     expect(versionResult0x).toMatchInlineSnapshot(`
-      Already up to date
-      Done in 349ms using {package-manager} v11.2.2
 
       NX   Running release version for project: {project-name}
 
@@ -279,20 +254,11 @@ describe('nx release multiple release branches', () => {
       "exports": {
 
 
-      Skipped lock file update because {package-manager} workspaces are not enabled.
-
       NX   Committing changes with git
 
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-      Committing files in git with the following command:
-      git commit --message chore(release): publish 0.0.8
 
       NX   Tagging commit with git
 
-      Tagging the current commit in git with the following command:
-      git tag --annotate v0.0.8 --message v0.0.8
 
     `);
   });
@@ -341,8 +307,6 @@ describe('nx release multiple release branches', () => {
     const versionResult2x = runCLI(`release version major`);
 
     expect(versionResult1x).toMatchInlineSnapshot(`
-      Already up to date
-      Done in 367ms using {package-manager} v11.2.2
 
       NX   Running release version for project: {project-name}
 
@@ -384,25 +348,14 @@ describe('nx release multiple release branches', () => {
       "exports": {
 
 
-      Skipped lock file update because {package-manager} workspaces are not enabled.
-
       NX   Committing changes with git
 
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-      Committing files in git with the following command:
-      git commit --message chore(release): publish 0.1.0
 
       NX   Tagging commit with git
 
-      Tagging the current commit in git with the following command:
-      git tag --annotate v0.1.0 --message v0.1.0
 
     `);
     expect(versionResult2x).toMatchInlineSnapshot(`
-      Already up to date
-      Done in 364ms using {package-manager} v11.2.2
 
       NX   Running release version for project: {project-name}
 
@@ -444,20 +397,11 @@ describe('nx release multiple release branches', () => {
       "exports": {
 
 
-      Skipped lock file update because {package-manager} workspaces are not enabled.
-
       NX   Committing changes with git
 
-      Staging files in git with the following command:
-      git add {project-name}/package.json {project-name}/package.json {project-name}/package.json
-
-      Committing files in git with the following command:
-      git commit --message chore(release): publish 1.0.0
 
       NX   Tagging commit with git
 
-      Tagging the current commit in git with the following command:
-      git tag --annotate v1.0.0 --message v1.0.0
 
     `);
   });
