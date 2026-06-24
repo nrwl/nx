@@ -192,7 +192,10 @@ function collapse(value: TargetDefaultValue): TargetDefaultValue {
     value.length === 1 &&
     value[0].filter === undefined
   ) {
-    return value[0];
+    // Drop the (already-undefined) `filter` key so the result matches the
+    // object value form, which forbids `filter`.
+    const { filter: _filter, ...config } = value[0];
+    return config;
   }
   return value;
 }

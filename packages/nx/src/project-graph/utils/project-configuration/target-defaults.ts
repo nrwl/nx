@@ -335,7 +335,9 @@ export function getUnfilteredTargetDefault(
   value: TargetDefaultValue | undefined
 ): Partial<TargetConfiguration> {
   if (value === undefined) return {};
-  if (!Array.isArray(value)) return value;
+  // Strip `filter` on both paths: the object form's type forbids it, but a
+  // stray one shouldn't leak through to callers that don't understand filters.
+  if (!Array.isArray(value)) return stripFilter(value);
   const catchAll = value.find((entry) => entry.filter === undefined);
   return catchAll ? stripFilter(catchAll) : {};
 }
@@ -368,10 +370,11 @@ interface MatchContext {
  * 1. **Outer key selection** — preserves the long-standing record-shape
  *    precedence: the executor key (when the target has that executor and the
  *    key exists) wins, then the exact target-name key, then glob keys
- *    (longest first). Keys are tried in that order and the first one that
- *    yields a non-empty merge wins; a key whose entries all fail to match
- *    falls through to the next, matching the record matcher's "key must
- *    apply" behavior.
+ *    (longest first). Keys are tried in that order and the first key with *any*
+ *    matching entry wins — even one contributing an empty config, so an empty
+ *    `{}` catch-all still wins and does not fall through. A key whose entries
+ *    all fail their `filter` contributes nothing and falls through to the next,
+ *    matching the record matcher's "key must apply" behavior.
  * 2. **Inner accumulate-and-merge** — within the selected key's array, every
  *    entry whose `filter` matches is merged in document order via
  *    `mergeTargetConfigurations`, so later matches override earlier ones

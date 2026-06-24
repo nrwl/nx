@@ -107,9 +107,13 @@ export type TargetDefaultArrayEntry = {
  *
  * The two forms are equivalent for the unfiltered case: `{ cache: true }` and
  * `[{ cache: true }]` mean the same thing.
+ *
+ * `filter` is only meaningful on array entries; the bare object form forbids it
+ * (`filter?: never`) so a stray filter on the unfiltered form is a type error
+ * rather than a silently-ignored field.
  */
 export type TargetDefaultValue =
-  | Partial<TargetConfiguration>
+  | (Partial<TargetConfiguration> & { filter?: never })
   | TargetDefaultArrayEntry[];
 
 /**

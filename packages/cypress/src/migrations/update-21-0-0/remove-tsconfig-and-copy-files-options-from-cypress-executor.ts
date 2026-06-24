@@ -70,8 +70,10 @@ export default async function (tree: Tree) {
       if (kept.length === 0) {
         delete targetDefaults[key];
       } else if (kept.length === 1 && kept[0].filter === undefined) {
-        // A lone unfiltered entry is stored as the plain object form.
-        targetDefaults[key] = kept[0];
+        // A lone unfiltered entry is stored as the plain object form (which
+        // omits `filter`).
+        const { filter: _filter, ...config } = kept[0];
+        targetDefaults[key] = config;
       } else {
         targetDefaults[key] = kept;
       }

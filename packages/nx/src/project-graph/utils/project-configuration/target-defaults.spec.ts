@@ -181,6 +181,19 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
         cache: true,
       });
     });
+
+    it('lets a matching but empty entry on a higher-precedence key win (no fall-through)', () => {
+      const targetDefaults = {
+        '@nx/jest:jest': {},
+        test: { cache: true },
+      };
+      // The executor key has a matching (empty) entry, so it wins outright —
+      // selection is "first key with any match", not "first non-empty merge",
+      // so the exact-name key is never consulted.
+      expect(
+        readTargetDefaultsForTarget('test', targetDefaults, '@nx/jest:jest')
+      ).toEqual({});
+    });
   });
 });
 
@@ -193,6 +206,14 @@ describe('getUnfilteredTargetDefault', () => {
     expect(getUnfilteredTargetDefault({ dependsOn: ['^build'] })).toEqual({
       dependsOn: ['^build'],
     });
+  });
+
+  it('strips a stray filter on the object value form', () => {
+    // The type forbids `filter` here, but a hand-edited nx.json could still
+    // carry one; it must not leak to filter-unaware callers.
+    expect(
+      getUnfilteredTargetDefault({ dependsOn: ['^build'], filter: {} } as any)
+    ).toEqual({ dependsOn: ['^build'] });
   });
 
   it('returns the filter-less entry of an array value, stripped of filter', () => {
