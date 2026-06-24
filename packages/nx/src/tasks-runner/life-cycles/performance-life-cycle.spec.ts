@@ -702,7 +702,7 @@ describe('cache reporting', () => {
 
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
-    // No-TTY jest env → linkify is a no-op → the tagged URL prints verbatim.
+    // No-TTY jest env → no hyperlinks → the tagged URL prints verbatim.
     expect(report).toContain('sharing a cache across your team and CI');
     expect(report).toContain(
       'https://nx.dev/ci/features/remote-cache?utm=performance-report'
@@ -710,8 +710,8 @@ describe('cache reporting', () => {
   });
 
   it('renders the remote-cache rec as a whole-phrase OSC 8 link (no raw URL) on a hyperlink terminal', () => {
-    // FORCE_HYPERLINK overrides the TTY/CI checks in supportsHyperlinks, flipping
-    // linkify on inside the no-TTY jest env.
+    // FORCE_HYPERLINK overrides the TTY/CI checks in supportsHyperlinks, turning the
+    // OSC 8 hyperlinks on inside the no-TTY jest env.
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '1';
     try {

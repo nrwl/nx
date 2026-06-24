@@ -10,6 +10,8 @@ import {
   buildRecommendation,
   formatReport,
   MEANINGFUL_OVERHEAD,
+  recommendationToPayloadString,
+  type Recommendation,
 } from './performance-report';
 import { LifeCycle, TaskResult } from '../life-cycle';
 
@@ -74,8 +76,14 @@ export interface PerformanceSummary {
   parallel: number;
   cores: number;
   isCI: boolean;
-  /** One rec per lever; rendered as a list when >1. */
+  /**
+   * One rec per lever, as plain strings (a phrase link's URL omitted) — the form
+   * the tests and the napi payload assert on. {@link structuredRecommendations}
+   * carries the same recs with their link parts for the renderers.
+   */
   recommendations: string[];
+  /** The structured form of {@link recommendations}; drives the report + payload renderers. */
+  structuredRecommendations: Recommendation[];
   /** Coordinator overhead outweighs task work, so the longest tasks aren't the lever (typical cached run). */
   coordinatorDominated: boolean;
   cacheHits: number;
@@ -600,7 +608,7 @@ export class PerformanceLifeCycle implements LifeCycle {
 
     const isCI = this.isCI();
     const distributing = this.distributingTasks();
-    const recommendations = buildRecommendation({
+    const structuredRecommendations = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
       coordinatorDominated,
@@ -627,7 +635,10 @@ export class PerformanceLifeCycle implements LifeCycle {
       parallel,
       cores,
       isCI,
-      recommendations,
+      recommendations: structuredRecommendations.map(
+        recommendationToPayloadString
+      ),
+      structuredRecommendations,
       coordinatorDominated,
       cacheHits,
       cacheableCount,

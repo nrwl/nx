@@ -1,4 +1,4 @@
-import type { PerformanceSummaryPayload } from '../../native';
+import type { Link, PerformanceSummaryPayload } from '../../native';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
 import type { PerformanceSummary } from './performance-life-cycle';
 
@@ -12,20 +12,101 @@ const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
 const NX_PERFORMANCE_LABEL = `Learn how to improve your run's performance`;
-/** Visible URL ⇄ tagged target pairs for {@link linkify}. */
-const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
-  { visible: NX_PERFORMANCE_URL, href: NX_PERFORMANCE_LINK },
-  { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
-];
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
  */
 const NX_REMOTE_CACHE_CTA =
   'Drastically reduce your run duration by sharing a cache across your team and CI';
-const PHRASE_LINKS: ReadonlyArray<{ phrase: string; href: string }> = [
-  { phrase: NX_REMOTE_CACHE_CTA, href: NX_REMOTE_CACHE_LINK },
-];
+
+/**
+ * A recommendation built from structured parts so the link text comes from the
+ * link definition (not a substring scanned out of the assembled report). A part
+ * is either literal text or a {@link RecLink}; the renderers below project the
+ * same parts to the terminal string, the payload string, and the popup links.
+ */
+type RecPart = string | RecLink;
+export type Recommendation = RecPart[];
+
+/**
+ * A docs link inside a recommendation, in one of two styles:
+ *
+ * - `url`   — the URL itself is the visible text. The clean URL shows (and is the
+ *   OSC 8 label), the utm-tagged URL is the click target. Without OSC 8 the tagged
+ *   URL prints verbatim (e.g. the agents recs, the footer).
+ * - `phrase` — a sentence is the visible text and the whole of it links to the
+ *   tagged URL. Without OSC 8 the tagged URL is appended as ` → <url>` (the
+ *   remote-cache CTA). The payload string for a phrase link is URL-less: the Rust
+ *   popup re-links the phrase from {@link PerformanceSummaryPayload.links}.
+ */
+interface RecLink {
+  /** Visible label: the clean URL (`url`) or the sentence (`phrase`). */
+  visible: string;
+  /** OSC 8 click target / appended URL: always the utm-tagged URL. */
+  href: string;
+  style: 'url' | 'phrase';
+}
+
+function urlLink(cleanUrl: string, taggedUrl: string): RecLink {
+  return { visible: cleanUrl, href: taggedUrl, style: 'url' };
+}
+
+function phraseLink(phrase: string, taggedUrl: string): RecLink {
+  return { visible: phrase, href: taggedUrl, style: 'phrase' };
+}
+
+function isRecLink(part: RecPart): part is RecLink {
+  return typeof part !== 'string';
+}
+
+/**
+ * The recommendation string the napi payload ships and the Rust popup matches
+ * against. A `url` link keeps its tagged URL inline; a `phrase` link is URL-less
+ * (the popup re-links it from {@link PerformanceSummaryPayload.links}).
+ */
+export function recommendationToPayloadString(rec: Recommendation): string {
+  return rec
+    .map((part) =>
+      !isRecLink(part) ? part : part.style === 'url' ? part.href : part.visible
+    )
+    .join('');
+}
+
+/**
+ * The recommendation as a terminal string. With OSC 8 each link becomes a
+ * hyperlink (clean URL or whole phrase as the visible label, tagged URL the
+ * target). Without it, a `url` link prints its tagged URL and a `phrase` link
+ * gets ` → <tagged url>` appended — `terminalLink` can't do this since it drops
+ * the URL entirely when hyperlinks are off.
+ */
+function recommendationToTerminalString(
+  rec: Recommendation,
+  hyperlinks: boolean
+): string {
+  return rec
+    .map((part) => {
+      if (!isRecLink(part)) {
+        return part;
+      }
+      if (hyperlinks) {
+        return terminalLink(part.visible, part.href);
+      }
+      return part.style === 'url'
+        ? part.href
+        : `${part.visible} → ${part.href}`;
+    })
+    .join('');
+}
+
+/** The popup links for the phrase-style CTAs in a recommendation list (url links live inline in the strings). */
+function recommendationLinks(recommendations: Recommendation[]): Link[] {
+  return recommendations.flatMap((rec) =>
+    rec
+      .filter(isRecLink)
+      .filter((part) => part.style === 'phrase')
+      .map((part) => ({ text: part.visible, href: part.href }))
+  );
+}
 
 /** At/below this hit rate, recommend remote cache (if off); above it caching works. */
 const LOW_CACHE_HIT_RATE = 0.1;
@@ -76,6 +157,11 @@ function formatTopTaskRows(
   });
 }
 
+/** An Nx Agents URL link, built from the link definition so the URL text never has to be scanned back out of the assembled report. */
+function agentsLink(): RecLink {
+  return urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
+}
+
 /** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Agents advice is omitted unless `canDistribute`. */
 export function buildRecommendation(args: {
   recoverableByParallel: number;
@@ -87,7 +173,7 @@ export function buildRecommendation(args: {
   canDistribute: boolean;
   distributing: boolean;
   criticalPathTop: Array<{ id: string; duration: number }>;
-}): string[] {
+}): Recommendation[] {
   const {
     recoverableByParallel,
     recoverableByMachines,
@@ -109,7 +195,7 @@ export function buildRecommendation(args: {
       recoverable >= PARALLEL_LEAD_FRACTION * runDuration
     ) {
       return [
-        `Add more Nx Agents to recover up to ${formatDuration(recoverable)}.`,
+        [`Add more Nx Agents to recover up to ${formatDuration(recoverable)}.`],
       ];
     }
   } else {
@@ -120,9 +206,11 @@ export function buildRecommendation(args: {
       recoverableByParallel >= recoverableByMachines
     ) {
       return [
-        `Increase parallelism to recover up to ${formatDuration(
-          recoverableByParallel
-        )}.`,
+        [
+          `Increase parallelism to recover up to ${formatDuration(
+            recoverableByParallel
+          )}.`,
+        ],
       ];
     }
     // Machine-bound: contention a higher local --parallel can't recover.
@@ -135,8 +223,12 @@ export function buildRecommendation(args: {
         )} and tasks are still queuing for a slot.`;
         return [
           canDistribute
-            ? `${base} If they're CPU-bound, distribute across machines with Nx Agents → ${NX_AGENTS_LINK}; if they're I/O-bound, a higher --parallel may help instead.`
-            : `${base} If they're I/O-bound, a higher --parallel may help.`,
+            ? [
+                `${base} If they're CPU-bound, distribute across machines with Nx Agents → `,
+                agentsLink(),
+                `; if they're I/O-bound, a higher --parallel may help instead.`,
+              ]
+            : [`${base} If they're I/O-bound, a higher --parallel may help.`],
         ];
       }
       // Below the core ceiling but still machine-bound (a parallelism:false task
@@ -144,7 +236,11 @@ export function buildRecommendation(args: {
       // free those slots, and that lever only exists in CI.
       return canDistribute
         ? [
-            `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → ${NX_AGENTS_LINK}.`,
+            [
+              `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → `,
+              agentsLink(),
+              `.`,
+            ],
           ]
         : [];
     }
@@ -153,7 +249,11 @@ export function buildRecommendation(args: {
     if (coordinatorDominated) {
       return canDistribute
         ? [
-            `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → ${NX_AGENTS_LINK}.`,
+            [
+              `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → `,
+              agentsLink(),
+              `.`,
+            ],
           ]
         : [];
     }
@@ -163,15 +263,19 @@ export function buildRecommendation(args: {
   if (criticalPathTop.length === 0) {
     return [];
   }
-  const speedUp = [
-    `Speed up or split the longest tasks on the critical path:`,
-    ...formatTopTaskRows(criticalPathTop),
-  ].join('\n');
-  const recommendations = [speedUp];
+  const speedUp: Recommendation = [
+    [
+      `Speed up or split the longest tasks on the critical path:`,
+      ...formatTopTaskRows(criticalPathTop),
+    ].join('\n'),
+  ];
+  const recommendations: Recommendation[] = [speedUp];
   if (canDistribute) {
-    recommendations.push(
-      `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → ${NX_AGENTS_LINK}.`
-    );
+    recommendations.push([
+      `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → `,
+      agentsLink(),
+      `.`,
+    ]);
   }
   return recommendations;
 }
@@ -181,11 +285,14 @@ export function buildRecommendation(args: {
  * → other levers → "speed up / split" LAST (deepest manual work, the only multi-line
  * rec). Shared by the report and TUI payload.
  */
-function orderedRecommendations(s: PerformanceSummary): string[] {
-  const levers = [...s.recommendations];
+function orderedRecommendations(s: PerformanceSummary): Recommendation[] {
+  const levers = [...s.structuredRecommendations];
   const cacheAdvice = buildCacheAdvice(s);
-  const isRecoverLever = (r: string) => r.includes('recover up to');
-  const isLongestTasks = (r: string) => r.includes('\n');
+  // Classify by the rec's plain text — the structured link parts don't affect order.
+  const text = recommendationToPayloadString;
+  const isRecoverLever = (r: Recommendation) =>
+    text(r).includes('recover up to');
+  const isLongestTasks = (r: Recommendation) => text(r).includes('\n');
   return [
     ...levers.filter(isRecoverLever),
     ...(cacheAdvice ? [cacheAdvice] : []),
@@ -210,44 +317,22 @@ function cacheStat(s: PerformanceSummary): string | null {
  * Bottom-of-report cache advice, only when there's a lever: a skipped cache (drop
  * the flag) or a barely-used cache with no remote (set up Nx Cloud).
  */
-function buildCacheAdvice(s: PerformanceSummary): string | null {
+function buildCacheAdvice(s: PerformanceSummary): Recommendation | null {
   if (s.cacheSkipped) {
-    return `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`;
+    return [
+      `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`,
+    ];
   }
   if (s.cacheableCount === 0) {
     return null;
   }
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    // Whole sentence is the link (see PHRASE_LINKS / linkify).
-    return `${NX_REMOTE_CACHE_CTA}.`;
+    // Whole-phrase link: the sentence is the visible text, the tagged URL the
+    // target. The payload string stays URL-less (the popup re-links the phrase).
+    return [phraseLink(NX_REMOTE_CACHE_CTA, NX_REMOTE_CACHE_LINK), `.`];
   }
   return null;
-}
-
-/**
- * Make the report's docs links clickable on OSC 8 terminals (URL-links → clean-URL
- * hyperlink; phrase-links → whole-sentence hyperlinks). Without OSC 8 (CI, pipes) URLs
- * print verbatim and phrase-links get the URL appended. Terminal-only: never run over
- * the TUI popup strings — ratatui strips the escape bytes, so the popup re-creates the
- * links natively.
- */
-function linkify(text: string): string {
-  let out = text;
-  if (!supportsHyperlinks()) {
-    // No clickable target: surface each phrase-link's URL inline.
-    for (const { phrase, href } of PHRASE_LINKS) {
-      out = out.split(phrase).join(`${phrase} → ${href}`);
-    }
-    return out;
-  }
-  for (const { visible, href } of REPORT_LINKS) {
-    out = out.split(href).join(terminalLink(visible, href));
-  }
-  for (const { phrase, href } of PHRASE_LINKS) {
-    out = out.split(phrase).join(terminalLink(phrase, href));
-  }
-  return out;
 }
 
 /** The full performance report as a terminal string (the TUI popup renders natively from {@link buildExitSummaryPayload} instead). */
@@ -278,7 +363,10 @@ export function formatReport(s: PerformanceSummary): string {
         : fmt(recoverable)
     ),
   ];
+  const hyperlinks = supportsHyperlinks();
   const recommendations = orderedRecommendations(s);
+  const render = (r: Recommendation) =>
+    recommendationToTerminalString(r, hyperlinks);
   // A rec may be multi-line (the critical-path one embeds a task list); indent
   // continuation lines under the bullet.
   const renderRec = (r: string): string[] => {
@@ -287,20 +375,25 @@ export function formatReport(s: PerformanceSummary): string {
   };
   if (recommendations.length > 0) {
     const onlySingleLine =
-      recommendations.length === 1 && !recommendations[0].includes('\n');
+      recommendations.length === 1 &&
+      !recommendationToPayloadString(recommendations[0]).includes('\n');
     if (onlySingleLine) {
-      lines.push('', `  Recommendation: ${linkify(recommendations[0])}`);
+      lines.push('', `  Recommendation: ${render(recommendations[0])}`);
     } else {
       lines.push(
         '',
         '  Recommendations:',
-        ...recommendations.flatMap((r) => renderRec(linkify(r)))
+        ...recommendations.flatMap((r) => renderRec(render(r)))
       );
     }
   }
-  // utm-tagged footer: linkify hides the utm in the OSC 8 target; without OSC 8 the
-  // tagged URL prints verbatim.
-  lines.push('', linkify(`  ${NX_PERFORMANCE_LABEL} → ${NX_PERFORMANCE_LINK}`));
+  // utm-tagged footer (a url link): with OSC 8 the clean URL shows and hides the utm
+  // in the target; without it the tagged URL prints verbatim.
+  const footer: Recommendation = [
+    `  ${NX_PERFORMANCE_LABEL} → `,
+    urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
+  ];
+  lines.push('', render(footer));
   lines.push('');
   return lines.join('\n');
 }
@@ -327,12 +420,12 @@ export function buildExitSummaryPayload(
       ? { hits: s.cacheHits, total: s.cacheableCount }
       : undefined,
     cacheSkipped: s.cacheSkipped,
-    recommendations,
+    // The napi payload ships plain strings; a phrase link (the remote-cache CTA)
+    // stays URL-less here and is re-linked from `links` by the popup.
+    recommendations: recommendations.map(recommendationToPayloadString),
     footer: { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
-    // The remote-cache CTA is a whole-phrase link; surface it for the popup only
-    // when that rec is actually shown (matches the terminal report).
-    links: recommendations.some((r) => r.includes(NX_REMOTE_CACHE_CTA))
-      ? [{ text: NX_REMOTE_CACHE_CTA, href: NX_REMOTE_CACHE_LINK }]
-      : [],
+    // Phrase links (e.g. the remote-cache CTA) carry their href as data so the
+    // popup hyperlinks the phrase in place; surfaced only when shown.
+    links: recommendationLinks(recommendations),
   };
 }
