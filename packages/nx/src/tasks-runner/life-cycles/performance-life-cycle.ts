@@ -725,8 +725,10 @@ export function flushPerformanceReport(): void {
     }
     // Post-TUI the terminal can still be in raw mode (no \n → \r\n translation),
     // which staircases plain "\n". Use \r\n on a TTY; plain \n when piped.
+    // `formatReport` already ends with a trailing newline, so don't add another
+    // (that left a stray blank line that broke exact-match e2e snapshots).
     const eol = process.stdout.isTTY ? '\r\n' : '\n';
-    process.stdout.write(formatReport(summary).split('\n').join(eol) + eol);
+    process.stdout.write(formatReport(summary).split('\n').join(eol));
   } catch {
     // best-effort report; never let it affect the run's exit behavior
   }
