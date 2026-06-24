@@ -7,178 +7,30 @@ weight: 2
 filter: 'type:References'
 ---
 
-The `NxModuleFederationPlugin` is a [Rspack](https://rspack.dev) plugin that handles module federation in Nx Workspaces. It aims to provide the same Developer Experience (DX) that you would normally get from using the Nx `withModuleFederation` function.
+Module Federation is an architectural pattern for splitting a frontend into separately built and deployed applications that compose at runtime. A host application loads remote modules exposed by other applications, and they share common dependencies so each library loads once. It's a common way to build micro frontends. For the full model, see the official [Module Federation documentation](https://module-federation.io/guide/start/index.html).
 
-## Requirements
+The `@nx/module-federation` plugin scaffolds and runs these setups using the official [Module Federation](https://module-federation.io) plugins, then adds Nx task orchestration on top.
 
-The `@nx/module-federation` plugin supports the following package versions.
+## How Nx helps with Module Federation
 
-| Package                       | Supported Versions |
-| ----------------------------- | ------------------ |
-| `webpack`                     | ^5.0.0             |
-| `@rspack/core`                | ^1.6.0             |
-| `@module-federation/enhanced` | ^2.0.0             |
-| `@module-federation/node`     | ^2.0.0             |
+- **Serve the whole system from one command.** With [continuous tasks](/docs/getting-started/tutorials/running-tasks#running-continuous-tasks), running a remote's dev server also starts its host. Run `nx serve remote1` and Nx serves `remote1` along with the host that consumes it, because the remote's serve task depends on the host's continuous serve task. You develop a remote in isolation while the shell stays running around it. For Webpack Module Federation, name the remotes you are developing with `--devRemotes`, for example `nx serve host --devRemotes=remote1`.
+- **Cache and skip unaffected work.** Each federated application is its own project, so Nx [caches](/docs/features/cache-task-results) builds and runs [affected](/docs/features/ci-features/affected) tasks only for the applications a change touches.
+- **Build in parallel.** Nx builds the smaller applications in parallel and coordinates a single release across them.
 
-[Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
+## Get started
 
-## Usage
+The fastest way to a working setup is the [React Module Federation template](/docs/templates/react-mfe). It scaffolds a host and remotes already wired with the official plugins.
 
-To use the plugin, you need to add it to your `rspack.config.ts` file. You can do this by adding the following to your config.
+To add Module Federation to an existing workspace, generate a host along with its remotes:
 
-### Client side rendering
-
-```ts
-// rspack.config.ts
-import {
-  NxModuleFederationPlugin,
-  NxModuleFederationDevServerPlugin,
-} from '@nx/module-federation/rspack';
-import config from './module-federation.config';
-
-export default {
-  ...otherRspackConfigOptions,
-  plugins: [
-    new NxModuleFederationPlugin({
-      config,
-    }),
-    new NxModuleFederationDevServerPlugin({
-      config,
-    }),
-  ],
-};
+```shell
+nx g @nx/react:host apps/shell --remotes=remote1,remote2
 ```
 
-### Server side rendering
+Add another remote later with the remote generator:
 
-```ts
-// rspack.config.ts
-import {
-  NxModuleFederationPlugin,
-  NxModuleFederationSSRDevServerPlugin,
-} from '@nx/module-federation/rspack';
-import config from './module-federation.config';
-
-export default {
-  ...otherRspackConfigOptions,
-  plugins: [
-    new NxModuleFederationPlugin({
-      config,
-      isServer: true,
-    }),
-    new NxModuleFederationSSRDevServerPlugin({
-      config,
-    }),
-  ],
-};
+```shell
+nx g @nx/react:remote apps/remote3 --host=shell
 ```
 
-## How it works
-
-The NxModuleFederationPlugin wraps and configures the Module Federation plugin from `@module-federation/enhanced` to provide a streamlined experience in Nx workspaces. Here's what the plugin does:
-
-1. **Base Configuration**: It sets up essential Rspack configurations:
-   - Disables runtime chunking (`runtimeChunk: false`)
-   - Sets a unique name for the output
-   - Configures specific settings for server-side rendering when needed
-
-2. **Module Federation Setup**: The plugin automatically:
-   - Configures the remote entry filename (`remoteEntry.js`)
-   - Sets up exposed modules based on your configuration
-   - Manages remote module connections
-   - Handles shared dependencies and libraries
-
-3. **Runtime Plugins**: It supports additional runtime plugins, including special handling for Node.js environments when running in server mode.
-
-4. **Shared Libraries**: The plugin includes a dedicated system for managing shared libraries across federated modules, helping to avoid duplicate code and ensure consistent versions.
-
-You can learn more about how Nx handles Module Federation in the [Module Federation and Nx Guide](/docs/technologies/module-federation/concepts/module-federation-and-nx#nx-support-for-module-federation).
-
-## API reference
-
-### NxModuleFederationPlugin
-
-```ts
-export class NxModuleFederationPlugin {
-  constructor(
-    private _options: {
-      config: ModuleFederationConfig;
-      isServer?: boolean;
-    },
-    private configOverride?: NxModuleFederationConfigOverride
-  ) {}
-}
-```
-
-### ModuleFederationConfig
-
-```ts
-export interface ModuleFederationConfig {
-  /**
-   * The name of the module federation application.
-   */
-  name: string;
-  /**
-   * The remotes that the module federation application uses.
-   */
-  remotes?: Remotes;
-  /**
-   * The library type and name the ModuleFederationPlugin uses to expose and load the federated modules.
-   */
-  library?: ModuleFederationLibrary;
-  /**
-   * The federated modules to expose for consumption by host/consumer applications.
-   */
-  exposes?: Record<string, string>;
-  /**
-   * A function that allows you to configure shared libraries.
-   * This function is called for each shared library that is used by the module federation application.
-   * The function is passed the library name and the shared library configuration.
-   * If the function returns `undefined` the default shared library configuration is used.
-   * If the function returns `false` the shared library is not shared.
-   * If the function returns a shared library configuration object, that configuration is used.
-   */
-  shared?: SharedFunction;
-  /**
-   * Additional shared libraries that are shared by the module federation application.
-   * This is useful when you want to share a library that is not found as part of the direct dependencies of the application found in the Nx Graph.
-   */
-  additionalShared?: AdditionalSharedConfig;
-  /**
-   * `nxRuntimeLibraryControlPlugin` is a runtime module federation plugin to ensure
-   * that shared libraries are resolved from a remote with live reload capabilities.
-   * If you run into any issues with loading shared libraries, try disabling this option.
-   */
-  disableNxRuntimeLibraryControlPlugin?: boolean;
-}
-
-export type Remotes = Array<string | [remoteName: string, remoteUrl: string]>;
-export type ModuleFederationLibrary = { type: string; name: string };
-export type SharedFunction = (
-  libraryName: string,
-  sharedConfig: SharedLibraryConfig
-) => undefined | false | SharedLibraryConfig;
-export interface SharedLibraryConfig {
-  singleton?: boolean;
-  strictVersion?: boolean;
-  requiredVersion?: false | string;
-  eager?: boolean;
-}
-export type AdditionalSharedConfig = Array<
-  | string
-  | [libraryName: string, sharedConfig: SharedLibraryConfig]
-  | { libraryName: string; sharedConfig: SharedLibraryConfig }
->;
-```
-
-### NxModuleFederationConfigOverride
-
-```ts
-/**
- * Used to override the options passed to the ModuleFederationPlugin.
- */
-export type NxModuleFederationConfigOverride = Omit<
-  moduleFederationPlugin.ModuleFederationPluginOptions,
-  'exposes' | 'remotes' | 'name' | 'shared' | 'filename'
->;
-```
+For the architecture and task-graph details, see [Module Federation and Nx](/docs/technologies/module-federation/concepts/module-federation-and-nx).
