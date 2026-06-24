@@ -1,9 +1,19 @@
 ---
-title: Angular
+title: Angular Monorepos
+description: Create and scale an Angular monorepo with Nx, including generators, caching, affected builds, and CI for Angular apps and libraries.
 sidebar:
   hidden: true
-description: Build scalable Angular applications with Nx powerful tooling and generators
 pagefind: false
 ---
+
+Nx is a monorepo tool with first-class Angular support. An Angular monorepo keeps multiple Angular applications and libraries in one workspace, sharing code, dependencies, and tooling. The `@nx/angular` plugin adds generators, executors, and migrations, so you can scaffold projects, run Angular tasks with caching, and keep every project on a single supported version.
+
+To add Nx to a new or existing Angular workspace, install the plugin:
+
+```shell
+nx add @nx/angular
+```
+
+You can then [generate Angular apps and libraries](/docs/technologies/angular/generators) and run their tasks with caching, affected builds, and a live project graph. For setup details, see the [Angular plugin introduction](/docs/technologies/angular/introduction).
 
 {% index_page_cards path="technologies/angular" /%}
