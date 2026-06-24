@@ -626,6 +626,22 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
+            label: 'Use npm workspaces with Nx',
+            link: 'guides/tips-n-tricks/npm-workspaces',
+          },
+          {
+            label: 'Use pnpm workspaces with Nx',
+            link: 'guides/tips-n-tricks/pnpm-workspaces',
+          },
+          {
+            label: 'Use Yarn workspaces with Nx',
+            link: 'guides/tips-n-tricks/yarn-workspaces',
+          },
+          {
+            label: 'Use Bun workspaces with Nx',
+            link: 'guides/tips-n-tricks/bun-workspaces',
+          },
+          {
             label: 'Identify dependencies between folders',
             link: 'guides/tips-n-tricks/identify-dependencies-between-folders',
           },
