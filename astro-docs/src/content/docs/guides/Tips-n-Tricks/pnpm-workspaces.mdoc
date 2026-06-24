@@ -1,0 +1,98 @@
+---
+title: Use pnpm Workspaces with Nx
+description: Set up a pnpm workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.
+filter: 'type:Guides'
+---
+
+A pnpm workspace lets you manage multiple packages in a single repository. Adding Nx to a pnpm workspace gives you cached tasks, affected-only builds, and faster CI, while pnpm keeps managing installs. This recipe sets up a pnpm workspace and then adds Nx.
+
+## Set up a pnpm workspace
+
+A pnpm workspace is a repository whose root contains a `pnpm-workspace.yaml` file. Its `packages` field tells pnpm which directories hold `package.json` files:
+
+```yaml
+# pnpm-workspace.yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+A common layout separates applications from shared packages:
+
+{% filetree %}
+
+- my-workspace/
+  - apps/
+    - web/
+      - package.json
+  - packages/
+    - shared-ui/
+      - package.json
+  - package.json
+  - pnpm-workspace.yaml
+
+{% /filetree %}
+
+To depend on another package in the workspace, reference it with the `workspace:` protocol so pnpm resolves it to the local package:
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+Run `pnpm install` once at the root to install every package's dependencies and link the internal ones.
+
+## Add Nx in one command
+
+Nx layers task running and caching on top of your existing pnpm workspace. pnpm still installs and resolves packages; Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
+
+```shell
+npx nx@latest init
+```
+
+Your existing `package.json` scripts keep working. Nx infers a project for each `package.json` in your workspace and runs its scripts with caching, with no `project.json` or extra configuration required.
+
+## Run tasks before and after Nx
+
+Before Nx, pnpm runs a script across packages, but it runs every task every time and has no notion of which packages a change affects:
+
+```shell
+pnpm -r run build           # every package
+pnpm --filter web run build # a single package
+```
+
+After `nx init`, run the same scripts through Nx:
+
+```shell
+nx run-many -t build   # every project
+nx build web           # a single project
+nx affected -t build   # only projects touched by your changes
+```
+
+The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results) instantly, and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
+
+## How task caching works
+
+`nx init` writes an `nx.json` with `targetDefaults` that control which targets are cached:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
+
+In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks. For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo) or the [From pnpm Workspaces to Distributed CI](/courses/pnpm-nx-next/lessons-00-overview) course.
