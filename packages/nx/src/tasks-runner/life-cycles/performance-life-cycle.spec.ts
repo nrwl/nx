@@ -1,11 +1,18 @@
 import * as os from 'node:os';
+import { performance } from 'node:perf_hooks';
+import type { NxJsonConfiguration } from '../../config/nx-json';
 import { Task, TaskGraph } from '../../config/task-graph';
+import { withEnvironmentVariables } from '../../internal-testing-utils/with-environment';
+import * as nxCloudUtils from '../../utils/nx-cloud-utils';
 import { TaskResult } from '../life-cycle';
 import {
+  buildSegments,
+  mergeIntervals,
+  overlap,
   PerformanceLifeCycle,
   flushPerformanceReport,
   getPerformanceSummaryPayload,
-  overlap,
+  TimedTask,
 } from './performance-life-cycle';
 import { formatDuration, formatReport } from './performance-report';
 import { getThreadPoolSize } from '../task-orchestrator';
@@ -58,17 +65,65 @@ interface TestEnv {
   distributing?: boolean;
 }
 
-/** Construct a PerformanceLifeCycle with its env-dependent signals injected. */
+// The lifecycle reads its signals from the environment (CI, distribution) and a
+// couple of helpers (hash windows via perf measures, remote cache via isNxCloudUsed)
+// rather than constructor seams. Tests drive the env vars through
+// `withEnvironmentVariables` (auto snapshot/restore) and the helpers through jest
+// spies set up in beforeEach.
+let getEntriesByTypeSpy: jest.SpyInstance;
+
+/**
+ * Make collectHashWindows() observe the given absolute-epoch [start, end] hash
+ * windows by faking the perf-measure entries it reads — origin-relative, to match
+ * collectHashWindows' `timeOrigin + startTime` math.
+ */
+function setHashWindows(windows: Array<[number, number]>): void {
+  const origin = performance.timeOrigin;
+  getEntriesByTypeSpy.mockImplementation((type: string): any =>
+    type === 'measure'
+      ? windows.map(([start, end], i) => ({
+          name: `hash-${i}`,
+          entryType: 'measure',
+          startTime: start - origin,
+          duration: end - start,
+        }))
+      : []
+  );
+}
+
+beforeEach(() => {
+  getEntriesByTypeSpy = jest.spyOn(performance, 'getEntriesByType');
+  setHashWindows([]);
+  jest.spyOn(nxCloudUtils, 'isNxCloudUsed').mockReturnValue(true);
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
+/** The env vars the given TestEnv implies (CI short-circuit + distribution flag). */
+function envFor(env: TestEnv): Record<string, string | null> {
+  return {
+    // The `CI === 'false'` short-circuit forces isCI() false even on a CI machine.
+    CI: env.isCI ? 'true' : 'false',
+    NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT: env.distributing ? '3' : null,
+  };
+}
+
+/** Construct a PerformanceLifeCycle with its non-env signals (mocks) set up. */
 function makeLifeCycle(
   graph: TaskGraph,
   env: TestEnv = {}
 ): PerformanceLifeCycle {
+  if (env.windows) {
+    setHashWindows(env.windows);
+  }
+  (nxCloudUtils.isNxCloudUsed as jest.Mock).mockReturnValue(
+    env.remoteCache ?? true
+  );
   return new PerformanceLifeCycle(graph, {
-    hashWindows: () => env.windows ?? [],
-    cacheSkipped: () => env.skipped ?? false,
-    remoteCacheEnabled: () => env.remoteCache ?? true,
-    isCI: () => env.isCI ?? false,
-    distributingTasks: () => env.distributing ?? false,
+    skipNxCache: env.skipped,
+    nxJson: {} as NxJsonConfiguration,
   });
 }
 
@@ -86,23 +141,26 @@ function run(
     distributing?: boolean;
   } = {}
 ) {
-  const lc = makeLifeCycle(graph, {
+  const env: TestEnv = {
     windows: opts.hashWindows,
     skipped: opts.cacheSkipped,
     remoteCache: opts.remoteCacheEnabled,
     isCI: opts.isCI,
     distributing: opts.distributing,
+  };
+  return withEnvironmentVariables(envFor(env), () => {
+    const lc = makeLifeCycle(graph, env);
+    lc.startCommand(total);
+    for (const taskIds of opts.batches ?? []) {
+      lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
+    }
+    const results = Object.values(graph.tasks).map(
+      (task) =>
+        ({ task, status: opts.statuses?.[task.id] }) as unknown as TaskResult
+    );
+    lc.endTasks(results);
+    return lc.getSummary();
   });
-  lc.startCommand(total);
-  for (const taskIds of opts.batches ?? []) {
-    lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
-  }
-  const results = Object.values(graph.tasks).map(
-    (task) =>
-      ({ task, status: opts.statuses?.[task.id] }) as unknown as TaskResult
-  );
-  lc.endTasks(results);
-  return lc.getSummary();
 }
 
 describe('PerformanceLifeCycle', () => {
@@ -746,58 +804,61 @@ describe('exit summary payload (TUI countdown)', () => {
     );
   }
 
-  it('builds the structured payload the TUI pulls at endCommand', () => {
-    const a = makeTask('a', { start: 0, end: 1000 });
-    const b = makeTask('b', { start: 1000, end: 2000 });
-    const graph = makeGraph([a, b], { b: ['a'] });
-    feed(makeLifeCycle(graph), graph);
+  it('builds the structured payload the TUI pulls at endCommand', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const b = makeTask('b', { start: 1000, end: 2000 });
+      const graph = makeGraph([a, b], { b: ['a'] });
+      feed(makeLifeCycle(graph), graph);
 
-    const payload = getPerformanceSummaryPayload();
-    expect(payload).not.toBeNull();
-    // The TUI builds the visual from these stats, not a pre-formatted string.
-    expect(payload!.runDurationMs).toBe(2000);
-    expect(payload!.criticalPathMs).toBe(2000);
-    expect(payload!.criticalPathTaskCount).toBe(2);
-    expect(Array.isArray(payload!.recommendations)).toBe(true);
-  });
+      const payload = getPerformanceSummaryPayload();
+      expect(payload).not.toBeNull();
+      // The TUI builds the visual from these stats, not a pre-formatted string.
+      expect(payload!.runDurationMs).toBe(2000);
+      expect(payload!.criticalPathMs).toBe(2000);
+      expect(payload!.criticalPathTaskCount).toBe(2);
+      expect(Array.isArray(payload!.recommendations)).toBe(true);
+    }));
 
-  it('carries the footer + remote-cache links as data (popup hardcodes no URLs)', () => {
-    // Cold cache, remote off → the remote-cache CTA is recommended, so it's
-    // surfaced as a link for the popup to hyperlink in place.
-    const a = makeTask('a', { start: 0, end: 1000 });
-    const graph = makeGraph([a]);
-    const lc = makeLifeCycle(graph, { remoteCache: false });
-    lc.startCommand(1);
-    lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
+  it('carries the footer + remote-cache links as data (popup hardcodes no URLs)', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      // Cold cache, remote off → the remote-cache CTA is recommended, so it's
+      // surfaced as a link for the popup to hyperlink in place.
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const graph = makeGraph([a]);
+      const lc = makeLifeCycle(graph, { remoteCache: false });
+      lc.startCommand(1);
+      lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
 
-    const payload = getPerformanceSummaryPayload()!;
-    // The docs footer link travels as data (label + tagged href).
-    expect(payload.footer).toEqual({
-      text: "Learn how to improve your run's performance",
-      href: 'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report',
-    });
-    // The CTA link text matches the phrase in the recommendation, so the popup
-    // links the text it was handed without a byte-identical constant of its own.
-    expect(payload.links).toEqual([
-      {
-        text: 'Drastically reduce your run duration by sharing a cache across your team and CI',
-        href: 'https://nx.dev/ci/features/remote-cache?utm=performance-report',
-      },
-    ]);
-    expect(
-      payload.recommendations.some((r) => r.includes(payload.links[0].text))
-    ).toBe(true);
-  });
+      const payload = getPerformanceSummaryPayload()!;
+      // The docs footer link travels as data (label + tagged href).
+      expect(payload.footer).toEqual({
+        text: "Learn how to improve your run's performance",
+        href: 'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report',
+      });
+      // The CTA link text matches the phrase in the recommendation, so the popup
+      // links the text it was handed without a byte-identical constant of its own.
+      expect(payload.links).toEqual([
+        {
+          text: 'Drastically reduce your run duration by sharing a cache across your team and CI',
+          href: 'https://nx.dev/ci/features/remote-cache?utm=performance-report',
+        },
+      ]);
+      expect(
+        payload.recommendations.some((r) => r.includes(payload.links[0].text))
+      ).toBe(true);
+    }));
 
-  it('clears the active lifecycle once consumed, so a later flush gets nothing', () => {
-    const a = makeTask('a', { start: 0, end: 1000 });
-    const graph = makeGraph([a]);
-    feed(makeLifeCycle(graph), graph);
+  it('clears the active lifecycle once consumed, so a later flush gets nothing', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const graph = makeGraph([a]);
+      feed(makeLifeCycle(graph), graph);
 
-    expect(getPerformanceSummaryPayload()).not.toBeNull();
-    // The popup now owns the report; the terminal flush path must not re-render it.
-    expect(getPerformanceSummaryPayload()).toBeNull();
-  });
+      expect(getPerformanceSummaryPayload()).not.toBeNull();
+      // The popup now owns the report; the terminal flush path must not re-render it.
+      expect(getPerformanceSummaryPayload()).toBeNull();
+    }));
 });
 
 describe('formatDuration', () => {
@@ -1001,6 +1062,112 @@ describe('overlap', () => {
   });
 });
 
+describe('mergeIntervals', () => {
+  it('returns an empty list unchanged', () => {
+    expect(mergeIntervals([])).toEqual([]);
+  });
+
+  it('sorts and leaves disjoint intervals separate', () => {
+    expect(
+      mergeIntervals([
+        [10, 15],
+        [0, 5],
+      ])
+    ).toEqual([
+      [0, 5],
+      [10, 15],
+    ]);
+  });
+
+  it('unions overlapping intervals', () => {
+    expect(
+      mergeIntervals([
+        [0, 5],
+        [3, 8],
+      ])
+    ).toEqual([[0, 8]]);
+  });
+
+  it('merges touching intervals (next starts exactly at the previous end)', () => {
+    expect(
+      mergeIntervals([
+        [0, 5],
+        [5, 10],
+      ])
+    ).toEqual([[0, 10]]);
+  });
+
+  it('chains a transitive overlap into one interval', () => {
+    expect(
+      mergeIntervals([
+        [10, 15],
+        [0, 5],
+        [4, 12],
+      ])
+    ).toEqual([[0, 15]]);
+  });
+});
+
+describe('buildSegments', () => {
+  const timed = (
+    rows: Array<[string, number, number, boolean?]>
+  ): TimedTask[] =>
+    rows.map(([id, start, end, nonParallel = false]) => ({
+      id,
+      start,
+      end,
+      nonParallel,
+    }));
+
+  it('returns no segments for no tasks', () => {
+    expect(buildSegments([], new Map(), 2)).toEqual([]);
+  });
+
+  it('tracks occupancy as tasks overlap', () => {
+    // a: [0,10], b: [5,15] → occ ramps 1 → 2 → 1 across the three boundaries.
+    const segments = buildSegments(
+      timed([
+        ['a', 0, 10],
+        ['b', 5, 15],
+      ]),
+      new Map(),
+      2
+    );
+
+    expect(segments).toEqual([
+      { start: 0, end: 5, occ: 1, waiting: 0, nonParallel: 0 },
+      { start: 5, end: 10, occ: 2, waiting: 0, nonParallel: 0 },
+      { start: 10, end: 15, occ: 1, waiting: 0, nonParallel: 0 },
+    ]);
+  });
+
+  it('counts a task eligible-but-not-started as waiting', () => {
+    // b is eligible at 0 but only starts at 5 while a holds the single slot.
+    const segments = buildSegments(
+      timed([
+        ['a', 0, 10],
+        ['b', 5, 10],
+      ]),
+      new Map([['b', 0]]),
+      1
+    );
+
+    expect(segments).toEqual([
+      { start: 0, end: 5, occ: 1, waiting: 1, nonParallel: 0 },
+      { start: 5, end: 10, occ: 2, waiting: 0, nonParallel: 0 },
+    ]);
+  });
+
+  it('weighs a parallelism:false task as the whole pool', () => {
+    // np monopolizes the pool: occ jumps to `parallel` (3), nonParallel counts it.
+    const segments = buildSegments(timed([['np', 0, 10, true]]), new Map(), 3);
+
+    expect(segments).toEqual([
+      { start: 0, end: 10, occ: 3, waiting: 0, nonParallel: 1 },
+    ]);
+  });
+});
+
 describe('flushPerformanceReport', () => {
   let writeSpy: jest.SpyInstance;
   let written: string;
@@ -1032,54 +1199,58 @@ describe('flushPerformanceReport', () => {
     });
   }
 
-  it('ends piped output in exactly one trailing newline', () => {
-    setTTY(false);
-    const a = makeTask('a', { start: 0, end: 1000 });
-    feedActive(makeGraph([a]));
+  it('ends piped output in exactly one trailing newline', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      setTTY(false);
+      const a = makeTask('a', { start: 0, end: 1000 });
+      feedActive(makeGraph([a]));
 
-    flushPerformanceReport();
+      flushPerformanceReport();
 
-    expect(written).not.toBe('');
-    expect(written.endsWith('\n')).toBe(true);
-    expect(written.endsWith('\n\n')).toBe(false);
-    expect(written).not.toContain('\r\n');
-  });
+      expect(written).not.toBe('');
+      expect(written.endsWith('\n')).toBe(true);
+      expect(written.endsWith('\n\n')).toBe(false);
+      expect(written).not.toContain('\r\n');
+    }));
 
-  it('uses CRLF on a TTY (terminal may still be in raw mode)', () => {
-    setTTY(true);
-    const a = makeTask('a', { start: 0, end: 1000 });
-    feedActive(makeGraph([a]));
+  it('uses CRLF on a TTY (terminal may still be in raw mode)', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      setTTY(true);
+      const a = makeTask('a', { start: 0, end: 1000 });
+      feedActive(makeGraph([a]));
 
-    flushPerformanceReport();
+      flushPerformanceReport();
 
-    expect(written).toContain('\r\n');
-    expect(written.endsWith('\r\n')).toBe(true);
-    // A bare "\n" (not part of "\r\n") would staircase a raw terminal.
-    expect(/(?<!\r)\n/.test(written)).toBe(false);
-  });
+      expect(written).toContain('\r\n');
+      expect(written.endsWith('\r\n')).toBe(true);
+      // A bare "\n" (not part of "\r\n") would staircase a raw terminal.
+      expect(/(?<!\r)\n/.test(written)).toBe(false);
+    }));
 
-  it('is a no-op once the payload was already consumed', () => {
-    setTTY(false);
-    const a = makeTask('a', { start: 0, end: 1000 });
-    feedActive(makeGraph([a]));
-    // The TUI path consumes the report via the payload getter first.
-    expect(getPerformanceSummaryPayload()).not.toBeNull();
+  it('is a no-op once the payload was already consumed', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      setTTY(false);
+      const a = makeTask('a', { start: 0, end: 1000 });
+      feedActive(makeGraph([a]));
+      // The TUI path consumes the report via the payload getter first.
+      expect(getPerformanceSummaryPayload()).not.toBeNull();
 
-    flushPerformanceReport();
+      flushPerformanceReport();
 
-    expect(written).toBe('');
-  });
+      expect(written).toBe('');
+    }));
 
-  it('swallows a write failure (cosmetic report never fails the run)', () => {
-    setTTY(false);
-    writeSpy.mockImplementation(() => {
-      throw new Error('EPIPE');
-    });
-    const a = makeTask('a', { start: 0, end: 1000 });
-    feedActive(makeGraph([a]));
+  it('swallows a write failure (cosmetic report never fails the run)', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      setTTY(false);
+      writeSpy.mockImplementation(() => {
+        throw new Error('EPIPE');
+      });
+      const a = makeTask('a', { start: 0, end: 1000 });
+      feedActive(makeGraph([a]));
 
-    expect(() => flushPerformanceReport()).not.toThrow();
-  });
+      expect(() => flushPerformanceReport()).not.toThrow();
+    }));
 
   // Constructing a lifecycle registers it as the module-level
   // `activePerformanceLifeCycle`, which is what flush reads.
@@ -1095,30 +1266,31 @@ describe('flushPerformanceReport', () => {
 });
 
 describe('getThreadPoolSize → startCommand contract', () => {
-  it('recovers --parallel exactly from the total fed to startCommand', () => {
-    // getThreadPoolSize hands startCommand `--parallel + continuousCount`; the
-    // lifecycle subtracts the continuous count to recover --parallel. Pin both
-    // ends of that seam so a refactor that passes discrete-only (or stops adding
-    // the continuous count) fails here instead of silently miscomputing every
-    // parallelism recommendation.
-    const discrete = makeTask('d', { start: 0, end: 1000 });
-    const c1 = makeTask('c1', { continuous: true });
-    const c2 = makeTask('c2', { continuous: true });
-    const graph = makeGraph([discrete, c1, c2]);
+  it('recovers --parallel exactly from the total fed to startCommand', () =>
+    withEnvironmentVariables(envFor({}), () => {
+      // getThreadPoolSize hands startCommand `--parallel + continuousCount`; the
+      // lifecycle subtracts the continuous count to recover --parallel. Pin both
+      // ends of that seam so a refactor that passes discrete-only (or stops adding
+      // the continuous count) fails here instead of silently miscomputing every
+      // parallelism recommendation.
+      const discrete = makeTask('d', { start: 0, end: 1000 });
+      const c1 = makeTask('c1', { continuous: true });
+      const c2 = makeTask('c2', { continuous: true });
+      const graph = makeGraph([discrete, c1, c2]);
 
-    const { discrete: parallelArg, total } = getThreadPoolSize(
-      { parallel: 3 } as any,
-      graph
-    );
-    expect(parallelArg).toBe(3);
-    expect(total).toBe(5); // 3 (--parallel) + 2 continuous
+      const { discrete: parallelArg, total } = getThreadPoolSize(
+        { parallel: 3 } as any,
+        graph
+      );
+      expect(parallelArg).toBe(3);
+      expect(total).toBe(5); // 3 (--parallel) + 2 continuous
 
-    const lc = makeLifeCycle(graph);
-    lc.startCommand(total);
-    lc.endTasks([
-      { task: discrete, status: 'success' } as unknown as TaskResult,
-    ]);
+      const lc = makeLifeCycle(graph);
+      lc.startCommand(total);
+      lc.endTasks([
+        { task: discrete, status: 'success' } as unknown as TaskResult,
+      ]);
 
-    expect(lc.getSummary()!.parallel).toBe(parallelArg);
-  });
+      expect(lc.getSummary()!.parallel).toBe(parallelArg);
+    }));
 });

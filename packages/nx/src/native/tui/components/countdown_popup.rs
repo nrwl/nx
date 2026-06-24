@@ -16,6 +16,7 @@ use std::time::{Duration, Instant};
 
 use crate::native::tui::lifecycle::PerformanceSummaryPayload;
 use crate::native::tui::theme::THEME;
+use crate::native::tui::utils::{format_report_duration, pluralize};
 
 use super::Component;
 
@@ -31,15 +32,11 @@ fn wrapped_rows(lines: &[Line], width: u16) -> usize {
         .line_count(width.max(1))
 }
 
-/// Make `visible` (as the Paragraph rendered it, possibly wrapped across rows) a
-/// clickable OSC 8 hyperlink to `href`. ratatui's text path strips the escape
-/// framing from cells (ratatui#1028), so instead we scan the buffer for the
-/// rendered text and replace each per-row run with one self-contained OSC 8 cell
-/// (sequence + `CellDiffOption::ForcedWidth` = the run's width), blanking the
-/// rest — one cell per row keeps every link fragment robust to incremental
-/// diffing. Matching collapses whitespace so a wrap point still matches; if
-/// `visible` isn't found nothing is injected. Requires ratatui-core >= 0.1.2 for
-/// ForcedWidth.
+/// Make `visible` a clickable OSC 8 hyperlink to `href` by rewriting the buffer:
+/// ratatui's text path strips the escape framing from cells (ratatui#1028), so we
+/// scan for the rendered text and replace each per-row run with one self-contained
+/// OSC 8 cell (ForcedWidth = the run's width), blanking the rest. Whitespace is
+/// collapsed when matching so a wrapped phrase still matches; no match → no-op.
 fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
     if visible.is_empty() {
         return;
@@ -119,29 +116,6 @@ fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
     }
 }
 
-/// Format a millisecond duration like the TS `formatDuration` (e.g. "470ms",
-/// "1m 30s"), so the popup matches the terminal report.
-fn format_duration(ms: f64) -> String {
-    if ms < 1000.0 {
-        return format!("{}ms", ms.round() as i64);
-    }
-    let seconds = (ms / 100.0).round() / 10.0;
-    if seconds >= 60.0 {
-        let total = (ms / 1000.0).round() as i64;
-        return format!("{}m {}s", total / 60, total % 60);
-    }
-    format!("{:.1}s", seconds)
-}
-
-/// Append "s" unless `count` is 1 (mirrors the TS `pluralize`).
-fn pluralize(count: u32, noun: &str) -> String {
-    if count == 1 {
-        noun.to_string()
-    } else {
-        format!("{noun}s")
-    }
-}
-
 /// The cache stat label, or None when there's nothing to show (mirrors the TS
 /// `cacheStat`).
 fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
@@ -212,7 +186,7 @@ impl CountdownPopup {
 
         lines.push(stat_line(
             "Run duration",
-            format_duration(s.run_duration_ms),
+            format_report_duration(s.run_duration_ms),
         ));
         if let Some(cache) = cache_label(s) {
             lines.push(stat_line("Cache", cache));
@@ -221,7 +195,7 @@ impl CountdownPopup {
             "Critical path",
             format!(
                 "{}   ({} {})",
-                format_duration(s.critical_path_ms),
+                format_report_duration(s.critical_path_ms),
                 s.critical_path_task_count,
                 pluralize(s.critical_path_task_count, "task")
             ),
@@ -230,18 +204,16 @@ impl CountdownPopup {
             let pct = (s.recoverable_ms / s.run_duration_ms * 100.0).round() as i64;
             format!(
                 "{}   ({}% of the run)",
-                format_duration(s.recoverable_ms),
+                format_report_duration(s.recoverable_ms),
                 pct
             )
         } else {
-            format_duration(s.recoverable_ms)
+            format_report_duration(s.recoverable_ms)
         };
         lines.push(stat_line("Recoverable time", recoverable));
 
-        // Header always shown: the docs link `render` adds below is itself a
-        // recommendation. Only single-line recs go here; the multi-line
-        // "speed up the longest tasks" rec is rendered LAST (after the link) by
-        // `longest_tasks_lines`, so its task list ends the report.
+        // Only single-line recs go here; the multi-line "speed up the longest
+        // tasks" rec is rendered LAST (after the docs link) by `longest_tasks_lines`.
         lines.push(Line::from(""));
         lines.push(Line::from(Span::styled(
             "Recommendations:",
@@ -398,16 +370,14 @@ impl CountdownPopup {
         // without one (e.g. q pressed mid-run) → the original exit dialog with
         // just the interactive hints.
         let mut content: Vec<Line> = Vec::new();
-        // Flag (via `is_some()` below) to gate the OSC 8 injection. The stored
-        // index is unused; presence is what matters.
+        // Presence gates the OSC 8 injection below; the stored index is unused.
         let mut url_line_index: Option<usize> = None;
         let report = self.build_report_lines();
         let has_report = !report.is_empty();
         if has_report {
             content.extend(report);
-            // The docs link is a "- " recommendation item; the label is turned
-            // into a clickable hyperlink by the OSC 8 injection below, or stays
-            // plain text if injection is skipped (e.g. popup too narrow).
+            // The docs link is a "- " recommendation item, hyperlinked by the OSC 8
+            // injection below (or left as plain text if that's skipped).
             url_line_index = Some(content.len());
             content.push(Line::from(vec![
                 Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
@@ -477,9 +447,8 @@ impl CountdownPopup {
 
         let time_remaining = seconds_remaining + 1;
 
-        // Title: with a report, "Performance Report" plus "— exiting in N..."
-        // while the countdown runs (dropped once pinned); without one, just
-        // "Exiting in N...".
+        // Title: "Performance Report" (+ "— exiting in N..." until pinned) with a
+        // report; just "Exiting in N..." without one.
         let mut title_spans = vec![
             Span::raw("  "),
             Span::styled(
@@ -591,14 +560,11 @@ impl CountdownPopup {
         f.render_widget(Clear, popup_area);
         f.render_widget(popup, popup_area);
 
-        // Turn the report's links into real OSC 8 hyperlinks. ratatui's text path
-        // can't carry them — the ESC/BEL framing is filtered out of cells
-        // (ratatui#1028) — so inject_osc8 locates and replaces them in the buffer.
+        // Turn the report's links into real OSC 8 hyperlinks (see inject_osc8).
         if url_line_index.is_some() {
             if let Some(s) = self.summary.as_ref() {
-                // The docs footer link, then any recommendation phrases (e.g. the
-                // remote-cache CTA spanning multiple wrapped rows). All labels and
-                // hrefs come from the payload; a phrase not shown isn't found.
+                // The docs footer link, then any recommendation phrases (labels and
+                // hrefs from the payload); a phrase that isn't shown isn't found.
                 inject_osc8(f, inner_area, &s.footer.text, &s.footer.href);
                 for link in &s.links {
                     inject_osc8(f, inner_area, &link.text, &link.href);
@@ -700,29 +666,6 @@ mod tests {
             },
             links: Vec::new(),
         }
-    }
-
-    // Kept in lockstep with the TS formatDuration; drift would make the popup and
-    // the terminal report disagree.
-    #[test]
-    fn format_duration_matches_ts() {
-        assert_eq!(format_duration(470.0), "470ms");
-        assert_eq!(format_duration(999.0), "999ms");
-        assert_eq!(format_duration(1000.0), "1.0s");
-        assert_eq!(format_duration(1500.0), "1.5s");
-        assert_eq!(format_duration(9999.0), "10.0s");
-        assert_eq!(format_duration(10000.0), "10.0s");
-        assert_eq!(format_duration(59950.0), "1m 0s");
-        assert_eq!(format_duration(60000.0), "1m 0s");
-        assert_eq!(format_duration(90000.0), "1m 30s");
-        assert_eq!(format_duration(119500.0), "2m 0s");
-    }
-
-    #[test]
-    fn pluralize_matches_ts() {
-        assert_eq!(pluralize(0, "task"), "tasks");
-        assert_eq!(pluralize(1, "task"), "task");
-        assert_eq!(pluralize(2, "task"), "tasks");
     }
 
     #[test]

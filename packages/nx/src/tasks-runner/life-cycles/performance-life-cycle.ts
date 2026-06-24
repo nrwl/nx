@@ -2,8 +2,9 @@ import * as os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
 import { TaskGraph } from '../../config/task-graph';
-import { readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { isCI as isCiEnv } from '../../utils/is-ci';
 import {
   buildExitSummaryPayload,
   buildRecommendation,
@@ -37,13 +38,21 @@ interface ChainLink {
   wait: number;
 }
 
-/** One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks eligible-but-not-running (`waiting`), and `parallelism: false` tasks running (`monopoly`). */
-interface Segment {
+/** A discrete task that ran, with its window and whether it monopolizes the pool (`parallelism: false`). */
+export interface TimedTask {
+  id: string;
+  start: number;
+  end: number;
+  nonParallel: boolean;
+}
+
+/** One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks eligible-but-not-running (`waiting`), and `parallelism: false` tasks running (`nonParallel`). */
+export interface Segment {
   start: number;
   end: number;
   occ: number;
   waiting: number;
-  monopoly: number;
+  nonParallel: number;
 }
 
 export interface PerformanceSummary {
@@ -76,18 +85,12 @@ export interface PerformanceSummary {
   remoteCacheEnabled: boolean;
 }
 
-/**
- * Environment seams for {@link PerformanceLifeCycle}. `skipNxCache` feeds the
- * cache-skipped check; the rest default to reading the live environment and are
- * supplied in tests to avoid touching process.env / the perf API / nx.json.
- */
+/** Construction-time inputs for {@link PerformanceLifeCycle}. */
 interface PerformanceLifeCycleOptions {
+  /** Whether `--skip-nx-cache` was passed (feeds the cache-skipped check). */
   skipNxCache?: boolean;
-  hashWindows?: () => Array<[number, number]>;
-  cacheSkipped?: () => boolean;
-  remoteCacheEnabled?: () => boolean;
-  isCI?: () => boolean;
-  distributingTasks?: () => boolean;
+  /** Passed in at construction so the lifecycle doesn't re-read nx.json. */
+  nxJson?: NxJsonConfiguration;
 }
 
 /**
@@ -162,53 +165,57 @@ export class PerformanceLifeCycle implements LifeCycle {
     return entry;
   }
 
-  // === Environment (overridden via constructor options in tests) ===
+  // === Environment (read from env vars / nx.json; tests drive these via env + mocks) ===
 
   private hashWindows(): Array<[number, number]> {
-    return this.options.hashWindows?.() ?? collectHashWindows();
+    return collectHashWindows();
   }
 
   private cacheSkipped(): boolean {
-    return (
-      this.options.cacheSkipped?.() ??
-      (this.options.skipNxCache === true ||
-        process.env.NX_SKIP_NX_CACHE === 'true' ||
-        process.env.NX_DISABLE_NX_CACHE === 'true')
-    );
+    // `skipNxCache` already folds in NX_SKIP_NX_CACHE / NX_DISABLE_NX_CACHE,
+    // normalized once in command-line-utils — don't re-read those env vars here.
+    return this.options.skipNxCache === true;
   }
 
   /** Whether a remote (Nx Cloud) cache is active. */
   private remoteCacheEnabled(): boolean {
-    if (this.options.remoteCacheEnabled) {
-      return this.options.remoteCacheEnabled();
-    }
     try {
-      return isNxCloudUsed(readNxJson());
+      // Prefer the nxJson handed in at construction; re-read only as a fallback.
+      return isNxCloudUsed(this.options.nxJson ?? readNxJson());
     } catch {
       return false;
     }
   }
 
   private isCI(): boolean {
-    return this.options.isCI?.() ?? !!process.env.CI;
+    // Shared helper: checks the full set of CI env vars, not just `CI`.
+    return !!isCiEnv();
   }
 
-  /** Whether the run is already distributing across machines (Agents/DTE). */
+  /**
+   * Whether the run is already distributing across machines (Agents/DTE).
+   * Future: source this from the light client (isCloudEnabled &&
+   * isDistributedExecution()) instead of reading the env var directly.
+   */
   private distributingTasks(): boolean {
-    return (
-      this.options.distributingTasks?.() ??
-      !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT
-    );
+    return !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
   }
 
-  /** Discrete tasks that ran and have a start + end timestamp. */
   // === Analysis (pure functions of the collected timings + task graph) ===
 
-  private timedTasks(): Array<{ id: string; start: number; end: number }> {
-    const result: Array<{ id: string; start: number; end: number }> = [];
+  /** Discrete tasks that ran and have a start + end timestamp. */
+  private timedTasks(): TimedTask[] {
+    const result: TimedTask[] = [];
     for (const [id, t] of this.timings) {
       if (!t.continuous && t.startTime != null && t.endTime != null) {
-        result.push({ id, start: t.startTime, end: t.endTime });
+        result.push({
+          id,
+          start: t.startTime,
+          end: t.endTime,
+          // A parallelism:false task occupies the whole pool; carried here so the
+          // occupancy timeline (buildSegments) stays a pure function of `timed`.
+          nonParallel: this.taskGraph.tasks[id]?.parallelism === false,
+        });
       }
     }
     return result;
@@ -329,62 +336,6 @@ export class PerformanceLifeCycle implements LifeCycle {
     return result;
   }
 
-  /**
-   * The occupancy timeline (contiguous {@link Segment}s) — single source of truth for
-   * slot contention. A `parallelism: false` task occupies the whole pool. Integrates
-   * over time rather than sampling one instant, so it's robust to when tasks hand off.
-   */
-  private buildSegments(
-    timed: Array<{ id: string; start: number; end: number }>,
-    eligible: Map<string, number>,
-    parallel: number
-  ): Segment[] {
-    const occDelta = new Map<number, number>();
-    const waitDelta = new Map<number, number>();
-    const monopolyDelta = new Map<number, number>();
-    const bump = (m: Map<number, number>, t: number, d: number) =>
-      m.set(t, (m.get(t) ?? 0) + d);
-
-    for (const { id, start, end } of timed) {
-      const monopolizes = this.taskGraph.tasks[id]?.parallelism === false;
-      const weight = monopolizes ? parallel : 1;
-      bump(occDelta, start, weight);
-      bump(occDelta, end, -weight);
-      if (monopolizes) {
-        bump(monopolyDelta, start, 1);
-        bump(monopolyDelta, end, -1);
-      }
-      const elig = eligible.get(id) ?? start;
-      if (elig < start) {
-        bump(waitDelta, elig, 1);
-        bump(waitDelta, start, -1);
-      }
-    }
-
-    const times = Array.from(
-      new Set([
-        ...occDelta.keys(),
-        ...waitDelta.keys(),
-        ...monopolyDelta.keys(),
-      ])
-    ).sort((a, b) => a - b);
-
-    const segments: Segment[] = [];
-    let occ = 0;
-    let waiting = 0;
-    let monopoly = 0;
-    for (let i = 0; i < times.length; i++) {
-      occ += occDelta.get(times[i]) ?? 0;
-      waiting += waitDelta.get(times[i]) ?? 0;
-      monopoly += monopolyDelta.get(times[i]) ?? 0;
-      const next = times[i + 1];
-      if (next != null && next > times[i]) {
-        segments.push({ start: times[i], end: next, occ, waiting, monopoly });
-      }
-    }
-    return segments;
-  }
-
   /** Time within [a, b] during which all slots were busy (occ ≥ parallel). */
   private saturatedTime(
     segments: Segment[],
@@ -412,27 +363,29 @@ export class PerformanceLifeCycle implements LifeCycle {
     firstTaskStart: number,
     hashWindows: Array<[number, number]>
   ): number {
-    const merged: Array<[number, number]> = [];
-    for (const [s, e] of hashWindows
-      .map(([s, e]): [number, number] => [s, Math.min(e, firstTaskStart)])
-      .filter(([s, e]) => e > s)
-      .sort((a, b) => a[0] - b[0])) {
-      const last = merged[merged.length - 1];
-      if (last && s <= last[1]) {
-        last[1] = Math.max(last[1], e);
-      } else {
-        merged.push([s, e]);
-      }
-    }
+    // Clip each window to the pre-dispatch span (anything after the first task is
+    // not pre-dispatch), drop empties, then union overlaps so they don't double-count.
+    const clipped = hashWindows
+      .map(([start, end]): [number, number] => [
+        start,
+        Math.min(end, firstTaskStart),
+      ])
+      .filter(([start, end]) => end > start);
+    const merged = mergeIntervals(clipped);
+
+    // Walk back from the first task, accumulating contiguous hashing. Stop at the
+    // first gap wider than PRE_DISPATCH_HASH_GAP — anything earlier is stale hashing
+    // from a previous run in this process (e.g. the daemon's).
     let total = 0;
     let boundary = firstTaskStart;
     for (let i = merged.length - 1; i >= 0; i--) {
-      const [s, e] = merged[i];
-      if (e < boundary - PRE_DISPATCH_HASH_GAP) {
-        break; // a real gap: everything earlier is stale
+      const [start, end] = merged[i];
+      const isStale = end < boundary - PRE_DISPATCH_HASH_GAP;
+      if (isStale) {
+        break;
       }
-      total += e - s;
-      boundary = s;
+      total += end - start;
+      boundary = start;
     }
     return total;
   }
@@ -597,7 +550,7 @@ export class PerformanceLifeCycle implements LifeCycle {
     const parallel = this.resolveParallel();
     const cores = detectCoreCount();
 
-    const segments = this.buildSegments(timed, eligible, parallel);
+    const segments = buildSegments(timed, eligible, parallel);
     const hashWindows = this.hashWindows();
     const finishChain = this.computeFinishChain(
       durations,
@@ -732,9 +685,10 @@ export function flushPerformanceReport(): void {
       return;
     }
     // Post-TUI the terminal can still be in raw mode (no \n → \r\n translation),
-    // which staircases plain "\n": use \r\n on a TTY, plain \n when piped. Don't add a
-    // trailing newline — formatReport already ends with one (an extra broke exact-match
-    // e2e snapshots).
+    // which staircases plain "\n": use \r\n on a TTY, plain \n when piped. This keys
+    // off whether stdout is a TTY, not daemon enablement — the daemon changes where
+    // tasks run, not the terminal's newline handling. Don't add a trailing newline —
+    // formatReport already ends with one (an extra broke exact-match e2e snapshots).
     const eol = process.stdout.isTTY ? '\r\n' : '\n';
     process.stdout.write(formatReport(summary).split('\n').join(eol));
   } catch (e) {
@@ -762,6 +716,26 @@ function collectHashWindows(): Array<[number, number]> {
   } catch {
     return [];
   }
+}
+
+/**
+ * Sort and union a set of intervals so the result is ordered and non-overlapping.
+ * Two intervals merge when the next one starts at or before the previous one's END
+ * (`last[1]`), extending that end to cover both.
+ */
+export function mergeIntervals(
+  intervals: Array<[number, number]>
+): Array<[number, number]> {
+  const merged: Array<[number, number]> = [];
+  for (const [start, end] of [...intervals].sort((a, b) => a[0] - b[0])) {
+    const last = merged[merged.length - 1];
+    if (last && start <= last[1]) {
+      last[1] = Math.max(last[1], end);
+    } else {
+      merged.push([start, end]);
+    }
+  }
+  return merged;
 }
 
 /** Total time [a, b] overlaps the given (unsorted, possibly overlapping) intervals. */
@@ -813,6 +787,66 @@ function detectCoreCount(): number {
 }
 
 /**
+ * The occupancy timeline (contiguous {@link Segment}s) — single source of truth for
+ * slot contention. A `parallelism: false` task occupies the whole pool. Integrates
+ * over time rather than sampling one instant, so it's robust to when tasks hand off.
+ *
+ * Builds it via a delta sweep: each task bumps a counter up at its start and down at
+ * its end, then we walk the sorted boundaries accumulating the running totals into one
+ * segment per gap.
+ */
+export function buildSegments(
+  timed: TimedTask[],
+  eligible: Map<string, number>,
+  parallel: number
+): Segment[] {
+  const occDelta = new Map<number, number>();
+  const waitDelta = new Map<number, number>();
+  const nonParallelDelta = new Map<number, number>();
+  const bump = (m: Map<number, number>, t: number, d: number) =>
+    m.set(t, (m.get(t) ?? 0) + d);
+
+  for (const { id, start, end, nonParallel: isNonParallel } of timed) {
+    // A parallelism:false task holds every slot, so it weighs the whole pool.
+    const weight = isNonParallel ? parallel : 1;
+    bump(occDelta, start, weight);
+    bump(occDelta, end, -weight);
+    if (isNonParallel) {
+      bump(nonParallelDelta, start, 1);
+      bump(nonParallelDelta, end, -1);
+    }
+    const elig = eligible.get(id) ?? start;
+    if (elig < start) {
+      bump(waitDelta, elig, 1);
+      bump(waitDelta, start, -1);
+    }
+  }
+
+  const times = Array.from(
+    new Set([
+      ...occDelta.keys(),
+      ...waitDelta.keys(),
+      ...nonParallelDelta.keys(),
+    ])
+  ).sort((a, b) => a - b);
+
+  const segments: Segment[] = [];
+  let occ = 0;
+  let waiting = 0;
+  let nonParallel = 0;
+  for (let i = 0; i < times.length; i++) {
+    occ += occDelta.get(times[i]) ?? 0;
+    waiting += waitDelta.get(times[i]) ?? 0;
+    nonParallel += nonParallelDelta.get(times[i]) ?? 0;
+    const next = times[i + 1];
+    if (next != null && next > times[i]) {
+      segments.push({ start: times[i], end: next, occ, waiting, nonParallel });
+    }
+  }
+  return segments;
+}
+
+/**
  * Split overhead off the occupancy timeline into three buckets that sum to overhead:
  * coordinator time, and slot contention recoverable by more machines vs by a higher
  * --parallel.
@@ -844,19 +878,22 @@ function splitOverhead(args: {
     criticalPathDuration,
   } = args;
   let slotContendedTime = 0;
-  let monopolizedContendedTime = 0;
+  let nonParallelContendedTime = 0;
   for (const s of segments) {
     if (s.occ >= parallel && s.waiting > 0) {
       const dur = s.end - s.start;
       slotContendedTime += dur;
-      if (s.monopoly > 0) {
-        monopolizedContendedTime += dur;
+      if (s.nonParallel > 0) {
+        nonParallelContendedTime += dur;
       }
     }
   }
   const recoverableBySlots = Math.min(overhead, slotContendedTime);
-  const monopolized = Math.min(recoverableBySlots, monopolizedContendedTime);
-  const ordinaryBySlots = recoverableBySlots - monopolized;
+  const nonParallelRecoverable = Math.min(
+    recoverableBySlots,
+    nonParallelContendedTime
+  );
+  const ordinaryBySlots = recoverableBySlots - nonParallelRecoverable;
   const machineBound =
     parallel < cores
       ? Math.max(0, totalWork / cores - criticalPathDuration)
@@ -864,7 +901,7 @@ function splitOverhead(args: {
   const ordinaryByMachines = Math.min(ordinaryBySlots, machineBound);
   return {
     coordinatorOverhead: overhead - recoverableBySlots,
-    recoverableByMachines: monopolized + ordinaryByMachines,
+    recoverableByMachines: nonParallelRecoverable + ordinaryByMachines,
     recoverableByParallel: ordinaryBySlots - ordinaryByMachines,
   };
 }

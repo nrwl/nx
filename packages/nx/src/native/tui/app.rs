@@ -760,7 +760,10 @@ impl App {
 
                 // If countdown popup is open, handle its keyboard events
                 if matches!(self.focus, Focus::CountdownPopup) {
-                    // Any key pressed (other than scroll keys if the popup is scrollable) will cancel the countdown
+                    // Control keys (q, Ctrl-C, scroll/pin, p, Esc) are handled here and
+                    // return. Any other key dismisses the popup and then falls through
+                    // to its normal handler below, so the keystroke isn't wasted just
+                    // closing the report.
                     if let Some(countdown_popup) = self
                         .components
                         .iter_mut()
@@ -822,14 +825,16 @@ impl App {
                                 return Ok(false);
                             }
                             _ => {
+                                // Dismiss the report, then fall through (no early
+                                // return) so this key still performs its normal action.
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
                                 self.update_focus(self.previous_focus);
                             }
                         }
                     }
-
-                    return Ok(false);
+                    // No early return: control keys above already returned; a dismissal
+                    // falls through to the normal key handling below.
                 }
 
                 // If hint popup is open, only ESC dismisses it

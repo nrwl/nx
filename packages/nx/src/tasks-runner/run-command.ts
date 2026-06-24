@@ -228,14 +228,20 @@ async function getTerminalOutputLifeCycle(
       );
       lifeCycles.unshift(appLifeCycle);
 
-      // Wrap (not replace) endCommand to forward the report to the TUI's exit-countdown popup; guard so a missing/renamed native method skips delivery instead of throwing.
+      // The orchestrator calls the generic `LifeCycle.endCommand()` with no
+      // arguments, but the TUI's native endCommand accepts an optional performance
+      // summary for its exit-countdown popup. Wrap the instance method to inject that
+      // summary — so we're adding an argument the caller never passes, not dropping
+      // one. Only multi-task runs feed the popup; a single-task run exits with no
+      // popup, leaving its report for the terminal flush below. Guarded: if the
+      // native method is somehow absent (stale binding) we skip the popup rather than
+      // break the run, since the report is cosmetic.
       const typedAppLifeCycle = appLifeCycle as AppLifeCycleClass;
-      const boundEndCommand =
+      const nativeEndCommand =
         typedAppLifeCycle.endCommand?.bind(typedAppLifeCycle);
-      if (typeof boundEndCommand === 'function') {
-        // Only multi-task runs feed the popup; a single-task run exits with no popup, leaving its report for the terminal flush below.
+      if (nativeEndCommand) {
         typedAppLifeCycle.endCommand = () =>
-          boundEndCommand(
+          nativeEndCommand(
             tasks.length > 1
               ? (getPerformanceSummaryPayload() ?? undefined)
               : undefined
@@ -1012,7 +1018,7 @@ export async function invokeTasksRunner({
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle, taskGraph, nxArgs.skipNxCache),
+    ...constructLifeCycles(lifeCycle, taskGraph, nxArgs.skipNxCache, nxJson),
     taskResultsLifecycle,
   ]);
 
@@ -1109,7 +1115,8 @@ export async function invokeTasksRunner({
 export function constructLifeCycles(
   lifeCycle: LifeCycle,
   taskGraph: TaskGraph,
-  skipNxCache?: boolean
+  skipNxCache?: boolean,
+  nxJson?: NxJsonConfiguration
 ): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
@@ -1120,7 +1127,7 @@ export function constructLifeCycles(
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  lifeCycles.push(new PerformanceLifeCycle(taskGraph, { skipNxCache }));
+  lifeCycles.push(new PerformanceLifeCycle(taskGraph, { skipNxCache, nxJson }));
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);

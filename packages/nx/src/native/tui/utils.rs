@@ -48,6 +48,31 @@ pub fn format_duration_with_estimate(actual_ms: i64, estimated_ms: Option<i64>) 
     }
 }
 
+/// Format a millisecond duration to match the TS `formatDuration` used by the
+/// performance report (e.g. "470ms", "13.4s", "1m 30s"). Distinct from
+/// `format_duration` above: this rolls into minutes and takes an `f64`, so the
+/// countdown popup renders identically to the terminal report.
+pub fn format_report_duration(ms: f64) -> String {
+    if ms < 1000.0 {
+        return format!("{}ms", ms.round() as i64);
+    }
+    let seconds = (ms / 100.0).round() / 10.0;
+    if seconds >= 60.0 {
+        let total = (ms / 1000.0).round() as i64;
+        return format!("{}m {}s", total / 60, total % 60);
+    }
+    format!("{:.1}s", seconds)
+}
+
+/// Append "s" unless `count` is 1 (mirrors the TS `pluralize`; regular plurals).
+pub fn pluralize(count: u32, noun: &str) -> String {
+    if count == 1 {
+        noun.to_string()
+    } else {
+        format!("{noun}s")
+    }
+}
+
 /// Calculate actual duration in milliseconds from epoch-based timing.
 ///
 /// This handles the different cases:
@@ -292,6 +317,29 @@ fn pad_symbol(symbol: &str, padding: usize) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // Kept in lockstep with the TS formatDuration; drift would make the popup and
+    // the terminal report disagree.
+    #[test]
+    fn format_report_duration_matches_ts() {
+        assert_eq!(format_report_duration(470.0), "470ms");
+        assert_eq!(format_report_duration(999.0), "999ms");
+        assert_eq!(format_report_duration(1000.0), "1.0s");
+        assert_eq!(format_report_duration(1500.0), "1.5s");
+        assert_eq!(format_report_duration(9999.0), "10.0s");
+        assert_eq!(format_report_duration(10000.0), "10.0s");
+        assert_eq!(format_report_duration(59950.0), "1m 0s");
+        assert_eq!(format_report_duration(60000.0), "1m 0s");
+        assert_eq!(format_report_duration(90000.0), "1m 30s");
+        assert_eq!(format_report_duration(119500.0), "2m 0s");
+    }
+
+    #[test]
+    fn pluralize_matches_ts() {
+        assert_eq!(pluralize(0, "task"), "tasks");
+        assert_eq!(pluralize(1, "task"), "task");
+        assert_eq!(pluralize(2, "task"), "tasks");
+    }
 
     // Helper function to create a TaskItem for testing
     fn create_task(name: &str, status: TaskStatus, end_time: Option<i64>) -> TaskItem {
