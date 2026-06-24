@@ -16,7 +16,6 @@ const UTM = '?utm=performance-report';
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
-/** Visible label for the footer docs link; the href is {@link NX_PERFORMANCE_LINK}. */
 const NX_PERFORMANCE_LABEL = `Learn how to improve your run's performance`;
 /** Visible URL ⇄ tagged target pairs for {@link linkify}. */
 const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
@@ -24,9 +23,8 @@ const REPORT_LINKS: ReadonlyArray<{ visible: string; href: string }> = [
   { visible: NX_AGENTS_URL, href: NX_AGENTS_LINK },
 ];
 /**
- * Whole-phrase CTA: the whole sentence is the link. {@link linkify} hyperlinks it
- * on a terminal; the TUI popup hyperlinks it from the phrase + href carried in the
- * exit payload's `links`, so the Rust side keeps no copy of this string.
+ * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
+ * copy of this string; it gets the phrase + href from the exit payload's `links`.
  */
 const NX_REMOTE_CACHE_CTA =
   'Drastically reduce your run duration by sharing a cache across your team and CI';
@@ -47,10 +45,7 @@ const EPS = 0;
 const MEANINGFUL_OVERHEAD = 1000;
 /** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
-/**
- * Gap (ms) still counted as the same pre-dispatch hashing phase. A larger gap means
- * older, unrelated hashing in the same process (e.g. a daemon's previous run) — excluded.
- */
+/** Gap (ms) still counted as the same pre-dispatch hashing phase; a larger gap means older, unrelated hashing (e.g. a daemon's previous run). */
 const PRE_DISPATCH_HASH_GAP = 1000;
 
 interface TaskTiming {
@@ -67,11 +62,7 @@ interface ChainLink {
   wait: number;
 }
 
-/**
- * One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks
- * eligible-but-not-running (`waiting`), and how many `parallelism: false` tasks are
- * running (`monopoly`). Produced by {@link PerformanceLifeCycle.buildSegments}.
- */
+/** One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks eligible-but-not-running (`waiting`), and `parallelism: false` tasks running (`monopoly`). */
 interface Segment {
   start: number;
   end: number;
@@ -86,10 +77,7 @@ export interface PerformanceSummary {
   criticalPathTaskCount: number;
   /** Diagnostic only, not displayed; the overhead split comes from the occupancy timeline. */
   finishChain: ChainLink[];
-  /**
-   * Longest critical-path tasks that ran (desc, capped at a few), cache hits excluded.
-   * Named inline by the "speed up or split" rec; empty when the path was fully cached.
-   */
+  /** Longest critical-path tasks that ran (desc, capped at a few), cache hits excluded; empty when the path was fully cached. */
   criticalPathTop: Array<{ id: string; duration: number }>;
   /** runDuration − criticalPathDuration. */
   overhead: number;
@@ -101,11 +89,7 @@ export interface PerformanceSummary {
   recoverableByParallel: number;
   recoverableByMachines: number;
   coordinatorOverhead: number;
-  /**
-   * Diagnostic: dispatch/scheduling latency — time a task was eligible with a free
-   * slot but not yet started (hashing excluded). A measured slice of the
-   * coordinator residual; never displayed in the report.
-   */
+  /** Diagnostic, never displayed: dispatch/scheduling latency (eligible with a free slot but unstarted, hashing excluded). */
   schedulingOverhead: number;
   parallel: number;
   cores: number;
@@ -122,17 +106,33 @@ export interface PerformanceSummary {
 }
 
 /**
+ * Environment seams for {@link PerformanceLifeCycle}. `skipNxCache` feeds the
+ * cache-skipped check; the rest default to reading the live environment and are
+ * supplied in tests to avoid touching process.env / the perf API / nx.json.
+ */
+interface PerformanceLifeCycleOptions {
+  skipNxCache?: boolean;
+  hashWindows?: () => Array<[number, number]>;
+  cacheSkipped?: () => boolean;
+  remoteCacheEnabled?: () => boolean;
+  isCI?: () => boolean;
+  distributingTasks?: () => boolean;
+}
+
+/**
  * Measures how much wall-clock a run loses to parallelism contention versus its
- * critical-path floor, and prints a report at the end of a normal task run. It is
- * added by `constructLifeCycles` only when a task graph is supplied (the main
- * `invokeTasksRunner` path) — not the programmatic `init-tasks-runner` path.
- * overhead = runDuration − criticalPathDuration, split by
- * CAUSE off the occupancy timeline: slot-queued time (recoverable by parallelism /
- * machines) versus coordinator time (hashing, scheduling, continuous-dep waits).
+ * critical-path floor, and reports it at the end of a run. Added on every run by
+ * `constructLifeCycles`, but only emitted where the report is flushed (the CLI
+ * `invokeTasksRunner` path) — the programmatic `init-tasks-runner` path collects
+ * timings but never displays them.
  *
- * Scope: discrete tasks only. Continuous tasks (no end time) are excluded from
- * every duration calculation; a discrete task's wait for a continuous dependency
- * to start is treated as eligibility, not contention.
+ * overhead = runDuration − criticalPathDuration, split by CAUSE off the occupancy
+ * timeline: slot-queued time (recoverable by parallelism / machines) versus
+ * coordinator time (hashing, scheduling, continuous-dep waits).
+ *
+ * Scope: discrete tasks only. Continuous tasks (no end time) are excluded; a
+ * discrete task's wait for a continuous dependency to start is eligibility, not
+ * contention.
  */
 export class PerformanceLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
@@ -145,7 +145,7 @@ export class PerformanceLifeCycle implements LifeCycle {
 
   constructor(
     private readonly taskGraph: TaskGraph,
-    private readonly skipNxCacheOption = false
+    private readonly options: PerformanceLifeCycleOptions = {}
   ) {
     activePerformanceLifeCycle = this;
   }
@@ -189,22 +189,24 @@ export class PerformanceLifeCycle implements LifeCycle {
     return entry;
   }
 
-  /** Hashing windows used to attribute waits to hashing. Overridable in tests. */
-  protected hashWindows(): Array<[number, number]> {
-    return collectHashWindows();
+  private hashWindows(): Array<[number, number]> {
+    return this.options.hashWindows?.() ?? collectHashWindows();
   }
 
-  /** Whether the cache was bypassed this run. Overridable in tests. */
-  protected cacheSkipped(): boolean {
+  private cacheSkipped(): boolean {
     return (
-      this.skipNxCacheOption ||
-      process.env.NX_SKIP_NX_CACHE === 'true' ||
-      process.env.NX_DISABLE_NX_CACHE === 'true'
+      this.options.cacheSkipped?.() ??
+      (this.options.skipNxCache === true ||
+        process.env.NX_SKIP_NX_CACHE === 'true' ||
+        process.env.NX_DISABLE_NX_CACHE === 'true')
     );
   }
 
-  /** Whether a remote (Nx Cloud) cache is active. Overridable in tests. */
-  protected remoteCacheEnabled(): boolean {
+  /** Whether a remote (Nx Cloud) cache is active. */
+  private remoteCacheEnabled(): boolean {
+    if (this.options.remoteCacheEnabled) {
+      return this.options.remoteCacheEnabled();
+    }
     try {
       return isNxCloudUsed(readNxJson());
     } catch {
@@ -212,14 +214,16 @@ export class PerformanceLifeCycle implements LifeCycle {
     }
   }
 
-  /** Whether the run is in CI. Overridable in tests. */
-  protected isCI(): boolean {
-    return !!process.env.CI;
+  private isCI(): boolean {
+    return this.options.isCI?.() ?? !!process.env.CI;
   }
 
-  /** Whether the run is already distributing across machines (Agents/DTE). Overridable in tests. */
-  protected distributingTasks(): boolean {
-    return !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
+  /** Whether the run is already distributing across machines (Agents/DTE). */
+  private distributingTasks(): boolean {
+    return (
+      this.options.distributingTasks?.() ??
+      !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT
+    );
   }
 
   /** Discrete tasks that ran and have a start + end timestamp. */
@@ -236,12 +240,9 @@ export class PerformanceLifeCycle implements LifeCycle {
   /**
    * Longest-duration chain through the dependency DAG — the floor with unlimited
    * slots. `finishEst[t] = duration[t] + max(finishEst[p] for predecessors p)`.
-   *
-   * Predecessors are real dependencies *plus* earlier batch siblings: a batch runs
-   * sequentially in one process, so that ordering is part of the floor too (else
-   * unavoidable batch-sequencing time would look recoverable). On equal finish
-   * estimates keep the longer-running predecessor. An in-progress guard terminates
-   * on a malformed cyclic graph.
+   * Predecessors are real dependencies *plus* earlier batch siblings (a batch runs
+   * sequentially in one process, so that ordering is part of the floor too). On equal
+   * finish estimates keep the longer-running predecessor.
    */
   private criticalPath(durations: Map<string, number>): {
     path: string[];
@@ -257,8 +258,8 @@ export class PerformanceLifeCycle implements LifeCycle {
         durations.has(d)
       );
       // Only a batch sibling that FINISHED before this task started is a real
-      // sequencing predecessor; batch executors may run concurrently with staggered
-      // starts, and chaining those would inflate the floor. (Matches earliestStart.)
+      // sequencing predecessor; batch executors may run concurrently, and chaining
+      // those would inflate the floor. (Matches earliestStart.)
       const siblings = (this.batchSiblings.get(id) ?? []).filter((s) => {
         const sEnd = this.timings.get(s)?.endTime;
         return durations.has(s) && sEnd != null && sEnd <= start;
@@ -307,8 +308,8 @@ export class PerformanceLifeCycle implements LifeCycle {
       }
     }
 
-    // Walk predecessors back to the root; onPath guards a `pred` cycle on a
-    // malformed graph (the finishEst guard alone doesn't keep `pred` acyclic).
+    // onPath guards a `pred` cycle on a malformed graph (the finishEst guard alone
+    // doesn't keep `pred` acyclic).
     const path: string[] = [];
     const onPath = new Set<string>();
     for (
@@ -352,11 +353,9 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   /**
-   * Occupancy timeline: contiguous segments, each carrying slots busy (`occ`),
-   * tasks eligible-but-not-running (`waiting`), and how many `parallelism: false`
-   * tasks are running (`monopoly`). A `parallelism: false` task occupies the whole
-   * pool. Single source of truth for slot contention; integrates over time rather
-   * than sampling one instant, so it's robust to when tasks hand off.
+   * The occupancy timeline (contiguous {@link Segment}s) — single source of truth for
+   * slot contention. A `parallelism: false` task occupies the whole pool. Integrates
+   * over time rather than sampling one instant, so it's robust to when tasks hand off.
    */
   private buildSegments(
     timed: Array<{ id: string; start: number; end: number }>,
@@ -427,11 +426,10 @@ export class PerformanceLifeCycle implements LifeCycle {
 
   /**
    * Coordinator hashing wall-clock before the first task started (the run window
-   * would otherwise miss it). Union the hash windows, walk back from the first task
-   * start, summing each interval within {@link PRE_DISPATCH_HASH_GAP} of the previous,
-   * and stop at the first larger gap (older, unrelated hashing). Counts the full
-   * phase regardless of how fast tasks then ran — matters on a cached run where
-   * hashing dominates but tasks restore in milliseconds.
+   * would otherwise miss it). Walk back from the first task start, summing merged
+   * hash intervals within {@link PRE_DISPATCH_HASH_GAP} of the previous, stopping at
+   * the first larger gap. Matters on a cached run where hashing dominates but tasks
+   * restore in milliseconds.
    */
   private preDispatchHashTime(
     firstTaskStart: number,
@@ -463,10 +461,10 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   /**
-   * Lineage of the LAST task to finish: walk back from max-endTime through whatever
-   * it waited on. Unlike the critical path (longest-duration chain), this follows
-   * the task that finished last — in a slot-starved run an off-path task that queued
-   * for a slot — so its waits explain the overhead.
+   * Lineage of the LAST task to finish, walking back through whatever it waited on.
+   * Unlike the critical path (longest-duration chain), this follows the task that
+   * finished last (in a slot-starved run, an off-path task that queued for a slot),
+   * so its waits explain the overhead.
    */
   private finishLineage(durations: Map<string, number>): string[] {
     let terminal: string | null = null;
@@ -489,9 +487,9 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   /**
-   * The predecessor (dependency or earlier batch sibling) that finished latest, and
-   * thus gated this task's start. Mirrors criticalPath's predecessor set, but picks
-   * by end time (who held this up) not finish estimate (who makes the floor longest).
+   * The predecessor (dependency or earlier batch sibling) that finished latest, thus
+   * gating this task's start. Picks by end time (who held this up), not finish
+   * estimate (who makes the floor longest, as in criticalPath).
    */
   private latestFinishingPredecessor(
     id: string,
@@ -526,7 +524,7 @@ export class PerformanceLifeCycle implements LifeCycle {
   /**
    * The `--parallel` value, recovered from the thread-pool total reported to
    * startCommand: `total = discrete + continuousCount` (see getThreadPoolSize), so
-   * subtracting the continuous count gives `--parallel` back. Falls back to 1.
+   * subtracting the continuous count gives it back. Falls back to 1.
    */
   private resolveParallel(): number {
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
@@ -537,7 +535,7 @@ export class PerformanceLifeCycle implements LifeCycle {
 
   /**
    * Lineage of the last-finishing task with each link's wait classified
-   * (root/dep/slot/hashing/other). Diagnostic only — never displayed; the overhead
+   * (root/dep/slot/hashing/other). Diagnostic only, never displayed; the overhead
    * split is read from the occupancy timeline, not from here.
    */
   private computeFinishChain(
@@ -569,9 +567,9 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   /**
-   * Longest critical-path tasks that RAN (desc, capped at 3) — the lever when no
-   * parallelism lever applies. Cache hits are excluded (their duration is just
-   * restore time); tasks with no recorded status (e.g. synthetic test runs) are kept.
+   * Longest critical-path tasks that RAN (desc, capped at 3). Cache hits are excluded
+   * (their duration is just restore time); no-status tasks (synthetic test runs) are
+   * kept.
    */
   private computeCriticalPathTop(
     criticalPathTasks: string[],
@@ -587,11 +585,7 @@ export class PerformanceLifeCycle implements LifeCycle {
       .slice(0, 3);
   }
 
-  /**
-   * Cache outcome from the recorded statuses: tasks restored (`cacheHits`) and the
-   * total that had a cache outcome (`cacheableCount` = hits + ran). No-status tasks
-   * (synthetic test runs) count for neither.
-   */
+  /** Cache outcome: tasks restored (`cacheHits`) and the total with a cache outcome (`cacheableCount` = hits + ran). No-status tasks count for neither. */
   private computeCacheStats(): { cacheHits: number; cacheableCount: number } {
     let cacheHits = 0;
     let cacheRan = 0;
@@ -718,8 +712,8 @@ let activePerformanceLifeCycle: PerformanceLifeCycle | null = null;
 
 /**
  * Structured report for the TUI's exit-countdown popup, or null when nothing to
- * show. Clears the active lifecycle so the popup owns the report and a later
- * terminal flush can't re-print it. Best-effort: a throw degrades to null.
+ * show. Clears the active lifecycle so the popup owns the report and a later terminal
+ * flush can't re-print it. Best-effort: a throw degrades to null.
  */
 export function getPerformanceSummaryPayload(): PerformanceSummaryPayload | null {
   const lifeCycle = activePerformanceLifeCycle;
@@ -734,8 +728,8 @@ export function getPerformanceSummaryPayload(): PerformanceSummaryPayload | null
     activePerformanceLifeCycle = null;
     return buildExitSummaryPayload(summary);
   } catch (e) {
-    // Best-effort: the report must never break the run. Surface the cause only
-    // under verbose logging so a silently-missing report is still debuggable.
+    // Best-effort: the report must never break the run. Surface the cause only under
+    // verbose logging so a missing report stays debuggable.
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
     }
@@ -761,24 +755,21 @@ export function flushPerformanceReport(): void {
       return;
     }
     // Post-TUI the terminal can still be in raw mode (no \n → \r\n translation),
-    // which staircases plain "\n". Use \r\n on a TTY; plain \n when piped.
-    // `formatReport` already ends with a trailing newline, so don't add another
-    // (that left a stray blank line that broke exact-match e2e snapshots).
+    // which staircases plain "\n": use \r\n on a TTY, plain \n when piped. Don't add a
+    // trailing newline — formatReport already ends with one (an extra broke exact-match
+    // e2e snapshots).
     const eol = process.stdout.isTTY ? '\r\n' : '\n';
     process.stdout.write(formatReport(summary).split('\n').join(eol));
   } catch (e) {
-    // best-effort report; never let it affect the run's exit behavior. Surface
-    // the cause only under verbose logging so a missing report stays debuggable.
+    // Best-effort report; never let it affect the run's exit behavior. Surface the
+    // cause only under verbose logging.
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
       console.error(e);
     }
   }
 }
 
-/**
- * Absolute-epoch [start, end] hashing windows, read from nx's existing `hash*` perf
- * measures. Returns [] if the performance API is unavailable.
- */
+/** Absolute-epoch [start, end] hashing windows from nx's existing `hash*` perf measures; [] if the performance API is unavailable. */
 function collectHashWindows(): Array<[number, number]> {
   try {
     const origin = performance.timeOrigin;
@@ -794,11 +785,7 @@ function collectHashWindows(): Array<[number, number]> {
   }
 }
 
-/**
- * Slot-contention time recoverable by parallelism or more machines — the single
- * source for the "recoverable" number the report and the TUI payload both show.
- * Derived, never stored, so the two halves can't drift from their sum.
- */
+/** Slot-contention time recoverable by parallelism or more machines (the "recoverable" number both the report and TUI payload show). Derived, never stored, so the halves can't drift from their sum. */
 function recoverableTime(s: PerformanceSummary): number {
   return s.recoverableByParallel + s.recoverableByMachines;
 }
@@ -844,10 +831,7 @@ function computeRunWindow(
   };
 }
 
-/**
- * cgroup-aware core count so a quota-capped CI container gets the right lever
- * (more machines, not a --parallel it can't use). cpus() only as fallback.
- */
+/** cgroup-aware core count so a quota-capped CI container gets the right lever (more machines, not a --parallel it can't use). cpus() only as fallback. */
 function detectCoreCount(): number {
   return typeof os.availableParallelism === 'function'
     ? os.availableParallelism()
@@ -855,15 +839,15 @@ function detectCoreCount(): number {
 }
 
 /**
- * Split overhead by CAUSE off the occupancy timeline into three buckets that sum
- * to overhead: coordinator time, and slot contention recoverable by more machines
- * vs by a higher --parallel.
+ * Split overhead off the occupancy timeline into three buckets that sum to overhead:
+ * coordinator time, and slot contention recoverable by more machines vs by a higher
+ * --parallel.
  *
  * Slot contention is wall-clock where every slot was busy with a backlog (occ ≥
- * parallel, waiting > 0). Contention while a `parallelism: false` task held the
- * whole pool goes to machines only — a higher local --parallel can't recover it.
- * Of the rest, --parallel helps up to the volume the cores can absorb; the
- * overflow (totalWork/cores − floor) needs more machines.
+ * parallel, waiting > 0). Contention while a `parallelism: false` task held the whole
+ * pool goes to machines only (a higher local --parallel can't recover it). Of the
+ * rest, --parallel helps up to the volume the cores can absorb; the overflow
+ * (totalWork/cores − floor) needs more machines.
  */
 function splitOverhead(args: {
   segments: Segment[];
@@ -911,11 +895,7 @@ function splitOverhead(args: {
   };
 }
 
-/**
- * Dispatch/scheduling latency: wall-clock where a slot was free (occ < parallel)
- * with a task eligible but unstarted, minus any hashing in that window. Diagnostic
- * only; never displayed.
- */
+/** Dispatch/scheduling latency: wall-clock with a free slot (occ < parallel) and a task eligible but unstarted, minus hashing in that window. Diagnostic only, never displayed. */
 function computeSchedulingOverhead(
   segments: Segment[],
   parallel: number,
@@ -930,11 +910,7 @@ function computeSchedulingOverhead(
   }, 0);
 }
 
-/**
- * Actionable levers to go faster, one rec per lever (pure advice; the header stats
- * already diagnose the run). The critical-path case has two (shorten the chain,
- * distribute the rest). Agents advice is omitted unless `canDistribute`.
- */
+/** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Agents advice is omitted unless `canDistribute`. */
 function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
@@ -959,9 +935,8 @@ function buildRecommendation(args: {
   } = args;
 
   if (distributing) {
-    // Already on agents: more agents (not local --parallel) is the parallelism lever,
-    // sized by total recoverable slot-contention. The cores/machine framing below
-    // doesn't apply to a distributed run.
+    // Already on agents: more agents (not local --parallel) is the parallelism lever;
+    // the cores/machine framing below doesn't apply to a distributed run.
     const recoverable = recoverableByParallel + recoverableByMachines;
     if (
       runDuration > 0 &&
@@ -998,10 +973,9 @@ function buildRecommendation(args: {
             : `${base} If they're I/O-bound, a higher --parallel may help.`,
         ];
       }
-      // Below the core ceiling but still machine-bound: a task is monopolizing the
-      // pool (parallelism: false) or the volume exceeds what these cores can absorb.
-      // A higher --parallel can't free those slots; only more machines can — and
-      // that lever only exists in CI, so locally there's nothing to recommend.
+      // Below the core ceiling but still machine-bound (a parallelism:false task
+      // monopolizes the pool, or volume exceeds the cores): only more machines can
+      // free those slots, and that lever only exists in CI.
       return canDistribute
         ? [
             `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → ${NX_AGENTS_LINK}.`,
@@ -1009,7 +983,7 @@ function buildRecommendation(args: {
         : [];
     }
     // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are
-    // the only lever; locally nothing actionable, so no recommendation.
+    // the only lever; locally nothing actionable.
     if (coordinatorDominated) {
       return canDistribute
         ? [
@@ -1018,8 +992,8 @@ function buildRecommendation(args: {
         : [];
     }
   }
-  // Critical-path-bound: shorten the chain's longest tasks (named inline, they ARE
-  // the lever) and distribute the rest. Nothing ran (fully cached) → no rec.
+  // Critical-path-bound: shorten the chain's longest tasks and distribute the rest.
+  // Nothing ran (fully cached) → no rec.
   if (criticalPathTop.length === 0) {
     return [];
   }
@@ -1061,9 +1035,9 @@ function pluralize(count: number, noun: string): string {
 }
 
 /**
- * Recommendations in display order, cheapest first: "recover up to X" parallelism
- * lever → remote-cache rec → other levers → "speed up / split" LAST (deepest manual
- * work, the only multi-line rec). Shared by the report and TUI payload.
+ * Recommendations in display order, cheapest first: "recover up to X" → remote-cache
+ * → other levers → "speed up / split" LAST (deepest manual work, the only multi-line
+ * rec). Shared by the report and TUI payload.
  */
 function orderedRecommendations(s: PerformanceSummary): string[] {
   const levers = [...s.recommendations];
@@ -1079,10 +1053,10 @@ function orderedRecommendations(s: PerformanceSummary): string[] {
 }
 
 /**
- * Build the structured payload for the TUI's exit-countdown popup, which renders
- * the visual natively in Rust (the terminal path uses {@link formatReport}). The
- * shape is the generated napi {@link PerformanceSummaryPayload}, imported rather
- * than re-declared so the producer and the Rust struct can't drift.
+ * Build the payload for the TUI's exit-countdown popup, which renders natively in Rust
+ * (the terminal path uses {@link formatReport}). The shape is the generated napi
+ * {@link PerformanceSummaryPayload}, imported not re-declared so the producer and the
+ * Rust struct can't drift.
  */
 function buildExitSummaryPayload(
   s: PerformanceSummary
@@ -1094,8 +1068,8 @@ function buildExitSummaryPayload(
     criticalPathMs: s.criticalPathDuration,
     criticalPathTaskCount: s.criticalPathTaskCount,
     recoverableMs: recoverableTime(s),
-    // One nested field instead of a hits/total pair: "one set, the other not" is
-    // unrepresentable, and the Rust side drops its defensive match.
+    // One nested field, not a hits/total pair: "one set, the other not" is
+    // unrepresentable, so the Rust side drops its defensive match.
     cache: hasCache
       ? { hits: s.cacheHits, total: s.cacheableCount }
       : undefined,
@@ -1112,10 +1086,10 @@ function buildExitSummaryPayload(
 
 /**
  * Make the report's docs links clickable on OSC 8 terminals (URL-links → clean-URL
- * hyperlink; phrase-links → whole sentence hyperlinks). Without OSC 8 (CI, pipes)
- * URLs print verbatim and phrase-links get the URL appended. Terminal-only: never
- * run this over the TUI popup strings — ratatui strips the escape bytes, so the
- * popup re-creates the links natively.
+ * hyperlink; phrase-links → whole-sentence hyperlinks). Without OSC 8 (CI, pipes) URLs
+ * print verbatim and phrase-links get the URL appended. Terminal-only: never run over
+ * the TUI popup strings — ratatui strips the escape bytes, so the popup re-creates the
+ * links natively.
  */
 function linkify(text: string): string {
   let out = text;
@@ -1138,8 +1112,7 @@ function linkify(text: string): string {
 export function formatReport(s: PerformanceSummary): string {
   const fmt = formatDuration;
   // Shows two of run duration's three parts (critical path + recoverable); the third,
-  // coordinator overhead, is computed but not displayed, so the two don't sum to run
-  // duration. "Critical path", not "floor" — durations shift with --parallel.
+  // coordinator overhead, isn't displayed, so the two don't sum to run duration.
   const recoverable = recoverableTime(s);
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
@@ -1170,7 +1143,6 @@ export function formatReport(s: PerformanceSummary): string {
     const [first, ...rest] = r.split('\n');
     return [`    - ${first}`, ...rest.map((l) => `      ${l}`)];
   };
-  // Nothing actionable → no recommendation section.
   if (recommendations.length > 0) {
     const onlySingleLine =
       recommendations.length === 1 && !recommendations[0].includes('\n');
@@ -1184,8 +1156,8 @@ export function formatReport(s: PerformanceSummary): string {
       );
     }
   }
-  // Footer guide, utm-tagged. linkify shows the clean URL and hides the utm in the
-  // OSC 8 target; without OSC 8 the tagged URL prints verbatim (auto-linked).
+  // utm-tagged footer: linkify hides the utm in the OSC 8 target; without OSC 8 the
+  // tagged URL prints verbatim.
   lines.push('', linkify(`  ${NX_PERFORMANCE_LABEL} → ${NX_PERFORMANCE_LINK}`));
   lines.push('');
   return lines.join('\n');
@@ -1214,7 +1186,6 @@ function buildCacheAdvice(s: PerformanceSummary): string | null {
   if (s.cacheableCount === 0) {
     return null;
   }
-  // Recommend Nx Cloud only when local caching is barely helping AND remote is off.
   const hitRate = s.cacheHits / s.cacheableCount;
   if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
     // Whole sentence is the link (see PHRASE_LINKS / linkify).
@@ -1228,7 +1199,7 @@ export function formatDuration(ms: number): string {
   if (ms < 1000) {
     return `${Math.round(ms)}ms`;
   }
-  const seconds = Math.round(ms / 100) / 10; // seconds, rounded to 0.1
+  const seconds = Math.round(ms / 100) / 10;
   if (seconds >= 60) {
     const totalSeconds = Math.round(ms / 1000);
     return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`;

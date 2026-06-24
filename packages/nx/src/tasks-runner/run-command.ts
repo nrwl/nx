@@ -19,8 +19,7 @@ import {
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
 import { hashArray, logDebug, RunMode } from '../native';
-// Type-only alias (the runtime `AppLifeCycle` is dynamically imported below) used
-// to type the endCommand wrapper without shadowing that runtime binding.
+// Type-only alias; the runtime `AppLifeCycle` is dynamically imported below, so this avoids shadowing it.
 import type { AppLifeCycle as AppLifeCycleClass } from '../native';
 import {
   runPostTasksExecution,
@@ -229,17 +228,12 @@ async function getTerminalOutputLifeCycle(
       );
       lifeCycles.unshift(appLifeCycle);
 
-      // Wrap (not replace) the endCommand hook so that when the normal lifecycle
-      // flow fires it, we forward the structured report for the TUI to render in
-      // its exit-countdown popup. Guard it so a missing/renamed native method just
-      // skips delivery instead of throwing. The cast type-checks the call against
-      // PerformanceSummaryPayload (`appLifeCycle` is `any` from the dynamic import).
+      // Wrap (not replace) endCommand to forward the report to the TUI's exit-countdown popup; guard so a missing/renamed native method skips delivery instead of throwing.
       const typedAppLifeCycle = appLifeCycle as AppLifeCycleClass;
       const boundEndCommand =
         typedAppLifeCycle.endCommand?.bind(typedAppLifeCycle);
       if (typeof boundEndCommand === 'function') {
-        // A single-task run exits with no popup, so leave its report unconsumed for
-        // the terminal flush below; only multi-task runs feed the popup.
+        // Only multi-task runs feed the popup; a single-task run exits with no popup, leaving its report for the terminal flush below.
         typedAppLifeCycle.endCommand = () =>
           boundEndCommand(
             tasks.length > 1
@@ -593,9 +587,7 @@ export async function runCommandForTasks(
       printSummary();
     }
 
-    // In a multi-task TUI run the report was rendered in the exit-countdown popup
-    // during the run; otherwise (non-TUI, or a single-task TUI run that exited
-    // immediately with no popup) print it to the terminal now that it's restored.
+    // Multi-task TUI runs already rendered the report in the popup; otherwise (non-TUI, or single-task TUI with no popup) print it to the restored terminal.
     if (!isTuiEnabled() || tasks.length <= 1) {
       flushPerformanceReport();
     }
@@ -611,10 +603,7 @@ export async function runCommandForTasks(
     };
   } catch (e) {
     restoreTerminal?.();
-    // Print the report to the restored terminal. No-ops if the popup already
-    // delivered it (the TUI's endCommand clears the active lifecycle once it
-    // pulls the report), so this won't double-print; it's fail-safe and never
-    // masks `e`.
+    // No-ops if the popup already delivered the report (TUI endCommand clears the lifecycle on pull), so this won't double-print and never masks `e`.
     flushPerformanceReport();
     throw e;
   }
@@ -1119,7 +1108,7 @@ export async function invokeTasksRunner({
 
 export function constructLifeCycles(
   lifeCycle: LifeCycle,
-  taskGraph?: TaskGraph,
+  taskGraph: TaskGraph,
   skipNxCache?: boolean
 ): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
@@ -1131,9 +1120,7 @@ export function constructLifeCycles(
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  if (taskGraph) {
-    lifeCycles.push(new PerformanceLifeCycle(taskGraph, skipNxCache));
-  }
+  lifeCycles.push(new PerformanceLifeCycle(taskGraph, { skipNxCache }));
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);

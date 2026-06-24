@@ -353,10 +353,9 @@ impl TuiApp for InlineApp {
     }
 
     fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
-        self.countdown_popup.set_summary(summary);
-        // Unlike the full-screen app, inline mode has no persistent help bar, so
-        // there's no `set_perf_report_available(true)` to call here. If inline mode
-        // ever grows a help bar that advertises the `p` shortcut, mirror that call.
+        // Inline doesn't render the report, but record it in shared state so a later
+        // switch to full-screen can pull it up with `p`.
+        self.core.state().lock().set_exit_summary(summary);
     }
 
     // === Event Handling ===
@@ -385,46 +384,18 @@ impl TuiApp for InlineApp {
                             self.quit_immediately();
                             return Ok(false);
                         }
-                        KeyCode::Up | KeyCode::Char('k') | KeyCode::Down | KeyCode::Char('j') => {
-                            // ↑/↓ pins the popup open (stops the auto-exit) so the
-                            // report stays up to read; it also scrolls on overflow.
-                            self.countdown_popup.pin_open();
-                            if self.countdown_popup.is_scrollable() {
-                                if matches!(key.code, KeyCode::Up | KeyCode::Char('k')) {
-                                    self.countdown_popup.scroll_up();
-                                } else {
-                                    self.countdown_popup.scroll_down();
-                                }
-                            }
-                            self.core.cancel_quit();
-                            return Ok(false);
-                        }
-                        KeyCode::Char('p') | KeyCode::Char('P')
-                            if self.countdown_popup.has_summary() =>
+                        KeyCode::Up | KeyCode::Char('k')
+                            if self.countdown_popup.is_scrollable() =>
                         {
-                            // `p` reopens the report elsewhere; while it's already the
-                            // visible popup, keep it open (pin) rather than dismissing
-                            // via the catch-all below. The mid-run exit dialog has no
-                            // summary, so `p` still dismisses it like any other key.
-                            self.countdown_popup.pin_open();
-                            self.core.cancel_quit();
+                            // Scroll up in countdown popup if scrollable
+                            self.countdown_popup.scroll_up();
                             return Ok(false);
                         }
-                        KeyCode::Esc => {
-                            // The performance report uses a two-stage Esc: the first
-                            // press pins it open (stops the auto-exit) so it can be
-                            // read, the second closes it. The mid-run exit dialog has
-                            // nothing to read, so Esc dismisses it at once (cancelling
-                            // the pending quit), like any other key.
-                            if self.countdown_popup.has_summary()
-                                && !self.countdown_popup.is_pinned()
-                            {
-                                self.countdown_popup.pin_open();
-                                self.core.cancel_quit();
-                            } else {
-                                self.countdown_popup.cancel_countdown();
-                                self.core.cancel_quit();
-                            }
+                        KeyCode::Down | KeyCode::Char('j')
+                            if self.countdown_popup.is_scrollable() =>
+                        {
+                            // Scroll down in countdown popup if scrollable
+                            self.countdown_popup.scroll_down();
                             return Ok(false);
                         }
                         _ => {
@@ -453,15 +424,6 @@ impl TuiApp for InlineApp {
                 }
 
                 // === Non-Interactive Mode Handling ===
-
-                // Reopen the run report popup ('p' for performance) after the run
-                // finished (it carries the final stats); a no-op mid-run.
-                if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P')) {
-                    if self.countdown_popup.has_summary() {
-                        self.countdown_popup.reopen();
-                    }
-                    return Ok(false);
-                }
 
                 // 'i' enters interactive mode if task supports it
                 if matches!(key.code, KeyCode::Char('i')) && key.modifiers.is_empty() {
@@ -1604,6 +1566,39 @@ mod tests {
             // Should not quit
             assert!(!app.should_quit());
         }
+    }
+
+    #[test]
+    fn test_inline_records_exit_summary_in_shared_state() {
+        // Regression: report was lost when a run ended in inline; it must survive in
+        // shared state for a full-screen switch to re-hydrate from.
+        let task_graph = TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = Arc::new(Mutex::new(TuiState::new(
+            vec![create_test_task("app1")],
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        )));
+
+        let mut app = InlineApp::with_state(state.clone(), None).unwrap();
+        app.set_exit_summary(PerformanceSummaryPayload::default());
+
+        assert!(!app.countdown_popup.has_summary());
+        assert!(state.lock().exit_summary().is_some());
     }
 
     #[test]

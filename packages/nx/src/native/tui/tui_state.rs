@@ -16,7 +16,7 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchInfo, BatchStatus, RunMode};
+use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, RunMode};
 use super::pty::PtyInstance;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
@@ -84,6 +84,11 @@ pub struct TuiState {
     // === Cloud Message ===
     cloud_message: Option<String>,
 
+    // === Performance Report ===
+    /// Stored here (not on the per-instance popup) so it survives mode switches;
+    /// both apps re-hydrate their popup from this on construction.
+    exit_summary: Option<PerformanceSummaryPayload>,
+
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
     ui_pane_tasks: [Option<SelectionEntry>; 2],
@@ -149,6 +154,7 @@ impl TuiState {
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
+            exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
@@ -451,6 +457,16 @@ impl TuiState {
     /// Check if the user has interacted with the TUI
     pub fn has_user_interacted(&self) -> bool {
         self.user_has_interacted
+    }
+
+    // === Performance Report Methods ===
+
+    pub fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        self.exit_summary = Some(summary);
+    }
+
+    pub fn exit_summary(&self) -> Option<PerformanceSummaryPayload> {
+        self.exit_summary.clone()
     }
 
     // === Forced Shutdown Methods ===

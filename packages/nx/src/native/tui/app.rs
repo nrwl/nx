@@ -250,7 +250,12 @@ impl App {
         }
 
         let help_popup = HelpPopup::new();
-        let countdown_popup = CountdownPopup::new();
+        let mut countdown_popup = CountdownPopup::new();
+        // Re-hydrate the run report from shared state so it survives mode switches.
+        if let Some(summary) = state.lock().exit_summary() {
+            countdown_popup.set_summary(summary);
+            tasks_list.set_perf_report_available(true);
+        }
         let hint_popup = HintPopup::new();
 
         let components: Vec<Box<dyn Component>> = vec![
@@ -727,11 +732,8 @@ impl App {
                     return Ok(false);
                 }
 
-                // Reopen the run report popup ('p' for performance) while exploring
-                // the TUI after a run. Only meaningful once the report exists (run
-                // finished); a no-op otherwise. Skipped in interactive mode, while
-                // another popup is up, or while typing into the filter (so 'p' types
-                // into the filter text instead of reopening the report).
+                // Reopen the run report popup ('p' = performance). Skipped while
+                // filtering so 'p' types into the filter instead of reopening.
                 let is_filtering = self
                     .components
                     .iter()
@@ -781,9 +783,8 @@ impl App {
                             | KeyCode::Char('k')
                             | KeyCode::Down
                             | KeyCode::Char('j') => {
-                                // ↑/↓ pins the popup open (stops the auto-exit) so
-                                // the report stays up to read; it also scrolls when
-                                // the report is taller than the popup.
+                                // ↑/↓ pins the popup open (stops the auto-exit) so the
+                                // report stays up to read, and scrolls if it overflows.
                                 countdown_popup.pin_open();
                                 if countdown_popup.is_scrollable() {
                                     if matches!(key.code, KeyCode::Up | KeyCode::Char('k')) {
@@ -798,23 +799,18 @@ impl App {
                             KeyCode::Char('p') | KeyCode::Char('P')
                                 if countdown_popup.has_summary() =>
                             {
-                                // The help bar advertises `p` as "reopen report",
-                                // and the reopen handler above is skipped while the
-                                // report is the focused popup. So treat `p` here as
-                                // keep-open (pin) rather than letting it fall through
-                                // to the dismiss catch-all. The mid-run exit dialog
-                                // has no summary, so it isn't matched here and `p`
-                                // still dismisses it like any other key.
+                                // While the report is focused the reopen handler above
+                                // is skipped, so `p` pins it open instead of falling
+                                // through to the dismiss catch-all. The mid-run exit
+                                // dialog has no summary, so `p` still dismisses it.
                                 countdown_popup.pin_open();
                                 self.core.state().lock().cancel_quit();
                                 return Ok(false);
                             }
                             KeyCode::Esc => {
-                                // The performance report uses a two-stage Esc: the
-                                // first press pins it open (stops the auto-exit) so it
-                                // can be read, the second closes it. The mid-run exit
-                                // dialog has nothing to read, so Esc dismisses it at
-                                // once (cancelling the pending quit), like any other key.
+                                // Two-stage Esc on the report: first press pins it open,
+                                // second closes it. The mid-run exit dialog has nothing
+                                // to read, so Esc dismisses it at once.
                                 if countdown_popup.has_summary() && !countdown_popup.is_pinned() {
                                     countdown_popup.pin_open();
                                     self.core.state().lock().cancel_quit();
@@ -2632,6 +2628,9 @@ impl TuiApp for App {
     }
 
     fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        // Persist in shared state so the report survives mode switches (rebuilt
+        // apps re-hydrate their fresh popup from here).
+        self.core.state().lock().set_exit_summary(summary.clone());
         if let Some(countdown_popup) = self
             .components
             .iter_mut()
@@ -2639,7 +2638,6 @@ impl TuiApp for App {
         {
             countdown_popup.set_summary(summary);
         }
-        // The report now exists, so let the help bar advertise the `p` shortcut.
         if let Some(tasks_list) = self
             .components
             .iter_mut()
