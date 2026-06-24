@@ -770,7 +770,6 @@ describe('nx release - independent projects - workspaces', () => {
 
                   Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
 
-
                   NX   Running target nx-release-publish for project {project-name}:
 
                   - {project-name}
@@ -1121,7 +1120,6 @@ describe('nx release - independent projects - workspaces', () => {
         {project-name}:nx-release-publish    {DURATION}
 
         Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-
 
         NX   Running target nx-release-publish for 2 projects:
 
