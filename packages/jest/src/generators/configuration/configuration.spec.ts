@@ -595,6 +595,63 @@ describe('jestProject', () => {
       expect(tree.exists('packages/pkg1/.spec.swcrc')).toBeFalsy();
     });
 
+    it('should set isolatedModules in tsconfig.spec.json for ts-jest below TypeScript 6', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          typescript: '~5.9.2',
+        };
+        return json;
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+      });
+
+      const tsConfig = readJson(tree, 'packages/pkg1/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.moduleResolution).toBe('node10');
+      expect(tsConfig.compilerOptions.isolatedModules).toBe(true);
+    });
+
+    it('should not set isolatedModules in tsconfig.spec.json on TypeScript 6 or above', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          typescript: '~6.0.3',
+        };
+        return json;
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+      });
+
+      const tsConfig = readJson(tree, 'packages/pkg1/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.moduleResolution).toBe('bundler');
+      expect(tsConfig.compilerOptions.isolatedModules).toBeUndefined();
+    });
+
+    it('should not set isolatedModules for the swc compiler below TypeScript 6', async () => {
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          typescript: '~5.9.2',
+        };
+        return json;
+      });
+
+      await configurationGenerator(tree, {
+        ...defaultOptions,
+        project: 'pkg1',
+        compiler: 'swc',
+      });
+
+      const tsConfig = readJson(tree, 'packages/pkg1/tsconfig.spec.json');
+      expect(tsConfig.compilerOptions.isolatedModules).toBeUndefined();
+    });
+
     it(`should setup a task pipeline for the test target to depend on the deps' build target`, async () => {
       await configurationGenerator(tree, {
         ...defaultOptions,

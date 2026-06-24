@@ -2978,6 +2978,9 @@ importers:
       jest-util:
         specifier: catalog:jest
         version: 30.3.0
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
