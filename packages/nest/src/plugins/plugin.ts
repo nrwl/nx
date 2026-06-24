@@ -1,18 +1,32 @@
 import {
-  CreateNodesContextV2,
   createNodesFromFiles,
-  CreateNodesV2,
   joinPathFragments,
   normalizePath,
-  NxJsonConfiguration,
   readJsonFile,
-  TargetConfiguration,
+  detectPackageManager,
+  type CreateNodes,
+  type CreateNodesContext,
+  type NxJsonConfiguration,
+  type TargetConfiguration,
 } from '@nx/devkit';
+import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import { getLockFileName } from '@nx/js';
+import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { hashObject } from 'nx/src/devkit-internals';
+import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 
 export interface NestPluginOptions {
   buildTargetName?: string;
+  startTargetName?: string;
+  /**
+   * @deprecated Use `startTargetName` instead.
+   */
   serveTargetName?: string;
 }
 
@@ -24,55 +38,89 @@ type NestCliConfig = {
 
 const nestCliConfigGlob = '**/nest-cli.json';
 
-export const createNodes: CreateNodesV2<NestPluginOptions> = [
+type NestTargets = Record<string, TargetConfiguration<NestPluginOptions>>;
+
+export const createNodes: CreateNodes<NestPluginOptions> = [
   nestCliConfigGlob,
   async (configFilePaths, options, context) => {
+    const optionsHash = hashObject(options);
+    const cachePath = join(workspaceDataDirectory, `nest-${optionsHash}.hash`);
+    const targetsCache = new PluginCache<NestTargets>(cachePath);
     const normalizedOptions = normalizeOptions(options);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const lockFileName = getLockFileName(packageManager);
     const validConfigFiles = configFilePaths.filter((configFilePath) =>
-      checkIfConfigFileShouldBeProject(
-        normalizeProjectRoot(dirname(configFilePath)),
+      checkIfConfigFileShouldBeProject(configFilePath, context)
+    );
+    const projectRoots = validConfigFiles.map(getProjectRootFromConfigFilePath);
+
+    try {
+      const projectHashes = await calculateHashesForCreateNodes(
+        projectRoots,
+        normalizedOptions,
+        context,
+        projectRoots.map(() => [lockFileName])
+      );
+
+      return await createNodesFromFiles(
+        (configFilePath, _, ctx, idx) =>
+          createNodesInternal(
+            configFilePath,
+            normalizedOptions,
+            ctx,
+            targetsCache,
+            projectHashes[idx]
+          ),
+        validConfigFiles,
+        options,
         context
-      )
-    );
-
-    return createNodesFromFiles(
-      async (configFilePath) => {
-        const projectRoot = normalizeProjectRoot(dirname(configFilePath));
-        const nestCliConfig = readNestCliConfig(configFilePath, context);
-
-        return {
-          projects: {
-            [projectRoot]: {
-              root: projectRoot,
-              targets: buildNestTargets(
-                projectRoot,
-                nestCliConfig,
-                normalizedOptions,
-                context
-              ),
-              metadata: {
-                technologies: ['nest'],
-              },
-            },
-          },
-        };
-      },
-      validConfigFiles,
-      normalizedOptions,
-      context
-    );
+      );
+    } finally {
+      targetsCache.writeToDisk();
+    }
   },
 ];
 
 export const createNodesV2 = createNodes;
 
+function createNodesInternal(
+  configFilePath: string,
+  options: NestPluginOptions,
+  context: CreateNodesContext,
+  targetsCache: PluginCache<NestTargets>,
+  hash: string
+) {
+  const projectRoot = getProjectRootFromConfigFilePath(configFilePath);
+  const hashKey = `${hash}:${configFilePath}`;
+
+  if (!targetsCache.has(hashKey)) {
+    const nestCliConfig = readNestCliConfig(configFilePath, context);
+    targetsCache.set(
+      hashKey,
+      buildNestTargets(projectRoot, nestCliConfig, options, context)
+    );
+  }
+
+  return {
+    projects: {
+      [projectRoot]: {
+        root: projectRoot,
+        targets: targetsCache.get(hashKey),
+        metadata: {
+          technologies: ['nest'],
+        },
+      },
+    },
+  };
+}
+
 function buildNestTargets(
   projectRoot: string,
   nestCliConfig: NestCliConfig,
   options: NestPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Record<string, TargetConfiguration> {
-  const namedInputs = getNamedInputs(context);
+  const namedInputs = getNamedInputs(projectRoot, context);
   const buildOutputs = normalizeOutputPath(
     nestCliConfig.compilerOptions?.outputPath,
     projectRoot,
@@ -94,15 +142,15 @@ function buildNestTargets(
         description: 'Build the Nest project.',
       },
     },
-    [options.serveTargetName]: {
-      command: 'nest start --watch',
+    [options.startTargetName]: {
+      command: 'nest start',
       options: {
         cwd: projectRoot,
       },
       continuous: true,
       metadata: {
         technologies: ['nest'],
-        description: 'Run the Nest project in watch mode.',
+        description: 'Run the Nest project.',
       },
     },
   };
@@ -118,11 +166,12 @@ function getBuildInputs(
     {
       externalDependencies: ['@nestjs/cli'],
     },
+    TS_SOLUTION_SETUP_TSCONFIG_INPUT,
   ];
 }
 
-function normalizeProjectRoot(projectRoot: string): string {
-  return normalizePath(projectRoot);
+function getProjectRootFromConfigFilePath(configFilePath: string): string {
+  return normalizePath(dirname(configFilePath));
 }
 
 function normalizeOutputPath(
@@ -135,10 +184,10 @@ function normalizeOutputPath(
   }
 
   if (isAbsolute(outputPath)) {
-    return `{workspaceRoot}/${relative(
-      workspaceRoot,
-      resolve(workspaceRoot, outputPath)
-    )}`;
+    return joinPathFragments(
+      '{workspaceRoot}',
+      relative(workspaceRoot, resolve(workspaceRoot, outputPath))
+    );
   }
 
   if (outputPath.startsWith('..')) {
@@ -151,27 +200,22 @@ function normalizeOutputPath(
 function normalizeOptions(options: NestPluginOptions): NestPluginOptions {
   options ??= {};
   options.buildTargetName ??= 'build';
-  options.serveTargetName ??= 'serve';
+  options.startTargetName ??= options.serveTargetName ?? 'start';
   return options;
-}
-
-function getNamedInputs(
-  context: CreateNodesContextV2
-): NxJsonConfiguration['namedInputs'] {
-  return context.nxJsonConfiguration?.namedInputs ?? {};
 }
 
 function readNestCliConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): NestCliConfig {
   return readJsonFile(join(context.workspaceRoot, configFilePath));
 }
 
 function checkIfConfigFileShouldBeProject(
-  projectRoot: string,
-  context: CreateNodesContextV2
-): boolean {
+  configFilePath: string,
+  context: CreateNodesContext
+) {
+  const projectRoot = getProjectRootFromConfigFilePath(configFilePath);
   const absoluteProjectRoot = join(context.workspaceRoot, projectRoot);
 
   if (!existsSync(absoluteProjectRoot)) {
