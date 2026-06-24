@@ -735,7 +735,12 @@ export function getPerformanceSummaryPayload(): PerformanceSummaryPayload | null
     }
     activePerformanceLifeCycle = null;
     return buildExitSummaryPayload(summary);
-  } catch {
+  } catch (e) {
+    // Best-effort: the report must never break the run. Surface the cause only
+    // under verbose logging so a silently-missing report is still debuggable.
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
     return null;
   }
 }
@@ -763,8 +768,12 @@ export function flushPerformanceReport(): void {
     // (that left a stray blank line that broke exact-match e2e snapshots).
     const eol = process.stdout.isTTY ? '\r\n' : '\n';
     process.stdout.write(formatReport(summary).split('\n').join(eol));
-  } catch {
-    // best-effort report; never let it affect the run's exit behavior
+  } catch (e) {
+    // best-effort report; never let it affect the run's exit behavior. Surface
+    // the cause only under verbose logging so a missing report stays debuggable.
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      console.error(e);
+    }
   }
 }
 
