@@ -1,7 +1,6 @@
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
 import {
   createTargetDefaultsResults,
-  getUnfilteredTargetDefault,
   normalizeTargetDefaults,
   readTargetDefaultsForTarget,
 } from './target-defaults';
@@ -194,43 +193,6 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
         readTargetDefaultsForTarget('test', targetDefaults, '@nx/jest:jest')
       ).toEqual({});
     });
-  });
-});
-
-describe('getUnfilteredTargetDefault', () => {
-  it('returns {} for undefined', () => {
-    expect(getUnfilteredTargetDefault(undefined)).toEqual({});
-  });
-
-  it('returns the object value as-is', () => {
-    expect(getUnfilteredTargetDefault({ dependsOn: ['^build'] })).toEqual({
-      dependsOn: ['^build'],
-    });
-  });
-
-  it('strips a stray filter on the object value form', () => {
-    // The type forbids `filter` here, but a hand-edited nx.json could still
-    // carry one; it must not leak to filter-unaware callers.
-    expect(
-      getUnfilteredTargetDefault({ dependsOn: ['^build'], filter: {} } as any)
-    ).toEqual({ dependsOn: ['^build'] });
-  });
-
-  it('returns the filter-less entry of an array value, stripped of filter', () => {
-    expect(
-      getUnfilteredTargetDefault([
-        { dependsOn: ['^build'] },
-        { filter: { plugin: '@nx/vite' }, cache: true },
-      ])
-    ).toEqual({ dependsOn: ['^build'] });
-  });
-
-  it('returns {} when an array value has no catch-all entry', () => {
-    expect(
-      getUnfilteredTargetDefault([
-        { filter: { plugin: '@nx/vite' }, cache: true },
-      ])
-    ).toEqual({});
   });
 });
 

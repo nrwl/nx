@@ -325,23 +325,6 @@ export function readTargetDefaultsForTarget(
   );
 }
 
-/**
- * Read the catch-all (unfiltered) config for a single `targetDefaults` value —
- * the plain object value form, or the filter-less entry of an array value
- * form. Coarse readers that don't carry project/plugin context (e.g. the task
- * graph dependency pre-pass) use this to read a key's baseline config.
- */
-export function getUnfilteredTargetDefault(
-  value: TargetDefaultValue | undefined
-): Partial<TargetConfiguration> {
-  if (value === undefined) return {};
-  // Strip `filter` on both paths: the object form's type forbids it, but a
-  // stray one shouldn't leak through to callers that don't understand filters.
-  if (!Array.isArray(value)) return stripFilter(value);
-  const catchAll = value.find((entry) => entry.filter === undefined);
-  return catchAll ? stripFilter(catchAll) : {};
-}
-
 const normalizedEntriesCache = new WeakMap<object, NormalizedTargetDefaults>();
 
 function getCachedNormalizedEntries(
