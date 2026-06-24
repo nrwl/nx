@@ -67,6 +67,19 @@ interface ChainLink {
   wait: number;
 }
 
+/**
+ * One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks
+ * eligible-but-not-running (`waiting`), and how many `parallelism: false` tasks are
+ * running (`monopoly`). Produced by {@link PerformanceLifeCycle.buildSegments}.
+ */
+interface Segment {
+  start: number;
+  end: number;
+  occ: number;
+  waiting: number;
+  monopoly: number;
+}
+
 export interface PerformanceSummary {
   runDuration: number;
   criticalPathDuration: number;
@@ -349,13 +362,7 @@ export class PerformanceLifeCycle implements LifeCycle {
     timed: Array<{ id: string; start: number; end: number }>,
     eligible: Map<string, number>,
     parallel: number
-  ): Array<{
-    start: number;
-    end: number;
-    occ: number;
-    waiting: number;
-    monopoly: number;
-  }> {
+  ): Segment[] {
     const occDelta = new Map<number, number>();
     const waitDelta = new Map<number, number>();
     const monopolyDelta = new Map<number, number>();
@@ -386,13 +393,7 @@ export class PerformanceLifeCycle implements LifeCycle {
       ])
     ).sort((a, b) => a - b);
 
-    const segments: Array<{
-      start: number;
-      end: number;
-      occ: number;
-      waiting: number;
-      monopoly: number;
-    }> = [];
+    const segments: Segment[] = [];
     let occ = 0;
     let waiting = 0;
     let monopoly = 0;
@@ -410,7 +411,7 @@ export class PerformanceLifeCycle implements LifeCycle {
 
   /** Time within [a, b] during which all slots were busy (occ ≥ parallel). */
   private saturatedTime(
-    segments: Array<{ start: number; end: number; occ: number }>,
+    segments: Segment[],
     a: number,
     b: number,
     parallel: number
@@ -522,55 +523,30 @@ export class PerformanceLifeCycle implements LifeCycle {
     return best;
   }
 
-  /** The structured performance summary, or `null` when no discrete task timings were recorded. */
-  getSummary(): PerformanceSummary | null {
-    const timed = this.timedTasks();
-    if (timed.length === 0) {
-      return null;
-    }
-
-    const durations = new Map<string, number>();
-    let totalWork = 0;
-    let runStart = Infinity;
-    let runEnd = -Infinity;
-    for (const { id, start, end } of timed) {
-      const duration = Math.max(0, end - start);
-      durations.set(id, duration);
-      totalWork += duration;
-      runStart = Math.min(runStart, start);
-      runEnd = Math.max(runEnd, end);
-    }
-    const taskWindow = Math.max(0, runEnd - runStart);
-
-    const eligible = new Map<string, number>();
-    for (const { id } of timed) {
-      eligible.set(id, this.earliestStart(id, runStart));
-    }
-
-    const { path: criticalPathTasks, duration: criticalPathDuration } =
-      this.criticalPath(durations);
-
-    // startCommand gets `total = discrete + continuousCount` (see getThreadPoolSize),
-    // so subtracting the continuous count recovers the `--parallel` value exactly.
+  /**
+   * The `--parallel` value, recovered from the thread-pool total reported to
+   * startCommand: `total = discrete + continuousCount` (see getThreadPoolSize), so
+   * subtracting the continuous count gives `--parallel` back. Falls back to 1.
+   */
+  private resolveParallel(): number {
     const continuousCount = Object.values(this.taskGraph.tasks).filter(
       (t) => t.continuous
     ).length;
-    const parallel = Math.max(
-      1,
-      (this.total ?? continuousCount + 1) - continuousCount
-    );
-    // cgroup-aware core count so a quota-capped CI container gets the right lever
-    // (more machines, not a --parallel it can't use). cpus() only as fallback.
-    const cores =
-      typeof os.availableParallelism === 'function'
-        ? os.availableParallelism()
-        : os.cpus().length;
+    return Math.max(1, (this.total ?? continuousCount + 1) - continuousCount);
+  }
 
-    const segments = this.buildSegments(timed, eligible, parallel);
-    const hashWindows = this.hashWindows();
-
-    // Last-finishing task's lineage, each link's wait classified (slot/hashing/dep).
-    // Diagnostic only; the overhead split is read from the occupancy timeline below.
+  /**
+   * Lineage of the last-finishing task with each link's wait classified
+   * (root/dep/slot/hashing/other). Diagnostic only — never displayed; the overhead
+   * split is read from the occupancy timeline, not from here.
+   */
+  private computeFinishChain(
+    durations: Map<string, number>,
+    eligible: Map<string, number>,
+    segments: Segment[],
+    hashWindows: Array<[number, number]>,
+    parallel: number
+  ): ChainLink[] {
     const annotate = (id: string, idx: number): ChainLink => {
       const start = this.timings.get(id)?.startTime ?? 0;
       const ready = eligible.get(id) ?? start;
@@ -589,63 +565,19 @@ export class PerformanceLifeCycle implements LifeCycle {
       }
       return { id, gate, wait };
     };
-    const finishLineageTasks = this.finishLineage(durations);
-    const finishChain: ChainLink[] = finishLineageTasks.map(annotate);
+    return this.finishLineage(durations).map(annotate);
+  }
 
-    // Pre-dispatch hashing, added to overhead and the coordinator bucket (not the slot split).
-    const preDispatchHash = this.preDispatchHashTime(runStart, hashWindows);
-    const runDuration = taskWindow + preDispatchHash;
-    const overhead = Math.max(0, runDuration - criticalPathDuration);
-
-    // Split overhead by CAUSE off the occupancy timeline: slot contention = wall-clock
-    // where every slot was busy AND tasks were queued (occ ≥ parallel with a backlog);
-    // everything else is coordinator time. Capped by overhead so the two sum to it.
-    // Track separately the contention while a `parallelism: false` task held the whole
-    // pool: a higher local --parallel can't recover that (the task occupies every slot
-    // by design), so it must be attributed to machines, not parallelism.
-    let slotContendedTime = 0;
-    let monopolizedContendedTime = 0;
-    for (const s of segments) {
-      if (s.occ >= parallel && s.waiting > 0) {
-        const dur = s.end - s.start;
-        slotContendedTime += dur;
-        if (s.monopoly > 0) {
-          monopolizedContendedTime += dur;
-        }
-      }
-    }
-    const recoverableBySlots = Math.min(overhead, slotContendedTime);
-    const coordinatorOverhead = overhead - recoverableBySlots;
-    // Pool-monopolized contention recovers only by more machines (never --parallel).
-    const monopolized = Math.min(recoverableBySlots, monopolizedContendedTime);
-    const ordinaryBySlots = recoverableBySlots - monopolized;
-    // Of the ordinary slot-recoverable part, --parallel helps while there are spare
-    // cores; the volume cores-way parallelism can't absorb (max(0, totalWork/cores −
-    // floor)) needs more machines. At parallel ≥ cores there's no --parallel headroom.
-    const machineBound =
-      parallel < cores
-        ? Math.max(0, totalWork / cores - criticalPathDuration)
-        : Infinity;
-    const ordinaryByMachines = Math.min(ordinaryBySlots, machineBound);
-    const recoverableByMachines = monopolized + ordinaryByMachines;
-    const recoverableByParallel = ordinaryBySlots - ordinaryByMachines;
-
-    // Dispatch/scheduling latency: wall-clock where a slot was free (occ < parallel)
-    // AND a task was eligible but unstarted (waiting > 0), minus any hashing in that
-    // window — ready work that simply wasn't dispatched yet. A measured view into the
-    // coordinator residual; tracked for diagnostics, never displayed.
-    const schedulingOverhead = segments.reduce((sum, s) => {
-      if (s.occ >= parallel || s.waiting === 0) {
-        return sum;
-      }
-      const stalled = s.end - s.start;
-      return sum + Math.max(0, stalled - overlap(s.start, s.end, hashWindows));
-    }, 0);
-
-    // Longest critical-path tasks that RAN — the lever when no parallelism lever
-    // applies. Cache hits excluded (their duration is just restore time); tasks with
-    // no recorded status (e.g. synthetic test runs) are kept.
-    const criticalPathTop = criticalPathTasks
+  /**
+   * Longest critical-path tasks that RAN (desc, capped at 3) — the lever when no
+   * parallelism lever applies. Cache hits are excluded (their duration is just
+   * restore time); tasks with no recorded status (e.g. synthetic test runs) are kept.
+   */
+  private computeCriticalPathTop(
+    criticalPathTasks: string[],
+    durations: Map<string, number>
+  ): Array<{ id: string; duration: number }> {
+    return criticalPathTasks
       .filter((id) => {
         const status = this.statuses.get(id);
         return !status || !CACHE_HIT_STATUSES.has(status);
@@ -653,8 +585,14 @@ export class PerformanceLifeCycle implements LifeCycle {
       .map((id) => ({ id, duration: durations.get(id) ?? 0 }))
       .sort((a, b) => b.duration - a.duration)
       .slice(0, 3);
+  }
 
-    // Cache outcome: restored vs ran. No-status tasks (synthetic test runs) count for neither.
+  /**
+   * Cache outcome from the recorded statuses: tasks restored (`cacheHits`) and the
+   * total that had a cache outcome (`cacheableCount` = hits + ran). No-status tasks
+   * (synthetic test runs) count for neither.
+   */
+  private computeCacheStats(): { cacheHits: number; cacheableCount: number } {
     let cacheHits = 0;
     let cacheRan = 0;
     for (const status of this.statuses.values()) {
@@ -664,21 +602,80 @@ export class PerformanceLifeCycle implements LifeCycle {
         cacheRan++;
       }
     }
-    const cacheableCount = cacheHits + cacheRan;
+    return { cacheHits, cacheableCount: cacheHits + cacheRan };
+  }
+
+  /** The structured performance summary, or `null` when no discrete task timings were recorded. */
+  getSummary(): PerformanceSummary | null {
+    const timed = this.timedTasks();
+    if (timed.length === 0) {
+      return null;
+    }
+
+    const { durations, totalWork, runStart, taskWindow } =
+      computeRunWindow(timed);
+
+    const eligible = new Map<string, number>();
+    for (const { id } of timed) {
+      eligible.set(id, this.earliestStart(id, runStart));
+    }
+
+    const { path: criticalPathTasks, duration: criticalPathDuration } =
+      this.criticalPath(durations);
+
+    const parallel = this.resolveParallel();
+    const cores = detectCoreCount();
+
+    const segments = this.buildSegments(timed, eligible, parallel);
+    const hashWindows = this.hashWindows();
+    const finishChain = this.computeFinishChain(
+      durations,
+      eligible,
+      segments,
+      hashWindows,
+      parallel
+    );
+
+    // Pre-dispatch hashing is part of overhead but not the slot split.
+    const runDuration =
+      taskWindow + this.preDispatchHashTime(runStart, hashWindows);
+    const overhead = Math.max(0, runDuration - criticalPathDuration);
+
+    const {
+      coordinatorOverhead,
+      recoverableByMachines,
+      recoverableByParallel,
+    } = splitOverhead({
+      segments,
+      parallel,
+      overhead,
+      totalWork,
+      cores,
+      criticalPathDuration,
+    });
+    const schedulingOverhead = computeSchedulingOverhead(
+      segments,
+      parallel,
+      hashWindows
+    );
+
+    const criticalPathTop = this.computeCriticalPathTop(
+      criticalPathTasks,
+      durations
+    );
+
+    const { cacheHits, cacheableCount } = this.computeCacheStats();
     const cacheSkipped = this.cacheSkipped();
     const remoteCacheEnabled = this.remoteCacheEnabled();
 
-    // Coordinator-dominated when hashing/scheduling outweighs task work >3x the
-    // critical path. The >3x bar keeps cold runs critical-path-bound when hashing
-    // merely edges past them.
+    // Coordinator-dominated: hashing/scheduling outweighs task work by >3x the
+    // critical path, which keeps cold runs critical-path-bound.
     const coordinatorDominated =
       coordinatorOverhead >= MEANINGFUL_OVERHEAD &&
       coordinatorOverhead > 3 * criticalPathDuration;
 
     const isCI = this.isCI();
     const distributing = this.distributingTasks();
-    // Can only recommend starting to distribute in CI when not already doing so.
-    const canDistribute = isCI && !distributing;
     const recommendations = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,
@@ -686,7 +683,8 @@ export class PerformanceLifeCycle implements LifeCycle {
       runDuration,
       parallel,
       cores,
-      canDistribute,
+      // Can only start distributing in CI when not already doing so.
+      canDistribute: isCI && !distributing,
       distributing,
       criticalPathTop,
     });
@@ -816,6 +814,120 @@ export function overlap(
     sum += Math.max(0, Math.min(b, e) - Math.max(a, s));
   }
   return sum;
+}
+
+/** Per-task durations, total work, and the run window from the timed tasks. */
+function computeRunWindow(
+  timed: Array<{ id: string; start: number; end: number }>
+): {
+  durations: Map<string, number>;
+  totalWork: number;
+  runStart: number;
+  taskWindow: number;
+} {
+  const durations = new Map<string, number>();
+  let totalWork = 0;
+  let runStart = Infinity;
+  let runEnd = -Infinity;
+  for (const { id, start, end } of timed) {
+    const duration = Math.max(0, end - start);
+    durations.set(id, duration);
+    totalWork += duration;
+    runStart = Math.min(runStart, start);
+    runEnd = Math.max(runEnd, end);
+  }
+  return {
+    durations,
+    totalWork,
+    runStart,
+    taskWindow: Math.max(0, runEnd - runStart),
+  };
+}
+
+/**
+ * cgroup-aware core count so a quota-capped CI container gets the right lever
+ * (more machines, not a --parallel it can't use). cpus() only as fallback.
+ */
+function detectCoreCount(): number {
+  return typeof os.availableParallelism === 'function'
+    ? os.availableParallelism()
+    : os.cpus().length;
+}
+
+/**
+ * Split overhead by CAUSE off the occupancy timeline into three buckets that sum
+ * to overhead: coordinator time, and slot contention recoverable by more machines
+ * vs by a higher --parallel.
+ *
+ * Slot contention is wall-clock where every slot was busy with a backlog (occ ≥
+ * parallel, waiting > 0). Contention while a `parallelism: false` task held the
+ * whole pool goes to machines only — a higher local --parallel can't recover it.
+ * Of the rest, --parallel helps up to the volume the cores can absorb; the
+ * overflow (totalWork/cores − floor) needs more machines.
+ */
+function splitOverhead(args: {
+  segments: Segment[];
+  parallel: number;
+  overhead: number;
+  totalWork: number;
+  cores: number;
+  criticalPathDuration: number;
+}): {
+  coordinatorOverhead: number;
+  recoverableByMachines: number;
+  recoverableByParallel: number;
+} {
+  const {
+    segments,
+    parallel,
+    overhead,
+    totalWork,
+    cores,
+    criticalPathDuration,
+  } = args;
+  let slotContendedTime = 0;
+  let monopolizedContendedTime = 0;
+  for (const s of segments) {
+    if (s.occ >= parallel && s.waiting > 0) {
+      const dur = s.end - s.start;
+      slotContendedTime += dur;
+      if (s.monopoly > 0) {
+        monopolizedContendedTime += dur;
+      }
+    }
+  }
+  const recoverableBySlots = Math.min(overhead, slotContendedTime);
+  const monopolized = Math.min(recoverableBySlots, monopolizedContendedTime);
+  const ordinaryBySlots = recoverableBySlots - monopolized;
+  const machineBound =
+    parallel < cores
+      ? Math.max(0, totalWork / cores - criticalPathDuration)
+      : Infinity;
+  const ordinaryByMachines = Math.min(ordinaryBySlots, machineBound);
+  return {
+    coordinatorOverhead: overhead - recoverableBySlots,
+    recoverableByMachines: monopolized + ordinaryByMachines,
+    recoverableByParallel: ordinaryBySlots - ordinaryByMachines,
+  };
+}
+
+/**
+ * Dispatch/scheduling latency: wall-clock where a slot was free (occ < parallel)
+ * with a task eligible but unstarted, minus any hashing in that window. Diagnostic
+ * only; never displayed.
+ */
+function computeSchedulingOverhead(
+  segments: Segment[],
+  parallel: number,
+  hashWindows: Array<[number, number]>
+): number {
+  return segments.reduce((sum, s) => {
+    if (s.occ >= parallel || s.waiting === 0) {
+      return sum;
+    }
+    const stalled = s.end - s.start;
+    return sum + Math.max(0, stalled - overlap(s.start, s.end, hashWindows));
+  }, 0);
 }
 
 /**

@@ -19,8 +19,8 @@ import {
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
 import { hashArray, logDebug, RunMode } from '../native';
-// Type-only: the runtime `AppLifeCycle` is loaded via dynamic import below (so it
-// stays `any`); this alias lets us type the endCommand wrapper without shadowing it.
+// Type-only alias (the runtime `AppLifeCycle` is dynamically imported below) used
+// to type the endCommand wrapper without shadowing that runtime binding.
 import type { AppLifeCycle as AppLifeCycleClass } from '../native';
 import {
   runPostTasksExecution,
@@ -229,30 +229,18 @@ async function getTerminalOutputLifeCycle(
       );
       lifeCycles.unshift(appLifeCycle);
 
-      // In the TUI, render the performance report inside the exit-countdown popup
-      // (while the TUI is still up) instead of printing it to the terminal after
-      // teardown. Deliver it through endCommand itself — which runs once every
-      // task timing is in — by wrapping appLifeCycle.endCommand to pull the
-      // structured report and forward it to the native endCommand. napi ignores
-      // the extra arg on an older binding, so a run is never crashed by it.
-      // Guard the wrap: if the native method is ever missing/renamed, skip the
-      // wrapping (the report just won't be delivered) rather than throwing at
-      // construction and crashing an otherwise-successful run. The payload getter
-      // is already internally best-effort (returns null on any error); we don't
-      // swallow the native endCommand call itself, since it does the real
-      // end-of-command work and a genuine failure there should not be hidden.
-      // `appLifeCycle` is `any` (dynamic import); view it through the class type so
-      // the endCommand call below is type-checked against PerformanceSummaryPayload.
+      // Wrap (not replace) the endCommand hook so that when the normal lifecycle
+      // flow fires it, we forward the structured report for the TUI to render in
+      // its exit-countdown popup. Guard it so a missing/renamed native method just
+      // skips delivery instead of throwing. The cast type-checks the call against
+      // PerformanceSummaryPayload (`appLifeCycle` is `any` from the dynamic import).
       const typedAppLifeCycle = appLifeCycle as AppLifeCycleClass;
       const boundEndCommand =
         typedAppLifeCycle.endCommand?.bind(typedAppLifeCycle);
       if (typeof boundEndCommand === 'function') {
+        // A single-task run exits with no popup, so leave its report unconsumed for
+        // the terminal flush below; only multi-task runs feed the popup.
         typedAppLifeCycle.endCommand = () =>
-          // Only hand the report to the popup when it will actually render.
-          // Multi-task runs get the exit-countdown popup; a single-task run exits
-          // immediately with no popup, so leave the report unconsumed and let the
-          // terminal flush below print it (otherwise it would vanish — consumed
-          // into a popup that never shows).
           boundEndCommand(
             tasks.length > 1
               ? (getPerformanceSummaryPayload() ?? undefined)
