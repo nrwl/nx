@@ -362,7 +362,7 @@ function readV11Surfaces(
 function readV10Surfaces(
   root: string
 ): WindowResolution | InvalidWindow | null {
-  // v10 layers config via @pnpm/npm-conf, per key:
+  // v10 layers the cooldown WINDOW via @pnpm/npm-conf, per key:
   // workspace yaml > npm_config_* env > project .npmrc > user .npmrc.
   const wsRead = readYamlWindow(join(root, 'pnpm-workspace.yaml'));
   if (wsRead && wsRead.kind === 'invalid') {
@@ -379,15 +379,13 @@ function readV10Surfaces(
   const projectNpmrc = readNpmrcSurface(join(root, '.npmrc'));
   const userNpmrc = readNpmrcSurface(join(homedir(), '.npmrc'));
 
-  // v10 reads npm_config_*, which never JSON-parses, so readEnvArray can only
-  // yield a single-entry array or undefined here - never 'invalid'.
-  const envExcludes = readEnvArray(env, keySet, 'minimum_release_age_exclude');
-  const excludes =
-    wsYaml?.excludes ??
-    (envExcludes === 'invalid' ? undefined : envExcludes) ??
-    projectNpmrc?.excludes ??
-    userNpmrc?.excludes ??
-    [];
+  // The EXCLUDE list is honored only from pnpm-workspace.yaml on v10. Verified
+  // empirically against pnpm 10.x (and the @pnpm/npm-conf source): a real
+  // `pnpm install` ignores minimumReleaseAgeExclude set in .npmrc or
+  // npm_config_* - only the cooldown window is read from those surfaces. So nx
+  // must NOT honor an exclude pnpm itself drops, or it would resolve a fresh
+  // version the user's pnpm would still gate.
+  const excludes = wsYaml?.excludes ?? [];
 
   if (wsYaml && wsYaml.windowMinutes !== undefined) {
     return okWindow(wsYaml.windowMinutes, excludes, 'pnpm-workspace.yaml');
@@ -466,31 +464,25 @@ function readYamlWindow(path: string): YamlWindow | InvalidWindow | null {
   };
 }
 
-function readNpmrcSurface(
-  path: string
-): { windowMinutes?: number; excludes?: string[] } | null {
+function readNpmrcSurface(path: string): { windowMinutes?: number } | null {
   const entries = readNpmrcEntries(path);
   if (entries === null) {
     return null;
   }
-  // v10 reads the kebab-case keys via npm-conf; camelCase in .npmrc is never
-  // honored. Only the two cooldown keys are relevant here.
+  // v10 reads the kebab-case window via npm-conf; camelCase in .npmrc is never
+  // honored. Only the window is read here: pnpm does NOT honor
+  // minimumReleaseAgeExclude from .npmrc or npm_config_* - the exclude list is
+  // only wired up from pnpm-workspace.yaml (see readV10Surfaces).
   let windowMinutes: number | undefined;
-  let excludes: string[] | undefined;
   for (const { key, value: rawValue } of entries) {
-    const value = stripQuotes(rawValue);
     if (key === 'minimum-release-age') {
-      const num = toNumber(value);
+      const num = toNumber(stripQuotes(rawValue));
       if (num !== null) {
         windowMinutes = num;
       }
-    } else if (key === 'minimum-release-age-exclude') {
-      // npm-conf accumulates repeated ini keys AND comma-splits each value, so
-      // `a,b` on one line and two separate `=` lines are equivalent.
-      (excludes ??= []).push(...splitNpmConfList(value));
     }
   }
-  return { windowMinutes, excludes };
+  return { windowMinutes };
 }
 
 // pnpm mirrors getConfigDir: XDG_CONFIG_HOME, else per-platform default.
@@ -589,25 +581,22 @@ function readEnvArray(
   if (raw === undefined) {
     return undefined;
   }
-  // pnpm v11's [String, Array] env schema tries a JSON array first, then falls
-  // back to the raw value as a single entry - never comma-split.
-  if (keySet.prefix === 'pnpm_config_') {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        // pnpm passes the array verbatim, then errors at install
-        // (ERR_PNPM_INVALID_MINIMUM_RELEASE_AGE_EXCLUDE) on any non-string
-        // element; signal invalid so the caller defers to a real install.
-        return parsed.every((e) => typeof e === 'string')
-          ? (parsed as string[])
-          : 'invalid';
-      }
-    } catch {}
-    return [raw];
-  }
-  // v10 reads npm_config_* via @pnpm/npm-conf, which comma-splits array-typed
-  // values (the same parsing it applies to .npmrc).
-  return splitNpmConfList(raw);
+  // Only v11's pnpm_config_* env feeds the exclude list (pnpm does not honor a
+  // v10 npm_config_* exclude). pnpm v11's [String, Array] env schema tries a
+  // JSON array first, then falls back to the raw value as a single entry - never
+  // comma-split.
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      // pnpm passes the array verbatim, then errors at install
+      // (ERR_PNPM_INVALID_MINIMUM_RELEASE_AGE_EXCLUDE) on any non-string
+      // element; signal invalid so the caller defers to a real install.
+      return parsed.every((e) => typeof e === 'string')
+        ? (parsed as string[])
+        : 'invalid';
+    }
+  } catch {}
+  return [raw];
 }
 
 // --- value helpers ----------------------------------------------------------
@@ -625,16 +614,6 @@ function toNumber(value: unknown): number | null {
     return Number.isFinite(num) ? num : null;
   }
   return null;
-}
-
-// @pnpm/npm-conf (pnpm v10's .npmrc / npm_config_* reader) treats array-typed
-// settings as comma-separated lists, trimming each entry. Mirror that so a value
-// like `nx,@nx/*` becomes two patterns instead of one invalid entry.
-function splitNpmConfList(value: string): string[] {
-  return value
-    .split(',')
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
 }
 
 function stripQuotes(value: string): string {

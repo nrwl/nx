@@ -877,40 +877,48 @@ describe('pnpm min-release-age behavior', () => {
       }
     });
 
-    it('v10 yaml window combines with npm_config_ env excludes', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
-      process.env.npm_config_minimum_release_age_exclude = 'pkg-a';
+    it('v10 honors minimumReleaseAgeExclude from pnpm-workspace.yaml', async () => {
+      mockYaml({
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeExclude: ['nx', '@nx/*'],
+      });
       const result = await readPnpmPolicy('/root', '10.20.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        expect(result.policy.isExcluded('pkg-a', '1.0.0')).toBe(true);
-      }
-    });
-
-    it('v10 npm_config_ env exclude comma-splits and trims (matches @pnpm/npm-conf)', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
-      process.env.npm_config_minimum_release_age_exclude = 'nx, @nx/*';
-      const result = await readPnpmPolicy('/root', '10.20.0');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
         expect(result.policy.isExcluded('nx', '1.0.0')).toBe(true);
         expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(true);
         expect(result.policy.isExcluded('other', '1.0.0')).toBe(false);
       }
     });
 
-    it('v10 .npmrc exclude comma-splits (matches @pnpm/npm-conf)', async () => {
+    // pnpm v10 reads the cooldown WINDOW from npm_config_*, but NOT the exclude
+    // list - minimumReleaseAgeExclude is wired up only from pnpm-workspace.yaml.
+    // Verified against pnpm 10.x: an .npmrc/npm_config_* exclude does not bypass
+    // the gate. Mirror that so nx never resolves a version pnpm would still gate.
+    it('v10 ignores minimumReleaseAgeExclude from npm_config_ env', async () => {
+      mockYaml({ minimumReleaseAge: 1440 });
+      process.env.npm_config_minimum_release_age_exclude = 'nx';
+      const result = await readPnpmPolicy('/root', '10.20.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(1440 * MINUTE);
+        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(false);
+      }
+    });
+
+    it('v10 reads the .npmrc window but ignores its exclude list', async () => {
       mockProjectNpmrc(
         'minimum-release-age=1440\nminimum-release-age-exclude=nx,@nx/*\n'
       );
       const result = await readPnpmPolicy('/root', '10.20.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
+        // window from .npmrc is honored...
         expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(true);
-        expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(true);
-        expect(result.policy.isExcluded('other', '1.0.0')).toBe(false);
+        // ...but the exclude is not (pnpm v10 only honors it from the yaml).
+        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(false);
+        expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(false);
       }
     });
 
