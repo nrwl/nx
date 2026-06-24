@@ -11,7 +11,7 @@ use rusqlite::{params, types::Value};
 use sysinfo::Disks;
 
 use crate::native::cache::expand_outputs::_expand_outputs;
-use crate::native::cache::file_ops::_copy;
+use crate::native::cache::file_ops::{_copy, copy_outputs_into_workspace};
 use crate::native::db::connection::NxDbConnection;
 use crate::native::utils::Normalize;
 use napi::bindgen_prelude::External;
@@ -391,39 +391,16 @@ impl NxCache {
 
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
 
-        trace!("Removing expanded outputs: {:?}", &expanded_outputs);
-        remove_items(
-            expanded_outputs
-                .iter()
-                .map(|p| self.workspace_root.join(p))
-                .collect::<Vec<_>>()
-                .as_slice(),
-        )?;
-
         trace!(
-            "Copying Files from Cache {:?} -> {:?}",
-            &outputs_path, &self.workspace_root
+            "Restoring {} outputs from cache {:?} -> {:?}",
+            expanded_outputs.len(),
+            &outputs_path,
+            &self.workspace_root
         );
-        let sz = _copy(outputs_path, &self.workspace_root);
-
-        match sz {
-            Err(e) => {
-                let kind = underlying_io_error_kind(&e);
-                match kind {
-                    Some(std::io::ErrorKind::NotFound) => {
-                        trace!("No artifacts to copy: {:?}", e);
-                        Ok(0)
-                    }
-                    _ => {
-                        return Err(anyhow::anyhow!("Error copying files from cache: {:?}", e));
-                    }
-                }
-            }
-            Ok(sz) => {
-                trace!("Copied {} bytes from cache", sz);
-                Ok(sz)
-            }
-        }
+        // Restore only the declared outputs, confined to the workspace, so a
+        // malicious remote-cache artifact cannot drop files beyond the declared
+        // outputs or escape the workspace through a symlink.
+        copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
     }
 
     #[napi]
@@ -530,14 +507,4 @@ where
             }
         }
     }
-}
-
-// From: https://docs.rs/anyhow/latest/anyhow/struct.Error.html#example-1
-fn underlying_io_error_kind(error: &anyhow::Error) -> Option<std::io::ErrorKind> {
-    for cause in error.chain() {
-        if let Some(io_error) = cause.downcast_ref::<std::io::Error>() {
-            return Some(io_error.kind());
-        }
-    }
-    None
 }

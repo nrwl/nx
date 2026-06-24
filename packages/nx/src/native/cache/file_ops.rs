@@ -21,44 +21,124 @@ pub fn _copy<P>(src: P, dest: P) -> anyhow::Result<i64>
 where
     P: AsRef<Path>,
 {
+    _copy_impl(src.as_ref(), dest.as_ref(), None)
+}
+
+/// Copy `src` to `dest`.
+///
+/// When `boundary` is `Some(root)` the copy is confined to `root` (used when
+/// restoring cache outputs into the workspace): parent directories are created
+/// without following symlinks — a symlink occupying a path under `root` is
+/// replaced with a real directory — and any pre-existing entry at `dest` is
+/// removed instead of written through. This stops a malicious cache artifact
+/// from writing outside the workspace via a planted or pre-existing symlink.
+/// With `None` the original behavior is used.
+pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
-    let src: PathBuf = src.as_ref().into();
+    let src: PathBuf = src.into();
 
     trace!("Copying {:?} -> {:?}", &src, &dest);
 
-    if !dest_parent.exists() {
-        trace!("Creating parent directory: {:?}", dest_parent);
-        fs::create_dir_all(dest_parent)?;
-        trace!("Successfully created parent directory: {:?}", dest_parent);
+    match boundary {
+        Some(root) => {
+            create_dir_all_within(root, dest_parent)?;
+            // Drop any existing entry first so a stale symlink/dir/file is never
+            // followed or merged into during a restore.
+            remove_path(&dest)?;
+        }
+        None => {
+            if !dest_parent.exists() {
+                trace!("Creating parent directory: {:?}", dest_parent);
+                fs::create_dir_all(dest_parent)?;
+            }
+        }
     }
 
     let size = if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
-        let copied_size = copy_dir_all(&src, &dest).map_err(anyhow::Error::new)?;
-        trace!(
-            "Successfully copied directory: {:?} ({} bytes)",
-            &src, copied_size
-        );
-        copied_size
+        copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
-        trace!("Successfully copied symlink: {:?}", &src);
         0
     } else {
         trace!("Copying file: {:?}", &src);
-        let copied_size = fs::copy(&src, &dest)?;
-        trace!(
-            "Successfully copied file: {:?} ({} bytes)",
-            &src, copied_size
-        );
-        copied_size
+        fs::copy(&src, &dest)?
     };
 
     debug!("Copy completed: {:?} -> {:?} ({} bytes)", &src, &dest, size);
     Ok(size as i64)
+}
+
+/// Create `dir` and any missing ancestors, but never traverse a symlink at or
+/// below `boundary`: a symlink (or file) occupying such a path is removed and
+/// replaced with a real directory. Components at or above `boundary` are trusted
+/// and left untouched, so this never disturbs e.g. a `/tmp` system symlink.
+fn create_dir_all_within(boundary: &Path, dir: &Path) -> io::Result<()> {
+    // At or above the boundary: trust the existing tree, only create if missing.
+    if dir == boundary || !dir.starts_with(boundary) {
+        return match fs::symlink_metadata(dir) {
+            Ok(_) => Ok(()),
+            Err(_) => fs::create_dir_all(dir),
+        };
+    }
+
+    if let Some(parent) = dir.parent() {
+        create_dir_all_within(boundary, parent)?;
+    }
+
+    match fs::symlink_metadata(dir) {
+        Ok(meta) if meta.file_type().is_dir() => Ok(()),
+        Ok(_) => {
+            // A symlink or file occupies the path — remove it (the link itself,
+            // never its target) and create a real directory in its place.
+            remove_path(dir)?;
+            fs::create_dir(dir)
+        }
+        Err(_) => match fs::create_dir(dir) {
+            Ok(()) => Ok(()),
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(()),
+            Err(e) => Err(e),
+        },
+    }
+}
+
+/// Remove the entry at `path` without following a final symlink (the link is
+/// unlinked, never its target); a directory is removed recursively. A missing
+/// path is a no-op.
+fn remove_path(path: &Path) -> io::Result<()> {
+    match fs::symlink_metadata(path) {
+        Ok(meta) if meta.file_type().is_dir() => fs::remove_dir_all(path),
+        Ok(_) => fs::remove_file(path),
+        Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(e) => Err(e),
+    }
+}
+
+/// Restore the given (already expanded) cache outputs from `outputs_path` into
+/// `workspace_root`. Only the listed outputs are copied — never the whole
+/// extracted cache directory — and every copy is confined to `workspace_root`,
+/// so a malicious cache artifact can neither place files beyond the declared
+/// outputs nor escape the workspace through a symlink.
+pub fn copy_outputs_into_workspace(
+    workspace_root: &Path,
+    outputs_path: &Path,
+    expanded_outputs: &[String],
+) -> anyhow::Result<i64> {
+    let mut size = 0;
+    for output in expanded_outputs {
+        let from = outputs_path.join(output);
+        // Only restore entries the artifact actually contains.
+        if fs::symlink_metadata(&from).is_err() {
+            trace!("No cached artifact for output {}, skipping", output);
+            continue;
+        }
+        let to = workspace_root.join(output);
+        size += _copy_impl(&from, &to, Some(workspace_root))?;
+    }
+    Ok(size)
 }
 
 fn remove_trailing_single_dot(path: impl AsRef<Path>) -> PathBuf {
@@ -102,10 +182,16 @@ fn remove_existing_symlink(path: &Path) -> io::Result<()> {
     Ok(())
 }
 
-fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64> {
+fn copy_dir_all(
+    src: impl AsRef<Path>,
+    dst: impl AsRef<Path>,
+    boundary: Option<&Path>,
+) -> io::Result<u64> {
     trace!("Creating directory: {:?}", dst.as_ref());
-    fs::create_dir_all(&dst)?;
-    trace!("Successfully created directory: {:?}", dst.as_ref());
+    match boundary {
+        Some(root) => create_dir_all_within(root, dst.as_ref())?,
+        None => fs::create_dir_all(&dst)?,
+    }
 
     trace!("Reading source directory: {:?}", src.as_ref());
     let mut total_size = 0;
@@ -121,28 +207,24 @@ fn copy_dir_all(src: impl AsRef<Path>, dst: impl AsRef<Path>) -> io::Result<u64>
 
         let size: u64 = if ty.is_dir() {
             trace!("Copying subdirectory: {:?}", entry.path());
-            let subdir_size = copy_dir_all(entry.path(), dest_path)?;
+            let subdir_size = copy_dir_all(entry.path(), dest_path, boundary)?;
             dirs_copied += 1;
-            trace!(
-                "Successfully copied subdirectory: {:?} ({} bytes)",
-                entry_name, subdir_size
-            );
             subdir_size
         } else if ty.is_symlink() {
             trace!("Copying symlink: {:?}", entry.path());
             remove_existing_symlink(&dest_path)?;
             symlink(fs::read_link(entry.path())?, dest_path)?;
             symlinks_copied += 1;
-            trace!("Successfully copied symlink: {:?}", entry_name);
             0
         } else {
             trace!("Copying file: {:?}", entry.path());
+            // On restore, replace a pre-existing symlink rather than following
+            // it out of the workspace.
+            if boundary.is_some() {
+                remove_existing_symlink(&dest_path)?;
+            }
             let file_size = fs::copy(entry.path(), dest_path)?;
             files_copied += 1;
-            trace!(
-                "Successfully copied file: {:?} ({} bytes)",
-                entry_name, file_size
-            );
             file_size
         };
         total_size += size;
@@ -239,5 +321,79 @@ mod test {
             temp.child("new-parent/file.txt").read_link().unwrap(),
             target.path()
         );
+    }
+
+    #[test]
+    fn restore_copies_only_declared_outputs() {
+        // A malicious artifact ships files beyond the declared outputs; the
+        // restore must copy ONLY the declared (expanded) outputs.
+        let cache = TempDir::new().unwrap();
+        let workspace = TempDir::new().unwrap();
+
+        cache.child("dist/main.js").write_str("ok").unwrap();
+        cache
+            .child(".git/hooks/pre-commit")
+            .write_str("#!/bin/sh\nevil")
+            .unwrap();
+        cache.child("package.json").write_str("{evil}").unwrap();
+
+        let expanded = vec!["dist/main.js".to_string()];
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+
+        assert!(workspace.child("dist/main.js").exists());
+        assert!(!workspace.child(".git/hooks/pre-commit").exists());
+        assert!(!workspace.child("package.json").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_traverse_parent_symlink() {
+        use std::os::unix::fs::symlink;
+
+        // A directory outside the workspace holding a victim file.
+        let outside = TempDir::new().unwrap();
+        outside.child("keep.txt").write_str("keep").unwrap();
+
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/payload.js").write_str("PWNED").unwrap();
+
+        let workspace = TempDir::new().unwrap();
+        // A planted/pre-existing symlink: <workspace>/dist -> <outside>.
+        symlink(outside.path(), workspace.join("dist")).unwrap();
+
+        let expanded = vec!["dist/payload.js".to_string()];
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+
+        // The write must land in the workspace, not through the symlink.
+        assert!(!outside.child("payload.js").exists());
+        // The implicit delete must not have followed the symlink either.
+        assert!(outside.child("keep.txt").exists());
+        // The symlink was replaced with a real directory holding the output.
+        assert!(workspace.child("dist/payload.js").exists());
+        assert!(
+            !workspace
+                .join("dist")
+                .symlink_metadata()
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn remove_path_unlinks_symlink_without_following() {
+        use std::os::unix::fs::symlink;
+
+        let outside = TempDir::new().unwrap();
+        outside.child("keep.txt").write_str("keep").unwrap();
+
+        let workspace = TempDir::new().unwrap();
+        symlink(outside.path(), workspace.join("link")).unwrap();
+
+        remove_path(&workspace.join("link")).unwrap();
+
+        assert!(workspace.join("link").symlink_metadata().is_err());
+        assert!(outside.child("keep.txt").exists());
     }
 }
