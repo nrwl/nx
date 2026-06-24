@@ -437,6 +437,11 @@ export function normalizePerformanceReport(output: string): string {
         .replace(/\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b/g, '{DURATION}')
         // "8 cores" / "1 core" in the machine-bound recommendation
         .replace(/\b\d+(?= cores?\b)/g, '{CORES}')
+        // The longest-tasks list right-aligns durations (padStart), so a shorter
+        // duration carries leading pad spaces that survive the {DURATION} swap and
+        // vary run-to-run. Collapse the id→duration gap back to the base 4-space
+        // separator so the table is deterministic.
+        .replace(/^([ \t]+\S+) {4,}(\{DURATION\})$/gm, '$1    $2')
   );
 }
 
