@@ -413,15 +413,30 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+          const updateEntries = Object.entries(packageUpdate.packages);
+          // Validate all up front so invalid metadata fails fast, before any
+          // resolution does I/O.
+          for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            filteredUpdates[name] = update;
-            this.packageUpdates[name] = update;
-          });
+          }
+          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
+          // append to minimumReleaseAgeExclude, so a serial loop avoids
+          // overlapping prompts and keeps packageUpdates ordering stable.
+          for (const [name, update] of updateEntries) {
+            const resolvedUpdate = {
+              ...update,
+              version: await this.resolveVersionForCascade(
+                name,
+                update.version
+              ),
+            };
+            filteredUpdates[name] = resolvedUpdate;
+            this.packageUpdates[name] = resolvedUpdate;
+          }
         }
       }
 
@@ -431,6 +446,19 @@ export class Migrator {
         )
       );
     }
+  }
+
+  private async resolveVersionForCascade(
+    packageName: string,
+    version: string
+  ): Promise<string> {
+    // Already a fully-qualified semver (incl. prereleases) - nothing to resolve.
+    if (valid(version)) {
+      return version;
+    }
+    // Otherwise resolve the spec (range/tag) through the min-release-age policy,
+    // which also honors any configured minimumReleaseAgeExclude entries.
+    return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
