@@ -449,9 +449,15 @@ impl TuiState {
 
     // === User Interaction Methods ===
 
-    /// Mark that the user has interacted with the TUI
+    /// Mark that the user has interacted with the TUI.
+    ///
+    /// Also cancels any pending auto-exit countdown: that countdown only applies
+    /// while the user is idle, so any interaction keeps the TUI running. The explicit
+    /// quit handlers (q / Ctrl-C) re-schedule a quit when the user actually confirms,
+    /// so this can't strand a deliberate quit.
     pub fn mark_user_interacted(&mut self) {
         self.user_has_interacted = true;
+        self.quit_at = None;
     }
 
     /// Check if the user has interacted with the TUI
@@ -891,6 +897,21 @@ mod tests {
 
         // Now true
         assert!(state.has_user_interacted());
+    }
+
+    #[test]
+    fn test_interaction_cancels_pending_auto_exit() {
+        let mut state = create_test_state();
+
+        // An auto-exit countdown is pending.
+        state.schedule_quit(Duration::from_secs(3));
+        assert!(state.quit_at.is_some());
+
+        // Interacting keeps the TUI running: the pending quit is cleared, not just
+        // "not yet reached".
+        state.mark_user_interacted();
+        assert!(state.quit_at.is_none());
+        assert!(!state.should_quit());
     }
 
     // === Forced Shutdown Tests ===

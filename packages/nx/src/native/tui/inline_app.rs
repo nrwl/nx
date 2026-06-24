@@ -371,6 +371,13 @@ impl TuiApp for InlineApp {
                 return Ok(false);
             }
             tui::Event::Key(key) => {
+                // A key press is user interaction. Inline mode otherwise records none,
+                // so the run-end auto-exit decision would treat an active inline user
+                // as idle and quit on them. This also clears any pending auto-exit (see
+                // mark_user_interacted); the explicit q / Ctrl-C handlers below re-quit
+                // when the user actually confirms.
+                self.core.mark_user_interacted();
+
                 // If countdown popup is visible, handle countdown-specific keys
                 if self.countdown_popup.is_visible() {
                     match key.code {
@@ -1260,6 +1267,27 @@ mod tests {
         // Should dispatch SwitchMode(FullScreen) action
         let action = rx.try_recv().unwrap();
         assert!(matches!(action, Action::SwitchMode(TuiMode::FullScreen)));
+    }
+
+    #[test]
+    fn test_keypress_records_interaction_and_cancels_auto_exit() {
+        // Regression: inline mode recorded no interaction, so the run-end auto-exit
+        // decision treated an active inline user as idle and quit on them. A key press
+        // must mark interaction and clear any already-pending auto-exit countdown.
+        let mut app = create_test_inline_app();
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+
+        // Simulate an auto-exit countdown already scheduled, with no interaction yet.
+        app.core().schedule_quit(std::time::Duration::from_secs(3));
+        assert!(!app.core().state().lock().has_user_interacted());
+
+        // A plain navigation key (not q / Ctrl-C) is interaction.
+        let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('j'), KeyModifiers::NONE));
+        app.handle_event(event, &tx).unwrap();
+
+        assert!(app.core().state().lock().has_user_interacted());
+        assert!(!app.should_quit()); // the pending auto-exit was cancelled
     }
 
     #[test]

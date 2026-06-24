@@ -662,7 +662,10 @@ impl App {
                 // If the app is in interactive mode, interactions are with
                 // the running task, not the app itself
                 if !self.is_interactive_mode() {
-                    // Record that the user has interacted with the app
+                    // Record that the user has interacted with the app. This also
+                    // cancels any pending auto-exit countdown (see mark_user_interacted),
+                    // so a key press reliably keeps the TUI running even if it returns
+                    // before reaching the countdown popup's own key handling below.
                     self.core.mark_user_interacted();
                 }
 
@@ -685,6 +688,11 @@ impl App {
                             Ok(false)
                         }
                         _ => {
+                            // Typing into a running interactive task still means the
+                            // user is present, so record it (the `!is_interactive_mode()`
+                            // guard above skipped the mark) before forwarding the key —
+                            // otherwise the run-end auto-exit would quit on an active user.
+                            self.core.mark_user_interacted();
                             // The TasksList will forward the key event to the focused terminal pane
                             self.handle_key_event(key).ok();
                             Ok(false)
