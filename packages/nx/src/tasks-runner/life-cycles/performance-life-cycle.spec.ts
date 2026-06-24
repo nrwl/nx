@@ -4,11 +4,10 @@ import { TaskResult } from '../life-cycle';
 import {
   PerformanceLifeCycle,
   flushPerformanceReport,
-  formatDuration,
-  formatReport,
   getPerformanceSummaryPayload,
   overlap,
 } from './performance-life-cycle';
+import { formatDuration, formatReport } from './performance-report';
 import { getThreadPoolSize } from '../task-orchestrator';
 
 function makeTask(
