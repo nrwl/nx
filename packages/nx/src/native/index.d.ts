@@ -275,6 +275,17 @@ export interface CachedResult {
   size?: number
 }
 
+/**
+ * Cache outcome for the report: tasks restored vs the total that had a cache
+ * outcome. Present only when there was a cache outcome to show; a bypassed cache
+ * is signalled separately by `cache_skipped`. One field instead of a
+ * hits/total pair makes "one set, the other not" unrepresentable.
+ */
+export interface CacheStat {
+  hits: number
+  total: number
+}
+
 export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
@@ -584,8 +595,7 @@ export interface PerformanceSummaryPayload {
   criticalPathMs: number
   criticalPathTaskCount: number
   recoverableMs: number
-  cacheHits?: number
-  cacheableCount?: number
+  cache?: CacheStat
   cacheSkipped: boolean
   /** Already in display order; a multi-line entry embeds a task list. */
   recommendations: Array<string>

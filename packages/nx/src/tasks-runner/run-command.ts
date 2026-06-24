@@ -19,6 +19,9 @@ import {
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
 import { hashArray, logDebug, RunMode } from '../native';
+// Type-only: the runtime `AppLifeCycle` is loaded via dynamic import below (so it
+// stays `any`); this alias lets us type the endCommand wrapper without shadowing it.
+import type { AppLifeCycle as AppLifeCycleClass } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -232,11 +235,30 @@ async function getTerminalOutputLifeCycle(
       // task timing is in — by wrapping appLifeCycle.endCommand to pull the
       // structured report and forward it to the native endCommand. napi ignores
       // the extra arg on an older binding, so a run is never crashed by it.
-      const nativeEndCommand = (appLifeCycle as any).endCommand.bind(
-        appLifeCycle
-      );
-      (appLifeCycle as any).endCommand = () =>
-        nativeEndCommand(getPerformanceSummaryPayload() ?? undefined);
+      // Guard the wrap: if the native method is ever missing/renamed, skip the
+      // wrapping (the report just won't be delivered) rather than throwing at
+      // construction and crashing an otherwise-successful run. The payload getter
+      // is already internally best-effort (returns null on any error); we don't
+      // swallow the native endCommand call itself, since it does the real
+      // end-of-command work and a genuine failure there should not be hidden.
+      // `appLifeCycle` is `any` (dynamic import); view it through the class type so
+      // the endCommand call below is type-checked against PerformanceSummaryPayload.
+      const typedAppLifeCycle = appLifeCycle as AppLifeCycleClass;
+      const boundEndCommand =
+        typedAppLifeCycle.endCommand?.bind(typedAppLifeCycle);
+      if (typeof boundEndCommand === 'function') {
+        typedAppLifeCycle.endCommand = () =>
+          // Only hand the report to the popup when it will actually render.
+          // Multi-task runs get the exit-countdown popup; a single-task run exits
+          // immediately with no popup, so leave the report unconsumed and let the
+          // terminal flush below print it (otherwise it would vanish — consumed
+          // into a popup that never shows).
+          boundEndCommand(
+            tasks.length > 1
+              ? (getPerformanceSummaryPayload() ?? undefined)
+              : undefined
+          );
+      }
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
@@ -583,9 +605,10 @@ export async function runCommandForTasks(
       printSummary();
     }
 
-    // In the TUI the report was rendered in the exit-countdown popup during the
-    // run; otherwise print it to the terminal now that it's been restored.
-    if (!isTuiEnabled()) {
+    // In a multi-task TUI run the report was rendered in the exit-countdown popup
+    // during the run; otherwise (non-TUI, or a single-task TUI run that exited
+    // immediately with no popup) print it to the terminal now that it's restored.
+    if (!isTuiEnabled() || tasks.length <= 1) {
       flushPerformanceReport();
     }
 

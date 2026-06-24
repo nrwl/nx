@@ -1,6 +1,6 @@
 import * as os from 'node:os';
 import { performance } from 'node:perf_hooks';
-import type { BatchInfo } from '../../native';
+import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
 import { TaskGraph } from '../../config/task-graph';
 import { readNxJson } from '../../config/nx-json';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
@@ -80,11 +80,13 @@ export interface PerformanceSummary {
   criticalPathTop: Array<{ id: string; duration: number }>;
   /** runDuration − criticalPathDuration. */
   overhead: number;
-  /** Overhead split by lever; these + coordinatorOverhead sum to `overhead`. */
+  /**
+   * Overhead split by lever; these + coordinatorOverhead sum to `overhead`. Their
+   * sum is the slot-contention time — derive it via {@link recoverableTime} rather
+   * than storing a third field that can drift.
+   */
   recoverableByParallel: number;
   recoverableByMachines: number;
-  /** recoverableByParallel + recoverableByMachines — the slot-contention time. */
-  recoverable: number;
   coordinatorOverhead: number;
   /**
    * Diagnostic: dispatch/scheduling latency — time a task was eligible with a free
@@ -108,8 +110,10 @@ export interface PerformanceSummary {
 
 /**
  * Measures how much wall-clock a run loses to parallelism contention versus its
- * critical-path floor, and prints a report at the end of every run (see
- * `constructLifeCycles`). overhead = runDuration − criticalPathDuration, split by
+ * critical-path floor, and prints a report at the end of a normal task run. It is
+ * added by `constructLifeCycles` only when a task graph is supplied (the main
+ * `invokeTasksRunner` path) — not the programmatic `init-tasks-runner` path.
+ * overhead = runDuration − criticalPathDuration, split by
  * CAUSE off the occupancy timeline: slot-queued time (recoverable by parallelism /
  * machines) versus coordinator time (hashing, scheduling, continuous-dep waits).
  *
@@ -335,26 +339,38 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   /**
-   * Occupancy timeline: contiguous segments, each carrying slots busy (`occ`) and
-   * tasks eligible-but-not-running (`waiting`). A `parallelism: false` task occupies
-   * the whole pool. Single source of truth for slot contention; integrates over time
-   * rather than sampling one instant, so it's robust to when tasks hand off.
+   * Occupancy timeline: contiguous segments, each carrying slots busy (`occ`),
+   * tasks eligible-but-not-running (`waiting`), and how many `parallelism: false`
+   * tasks are running (`monopoly`). A `parallelism: false` task occupies the whole
+   * pool. Single source of truth for slot contention; integrates over time rather
+   * than sampling one instant, so it's robust to when tasks hand off.
    */
   private buildSegments(
     timed: Array<{ id: string; start: number; end: number }>,
     eligible: Map<string, number>,
     parallel: number
-  ): Array<{ start: number; end: number; occ: number; waiting: number }> {
+  ): Array<{
+    start: number;
+    end: number;
+    occ: number;
+    waiting: number;
+    monopoly: number;
+  }> {
     const occDelta = new Map<number, number>();
     const waitDelta = new Map<number, number>();
+    const monopolyDelta = new Map<number, number>();
     const bump = (m: Map<number, number>, t: number, d: number) =>
       m.set(t, (m.get(t) ?? 0) + d);
 
     for (const { id, start, end } of timed) {
-      const weight =
-        this.taskGraph.tasks[id]?.parallelism === false ? parallel : 1;
+      const monopolizes = this.taskGraph.tasks[id]?.parallelism === false;
+      const weight = monopolizes ? parallel : 1;
       bump(occDelta, start, weight);
       bump(occDelta, end, -weight);
+      if (monopolizes) {
+        bump(monopolyDelta, start, 1);
+        bump(monopolyDelta, end, -1);
+      }
       const elig = eligible.get(id) ?? start;
       if (elig < start) {
         bump(waitDelta, elig, 1);
@@ -363,7 +379,11 @@ export class PerformanceLifeCycle implements LifeCycle {
     }
 
     const times = Array.from(
-      new Set([...occDelta.keys(), ...waitDelta.keys()])
+      new Set([
+        ...occDelta.keys(),
+        ...waitDelta.keys(),
+        ...monopolyDelta.keys(),
+      ])
     ).sort((a, b) => a - b);
 
     const segments: Array<{
@@ -371,15 +391,18 @@ export class PerformanceLifeCycle implements LifeCycle {
       end: number;
       occ: number;
       waiting: number;
+      monopoly: number;
     }> = [];
     let occ = 0;
     let waiting = 0;
+    let monopoly = 0;
     for (let i = 0; i < times.length; i++) {
       occ += occDelta.get(times[i]) ?? 0;
       waiting += waitDelta.get(times[i]) ?? 0;
+      monopoly += monopolyDelta.get(times[i]) ?? 0;
       const next = times[i + 1];
       if (next != null && next > times[i]) {
-        segments.push({ start: times[i], end: next, occ, waiting });
+        segments.push({ start: times[i], end: next, occ, waiting, monopoly });
       }
     }
     return segments;
@@ -577,24 +600,35 @@ export class PerformanceLifeCycle implements LifeCycle {
     // Split overhead by CAUSE off the occupancy timeline: slot contention = wall-clock
     // where every slot was busy AND tasks were queued (occ ≥ parallel with a backlog);
     // everything else is coordinator time. Capped by overhead so the two sum to it.
-    const slotContendedTime = segments.reduce(
-      (sum, s) =>
-        s.occ >= parallel && s.waiting > 0 ? sum + (s.end - s.start) : sum,
-      0
-    );
+    // Track separately the contention while a `parallelism: false` task held the whole
+    // pool: a higher local --parallel can't recover that (the task occupies every slot
+    // by design), so it must be attributed to machines, not parallelism.
+    let slotContendedTime = 0;
+    let monopolizedContendedTime = 0;
+    for (const s of segments) {
+      if (s.occ >= parallel && s.waiting > 0) {
+        const dur = s.end - s.start;
+        slotContendedTime += dur;
+        if (s.monopoly > 0) {
+          monopolizedContendedTime += dur;
+        }
+      }
+    }
     const recoverableBySlots = Math.min(overhead, slotContendedTime);
     const coordinatorOverhead = overhead - recoverableBySlots;
-    // Of the slot-recoverable part, --parallel helps while there are spare cores;
-    // the volume cores-way parallelism can't absorb (max(0, totalWork/cores − floor))
-    // needs more machines. At parallel ≥ cores there's no --parallel headroom.
+    // Pool-monopolized contention recovers only by more machines (never --parallel).
+    const monopolized = Math.min(recoverableBySlots, monopolizedContendedTime);
+    const ordinaryBySlots = recoverableBySlots - monopolized;
+    // Of the ordinary slot-recoverable part, --parallel helps while there are spare
+    // cores; the volume cores-way parallelism can't absorb (max(0, totalWork/cores −
+    // floor)) needs more machines. At parallel ≥ cores there's no --parallel headroom.
     const machineBound =
       parallel < cores
         ? Math.max(0, totalWork / cores - criticalPathDuration)
         : Infinity;
-    const recoverableByMachines = Math.min(recoverableBySlots, machineBound);
-    const recoverableByParallel = recoverableBySlots - recoverableByMachines;
-    // Slot-contention total, computed once so payload and report read one number.
-    const recoverable = recoverableByParallel + recoverableByMachines;
+    const ordinaryByMachines = Math.min(ordinaryBySlots, machineBound);
+    const recoverableByMachines = monopolized + ordinaryByMachines;
+    const recoverableByParallel = ordinaryBySlots - ordinaryByMachines;
 
     // Dispatch/scheduling latency: wall-clock where a slot was free (occ < parallel)
     // AND a task was eligible but unstarted (waiting > 0), minus any hashing in that
@@ -650,6 +684,7 @@ export class PerformanceLifeCycle implements LifeCycle {
       recoverableByMachines,
       coordinatorDominated,
       runDuration,
+      parallel,
       cores,
       canDistribute,
       distributing,
@@ -665,7 +700,6 @@ export class PerformanceLifeCycle implements LifeCycle {
       overhead,
       recoverableByParallel,
       recoverableByMachines,
-      recoverable,
       coordinatorOverhead,
       schedulingOverhead,
       parallel,
@@ -753,6 +787,15 @@ function collectHashWindows(): Array<[number, number]> {
   }
 }
 
+/**
+ * Slot-contention time recoverable by parallelism or more machines — the single
+ * source for the "recoverable" number the report and the TUI payload both show.
+ * Derived, never stored, so the two halves can't drift from their sum.
+ */
+function recoverableTime(s: PerformanceSummary): number {
+  return s.recoverableByParallel + s.recoverableByMachines;
+}
+
 /** Total time [a, b] overlaps the given (unsorted, possibly overlapping) intervals. */
 export function overlap(
   a: number,
@@ -776,6 +819,7 @@ function buildRecommendation(args: {
   recoverableByMachines: number;
   coordinatorDominated: boolean;
   runDuration: number;
+  parallel: number;
   cores: number;
   canDistribute: boolean;
   distributing: boolean;
@@ -786,6 +830,7 @@ function buildRecommendation(args: {
     recoverableByMachines,
     coordinatorDominated,
     runDuration,
+    parallel,
     cores,
     canDistribute,
     distributing,
@@ -818,17 +863,29 @@ function buildRecommendation(args: {
         )}.`,
       ];
     }
-    // Machine-bound: at the core count and still queuing. Agents for CPU-bound work;
-    // otherwise only the I/O-bound --parallel tip applies.
+    // Machine-bound: contention a higher local --parallel can't recover.
     if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
-      const base = `You're at this machine's ${cores} ${pluralizeCores(
-        cores
-      )} and tasks are still queuing for a slot.`;
-      return [
-        canDistribute
-          ? `${base} If they're CPU-bound, distribute across machines with Nx Agents → ${NX_AGENTS_LINK}; if they're I/O-bound, a higher --parallel may help instead.`
-          : `${base} If they're I/O-bound, a higher --parallel may help.`,
-      ];
+      if (parallel >= cores) {
+        // At the core ceiling and still queuing. Agents for CPU-bound work;
+        // otherwise only the I/O-bound --parallel tip applies.
+        const base = `You're at this machine's ${cores} ${pluralizeCores(
+          cores
+        )} and tasks are still queuing for a slot.`;
+        return [
+          canDistribute
+            ? `${base} If they're CPU-bound, distribute across machines with Nx Agents → ${NX_AGENTS_LINK}; if they're I/O-bound, a higher --parallel may help instead.`
+            : `${base} If they're I/O-bound, a higher --parallel may help.`,
+        ];
+      }
+      // Below the core ceiling but still machine-bound: a task is monopolizing the
+      // pool (parallelism: false) or the volume exceeds what these cores can absorb.
+      // A higher --parallel can't free those slots; only more machines can — and
+      // that lever only exists in CI, so locally there's nothing to recommend.
+      return canDistribute
+        ? [
+            `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → ${NX_AGENTS_LINK}.`,
+          ]
+        : [];
     }
     // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are
     // the only lever; locally nothing actionable, so no recommendation.
@@ -874,7 +931,12 @@ function formatTopTaskRows(
 }
 
 function pluralizeCores(cores: number): string {
-  return cores === 1 ? 'core' : 'cores';
+  return pluralize(cores, 'core');
+}
+
+/** Append "s" unless `count` is 1 (regular plurals only). */
+function pluralize(count: number, noun: string): string {
+  return count === 1 ? noun : `${noun}s`;
 }
 
 /**
@@ -896,32 +958,11 @@ function orderedRecommendations(s: PerformanceSummary): string[] {
 }
 
 /**
- * Structured payload for the TUI's exit-countdown popup, which builds the visual
- * natively in Rust (the terminal path uses {@link formatReport}). Field names map
- * to the napi object's camelCase (see `PerformanceSummaryPayload`).
+ * Build the structured payload for the TUI's exit-countdown popup, which renders
+ * the visual natively in Rust (the terminal path uses {@link formatReport}). The
+ * shape is the generated napi {@link PerformanceSummaryPayload}, imported rather
+ * than re-declared so the producer and the Rust struct can't drift.
  */
-export interface PerformanceSummaryPayload {
-  runDurationMs: number;
-  criticalPathMs: number;
-  criticalPathTaskCount: number;
-  recoverableMs: number;
-  /** Omitted when there's no cache outcome to show. */
-  cacheHits?: number;
-  cacheableCount?: number;
-  cacheSkipped: boolean;
-  /** Already in display order; a multi-line entry embeds the task list. */
-  recommendations: string[];
-  /** The docs footer link the popup renders and hyperlinks (label + tagged href). */
-  footer: { text: string; href: string };
-  /**
-   * Recommendation phrases the popup should hyperlink in place (currently just the
-   * remote-cache CTA). The popup links the text it was given to the href — no
-   * hardcoded URLs or byte-identical label constants on the Rust side. Empty when
-   * none apply.
-   */
-  links: Array<{ text: string; href: string }>;
-}
-
 function buildExitSummaryPayload(
   s: PerformanceSummary
 ): PerformanceSummaryPayload {
@@ -931,9 +972,12 @@ function buildExitSummaryPayload(
     runDurationMs: s.runDuration,
     criticalPathMs: s.criticalPathDuration,
     criticalPathTaskCount: s.criticalPathTaskCount,
-    recoverableMs: s.recoverable,
-    cacheHits: hasCache ? s.cacheHits : undefined,
-    cacheableCount: hasCache ? s.cacheableCount : undefined,
+    recoverableMs: recoverableTime(s),
+    // One nested field instead of a hits/total pair: "one set, the other not" is
+    // unrepresentable, and the Rust side drops its defensive match.
+    cache: hasCache
+      ? { hits: s.cacheHits, total: s.cacheableCount }
+      : undefined,
     cacheSkipped: s.cacheSkipped,
     recommendations,
     footer: { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
@@ -975,7 +1019,7 @@ export function formatReport(s: PerformanceSummary): string {
   // Shows two of run duration's three parts (critical path + recoverable); the third,
   // coordinator overhead, is computed but not displayed, so the two don't sum to run
   // duration. "Critical path", not "floor" — durations shift with --parallel.
-  const recoverable = s.recoverable;
+  const recoverable = recoverableTime(s);
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const stat = (label: string, value: string) =>
@@ -987,7 +1031,9 @@ export function formatReport(s: PerformanceSummary): string {
     ...(cache ? [stat('Cache', cache)] : []),
     stat(
       'Critical path',
-      `${fmt(s.criticalPathDuration)}   (${s.criticalPathTaskCount} tasks)`
+      `${fmt(s.criticalPathDuration)}   (${
+        s.criticalPathTaskCount
+      } ${pluralize(s.criticalPathTaskCount, 'task')})`
     ),
     stat(
       'Recoverable time',

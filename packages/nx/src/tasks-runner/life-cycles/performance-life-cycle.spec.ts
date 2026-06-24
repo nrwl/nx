@@ -3,11 +3,13 @@ import { Task, TaskGraph } from '../../config/task-graph';
 import { TaskResult } from '../life-cycle';
 import {
   PerformanceLifeCycle,
+  flushPerformanceReport,
   formatDuration,
   formatReport,
   getPerformanceSummaryPayload,
   overlap,
 } from './performance-life-cycle';
+import { getThreadPoolSize } from '../task-orchestrator';
 
 function makeTask(
   id: string,
@@ -116,6 +118,30 @@ function run(
 describe('PerformanceLifeCycle', () => {
   it('returns null when there are no discrete task timings', () => {
     expect(run(makeGraph([makeTask('a')]), 4)).toBeNull();
+  });
+
+  it('returns null for an empty task graph', () => {
+    expect(run(makeGraph([]), 4)).toBeNull();
+  });
+
+  it('returns null when only continuous tasks ran (no end times)', () => {
+    const c1 = makeTask('c1', { continuous: true });
+    const c2 = makeTask('c2', { continuous: true });
+    expect(run(makeGraph([c1, c2]), 4)).toBeNull();
+  });
+
+  it('reports a zero-duration run without dividing by zero', () => {
+    // A single instant task (start == end) → runDuration 0. The recoverable
+    // percentage must guard the division and the report must still render.
+    const a = makeTask('a', { start: 0, end: 0 });
+    const s = run(makeGraph([a]), 1)!;
+
+    expect(s.runDuration).toBe(0);
+    expect(s.overhead).toBe(0);
+    const report = formatReport(s);
+    expect(report).toContain('Run duration:              0ms');
+    expect(report).not.toContain('NaN');
+    expect(report).not.toContain('Infinity');
   });
 
   it('reports zero overhead and a dependency-gated chain for a single chain', () => {
@@ -431,6 +457,20 @@ describe('PerformanceLifeCycle', () => {
     expect(s.overhead).toBe(1000);
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
+  });
+
+  it('attributes pool-monopolized contention to machines, never to --parallel', () => {
+    // `np` monopolizes both slots (parallelism:false) while `x` queues. A higher
+    // local --parallel can't recover that — the task holds every slot by design —
+    // so the time must land in recoverable-by-machines, and the run must NOT
+    // suggest increasing --parallel (an unactionable lever here).
+    const np = makeTask('np', { start: 0, end: 1000, parallelism: false });
+    const x = makeTask('x', { start: 1000, end: 2000 });
+    const s = run(makeGraph([np, x]), 2)!;
+
+    expect(s.recoverableByMachines).toBe(1000);
+    expect(s.recoverableByParallel).toBe(0);
+    expect(s.recommendations.join('\n')).not.toContain('Increase parallelism');
   });
 
   it('attributes volume beyond one machine to recoverable-by-machines even when parallel < cores', () => {
@@ -800,6 +840,12 @@ describe('formatDuration', () => {
     expect(formatDuration(999)).toBe('999ms');
   });
 
+  it('handles zero and sub-millisecond instants', () => {
+    expect(formatDuration(0)).toBe('0ms');
+    expect(formatDuration(0.4)).toBe('0ms'); // rounds toward zero
+    expect(formatDuration(0.6)).toBe('1ms');
+  });
+
   it('shows one decimal from 1s up to a minute', () => {
     expect(formatDuration(1000)).toBe('1.0s');
     expect(formatDuration(3500)).toBe('3.5s');
@@ -831,6 +877,48 @@ describe('formatReport', () => {
     expect(report).toContain('Recoverable time:');
     // Single recommendation (no cache advice here) stays a plain line.
     expect(report).toContain('Recommendation:');
+  });
+
+  it('OSC 8-links the footer and agents URLs when hyperlinks are supported', () => {
+    // The snapshot test pins the no-OSC-8 form (FORCE_HYPERLINK=0). This pins the
+    // other branch: with hyperlinks on, the docs footer AND the agents URL become
+    // OSC 8 links whose visible text is the clean URL and whose target carries the
+    // utm tag (the cache CTA's both-ways coverage already exists; this adds the
+    // URL-style links).
+    const OSC8 = ']8;;';
+    const BEL = '';
+    const footerHref =
+      'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report';
+    const footerVisible =
+      'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
+    const agentsHref =
+      'https://nx.dev/ci/features/distribute-task-execution?utm=performance-report';
+    const agentsVisible =
+      'https://nx.dev/ci/features/distribute-task-execution';
+
+    const prev = process.env.FORCE_HYPERLINK;
+    process.env.FORCE_HYPERLINK = '1';
+    try {
+      // CI + cold cache → the report carries both the agents rec and the footer.
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const s = run(makeGraph([a]), 1, {
+        statuses: { a: 'success' },
+        remoteCacheEnabled: false,
+        isCI: true,
+      })!;
+      const report = formatReport(s);
+
+      expect(report).toContain(`${OSC8}${footerHref}${BEL}${footerVisible}`);
+      expect(report).toContain(`${OSC8}${agentsHref}${BEL}${agentsVisible}`);
+      // The clean visible URL is shown, not the tagged target, outside the escape.
+      expect(report).not.toContain(`→ ${footerHref}`);
+    } finally {
+      if (prev === undefined) {
+        delete process.env.FORCE_HYPERLINK;
+      } else {
+        process.env.FORCE_HYPERLINK = prev;
+      }
+    }
   });
 
   it('lists the parallelism lever before the cache recommendation', () => {
@@ -911,7 +999,7 @@ describe('formatReport', () => {
       expect(formatReport(s)).toMatchInlineSnapshot(`
         "  Run duration:              1.0s
           Cache:                     0/1 hit (0%)
-          Critical path:             1.0s   (1 tasks)
+          Critical path:             1.0s   (1 task)
           Recoverable time:          0ms
 
           Recommendations:
@@ -949,5 +1037,127 @@ describe('overlap', () => {
       ])
     ).toBe(15);
     expect(overlap(0, 10, [[20, 30]])).toBe(0);
+  });
+});
+
+describe('flushPerformanceReport', () => {
+  let writeSpy: jest.SpyInstance;
+  let written: string;
+  let originalIsTTY: boolean | undefined;
+
+  beforeEach(() => {
+    written = '';
+    originalIsTTY = process.stdout.isTTY;
+    writeSpy = jest
+      .spyOn(process.stdout, 'write')
+      .mockImplementation((chunk: any) => {
+        written += String(chunk);
+        return true;
+      });
+  });
+
+  afterEach(() => {
+    writeSpy.mockRestore();
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: originalIsTTY,
+      configurable: true,
+    });
+  });
+
+  function setTTY(isTTY: boolean) {
+    Object.defineProperty(process.stdout, 'isTTY', {
+      value: isTTY,
+      configurable: true,
+    });
+  }
+
+  it('ends piped output in exactly one trailing newline', () => {
+    setTTY(false);
+    const a = makeTask('a', { start: 0, end: 1000 });
+    feedActive(makeGraph([a]));
+
+    flushPerformanceReport();
+
+    expect(written).not.toBe('');
+    expect(written.endsWith('\n')).toBe(true);
+    expect(written.endsWith('\n\n')).toBe(false);
+    expect(written).not.toContain('\r\n');
+  });
+
+  it('uses CRLF on a TTY (terminal may still be in raw mode)', () => {
+    setTTY(true);
+    const a = makeTask('a', { start: 0, end: 1000 });
+    feedActive(makeGraph([a]));
+
+    flushPerformanceReport();
+
+    expect(written).toContain('\r\n');
+    expect(written.endsWith('\r\n')).toBe(true);
+    // No bare "\n" that isn't part of a "\r\n" (would staircase a raw terminal).
+    expect(/(?<!\r)\n/.test(written)).toBe(false);
+  });
+
+  it('is a no-op once the payload was already consumed', () => {
+    setTTY(false);
+    const a = makeTask('a', { start: 0, end: 1000 });
+    feedActive(makeGraph([a]));
+    // The TUI path consumes the report via the payload getter first.
+    expect(getPerformanceSummaryPayload()).not.toBeNull();
+
+    flushPerformanceReport();
+
+    expect(written).toBe('');
+  });
+
+  it('swallows a write failure (cosmetic report never fails the run)', () => {
+    setTTY(false);
+    writeSpy.mockImplementation(() => {
+      throw new Error('EPIPE');
+    });
+    const a = makeTask('a', { start: 0, end: 1000 });
+    feedActive(makeGraph([a]));
+
+    expect(() => flushPerformanceReport()).not.toThrow();
+  });
+
+  // Construct a lifecycle (registers it as the active one) and feed it a full run
+  // so the module-level `activePerformanceLifeCycle` is what flush will read.
+  function feedActive(graph: TaskGraph) {
+    const lc = new TestPerformanceLifeCycle(graph);
+    lc.startCommand(1);
+    lc.endTasks(
+      Object.values(graph.tasks).map(
+        (task) => ({ task, status: 'success' }) as unknown as TaskResult
+      )
+    );
+  }
+});
+
+describe('getThreadPoolSize → startCommand contract', () => {
+  it('recovers --parallel exactly from the total fed to startCommand', () => {
+    // getThreadPoolSize hands startCommand `--parallel + continuousCount`; the
+    // lifecycle subtracts the continuous count to recover --parallel. Pin both
+    // ends of that seam together so a refactor that passes discrete-only (or stops
+    // adding the continuous count) fails here instead of silently miscomputing
+    // every parallelism recommendation.
+    const discrete = makeTask('d', { start: 0, end: 1000 });
+    const c1 = makeTask('c1', { continuous: true });
+    const c2 = makeTask('c2', { continuous: true });
+    const graph = makeGraph([discrete, c1, c2]);
+
+    const { discrete: parallelArg, total } = getThreadPoolSize(
+      { parallel: 3 } as any,
+      graph
+    );
+    expect(parallelArg).toBe(3);
+    expect(total).toBe(5); // 3 (--parallel) + 2 continuous
+
+    const lc = new TestPerformanceLifeCycle(graph);
+    lc.startCommand(total);
+    lc.endTasks([
+      { task: discrete, status: 'success' } as unknown as TaskResult,
+    ]);
+
+    expect(lc.getSummary()!.parallel).toBe(parallelArg);
   });
 });

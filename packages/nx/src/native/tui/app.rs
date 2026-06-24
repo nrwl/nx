@@ -777,22 +777,35 @@ impl App {
                                 self.core.state().lock().quit_immediately();
                                 return Ok(false);
                             }
-                            KeyCode::Up | KeyCode::Char('k') => {
+                            KeyCode::Up
+                            | KeyCode::Char('k')
+                            | KeyCode::Down
+                            | KeyCode::Char('j') => {
                                 // ↑/↓ pins the popup open (stops the auto-exit) so
                                 // the report stays up to read; it also scrolls when
                                 // the report is taller than the popup.
                                 countdown_popup.pin_open();
                                 if countdown_popup.is_scrollable() {
-                                    countdown_popup.scroll_up();
+                                    if matches!(key.code, KeyCode::Up | KeyCode::Char('k')) {
+                                        countdown_popup.scroll_up();
+                                    } else {
+                                        countdown_popup.scroll_down();
+                                    }
                                 }
                                 self.core.state().lock().cancel_quit();
                                 return Ok(false);
                             }
-                            KeyCode::Down | KeyCode::Char('j') => {
+                            KeyCode::Char('p') | KeyCode::Char('P')
+                                if countdown_popup.has_summary() =>
+                            {
+                                // The help bar advertises `p` as "reopen report",
+                                // and the reopen handler above is skipped while the
+                                // report is the focused popup. So treat `p` here as
+                                // keep-open (pin) rather than letting it fall through
+                                // to the dismiss catch-all. The mid-run exit dialog
+                                // has no summary, so it isn't matched here and `p`
+                                // still dismisses it like any other key.
                                 countdown_popup.pin_open();
-                                if countdown_popup.is_scrollable() {
-                                    countdown_popup.scroll_down();
-                                }
                                 self.core.state().lock().cancel_quit();
                                 return Ok(false);
                             }

@@ -22,11 +22,9 @@ export function terminalLink(text: string, url: string): string {
 /**
  * Best-effort detection of OSC 8 hyperlink support, adapted from the
  * `supports-hyperlinks` package. Defaults to false when in doubt so we never
- * print raw escape sequences to a terminal that can't render them. Exported so
- * callers can vary the *visible* text by support (e.g. show a tracking
- * querystring inline when there's no clickable target to hide it behind).
+ * print raw escape sequences to a terminal that can't render them.
  */
-export function supportsHyperlinks(): boolean {
+function supportsHyperlinks(): boolean {
   const env = process.env;
 
   if (env.FORCE_HYPERLINK !== undefined) {

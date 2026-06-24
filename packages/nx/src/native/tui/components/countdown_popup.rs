@@ -78,6 +78,10 @@ fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
         }
     }
     let target: String = visible.split_whitespace().collect::<Vec<_>>().join(" ");
+    // Injects at the FIRST whitespace-collapsed match of `visible` in the popup
+    // body. Invariant: each linked phrase (footer label, remote-cache CTA) must be
+    // unique within the popup's rendered text — if a phrase ever appears as a
+    // substring of another line, the link would land on the wrong run.
     let Some(byte_idx) = flat.find(&target) else {
         return;
     };
@@ -134,19 +138,27 @@ fn format_duration(ms: f64) -> String {
     format!("{:.1}s", seconds)
 }
 
+/// Append "s" unless `count` is 1 (mirrors the TS `pluralize`; regular plurals).
+fn pluralize(count: u32, noun: &str) -> String {
+    if count == 1 {
+        noun.to_string()
+    } else {
+        format!("{noun}s")
+    }
+}
+
 /// The cache stat label from the counts, or None when there's nothing to show
 /// (mirrors the TS `cacheStat`).
 fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
     if s.cache_skipped {
         return Some("Skipped (--skip-nx-cache)".to_string());
     }
-    match (s.cache_hits, s.cacheable_count) {
-        (Some(hits), Some(total)) if total > 0 => {
-            let pct = (hits as f64 / total as f64 * 100.0).round() as i64;
-            Some(format!("{hits}/{total} hit ({pct}%)"))
-        }
-        _ => None,
+    let cache = s.cache.as_ref()?;
+    if cache.total == 0 {
+        return None;
     }
+    let pct = (cache.hits as f64 / cache.total as f64 * 100.0).round() as i64;
+    Some(format!("{}/{} hit ({}%)", cache.hits, cache.total, pct))
 }
 
 /// A stat row — left-aligned label (padded), then the value. No leading indent:
@@ -217,9 +229,10 @@ impl CountdownPopup {
         lines.push(stat_line(
             "Critical path",
             format!(
-                "{}   ({} tasks)",
+                "{}   ({} {})",
                 format_duration(s.critical_path_ms),
-                s.critical_path_task_count
+                s.critical_path_task_count,
+                pluralize(s.critical_path_task_count, "task")
             ),
         ));
         let recoverable = if s.recoverable_ms > 0.0 && s.run_duration_ms > 0.0 {
@@ -307,7 +320,8 @@ impl CountdownPopup {
         self.pinned = true;
     }
 
-    /// Whether the countdown has been cancelled (popup is staying open).
+    /// Whether the auto-exit countdown has been pinned/stopped while the popup
+    /// stays open (distinct from `cancel_countdown`, which hides it entirely).
     pub fn is_pinned(&self) -> bool {
         self.pinned
     }
@@ -399,8 +413,9 @@ impl CountdownPopup {
         // Without one (e.g. the user pressed q mid-run, before the report exists) →
         // the original exit dialog: just the interactive hints.
         let mut content: Vec<Line> = Vec::new();
-        // Index of the URL line within `content`, so we can turn it into a real
-        // OSC 8 hyperlink after the Paragraph lays it out (see below).
+        // Whether the report includes the docs-link line — used only as a flag
+        // (`is_some()` below) to gate the OSC 8 injection after the Paragraph lays
+        // the content out. (The stored index is not used; presence is what matters.)
         let mut url_line_index: Option<usize> = None;
         let report = self.build_report_lines();
         let has_report = !report.is_empty();
@@ -692,7 +707,7 @@ impl Component for CountdownPopup {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tui::lifecycle::Link;
+    use crate::native::tui::lifecycle::{CacheStat, Link};
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
 
@@ -710,8 +725,7 @@ mod tests {
             critical_path_ms: 50_000.0,
             critical_path_task_count: 5,
             recoverable_ms: 0.0,
-            cache_hits: None,
-            cacheable_count: None,
+            cache: None,
             cache_skipped: false,
             recommendations,
             footer: Link {
@@ -739,6 +753,13 @@ mod tests {
     }
 
     #[test]
+    fn pluralize_matches_ts() {
+        assert_eq!(pluralize(0, "task"), "tasks");
+        assert_eq!(pluralize(1, "task"), "task");
+        assert_eq!(pluralize(2, "task"), "tasks");
+    }
+
+    #[test]
     fn cache_label_matches_ts() {
         let mut skipped = summary_with(vec![]);
         skipped.cache_skipped = true;
@@ -748,21 +769,72 @@ mod tests {
         );
 
         let mut partial = summary_with(vec![]);
-        partial.cache_hits = Some(1);
-        partial.cacheable_count = Some(3);
+        partial.cache = Some(CacheStat { hits: 1, total: 3 });
         assert_eq!(cache_label(&partial).as_deref(), Some("1/3 hit (33%)"));
 
         let mut full = summary_with(vec![]);
-        full.cache_hits = Some(1);
-        full.cacheable_count = Some(1);
+        full.cache = Some(CacheStat { hits: 1, total: 1 });
         assert_eq!(cache_label(&full).as_deref(), Some("1/1 hit (100%)"));
 
         // Nothing cacheable → no cache line.
         assert_eq!(cache_label(&summary_with(vec![])), None);
         let mut zero = summary_with(vec![]);
-        zero.cache_hits = Some(0);
-        zero.cacheable_count = Some(0);
+        zero.cache = Some(CacheStat { hits: 0, total: 0 });
         assert_eq!(cache_label(&zero), None);
+    }
+
+    /// Render the popup's report to a newline-joined string of cell symbols.
+    fn render_to_string(popup: &mut CountdownPopup) -> String {
+        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                popup.render(f, area);
+            })
+            .unwrap();
+        let buffer = terminal.backend().buffer().clone();
+        let mut text = String::new();
+        for y in 0..buffer.area.height {
+            for x in 0..buffer.area.width {
+                text.push_str(buffer.cell((x, y)).unwrap().symbol());
+            }
+            text.push('\n');
+        }
+        text
+    }
+
+    #[test]
+    fn renders_singular_task_count() {
+        // The grammar fix must hold at the RENDER level, not just in `pluralize`:
+        // a hardcoded "tasks" back in the format string would slip past the
+        // helper-only test, so assert the rendered critical-path line.
+        let mut popup = CountdownPopup::new();
+        let mut s = summary_with(vec![]);
+        s.critical_path_task_count = 1;
+        popup.set_summary(s);
+
+        let text = render_to_string(&mut popup);
+        assert!(text.contains("(1 task)"), "expected a singular task count");
+        assert!(
+            !text.contains("(1 tasks)"),
+            "must not pluralize a single task"
+        );
+    }
+
+    #[test]
+    fn renders_zero_duration_without_nan_or_inf() {
+        // A zero run duration must hit the recoverable-percentage guard rather
+        // than divide by zero and leak NaN/inf into the rendered report.
+        let mut popup = CountdownPopup::new();
+        let mut s = summary_with(vec![]);
+        s.run_duration_ms = 0.0;
+        s.critical_path_ms = 0.0;
+        s.recoverable_ms = 0.0;
+        popup.set_summary(s);
+
+        let text = render_to_string(&mut popup).to_lowercase();
+        assert!(!text.contains("nan"), "NaN leaked into the report");
+        assert!(!text.contains("inf"), "inf leaked into the report");
     }
 
     #[test]

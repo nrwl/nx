@@ -698,7 +698,7 @@ describe('nx release - independent projects - workspaces', () => {
 
                   Run duration:              {DURATION}
                   Cache:                     0/1 hit (0%)
-                  Critical path:             {DURATION}   (1 tasks)
+                  Critical path:             {DURATION}   (1 task)
                   Recoverable time:          {DURATION}
 
                   Recommendations:
@@ -759,7 +759,7 @@ describe('nx release - independent projects - workspaces', () => {
 
                   Run duration:              {DURATION}
                   Cache:                     0/1 hit (0%)
-                  Critical path:             {DURATION}   (1 tasks)
+                  Critical path:             {DURATION}   (1 task)
                   Recoverable time:          {DURATION}
 
                   Recommendations:
@@ -808,7 +808,7 @@ describe('nx release - independent projects - workspaces', () => {
 
                   Run duration:              {DURATION}
                   Cache:                     0/1 hit (0%)
-                  Critical path:             {DURATION}   (1 tasks)
+                  Critical path:             {DURATION}   (1 task)
                   Recoverable time:          {DURATION}
 
                   Recommendations:
@@ -905,7 +905,7 @@ describe('nx release - independent projects - workspaces', () => {
 
         Run duration:              {DURATION}
         Cache:                     0/2 hit (0%)
-        Critical path:             {DURATION}   (1 tasks)
+        Critical path:             {DURATION}   (1 task)
         Recoverable time:          {DURATION}
 
         Recommendations:
@@ -959,7 +959,7 @@ describe('nx release - independent projects - workspaces', () => {
 
         Run duration:              {DURATION}
         Cache:                     0/1 hit (0%)
-        Critical path:             {DURATION}   (1 tasks)
+        Critical path:             {DURATION}   (1 task)
         Recoverable time:          {DURATION}
 
         Recommendations:
@@ -1056,7 +1056,7 @@ describe('nx release - independent projects - workspaces', () => {
 
         Run duration:              {DURATION}
         Cache:                     0/2 hit (0%)
-        Critical path:             {DURATION}   (1 tasks)
+        Critical path:             {DURATION}   (1 task)
         Recoverable time:          {DURATION}
 
         Recommendations:
@@ -1110,7 +1110,7 @@ describe('nx release - independent projects - workspaces', () => {
 
         Run duration:              {DURATION}
         Cache:                     0/1 hit (0%)
-        Critical path:             {DURATION}   (1 tasks)
+        Critical path:             {DURATION}   (1 task)
         Recoverable time:          {DURATION}
 
         Recommendations:
@@ -1182,7 +1182,7 @@ describe('nx release - independent projects - workspaces', () => {
 
         Run duration:              {DURATION}
         Cache:                     0/2 hit (0%)
-        Critical path:             {DURATION}   (1 tasks)
+        Critical path:             {DURATION}   (1 task)
         Recoverable time:          {DURATION}
 
         Recommendations:

@@ -354,6 +354,9 @@ impl TuiApp for InlineApp {
 
     fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
         self.countdown_popup.set_summary(summary);
+        // Unlike the full-screen app, inline mode has no persistent help bar, so
+        // there's no `set_perf_report_available(true)` to call here. If inline mode
+        // ever grows a help bar that advertises the `p` shortcut, mirror that call.
     }
 
     // === Event Handling ===
@@ -382,21 +385,28 @@ impl TuiApp for InlineApp {
                             self.quit_immediately();
                             return Ok(false);
                         }
-                        KeyCode::Up | KeyCode::Char('k') => {
+                        KeyCode::Up | KeyCode::Char('k') | KeyCode::Down | KeyCode::Char('j') => {
                             // ↑/↓ pins the popup open (stops the auto-exit) so the
                             // report stays up to read; it also scrolls on overflow.
                             self.countdown_popup.pin_open();
                             if self.countdown_popup.is_scrollable() {
-                                self.countdown_popup.scroll_up();
+                                if matches!(key.code, KeyCode::Up | KeyCode::Char('k')) {
+                                    self.countdown_popup.scroll_up();
+                                } else {
+                                    self.countdown_popup.scroll_down();
+                                }
                             }
                             self.core.cancel_quit();
                             return Ok(false);
                         }
-                        KeyCode::Down | KeyCode::Char('j') => {
+                        KeyCode::Char('p') | KeyCode::Char('P')
+                            if self.countdown_popup.has_summary() =>
+                        {
+                            // `p` reopens the report elsewhere; while it's already the
+                            // visible popup, keep it open (pin) rather than dismissing
+                            // via the catch-all below. The mid-run exit dialog has no
+                            // summary, so `p` still dismisses it like any other key.
                             self.countdown_popup.pin_open();
-                            if self.countdown_popup.is_scrollable() {
-                                self.countdown_popup.scroll_down();
-                            }
                             self.core.cancel_quit();
                             return Ok(false);
                         }

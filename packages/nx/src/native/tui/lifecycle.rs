@@ -105,6 +105,17 @@ pub struct Link {
     pub href: String,
 }
 
+/// Cache outcome for the report: tasks restored vs the total that had a cache
+/// outcome. Present only when there was a cache outcome to show; a bypassed cache
+/// is signalled separately by `cache_skipped`. One field instead of a
+/// hits/total pair makes "one set, the other not" unrepresentable.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct CacheStat {
+    pub hits: u32,
+    pub total: u32,
+}
+
 /// Structured run report shown in the exit-countdown popup. The TUI builds the
 /// visual from these numbers (durations are formatted, columns aligned, and
 /// recommendations bulleted natively) rather than receiving a pre-formatted string.
@@ -115,8 +126,7 @@ pub struct PerformanceSummaryPayload {
     pub critical_path_ms: f64,
     pub critical_path_task_count: u32,
     pub recoverable_ms: f64,
-    pub cache_hits: Option<u32>,
-    pub cacheable_count: Option<u32>,
+    pub cache: Option<CacheStat>,
     pub cache_skipped: bool,
     /// Already in display order; a multi-line entry embeds a task list.
     pub recommendations: Vec<String>,
