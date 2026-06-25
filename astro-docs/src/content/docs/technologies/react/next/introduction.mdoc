@@ -13,8 +13,6 @@ The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and
 
 You don't need the plugin to use Next.js with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, code generators, and simplified configuration.
 
-To start a new Next.js workspace, use the [Next.js template](/docs/templates/nextjs), which scaffolds a ready-to-run setup you can build on.
-
 ## Requirements
 
 The `@nx/next` plugin supports the following package versions.
@@ -64,8 +62,10 @@ Verify the plugin is setup:
 
 ### Create a new workspace
 
+Start from the [Next.js template](/docs/templates/nextjs) to scaffold a Next.js app with a shared UI library:
+
 ```shell
-npx create-nx-workspace@latest --preset=next
+npx create-nx-workspace@latest my-workspace --template nrwl/nextjs-template
 ```
 
 ### Generate a new application
