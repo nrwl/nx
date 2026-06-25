@@ -280,10 +280,10 @@ describe('nx release preserve local dependency protocols', () => {
         total files: X
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
-        Run duration:              {DURATION}
-        Cache:                     0/2 hit (0%)
-        Critical path:             {DURATION}   (2 tasks)
-        Recoverable time:          {DURATION}
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION}   (2 tasks)
+        Recoverable time: {DURATION}
         Recommendations:
         - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
         - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
@@ -362,10 +362,10 @@ describe('nx release preserve local dependency protocols', () => {
         + @proj/{project-name}@0.0.0
         Published to ${e2eRegistryUrl} with tag "latest"
         NX   Successfully ran target nx-release-publish for 2 projects
-        Run duration:              {DURATION}
-        Cache:                     0/2 hit (0%)
-        Critical path:             {DURATION}   (2 tasks)
-        Recoverable time:          {DURATION}
+        Run duration: {DURATION}
+        Cache: 0/2 hit (0%)
+        Critical path: {DURATION}   (2 tasks)
+        Recoverable time: {DURATION}
         Recommendations:
         - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
         - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.

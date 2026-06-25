@@ -340,8 +340,10 @@ export function formatReport(s: PerformanceSummary): string {
   const recoverable = recoverableTime(s);
   const recoverablePct =
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
+  // Pad to the widest label ("Recoverable time:" = 17) so values align without a
+  // gaping gap. Keep in sync with the Rust popup's stat_line.
   const stat = (label: string, value: string) =>
-    `  ${`${label}:`.padEnd(25)}  ${value}`;
+    `  ${`${label}:`.padEnd(17)}  ${value}`;
   // No leading blank line: nx's run summary already prints trailing blanks before this.
   const cache = cacheStat(s);
   const lines = [

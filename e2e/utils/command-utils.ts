@@ -425,6 +425,12 @@ export function normalizePerformanceReport(output: string): string {
         // Longest-tasks list right-aligns durations (padStart); collapse the varying
         // id→duration gap back to a fixed 4-space separator so the table is deterministic.
         .replace(/^([ \t]+\S+) {4,}(\{DURATION\})$/gm, '$1    $2')
+        // Stat rows align values by padding the label column, whose width may change;
+        // collapse the label→value gap so the snapshot doesn't depend on that padding.
+        .replace(
+          /^([ \t]*(?:Run duration|Cache|Critical path|Recoverable time):) +/gm,
+          '$1 '
+        )
   );
 }
 

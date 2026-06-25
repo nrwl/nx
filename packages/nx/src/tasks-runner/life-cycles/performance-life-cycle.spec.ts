@@ -190,7 +190,7 @@ describe('PerformanceLifeCycle', () => {
     expect(s.runDuration).toBe(0);
     expect(s.overhead).toBe(0);
     const report = formatReport(s);
-    expect(report).toContain('Run duration:              <1ms');
+    expect(report).toContain('Run duration:      <1ms');
     expect(report).not.toContain('NaN');
     expect(report).not.toContain('Infinity');
   });
@@ -998,10 +998,10 @@ describe('formatReport', () => {
         isCI: true,
       })!;
       expect(formatReport(s)).toMatchInlineSnapshot(`
-        "  Run duration:              1.0s
-          Cache:                     0/1 hit (0%)
-          Critical path:             1.0s   (1 task)
-          Recoverable time:          <1ms
+        "  Run duration:      1.0s
+          Cache:             0/1 hit (0%)
+          Critical path:     1.0s   (1 task)
+          Recoverable time:  <1ms
 
           Recommendations:
             - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.

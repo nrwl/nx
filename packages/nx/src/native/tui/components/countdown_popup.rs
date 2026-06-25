@@ -130,11 +130,12 @@ fn cache_label(s: &PerformanceSummaryPayload) -> Option<String> {
     Some(format!("{}/{} hit ({}%)", cache.hits, cache.total, pct))
 }
 
-/// A stat row — left-aligned padded label, then the value.
+/// A stat row — label padded to the widest label ("Recoverable time:" = 17) so
+/// values align without a gaping gap, then the value. Keep in sync with the TS report.
 fn stat_line(label: &str, value: String) -> Line<'static> {
     Line::from(vec![
         Span::styled(
-            format!("{:<25}  ", format!("{label}:")),
+            format!("{:<17}  ", format!("{label}:")),
             Style::default().fg(THEME.secondary_fg),
         ),
         Span::styled(value, Style::default().fg(THEME.primary_fg)),
@@ -363,9 +364,6 @@ impl CountdownPopup {
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
 
-        let popup_width: u16 = 70;
-        let popup_width = popup_width.min(safe_area.width.saturating_sub(4));
-
         // Two modes: with a report (run finished) → the Performance Report;
         // without one (e.g. q pressed mid-run) → the original exit dialog with
         // just the interactive hints.
@@ -413,25 +411,6 @@ impl CountdownPopup {
             ]));
         }
 
-        // Inner width comes from a matching chrome block so it tracks the real
-        // inner_area width below instead of hard-coded padding math; +4 for vertical
-        // chrome, overflow scrolls.
-        let inner_width = Block::default()
-            .borders(Borders::ALL)
-            .padding(Padding::proportional(1))
-            .inner(Rect::new(0, 0, popup_width, 1))
-            .width
-            .max(1);
-        let estimated_rows = wrapped_rows(&content, inner_width);
-        let popup_height = ((estimated_rows as u16).saturating_add(4))
-            .min(safe_area.height.saturating_sub(4))
-            .max(5);
-
-        let popup_x = safe_area.x + (safe_area.width.saturating_sub(popup_width)) / 2;
-        let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
-
-        let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
-
         let seconds_remaining = if let Some(start_time) = self.start_time {
             let elapsed = start_time.elapsed();
             if elapsed >= self.duration {
@@ -442,9 +421,9 @@ impl CountdownPopup {
         } else {
             0
         };
-
         let time_remaining = seconds_remaining + 1;
 
+        // Title (left) and the close hint (top-right) of the border.
         let mut title_spans = vec![
             Span::raw("  "),
             Span::styled(
@@ -482,26 +461,14 @@ impl CountdownPopup {
             ));
             title_spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
         }
+        let close_hint = vec![
+            Span::styled(" (esc) ", Style::default().fg(THEME.secondary_fg)),
+            Span::styled("✕  ", Style::default().fg(THEME.info)),
+        ];
 
-        let mut block = Block::default()
-            .title(Line::from(title_spans))
-            .title_alignment(Alignment::Left)
-            .title_top(
-                Line::from(vec![
-                    Span::styled(" (esc) ", Style::default().fg(THEME.secondary_fg)),
-                    Span::styled("✕  ", Style::default().fg(THEME.info)),
-                ])
-                .alignment(Alignment::Right),
-            )
-            .borders(Borders::ALL)
-            .border_type(BorderType::Plain)
-            .border_style(Style::default().fg(THEME.info))
-            .padding(Padding::proportional(1));
-
-        // Keybinding actions in the bottom border — only with a report, where
-        // there's a pane to reopen and possibly scroll. Scroll is offered only
-        // when the report overflows.
-        if has_report {
+        // Keybinding actions in the bottom border — only with a report, where there's
+        // a pane to reopen and possibly scroll (scroll only when the report overflows).
+        let bottom_hints: Option<Vec<Span>> = if has_report {
             let mut footer = vec![
                 Span::raw("  "),
                 Span::styled("quit: ", Style::default().fg(THEME.secondary_fg)),
@@ -520,6 +487,66 @@ impl CountdownPopup {
                 footer.push(Span::styled("↑/↓", Style::default().fg(THEME.info)));
             }
             footer.push(Span::raw("  "));
+            Some(footer)
+        } else {
+            None
+        };
+
+        // Horizontal chrome (borders + padding) the content sits inside — derived from
+        // a matching block so the width math tracks the real padding instead of a magic
+        // number (Padding::proportional(1) is 2 cells per side, not 1).
+        let h_chrome = {
+            let b = Block::default()
+                .borders(Borders::ALL)
+                .padding(Padding::proportional(1));
+            100u16.saturating_sub(b.inner(Rect::new(0, 0, 100, 1)).width)
+        };
+
+        // Size the popup to its content so a short cached-run report doesn't float in a
+        // fixed-width box, while staying wide enough for the title row and the bottom
+        // keybindings; cap at 70 so long recommendations still wrap.
+        let content_width = content.iter().map(|l| l.width() as u16).max().unwrap_or(0);
+        let title_row_width: u16 = title_spans.iter().map(|s| s.width() as u16).sum::<u16>()
+            + close_hint.iter().map(|s| s.width() as u16).sum::<u16>();
+        let bottom_width: u16 = bottom_hints
+            .as_ref()
+            .map(|f| f.iter().map(|s| s.width() as u16).sum())
+            .unwrap_or(0);
+        let popup_width = content_width
+            .max(title_row_width)
+            .max(bottom_width)
+            .saturating_add(h_chrome)
+            .min(70)
+            .min(safe_area.width.saturating_sub(4));
+
+        // Inner width comes from a matching chrome block so it tracks the real
+        // inner_area width below instead of hard-coded padding math; +4 for vertical
+        // chrome, overflow scrolls.
+        let inner_width = Block::default()
+            .borders(Borders::ALL)
+            .padding(Padding::proportional(1))
+            .inner(Rect::new(0, 0, popup_width, 1))
+            .width
+            .max(1);
+        let estimated_rows = wrapped_rows(&content, inner_width);
+        let popup_height = ((estimated_rows as u16).saturating_add(4))
+            .min(safe_area.height.saturating_sub(4))
+            .max(5);
+
+        let popup_x = safe_area.x + (safe_area.width.saturating_sub(popup_width)) / 2;
+        let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
+
+        let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
+
+        let mut block = Block::default()
+            .title(Line::from(title_spans))
+            .title_alignment(Alignment::Left)
+            .title_top(Line::from(close_hint).alignment(Alignment::Right))
+            .borders(Borders::ALL)
+            .border_type(BorderType::Plain)
+            .border_style(Style::default().fg(THEME.info))
+            .padding(Padding::proportional(1));
+        if let Some(footer) = bottom_hints {
             block = block.title_bottom(Line::from(footer).alignment(Alignment::Right));
         }
 
@@ -738,6 +765,45 @@ mod tests {
         let text = render_to_string(&mut popup).to_lowercase();
         assert!(!text.contains("nan"), "NaN leaked into the report");
         assert!(!text.contains("inf"), "inf leaked into the report");
+    }
+
+    /// Width in columns of the rendered popup's border box.
+    fn popup_border_width(text: &str) -> usize {
+        let row = text
+            .lines()
+            .find(|l| l.contains('┌'))
+            .expect("a bordered popup");
+        let chars: Vec<char> = row.chars().collect();
+        let left = chars.iter().position(|&c| c == '┌').unwrap();
+        let right = chars.iter().rposition(|&c| c == '┐').unwrap();
+        right - left + 1
+    }
+
+    #[test]
+    fn sizes_the_popup_to_its_content() {
+        // A short (cached-run) report is sized to its content + chrome, not the old
+        // fixed-width box; a long recommendation still expands it up to the 70 cap.
+        let mut short = CountdownPopup::new();
+        short.set_summary(summary_with(vec![]));
+        let short_w = popup_border_width(&render_to_string(&mut short));
+
+        let mut wide = CountdownPopup::new();
+        wide.set_summary(summary_with(vec![
+            "Distribute across machines with Nx Agents to increase parallelism without \
+             overwhelming local resource usage, then split the longest critical-path tasks."
+                .to_string(),
+        ]));
+        let wide_w = popup_border_width(&render_to_string(&mut wide));
+
+        assert!(
+            short_w < 70,
+            "short report should not be a fixed 70 wide: {short_w}"
+        );
+        assert!(
+            short_w < wide_w,
+            "popup width should follow content (short {short_w} vs wide {wide_w})"
+        );
+        assert!(wide_w <= 70, "popup width caps at 70: {wide_w}");
     }
 
     #[test]

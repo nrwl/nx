@@ -145,10 +145,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
-      Run duration:              {DURATION}
-      Cache:                     0/1 hit (0%)
-      Critical path:             {DURATION}   (1 task)
-      Recoverable time:          {DURATION}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION}   (1 task)
+      Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
       - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
@@ -214,10 +214,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
-      Run duration:              {DURATION}
-      Cache:                     0/1 hit (0%)
-      Critical path:             {DURATION}   (1 task)
-      Recoverable time:          {DURATION}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION}   (1 task)
+      Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
       - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
@@ -281,10 +281,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
-      Run duration:              {DURATION}
-      Cache:                     0/1 hit (0%)
-      Critical path:             {DURATION}   (1 task)
-      Recoverable time:          {DURATION}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION}   (1 task)
+      Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
       - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
@@ -346,10 +346,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
-      Run duration:              {DURATION}
-      Cache:                     0/1 hit (0%)
-      Critical path:             {DURATION}   (1 task)
-      Recoverable time:          {DURATION}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION}   (1 task)
+      Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
       - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
@@ -415,10 +415,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
-      Run duration:              {DURATION}
-      Cache:                     0/1 hit (0%)
-      Critical path:             {DURATION}   (1 task)
-      Recoverable time:          {DURATION}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION}   (1 task)
+      Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
       - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
