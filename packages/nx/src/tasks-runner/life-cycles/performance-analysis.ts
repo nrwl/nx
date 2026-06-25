@@ -171,6 +171,15 @@ export class PerformanceAnalysis {
     const pred = new Map<string, string | null>();
     const visiting = new Set<string>();
 
+    // Higher finish estimate wins; ties broken by the longer-running task.
+    const isBetter = (
+      finish: number,
+      dur: number,
+      bestFinish: number,
+      bestDur: number
+    ): boolean =>
+      finish > bestFinish || (finish === bestFinish && dur > bestDur);
+
     const predecessors = (id: string): string[] => {
       const start = this.timings.get(id)?.startTime ?? Infinity;
       const deps = (this.taskGraph.dependencies[id] ?? []).filter((d) =>
@@ -201,7 +210,7 @@ export class PerformanceAnalysis {
       for (const p of predecessors(id)) {
         const f = finishEst(p);
         const d = durations.get(p) ?? 0;
-        if (f > best || (f === best && d > bestDur)) {
+        if (isBetter(f, d, best, bestDur)) {
           best = f;
           bestPred = p;
           bestDur = d;
@@ -220,25 +229,14 @@ export class PerformanceAnalysis {
     for (const id of durations.keys()) {
       const f = finishEst(id);
       const d = durations.get(id) ?? 0;
-      if (f > terminalFinish || (f === terminalFinish && d > terminalDur)) {
+      if (isBetter(f, d, terminalFinish, terminalDur)) {
         terminalFinish = f;
         terminalDur = d;
         terminal = id;
       }
     }
 
-    // onPath guards a `pred` cycle on a malformed graph (the finishEst guard alone
-    // doesn't keep `pred` acyclic).
-    const path: string[] = [];
-    const onPath = new Set<string>();
-    for (
-      let node = terminal;
-      node != null && !onPath.has(node);
-      node = pred.get(node) ?? null
-    ) {
-      onPath.add(node);
-      path.unshift(node);
-    }
+    const path = tracePath(terminal, pred);
     return { path, duration: terminal == null ? 0 : terminalFinish };
   }
 
@@ -418,9 +416,30 @@ export class PerformanceAnalysis {
   }
 }
 
-/** Absolute-epoch [start, end] hashing windows from nx's existing `hash*` perf measures; [] if the performance API is unavailable. */
 // === Analysis helpers (module-level; no instance state) ===
 
+/**
+ * Follow the recorded best-predecessor links from `end` back to the root, returning
+ * the path root → end. `seen` guards against a cycle in a malformed `pred` chain.
+ */
+function tracePath(
+  end: string | null,
+  pred: Map<string, string | null>
+): string[] {
+  const path: string[] = [];
+  const seen = new Set<string>();
+  for (
+    let node = end;
+    node != null && !seen.has(node);
+    node = pred.get(node) ?? null
+  ) {
+    seen.add(node);
+    path.unshift(node);
+  }
+  return path;
+}
+
+/** Absolute-epoch [start, end] hashing windows from nx's existing `hash*` perf measures; [] if the performance API is unavailable. */
 function collectHashWindows(): Array<[number, number]> {
   try {
     const origin = performance.timeOrigin;
@@ -620,7 +639,14 @@ export function buildSegments(
  * rest, --parallel helps up to the volume the cores can absorb; the overflow
  * (totalWork/cores − floor) needs more machines.
  */
-function splitOverhead(args: {
+function splitOverhead({
+  segments,
+  parallel,
+  overhead,
+  totalWork,
+  cores,
+  criticalPathDuration,
+}: {
   segments: Segment[];
   parallel: number;
   overhead: number;
@@ -632,14 +658,6 @@ function splitOverhead(args: {
   recoverableByMachines: number;
   recoverableByParallel: number;
 } {
-  const {
-    segments,
-    parallel,
-    overhead,
-    totalWork,
-    cores,
-    criticalPathDuration,
-  } = args;
   let slotContendedTime = 0;
   let nonParallelContendedTime = 0;
   for (const s of segments) {
