@@ -50,14 +50,17 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
         }
     }
 
-    let size = if src.is_dir() {
-        trace!("Copying directory: {:?}", &src);
-        copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
-    } else if src.is_symlink() {
+    // Check symlink before dir: `is_dir()` follows symlinks, so a cache output
+    // shipped as a symlink-to-dir would otherwise be followed and its (possibly
+    // external) target contents copied into the workspace.
+    let size = if src.is_symlink() {
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
         symlink(fs::read_link(&src)?, &dest)?;
         0
+    } else if src.is_dir() {
+        trace!("Copying directory: {:?}", &src);
+        copy_dir_all(&src, &dest, boundary).map_err(anyhow::Error::new)?
     } else {
         trace!("Copying file: {:?}", &src);
         fs::copy(&src, &dest)?
@@ -385,5 +388,38 @@ mod test {
 
         assert!(workspace.join("link").symlink_metadata().is_err());
         assert!(outside.child("keep.txt").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_does_not_follow_symlinked_output_dir() {
+        use std::os::unix::fs::symlink;
+
+        // A directory outside the workspace whose contents an attacker wants
+        // exfiltrated into the build outputs.
+        let outside = TempDir::new().unwrap();
+        outside.child("secret.txt").write_str("SECRET").unwrap();
+
+        // A malicious artifact ships the declared output `dist` as a symlink to
+        // that external directory (`unpack_in` creates such symlinks).
+        let cache = TempDir::new().unwrap();
+        symlink(outside.path(), cache.join("dist")).unwrap();
+
+        let workspace = TempDir::new().unwrap();
+        let expanded = vec!["dist".to_string()];
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
+
+        // The symlink must be recreated verbatim, not followed: the external
+        // contents must not be copied into the workspace as real files.
+        let dist = workspace.join("dist");
+        assert!(
+            dist.symlink_metadata().unwrap().file_type().is_symlink(),
+            "a symlinked cache output must be recreated as a symlink, not followed"
+        );
+        // Removing the recreated link leaves no real copy behind, and the
+        // external target is untouched.
+        remove_path(&dist).unwrap();
+        assert!(!dist.join("secret.txt").exists());
+        assert!(outside.child("secret.txt").exists());
     }
 }
