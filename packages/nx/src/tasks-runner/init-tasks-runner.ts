@@ -32,7 +32,6 @@ async function createOrchestrator(
     ...constructLifeCycles(
       invokeRunnerTerminalLifecycle,
       fullTaskGraph,
-      undefined,
       nxJson
     ),
     taskResultsLifecycle,

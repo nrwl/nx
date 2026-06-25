@@ -997,7 +997,7 @@ export async function invokeTasksRunner({
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle, taskGraph, nxArgs.skipNxCache, nxJson),
+    ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
     taskResultsLifecycle,
   ]);
 
@@ -1094,8 +1094,8 @@ export async function invokeTasksRunner({
 export function constructLifeCycles(
   lifeCycle: LifeCycle,
   taskGraph: TaskGraph,
-  skipNxCache?: boolean,
-  nxJson?: NxJsonConfiguration
+  nxJson?: NxJsonConfiguration,
+  skipNxCache?: boolean
 ): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
