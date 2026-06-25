@@ -3,7 +3,29 @@ use hashbrown::HashSet;
 use crate::native::tui::components::tasks_list::{TaskItem, TaskStatus};
 use crate::native::utils::time::current_timestamp_millis;
 
-pub fn format_duration(duration_ms: i64) -> String {
+/// The single duration formatter — used by the task list, terminal report, and TUI
+/// popup. Exposed to JS as `formatDuration` so all three share one implementation.
+/// 0 (or sub-millisecond) → "<1ms", then "470ms", "13.4s", "1m 30s".
+#[napi(js_name = "formatDuration")]
+pub fn format_duration(ms: f64) -> String {
+    if ms < 1000.0 {
+        let rounded = ms.round() as i64;
+        if rounded == 0 {
+            return "<1ms".to_string();
+        }
+        return format!("{}ms", rounded);
+    }
+    let seconds = (ms / 100.0).round() / 10.0;
+    if seconds >= 60.0 {
+        let total = (ms / 1000.0).round() as i64;
+        return format!("{}m {}s", total / 60, total % 60);
+    }
+    format!("{:.1}s", seconds)
+}
+
+/// Task-list durations call this i64 wrapper: it shares `format_duration` but keeps
+/// live sub-second durations deterministic in snapshots via the cfg(test) guard.
+fn format_task_duration(duration_ms: i64) -> String {
     #[cfg(test)]
     {
         if duration_ms < 1000 {
@@ -11,24 +33,17 @@ pub fn format_duration(duration_ms: i64) -> String {
             return "<1ms".to_string();
         }
     }
-
-    if duration_ms == 0 {
-        "<1ms".to_string()
-    } else if duration_ms < 1000 {
-        format!("{}ms", duration_ms)
-    } else {
-        format!("{:.1}s", duration_ms as f64 / 1000.0)
-    }
+    format_duration(duration_ms as f64)
 }
 
 pub fn format_duration_since(start_ms: i64, end_ms: i64) -> String {
-    format_duration(end_ms.saturating_sub(start_ms))
+    format_task_duration(end_ms.saturating_sub(start_ms))
 }
 
 /// Formats the duration from a start time to the current time
 pub fn format_live_duration(start_ms: i64) -> String {
     let current_ms = current_timestamp_millis();
-    format_duration(current_ms.saturating_sub(start_ms))
+    format_task_duration(current_ms.saturating_sub(start_ms))
 }
 
 /// Formats a duration with an optional estimated time.
@@ -39,29 +54,13 @@ pub fn format_live_duration(start_ms: i64) -> String {
 /// This is the shared formatting pattern used by both the terminal pane and inline app
 /// for displaying task durations.
 pub fn format_duration_with_estimate(actual_ms: i64, estimated_ms: Option<i64>) -> String {
-    let actual_formatted = format_duration(actual_ms);
+    let actual_formatted = format_task_duration(actual_ms);
     if let Some(estimated) = estimated_ms {
-        let estimated_formatted = format_duration(estimated);
+        let estimated_formatted = format_task_duration(estimated);
         format!("{} ({} avg)", actual_formatted, estimated_formatted)
     } else {
         actual_formatted
     }
-}
-
-/// Format a millisecond duration to match the TS `formatDuration` used by the
-/// performance report (e.g. "470ms", "13.4s", "1m 30s"). Distinct from
-/// `format_duration` above: this rolls into minutes and takes an `f64`, so the
-/// countdown popup renders identically to the terminal report.
-pub fn format_report_duration(ms: f64) -> String {
-    if ms < 1000.0 {
-        return format!("{}ms", ms.round() as i64);
-    }
-    let seconds = (ms / 100.0).round() / 10.0;
-    if seconds >= 60.0 {
-        let total = (ms / 1000.0).round() as i64;
-        return format!("{}m {}s", total / 60, total % 60);
-    }
-    format!("{:.1}s", seconds)
 }
 
 /// Append "s" unless `count` is 1 (mirrors the TS `pluralize`; regular plurals).
@@ -321,17 +320,20 @@ mod tests {
     // Kept in lockstep with the TS formatDuration; drift would make the popup and
     // the terminal report disagree.
     #[test]
-    fn format_report_duration_matches_ts() {
-        assert_eq!(format_report_duration(470.0), "470ms");
-        assert_eq!(format_report_duration(999.0), "999ms");
-        assert_eq!(format_report_duration(1000.0), "1.0s");
-        assert_eq!(format_report_duration(1500.0), "1.5s");
-        assert_eq!(format_report_duration(9999.0), "10.0s");
-        assert_eq!(format_report_duration(10000.0), "10.0s");
-        assert_eq!(format_report_duration(59950.0), "1m 0s");
-        assert_eq!(format_report_duration(60000.0), "1m 0s");
-        assert_eq!(format_report_duration(90000.0), "1m 30s");
-        assert_eq!(format_report_duration(119500.0), "2m 0s");
+    fn format_duration_matches_ts() {
+        assert_eq!(format_duration(0.0), "<1ms");
+        assert_eq!(format_duration(0.4), "<1ms"); // rounds to 0
+        assert_eq!(format_duration(0.6), "1ms");
+        assert_eq!(format_duration(470.0), "470ms");
+        assert_eq!(format_duration(999.0), "999ms");
+        assert_eq!(format_duration(1000.0), "1.0s");
+        assert_eq!(format_duration(1500.0), "1.5s");
+        assert_eq!(format_duration(9999.0), "10.0s");
+        assert_eq!(format_duration(10000.0), "10.0s");
+        assert_eq!(format_duration(59950.0), "1m 0s");
+        assert_eq!(format_duration(60000.0), "1m 0s");
+        assert_eq!(format_duration(90000.0), "1m 30s");
+        assert_eq!(format_duration(119500.0), "2m 0s");
     }
 
     #[test]

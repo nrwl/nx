@@ -384,6 +384,13 @@ export declare function findImports(projectFileMap: Record<string, Array<string>
  */
 export declare function flushTelemetry(): void
 
+/**
+ * The single duration formatter — used by the task list, terminal report, and TUI
+ * popup. Exposed to JS as `formatDuration` so all three share one implementation.
+ * 0 (or sub-millisecond) → "<1ms", then "470ms", "13.4s", "1m 30s".
+ */
+export declare function formatDuration(ms: number): string
+
 export declare function getBinaryTarget(): string
 
 export declare function getDefaultMaxCacheSize(cachePath: string): number

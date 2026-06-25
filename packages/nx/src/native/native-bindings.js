@@ -605,6 +605,7 @@ module.exports.EventType = nativeBinding.EventType
 module.exports.expandOutputs = nativeBinding.expandOutputs
 module.exports.findImports = nativeBinding.findImports
 module.exports.flushTelemetry = nativeBinding.flushTelemetry
+module.exports.formatDuration = nativeBinding.formatDuration
 module.exports.getBinaryTarget = nativeBinding.getBinaryTarget
 module.exports.getDefaultMaxCacheSize = nativeBinding.getDefaultMaxCacheSize
 module.exports.getEventDimensions = nativeBinding.getEventDimensions

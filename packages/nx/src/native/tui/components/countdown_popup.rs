@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 
 use crate::native::tui::lifecycle::PerformanceSummaryPayload;
 use crate::native::tui::theme::THEME;
-use crate::native::tui::utils::{format_report_duration, pluralize};
+use crate::native::tui::utils::{format_duration, pluralize};
 
 use super::Component;
 
@@ -186,7 +186,7 @@ impl CountdownPopup {
 
         lines.push(stat_line(
             "Run duration",
-            format_report_duration(s.run_duration_ms),
+            format_duration(s.run_duration_ms),
         ));
         if let Some(cache) = cache_label(s) {
             lines.push(stat_line("Cache", cache));
@@ -195,7 +195,7 @@ impl CountdownPopup {
             "Critical path",
             format!(
                 "{}   ({} {})",
-                format_report_duration(s.critical_path_ms),
+                format_duration(s.critical_path_ms),
                 s.critical_path_task_count,
                 pluralize(s.critical_path_task_count, "task")
             ),
@@ -204,11 +204,11 @@ impl CountdownPopup {
             let pct = (s.recoverable_ms / s.run_duration_ms * 100.0).round() as i64;
             format!(
                 "{}   ({}% of the run)",
-                format_report_duration(s.recoverable_ms),
+                format_duration(s.recoverable_ms),
                 pct
             )
         } else {
-            format_report_duration(s.recoverable_ms)
+            format_duration(s.recoverable_ms)
         };
         lines.push(stat_line("Recoverable time", recoverable));
 
