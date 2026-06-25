@@ -221,8 +221,9 @@ impl HttpRemoteCache {
 
             let entry_path = entry
                 .path()
-                .map(|p| p.to_string_lossy().into_owned())
-                .unwrap();
+                .map_err(|e| anyhow::anyhow!("Invalid entry path in cache artifact: {}", e))?
+                .to_string_lossy()
+                .into_owned();
 
             if entry_path == "code" {
                 let code_file_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
