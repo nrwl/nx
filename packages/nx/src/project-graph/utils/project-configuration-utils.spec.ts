@@ -1346,6 +1346,294 @@ describe('project-configuration-utils', () => {
         '@acme/base',
       ]);
     });
+
+    describe('target defaults source map attribution', () => {
+      // A plugin that infers a `build` target on libs/a, optionally tagged.
+      const vitePluginResult = (
+        tags?: string[]
+      ): CreateNodesResultEntry[][] => [
+        [
+          [
+            '@nx/vite/plugin',
+            'libs/a/vite.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  ...(tags ? { tags } : {}),
+                  targets: { build: { executor: '@nx/vite:build' } },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const PLUGIN: SourceInformation = [
+        'libs/a/vite.config.ts',
+        '@nx/vite/plugin',
+      ];
+      const sourceMapFor = (
+        result: ReturnType<typeof mergeCreateNodesResults>
+      ) => result.configurationSourceMaps['libs/a'];
+
+      it('keeps the plugin executor attribution while crediting a target-default-introduced field (object form)', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.executor).toBe('@nx/vite:build');
+        expect(build.cache).toBe(true);
+
+        const sm = sourceMapFor(result);
+        // The plugin authored the executor — the target default re-stamps the
+        // same value as a merge guard but must not steal provenance.
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        // The newly introduced `cache` is credited to the target default, at
+        // the object-form location (no array index).
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes each matching array entry to its own element location', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                { cache: true },
+                {
+                  filter: { plugin: '@nx/vite/plugin' },
+                  inputs: ['vite.config.ts'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+        expect(build.inputs).toEqual(['vite.config.ts']);
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        // Catch-all entry → index 0; the plugin-filtered entry → index 1.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build[0]',
+          'nx/target-defaults',
+        ]);
+        expect(sm['targets.build.inputs']).toEqual([
+          'nx.json#targetDefaults.build[1]',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('credits the target default for an executor the plugin did not author', () => {
+        // The plugin target has no executor — the target default introduces it,
+        // so the executor provenance correctly belongs to the target default.
+        const specified: CreateNodesResultEntry[][] = [
+          [
+            [
+              '@nx/vite/plugin',
+              'libs/a/vite.config.ts',
+              {
+                projects: {
+                  'libs/a': {
+                    name: 'a',
+                    root: 'libs/a',
+                    targets: { build: { options: { foo: 1 } } },
+                  },
+                },
+              },
+            ],
+          ],
+        ];
+
+        const result = mergeCreateNodesResults(
+          specified,
+          [],
+          {
+            targetDefaults: {
+              build: { executor: 'nx:run-commands', cache: true },
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.executor).toBe('nx:run-commands');
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('does not reattribute a scalar a target default re-stamps to the same value', () => {
+        const result = mergeCreateNodesResults(
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: { executor: '@nx/vite:build', cache: true },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        // `cache` is unchanged (plugin already set `true`) — provenance stays
+        // with the plugin, not the target default.
+        expect(sm['targets.build.cache']).toEqual(PLUGIN);
+      });
+
+      it('reattributes a scalar a target default actually changes', () => {
+        const result = mergeCreateNodesResults(
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: { executor: '@nx/vite:build', cache: false },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+
+        const sm = sourceMapFor(result);
+        // Value changed false → true, so the target default is credited.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes a projects-filtered default by element, matching on tags', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(['web']),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                {
+                  filter: { projects: ['tag:web'] },
+                  outputs: ['{workspaceRoot}/dist'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.outputs).toEqual(['{workspaceRoot}/dist']);
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        expect(sm['targets.build.outputs']).toEqual([
+          'nx.json#targetDefaults.build[0]',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('does not apply (or attribute) a projects-filtered default that does not match', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(['web']),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                {
+                  filter: { projects: ['tag:api'] },
+                  outputs: ['{workspaceRoot}/dist'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.outputs).toBeUndefined();
+        expect(sourceMapFor(result)['targets.build.outputs']).toBeUndefined();
+      });
+
+      it('attributes the executor-key default and leaves the name-key default unconsulted', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          {
+            targetDefaults: {
+              // Executor key wins over the name key for a matching target.
+              '@nx/vite:build': { cache: true },
+              build: { inputs: ['should-not-apply'] },
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+        // Name-key default must not apply when the executor key matched.
+        expect(build.inputs).toBeUndefined();
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.@nx/vite:build',
+          'nx/target-defaults',
+        ]);
+        expect(sm['targets.build.inputs']).toBeUndefined();
+      });
+    });
   });
 
   describe('createProjectConfigurations', () => {

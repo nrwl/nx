@@ -659,6 +659,36 @@ describe('spread syntax in mergeTargetConfigurations', () => {
         'other-plugin',
       ]);
     });
+
+    it('preserves provenance for any unchanged scalar key, not just executor', () => {
+      // The guard is value-based, not key-name-based: `command`, `cache`, etc.
+      // a later layer re-stamps to the same value all keep their origin.
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.run.command': ['plugin.config.ts', 'some-plugin'],
+        'targets.run.cache': ['plugin.config.ts', 'some-plugin'],
+      };
+      mergeTargetConfigurations(
+        { command: 'echo hi', cache: true, parallelism: false },
+        { command: 'echo hi', cache: true },
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.run'
+      );
+
+      expect(sourceMap['targets.run.command']).toEqual([
+        'plugin.config.ts',
+        'some-plugin',
+      ]);
+      expect(sourceMap['targets.run.cache']).toEqual([
+        'plugin.config.ts',
+        'some-plugin',
+      ]);
+      // A genuinely new key is still credited to the new layer.
+      expect(sourceMap['targets.run.parallelism']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
   });
 
   it('should replace array without spread token', () => {
