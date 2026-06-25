@@ -28,8 +28,6 @@ export class PerformanceLifeCycle implements LifeCycle {
   private readonly timings = new Map<string, TaskTiming>();
   /** taskId → terminal status (cache hit vs ran), for the cache summary. */
   private readonly statuses = new Map<string, TaskResult['status']>();
-  /** Thread pool size reported to startCommand (discrete + continuous). */
-  private total: number | undefined;
   /** taskId → other tasks in its batch (batches run sequentially). */
   private readonly batchSiblings = new Map<string, string[]>();
 
@@ -41,10 +39,6 @@ export class PerformanceLifeCycle implements LifeCycle {
   }
 
   // === Lifecycle hooks (called by the orchestrator as the run progresses) ===
-
-  startCommand(total?: number): void {
-    this.total = total;
-  }
 
   registerRunningBatch(_batchId: string, batchInfo: BatchInfo): void {
     for (const id of batchInfo.taskIds) {
@@ -88,7 +82,6 @@ export class PerformanceLifeCycle implements LifeCycle {
       this.statuses,
       this.taskGraph,
       this.batchSiblings,
-      this.total,
       this.options
     ).summary();
   }

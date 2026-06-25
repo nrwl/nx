@@ -77,6 +77,8 @@ export interface PerformanceLifeCycleOptions {
   skipNxCache?: boolean;
   /** Passed in at construction so the lifecycle doesn't re-read nx.json. */
   nxJson?: NxJsonConfiguration;
+  /** Resolved `--parallel` value (getThreadPoolSize's `discrete`); falls back to 1. */
+  parallel?: number;
 }
 
 /** Per-call memo state for the critical-path search (one fresh instance per run). */
@@ -98,7 +100,6 @@ export class PerformanceAnalysis {
     private readonly statuses: Map<string, TaskResult['status']>,
     private readonly taskGraph: TaskGraph,
     private readonly batchSiblings: Map<string, string[]>,
-    private readonly total: number | undefined,
     private readonly options: PerformanceLifeCycleOptions
   ) {}
 
@@ -155,7 +156,7 @@ export class PerformanceAnalysis {
     for (const id of durations.keys()) {
       const f = this.finishEstimate(id, ctx);
       const d = durations.get(id) ?? 0;
-      if (isBetterCandidate(f, d, terminalFinish, terminalDur)) {
+      if (finishesLater(f, d, terminalFinish, terminalDur)) {
         terminalFinish = f;
         terminalDur = d;
         terminal = id;
@@ -172,7 +173,7 @@ export class PerformanceAnalysis {
    * Real predecessors of `id`: dependencies plus any earlier batch sibling that FINISHED
    * before `id` started. A batch runs sequentially in one process, so that ordering is
    * part of the floor; concurrent batch executors aren't, and chaining them would inflate
-   * it. (Matches earliestStart.)
+   * it. (Matches readyTime.)
    */
   private predecessorsFor(
     id: string,
@@ -209,7 +210,7 @@ export class PerformanceAnalysis {
     for (const p of this.predecessorsFor(id, ctx.durations)) {
       const f = this.finishEstimate(p, ctx);
       const d = ctx.durations.get(p) ?? 0;
-      if (isBetterCandidate(f, d, best, bestDur)) {
+      if (finishesLater(f, d, best, bestDur)) {
         best = f;
         bestPred = p;
         bestDur = d;
@@ -227,7 +228,7 @@ export class PerformanceAnalysis {
    * start, dependency ends, any continuous dependency's *start* (an ordering
    * constraint, not contention), and any earlier batch sibling's end.
    */
-  private earliestStart(id: string, runStart: number): number {
+  private readyTime(id: string, runStart: number): number {
     const start = this.timings.get(id)?.startTime;
     let result = runStart;
     for (const dep of this.taskGraph.dependencies[id] ?? []) {
@@ -249,18 +250,6 @@ export class PerformanceAnalysis {
       }
     }
     return result;
-  }
-
-  /**
-   * The `--parallel` value, recovered from the thread-pool total reported to
-   * startCommand: `total = discrete + continuousCount` (see getThreadPoolSize), so
-   * subtracting the continuous count gives it back. Falls back to 1.
-   */
-  private resolveParallel(): number {
-    const continuousCount = Object.values(this.taskGraph.tasks).filter(
-      (t) => t.continuous
-    ).length;
-    return Math.max(1, (this.total ?? continuousCount + 1) - continuousCount);
   }
 
   /**
@@ -308,13 +297,13 @@ export class PerformanceAnalysis {
 
     const eligible = new Map<string, number>();
     for (const { id } of timed) {
-      eligible.set(id, this.earliestStart(id, runStart));
+      eligible.set(id, this.readyTime(id, runStart));
     }
 
     const { path: criticalPathTasks, duration: criticalPathDuration } =
       this.criticalPath(durations);
 
-    const parallel = this.resolveParallel();
+    const parallel = Math.max(1, this.options.parallel ?? 1);
     const cores = detectCoreCount();
 
     const segments = buildSegments(timed, eligible, parallel);
@@ -403,10 +392,10 @@ export class PerformanceAnalysis {
 // === Analysis helpers (module-level; no instance state) ===
 
 /**
- * True when a `(finishEstimate, duration)` candidate beats the current best — higher
- * finish wins, ties broken by the longer-running task.
+ * True when a `(finishEstimate, duration)` candidate finishes later than the current
+ * best — higher finish wins, ties broken by the longer-running task.
  */
-function isBetterCandidate(
+function finishesLater(
   finish: number,
   dur: number,
   bestFinish: number,

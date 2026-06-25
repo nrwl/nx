@@ -31,7 +31,7 @@ export interface TaskMetadata {
 }
 
 export interface LifeCycle {
-  startCommand?(parallel?: number): void | Promise<void>;
+  startCommand?(threadCount?: number): void | Promise<void>;
 
   endCommand?(): void | Promise<void>;
 
@@ -92,10 +92,10 @@ export interface LifeCycle {
 export class CompositeLifeCycle implements LifeCycle {
   constructor(private readonly lifeCycles: LifeCycle[]) {}
 
-  async startCommand(parallel?: number): Promise<void> {
+  async startCommand(threadCount?: number): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.startCommand) {
-        await l.startCommand(parallel);
+        await l.startCommand(threadCount);
       }
     }
   }

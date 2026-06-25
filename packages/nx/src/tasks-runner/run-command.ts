@@ -27,6 +27,7 @@ import {
 } from '../project-graph/plugins/tasks-execution-hooks';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { NxArgs } from '../utils/command-line-utils';
+import { getThreadPoolSize } from './task-orchestrator';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
@@ -1037,8 +1038,17 @@ export async function invokeTasksRunner({
     taskDetails
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
+  // `discrete` is the resolved `--parallel`; hand it to the perf lifecycle directly
+  // so it doesn't have to back it out of the thread-pool total.
+  const parallel = getThreadPoolSize({ ...nxArgs } as any, taskGraph).discrete;
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle, taskGraph, nxArgs.skipNxCache, nxJson),
+    ...constructLifeCycles(
+      lifeCycle,
+      taskGraph,
+      nxArgs.skipNxCache,
+      nxJson,
+      parallel
+    ),
     taskResultsLifecycle,
   ]);
 
@@ -1136,7 +1146,8 @@ export function constructLifeCycles(
   lifeCycle: LifeCycle,
   taskGraph: TaskGraph,
   skipNxCache?: boolean,
-  nxJson?: NxJsonConfiguration
+  nxJson?: NxJsonConfiguration,
+  parallel?: number
 ): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
@@ -1147,7 +1158,9 @@ export function constructLifeCycles(
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
-  lifeCycles.push(new PerformanceLifeCycle(taskGraph, { skipNxCache, nxJson }));
+  lifeCycles.push(
+    new PerformanceLifeCycle(taskGraph, { skipNxCache, nxJson, parallel })
+  );
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);

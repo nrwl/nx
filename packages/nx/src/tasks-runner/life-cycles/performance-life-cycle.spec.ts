@@ -121,7 +121,8 @@ function envFor(env: TestEnv): Record<string, string | null> {
 /** Construct a PerformanceLifeCycle with its non-env signals (mocks) set up. */
 function makeLifeCycle(
   graph: TaskGraph,
-  env: TestEnv = {}
+  env: TestEnv = {},
+  parallel?: number
 ): PerformanceLifeCycle {
   if (env.windows) {
     setHashWindows(env.windows);
@@ -132,7 +133,16 @@ function makeLifeCycle(
   return new PerformanceLifeCycle(graph, {
     skipNxCache: env.skipped,
     nxJson: {} as NxJsonConfiguration,
+    parallel,
   });
+}
+
+/** Recover `--parallel` from a thread-pool total the way run-command does. */
+function parallelFromTotal(graph: TaskGraph, total: number): number {
+  const continuous = Object.values(graph.tasks).filter(
+    (t) => t.continuous
+  ).length;
+  return Math.max(1, total - continuous);
 }
 
 /** Feed a lifecycle a full run and return its summary. */
@@ -157,8 +167,7 @@ function run(
     distributing: opts.distributing,
   };
   return withEnvironmentVariables(envFor(env), () => {
-    const lc = makeLifeCycle(graph, env);
-    lc.startCommand(total);
+    const lc = makeLifeCycle(graph, env, parallelFromTotal(graph, total));
     for (const taskIds of opts.batches ?? []) {
       lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
     }
@@ -784,7 +793,6 @@ describe('cache reporting', () => {
 
 describe('exit summary payload (TUI countdown)', () => {
   function feed(lc: PerformanceLifeCycle, graph: TaskGraph) {
-    lc.startCommand(1);
     lc.endTasks(
       Object.values(graph.tasks).map(
         (task) => ({ task }) as unknown as TaskResult
@@ -815,7 +823,6 @@ describe('exit summary payload (TUI countdown)', () => {
       const a = makeTask('a', { start: 0, end: 1000 });
       const graph = makeGraph([a]);
       const lc = makeLifeCycle(graph, { remoteCache: false });
-      lc.startCommand(1);
       lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
 
       const payload = getPerformanceSummaryPayload()!;
@@ -1279,7 +1286,6 @@ describe('flushPerformanceReport', () => {
   // `activePerformanceLifeCycle`, which is what flush reads.
   function feedActive(graph: TaskGraph) {
     const lc = makeLifeCycle(graph);
-    lc.startCommand(1);
     lc.endTasks(
       Object.values(graph.tasks).map(
         (task) => ({ task, status: 'success' }) as unknown as TaskResult
@@ -1288,32 +1294,28 @@ describe('flushPerformanceReport', () => {
   }
 });
 
-describe('getThreadPoolSize → startCommand contract', () => {
-  it('recovers --parallel exactly from the total fed to startCommand', () =>
+describe('parallel value', () => {
+  it('reports the --parallel passed at construction (continuous slots excluded)', () =>
     withEnvironmentVariables(envFor({}), () => {
-      // getThreadPoolSize hands startCommand `--parallel + continuousCount`; the
-      // lifecycle subtracts the continuous count to recover --parallel. Pin both
-      // ends of that seam so a refactor that passes discrete-only (or stops adding
-      // the continuous count) fails here instead of silently miscomputing every
-      // parallelism recommendation.
+      // run-command hands the lifecycle getThreadPoolSize().discrete = --parallel (with
+      // continuous excluded). Pin that seam + that the lifecycle reports it verbatim, so
+      // a regression in either fails here instead of silently skewing the recommendations.
       const discrete = makeTask('d', { start: 0, end: 1000 });
       const c1 = makeTask('c1', { continuous: true });
       const c2 = makeTask('c2', { continuous: true });
       const graph = makeGraph([discrete, c1, c2]);
 
-      const { discrete: parallelArg, total } = getThreadPoolSize(
+      const { discrete: parallel } = getThreadPoolSize(
         { parallel: 3 } as any,
         graph
       );
-      expect(parallelArg).toBe(3);
-      expect(total).toBe(5); // 3 (--parallel) + 2 continuous
+      expect(parallel).toBe(3); // continuous tasks don't count toward --parallel
 
-      const lc = makeLifeCycle(graph);
-      lc.startCommand(total);
+      const lc = makeLifeCycle(graph, {}, parallel);
       lc.endTasks([
         { task: discrete, status: 'success' } as unknown as TaskResult,
       ]);
 
-      expect(lc.getSummary()!.parallel).toBe(parallelArg);
+      expect(lc.getSummary()!.parallel).toBe(parallel);
     }));
 });
