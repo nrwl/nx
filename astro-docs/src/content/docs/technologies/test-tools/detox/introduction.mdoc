@@ -1,6 +1,6 @@
 ---
-title: Detox Plugin for Nx
-description: Learn how to set up and use Detox for end-to-end testing of mobile applications in your Nx workspace, including environment setup and configuration options.
+title: Nx with Detox
+description: Run Detox through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -132,3 +132,9 @@ In addition, to override the device name specified in a configuration, you could
 nx test-ios frontend-e2e --device-name "iPhone 11"
 nx test-android frontend-e2e --device-name "Pixel_4a_API_30"
 ```
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

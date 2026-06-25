@@ -1,13 +1,13 @@
 ---
-title: esbuild Plugin for Nx
-description: The Nx Plugin for esbuild contains executors and generators that support building applications using esbuild, including setup and configuration for your Nx workspace.
+title: Nx with esbuild
+description: Use esbuild with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler.
+The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler. Use it to build and cache projects in an esbuild monorepo, with type-checking and asset handling layered on top.
 
 ## Requirements
 
@@ -148,3 +148,9 @@ Extra API options for esbuild can be passed in the `esbuildOptions` object for y
 ## More documentation
 
 - [Using JS](/docs/technologies/typescript/introduction)
+
+## Set up CI for your esbuild monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
