@@ -1,6 +1,6 @@
 ---
-title: ESLint Plugin for Nx
-description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
+title: Nx with ESLint
+description: Use ESLint with Nx to lint projects across your monorepo, with caching, affected-only runs, and module boundary rules.
 sidebar:
   label: Introduction
 weight: 2
@@ -95,3 +95,9 @@ nx lint my-project
 ## ESLint plugin
 
 Read about our dedicated ESLint plugin - [eslint-plugin-nx](/docs/technologies/eslint/eslint-plugin).
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

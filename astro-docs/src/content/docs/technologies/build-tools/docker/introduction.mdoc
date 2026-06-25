@@ -1,6 +1,6 @@
 ---
-title: Docker Plugin for Nx
-description: The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
+title: Nx with Docker
+description: Use Docker with Nx to build, cache, and deploy containerized projects from your monorepo.
 keywords: [docker]
 sidebar:
   label: Introduction
@@ -188,3 +188,9 @@ The `@nx/docker` plugin provides a `nx-release-publish` target for publishing do
 [Nx Release](/docs/features/manage-releases) was also updated to support versioning docker images, generating changelogs, and publishing docker images to a registry through a single command.
 
 You can learn more about how to manage releases for Docker Images in the [Release Docker Images](/docs/guides/nx-release/release-docker-images) guide.
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

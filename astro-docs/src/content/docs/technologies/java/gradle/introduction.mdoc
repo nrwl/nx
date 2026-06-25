@@ -1,13 +1,13 @@
 ---
-title: Gradle Plugin for Nx
-description: Run Gradle tasks through Nx with caching, graph insights, and CI optimization.
+title: Nx with Gradle
+description: Use Gradle with Nx to cache and run tasks across your Java monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: 'Introduction'
 weight: 2
 filter: 'type:References'
 ---
 
-[Gradle](https://gradle.org/) is a build automation tool for JVM-based projects.
+[Gradle](https://gradle.org/) is a build automation tool for JVM-based projects, and the `@nx/gradle` plugin brings Nx task running, caching, and graph analysis to a Gradle monorepo.
 
 The `@nx/gradle` plugin registers Gradle projects in the Nx graph so you can [set up Gradle in Nx](#setup), [run local tasks](#local-development), [configure task inference](#configuration), and [scale in CI](#ci-considerations).
 
@@ -175,31 +175,11 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
 Individual Gradle projects can also configure Nx-specific settings using the `nx { }` DSL in `build.gradle` or `build.gradle.kts`.
 
-## CI considerations
+## Set up CI for your Gradle monorepo
 
-Only run what changed in CI:
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-```shell
-nx affected -t build test
-```
-
-Enable remote caching with Nx Cloud:
-
-```shell
-nx connect
-```
-
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for provider-specific workflows. If you set `ciTestTargetName`, Nx will create CI variants that use atomized test targets.
-
-### Batch mode
-
-Batch mode runs multiple Gradle tasks in a single invocation. Enable it by setting `NX_BATCH_MODE=true`:
-
-```shell
-NX_BATCH_MODE=true nx run-many -t build test
-```
-
-If your Gradle builds require specific CI flags (for example `--no-daemon` or custom JVM args), add them to `gradle.properties` so Nx runs consistent settings locally and in CI.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

@@ -1,13 +1,13 @@
 ---
-title: Rsbuild Plugin for Nx
-description: The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild.
+title: Nx with Rsbuild
+description: Use Rsbuild with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild.
+The Nx Plugin for Rsbuild contains executors and generators that support building applications using Rsbuild. In an Rsbuild monorepo, it wires each project into Nx so you can build, serve, and cache them from a single workspace.
 
 ## Requirements
 
@@ -46,3 +46,9 @@ nx g @nx/react:app myapp --bundler=rsbuild
 ```
 
 This will create a new application configured to use Rsbuild for building.
+
+## Set up CI for your Rsbuild monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

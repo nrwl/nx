@@ -1,6 +1,6 @@
 ---
-title: Cypress Plugin for Nx
-description: The Nx Plugin for Cypress contains executors and generators that support e2e testing with Cypress, including setup and configuration for your Nx workspace.
+title: Nx with Cypress
+description: Run Cypress through Nx for caching, affected test runs, and faster CI across your monorepo.
 sidebar:
   label: Introduction
 weight: 2
@@ -338,3 +338,9 @@ nx e2e frontend-e2e --env.API_URL="https://api.my-nx-website.com" --env.API_KEY=
 {% aside type="caution" title="Command-line args vs configuration options" %}
 Providing a flag will override any option with the same name set in the project or workspace configuration.
 {% /aside %}
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
