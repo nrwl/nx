@@ -19,8 +19,6 @@ import {
   hashTasksThatDoNotDependOnOutputsOfOtherTasks,
 } from '../hasher/hash-task';
 import { hashArray, logDebug, RunMode } from '../native';
-// Type-only alias; the runtime `AppLifeCycle` is dynamically imported below, so this avoids shadowing it.
-import type { AppLifeCycle as AppLifeCycleClass } from '../native';
 import {
   runPostTasksExecution,
   runPreTasksExecution,
@@ -64,7 +62,6 @@ import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle'
 import {
   PerformanceLifeCycle,
   flushPerformanceReport,
-  getPerformanceSummaryPayload,
 } from './life-cycles/performance-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
@@ -86,44 +83,6 @@ const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 const originalStderrWrite = process.stderr.write.bind(process.stderr);
 const originalConsoleLog = console.log.bind(console);
 const originalConsoleError = console.error.bind(console);
-
-/**
- * Forward every lifecycle call to the TUI's native instance, but supply `endCommand`
- * with the performance-report payload for its exit popup (the orchestrator calls
- * `endCommand()` with no arguments; only multi-task runs get a popup). A wrapper
- * rather than reassigning the instance method, so the native lifecycle is never
- * mutated; a stale binding without `endCommand` is forwarded as-is.
- */
-function withPerformanceReportPopup(
-  appLifeCycle: AppLifeCycleClass,
-  tasks: Task[]
-): LifeCycle {
-  if (typeof appLifeCycle.endCommand !== 'function') {
-    return appLifeCycle as unknown as LifeCycle;
-  }
-  const endCommand = () =>
-    appLifeCycle.endCommand(
-      tasks.length > 1
-        ? (getPerformanceSummaryPayload() ?? undefined)
-        : undefined
-    );
-  const forwarded = new Map<PropertyKey, unknown>();
-  return new Proxy(appLifeCycle, {
-    get(target, prop) {
-      if (prop === 'endCommand') {
-        return endCommand;
-      }
-      if (!forwarded.has(prop)) {
-        const value = Reflect.get(target, prop, target);
-        forwarded.set(
-          prop,
-          typeof value === 'function' ? value.bind(target) : value
-        );
-      }
-      return forwarded.get(prop);
-    },
-  }) as unknown as LifeCycle;
-}
 
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
@@ -264,9 +223,9 @@ async function getTerminalOutputLifeCycle(
         workspaceRoot,
         taskGraph
       );
-      // Feed the TUI's exit popup the performance report via a forwarding wrapper
-      // (the orchestrator's generic endCommand() takes no arguments).
-      lifeCycles.unshift(withPerformanceReportPopup(appLifeCycle, tasks));
+      // The native endCommand renders the perf report in the exit popup; the runner
+      // sources the payload and CompositeLifeCycle forwards it here.
+      lifeCycles.unshift(appLifeCycle as unknown as LifeCycle);
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle

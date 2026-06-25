@@ -8,6 +8,7 @@ import { TaskResult } from '../life-cycle';
 import {
   PerformanceLifeCycle,
   flushPerformanceReport,
+  getPerformanceReport,
   getPerformanceSummaryPayload,
 } from './performance-life-cycle';
 import {
@@ -841,6 +842,39 @@ describe('exit summary payload (TUI countdown)', () => {
       expect(getPerformanceSummaryPayload()).not.toBeNull();
       // The popup now owns the report; the terminal flush path must not re-render it.
       expect(getPerformanceSummaryPayload()).toBeNull();
+    }));
+
+  it('hands the popup the report for multi-task TUI runs, consuming it', () =>
+    withEnvironmentVariables({ ...envFor({}), NX_TUI: 'true' }, () => {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const b = makeTask('b', { start: 1000, end: 2000 });
+      const graph = makeGraph([a, b], { b: ['a'] });
+      feed(makeLifeCycle(graph), graph);
+
+      // >1 task under the TUI → the popup gets the payload and owns it.
+      expect(getPerformanceReport(2)).not.toBeUndefined();
+      expect(getPerformanceSummaryPayload()).toBeNull();
+    }));
+
+  it('leaves the report for the flush when there is no TUI popup', () =>
+    withEnvironmentVariables({ ...envFor({}), NX_TUI: 'false' }, () => {
+      const a = makeTask('a', { start: 0, end: 1000 });
+      const b = makeTask('b', { start: 1000, end: 2000 });
+      const graph = makeGraph([a, b], { b: ['a'] });
+      feed(makeLifeCycle(graph), graph);
+
+      // No TUI → no popup payload, and the report is NOT consumed (the flush prints it).
+      expect(getPerformanceReport(2)).toBeUndefined();
+      expect(getPerformanceSummaryPayload()).not.toBeNull();
+    }));
+
+  it('skips the popup for single-task runs', () =>
+    withEnvironmentVariables({ ...envFor({}), NX_TUI: 'true' }, () => {
+      const graph = makeGraph([makeTask('a', { start: 0, end: 1000 })]);
+      feed(makeLifeCycle(graph), graph);
+
+      expect(getPerformanceReport(1)).toBeUndefined();
+      expect(getPerformanceSummaryPayload()).not.toBeNull(); // left for the flush
     }));
 });
 

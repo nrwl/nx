@@ -2,6 +2,7 @@ import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
 import { TaskGraph } from '../../config/task-graph';
 import { buildExitSummaryPayload, formatReport } from './performance-report';
 import { LifeCycle, TaskResult } from '../life-cycle';
+import { isTuiEnabled } from '../is-tui-enabled';
 import {
   PerformanceAnalysis,
   type PerformanceLifeCycleOptions,
@@ -128,6 +129,21 @@ export function getPerformanceSummaryPayload(): PerformanceSummaryPayload | null
     }
     return null;
   }
+}
+
+/**
+ * The performance report payload for `endCommand`'s TUI exit popup, or undefined when the
+ * report should instead be flushed to the terminal — non-TUI runs, or a single task (the
+ * complement of run-command's flush gate). Reading it consumes the report so the flush
+ * won't reprint it.
+ */
+export function getPerformanceReport(
+  taskCount: number
+): PerformanceSummaryPayload | undefined {
+  if (!isTuiEnabled() || taskCount <= 1) {
+    return undefined;
+  }
+  return getPerformanceSummaryPayload() ?? undefined;
 }
 
 /**

@@ -3,6 +3,7 @@ import {
   BatchInfo,
   BatchStatus,
   ExternalObject,
+  PerformanceSummaryPayload,
   TaskResult,
   TaskStatus as NativeTaskStatus,
 } from '../native';
@@ -37,7 +38,8 @@ export interface LifeCycle {
    */
   startCommand?(threadCount?: number, parallel?: number): void | Promise<void>;
 
-  endCommand?(): void | Promise<void>;
+  /** @param summary performance report payload for the TUI exit popup (TUI runs only) */
+  endCommand?(summary?: PerformanceSummaryPayload): void | Promise<void>;
 
   scheduleTask?(task: Task): void | Promise<void>;
 
@@ -104,10 +106,10 @@ export class CompositeLifeCycle implements LifeCycle {
     }
   }
 
-  async endCommand(): Promise<void> {
+  async endCommand(summary?: PerformanceSummaryPayload): Promise<void> {
     for (let l of this.lifeCycles) {
       if (l.endCommand) {
-        await l.endCommand();
+        await l.endCommand(summary);
       }
     }
   }
