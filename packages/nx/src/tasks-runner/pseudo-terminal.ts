@@ -12,10 +12,11 @@ import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal, messageToCode } from '../utils/exit-codes';
 
-// Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
+// Kill any children still alive when Nx exits. Terminals remove themselves once
+// their children exit (see releaseChild), so finished runs skip a per-terminal scan.
+const activePseudoTerminals = new Set<PseudoTerminal>();
 process.on('exit', (code) => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb(code));
+  activePseudoTerminals.forEach((t) => t.shutdown(code));
 });
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
@@ -23,9 +24,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
   const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
-  pseudoTerminalShutdownCallbacks.push(
-    pseudoTerminal.shutdown.bind(pseudoTerminal)
-  );
+  activePseudoTerminals.add(pseudoTerminal);
   return pseudoTerminal;
 }
 
@@ -70,6 +69,18 @@ export class PseudoTerminal {
     }
   }
 
+  // Once all children have exited, drop the process-exit handler and close IPC.
+  private releaseChild(cp: PseudoTtyProcess) {
+    this.childProcesses.delete(cp);
+    if (this.childProcesses.size === 0) {
+      activePseudoTerminals.delete(this);
+      if (this.initialized) {
+        this.pseudoIPC.close();
+        this.initialized = false;
+      }
+    }
+  }
+
   runCommand(
     command: string,
     {
@@ -98,6 +109,7 @@ export class PseudoTerminal {
       )
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
     return cp;
   }
 
@@ -137,6 +149,7 @@ export class PseudoTerminal {
       this.pseudoIPC
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
 
     await this.pseudoIPC.waitForChildReady(id);
 
