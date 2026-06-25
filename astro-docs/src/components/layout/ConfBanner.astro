@@ -45,9 +45,11 @@ const active = isConfBannerActive();
     z-index: calc(var(--sl-z-index-navbar) + 1);
     height: var(--conf-banner-h, 2.5rem);
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    align-content: center;
     justify-content: center;
-    gap: 0.625rem;
+    gap: 0.25rem 0.625rem;
     padding-inline: 1rem;
     /* Theme-aware: light strip in light mode, dark strip in dark mode. */
     background-color: var(--sl-color-bg-nav);
