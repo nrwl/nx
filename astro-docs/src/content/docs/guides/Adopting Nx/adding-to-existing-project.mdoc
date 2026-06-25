@@ -369,7 +369,7 @@ jobs:
       - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
       - run: npm ci
       - uses: nrwl/nx-set-shas@v5
