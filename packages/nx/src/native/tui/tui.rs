@@ -443,7 +443,7 @@ impl Tui {
         Ok(())
     }
 
-    pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
+    pub async fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
         if new_mode == self.current_mode {
             debug!("Mode {:?} is already active", new_mode);
             return Ok(());
@@ -454,8 +454,18 @@ impl Tui {
             self.current_mode, new_mode
         );
 
+        // Ensure the inline terminal exists before touching any terminal state, so
+        // a refusal leaves us cleanly in the current mode.
+        if new_mode == TuiMode::Inline && self.inline_terminal.is_none() {
+            return Err(color_eyre::eyre::eyre!(
+                "Cannot switch to inline mode: inline terminal not available (stdin is not a TTY)"
+            ));
+        }
+
+        let previous_mode = self.current_mode;
+
         // Clean up current mode's terminal state (but stay in raw mode)
-        match self.current_mode {
+        match previous_mode {
             TuiMode::FullScreen => {
                 // Leave alternate screen but stay in raw mode
                 execute!(std::io::stderr(), LeaveAlternateScreen)?;
@@ -466,31 +476,47 @@ impl Tui {
             }
         }
 
-        // Ensure inline terminal exists before switching to it
-        if new_mode == TuiMode::Inline && self.inline_terminal.is_none() {
-            return Err(color_eyre::eyre::eyre!(
-                "Cannot switch to inline mode: inline terminal not available (stdin is not a TTY)"
-            ));
-        }
-
         // Switch the mode
         self.current_mode = new_mode;
-
-        // Clear the new terminal's buffers to force a full redraw
-        self.terminal_mut().clear()?;
 
         // Set up new mode's terminal state (we're still in raw mode)
         match new_mode {
             TuiMode::FullScreen => {
+                // Coming from inline, clearing the terminal still triggers ratatui's
+                // cursor-position query, which races stdin and intermittently times
+                // out (the same hazard the inline direction has). Stop the input
+                // event stream around it so the switch back can't fail and bounce the
+                // user to a second Esc.
+                self.stop().await?;
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                // Clear the new terminal's buffers to force a full redraw
+                self.terminal_mut().clear()?;
                 execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+                // Fresh event channel + restart, mirroring reinitialize_inline_terminal.
+                let (new_tx, new_rx) = mpsc::unbounded_channel();
+                self.event_tx = new_tx;
+                self.event_rx = new_rx;
+                self.start();
+                tokio::task::yield_now().await;
             }
             TuiMode::Inline => {
+                // Recreate the inline viewport with the input event stream stopped,
+                // so its cursor-position query can't race stdin and time out — the
+                // same hazard the resize path handles. Querying the cursor here while
+                // the EventStream is live is what intermittently failed and left the
+                // terminal half-switched ("neither mode") before the run quit.
+                if let Err(e) = self.reinitialize_inline_terminal().await {
+                    // Roll the terminal back to the mode we came from so we never
+                    // surface a half-switched ("neither") terminal to the caller.
+                    self.current_mode = previous_mode;
+                    if previous_mode == TuiMode::FullScreen {
+                        let _ =
+                            execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide);
+                        let _ = self.terminal_mut().clear();
+                    }
+                    return Err(e);
+                }
                 execute!(std::io::stderr(), cursor::Hide)?;
-                execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
-                execute!(
-                    std::io::stderr(),
-                    crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
-                )?;
             }
         }
 

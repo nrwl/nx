@@ -810,12 +810,14 @@ impl App {
                             KeyCode::Char('p') | KeyCode::Char('P')
                                 if countdown_popup.has_summary() =>
                             {
-                                // While the report is focused the reopen handler above
-                                // is skipped, so `p` pins it open instead of falling
-                                // through to the dismiss catch-all. The mid-run exit
-                                // dialog has no summary, so `p` still dismisses it.
-                                countdown_popup.pin_open();
+                                // `p` toggles the report. It's visible+focused here, so
+                                // this press dismisses it (and stops the auto-exit);
+                                // pressing `p` again from the task list reopens it via
+                                // the handler above. The mid-run exit dialog has no
+                                // summary, so `p` falls through to the dismiss catch-all.
+                                countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
+                                self.update_focus(self.previous_focus);
                                 return Ok(false);
                             }
                             KeyCode::Esc => {
@@ -830,6 +832,19 @@ impl App {
                                     self.core.state().lock().cancel_quit();
                                     self.update_focus(self.previous_focus);
                                 }
+                                return Ok(false);
+                            }
+                            KeyCode::F(11) | KeyCode::Enter
+                                if countdown_popup.has_summary() =>
+                            {
+                                // Jump from the report straight into inline in one
+                                // press. Without an explicit arm the popup would
+                                // swallow this key just to dismiss itself, so the
+                                // switch wouldn't happen until a second press.
+                                countdown_popup.cancel_countdown();
+                                self.core.state().lock().cancel_quit();
+                                self.update_focus(self.previous_focus);
+                                self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
                                 return Ok(false);
                             }
                             _ => {
@@ -2874,6 +2889,92 @@ mod tests {
                 .expect("PTY parser should be readable")
                 .hide_cursor(),
             "cursor must be hidden when print creates a fresh PTY"
+        );
+    }
+
+    /// Show the performance report popup (focused) with an already-due auto-exit.
+    fn show_focused_report(app: &mut App) {
+        {
+            let popup = app
+                .components
+                .iter_mut()
+                .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                .expect("countdown popup exists");
+            popup.set_summary(PerformanceSummaryPayload::default());
+            popup.start_countdown(3);
+        }
+        app.update_focus(Focus::CountdownPopup);
+        // Arm an already-due quit so cancellation is observable via should_quit().
+        app.core
+            .state()
+            .lock()
+            .schedule_quit(std::time::Duration::from_secs(0));
+        assert!(
+            app.core.state().lock().should_quit(),
+            "precondition: auto-exit armed"
+        );
+    }
+
+    fn report_visible(app: &App) -> bool {
+        app.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+            .expect("countdown popup exists")
+            .is_visible()
+    }
+
+    /// `p` toggles the report: while it is focused, the press dismisses it and
+    /// cancels the auto-exit countdown (the reopen half is handled separately when
+    /// the popup is not focused).
+    #[test]
+    fn test_p_dismisses_focused_report_and_cancels_exit() {
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_event(
+            tui::Event::Key(KeyEvent::new(KeyCode::Char('p'), KeyModifiers::NONE)),
+            &tx,
+        )
+        .unwrap();
+
+        assert!(!report_visible(&app), "`p` should dismiss the focused report");
+        assert!(
+            !app.core.state().lock().should_quit(),
+            "`p` should cancel the auto-exit countdown"
+        );
+    }
+
+    /// Enter while the report is focused jumps to inline in a single press (and
+    /// cancels the auto-exit), instead of only dismissing the popup.
+    #[test]
+    fn test_enter_on_report_switches_to_inline_in_one_press() {
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_event(
+            tui::Event::Key(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE)),
+            &tx,
+        )
+        .unwrap();
+
+        assert!(!report_visible(&app), "Enter should dismiss the report");
+        assert!(
+            !app.core.state().lock().should_quit(),
+            "Enter should cancel the auto-exit"
+        );
+        let mut switched_to_inline = false;
+        while let Ok(action) = rx.try_recv() {
+            if matches!(action, Action::SwitchMode(TuiMode::Inline)) {
+                switched_to_inline = true;
+            }
+        }
+        assert!(
+            switched_to_inline,
+            "Enter on the report should switch to inline in one press"
         );
     }
 }

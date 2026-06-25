@@ -224,7 +224,7 @@ impl Clone for TuiAppInstance {
 /// Returns `Some(new_mode)` on success, `None` on failure.
 /// On failure, the caller should break out of the event loop.
 #[cfg(not(test))]
-fn switch_mode(
+async fn switch_mode(
     shared_app: &SharedAppInstance,
     tui: &mut Tui,
     target_mode: TuiMode,
@@ -267,11 +267,13 @@ fn switch_mode(
         (guard.get_shared_state(), item)
     };
 
-    // Switch terminal viewport
-    if let Err(e) = tui.switch_mode(target_mode) {
+    // Switch terminal viewport. On failure `tui.switch_mode` rolls the terminal
+    // back to the current mode, so don't tear down the whole run over a viewport
+    // hiccup — tell the user and stay where we are.
+    if let Err(e) = tui.switch_mode(target_mode).await {
         debug!("Failed to switch terminal mode: {}", e);
-        shared_state.lock().quit_immediately();
-        return None;
+        let _ = action_tx.send(Action::ShowHint(format!("Couldn't switch view: {e}")));
+        return Some(tui.current_mode);
     }
 
     // Create new app instance with same state
@@ -650,7 +652,7 @@ impl AppLifeCycle {
                         // Only switch if target mode differs from current
                         if target_mode != tui_mode {
                             // switch_mode updates the shared app reference in place
-                            match switch_mode(&app, &mut tui, target_mode, &action_tx) {
+                            match switch_mode(&app, &mut tui, target_mode, &action_tx).await {
                                 Some(new_mode) => {
                                     tui_mode = new_mode;
                                     // Force an immediate render
