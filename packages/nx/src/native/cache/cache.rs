@@ -1,5 +1,5 @@
 use std::fs::{create_dir_all, read_to_string, write};
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::rc::Rc;
 use std::time::Instant;
 use tracing::{debug, trace};
@@ -243,6 +243,7 @@ impl NxCache {
         trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
+        let outputs = normalize_outputs(&self.workspace_root, outputs);
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
@@ -389,6 +390,7 @@ impl NxCache {
     ) -> anyhow::Result<i64> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
+        let outputs = normalize_outputs(&self.workspace_root, outputs);
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
 
         trace!(
@@ -506,5 +508,87 @@ where
                 std::thread::sleep(std::time::Duration::from_millis(timeout as u64));
             }
         }
+    }
+}
+
+/// Normalize declared output paths for cache use. Absolute paths are only
+/// meaningful inside the workspace: an in-workspace absolute path is made
+/// relative to the workspace root, and one pointing outside is dropped (the
+/// cache mirrors the workspace and never reads or writes outside it). Relative
+/// paths that climb out via `..` are dropped for the same reason; the rest pass
+/// through unchanged.
+fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> Vec<String> {
+    outputs
+        .into_iter()
+        .filter_map(|output| {
+            let path = Path::new(&output);
+            let relative = if path.is_absolute() {
+                match path.strip_prefix(workspace_root) {
+                    Ok(rel) => rel,
+                    Err(_) => {
+                        trace!("Skipping cache output outside the workspace: {}", output);
+                        return None;
+                    }
+                }
+            } else {
+                path
+            };
+            if escapes_workspace(relative) {
+                trace!("Skipping cache output outside the workspace: {}", output);
+                return None;
+            }
+            Some(relative.to_normalized_string())
+        })
+        .collect()
+}
+
+/// Whether a relative path climbs above its base via `..`.
+fn escapes_workspace(path: &Path) -> bool {
+    let mut depth: i32 = 0;
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                depth -= 1;
+                if depth < 0 {
+                    return true;
+                }
+            }
+            Component::Normal(_) => depth += 1,
+            Component::CurDir => {}
+            // A relative path shouldn't contain a root/prefix; treat as escaping.
+            Component::RootDir | Component::Prefix(_) => return true,
+        }
+    }
+    false
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new("/ws/root");
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), "/ws/root/build/app".to_string()],
+        );
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn normalize_outputs_skips_paths_outside_workspace() {
+        let ws = Path::new("/ws/root");
+        let out = normalize_outputs(
+            ws,
+            vec![
+                "/etc/cron.d/evil".to_string(),
+                "../../escape".to_string(),
+                "dist".to_string(),
+            ],
+        );
+        assert_eq!(out, vec!["dist".to_string()]);
     }
 }
