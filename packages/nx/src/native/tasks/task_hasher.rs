@@ -5,7 +5,7 @@ use std::sync::Arc;
 use hashbrown::HashSet;
 
 use crate::native::{
-    hasher::hash,
+    hasher::{hash, hash_array},
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
     tasks::types::HashInstruction,
     types::NapiDashMap,
@@ -85,6 +85,10 @@ impl From<&HashInstruction> for HashInputsBuilder {
             },
             HashInstruction::External(external) => HashInputsBuilder {
                 external: HashSet::from([external.clone()]),
+                ..Default::default()
+            },
+            HashInstruction::ExternalDependencies(externals) => HashInputsBuilder {
+                external: externals.iter().cloned().collect(),
                 ..Default::default()
             },
             HashInstruction::AllExternalDependencies => HashInputsBuilder {
@@ -233,6 +237,10 @@ impl TaskHasher {
         let project_file_set_cache = ProjectFileSetCache::new();
         let workspace_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        // Folded hash for a task's collapsed external-dependency closure, keyed by the
+        // instruction string. Many tasks share the same closure (e.g. everything that
+        // depends on a given package), so this avoids re-folding it per task.
+        let external_closure_cache: DashMap<String, String> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -292,6 +300,7 @@ impl TaskHasher {
                         project_file_set_cache: &project_file_set_cache,
                         workspace_file_set_cache: &workspace_file_set_cache,
                         json_file_set_cache: &json_file_set_cache,
+                        external_closure_cache: &external_closure_cache,
                         cwd: cwd_path,
                         collect_inputs: should_collect_inputs,
                     },
@@ -370,6 +379,7 @@ impl TaskHasher {
             project_file_set_cache,
             workspace_file_set_cache,
             json_file_set_cache,
+            external_closure_cache,
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
@@ -539,6 +549,39 @@ impl TaskHasher {
                 };
                 (hashed_external, inputs)
             }
+            HashInstruction::ExternalDependencies(externals) => {
+                // Fold the collapsed closure's member hashes once and cache it: tasks that
+                // share the same external closure reuse the folded result instead of
+                // re-hashing every member. Individual members are still served from
+                // external_cache.
+                let cache_key = instruction.to_string();
+                let hashed_external_deps =
+                    if let Some(entry) = external_closure_cache.get(&cache_key) {
+                        entry.clone()
+                    } else {
+                        let hashes = externals
+                            .iter()
+                            .map(|name| {
+                                hash_external(
+                                    name,
+                                    &self.project_graph.external_nodes,
+                                    Arc::clone(&self.external_cache),
+                                )
+                                .map(Some)
+                            })
+                            .collect::<anyhow::Result<Vec<Option<String>>>>()?;
+                        let folded = hash_array(hashes);
+                        external_closure_cache.insert(cache_key, folded.clone());
+                        folded
+                    };
+                trace!(parent: &span, "hash_external_deps: {:?}", now.elapsed());
+                let inputs = if collect_inputs {
+                    instruction.into()
+                } else {
+                    empty
+                };
+                (hashed_external_deps, inputs)
+            }
             HashInstruction::AllExternalDependencies => {
                 let hashed_all_externals = hash_all_externals(
                     sorted_externals,
@@ -609,6 +652,7 @@ struct HashInstructionArgs<'a> {
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a DashMap<String, CachedFileSetHash>,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
+    external_closure_cache: &'a DashMap<String, String>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
 }
