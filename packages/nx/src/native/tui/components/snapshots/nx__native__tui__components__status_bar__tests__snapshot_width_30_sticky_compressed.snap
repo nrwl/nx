@@ -1,0 +1,5 @@
+---
+source: packages/nx/src/native/tui/components/status_bar.rs
+expression: terminal.backend()
+---
+"12/29  ✖ 3                q  ?"

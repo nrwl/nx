@@ -10,5 +10,5 @@ expression: terminal.backend()
 "  ·    app2:test                                               ...        ...  █"
 "  ·    app3:test                                               ...        ...  ║"
 "  ·    app4:test                                               ...        ...  ║"
-"  ·    app5:test                                               ...        ...  ↓"
-"                                                                quit: q  help: ?"
+"  ·    app5:test                                               ...        ...  ║"
+"  ·    app6:test                                               ...        ...  ↓"

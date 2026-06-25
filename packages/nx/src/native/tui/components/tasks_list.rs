@@ -15,7 +15,6 @@ use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::help_text::HelpText;
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
@@ -45,12 +44,6 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 // This is just a fallback value, the real value will be set via start_command on the lifecycle
 const DEFAULT_MAX_PARALLEL: usize = 0;
 
-// Constants for layout calculation
-const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
-const FULL_HELP_WIDTH: u16 = 86; // Full help text width
-const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
-const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Cloud and Help
-const SCROLLBAR_WIDTH: u16 = 3; // Width for scrollbar area (1 scrollbar + 2 padding)
 // Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
 const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
 // Rows before the scrollbar track starts: top_margin(1) + header content(1)
@@ -240,8 +233,7 @@ pub struct TasksList {
     filter_text: String,
     filter_persisted: bool, // Whether the filter is in a persisted state
     spacebar_mode: bool,    // Whether we're in spacebar mode (output follows selection)
-    cloud_message: Option<String>,
-    max_parallel: usize, // Maximum number of parallel tasks
+    max_parallel: usize,    // Maximum number of parallel tasks
     title_text: String,
     pub action_tx: Option<UnboundedSender<Action>>,
     focus: Focus,
@@ -287,7 +279,6 @@ impl TasksList {
             filter_text: String::new(),
             filter_persisted: false,
             spacebar_mode: false,
-            cloud_message: None,
             max_parallel: DEFAULT_MAX_PARALLEL,
             title_text,
             action_tx: None,
@@ -312,6 +303,12 @@ impl TasksList {
         // Cap to the number of tasks in the graph so we don't reserve placeholder
         // rows for slots that can never be filled (e.g. --parallel=8 with 5 tasks).
         self.max_parallel = requested.min(self.task_lookup.len());
+    }
+
+    /// Run capacity (`parallel` + continuous tasks, capped to the task count):
+    /// an upper bound on the number of concurrently running tasks.
+    pub fn max_parallel(&self) -> usize {
+        self.max_parallel
     }
 
     /// Returns the display items visible to the renderer: the filtered subset when a
@@ -2413,101 +2410,6 @@ impl TasksList {
             normal_style
         })
     }
-
-    /// Renders the help text component.
-    fn render_help_text(
-        &self,
-        f: &mut Frame<'_>,
-        help_text_area: Rect,
-        is_collapsed: bool,
-        is_dimmed: bool,
-    ) {
-        let help_text = HelpText::new(is_collapsed, is_dimmed, false);
-        help_text.render(f, help_text_area);
-    }
-
-    /// Renders messages received from Nx Cloud
-    fn render_cloud_message(&self, f: &mut Frame<'_>, cloud_message_area: Rect, is_dimmed: bool) {
-        if let Some(message) = &self.cloud_message {
-            let available_width = cloud_message_area.width;
-            // Ensure minimum width to render anything
-            if available_width == 0 || cloud_message_area.height == 0 {
-                return;
-            }
-
-            let message_style = if is_dimmed {
-                Style::default().fg(THEME.secondary_fg).dim()
-            } else {
-                Style::default().fg(THEME.secondary_fg)
-            };
-
-            // No URL present in the message, render the message as is if it fits, otherwise truncate
-            if !message.contains("https://") {
-                let message_line = Line::from(Span::styled(message.as_str(), message_style));
-                // Line fits as is
-                if message_line.width() <= available_width as usize {
-                    let cloud_message_paragraph =
-                        Paragraph::new(message_line).alignment(Alignment::Left);
-                    f.render_widget(cloud_message_paragraph, cloud_message_area);
-                    return;
-                }
-                // Line doesn't fit, truncate
-                let max_message_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_message =
-                    format!("{}...", &message[..max_message_render_len as usize]);
-                let cloud_message_paragraph =
-                    Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
-                        .alignment(Alignment::Left);
-                f.render_widget(cloud_message_paragraph, cloud_message_area);
-                return;
-            }
-
-            // Find URL position
-            let url_start_pos = message.find("https://").unwrap_or(message.len());
-            // Figure out the "prefix" (i.e. any message contents before the URL)
-            let prefix = &message[0..url_start_pos];
-            let url = &message[url_start_pos..];
-
-            let prefix_len = prefix.len() as u16;
-            let url_len = url.len() as u16;
-
-            let mut spans = vec![];
-
-            let url_style = if is_dimmed {
-                Style::default().fg(THEME.info).underlined().dim()
-            } else {
-                Style::default().fg(THEME.info).underlined()
-            };
-
-            // Determine what fits, prioritizing the URL
-            if url_len <= available_width {
-                // Full URL Fits, check if the full message does, and if so, render the full thing
-                if prefix_len + url_len <= available_width {
-                    spans.push(Span::styled(prefix, message_style));
-                    spans.push(Span::styled(url, url_style));
-                } else {
-                    // Only URL fits, do not render the prefix
-                    spans.push(Span::styled(url, url_style));
-                }
-            } else if available_width >= MIN_CLOUD_URL_WIDTH {
-                // Full URL doesn't fit, but Truncated URL does.
-                let max_url_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_url = format!("{}...", &url[..max_url_render_len as usize]);
-                spans.push(Span::styled(truncated_url, url_style));
-            } else {
-                // Not enough space for even truncated URL, show nothing...
-                // Hopefully in this situation user can make their terminal bigger or switch layout mode
-            }
-
-            if !spans.is_empty() {
-                let message_line = Line::from(spans);
-                let cloud_message_paragraph =
-                    Paragraph::new(message_line).alignment(Alignment::Left);
-
-                f.render_widget(cloud_message_paragraph, cloud_message_area);
-            }
-        }
-    }
 }
 
 impl Component for TasksList {
@@ -2526,168 +2428,37 @@ impl Component for TasksList {
 
         // --- 1. Initial Context ---
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
-        let is_dimmed = !self.is_task_list_focused();
-        let has_cloud_message = self.cloud_message.is_some();
 
-        // --- 2. Determine Bottom Layout Mode ---
-        enum BottomLayoutMode {
-            SingleLine { help_collapsed: bool }, // Cloud + Help
-            TwoLine { help_collapsed: bool },    // Cloud / Help
-            NoCloud { help_collapsed: bool },    // Help only
-        }
-        let layout_mode: BottomLayoutMode;
-
-        if has_cloud_message {
-            // Calculate the actual cloud message width that will be rendered
-            // This accounts for the URL-only fallback when the full message doesn't fit
-            let cloud_text_width = if let Some(message) = &self.cloud_message {
-                if message.contains("https://") {
-                    let url_start_pos = message.find("https://").unwrap_or(message.len());
-                    let prefix = &message[0..url_start_pos];
-                    let url = &message[url_start_pos..];
-                    let full_message_width = (prefix.len() + url.len()) as u16;
-                    let url_width = url.len() as u16;
-
-                    // Check if we'll need to fall back to URL-only rendering
-                    // We need to account for the help text that will be on the same line
-                    let available_for_cloud = area
-                        .width
-                        .saturating_sub(SCROLLBAR_WIDTH)
-                        .saturating_sub(COLLAPSED_HELP_WIDTH)
-                        .saturating_sub(MIN_BOTTOM_SPACING);
-
-                    if full_message_width <= available_for_cloud {
-                        full_message_width
-                    } else {
-                        // Will fall back to URL-only rendering
-                        url_width
-                    }
-                } else {
-                    message.len() as u16
-                }
-            } else {
-                0
-            };
-
-            let required_width_full_help =
-                SCROLLBAR_WIDTH + cloud_text_width + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
-            let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + cloud_text_width + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
-
-            if required_width_full_help <= area.width {
-                layout_mode = BottomLayoutMode::SingleLine {
-                    help_collapsed: false,
-                };
-            } else if required_width_collapsed_help <= area.width {
-                layout_mode = BottomLayoutMode::SingleLine {
-                    help_collapsed: true,
-                };
-            } else {
-                layout_mode = BottomLayoutMode::TwoLine {
-                    help_collapsed: true,
-                }; // Force collapse in two-line mode
-            }
-        } else {
-            // No Cloud message is present
-            let required_width_full_help = SCROLLBAR_WIDTH + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
-            let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
-
-            if required_width_full_help <= area.width {
-                layout_mode = BottomLayoutMode::NoCloud {
-                    help_collapsed: false,
-                };
-            } else if required_width_collapsed_help <= area.width {
-                layout_mode = BottomLayoutMode::NoCloud {
-                    help_collapsed: true,
-                };
-            } else {
-                // Force vertical Help split, treat as TwoLine for structure, ensure help is collapsed
-                layout_mode = BottomLayoutMode::TwoLine {
-                    help_collapsed: true,
-                };
-            }
-        }
-
-        // --- 3. Calculate Main Vertical Split ---
+        // --- 2. Vertical Split: [table, (filter)] ---
+        // Cloud + help / status bar now live in the global StatusBar
+        // component (NXC-3076); tasks_list only owns the table and the
+        // optional filter row directly under it.
         let mut vertical_constraints = vec![Constraint::Fill(1)]; // Table first
-        let mut bottom_row_indices: std::collections::HashMap<&str, usize> =
-            std::collections::HashMap::new();
-        let mut current_chunk_index = 1; // Index for chunks after the table
-
-        // Determine if help will be collapsed for the separator logic
-        let final_help_collapsed = match layout_mode {
-            BottomLayoutMode::SingleLine { help_collapsed } => help_collapsed,
-            BottomLayoutMode::TwoLine { help_collapsed } => help_collapsed,
-            BottomLayoutMode::NoCloud { help_collapsed } => help_collapsed,
-        };
-
-        let needs_filter_separator = matches!(layout_mode, BottomLayoutMode::TwoLine {..} | BottomLayoutMode::NoCloud {..} if has_cloud_message || !final_help_collapsed);
-        let final_help_width = if final_help_collapsed {
-            COLLAPSED_HELP_WIDTH
-        } else {
-            FULL_HELP_WIDTH
-        };
-
         if filter_is_active {
-            vertical_constraints.push(Constraint::Length(2)); // Filter area below table
-            bottom_row_indices.insert("filter", current_chunk_index);
-            current_chunk_index += 1;
-            if needs_filter_separator || matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
-                // Add separator if filter isn't the very last thing
-                vertical_constraints.push(Constraint::Length(1)); // Separator
-                bottom_row_indices.insert("filter_sep", current_chunk_index);
-                current_chunk_index += 1;
-            }
+            vertical_constraints.push(Constraint::Length(2));
         }
-        if matches!(layout_mode, BottomLayoutMode::TwoLine { .. }) {
-            // Reserve space for cloud or the top part of vertical Help
-            vertical_constraints.push(Constraint::Length(1));
-            bottom_row_indices.insert("cloud_or_help_vertical", current_chunk_index);
-            current_chunk_index += 1;
-            // Add separator between cloud and help rows in two-line mode
-            vertical_constraints.push(Constraint::Length(1));
-            bottom_row_indices.insert("cloud_help_sep", current_chunk_index);
-            current_chunk_index += 1;
-        }
-        // Reserve space for help row or the bottom part of vertical Help
-        vertical_constraints.push(Constraint::Length(1));
-        bottom_row_indices.insert("help_vertical", current_chunk_index);
 
         let vertical_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints(vertical_constraints)
             .split(area);
 
-        // --- 4. Assign Areas ---
-        let table_area = vertical_chunks[0]; // Table is always the first chunk
-        let filter_area = bottom_row_indices
-            .get("filter")
-            .map(|&i| vertical_chunks[i]);
-        // Separator area not needed directly
-        let cloud_or_help_vertical_area = bottom_row_indices
-            .get("cloud_or_help_vertical")
-            .map(|&i| vertical_chunks[i]);
-        let help_vertical_area = bottom_row_indices
-            .get("help_vertical")
-            .map(|&i| vertical_chunks[i])
-            .unwrap(); // Must exist at this point
+        let table_area = vertical_chunks[0];
+        let filter_area = if filter_is_active {
+            vertical_chunks.get(1).copied()
+        } else {
+            None
+        };
 
-        // --- 5. Early Scrollbar Detection and Column Visibility ---
-        // Check if scrollbar will be needed before calculating column visibility
+        // --- 3. Early Scrollbar Detection and Column Visibility ---
         let needs_scrollbar = self.will_need_scrollbar(table_area.height);
-
-        // Calculate effective width for column visibility (accounting for scrollbar if needed)
         let effective_width = if needs_scrollbar {
-            area.width.saturating_sub(3) // Subtract scrollbar (1) + padding (2)
+            area.width.saturating_sub(3)
         } else {
             area.width
         };
 
-        // Calculate column visibility with the effective width
         let column_visibility = self.calculate_column_visibility(effective_width);
-
-        // If duration column is visible and was not visible before, update live durations
         let previous_show_duration = self
             .column_visibility
             .as_ref()
@@ -2695,11 +2466,9 @@ impl Component for TasksList {
         if column_visibility.show_duration && !previous_show_duration {
             self.update_live_durations();
         }
-        // Cache the column visibility
         self.column_visibility = Some(column_visibility.clone());
 
-        // --- 6. Render Table ---
-        // Compute scroll metrics once here to reduce lock contention in render_task_table
+        // --- 4. Render Table ---
         let scroll_metrics = {
             let mut manager = self.selection_manager.lock();
             manager.update_viewport_and_get_metrics(
@@ -2714,127 +2483,20 @@ impl Component for TasksList {
             &scroll_metrics,
         );
 
-        // --- 7. Render Filter ---
-        if let Some(area) = filter_area {
-            if area.height > 0
-                && area.width > 0
-                && area.y < f.area().height
-                && area.x < f.area().width
-            {
-                let safe_area = Rect {
-                    x: area.x,
-                    y: area.y,
-                    width: area.width.min(f.area().width.saturating_sub(area.x)),
-                    height: area.height.min(f.area().height.saturating_sub(area.y)),
-                };
-                self.render_filter(f, safe_area);
-            }
-        }
-
-        // --- 8. Render Bottom Rows ---
-        // Use final_help_collapsed and final_help_width from here down
-        let help_is_collapsed = final_help_collapsed;
-        let help_text_width = final_help_width;
-
-        match layout_mode {
-            BottomLayoutMode::SingleLine { .. } => {
-                // Don't need help_collapsed from enum variant now
-                // Cloud + Help on one line
-                // Calculate exact cloud width based on available space in single line
-                let cloud_message_render_width = area
-                    .width
-                    .saturating_sub(help_text_width) // Use final calculated width
-                    .saturating_sub(MIN_BOTTOM_SPACING);
-
-                let constraints = vec![
-                    Constraint::Length(cloud_message_render_width),
-                    Constraint::Fill(1),
-                    Constraint::Length(help_text_width),
-                ];
-                let row_chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints(constraints)
-                    .split(help_vertical_area);
-
-                // Render components with safety checks
-                if !row_chunks.is_empty()
-                    && row_chunks[0].height > 0
-                    && row_chunks[0].width > 0
-                    && row_chunks[0].y < f.area().height
-                {
-                    self.render_cloud_message(f, row_chunks[0].intersection(f.area()), is_dimmed);
-                }
-                if row_chunks.len() > 2
-                    && row_chunks[2].height > 0
-                    && row_chunks[2].width > 0
-                    && row_chunks[2].y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        row_chunks[2].intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
-            BottomLayoutMode::TwoLine { .. } => {
-                // Cloud (if present) row first
-                if has_cloud_message {
-                    if let Some(area) = cloud_or_help_vertical_area {
-                        if area.height > 0
-                            && area.width > 0
-                            && area.y < f.area().height
-                            && area.x < f.area().width
-                        {
-                            // Apply padding safely
-                            let constraints = [Constraint::Length(2), Constraint::Fill(1)];
-                            let padded_chunks = Layout::default()
-                                .direction(Direction::Horizontal)
-                                .constraints(constraints)
-                                .split(area);
-                            if padded_chunks.len() >= 2 {
-                                let safe_padded_area = padded_chunks[1].intersection(f.area());
-                                if safe_padded_area.height > 0 && safe_padded_area.width > 0 {
-                                    self.render_cloud_message(f, safe_padded_area, is_dimmed);
-                                }
-                            } else {
-                                // Fallback: Render in original area if padding fails
-                                let safe_area = area.intersection(f.area());
-                                if safe_area.height > 0 && safe_area.width > 0 {
-                                    self.render_cloud_message(f, safe_area, is_dimmed);
-                                }
-                            }
-                        }
-                    }
-                }
-                // Render help text directly in the area
-                if help_vertical_area.height > 0
-                    && help_vertical_area.width > 0
-                    && help_vertical_area.y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        help_vertical_area.intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
-            BottomLayoutMode::NoCloud { .. } => {
-                // Help row
-                // Render help text directly in the area
-                if help_vertical_area.height > 0
-                    && help_vertical_area.width > 0
-                    && help_vertical_area.y < f.area().height
-                {
-                    self.render_help_text(
-                        f,
-                        help_vertical_area.intersection(f.area()),
-                        help_is_collapsed,
-                        is_dimmed,
-                    );
-                }
-            }
+        // --- 5. Render Filter ---
+        if let Some(area) = filter_area
+            && area.height > 0
+            && area.width > 0
+            && area.y < f.area().height
+            && area.x < f.area().width
+        {
+            let safe_area = Rect {
+                x: area.x,
+                y: area.y,
+                width: area.width.min(f.area().width.saturating_sub(area.x)),
+                height: area.height.min(f.area().height.saturating_sub(area.y)),
+            };
+            self.render_filter(f, safe_area);
         }
 
         Ok(())
@@ -2892,9 +2554,6 @@ impl Component for TasksList {
             }
             Action::SetTaskTiming(task_id, start_time, end_time) => {
                 self.set_task_timing(task_id, Some(start_time), Some(end_time));
-            }
-            Action::UpdateCloudMessage(message) => {
-                self.cloud_message = Some(message);
             }
             Action::ScrollUp => {
                 self.scroll_up();
@@ -3662,64 +3321,8 @@ mod tests {
         insta::assert_snapshot!(terminal.backend());
     }
 
-    #[test]
-    fn test_cloud_message_rendering() {
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(120, 15);
-
-        // All tasks should be complete in some way, we'll do a mixture of success and failure
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "failure".to_string(),
-                    code: 1,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Failure,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message with a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
+    // Cloud-message rendering moved to StatusBar (NXC-3076); see
+    // `components::status_bar::tests` for cloud cascade coverage.
 
     #[test]
     fn test_not_focused() {
@@ -4061,154 +3664,8 @@ mod tests {
         insta::assert_snapshot!(terminal.backend());
     }
 
-    #[test]
-    fn test_cloud_message_without_url() {
-        let (mut tasks_list, _) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(90, 15);
-
-        // Set a cloud message without a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "This is some warning from Nx Cloud".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_without_url_super_wide() {
-        let (mut tasks_list, _) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(150, 15);
-
-        // Set a cloud message without a URL
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "This is some warning from Nx Cloud".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_single_line_url_only() {
-        // Tests SingleLine mode where full message doesn't fit but URL alone does
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(60, 15);
-
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
-
-    #[test]
-    fn test_cloud_message_two_line_layout() {
-        // Tests actual TwoLine mode where URL + help don't fit on one line
-        let (mut tasks_list, test_tasks) = create_test_tasks_list();
-        let mut terminal = create_test_terminal(45, 15); // Narrower terminal
-
-        tasks_list
-            .update(Action::EndTasks(vec![
-                TaskResult {
-                    task: test_tasks[0].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[1].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-                TaskResult {
-                    task: test_tasks[2].clone(),
-                    status: "success".to_string(),
-                    code: 0,
-                    terminal_output: None,
-                },
-            ]))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[0].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[1].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-        tasks_list
-            .update(Action::UpdateTaskStatus(
-                test_tasks[2].id.clone(),
-                TaskStatus::Success,
-            ))
-            .unwrap();
-
-        // Set a cloud message - URL (31) + collapsed help (19) + spacing (4) = 54 chars
-        // Won't fit in 45 char width, forcing TwoLine mode
-        tasks_list
-            .update(Action::UpdateCloudMessage(
-                "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
-            ))
-            .ok();
-
-        render_to_test_backend(&mut terminal, &mut tasks_list);
-        insta::assert_snapshot!(terminal.backend());
-    }
+    // Cloud-message rendering tests removed — feature lives in StatusBar
+    // (NXC-3076); see `components::status_bar::tests`.
 
     #[test]
     fn test_very_narrow_layout_handling() {

@@ -25,5 +25,5 @@ expression: terminal.backend()
 "  ·    app25:test                                                                                      ...        ...  ║"
 "  ·    app26:build                                                                                     ...        ...  ║"
 "  ·    app27:lint                                                                                      ...        ...  ║"
-"  ·    app28:test                                                                                      ...        ...  ↓"
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"  ·    app28:test                                                                                      ...        ...  ║"
+"  ·    app29:build                                                                                     ...        ...  ↓"

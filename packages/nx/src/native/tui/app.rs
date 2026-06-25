@@ -34,6 +34,7 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::status_bar::{StatusBar, StatusCounts};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -106,6 +107,9 @@ pub struct App {
     frame_area: Option<Rect>,
     // Cached result of layout manager's calculate_layout, only updated when necessary (e.g. terminal resize, task list visibility change etc)
     layout_areas: Option<LayoutAreas>,
+    // Cached area reserved for the global status bar (and cloud row above it
+    // when present). Calculated alongside `layout_areas`.
+    status_bar_area: Option<Rect>,
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
     spacebar_mode: bool,
@@ -253,11 +257,17 @@ impl App {
         let countdown_popup = CountdownPopup::new();
         let hint_popup = HintPopup::new();
 
+        // StatusBar pulls cloud message (and other state) from TuiState
+        // via set_state every frame, so mode-switch persistence comes for
+        // free — no initial seed needed here.
+        let status_bar = StatusBar::new();
+
         let components: Vec<Box<dyn Component>> = vec![
             Box::new(tasks_list),
             Box::new(help_popup),
             Box::new(countdown_popup),
             Box::new(hint_popup),
+            Box::new(status_bar),
         ];
 
         let main_terminal_pane_data = TerminalPaneData::new();
@@ -300,6 +310,7 @@ impl App {
             layout_manager,
             frame_area: None,
             layout_areas: None,
+            status_bar_area: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
             spacebar_mode: saved_spacebar_mode,
@@ -1345,6 +1356,51 @@ impl App {
                         physical_idx += 1;
                     }
 
+                    // Draw the global status bar (and cloud row above it when
+                    // present) at the bottom of the frame. Renders regardless
+                    // of task list visibility so it survives `b`-toggle.
+                    if let Some(status_bar_area) = self.status_bar_area {
+                        // Snapshot run state into StatusBar before drawing.
+                        // Counts are O(N) but N is bounded by task count;
+                        // per-frame is fine. Cloud message comes off the
+                        // shared state lock — same source set_cloud_message
+                        // writes to.
+                        let (counts, max_parallel) = self
+                            .components
+                            .iter()
+                            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                            .map(|tl| {
+                                (
+                                    StatusCounts::from_iter(
+                                        tl.task_lookup.values().map(|t| t.status),
+                                    ),
+                                    Some(tl.max_parallel() as u32),
+                                )
+                            })
+                            .unwrap_or_default();
+                        let task_list_hidden = self.is_task_list_hidden();
+                        let cloud_message = self
+                            .core
+                            .state()
+                            .lock()
+                            .get_cloud_message()
+                            .map(|s| s.to_string());
+
+                        if let Some(status_bar) = self
+                            .components
+                            .iter_mut()
+                            .find_map(|c| c.as_any_mut().downcast_mut::<StatusBar>())
+                        {
+                            status_bar.set_state(
+                                counts,
+                                task_list_hidden,
+                                cloud_message,
+                                max_parallel,
+                            );
+                            let _ = status_bar.draw(f, status_bar_area);
+                        }
+                    }
+
                     // Draw the popups (help, countdown, interstitial)
                     // Draw each popup sequentially to avoid multiple mutable borrows
                     if let Some(help_popup) = self
@@ -1434,12 +1490,17 @@ impl App {
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
-        // Store in state (for mode switching persistence)
-        self.core.state().lock().set_cloud_message(message.clone());
-        // Dispatch to TasksList component for UI rendering
-        if let Some(message) = message {
-            self.dispatch_action(Action::UpdateCloudMessage(message));
-        }
+        // Single source of truth lives in TuiState. The status bar reads it
+        // each frame via set_state. Required-height reads it directly off
+        // the lock during layout recalculation below.
+        self.core.state().lock().set_cloud_message(message);
+        // Cloud message presence changes the status bar's required height,
+        // so recompute layout areas immediately rather than waiting for resize.
+        self.recalculate_layout_areas();
+        // The bar height change shrinks/grows the area available to terminal
+        // panes; resync PTY dimensions so running output doesn't wrap against
+        // stale row counts until the next user-driven resize.
+        let _ = self.handle_pty_resize();
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1449,7 +1510,40 @@ impl App {
 
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
-            self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
+            let bar_height = self.required_status_bar_height();
+            let usable_height = frame_area.height.saturating_sub(bar_height);
+            let usable_area = Rect {
+                x: frame_area.x,
+                y: frame_area.y,
+                width: frame_area.width,
+                height: usable_height,
+            };
+            let bar_area = if bar_height > 0 && frame_area.height >= bar_height {
+                Some(Rect {
+                    x: frame_area.x,
+                    y: frame_area.y.saturating_add(usable_height),
+                    width: frame_area.width,
+                    height: bar_height,
+                })
+            } else {
+                None
+            };
+
+            self.layout_areas = Some(self.layout_manager.calculate_layout(usable_area));
+            self.status_bar_area = bar_area;
+        }
+    }
+
+    /// Height (in rows) the status bar needs at the bottom of the frame:
+    /// 1 row for the bar itself, plus 1 more for the cloud message row
+    /// when one is present. Reads cloud presence from TuiState (single
+    /// source of truth) so callers don't have to keep the bar's snapshot
+    /// in sync ahead of layout recalculation.
+    fn required_status_bar_height(&self) -> u16 {
+        if self.core.state().lock().get_cloud_message().is_some() {
+            2
+        } else {
+            1
         }
     }
 
@@ -2667,6 +2761,13 @@ impl TuiApp for App {
     fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
     }
+
+    // Without this override a cloud message arriving after the first render
+    // would only update TuiState (the trait default) and never relayout,
+    // leaving the cloud row hidden until the next resize.
+    fn set_cloud_message(&mut self, message: Option<String>) {
+        App::set_cloud_message(self, message);
+    }
 }
 
 #[cfg(test)]
@@ -2757,6 +2858,37 @@ mod tests {
                 .expect("PTY parser should be readable")
                 .hide_cursor(),
             "append_task_output is for streaming; the cursor must remain visible"
+        );
+    }
+
+    /// A cloud message arriving after the first render must grow the status
+    /// bar from one row to two so the cloud row is drawn. Nx Cloud calls
+    /// `__setCloudMessage`, which dispatches through `&mut dyn TuiApp`; the
+    /// trait default only writes TuiState, so without the `set_cloud_message`
+    /// override the bar area stays one row and the cloud row is hidden until
+    /// an unrelated resize. Exercise that exact dynamic-dispatch path.
+    #[test]
+    fn cloud_message_via_trait_object_relayouts_status_bar() {
+        let mut app = create_test_app();
+
+        // Establish the initial layout the way the first Render action does.
+        app.frame_area = Some(Rect::new(0, 0, 100, 30));
+        app.recalculate_layout_areas();
+        assert_eq!(
+            app.status_bar_area.map(|r| r.height),
+            Some(1),
+            "no cloud message yet: the bar occupies a single row"
+        );
+
+        {
+            let app_dyn: &mut dyn TuiApp = &mut app;
+            app_dyn.set_cloud_message(Some("View logs at https://nx.app/runs/abc".to_string()));
+        }
+
+        assert_eq!(
+            app.status_bar_area.map(|r| r.height),
+            Some(2),
+            "cloud message present: the bar grows to two rows for the cloud row"
         );
     }
 

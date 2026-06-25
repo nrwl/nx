@@ -11,4 +11,4 @@ expression: terminal.backend()
 "  ·    app1:build                                                                                         ...        ..."
 "  ·    app2:lint                                                                                          ...        ..."
 "                                                                                                                        "
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"                                                                                                                        "

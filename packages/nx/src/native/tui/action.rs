@@ -32,7 +32,6 @@ pub enum Action {
     ScrollPaneDown(usize),
     UpdateTaskStatus(String, TaskStatus),
     SetTaskTiming(String, i64, i64),
-    UpdateCloudMessage(String),
     UpdateFocus(Focus),
     StartCommand(Option<u32>),
     StartTasks(Vec<Task>),

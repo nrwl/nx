@@ -1,0 +1,5 @@
+---
+source: packages/nx/src/native/tui/components/status_bar.rs
+expression: terminal.backend()
+---
+"12/29 done  ✔ 9  ✖ 3  ⠋ 5  · 12     quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
