@@ -30,6 +30,8 @@ export class PerformanceLifeCycle implements LifeCycle {
   private readonly statuses = new Map<string, TaskResult['status']>();
   /** taskId → other tasks in its batch (batches run sequentially). */
   private readonly batchSiblings = new Map<string, string[]>();
+  /** Resolved `--parallel`, set by the runner via {@link setPerformanceParallel} once the thread pool is sized. */
+  private parallel = 1;
 
   constructor(
     private readonly taskGraph: TaskGraph,
@@ -75,6 +77,11 @@ export class PerformanceLifeCycle implements LifeCycle {
     return entry;
   }
 
+  /** Record the resolved `--parallel` (getThreadPoolSize's `discrete`). Called by the runner post-construction, since the thread pool is sized after the lifecycle is built. */
+  setParallel(parallel: number): void {
+    this.parallel = parallel;
+  }
+
   /** Analyze the collected timings into a structured summary, or `null` when no discrete task timings were recorded. */
   getSummary(): PerformanceSummary | null {
     return new PerformanceAnalysis(
@@ -82,6 +89,7 @@ export class PerformanceLifeCycle implements LifeCycle {
       this.statuses,
       this.taskGraph,
       this.batchSiblings,
+      this.parallel,
       this.options
     ).summary();
   }
@@ -89,6 +97,14 @@ export class PerformanceLifeCycle implements LifeCycle {
 
 /** The most recently constructed performance lifecycle, read after the run. Cleared once consumed. */
 let activePerformanceLifeCycle: PerformanceLifeCycle | null = null;
+
+/**
+ * Record the resolved `--parallel` on the active performance lifecycle. Called by the
+ * runner once it has sized the thread pool, so the report doesn't re-derive it.
+ */
+export function setPerformanceParallel(parallel: number): void {
+  activePerformanceLifeCycle?.setParallel(parallel);
+}
 
 /**
  * Structured report for the TUI's exit-countdown popup, or null when nothing to

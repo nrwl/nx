@@ -75,8 +75,6 @@ export interface PerformanceLifeCycleOptions {
   skipNxCache?: boolean;
   /** Passed in at construction so the lifecycle doesn't re-read nx.json. */
   nxJson?: NxJsonConfiguration;
-  /** Resolved `--parallel` value (getThreadPoolSize's `discrete`); falls back to 1. */
-  parallel?: number;
 }
 
 /** Per-call memo state for the critical-path search (one fresh instance per run). */
@@ -98,6 +96,8 @@ export class PerformanceAnalysis {
     private readonly statuses: Map<string, TaskResult['status']>,
     private readonly taskGraph: TaskGraph,
     private readonly batchSiblings: Map<string, string[]>,
+    /** Resolved `--parallel` (getThreadPoolSize's `discrete`), set on the lifecycle by the runner; falls back to 1. */
+    private readonly parallel: number,
     private readonly options: PerformanceLifeCycleOptions
   ) {}
 
@@ -301,7 +301,7 @@ export class PerformanceAnalysis {
     const { path: criticalPathTasks, duration: criticalPathDuration } =
       this.criticalPath(durations);
 
-    const parallel = Math.max(1, this.options.parallel ?? 1);
+    const parallel = Math.max(1, this.parallel);
     const cores = detectCoreCount();
 
     const segments = buildSegments(timed, eligible, parallel);

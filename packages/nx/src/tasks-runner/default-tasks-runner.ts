@@ -2,6 +2,7 @@ import { TasksRunner, TaskStatus } from './tasks-runner';
 import { getThreadPoolSize, TaskOrchestrator } from './task-orchestrator';
 import { TaskHasher } from '../hasher/task-hasher';
 import { LifeCycle } from './life-cycle';
+import { setPerformanceParallel } from './life-cycles/performance-life-cycle';
 import { ProjectGraph } from '../config/project-graph';
 import { NxJsonConfiguration } from '../config/nx-json';
 import { Task, TaskGraph } from '../config/task-graph';
@@ -120,7 +121,12 @@ export const defaultTasksRunner: TasksRunner<
     daemon: DaemonClient;
   }
 ): Promise<{ [id: string]: TaskStatus }> => {
-  const { total: threadCount } = getThreadPoolSize(options, context.taskGraph);
+  const { total: threadCount, discrete } = getThreadPoolSize(
+    options,
+    context.taskGraph
+  );
+  // Sized the pool here, so feed the resolved `--parallel` to the perf report directly.
+  setPerformanceParallel(discrete);
   await options.lifeCycle.startCommand(threadCount);
   try {
     return await runAllTasks(options, context);

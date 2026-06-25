@@ -121,8 +121,7 @@ function envFor(env: TestEnv): Record<string, string | null> {
 /** Construct a PerformanceLifeCycle with its non-env signals (mocks) set up. */
 function makeLifeCycle(
   graph: TaskGraph,
-  env: TestEnv = {},
-  parallel?: number
+  env: TestEnv = {}
 ): PerformanceLifeCycle {
   if (env.windows) {
     setHashWindows(env.windows);
@@ -133,7 +132,6 @@ function makeLifeCycle(
   return new PerformanceLifeCycle(graph, {
     skipNxCache: env.skipped,
     nxJson: {} as NxJsonConfiguration,
-    parallel,
   });
 }
 
@@ -167,7 +165,8 @@ function run(
     distributing: opts.distributing,
   };
   return withEnvironmentVariables(envFor(env), () => {
-    const lc = makeLifeCycle(graph, env, parallelFromTotal(graph, total));
+    const lc = makeLifeCycle(graph, env);
+    lc.setParallel(parallelFromTotal(graph, total));
     for (const taskIds of opts.batches ?? []) {
       lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
     }
@@ -1286,9 +1285,10 @@ describe('flushPerformanceReport', () => {
 describe('parallel value', () => {
   it('reports the --parallel passed at construction (continuous slots excluded)', () =>
     withEnvironmentVariables(envFor({}), () => {
-      // run-command hands the lifecycle getThreadPoolSize().discrete = --parallel (with
-      // continuous excluded). Pin that seam + that the lifecycle reports it verbatim, so
-      // a regression in either fails here instead of silently skewing the recommendations.
+      // The runner hands the lifecycle getThreadPoolSize().discrete = --parallel (with
+      // continuous excluded) via setParallel. Pin that seam + that the lifecycle reports
+      // it verbatim, so a regression in either fails here instead of silently skewing the
+      // recommendations.
       const discrete = makeTask('d', { start: 0, end: 1000 });
       const c1 = makeTask('c1', { continuous: true });
       const c2 = makeTask('c2', { continuous: true });
@@ -1300,7 +1300,8 @@ describe('parallel value', () => {
       );
       expect(parallel).toBe(3); // continuous tasks don't count toward --parallel
 
-      const lc = makeLifeCycle(graph, {}, parallel);
+      const lc = makeLifeCycle(graph, {});
+      lc.setParallel(parallel);
       lc.endTasks([
         { task: discrete, status: 'success' } as unknown as TaskResult,
       ]);
