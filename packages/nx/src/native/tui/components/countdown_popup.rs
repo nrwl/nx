@@ -395,7 +395,7 @@ impl CountdownPopup {
     }
 
     /// The popup title spans: "NX Performance Report — exiting in N..." with a report
-    /// (the countdown drops once pinned), or "NX Exiting in N..." without one.
+    /// (the countdown drops once pinned), or "NX — exiting in N..." without one.
     fn build_title_spans(&self, has_report: bool, time_remaining: u64) -> Vec<Span<'static>> {
         let mut spans = vec![
             Span::raw("  "),
@@ -409,23 +409,16 @@ impl CountdownPopup {
         ];
         if has_report {
             spans.push(Span::styled(
-                "  Performance Report  ",
+                "  Performance Report",
                 Style::default().fg(THEME.primary_fg),
             ));
-            if !self.pinned {
-                spans.push(Span::styled(
-                    "— exiting in ",
-                    Style::default().fg(THEME.primary_fg),
-                ));
-                spans.push(Span::styled(
-                    format!("{time_remaining}"),
-                    Style::default().fg(THEME.info),
-                ));
-                spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
-            }
-        } else {
+        }
+        // The countdown runs until the report is pinned; the no-report exit dialog
+        // (q pressed mid-run) always shows it. The leading spaces give the gap after
+        // the badge / report label.
+        if !has_report || !self.pinned {
             spans.push(Span::styled(
-                "  Exiting in ",
+                "  — exiting in ",
                 Style::default().fg(THEME.primary_fg),
             ));
             spans.push(Span::styled(

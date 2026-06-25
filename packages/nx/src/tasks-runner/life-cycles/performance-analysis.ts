@@ -7,7 +7,6 @@ import { isCI as isCiEnv } from '../../utils/is-ci';
 import {
   buildRecommendation,
   MEANINGFUL_OVERHEAD,
-  recommendationToPayloadString,
   type Recommendation,
 } from './performance-report';
 import { TaskResult } from '../life-cycle';
@@ -61,13 +60,7 @@ export interface PerformanceSummary {
   parallel: number;
   cores: number;
   isCI: boolean;
-  /**
-   * One rec per lever, as plain strings (a phrase link's URL omitted) — the form
-   * the tests and the napi payload assert on. {@link structuredRecommendations}
-   * carries the same recs with their link parts for the renderers.
-   */
-  recommendations: string[];
-  /** The structured form of {@link recommendations}; drives the report + payload renderers. */
+  /** One structured rec per lever (with link parts); drives the report + payload renderers. */
   structuredRecommendations: Recommendation[];
   /** Coordinator overhead outweighs task work, so the longest tasks aren't the lever (typical cached run). */
   coordinatorDominated: boolean;
@@ -84,6 +77,14 @@ export interface PerformanceLifeCycleOptions {
   skipNxCache?: boolean;
   /** Passed in at construction so the lifecycle doesn't re-read nx.json. */
   nxJson?: NxJsonConfiguration;
+}
+
+/** Per-call memo state for the critical-path search (one fresh instance per run). */
+interface FinishContext {
+  durations: Map<string, number>;
+  memo: Map<string, number>;
+  pred: Map<string, string | null>;
+  visiting: Set<string>;
 }
 
 /**
@@ -132,8 +133,8 @@ export class PerformanceAnalysis {
 
   /**
    * Longest-duration chain through the dependency DAG — the floor with unlimited
-   * slots. `finishEst[t] = duration[t] + max(finishEst[p] for predecessors p)`.
-   * Predecessors are real dependencies *plus* earlier batch siblings (a batch runs
+   * slots. `finishEstimate(t) = duration[t] + max(finishEstimate(p) for predecessors
+   * p)`. Predecessors are real dependencies *plus* earlier batch siblings (a batch runs
    * sequentially in one process, so that ordering is part of the floor too). On equal
    * finish estimates keep the longer-running predecessor.
    */
@@ -141,77 +142,84 @@ export class PerformanceAnalysis {
     path: string[];
     duration: number;
   } {
-    const memo = new Map<string, number>();
-    const pred = new Map<string, string | null>();
-    const visiting = new Set<string>();
-
-    // Higher finish estimate wins; ties broken by the longer-running task.
-    const isBetter = (
-      finish: number,
-      dur: number,
-      bestFinish: number,
-      bestDur: number
-    ): boolean =>
-      finish > bestFinish || (finish === bestFinish && dur > bestDur);
-
-    const predecessors = (id: string): string[] => {
-      const start = this.timings.get(id)?.startTime ?? Infinity;
-      const deps = (this.taskGraph.dependencies[id] ?? []).filter((d) =>
-        durations.has(d)
-      );
-      // Only a batch sibling that FINISHED before this task started is a real
-      // sequencing predecessor; batch executors may run concurrently, and chaining
-      // those would inflate the floor. (Matches earliestStart.)
-      const siblings = (this.batchSiblings.get(id) ?? []).filter((s) => {
-        const sEnd = this.timings.get(s)?.endTime;
-        return durations.has(s) && sEnd != null && sEnd <= start;
-      });
-      return [...deps, ...siblings];
-    };
-
-    const finishEst = (id: string): number => {
-      const cached = memo.get(id);
-      if (cached != null) {
-        return cached;
-      }
-      if (visiting.has(id)) {
-        return 0; // cycle guard: treat the back-edge as contributing nothing
-      }
-      visiting.add(id);
-      let best = 0;
-      let bestPred: string | null = null;
-      let bestDur = -1;
-      for (const p of predecessors(id)) {
-        const f = finishEst(p);
-        const d = durations.get(p) ?? 0;
-        if (isBetter(f, d, best, bestDur)) {
-          best = f;
-          bestPred = p;
-          bestDur = d;
-        }
-      }
-      visiting.delete(id);
-      const value = best + (durations.get(id) ?? 0);
-      memo.set(id, value);
-      pred.set(id, bestPred);
-      return value;
+    const ctx: FinishContext = {
+      durations,
+      memo: new Map(),
+      pred: new Map(),
+      visiting: new Set(),
     };
 
     let terminal: string | null = null;
     let terminalFinish = -1;
     let terminalDur = -1;
     for (const id of durations.keys()) {
-      const f = finishEst(id);
+      const f = this.finishEstimate(id, ctx);
       const d = durations.get(id) ?? 0;
-      if (isBetter(f, d, terminalFinish, terminalDur)) {
+      if (isBetterCandidate(f, d, terminalFinish, terminalDur)) {
         terminalFinish = f;
         terminalDur = d;
         terminal = id;
       }
     }
 
-    const path = tracePath(terminal, pred);
-    return { path, duration: terminal == null ? 0 : terminalFinish };
+    return {
+      path: tracePath(terminal, ctx.pred),
+      duration: terminal == null ? 0 : terminalFinish,
+    };
+  }
+
+  /**
+   * Real predecessors of `id`: dependencies plus any earlier batch sibling that FINISHED
+   * before `id` started. A batch runs sequentially in one process, so that ordering is
+   * part of the floor; concurrent batch executors aren't, and chaining them would inflate
+   * it. (Matches earliestStart.)
+   */
+  private predecessorsFor(
+    id: string,
+    durations: Map<string, number>
+  ): string[] {
+    const start = this.timings.get(id)?.startTime ?? Infinity;
+    const deps = (this.taskGraph.dependencies[id] ?? []).filter((d) =>
+      durations.has(d)
+    );
+    const siblings = (this.batchSiblings.get(id) ?? []).filter((s) => {
+      const sEnd = this.timings.get(s)?.endTime;
+      return durations.has(s) && sEnd != null && sEnd <= start;
+    });
+    return [...deps, ...siblings];
+  }
+
+  /**
+   * Longest finish time of any chain reaching `id` — its duration plus the best
+   * predecessor's finish estimate — memoized in `ctx`. `ctx.visiting` guards a cycle in
+   * a malformed graph (the back-edge contributes nothing).
+   */
+  private finishEstimate(id: string, ctx: FinishContext): number {
+    const cached = ctx.memo.get(id);
+    if (cached != null) {
+      return cached;
+    }
+    if (ctx.visiting.has(id)) {
+      return 0;
+    }
+    ctx.visiting.add(id);
+    let best = 0;
+    let bestPred: string | null = null;
+    let bestDur = -1;
+    for (const p of this.predecessorsFor(id, ctx.durations)) {
+      const f = this.finishEstimate(p, ctx);
+      const d = ctx.durations.get(p) ?? 0;
+      if (isBetterCandidate(f, d, best, bestDur)) {
+        best = f;
+        bestPred = p;
+        bestDur = d;
+      }
+    }
+    ctx.visiting.delete(id);
+    const value = best + (ctx.durations.get(id) ?? 0);
+    ctx.memo.set(id, value);
+    ctx.pred.set(id, bestPred);
+    return value;
   }
 
   /**
@@ -382,9 +390,6 @@ export class PerformanceAnalysis {
       parallel,
       cores,
       isCI,
-      recommendations: structuredRecommendations.map(
-        recommendationToPayloadString
-      ),
       structuredRecommendations,
       coordinatorDominated,
       cacheHits,
@@ -396,6 +401,19 @@ export class PerformanceAnalysis {
 }
 
 // === Analysis helpers (module-level; no instance state) ===
+
+/**
+ * True when a `(finishEstimate, duration)` candidate beats the current best — higher
+ * finish wins, ties broken by the longer-running task.
+ */
+function isBetterCandidate(
+  finish: number,
+  dur: number,
+  bestFinish: number,
+  bestDur: number
+): boolean {
+  return finish > bestFinish || (finish === bestFinish && dur > bestDur);
+}
 
 /**
  * Follow the recorded best-predecessor links from `end` back to the root, returning

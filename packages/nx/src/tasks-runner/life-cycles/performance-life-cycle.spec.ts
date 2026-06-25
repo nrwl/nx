@@ -14,10 +14,15 @@ import {
   buildSegments,
   mergeIntervals,
   overlap,
+  PerformanceSummary,
   preDispatchHashTime,
   TimedTask,
 } from './performance-analysis';
-import { formatDuration, formatReport } from './performance-report';
+import {
+  formatDuration,
+  formatReport,
+  recommendationToPayloadString,
+} from './performance-report';
 import { getThreadPoolSize } from '../task-orchestrator';
 
 function makeTask(
@@ -166,6 +171,10 @@ function run(
   });
 }
 
+/** The lever recommendations as plain strings — what production re-derives for the report/payload. */
+const recStrings = (s: PerformanceSummary): string[] =>
+  s.structuredRecommendations.map(recommendationToPayloadString);
+
 describe('PerformanceLifeCycle', () => {
   it('returns null when there are no discrete task timings', () => {
     expect(run(makeGraph([makeTask('a')]), 4)).toBeNull();
@@ -232,7 +241,7 @@ describe('PerformanceLifeCycle', () => {
     // cores-dependent split; only the sum is robustly assertable.
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(1000);
     expect(s.coordinatorOverhead).toBe(0);
-    const recs = s.recommendations.join('\n');
+    const recs = recStrings(s).join('\n');
     if (cores >= 2) {
       // 50% slot wait (>20%) with spare cores → --parallel leads, agents not yet.
       expect(recs).toContain('Increase parallelism');
@@ -312,7 +321,7 @@ describe('PerformanceLifeCycle', () => {
     // Nx Agents (CI run), drop the longest-tasks section, and don't restate the
     // coordinator-overhead number (it's a header stat).
     expect(s.coordinatorDominated).toBe(true);
-    const recs = s.recommendations.join('\n');
+    const recs = recStrings(s).join('\n');
     expect(recs).toContain('about as fast as this machine');
     expect(recs).toContain('Nx Agents');
     expect(recs).not.toContain('coordinator overhead');
@@ -365,7 +374,7 @@ describe('PerformanceLifeCycle', () => {
     })!;
 
     expect(s.overhead).toBe(0);
-    const recs = s.recommendations.join('\n');
+    const recs = recStrings(s).join('\n');
     expect(recs).toContain('Speed up or split');
     expect(recs).toContain('longest tasks on the critical path');
     expect(recs).toContain('b'); // the longest task, listed inline
@@ -373,7 +382,7 @@ describe('PerformanceLifeCycle', () => {
     // A separate rec offers Nx Agents; neither suggests a higher --parallel.
     expect(recs).toContain('Nx Agents');
     expect(recs).not.toContain('--parallel');
-    expect(s.recommendations.length).toBe(2); // speed-up + distribute, separate
+    expect(recStrings(s).length).toBe(2); // speed-up + distribute, separate
   });
 
   it('keeps a small --parallel win in the header, not the recommendation', () => {
@@ -390,7 +399,7 @@ describe('PerformanceLifeCycle', () => {
 
     if (cores >= 2) {
       expect(s.recoverableByParallel).toBe(500);
-      const recs = s.recommendations.join('\n');
+      const recs = recStrings(s).join('\n');
       expect(recs).toContain('Speed up or split');
       expect(recs).not.toContain('--parallel');
       expect(formatReport(s)).toMatch(/Recoverable time:\s+500ms/);
@@ -407,9 +416,9 @@ describe('PerformanceLifeCycle', () => {
       isCI: false,
     })!;
 
-    expect(s.recommendations.length).toBe(1); // just speed-up, no distribute
-    expect(s.recommendations[0]).toContain('Speed up or split');
-    expect(s.recommendations.join('\n')).not.toContain('Nx Agents');
+    expect(recStrings(s).length).toBe(1); // just speed-up, no distribute
+    expect(recStrings(s)[0]).toContain('Speed up or split');
+    expect(recStrings(s).join('\n')).not.toContain('Nx Agents');
   });
 
   it('omits the distribute recommendation when already distributing (CI)', () => {
@@ -423,8 +432,8 @@ describe('PerformanceLifeCycle', () => {
       distributing: true,
     })!;
 
-    expect(s.recommendations.length).toBe(1); // just speed-up
-    expect(s.recommendations.join('\n')).not.toContain('Nx Agents');
+    expect(recStrings(s).length).toBe(1); // just speed-up
+    expect(recStrings(s).join('\n')).not.toContain('Nx Agents');
   });
 
   it('recommends more agents (with the recoverable figure) when distributing', () => {
@@ -434,7 +443,7 @@ describe('PerformanceLifeCycle', () => {
     const b = makeTask('b', { start: 1000, end: 2000 });
     const s = run(makeGraph([a, b]), 1, { distributing: true })!;
 
-    const recs = s.recommendations.join('\n');
+    const recs = recStrings(s).join('\n');
     expect(recs).toContain('Add more Nx Agents to recover up to');
     expect(recs).toMatch(/recover up to 1\.0s/);
     expect(recs).not.toContain('Increase parallelism');
@@ -491,7 +500,7 @@ describe('PerformanceLifeCycle', () => {
 
     expect(s.recoverableByMachines).toBe(1000);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.recommendations.join('\n')).not.toContain('Increase parallelism');
+    expect(recStrings(s).join('\n')).not.toContain('Increase parallelism');
   });
 
   it('attributes volume beyond one machine to recoverable-by-machines even when parallel < cores', () => {
@@ -535,7 +544,7 @@ describe('PerformanceLifeCycle', () => {
 
     expect(s.recoverableByMachines).toBe(1000);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.recommendations.join('\n')).toContain('Nx Agents');
+    expect(recStrings(s).join('\n')).toContain('Nx Agents');
   });
 
   it('drops agents (keeps the --parallel tip) for a machine-bound run outside CI', () => {
@@ -551,7 +560,7 @@ describe('PerformanceLifeCycle', () => {
     const waiter = makeTask('w', { start: 1000, end: 2000 });
     const s = run(makeGraph([...fillers, waiter]), cores, { isCI: false })!;
 
-    const recs = s.recommendations.join('\n');
+    const recs = recStrings(s).join('\n');
     expect(recs).not.toContain('Nx Agents');
     expect(recs).toContain('a higher --parallel may help');
   });
@@ -568,7 +577,7 @@ describe('PerformanceLifeCycle', () => {
 
     expect(s.cacheHits).toBe(3);
     expect(s.criticalPathTop).toHaveLength(0); // all cached → nothing to show
-    expect(s.recommendations).toHaveLength(0);
+    expect(recStrings(s)).toHaveLength(0);
     expect(formatReport(s)).not.toContain('Speed up or split');
   });
 
@@ -593,7 +602,7 @@ describe('PerformanceLifeCycle', () => {
     const s = run(makeGraph([early, x]), 4, { isCI: false })!;
 
     expect(s.coordinatorDominated).toBe(true);
-    expect(s.recommendations).toHaveLength(0);
+    expect(recStrings(s)).toHaveLength(0);
     expect(formatReport(s)).not.toContain('Recommendation');
   });
 
