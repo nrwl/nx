@@ -10,6 +10,12 @@
     }
   },
   "targets": {
+    "lint": {
+      "inputs": [
+        "...",
+        "{workspaceRoot}/packages/nx/native-packages/*/project.json"
+      ]
+    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],
