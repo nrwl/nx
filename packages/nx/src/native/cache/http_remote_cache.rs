@@ -227,11 +227,12 @@ impl HttpRemoteCache {
 
             if entry_path == "code" {
                 let code_file_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
-                // A short/empty `code` entry must not panic on the indexing below.
-                if code_file_bytes.len() < 2 {
-                    return Err(anyhow::anyhow!("Invalid exit code in cache artifact"));
-                }
-                code = Some(i16::from_be_bytes([code_file_bytes[0], code_file_bytes[1]]));
+                // The exit code is stored as a 4-byte big-endian integer (see `store`).
+                let code_bytes: [u8; 4] = code_file_bytes
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| anyhow::anyhow!("Invalid exit code in cache artifact"))?;
+                code = Some(u32::from_be_bytes(code_bytes) as i16);
                 trace!("Retrieved exit code from cache: {}", code.unwrap());
             } else if entry_path == "terminalOutput" {
                 let terminal_output_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
@@ -485,6 +486,23 @@ mod test {
         assert!(
             result.is_err(),
             "a missing code entry must be rejected, not panic"
+        );
+    }
+
+    #[test]
+    fn extract_reads_full_exit_code() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        // The code is stored as a 4-byte big-endian int; the reader must consume
+        // all 4 bytes rather than truncating a nonzero code to 0.
+        let tar = build_tar_gz(vec![code_entry(1)]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123")
+            .expect("a valid code entry should extract");
+
+        assert_eq!(
+            result.code, 1,
+            "exit code must round-trip, not truncate to 0"
         );
     }
 }
