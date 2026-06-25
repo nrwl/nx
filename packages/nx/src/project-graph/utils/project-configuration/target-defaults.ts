@@ -1,4 +1,6 @@
 import { minimatch } from 'minimatch';
+import { join } from 'path';
+import { toProjectName } from '../../../config/to-project-name';
 import {
   NormalizedTargetDefaults,
   NxJsonConfiguration,
@@ -585,26 +587,39 @@ function buildProjectNodesAndRootToName(
 } {
   const projectNodesByName: Record<string, MatcherProjectNode> = {};
   const rootToName = new Map<string, string>();
-  const addFromMap = (map: Record<string, ProjectConfiguration>) => {
-    for (const root of Object.keys(map)) {
-      const cfg = map[root];
-      const name = cfg?.name;
-      if (!name) continue;
-      if (projectNodesByName[name]) {
-        const existingTags = projectNodesByName[name].data.tags ?? [];
-        const newTags = cfg.tags ?? [];
-        projectNodesByName[name].data.tags = Array.from(
-          new Set([...existingTags, ...newTags])
-        );
-      } else {
-        // `findMatchingProjects` only reads `data.root`/`data.tags`; the name
-        // is carried by the map key and `rootToName`.
-        projectNodesByName[name] = { data: { root, tags: cfg.tags ?? [] } };
-        rootToName.set(root, name);
-      }
+  const roots = new Set<string>([
+    ...Object.keys(specifiedPluginRootMap),
+    ...Object.keys(defaultPluginRootMap),
+  ]);
+  for (const root of roots) {
+    const specifiedCfg = specifiedPluginRootMap[root];
+    const defaultCfg = defaultPluginRootMap[root];
+    // Synthesis runs before name inference, so an unnamed `project.json` has no
+    // `name` yet. Derive it the same way normalization will — `toProjectName`
+    // on the `project.json` path — so `projects:`/`tag:` filters resolve
+    // instead of silently no-opping for the common unnamed-`project.json` case.
+    // We don't gate on the file existing: if it truly doesn't, the project has
+    // no valid name and the graph errors downstream anyway; here the derived
+    // name is only used for filtering. Default-plugin name wins over specified,
+    // matching the real merge's layering.
+    const name =
+      defaultCfg?.name ??
+      specifiedCfg?.name ??
+      toProjectName(join(root, 'project.json'));
+    const tags = Array.from(
+      new Set([...(specifiedCfg?.tags ?? []), ...(defaultCfg?.tags ?? [])])
+    );
+    rootToName.set(root, name);
+    if (projectNodesByName[name]) {
+      const existingTags = projectNodesByName[name].data.tags ?? [];
+      projectNodesByName[name].data.tags = Array.from(
+        new Set([...existingTags, ...tags])
+      );
+    } else {
+      // `findMatchingProjects` only reads `data.root`/`data.tags`; the name
+      // is carried by the map key and `rootToName`.
+      projectNodesByName[name] = { data: { root, tags } };
     }
-  };
-  addFromMap(specifiedPluginRootMap);
-  addFromMap(defaultPluginRootMap);
+  }
   return { projectNodesByName, rootToName };
 }

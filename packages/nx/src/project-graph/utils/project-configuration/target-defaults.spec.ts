@@ -363,3 +363,68 @@ describe('createTargetDefaultsResults (source attribution)', () => {
     ).toEqual(['vite.config.ts']);
   });
 });
+
+describe('createTargetDefaultsResults (unnamed project.json)', () => {
+  // Synthesis runs before name inference, so a project.json that omits `name`
+  // has no `name` at this point. A `projects:`/`tag:` filter would silently
+  // no-op without deriving the name here; the name is derived from the
+  // project.json path (the same value normalization assigns later).
+  const defaultRootMap = {
+    'apps/app': {
+      // No `name` — derived as `app` for filtering.
+      root: 'apps/app',
+      tags: ['web'],
+      targets: { build: { executor: '@nx/vite:build', options: {} } },
+    },
+  };
+
+  it('applies a `tag:` filtered default to an unnamed project.json', () => {
+    const nxJson = {
+      targetDefaults: {
+        build: [{ filter: { projects: ['tag:web'] }, options: { scoped: 1 } }],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any
+    );
+
+    const synthetic = results[0]?.[2]?.projects?.['apps/app']?.targets?.build;
+    expect(synthetic?.options).toEqual({ scoped: 1 });
+  });
+
+  it('applies a default filtered by the derived project name', () => {
+    const nxJson = {
+      targetDefaults: {
+        build: [{ filter: { projects: ['app'] }, options: { scoped: 1 } }],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any
+    );
+
+    const synthetic = results[0]?.[2]?.projects?.['apps/app']?.targets?.build;
+    expect(synthetic?.options).toEqual({ scoped: 1 });
+  });
+
+  it('does not apply when the filter matches neither tag nor derived name', () => {
+    const nxJson = {
+      targetDefaults: {
+        build: [{ filter: { projects: ['tag:api'] }, options: { scoped: 1 } }],
+      },
+    };
+
+    const results = createTargetDefaultsResults(
+      {},
+      defaultRootMap,
+      nxJson as any
+    );
+
+    expect(results).toEqual([]);
+  });
+});
