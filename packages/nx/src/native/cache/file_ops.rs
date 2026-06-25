@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::{Component, Path, PathBuf};
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
@@ -54,9 +54,20 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
     // shipped as a symlink-to-dir would otherwise be followed and its (possibly
     // external) target contents copied into the workspace.
     let size = if src.is_symlink() {
+        let target = fs::read_link(&src)?;
+        // On restore, refuse a cache symlink whose target escapes the workspace.
+        if let Some(root) = boundary {
+            if symlink_target_escapes(root, &dest, &target) {
+                return Err(anyhow::anyhow!(
+                    "Refusing to restore cache symlink {:?} escaping the workspace: {:?}",
+                    dest,
+                    target
+                ));
+            }
+        }
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
-        symlink(fs::read_link(&src)?, &dest)?;
+        symlink(target, &dest)?;
         0
     } else if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
@@ -165,6 +176,36 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
 /// Removes an existing symlink at `path` if one exists.
 /// Uses `symlink_metadata` which does not follow symlinks, so it correctly
 /// detects dangling symlinks that `is_file()`/`is_dir()` would miss.
+/// Whether a symlink placed at `link_path` pointing to `target` would resolve
+/// outside `boundary` once followed. Absolute targets are checked directly;
+/// relative targets are resolved against the symlink's own directory. The check
+/// is lexical (collapses `.`/`..`, no symlink resolution) — sufficient because
+/// restore realizes every parent directory within `boundary` as a real
+/// directory, so there are no intermediate symlinks left to follow.
+fn symlink_target_escapes(boundary: &Path, link_path: &Path, target: &Path) -> bool {
+    let resolved = if target.is_absolute() {
+        target.to_path_buf()
+    } else {
+        link_path.parent().unwrap_or(link_path).join(target)
+    };
+    !lexically_normalize(&resolved).starts_with(lexically_normalize(boundary))
+}
+
+/// Collapse `.` and `..` components lexically, without touching the filesystem.
+fn lexically_normalize(path: &Path) -> PathBuf {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::ParentDir => {
+                normalized.pop();
+            }
+            Component::CurDir => {}
+            other => normalized.push(other.as_os_str()),
+        }
+    }
+    normalized
+}
+
 fn remove_existing_symlink(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(meta) if meta.file_type().is_symlink() => {
@@ -205,9 +246,22 @@ fn copy_dir_all(
             dirs_copied += 1;
             subdir_size
         } else if ty.is_symlink() {
+            let target = fs::read_link(entry.path())?;
+            // On restore, refuse a cache symlink whose target escapes the workspace.
+            if let Some(root) = boundary {
+                if symlink_target_escapes(root, &dest_path, &target) {
+                    return Err(io::Error::new(
+                        io::ErrorKind::Other,
+                        format!(
+                            "Refusing to restore cache symlink {:?} escaping the workspace: {:?}",
+                            dest_path, target
+                        ),
+                    ));
+                }
+            }
             trace!("Copying symlink: {:?}", entry.path());
             remove_existing_symlink(&dest_path)?;
-            symlink(fs::read_link(entry.path())?, dest_path)?;
+            symlink(target, dest_path)?;
             symlinks_copied += 1;
             0
         } else {
@@ -392,7 +446,7 @@ mod test {
 
     #[cfg(unix)]
     #[test]
-    fn restore_does_not_follow_symlinked_output_dir() {
+    fn restore_rejects_symlinked_output_escaping_workspace() {
         use std::os::unix::fs::symlink;
 
         // A directory outside the workspace whose contents an attacker wants
@@ -407,19 +461,41 @@ mod test {
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist".to_string()];
+        let result = copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded);
+
+        // The escaping symlink must be rejected — not recreated, not followed.
+        assert!(
+            result.is_err(),
+            "a cache symlink escaping the workspace must be rejected"
+        );
+        assert!(
+            workspace.join("dist").symlink_metadata().is_err(),
+            "no symlink must be left in the workspace"
+        );
+        assert!(outside.child("secret.txt").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn restore_allows_symlinked_output_within_workspace() {
+        use std::os::unix::fs::symlink;
+
+        // The legit pnpm/Next.js case: an output symlink whose (relative) target
+        // stays inside the workspace must still be restored.
+        let cache = TempDir::new().unwrap();
+        cache.child("dist/real.js").write_str("ok").unwrap();
+        symlink("real.js", cache.join("dist/link.js")).unwrap();
+
+        let workspace = TempDir::new().unwrap();
+        let expanded = vec!["dist/real.js".to_string(), "dist/link.js".to_string()];
         copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
 
-        // The symlink must be recreated verbatim, not followed: the external
-        // contents must not be copied into the workspace as real files.
-        let dist = workspace.join("dist");
+        let link = workspace.join("dist/link.js");
         assert!(
-            dist.symlink_metadata().unwrap().file_type().is_symlink(),
-            "a symlinked cache output must be recreated as a symlink, not followed"
+            link.symlink_metadata().unwrap().file_type().is_symlink(),
+            "an in-workspace symlink output must be restored"
         );
-        // Removing the recreated link leaves no real copy behind, and the
-        // external target is untouched.
-        remove_path(&dist).unwrap();
-        assert!(!dist.join("secret.txt").exists());
-        assert!(outside.child("secret.txt").exists());
+        assert_eq!(link.read_link().unwrap(), Path::new("real.js"));
+        assert_eq!(std::fs::read_to_string(&link).unwrap(), "ok");
     }
 }
