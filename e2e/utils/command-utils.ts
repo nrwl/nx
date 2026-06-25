@@ -419,8 +419,9 @@ export function normalizePerformanceReport(output: string): string {
     /\n[ \t]*Run duration:[\s\S]*?Learn how to improve your run's performance → \S+/g,
     (block) =>
       block
-        // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched alone.
-        .replace(/\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b/g, '{DURATION}')
+        // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched
+        // alone; the optional "<" also captures a "<1ms" (sub-millisecond) duration.
+        .replace(/<?(?:\b\d+m \d+s\b|\b\d+(?:\.\d+)?m?s\b)/g, '{DURATION}')
         .replace(/\b\d+(?= cores?\b)/g, '{CORES}')
         // Longest-tasks list right-aligns durations (padStart); collapse the varying
         // id→duration gap back to a fixed 4-space separator so the table is deterministic.

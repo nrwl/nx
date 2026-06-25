@@ -147,7 +147,7 @@ describe('release publishable libraries', () => {
       NX   Successfully ran target nx-release-publish for project {project-name}
       Run duration: {DURATION}
       Cache: 0/1 hit (0%)
-      Critical path: {DURATION}   (1 task)
+      Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
@@ -216,7 +216,7 @@ describe('release publishable libraries', () => {
       NX   Successfully ran target nx-release-publish for project {project-name}
       Run duration: {DURATION}
       Cache: 0/1 hit (0%)
-      Critical path: {DURATION}   (1 task)
+      Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
@@ -283,7 +283,7 @@ describe('release publishable libraries', () => {
       NX   Successfully ran target nx-release-publish for project {project-name}
       Run duration: {DURATION}
       Cache: 0/1 hit (0%)
-      Critical path: {DURATION}   (1 task)
+      Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
@@ -348,7 +348,7 @@ describe('release publishable libraries', () => {
       NX   Successfully ran target nx-release-publish for project {project-name}
       Run duration: {DURATION}
       Cache: 0/1 hit (0%)
-      Critical path: {DURATION}   (1 task)
+      Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
@@ -417,7 +417,7 @@ describe('release publishable libraries', () => {
       NX   Successfully ran target nx-release-publish for project {project-name}
       Run duration: {DURATION}
       Cache: 0/1 hit (0%)
-      Critical path: {DURATION}   (1 task)
+      Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.

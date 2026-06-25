@@ -282,7 +282,7 @@ describe('nx release preserve local dependency protocols', () => {
         NX   Successfully ran target nx-release-publish for 2 projects
         Run duration: {DURATION}
         Cache: 0/2 hit (0%)
-        Critical path: {DURATION}   (2 tasks)
+        Critical path: {DURATION} (2 tasks)
         Recoverable time: {DURATION}
         Recommendations:
         - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
@@ -364,7 +364,7 @@ describe('nx release preserve local dependency protocols', () => {
         NX   Successfully ran target nx-release-publish for 2 projects
         Run duration: {DURATION}
         Cache: 0/2 hit (0%)
-        Critical path: {DURATION}   (2 tasks)
+        Critical path: {DURATION} (2 tasks)
         Recoverable time: {DURATION}
         Recommendations:
         - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.

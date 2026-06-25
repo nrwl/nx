@@ -1000,7 +1000,7 @@ describe('formatReport', () => {
       expect(formatReport(s)).toMatchInlineSnapshot(`
         "  Run duration:      1.0s
           Cache:             0/1 hit (0%)
-          Critical path:     1.0s   (1 task)
+          Critical path:     1.0s (1 task)
           Recoverable time:  <1ms
 
           Recommendations:

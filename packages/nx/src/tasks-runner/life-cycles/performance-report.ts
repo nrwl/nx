@@ -351,14 +351,14 @@ export function formatReport(s: PerformanceSummary): string {
     ...(cache ? [stat('Cache', cache)] : []),
     stat(
       'Critical path',
-      `${fmt(s.criticalPathDuration)}   (${
+      `${fmt(s.criticalPathDuration)} (${
         s.criticalPathTaskCount
       } ${pluralize(s.criticalPathTaskCount, 'task')})`
     ),
     stat(
       'Recoverable time',
       recoverable > 0
-        ? `${fmt(recoverable)}   (${recoverablePct}% of the run)`
+        ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
         : fmt(recoverable)
     ),
   ];

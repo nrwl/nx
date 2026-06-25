@@ -195,7 +195,7 @@ impl CountdownPopup {
         lines.push(stat_line(
             "Critical path",
             format!(
-                "{}   ({} {})",
+                "{} ({} {})",
                 format_duration(s.critical_path_ms),
                 s.critical_path_task_count,
                 pluralize(s.critical_path_task_count, "task")
@@ -204,7 +204,7 @@ impl CountdownPopup {
         let recoverable = if s.recoverable_ms > 0.0 && s.run_duration_ms > 0.0 {
             let pct = (s.recoverable_ms / s.run_duration_ms * 100.0).round() as i64;
             format!(
-                "{}   ({}% of the run)",
+                "{} ({}% of the run)",
                 format_duration(s.recoverable_ms),
                 pct
             )

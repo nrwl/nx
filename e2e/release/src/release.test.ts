@@ -272,7 +272,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION}   (2 tasks)
+      Critical path: {DURATION} (2 tasks)
       Recoverable time: {DURATION}
 
       Recommendations:
@@ -462,7 +462,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION}   (2 tasks)
+      Critical path: {DURATION} (2 tasks)
       Recoverable time: {DURATION}
 
       Recommendations:
@@ -579,7 +579,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION}   (2 tasks)
+      Critical path: {DURATION} (2 tasks)
       Recoverable time: {DURATION}
 
       Recommendations:
@@ -628,7 +628,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION}   (2 tasks)
+      Critical path: {DURATION} (2 tasks)
       Recoverable time: {DURATION}
 
       Recommendations:
@@ -682,7 +682,7 @@ describe('nx release', () => {
 
       Run duration: {DURATION}
       Cache: 0/3 hit (0%)
-      Critical path: {DURATION}   (2 tasks)
+      Critical path: {DURATION} (2 tasks)
       Recoverable time: {DURATION}
 
       Recommendations:
