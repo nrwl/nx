@@ -4,7 +4,7 @@ description: Set up a Bun workspace and add Nx in one command to get cached task
 filter: 'type:Guides'
 ---
 
-A Bun workspace lets you manage multiple packages in a single repository. Adding Nx to a Bun workspace gives you cached tasks, affected-only builds, and faster CI, while Bun keeps managing installs. This recipe sets up a Bun workspace and then adds Nx.
+A Bun workspace lets you manage multiple packages in a single repository. Adding Nx to a Bun workspace gives you cached tasks, affected-only builds, and faster CI, while Bun keeps managing installs. Set up a Bun workspace first, then add Nx.
 
 ## Set up a Bun workspace
 
@@ -51,7 +51,7 @@ Run `bun install` once at the root to install every package's dependencies and l
 
 ## Add Nx in one command
 
-Nx layers task running and caching on top of your existing Bun workspace. Bun still installs and resolves packages; Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
+Nx layers task running and caching on top of your existing Bun workspace. Bun still installs and resolves packages. Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
 
 ```shell
 npx nx@latest init
@@ -76,7 +76,7 @@ nx build web           # a single project
 nx affected -t build   # only projects touched by your changes
 ```
 
-The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results) instantly, and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
+The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
 
 ## How task caching works
 
@@ -96,4 +96,6 @@ The first run executes your scripts. A second run with no changes is [restored f
 
 `cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
 
-In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks. For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
+In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks.
+
+For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
