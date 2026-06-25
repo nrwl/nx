@@ -9,9 +9,19 @@ filter: 'type:References'
 
 Module Federation is an architectural pattern for splitting a frontend into separately built and deployed applications that compose at runtime. A host application loads remote modules exposed by other applications, and they share common dependencies so each library loads once. It's a common way to build micro frontends. For the full model, see the official [Module Federation documentation](https://module-federation.io/guide/start/index.html).
 
-Nx scaffolds Module Federation with the official [Module Federation](https://module-federation.io) plugins (Vite by default) and orchestrates the dev and build tasks across the host and its remotes.
+The fastest way to try Module Federation with Nx is the React Module Federation template. It sets up a host (`apps/shell`) and two remotes (`apps/shop`, `apps/cart`) federated over Vite with the official [Module Federation](https://module-federation.io) plugins:
 
-## Serve the whole system with one command
+```shell
+npx create-nx-workspace@latest my-workspace --template nrwl/react-mfe-template
+```
+
+See the [template details](/docs/templates/react-mfe) for what's inside.
+
+## Why Nx works well with Module Federation
+
+Module Federation turns one app into many independently built and served pieces. Nx knows how those pieces relate through the [project graph](/docs/features/explore-graph), so it serves, caches, and scales them as one system. You bring your own Module Federation setup, and Nx orchestrates it. Because Nx reads the topology from the graph, serving, affected rebuilds, and caching stay correct as you add remotes.
+
+### Serve a remote and its host together
 
 Each app has a `dev` task. The host's `dev` task is [continuous](/docs/getting-started/tutorials/running-tasks#running-continuous-tasks), so it keeps running, and each remote's `dev` task depends on it:
 
@@ -31,27 +41,29 @@ Each app has a `dev` task. The host's `dev` task is [continuous](/docs/getting-s
 }
 ```
 
-Because the remote's `dev` task depends on the host's continuous `dev` task, `nx dev shop` serves the `shop` remote and starts the `shell` host alongside it. You develop a remote in isolation while the shell stays running around it. To bring up several remotes at once, run `nx run-many -t dev -p shop cart`, and the shared `shell:dev` task starts only once.
+Because the remote's `dev` task depends on the host's continuous `dev` task, `nx dev shop` serves the `shop` remote and starts the `shell` host alongside it. You develop a remote in isolation while the shell stays running around it. Without Nx, you start the host and each remote in separate terminals and keep them wired together by hand. To bring up several remotes at once, run `nx run-many -t dev -p shop cart`, and the shared `shell:dev` task starts only once.
 
-## Cache and build in parallel
+### Rebuild only the remotes a shared change touches
 
-Each federated app is its own project, so Nx [caches](/docs/features/cache-task-results) builds and runs [affected](/docs/features/ci-features/affected) tasks only for the apps a change touches. Nx builds the smaller apps in parallel and coordinates a single release across them.
+When you change a shared library, Module Federation forces every app that consumes it to redeploy. Because each host and remote is its own project, [`nx affected`](/docs/features/ci-features/affected) computes that exact set from the graph and rebuilds and retests only those apps, while Nx [caches](/docs/features/cache-task-results) the rest. Each app has its own test and e2e targets, so affected verification runs only for the apps a change touches.
 
-## Get started
+With [remote caching](/docs/features/ci-features/remote-cache) on [Nx Cloud](/docs/getting-started/nx-cloud), a remote already built by a teammate or in CI is restored instead of rebuilt.
 
-The fastest way to explore Module Federation with Nx is the React Module Federation template. It scaffolds a host (`apps/shell`) and two remotes (`apps/shop`, `apps/cart`) federated over Vite:
+### Scale builds and tests across machines
 
-```shell
-npx create-nx-workspace@latest my-workspace --template nrwl/react-mfe-template
-```
+A workspace with many remotes has a lot to build. With Nx Cloud, [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute those builds and tests across machines, so adding remotes stops adding CI time. Nx reports worst-case CI tracking the single largest remote instead of the sum of all of them.
 
-See the [template details](/docs/templates/react-mfe) for what's inside.
+### Keep shared dependencies in sync
 
-To add Module Federation to an existing workspace, generate a host with the consumer generator and a remote with the provider generator:
+Module Federation breaks when two apps load incompatible copies of a shared library, such as two versions of React. The official plugins share libraries as singletons so each one loads once, and Nx workspaces can enforce a single version of each shared dependency, so the host and every remote resolve to the same copy.
+
+## Add Module Federation to an existing workspace
+
+Generate a host with the consumer generator and a remote with the provider generator. They wire up the official Module Federation plugins for you:
 
 ```shell
 nx g @nx/react:consumer apps/shell
 nx g @nx/react:provider apps/shop --consumer=shell
 ```
 
-The `--consumer` option wires the new remote's `dev` task to depend on the host. For the architecture and task-graph details, see [Module Federation and Nx](/docs/technologies/module-federation/concepts/module-federation-and-nx).
+The `--consumer` option makes the new remote's `dev` task depend on the host. For the architecture and task-graph details, see [Module Federation and Nx](/docs/technologies/module-federation/concepts/module-federation-and-nx).
