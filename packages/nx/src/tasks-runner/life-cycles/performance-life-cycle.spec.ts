@@ -12,7 +12,7 @@ import {
   getPerformanceSummaryPayload,
 } from './performance-life-cycle';
 import {
-  buildSegments,
+  buildTimespans,
   mergeIntervals,
   overlap,
   PerformanceSummary,
@@ -1047,8 +1047,7 @@ describe('formatReport', () => {
             - Speed up or split the longest tasks on the critical path:
                 a    1.0s
 
-          Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
-        "
+          Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report"
       `);
     } finally {
       if (prev === undefined) {
@@ -1160,7 +1159,7 @@ describe('preDispatchHashTime', () => {
   });
 });
 
-describe('buildSegments', () => {
+describe('buildTimespans', () => {
   const timed = (
     rows: Array<[string, number, number, boolean?]>
   ): TimedTask[] =>
@@ -1171,13 +1170,13 @@ describe('buildSegments', () => {
       nonParallel,
     }));
 
-  it('returns no segments for no tasks', () => {
-    expect(buildSegments([], new Map(), 2)).toEqual([]);
+  it('returns no timespans for no tasks', () => {
+    expect(buildTimespans([], new Map(), 2)).toEqual([]);
   });
 
   it('tracks occupancy as tasks overlap', () => {
     // a: [0,10], b: [5,15] → occ ramps 1 → 2 → 1 across the three boundaries.
-    const segments = buildSegments(
+    const timespans = buildTimespans(
       timed([
         ['a', 0, 10],
         ['b', 5, 15],
@@ -1186,7 +1185,7 @@ describe('buildSegments', () => {
       2
     );
 
-    expect(segments).toEqual([
+    expect(timespans).toEqual([
       { start: 0, end: 5, occ: 1, waiting: 0, nonParallel: 0 },
       { start: 5, end: 10, occ: 2, waiting: 0, nonParallel: 0 },
       { start: 10, end: 15, occ: 1, waiting: 0, nonParallel: 0 },
@@ -1195,7 +1194,7 @@ describe('buildSegments', () => {
 
   it('counts a task eligible-but-not-started as waiting', () => {
     // b is eligible at 0 but only starts at 5 while a holds the single slot.
-    const segments = buildSegments(
+    const timespans = buildTimespans(
       timed([
         ['a', 0, 10],
         ['b', 5, 10],
@@ -1204,7 +1203,7 @@ describe('buildSegments', () => {
       1
     );
 
-    expect(segments).toEqual([
+    expect(timespans).toEqual([
       { start: 0, end: 5, occ: 1, waiting: 1, nonParallel: 0 },
       { start: 5, end: 10, occ: 2, waiting: 0, nonParallel: 0 },
     ]);
@@ -1212,76 +1211,48 @@ describe('buildSegments', () => {
 
   it('weighs a parallelism:false task as the whole pool', () => {
     // np monopolizes the pool: occ jumps to `parallel` (3), nonParallel counts it.
-    const segments = buildSegments(timed([['np', 0, 10, true]]), new Map(), 3);
+    const timespans = buildTimespans(
+      timed([['np', 0, 10, true]]),
+      new Map(),
+      3
+    );
 
-    expect(segments).toEqual([
+    expect(timespans).toEqual([
       { start: 0, end: 10, occ: 3, waiting: 0, nonParallel: 1 },
     ]);
   });
 });
 
 describe('flushPerformanceReport', () => {
-  let writeSpy: jest.SpyInstance;
-  let written: string;
-  let originalIsTTY: boolean | undefined;
+  let logSpy: jest.SpyInstance;
+  let logged: string | undefined;
 
   beforeEach(() => {
-    written = '';
-    originalIsTTY = process.stdout.isTTY;
-    writeSpy = jest
-      .spyOn(process.stdout, 'write')
-      .mockImplementation((chunk: any) => {
-        written += String(chunk);
-        return true;
-      });
+    logged = undefined;
+    logSpy = jest.spyOn(console, 'log').mockImplementation((msg?: any) => {
+      logged = String(msg);
+    });
   });
 
   afterEach(() => {
-    writeSpy.mockRestore();
-    Object.defineProperty(process.stdout, 'isTTY', {
-      value: originalIsTTY,
-      configurable: true,
-    });
+    logSpy.mockRestore();
   });
 
-  function setTTY(isTTY: boolean) {
-    Object.defineProperty(process.stdout, 'isTTY', {
-      value: isTTY,
-      configurable: true,
-    });
-  }
-
-  it('ends piped output in exactly one trailing newline', () =>
+  it('logs the report without a trailing newline (console.log adds the only one)', () =>
     withEnvironmentVariables(envFor({}), () => {
-      setTTY(false);
       const a = makeTask('a', { start: 0, end: 1000 });
       feedActive(makeGraph([a]));
 
       flushPerformanceReport();
 
-      expect(written).not.toBe('');
-      expect(written.endsWith('\n')).toBe(true);
-      expect(written.endsWith('\n\n')).toBe(false);
-      expect(written).not.toContain('\r\n');
-    }));
-
-  it('uses CRLF on a TTY (terminal may still be in raw mode)', () =>
-    withEnvironmentVariables(envFor({}), () => {
-      setTTY(true);
-      const a = makeTask('a', { start: 0, end: 1000 });
-      feedActive(makeGraph([a]));
-
-      flushPerformanceReport();
-
-      expect(written).toContain('\r\n');
-      expect(written.endsWith('\r\n')).toBe(true);
-      // A bare "\n" (not part of "\r\n") would staircase a raw terminal.
-      expect(/(?<!\r)\n/.test(written)).toBe(false);
+      expect(logSpy).toHaveBeenCalledTimes(1);
+      expect(logged).not.toBe('');
+      // formatReport doesn't self-terminate; console.log supplies the single newline.
+      expect(logged!.endsWith('\n')).toBe(false);
     }));
 
   it('is a no-op once the payload was already consumed', () =>
     withEnvironmentVariables(envFor({}), () => {
-      setTTY(false);
       const a = makeTask('a', { start: 0, end: 1000 });
       feedActive(makeGraph([a]));
       // The TUI path consumes the report via the payload getter first.
@@ -1289,13 +1260,12 @@ describe('flushPerformanceReport', () => {
 
       flushPerformanceReport();
 
-      expect(written).toBe('');
+      expect(logSpy).not.toHaveBeenCalled();
     }));
 
   it('swallows a write failure (cosmetic report never fails the run)', () =>
     withEnvironmentVariables(envFor({}), () => {
-      setTTY(false);
-      writeSpy.mockImplementation(() => {
+      logSpy.mockImplementation(() => {
         throw new Error('EPIPE');
       });
       const a = makeTask('a', { start: 0, end: 1000 });

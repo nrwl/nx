@@ -163,13 +163,9 @@ export function flushPerformanceReport(): void {
     if (!summary) {
       return;
     }
-    // Post-TUI the terminal can still be in raw mode (no \n → \r\n translation),
-    // which staircases plain "\n": use \r\n on a TTY, plain \n when piped. This keys
-    // off whether stdout is a TTY, not daemon enablement — the daemon changes where
-    // tasks run, not the terminal's newline handling. Don't add a trailing newline —
-    // formatReport already ends with one (an extra broke exact-match e2e snapshots).
-    const eol = process.stdout.isTTY ? '\r\n' : '\n';
-    process.stdout.write(formatReport(summary).split('\n').join(eol));
+    // restore_terminal cooks the terminal back post-TUI, so console.log's plain \n
+    // renders fine; it also supplies the single trailing newline formatReport omits.
+    console.log(formatReport(summary));
   } catch (e) {
     // Best-effort report; never let it affect the run's exit behavior. Surface the
     // cause only under verbose logging.

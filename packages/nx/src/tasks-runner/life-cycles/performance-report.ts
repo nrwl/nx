@@ -1,5 +1,5 @@
 import type { Link, PerformanceSummaryPayload } from '../../native';
-import { formatDuration as nativeFormatDuration } from '../../native';
+import { formatDuration } from '../../native';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
 import type { PerformanceSummary } from './performance-analysis';
 
@@ -116,22 +116,13 @@ export const MEANINGFUL_OVERHEAD = 1000;
 /** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
 
-/**
- * Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". The single
- * implementation lives in Rust (exposed to JS as `formatDuration`); this re-exports
- * it so the terminal report and the TUI popup format durations identically.
- */
-export function formatDuration(ms: number): string {
-  return nativeFormatDuration(ms);
-}
+// Single Rust implementation, re-exported so the terminal report and the TUI popup
+// format durations ("3m 30s", "13.4s", "470ms") identically.
+export { formatDuration };
 
 /** Append "s" unless `count` is 1 (regular plurals only). */
 function pluralize(count: number, noun: string): string {
   return count === 1 ? noun : `${noun}s`;
-}
-
-function pluralizeCores(cores: number): string {
-  return pluralize(cores, 'core');
 }
 
 /** Slot-contention time recoverable by parallelism or more machines (the "recoverable" number both the report and TUI payload show). Derived, never stored, so the halves can't drift from their sum. */
@@ -155,9 +146,7 @@ function formatTopTaskRows(
 }
 
 /** An Nx Agents URL link, built from the link definition so the URL text never has to be scanned back out of the assembled report. */
-function agentsLink(): RecLink {
-  return urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
-}
+const agentsLink: RecLink = urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
 
 /** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Agents advice is omitted unless `canDistribute`. */
 export function buildRecommendation(args: {
@@ -215,14 +204,15 @@ export function buildRecommendation(args: {
       if (parallel >= cores) {
         // At the core ceiling and still queuing. Agents for CPU-bound work;
         // otherwise only the I/O-bound --parallel tip applies.
-        const base = `You're at this machine's ${cores} ${pluralizeCores(
-          cores
+        const base = `You're at this machine's ${cores} ${pluralize(
+          cores,
+          'core'
         )} and tasks are still queuing for a slot.`;
         return [
           canDistribute
             ? [
                 `${base} If they're CPU-bound, distribute across machines with Nx Agents → `,
-                agentsLink(),
+                agentsLink,
                 `; if they're I/O-bound, a higher --parallel may help instead.`,
               ]
             : [`${base} If they're I/O-bound, a higher --parallel may help.`],
@@ -235,7 +225,7 @@ export function buildRecommendation(args: {
         ? [
             [
               `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → `,
-              agentsLink(),
+              agentsLink,
               `.`,
             ],
           ]
@@ -248,7 +238,7 @@ export function buildRecommendation(args: {
         ? [
             [
               `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → `,
-              agentsLink(),
+              agentsLink,
               `.`,
             ],
           ]
@@ -270,7 +260,7 @@ export function buildRecommendation(args: {
   if (canDistribute) {
     recommendations.push([
       `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → `,
-      agentsLink(),
+      agentsLink,
       `.`,
     ]);
   }
@@ -393,7 +383,7 @@ export function formatReport(s: PerformanceSummary): string {
     urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
   ];
   lines.push('', render(footer));
-  lines.push('');
+  // No trailing newline — the caller's console.log adds the line terminator.
   return lines.join('\n');
 }
 

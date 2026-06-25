@@ -34,12 +34,20 @@ export interface TimedTask {
   nonParallel: boolean;
 }
 
-/** One contiguous slice of the occupancy timeline: slots busy (`occ`), tasks eligible-but-not-running (`waiting`), and `parallelism: false` tasks running (`nonParallel`). */
-export interface Segment {
+/**
+ * One [start, end) slice of the run where the counts below hold steady — the gap between
+ * two adjacent sweep boundaries (see {@link buildTimespans}). Because nothing changes
+ * within the slice, the analysis treats it as a flat rectangle of `end - start` ms.
+ */
+export interface Timespan {
+  /** Slice bounds (epoch ms); occ/waiting/nonParallel are constant across [start, end). */
   start: number;
   end: number;
+  /** Slots busy for the whole slice (a `parallelism: false` task counts as the entire pool). */
   occ: number;
+  /** Tasks eligible to run but still queued for a free slot. */
   waiting: number;
+  /** `parallelism: false` tasks running during the slice (each one holds every slot). */
   nonParallel: number;
 }
 
@@ -122,7 +130,7 @@ export class PerformanceAnalysis {
           start: t.startTime,
           end: t.endTime,
           // A parallelism:false task occupies the whole pool; carried here so the
-          // occupancy timeline (buildSegments) stays a pure function of `timed`.
+          // occupancy timeline (buildTimespans) stays a pure function of `timed`.
           nonParallel: this.taskGraph.tasks[id]?.parallelism === false,
         });
       }
@@ -304,7 +312,7 @@ export class PerformanceAnalysis {
     const parallel = Math.max(1, this.parallel);
     const cores = detectCoreCount();
 
-    const segments = buildSegments(timed, eligible, parallel);
+    const timespans = buildTimespans(timed, eligible, parallel);
     const hashWindows = collectHashWindows();
 
     // Pre-dispatch hashing is part of overhead but not the slot split.
@@ -316,7 +324,7 @@ export class PerformanceAnalysis {
       recoverableByMachines,
       recoverableByParallel,
     } = splitOverhead({
-      segments,
+      timespans,
       parallel,
       overhead,
       totalWork,
@@ -547,38 +555,40 @@ function detectCoreCount(): number {
 }
 
 /**
- * The occupancy timeline (contiguous {@link Segment}s) — single source of truth for
+ * The occupancy timeline (contiguous {@link Timespan}s) — single source of truth for
  * slot contention. A `parallelism: false` task occupies the whole pool. Integrates
  * over time rather than sampling one instant, so it's robust to when tasks hand off.
  *
  * Builds it via a delta sweep: each task bumps a counter up at its start and down at
  * its end, then we walk the sorted boundaries accumulating the running totals into one
- * segment per gap.
+ * timespan per gap.
  */
-export function buildSegments(
+export function buildTimespans(
   timed: TimedTask[],
   eligible: Map<string, number>,
   parallel: number
-): Segment[] {
+): Timespan[] {
+  // Per-timestamp +/- deltas the sweep integrates into timespans: busy slots (occ),
+  // eligible-but-waiting tasks, and parallelism:false tasks that hold the whole pool.
   const occDelta = new Map<number, number>();
   const waitDelta = new Map<number, number>();
   const nonParallelDelta = new Map<number, number>();
-  const bump = (m: Map<number, number>, t: number, d: number) =>
-    m.set(t, (m.get(t) ?? 0) + d);
+  const addDelta = (deltas: Map<number, number>, at: number, delta: number) =>
+    deltas.set(at, (deltas.get(at) ?? 0) + delta);
 
   for (const { id, start, end, nonParallel: isNonParallel } of timed) {
     // A parallelism:false task holds every slot, so it weighs the whole pool.
     const weight = isNonParallel ? parallel : 1;
-    bump(occDelta, start, weight);
-    bump(occDelta, end, -weight);
+    addDelta(occDelta, start, weight);
+    addDelta(occDelta, end, -weight);
     if (isNonParallel) {
-      bump(nonParallelDelta, start, 1);
-      bump(nonParallelDelta, end, -1);
+      addDelta(nonParallelDelta, start, 1);
+      addDelta(nonParallelDelta, end, -1);
     }
     const elig = eligible.get(id) ?? start;
     if (elig < start) {
-      bump(waitDelta, elig, 1);
-      bump(waitDelta, start, -1);
+      addDelta(waitDelta, elig, 1);
+      addDelta(waitDelta, start, -1);
     }
   }
 
@@ -590,7 +600,7 @@ export function buildSegments(
     ])
   ).sort((a, b) => a - b);
 
-  const segments: Segment[] = [];
+  const timespans: Timespan[] = [];
   let occ = 0;
   let waiting = 0;
   let nonParallel = 0;
@@ -600,10 +610,10 @@ export function buildSegments(
     nonParallel += nonParallelDelta.get(times[i]) ?? 0;
     const next = times[i + 1];
     if (next != null && next > times[i]) {
-      segments.push({ start: times[i], end: next, occ, waiting, nonParallel });
+      timespans.push({ start: times[i], end: next, occ, waiting, nonParallel });
     }
   }
-  return segments;
+  return timespans;
 }
 
 /**
@@ -618,14 +628,14 @@ export function buildSegments(
  * (totalWork/cores − floor) needs more machines.
  */
 function splitOverhead({
-  segments,
+  timespans,
   parallel,
   overhead,
   totalWork,
   cores,
   criticalPathDuration,
 }: {
-  segments: Segment[];
+  timespans: Timespan[];
   parallel: number;
   overhead: number;
   totalWork: number;
@@ -638,7 +648,7 @@ function splitOverhead({
 } {
   let slotContendedTime = 0;
   let nonParallelContendedTime = 0;
-  for (const s of segments) {
+  for (const s of timespans) {
     if (s.occ >= parallel && s.waiting > 0) {
       const dur = s.end - s.start;
       slotContendedTime += dur;
