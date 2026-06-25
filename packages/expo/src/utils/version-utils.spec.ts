@@ -113,10 +113,10 @@ describe('version-utils', () => {
   });
 
   describe('getExpoDependenciesVersionsToInstall', () => {
-    it('should return v55 versions for fresh workspace', async () => {
+    it('should return v56 versions for fresh workspace', async () => {
       const versions = await getExpoDependenciesVersionsToInstall(tree);
-      expect(versions.expo).toContain('55');
-      expect(versions.reactNative).toContain('0.83');
+      expect(versions.expo).toContain('56');
+      expect(versions.reactNative).toContain('0.85');
       expect(versions.react).toContain('19.2');
     });
 
@@ -155,6 +155,19 @@ describe('version-utils', () => {
       const versions = await getExpoDependenciesVersionsToInstall(tree);
       expect(versions.expo).toContain('55');
       expect(versions.reactNative).toContain('0.83');
+      expect(versions.react).toContain('19.2');
+    });
+
+    it('should return v56 versions when v56 is installed', async () => {
+      tree.write(
+        'package.json',
+        JSON.stringify({
+          dependencies: { expo: '~56.0.0' },
+        })
+      );
+      const versions = await getExpoDependenciesVersionsToInstall(tree);
+      expect(versions.expo).toContain('56');
+      expect(versions.reactNative).toContain('0.85');
       expect(versions.react).toContain('19.2');
     });
 

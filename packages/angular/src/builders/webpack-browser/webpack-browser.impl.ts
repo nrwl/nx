@@ -139,8 +139,8 @@ export function executeWebpackBrowserBuilder(
               );
 
               baseWebpackConfig.plugins.push(
-                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
-                new WebpackNxBuildCoordinationPlugin(
+                // Cast away the angular/webpack plugin type difference (webpack versions).
+                new (WebpackNxBuildCoordinationPlugin as any)(
                   `nx run-many --target=${
                     context.target.target
                   } --projects=${workspaceDependencies.join(',')}`,

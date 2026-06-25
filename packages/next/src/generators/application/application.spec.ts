@@ -88,6 +88,7 @@ describe('app', () => {
         '**/*.jsx',
         `../${name}/.next/types/**/*.ts`,
         `../dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
       expect(tree.exists(`${name}/src/pages/styles.css`)).toBeFalsy();
@@ -97,6 +98,19 @@ describe('app', () => {
       expect(tree.exists(`${name}/src/app/api/hello/route.ts`)).toBeTruthy();
       expect(tree.exists(`${name}/src/app/page.module.css`)).toBeTruthy();
       expect(tree.exists(`${name}/public/favicon.ico`)).toBeTruthy();
+    });
+
+    it('should include the @nx/next style reference in the generated index.d.ts', async () => {
+      const name = uniq();
+      await applicationGenerator(tree, {
+        directory: name,
+        style: 'css',
+      });
+
+      const content = tree.read(`${name}/index.d.ts`, 'utf-8');
+      expect(content).toContain(
+        '/// <reference types="@nx/next/typings/style.d.ts" />'
+      );
     });
 
     it('should add layout types correctly for standalone apps', async () => {
@@ -116,6 +130,7 @@ describe('app', () => {
         'src/**/*.jsx',
         '.next/types/**/*.ts',
         `dist/${name}/.next/types/**/*.ts`,
+        'index.d.ts',
         'next-env.d.ts',
       ]);
     });
@@ -638,6 +653,7 @@ describe('app', () => {
           'src/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -662,6 +678,7 @@ describe('app', () => {
           'app/**/*.jsx',
           '.next/types/**/*.ts',
           `dist/${name}/.next/types/**/*.ts`,
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -683,6 +700,7 @@ describe('app', () => {
           'pages/**/*.tsx',
           'pages/**/*.js',
           'pages/**/*.jsx',
+          'index.d.ts',
           'next-env.d.ts',
         ]);
       });
@@ -853,6 +871,7 @@ describe('app', () => {
             "src/**/*.jsx",
             "../myapp/.next/types/**/*.ts",
             "../dist/myapp/.next/types/**/*.ts",
+            "index.d.ts",
             "next-env.d.ts",
           ],
         }
@@ -895,6 +914,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "outDir": "out-tsc/cypress",
+            "rootDir": ".",
             "sourceMap": false,
             "types": [
               "cypress",

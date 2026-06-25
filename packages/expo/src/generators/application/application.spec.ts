@@ -75,6 +75,9 @@ describe('app', () => {
 
     const tsconfig = readJson(appTree, 'my-app/tsconfig.json');
     expect(tsconfig.extends).toEqual('../tsconfig.base.json');
+    // bundler is the only moduleResolution valid and non-deprecated under both
+    // TS 5.8 and 6.0 for this esm-family (module: esnext) config.
+    expect(tsconfig.compilerOptions.moduleResolution).toEqual('bundler');
 
     expect(appTree.exists('my-app/eslint.config.mjs')).toBe(true);
   });

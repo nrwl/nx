@@ -439,6 +439,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -447,6 +448,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -455,6 +457,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -463,6 +466,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -471,6 +475,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
       },
     };
@@ -620,6 +625,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib1:build-base': {
           id: 'lib1:build-base',
@@ -628,6 +634,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build': {
           id: 'lib2:build',
@@ -636,6 +643,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib2:build-base': {
           id: 'lib2:build-base',
@@ -644,6 +652,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build': {
           id: 'lib3:build',
@@ -652,6 +661,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib3:build-base': {
           id: 'lib3:build-base',
@@ -660,6 +670,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build': {
           id: 'lib4:build',
@@ -668,6 +679,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
         'lib4:build-base': {
           id: 'lib4:build-base',
@@ -676,6 +688,7 @@ describe('calculateDependenciesFromTaskGraph', () => {
           outputs: [],
           parallelism: true,
           continuous: false,
+          cache: false,
         },
       },
     };

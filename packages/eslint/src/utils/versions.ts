@@ -16,7 +16,7 @@ export const jsoncEslintParserVersion = '^2.1.0';
 export const eslintCompat = '^1.1.1';
 
 export const eslintVersion = '^9.8.0';
-export const typescriptESLintVersion = '^8.40.0';
+export const typescriptESLintVersion = '^8.58.0';
 
 type EslintVersions = {
   eslintVersion: string;
@@ -33,7 +33,7 @@ const latestVersions: EslintVersions = {
 // for now; the v10 entry will be added alongside full v10 support.
 type CompatVersions = 9;
 const versionMap: Record<CompatVersions, EslintVersions> = {
-  9: { eslintVersion: '^9.8.0', typescriptESLintVersion: '^8.40.0' },
+  9: { eslintVersion: '^9.8.0', typescriptESLintVersion: '^8.58.0' },
 };
 
 export function versions(tree: Tree): EslintVersions {

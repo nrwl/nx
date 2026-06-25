@@ -53,13 +53,14 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     !!packageJson.dependencies?.['@angular/localize'] ||
     !!packageJson.devDependencies?.['@angular/localize'];
 
-  const baseFilesPath = join(__dirname, '..', 'files');
-  let pathToFiles: string;
-  if (angularMajorVersion >= 20) {
-    pathToFiles = join(baseFilesPath, 'v20+', 'server-builder', 'root');
-  } else {
-    pathToFiles = join(baseFilesPath, 'v19', 'server-builder', 'root');
-  }
+  const pathToFiles = join(
+    __dirname,
+    '..',
+    'files',
+    'v20+',
+    'server-builder',
+    'root'
+  );
 
   generateFiles(tree, pathToFiles, project.root, {
     ...options,
@@ -80,18 +81,16 @@ export function generateTsConfigServerJsonForBrowserBuilder(
     return json;
   });
 
-  if (angularMajorVersion >= 20) {
-    updateJson(tree, options.buildTargetTsConfigPath, (json) => {
-      const exclude = new Set(json.exclude ?? []);
-      exclude.add(`src/${options.main}`);
-      exclude.add(`src/${options.serverFileName}`);
-      if (options.standalone) {
-        exclude.add('src/app/app.config.server.ts');
-      }
-      json.exclude = Array.from(exclude);
-      return json;
-    });
-  }
+  updateJson(tree, options.buildTargetTsConfigPath, (json) => {
+    const exclude = new Set(json.exclude ?? []);
+    exclude.add(`src/${options.main}`);
+    exclude.add(`src/${options.serverFileName}`);
+    if (options.standalone) {
+      exclude.add('src/app/app.config.server.ts');
+    }
+    json.exclude = Array.from(exclude);
+    return json;
+  });
   if (angularMajorVersion >= 21) {
     // remove module and moduleResolution from tsconfig.server.json
     updateJson(tree, tsconfigServerPath, (json) => {

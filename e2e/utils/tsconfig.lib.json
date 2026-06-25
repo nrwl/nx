@@ -10,6 +10,7 @@
     "strict": false
   },
   "exclude": [
+    "out-tsc",
     "**/*.spec.ts",
     "**/*.test.ts",
     "jest.config.ts",

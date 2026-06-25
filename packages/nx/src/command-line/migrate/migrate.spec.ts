@@ -36,6 +36,7 @@ jest.mock('./resolve-package-version', () => ({
       version
     ),
 }));
+import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
@@ -44,6 +45,7 @@ import {
   filterDowngradedUpdates,
   formatCommandFailure,
   formatSkippedPromptsNextStep,
+  generateMigrationsJsonAndUpdatePackageJson,
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
@@ -3485,6 +3487,58 @@ describe('Migration', () => {
 
       expect(result).toEqual({});
     });
+
+    it('should not narrow non-range specifiers (workspace:/npm:/git/file)', () => {
+      const nonSemverSpecifiers = [
+        'workspace:*',
+        'workspace:^',
+        'npm:@scope/alias@^1.0.0',
+        'git+https://github.com/owner/repo.git',
+        'file:../local-pkg',
+      ];
+
+      for (const specifier of nonSemverSpecifiers) {
+        const result = filterDowngradedUpdates(
+          { pkg: { version: '1.0.0', addToPackageJson: 'dependencies' } },
+          createPackageJson({ dependencies: { pkg: specifier } }),
+          () => '1.0.0'
+        );
+
+        expect(result).toEqual({});
+      }
+    });
+  });
+
+  describe('resolveCatalogSpecifiers', () => {
+    it('returns null when given null', () => {
+      expect(resolveCatalogSpecifiers(null)).toBeNull();
+    });
+
+    it('passes plain semver specifiers through unchanged', () => {
+      const packageJson = createPackageJson({
+        dependencies: { react: '^18.0.0' },
+        devDependencies: { vite: '~6.2.0' },
+      });
+
+      const result = resolveCatalogSpecifiers(packageJson);
+
+      expect(result?.dependencies).toEqual({ react: '^18.0.0' });
+      expect(result?.devDependencies).toEqual({ vite: '~6.2.0' });
+    });
+
+    it('leaves an unresolvable catalog reference as-is instead of throwing', () => {
+      // Unresolvable catalog entry: preserved rather than throwing.
+      const packageJson = createPackageJson({
+        dependencies: { 'nonexistent-pkg-xyz': 'catalog:does-not-exist' },
+      });
+
+      const run = () => resolveCatalogSpecifiers(packageJson);
+
+      expect(run).not.toThrow();
+      expect(run()?.dependencies).toEqual({
+        'nonexistent-pkg-xyz': 'catalog:does-not-exist',
+      });
+    });
   });
 
   describe('isNpmPeerDepsError', () => {
@@ -4414,6 +4468,81 @@ describe('Migration', () => {
         ).rejects.toThrow(/Invalid prompt path/);
       }
     );
+  });
+
+  describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-migrate-optional-'));
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    // NXC-4590: under `--include=optional` the target package (e.g. `nx`) is in
+    // its own required closure, so the Migrator drops its entry from
+    // `packageUpdates`. The orchestration must not assume that entry exists when
+    // resolving the version for the AI-migrations directory.
+    it('does not crash when the target package is filtered out of packageUpdates', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: {
+            nx: '0.0.0',
+            requiredChild: '1.0.0',
+            optionalChild: '1.0.0',
+          },
+        })
+      );
+
+      // `packageGroup` puts `requiredChild` in nx's required closure; both `nx`
+      // and `requiredChild` are dropped under optional, leaving `optionalChild`.
+      const fetch = (p: string, version: string) => {
+        if (p === 'nx') {
+          return Promise.resolve({
+            version: '23.0.0',
+            packageGroup: [{ package: 'requiredChild', version: '23.0.0' }],
+            packageJsonUpdates: {
+              mixed: {
+                version: '23.0.0',
+                packages: {
+                  requiredChild: { version: '3.0.0' },
+                  optionalChild: { version: '3.0.0' },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '3.0.0' });
+      };
+
+      const opts = {
+        type: 'generateMigrations' as const,
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        from: {},
+        to: {},
+        interactive: false,
+        include: 'optional' as const,
+      };
+
+      await expect(
+        generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch as any)
+      ).resolves.toBeUndefined();
+
+      const updated = JSON.parse(
+        readFileSync(join(root, 'package.json'), 'utf-8')
+      );
+      // Optional update applied; the filtered-out required packages untouched.
+      expect(updated.devDependencies.optionalChild).toBe('3.0.0');
+      expect(updated.devDependencies.requiredChild).toBe('1.0.0');
+      expect(updated.devDependencies.nx).toBe('0.0.0');
+    });
   });
 
   describe('writePromptMigrationFiles', () => {

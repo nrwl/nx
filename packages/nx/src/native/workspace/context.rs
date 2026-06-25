@@ -170,7 +170,7 @@ impl FilesWorker {
             };
         }
 
-        let updated_files_hashes: HashMap<String, String> = updated_files
+        let new_hashes: HashMap<String, String> = updated_files
             .par_iter()
             .filter_map(|path| {
                 let full_path = workspace_root_path.join(path);
@@ -182,16 +182,29 @@ impl FilesWorker {
             })
             .collect();
 
-        for (file, hash) in &updated_files_hashes {
-            map.entry(file.into())
-                .and_modify(|e| e.clone_from(hash))
-                .or_insert(hash.clone());
+        // Report only files whose content actually changed (new files, or
+        // files whose hash differs from what we already had). Restoring a
+        // cached task output rewrites a file with identical bytes (new inode,
+        // same content) and the watcher reports it as a change — but treating
+        // that as a real change makes the daemon recompute the project graph
+        // for nothing.
+        let mut changed_files_hashes: HashMap<String, String> = HashMap::new();
+        for (file, new_hash) in new_hashes {
+            match map.get(Path::new(&file)) {
+                Some(existing) if *existing == new_hash => {
+                    // Unchanged content — leave the map as-is, do not report.
+                }
+                _ => {
+                    map.insert(PathBuf::from(&file), new_hash.clone());
+                    changed_files_hashes.insert(file, new_hash);
+                }
+            }
         }
 
         *files = map.into_iter().collect();
         files.par_sort();
 
-        updated_files_hashes
+        changed_files_hashes
     }
 }
 
@@ -478,5 +491,50 @@ mod tests {
                 "multi_glob group {i} must be sorted regardless of file creation order"
             );
         }
+    }
+
+    /// Restoring a cached task output rewrites a file with identical bytes
+    /// (new inode, same content). The watcher reports it as a change, but
+    /// `incremental_update` must report only files whose content actually
+    /// changed — otherwise the daemon recomputes the whole project graph for
+    /// a no-op rewrite.
+    #[test]
+    fn incremental_update_reports_only_real_content_changes() {
+        let temp = TempDir::new().unwrap();
+        temp.child("a.txt").write_str("hello").unwrap();
+        temp.child("b.txt").write_str("world").unwrap();
+
+        let cache = TempDir::new().unwrap();
+        let ctx = WorkspaceContext::new(
+            temp.path().to_string_lossy().to_string(),
+            cache.path().to_string_lossy().to_string(),
+        );
+        // Force the initial file gather + hash to complete before updating.
+        ctx.all_file_data();
+
+        // Rewrite a.txt with identical content — a no-op rewrite.
+        temp.child("a.txt").write_str("hello").unwrap();
+        let no_op = ctx.incremental_update(vec!["a.txt".into()], vec![]);
+        assert!(
+            no_op.is_empty(),
+            "rewriting a file with identical content must report no change; got {no_op:?}"
+        );
+
+        // Genuinely change b.txt — must be reported.
+        temp.child("b.txt").write_str("changed").unwrap();
+        let changed = ctx.incremental_update(vec!["b.txt".into()], vec![]);
+        assert_eq!(
+            changed.keys().collect::<Vec<_>>(),
+            vec![&"b.txt".to_string()],
+            "a real content change must be reported; got {changed:?}"
+        );
+
+        // A brand-new file must be reported as a change.
+        temp.child("c.txt").write_str("new").unwrap();
+        let created = ctx.incremental_update(vec!["c.txt".into()], vec![]);
+        assert!(
+            created.contains_key("c.txt"),
+            "a newly-created file must be reported; got {created:?}"
+        );
     }
 }

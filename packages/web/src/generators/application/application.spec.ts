@@ -808,6 +808,7 @@ describe('app', () => {
             "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
             "types": [
               "node",
+              "vite/client",
             ],
           },
           "exclude": [

@@ -67,20 +67,6 @@ export function versions(
   return backwardCompatibleVersions[majorAngularVersion] ?? latestVersions;
 }
 
-/**
- * Temporary helper to abstract away the version of angular-rspack to be installed
- * until we stop supporting Angular 19.
- */
-export function getAngularRspackVersion(tree: Tree): string {
-  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
-
-  // Starting with Angular 20, we can use an Angular Rspack version that is
-  // aligned with the Nx version
-  return majorAngularVersion === 19
-    ? backwardCompatibleVersions[19].angularRspackVersion
-    : latestVersions.nxVersion;
-}
-
 // Helper types
 
 type TakeUntil<Arr extends readonly any[], Target> = Arr extends readonly [

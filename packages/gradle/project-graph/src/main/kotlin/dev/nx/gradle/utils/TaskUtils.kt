@@ -14,6 +14,8 @@ import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.compile.AbstractCompile
@@ -29,6 +31,27 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
+
+// AGP task classes aren't on our classpath; resolve by name (like isKotlinCompileTask).
+// Maintained allow-list of AGP producers whose outputs feed downstream tasks.
+// FQCNs (esp. internal.tasks.*) can move between AGP majors; verify per version.
+private val agpCopyLikeClasses: List<Class<*>> by lazy {
+  listOf(
+          "com.android.build.gradle.tasks.MergeResources",
+          "com.android.build.gradle.tasks.MergeSourceSetFolders",
+          "com.android.build.gradle.tasks.ProcessApplicationManifest",
+          "com.android.build.gradle.internal.tasks.MergeJavaResourceTask",
+      )
+      .mapNotNull { name ->
+        try {
+          Class.forName(name)
+        } catch (e: Throwable) {
+          null
+        }
+      }
+}
+
+private fun isAgpCopyLikeTask(task: Task): Boolean = agpCopyLikeClasses.any { it.isInstance(task) }
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -192,6 +215,16 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
     }
     if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
       extensions.add("class")
+    }
+    if (depTask is Copy || depTask is Sync || isAgpCopyLikeTask(depTask)) {
+      try {
+        depTask.inputs.files.forEach { f ->
+          if (f.isFile && f.extension.isNotEmpty()) extensions.add(f.extension)
+        }
+      } catch (e: Exception) {
+        task.logger.debug(
+            "Could not read copy/merge source inputs for ${depTask.path}: ${e.message}")
+      }
     }
   }
 

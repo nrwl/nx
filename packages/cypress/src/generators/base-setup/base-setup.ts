@@ -9,7 +9,11 @@ import {
   updateJson,
 } from '@nx/devkit';
 import { getRelativePathToRootTsConfig } from '@nx/js';
-import { isEsmProject, isUsingTsSolutionSetup } from '@nx/js/internal';
+import {
+  getTsConfigModuleResolution,
+  isEsmProject,
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
 import { join } from 'path';
 
 export interface CypressBaseSetupSchema {
@@ -58,6 +62,7 @@ export function addBaseCypressSetup(
           : getRelativePathToRootTsConfig(tree, projectConfig.root),
     linter: isEslintInstalled(tree) ? 'eslint' : 'none',
     ext: '',
+    moduleResolution: getTsConfigModuleResolution(tree),
   };
 
   generateFiles(
