@@ -572,11 +572,6 @@ export async function runCommandForTasks(
       printSummary();
     }
 
-    // Multi-task TUI runs already rendered the report in the popup; otherwise (non-TUI, or single-task TUI with no popup) print it to the restored terminal.
-    if (!isTuiEnabled() || tasks.length <= 1) {
-      flushPerformanceReport();
-    }
-
     await printConfigureAiAgentsDisclaimer();
 
     const nxKey = await nxKeyPromise;
@@ -588,9 +583,12 @@ export async function runCommandForTasks(
     };
   } catch (e) {
     restoreTerminal?.();
-    // No-ops if the popup already delivered the report (TUI endCommand clears the lifecycle on pull), so this won't double-print and never masks `e`.
-    flushPerformanceReport();
     throw e;
+  } finally {
+    // Print the report once, on success or failure (restoreTerminal has run in both
+    // paths). No-ops if a multi-task TUI run already delivered it via the popup; its own
+    // try/catch means it never masks `e`.
+    flushPerformanceReport();
   }
 }
 
