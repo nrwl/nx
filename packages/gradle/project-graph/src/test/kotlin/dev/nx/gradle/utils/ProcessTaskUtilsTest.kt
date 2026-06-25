@@ -118,6 +118,15 @@ class ProcessTaskUtilsTest {
     assertNotNull(result["options"])
   }
 
+  @Test
+  fun `publishToMavenLocal tasks are not cacheable`() {
+    val project = ProjectBuilder.builder().build()
+    assertFalse(
+        isCacheable(project.tasks.register("publishPluginMavenPublicationToMavenLocal").get()))
+    assertFalse(isCacheable(project.tasks.register("publishToMavenLocal").get()))
+    assertTrue(isCacheable(project.tasks.register("compileJava").get()))
+  }
+
   @Nested
   inner class GetInputsForTaskTests {
     lateinit var project: Project
@@ -209,6 +218,176 @@ class ProcessTaskUtilsTest {
       val dependentTasksOutputFilesCount =
           result.count { it is Map<*, *> && it.containsKey("dependentTasksOutputFiles") }
       assertEquals(2, dependentTasksOutputFilesCount)
+    }
+
+    @Test
+    fun `test getInputsForTask discovers Copy task source extensions in clean build`() {
+      // Create source files with specific extensions in a source directory
+      val sourceDir = java.io.File("$workspaceRoot/src/resources").apply { mkdirs() }
+      java.io.File(sourceDir, "config.conf").writeText("test config")
+      java.io.File(sourceDir, "data.json").writeText("{}")
+
+      // Create a Copy task that copies from source to destination (but don't populate destination)
+      val copyTask =
+          project.tasks.register("processResources", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(sourceDir)
+      copyTask.into(java.io.File("$workspaceRoot/build/resources"))
+      // Note: we do NOT create/populate the destination directory to simulate a clean build
+
+      // Create a consumer task that depends on the Copy task
+      val consumerTask = project.tasks.register("classes").get()
+      consumerTask.dependsOn(copyTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result, "Result should not be null")
+
+      // Should contain globs for both .conf and .json extensions inferred from Copy task inputs
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.conf" &&
+                it["transitive"] == true
+          },
+          "Expected **/*.conf glob in result: $result")
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.json" &&
+                it["transitive"] == true
+          },
+          "Expected **/*.json glob in result: $result")
+    }
+
+    @Test
+    fun `test getInputsForTask discovers Sync task source extensions in clean build`() {
+      // Create source files with specific extensions in a source directory
+      val sourceDir = java.io.File("$workspaceRoot/src/sync-input").apply { mkdirs() }
+      java.io.File(sourceDir, "config.conf").writeText("test config")
+      java.io.File(sourceDir, "data.json").writeText("{}")
+
+      // Create a Sync task that syncs from source to destination (but don't populate destination)
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      syncTask.from(sourceDir)
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+      // Note: we do NOT create/populate the destination directory to simulate a clean build
+
+      // Create a consumer task that depends on the Sync task
+      val consumerTask = project.tasks.register("consumerSync").get()
+      consumerTask.dependsOn(syncTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result, "Result should not be null")
+
+      // Should contain globs for both .conf and .json extensions inferred from Sync task inputs
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.conf" &&
+                it["transitive"] == true
+          },
+          "Expected **/*.conf glob in result for Sync: $result")
+      assertTrue(
+          result.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.json" &&
+                it["transitive"] == true
+          },
+          "Expected **/*.json glob in result for Sync: $result")
+    }
+
+    @Test
+    fun `test getInputsForTask uses archiveExtension for Jar, not source extensions`() {
+      // Create a Jar task with source files
+      val sourceDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
+      java.io.File(sourceDir, "Main.java").writeText("public class Main {}")
+
+      val jarTask =
+          project.tasks.register("packageJar", org.gradle.api.tasks.bundling.Jar::class.java).get()
+      jarTask.from(sourceDir)
+      // Set explicit archive extension
+      jarTask.archiveExtension.set("jar")
+      // Do NOT create the archive output file to simulate clean build
+
+      // Create a consumer task that depends on the Jar task
+      val consumerTask = project.tasks.register("consumerJar").get()
+      consumerTask.dependsOn(jarTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result, "Result should not be null")
+
+      // Should contain **/*.jar (from archiveExtension), NOT **/*.java (from source)
+      assertTrue(
+          result!!.any {
+            it is Map<*, *> &&
+                it["dependentTasksOutputFiles"] == "**/*.jar" &&
+                it["transitive"] == true
+          },
+          "Expected **/*.jar glob from archiveExtension in result: $result")
+      assertTrue(
+          result.none { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.java" },
+          "Should NOT have **/*.java glob for Jar task (uses archiveExtension instead): $result")
+    }
+
+    @Test
+    fun `test AGP task detection gracefully handles missing classes in classpath`() {
+      // When AGP classes are not on the classpath, isAgpCopyLikeTask returns false.
+      // This test verifies the detection doesn't crash and gracefully degrades.
+      // Create a plain task (not Copy, Sync, or AGP) as a dependency.
+      val plainTask = project.tasks.register("plainTask").get()
+
+      // Create a consumer task that depends on it
+      val consumerTask = project.tasks.register("consumer").get()
+      consumerTask.dependsOn(plainTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      // This should not crash even though AGP is not on the classpath
+      val result =
+          getInputsForTask(
+              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      // Verify it completes without error (graceful degradation)
+      // Result can be null if there are no inputs - thats fine
+    }
+
+    @Test
+    fun `test getInputsForTask ignores bin incremental-compilation outputs`() {
+      val dependentTask = project.tasks.register("dependentCompile").get()
+
+      val classFile = java.io.File("$workspaceRoot/build/classes/kotlin/main/Main.class")
+      val incrementalBin =
+          java.io.File("$workspaceRoot/build/tmp/compileJava/previous-compilation-data.bin")
+      dependentTask.outputs.file(classFile)
+      dependentTask.outputs.file(incrementalBin)
+
+      val mainTask = project.tasks.register("consumerTask").get()
+      mainTask.dependsOn(dependentTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, mainTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      assertNotNull(result)
+
+      assertTrue(
+          result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" })
+      assertTrue(
+          result.none { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.bin" },
+          "Expected no **/*.bin dependentTasksOutputFiles input, got $result")
     }
 
     @Test
@@ -678,6 +857,34 @@ class ProcessTaskUtilsTest {
       assertTrue { result.contains(":jar") }
       assertTrue { result.contains(":compileJava") }
       assertTrue { result.contains(":checkKotlinGradlePluginConfigurationErrors") }
+    }
+
+    @Test
+    fun `processTask emits includeDependsOnTasks in sorted order`() {
+      val kotlinProject = ProjectBuilder.builder().withName("kotlinProject").build()
+      kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
+
+      val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
+      val result =
+          processTask(
+              compileTestKotlin,
+              projectBuildPath = ":kotlinProject",
+              projectRoot = kotlinProject.projectDir.path,
+              workspaceRoot = kotlinProject.rootDir.path,
+              externalNodes = mutableMapOf(),
+              dependencies = mutableSetOf(),
+              targetNameOverrides = emptyMap(),
+              gitIgnoreClassifier = GitIgnoreClassifier(kotlinProject.rootDir),
+              project = kotlinProject)
+
+      @Suppress("UNCHECKED_CAST") val options = result["options"] as Map<String, Any?>
+      @Suppress("UNCHECKED_CAST")
+      val includeDependsOnTasks = options["includeDependsOnTasks"] as List<String>
+
+      assertEquals(
+          includeDependsOnTasks.sorted(),
+          includeDependsOnTasks,
+          "includeDependsOnTasks must be sorted so options (and the ProjectConfiguration hash) stay stable across JVM runs")
     }
   }
 

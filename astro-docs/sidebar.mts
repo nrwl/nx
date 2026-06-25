@@ -10,12 +10,15 @@ type SidebarItems = NonNullable<StarlightUserConfig['sidebar']>;
 /**
  * Tab configuration for the sidebar. Each tab directly owns its sidebar groups,
  * making the tab ↔ content relationship explicit and impossible to drift.
+ * A tab may instead be a direct `link` (renders as a nav link, not a panel).
  */
 export interface SidebarTab {
   id: string;
   label: string;
   icon?: string;
   groups: SidebarItems;
+  /** If set, the tab navigates straight to this slug instead of opening a panel. */
+  link?: string;
 }
 
 const learnGroups: SidebarItems = [
@@ -106,10 +109,6 @@ const learnGroups: SidebarItems = [
         link: 'concepts/ci-concepts/parallelization-distribution',
       },
       { label: 'Nx Daemon', link: 'concepts/nx-daemon' },
-      {
-        label: 'Synthetic monorepos',
-        link: 'concepts/synthetic-monorepos',
-      },
     ],
   },
   {
@@ -303,10 +302,6 @@ const learnGroups: SidebarItems = [
             link: 'features/automate-updating-dependencies',
           },
           {
-            label: 'Nx Console migration assistance',
-            link: 'guides/nx-console/console-migrate-ui',
-          },
-          {
             label: 'Advanced update process',
             link: 'guides/tips-n-tricks/advanced-update',
           },
@@ -346,12 +341,7 @@ const learnGroups: SidebarItems = [
             link: 'enterprise/publish-conformance-rules-to-nx-cloud',
           },
           { label: 'Owners', link: 'enterprise/owners' },
-          { label: 'Polygraph', link: 'enterprise/polygraph' },
           { label: 'Custom workflows', link: 'enterprise/custom-workflows' },
-          {
-            label: 'Metadata only workspace',
-            link: 'enterprise/metadata-only-workspace',
-          },
           { label: 'Activate license', link: 'enterprise/activate-license' },
           {
             label: 'Single tenant',
@@ -465,12 +455,29 @@ const technologiesGroups: SidebarItems = [
           { label: 'Expo', link: 'technologies/react/expo/introduction' },
           { label: 'Vue', link: 'technologies/vue/introduction' },
           { label: 'Nuxt', link: 'technologies/vue/nuxt/introduction' },
+          {
+            label: 'Module Federation',
+            link: 'technologies/module-federation/introduction',
+          },
+          { label: 'ESLint', link: 'technologies/eslint/introduction' },
+        ],
+      },
+      {
+        label: 'Node',
+        collapsed: false,
+        items: [
           { label: 'Node.js', link: 'technologies/node/introduction' },
           {
             label: 'Express',
             link: 'technologies/node/express/introduction',
           },
           { label: 'Nest', link: 'technologies/node/nest/introduction' },
+        ],
+      },
+      {
+        label: 'Java (JVM)',
+        collapsed: false,
+        items: [
           { label: 'Java', link: 'technologies/java/introduction' },
           {
             label: 'Gradle',
@@ -480,13 +487,12 @@ const technologiesGroups: SidebarItems = [
             label: 'Maven',
             link: 'technologies/java/maven/introduction',
           },
-          { label: '.NET', link: 'technologies/dotnet/introduction' },
-          {
-            label: 'Module Federation',
-            link: 'technologies/module-federation/introduction',
-          },
-          { label: 'ESLint', link: 'technologies/eslint/introduction' },
         ],
+      },
+      {
+        label: '.NET',
+        collapsed: false,
+        items: [{ label: '.NET', link: 'technologies/dotnet/introduction' }],
       },
       {
         label: 'Build tools',
@@ -620,6 +626,22 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
+            label: 'Use npm workspaces with Nx',
+            link: 'guides/tips-n-tricks/npm-workspaces',
+          },
+          {
+            label: 'Use pnpm workspaces with Nx',
+            link: 'guides/tips-n-tricks/pnpm-workspaces',
+          },
+          {
+            label: 'Use Yarn workspaces with Nx',
+            link: 'guides/tips-n-tricks/yarn-workspaces',
+          },
+          {
+            label: 'Use Bun workspaces with Nx',
+            link: 'guides/tips-n-tricks/bun-workspaces',
+          },
+          {
             label: 'Identify dependencies between folders',
             link: 'guides/tips-n-tricks/identify-dependencies-between-folders',
           },
@@ -710,7 +732,7 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Installation',
+        label: 'Installation and updates',
         collapsed: true,
         items: [
           {
@@ -720,6 +742,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Update global installation',
             link: 'guides/installation/update-global-installation',
+          },
+          {
+            label: 'Nx Console migration assistance',
+            link: 'guides/nx-console/console-migrate-ui',
           },
         ],
       },
@@ -799,6 +825,10 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'CreateNodes compatibility',
             link: 'extending-nx/createnodes-compatibility',
+          },
+          {
+            label: 'Performant project graph plugins',
+            link: 'extending-nx/performant-project-graph-plugins',
           },
           {
             label: 'Organization-specific plugin',
@@ -1267,6 +1297,13 @@ export const sidebarTabs: SidebarTab[] = [
     label: 'Reference',
     icon: 'document',
     groups: referenceGroups,
+  },
+  {
+    id: 'tab-templates',
+    label: 'Templates',
+    icon: 'rocket',
+    link: 'templates',
+    groups: [],
   },
 ];
 

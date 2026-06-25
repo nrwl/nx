@@ -29,16 +29,8 @@ type PackageManager = 'npm' | 'yarn' | 'pnpm' | 'bun';
 
 const SCRIPT_DIR = __dirname;
 const REPOS_DIR = path.join(os.tmpdir(), 'updating-nx', 'repos');
-const CONFIG_FILE = path.join(
-  SCRIPT_DIR,
-  '..',
-  '..',
-  '..',
-  'tools',
-  'update-repos',
-  'config',
-  'repos.json'
-);
+// Compiled to tools/update-repos/dist/src, so the package root is two levels up.
+const CONFIG_FILE = path.join(SCRIPT_DIR, '..', '..', 'config', 'repos.json');
 
 function log(message: string) {
   const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -55,7 +47,8 @@ function getErrorMessage(error: unknown): string {
 async function execWithOutput(
   command: string,
   cwd: string,
-  description?: string
+  description?: string,
+  env?: NodeJS.ProcessEnv
 ): Promise<void> {
   if (description) {
     log(`🔄 ${description}`);
@@ -69,6 +62,7 @@ async function execWithOutput(
     const child = spawn('bash', ['-c', finalCommand], {
       cwd,
       stdio: ['inherit', 'pipe', 'pipe'],
+      env: env ? { ...process.env, ...env } : undefined,
     });
 
     child.stdout.on('data', (data) => {
@@ -147,14 +141,14 @@ function getMigrateCommand(packageManager: PackageManager): string {
 function getRunMigrationsCommand(packageManager: PackageManager): string {
   switch (packageManager) {
     case 'pnpm':
-      return 'pnpm exec nx migrate --run-migrations --create-commits';
+      return 'pnpm exec nx migrate --run-migrations --create-commits --agentic';
     case 'yarn':
-      return 'yarn nx migrate --run-migrations --create-commits';
+      return 'yarn nx migrate --run-migrations --create-commits --agentic';
     case 'bun':
-      return 'bun nx migrate --run-migrations --create-commits';
+      return 'bun nx migrate --run-migrations --create-commits --agentic';
     case 'npm':
     default:
-      return 'npx nx migrate --run-migrations --create-commits';
+      return 'npx nx migrate --run-migrations --create-commits --agentic';
   }
 }
 
@@ -421,12 +415,13 @@ async function updateRepository(repoName: string): Promise<PullRequestInfo> {
     const fromVersion = await getNxVersion(repoDir, packageManager);
     log(`📦 Current Nx version: ${fromVersion}`);
 
-    // Run nx migrate
+    // Run nx migrate with the next version of the migrate CLI itself
     const migrateCmd = getMigrateCommand(packageManager);
     await execWithOutput(
       migrateCmd,
       repoDir,
-      'Running Nx migration to next version'
+      'Running Nx migration to next version',
+      { NX_MIGRATE_CLI_VERSION: 'next' }
     );
 
     // Install updated dependencies to get the new Nx version
@@ -462,7 +457,8 @@ async function updateRepository(repoName: string): Promise<PullRequestInfo> {
       await execWithOutput(
         runMigrationsCmd,
         repoDir,
-        'Applying Nx migrations (auto-commits enabled)'
+        'Applying Nx migrations (auto-commits enabled)',
+        { NX_MIGRATE_CLI_VERSION: 'next' }
       );
 
       // Clean up migrations.json after successful migration

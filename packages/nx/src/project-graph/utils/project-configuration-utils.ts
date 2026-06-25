@@ -324,19 +324,11 @@ function mergeCreateNodesResultsFromSinglePlugin(
 /**
  * Merges create nodes results into a single rootMap.
  *
- * Specified plugin results are merged once into the manager. Default
- * plugin results are first staged into an intermediate rootMap (with
- * `'...'` spreads deferred) so that synthesis can read each layer's
- * contribution without re-running the merge. The synthetic result from
- * `createTargetDefaultsResults` is then merged into the manager, and
- * the staged intermediate is replayed on top — that replay is where
- * deferred spreads expand against the final (specified + synth) base.
- *
- * Synthesis itself doesn't materialize a second rootMap. Per
- * (root, target) it does an on-the-fly merge of the two layered
- * contributions to learn the eventual executor/command, then matches
- * defaults against that merged shape. This keeps specified-plugin
- * merge work to a single pass.
+ * Default plugin results are merged twice: first into an intermediate
+ * rootMap with unresolved spread sentinels preserved, so target
+ * defaults selection sees the real merged shape of defaults; then
+ * applied as a single layer onto the main rootMap where the preserved
+ * spreads resolve against the specified + target-defaults base.
  */
 export function mergeCreateNodesResults(
   specifiedResults: CreateNodesResultEntry[][],
@@ -394,9 +386,7 @@ export function mergeCreateNodesResults(
   const targetDefaultsResults = createTargetDefaultsResults(
     nodesManager.getRootMap(),
     intermediateDefaultRootMap,
-    nxJsonConfiguration,
-    configurationSourceMaps,
-    defaultConfigurationSourceMaps
+    nxJsonConfiguration
   );
 
   if (targetDefaultsResults.length > 0) {

@@ -100,8 +100,31 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
-import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
 import {
+  type CatalogManager,
+  getCatalogManager,
+  resolveCatalogSpecifiers,
+} from '../../utils/catalog';
+import {
+  classifyMigrateFetchFallback,
+  hasMigrateRunStarted,
+  type MigrateFetchFallbackReason,
+  type MigrateFetchStats,
+  type MigrateGenerateErrorCode,
+  type MigrateMultiMajorChoice,
+  reportMigrateGenerateComplete,
+  reportMigrateGenerateError,
+  reportMigrateGenerateStart,
+  reportMigratePrompt,
+  reportMigrateRunComplete,
+  reportMigrateRunError,
+  reportMigrateRunStart,
+  safeReport,
+  setMigrateInclude,
+  setMigrateIncludeSource,
+} from './migrate-analytics';
+import {
+  isNxTarget,
   maybePromptOrWarnMultiMajorMigration,
   MULTI_MAJOR_MODE_FLAG,
   type MultiMajorMode,
@@ -156,8 +179,8 @@ export { normalizeVersion };
 
 export interface ResolvedMigrationConfiguration extends MigrationsJson {
   packageGroup?: ArrayPackageGroup;
-  /** Mirrors the package's `nx-migrations`/`ng-update` `supportsOptionalUpdates` flag. */
-  supportsOptionalUpdates?: boolean;
+  /** Mirrors the package's `nx-migrations`/`ng-update` `supportsOptionalMigrations` flag. */
+  supportsOptionalMigrations?: boolean;
   /** Prompt file contents keyed by the `prompt` value as it appears on the migration entry. */
   resolvedPromptFiles?: Record<string, string>;
 }
@@ -232,10 +255,13 @@ export interface MigratorOptions {
     pkg: string,
     overrides?: Record<string, string>
   ) => string;
-  fetch: (
+  fetch: ((
     pkg: string,
     version: string
-  ) => Promise<ResolvedMigrationConfiguration>;
+  ) => Promise<ResolvedMigrationConfiguration>) & {
+    // Set by `createFetcher`; absent on injected (test) fetchers.
+    stats?: MigrateFetchStats;
+  };
   from: { [pkg: string]: string };
   to: { [pkg: string]: string };
   interactive?: boolean;
@@ -387,15 +413,30 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+          const updateEntries = Object.entries(packageUpdate.packages);
+          // Validate all up front so invalid metadata fails fast, before any
+          // resolution does I/O.
+          for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            filteredUpdates[name] = update;
-            this.packageUpdates[name] = update;
-          });
+          }
+          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
+          // append to minimumReleaseAgeExclude, so a serial loop avoids
+          // overlapping prompts and keeps packageUpdates ordering stable.
+          for (const [name, update] of updateEntries) {
+            const resolvedUpdate = {
+              ...update,
+              version: await this.resolveVersionForCascade(
+                name,
+                update.version
+              ),
+            };
+            filteredUpdates[name] = resolvedUpdate;
+            this.packageUpdates[name] = resolvedUpdate;
+          }
         }
       }
 
@@ -405,6 +446,19 @@ export class Migrator {
         )
       );
     }
+  }
+
+  private async resolveVersionForCascade(
+    packageName: string,
+    version: string
+  ): Promise<string> {
+    // Already a fully-qualified semver (incl. prereleases) - nothing to resolve.
+    if (valid(version)) {
+      return version;
+    }
+    // Otherwise resolve the spec (range/tag) through the min-release-age policy,
+    // which also honors any configured minimumReleaseAgeExclude entries.
+    return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
@@ -975,12 +1029,13 @@ export async function resolveInclude(
   },
   configuredInclude?: MigrateInclude
 ): Promise<MigrateInclude> {
-  // An explicit `--include` is validated against the target's `supportsOptionalUpdates` in
+  // An explicit `--include` is validated against the target's `supportsOptionalMigrations` in
   // `resolveTargetAndInclude`, so honor it directly here.
   if (include) {
+    setMigrateIncludeSource('flag');
     return include;
   }
-  // Targets that don't declare `supportsOptionalUpdates` only ever run the full
+  // Targets that don't declare `supportsOptionalMigrations` only ever run the full
   // migration; there is nothing to pick between.
   if (!context.targetSupportsOptionalUpdates) {
     if (configuredInclude && configuredInclude !== 'all') {
@@ -989,10 +1044,12 @@ export async function resolveInclude(
         bodyLines: [`The target package does not support optional updates.`],
       });
     }
+    setMigrateIncludeSource('default');
     return 'all';
   }
   // nx.json `migrate.include` pre-selects the answer the prompt would ask for.
   if (configuredInclude) {
+    setMigrateIncludeSource('nx-json');
     return configuredInclude;
   }
   const choices: { name: string; message: string }[] = [
@@ -1016,6 +1073,7 @@ export async function resolveInclude(
     });
   }
   if (!canPrompt(context.interactive)) {
+    setMigrateIncludeSource('default');
     return 'all';
   }
   choices.push({
@@ -1030,6 +1088,8 @@ export async function resolveInclude(
     message: 'Which packages would you like to migrate?',
     choices,
   });
+  reportMigratePrompt('include', selected);
+  setMigrateIncludeSource('prompt');
   return selected;
 }
 
@@ -1128,6 +1188,11 @@ type GenerateMigrations = {
    * or undefined to omit it. See `MultiMajorResult.gradual` for when it's set.
    */
   multiMajorMode?: MultiMajorMode;
+  /**
+   * Collapsed multi-major outcome for the generate completion analytics
+   * event. See `MultiMajorResult.decision` for when it's set.
+   */
+  multiMajorChoice?: MigrateMultiMajorChoice;
 };
 
 type RunMigrations = {
@@ -1182,7 +1247,7 @@ export async function parseMigrationsOptions(
       : Promise.resolve({} as Record<string, string>),
   ]);
 
-  // The gate reads `supportsOptionalUpdates` through this fetcher (registry-first, install
+  // The gate reads `supportsOptionalMigrations` through this fetcher (registry-first, install
   // fallback) so private registries don't fail closed. In production the caller
   // shares its fetcher; standalone callers (tests) get a fresh one.
   const resolvedFetch = fetch ?? createFetcher(getPackageManagerCommand());
@@ -1237,6 +1302,7 @@ export async function parseMigrationsOptions(
     include,
     originalTargetVersion: multiMajorResult.originalTarget,
     multiMajorMode: multiMajorResult.gradual ? 'gradual' : undefined,
+    multiMajorChoice: multiMajorResult.decision,
   };
 }
 
@@ -1315,7 +1381,7 @@ async function resolveTargetAndInclude(args: {
     targetVersion = 'latest';
   }
 
-  // Resolve dist-tags to a concrete version so the `supportsOptionalUpdates` gate and the
+  // Resolve dist-tags to a concrete version so the `supportsOptionalMigrations` gate and the
   // downstream cascade read a real semver. Explicit dist-tags arrive already
   // resolved from `parseTargetPackageAndVersion`; only bare invocations and
   // bare package names (`nx migrate nx`) reach here unresolved.
@@ -1336,13 +1402,13 @@ async function resolveTargetAndInclude(args: {
     }
   }
 
-  // `--include` is only available for targets that opt in via `supportsOptionalUpdates`.
+  // `--include` is only available for targets that opt in via `supportsOptionalMigrations`.
   // required/all/prompt/nx.json read the flag at the version being migrated
   // to. Skipped when the include value can't depend on it (no `--include`, no nx.json
   // default, no interactive prompt) and for the explicit `optional` value, which
   // anchors to the installed target and reads at that version below.
   let targetSupportsOptionalUpdates = false;
-  // The package/version whose `supportsOptionalUpdates` flag the gate actually read,
+  // The package/version whose `supportsOptionalMigrations` flag the gate actually read,
   // surfaced verbatim in the rejection message below.
   let eligibilityPackage = targetPackage;
   let eligibilityVersion = targetVersion;
@@ -1362,6 +1428,14 @@ async function resolveTargetAndInclude(args: {
       targetVersion!
     );
   }
+
+  // Recorded before the interactive prompts (include, multi-major) so runs
+  // abandoned at a prompt still register a start.
+  reportMigrateGenerateStart({
+    targetPackage: targetPackage ?? 'nx',
+    interactive: options.interactive,
+    excludeAppliedMigrations: options.excludeAppliedMigrations,
+  });
 
   const include = await resolveInclude(
     options.include,
@@ -1435,7 +1509,7 @@ async function resolveTargetAndInclude(args: {
   };
 }
 
-// `--include` is opt-in per package via `supportsOptionalUpdates` in the target's
+// `--include` is opt-in per package via `supportsOptionalMigrations` in the target's
 // `nx-migrations`/`ng-update` config. Read it through the shared fetcher
 // (registry-first, install fallback) so registries that can't serve metadata
 // via `npm view` resolve it from an install rather than failing the gate.
@@ -1445,7 +1519,7 @@ async function fetchSupportsOptionalUpdates(
   packageVersion: string
 ): Promise<boolean> {
   const config = await fetch(packageName, packageVersion);
-  return config.supportsOptionalUpdates === true;
+  return config.supportsOptionalMigrations === true;
 }
 
 // `--include=optional` upper-bound gate. The optional walk catches up from
@@ -1580,6 +1654,11 @@ export function createFetcher(pmc: PackageManagerCommands) {
     Promise<ResolvedMigrationConfiguration>
   > = {};
   const resolvedVersionCache: Record<string, Promise<string>> = {};
+  const stats: MigrateFetchStats = { registryCount: 0, installCount: 0 };
+  function recordInstallFetch(reason: MigrateFetchFallbackReason): void {
+    stats.installCount++;
+    stats.fallbackReason ??= reason;
+  }
 
   function fetchMigrations(
     packageName,
@@ -1589,6 +1668,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
     if (!isRegistryResolutionEnabled()) {
       // Skip registry fetch and use installation method directly
       logger.info(`Fetching ${packageName}@${packageVersion}`);
+      recordInstallFetch('env-skip');
       return getPackageMigrationsUsingInstall(packageName, packageVersion, pmc);
     }
 
@@ -1614,7 +1694,13 @@ export function createFetcher(pmc: PackageManagerCommands) {
           return migrationsCache[`${packageName}-${resolvedVersion}`];
         }
         setCache(packageName, resolvedVersion);
-        return getPackageMigrationsUsingRegistry(packageName, resolvedVersion);
+        return getPackageMigrationsUsingRegistry(
+          packageName,
+          resolvedVersion
+        ).then((result) => {
+          stats.registryCount++;
+          return result;
+        });
       })
       .catch((e) => {
         // A cooldown violation would fail an install identically (only slower),
@@ -1626,6 +1712,7 @@ export function createFetcher(pmc: PackageManagerCommands) {
           `Failed to get migrations from registry for ${packageName}@${packageVersion}: ${e.message}. Falling back to install.`
         );
         logger.info(`Fetching ${packageName}@${packageVersion}`);
+        recordInstallFetch(classifyMigrateFetchFallback(e));
 
         return getPackageMigrationsUsingInstall(
           packageName,
@@ -1635,10 +1722,10 @@ export function createFetcher(pmc: PackageManagerCommands) {
       });
   }
 
-  return function nxMigrateFetcher(
+  const nxMigrateFetcher: MigratorOptions['fetch'] = (
     packageName: string,
     packageVersion: string
-  ): Promise<ResolvedMigrationConfiguration> {
+  ): Promise<ResolvedMigrationConfiguration> => {
     if (migrationsCache[`${packageName}-${packageVersion}`]) {
       return migrationsCache[`${packageName}-${packageVersion}`];
     }
@@ -1665,6 +1752,8 @@ export function createFetcher(pmc: PackageManagerCommands) {
 
     return migrations;
   };
+  nxMigrateFetcher.stats = stats;
+  return nxMigrateFetcher;
 }
 
 // testing-fetch-end
@@ -1695,7 +1784,7 @@ async function getPackageMigrationsUsingRegistry(
       name: packageName,
       version: packageVersion,
       packageGroup: migrationsConfig.packageGroup,
-      supportsOptionalUpdates: migrationsConfig.supportsOptionalUpdates,
+      supportsOptionalMigrations: migrationsConfig.supportsOptionalMigrations,
     };
   }
 
@@ -1751,7 +1840,7 @@ async function downloadPackageMigrationsFromRegistry(
   {
     migrations: migrationsFilePath,
     packageGroup,
-    supportsOptionalUpdates,
+    supportsOptionalMigrations,
   }: NxMigrationsConfiguration & { packageGroup?: ArrayPackageGroup }
 ): Promise<ResolvedMigrationConfiguration> {
   const { dir, cleanup } = createTempNpmDirectory();
@@ -1794,7 +1883,7 @@ async function downloadPackageMigrationsFromRegistry(
     result = {
       ...migrations,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       version: packageVersion,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1884,7 +1973,7 @@ async function getPackageMigrationsUsingInstallImpl(
     const {
       migrations: migrationsFilePath,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       packageJson,
     } = readPackageMigrationConfig(packageName, dir);
 
@@ -1904,7 +1993,7 @@ async function getPackageMigrationsUsingInstallImpl(
     result = {
       ...migrations,
       packageGroup,
-      supportsOptionalUpdates,
+      supportsOptionalMigrations,
       version: packageJson.version,
       ...(resolvedPromptFiles ? { resolvedPromptFiles } : {}),
     };
@@ -1951,14 +2040,14 @@ function readPackageMigrationConfig(
       packageJson: json,
       migrations: migrationFile,
       packageGroup: config.packageGroup,
-      supportsOptionalUpdates: config.supportsOptionalUpdates,
+      supportsOptionalMigrations: config.supportsOptionalMigrations,
     };
   } catch {
     return {
       packageJson: json,
       migrations: null,
       packageGroup: config.packageGroup,
-      supportsOptionalUpdates: config.supportsOptionalUpdates,
+      supportsOptionalMigrations: config.supportsOptionalMigrations,
     };
   }
 }
@@ -2145,12 +2234,14 @@ function readNxVersion(packageJson: PackageJson, root: string) {
   );
 }
 
-async function generateMigrationsJsonAndUpdatePackageJson(
+// Exported for testing the optional-include orchestration seam (see NXC-4590).
+export async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: GenerateMigrations,
   fetch?: MigratorOptions['fetch']
 ) {
   const pmc = getPackageManagerCommand();
+  let phase: MigrateGenerateErrorCode = 'fetch_migrations';
   try {
     const rootPkgJsonPath = join(root, 'package.json');
     let originalPackageJson = existsSync(rootPkgJsonPath)
@@ -2162,6 +2253,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       readNxVersion(originalPackageJson, root);
 
     const include = opts.include;
+    setMigrateInclude(include);
 
     let walkedTargetPackage = opts.targetPackage;
     let fromOverrides = opts.from;
@@ -2231,9 +2323,11 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // surface a stale historical pin that would write a lower version than
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
+    phase = 'package_updates';
+    // Resolve catalog: specifiers first so the filter compares real versions.
     const writableUpdates = filterDowngradedUpdates(
       packageUpdates,
-      originalPackageJson,
+      resolveCatalogSpecifiers(originalPackageJson),
       installedPackageVersions
     );
 
@@ -2243,11 +2337,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       writableUpdates
     );
 
+    // Under `--include=optional` the target's own entry is filtered out of
+    // `packageUpdates` (it's a required package), so resolve the version
+    // defensively. Also reused by the completion analytics below.
+    const resolvedTargetVersion =
+      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+
     const promptMigrationFiles = writePromptMigrationFiles(
       root,
       migrations,
       promptContents ?? {},
-      packageUpdates[walkedTargetPackage].version
+      resolvedTargetVersion
     );
 
     if (migrations.length > 0) {
@@ -2264,6 +2364,28 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
+    // The param expressions below evaluate before the report function is
+    // entered; `safeReport` keeps them inside the analytics boundary so a
+    // param-building throw can't surface here and convert an already
+    // successful migrate into a reported failure.
+    const recordCompletion = () =>
+      safeReport(() =>
+        reportMigrateGenerateComplete({
+          targetVersion: resolvedTargetVersion,
+          requestedTargetVersion:
+            opts.originalTargetVersion ?? resolvedTargetVersion,
+          installedTargetVersion: isNxTarget(
+            opts.targetPackage,
+            opts.targetVersion
+          )
+            ? from
+            : installedPackageVersions(opts.targetPackage),
+          include,
+          multiMajorChoice: opts.multiMajorChoice,
+          fetchStats: resolvedFetch.stats,
+        })
+      );
+
     const noChanges =
       !wrotePackageJson && !wroteNxJsonInstallation && migrations.length === 0;
 
@@ -2279,6 +2401,7 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       });
       // Nothing was applied; skip the "Next steps" guidance below — it would
       // tell the user to inspect package.json changes that don't exist.
+      recordCompletion();
       return;
     }
 
@@ -2376,7 +2499,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       title: 'Next steps:',
       bodyLines,
     });
+
+    recordCompletion();
   } catch (e) {
+    reportMigrateGenerateError(phase, e);
     output.error({
       title: `The migrate command failed.`,
     });
@@ -2849,6 +2975,9 @@ export async function executeMigrations(
     // Content-sensitive so a dirty→dirty case (this migration mutating an
     // already-dirty shared file like `package.json`) doesn't collapse.
     const baselineWorkingTreeSnapshot = getUncommittedChangesSnapshot(root);
+    // Tracks whether a failure originated in the agentic step so the error
+    // event classifies it as 'agentic' rather than 'migration_exec'.
+    let inAgenticStep = false;
     try {
       // Read this migration's collection once and derive everything from it:
       // the implementation context (passed to runNxOrAngularMigration) and the
@@ -2863,6 +2992,7 @@ export async function executeMigrations(
       let commit: CommitState = { kind: 'none' };
       if (isPromptOnlyMigration(m)) {
         if (agenticRun) {
+          inAgenticStep = true;
           const stepResult = await agenticRun.runStep({
             root,
             migration: m,
@@ -2871,6 +3001,7 @@ export async function executeMigrations(
             installDepsIfChanged,
             documentationPath,
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
@@ -2902,6 +3033,7 @@ export async function executeMigrations(
           // agent runs — the prompt half may depend on them being present in
           // node_modules.
           await installDepsIfChanged();
+          inAgenticStep = true;
           const stepResult = await agenticRun.runStep({
             root,
             migration: m,
@@ -2919,6 +3051,7 @@ export async function executeMigrations(
               hasDiffContext: agenticHasDiffContext && !hasPendingCommitDebt(),
             },
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous ? 'Marked complete by user' : 'Applied',
@@ -2978,6 +3111,7 @@ export async function executeMigrations(
           // Install any deps the deterministic phase added/bumped before the
           // validation agent runs — the agent may run tasks that need them.
           await installDepsIfChanged();
+          inAgenticStep = true;
           const stepResult = await validationRun.runStep({
             root,
             migration: m,
@@ -2995,6 +3129,7 @@ export async function executeMigrations(
             },
             mode: 'generic-validation',
           });
+          inAgenticStep = false;
           commit = await attemptMigrationCommit(m);
           logAgenticSuccessOutcome(
             stepResult.ambiguous
@@ -3045,6 +3180,21 @@ export async function executeMigrations(
             ? { kind: 'failed' }
             : { kind: 'none' },
       });
+      // `nx repair` reuses executeMigrations; only record for migrate runs.
+      if (hasMigrateRunStarted()) {
+        reportMigrateRunError({
+          code:
+            e instanceof NpmPeerDepsInstallError
+              ? 'npm_install'
+              : inAgenticStep
+                ? 'agentic'
+                : 'migration_exec',
+          migrationPackage: m.package,
+          migrationName: m.name,
+          migrationCount: totalMigrations,
+          error: e,
+        });
+      }
       if (!(e instanceof NpmPeerDepsInstallError)) {
         // `withGeneratorOutputCapture` attaches the generator's `console.*`
         // output as `capturedLogs` (best-effort; may be absent). Surface it
@@ -3285,13 +3435,24 @@ async function runMigrations(
     join(root, opts.runMigrations)
   ).migrations;
 
+  reportMigrateRunStart({
+    createCommits: shouldCreateCommits ?? false,
+    migrationCount: migrations.length,
+  });
+
   const { resolveAgentic } =
     require('./agentic/select') as typeof import('./agentic/select');
-  const agentic = await resolveAgentic({
-    agentic: opts.agentic,
-    migrations,
-    interactive: opts.interactive,
-  });
+  let agentic: ResolvedAgentic;
+  try {
+    agentic = await resolveAgentic({
+      agentic: opts.agentic,
+      migrations,
+      interactive: opts.interactive,
+    });
+  } catch (e) {
+    reportMigrateRunError({ code: 'agentic', error: e });
+    throw e;
+  }
 
   const {
     effective: effectiveCreateCommits,
@@ -3454,6 +3615,14 @@ async function runMigrations(
       bodyLines: bodyLines.map((line) => `- ${line}`),
     });
   }
+
+  reportMigrateRunComplete({
+    agenticOutcome: agentic.kind,
+    agentUsed:
+      agentic.kind === 'enabled' ? agentic.selectedAgent.id : undefined,
+    migrationCount: migrations.length,
+    appliedCount,
+  });
 }
 
 function getStringifiedPackageJsonDeps(root: string): string {
@@ -3547,7 +3716,18 @@ export async function migrate(
     // eligibility gate and the migration cascade so package metadata is fetched
     // at most once per package/version.
     const fetch = createFetcher(getPackageManagerCommand());
-    const opts = await parseMigrationsOptions(mergedArgs, fetch);
+    // `--run-migrations` without a value parses as '' - undefined means the
+    // generate phase.
+    const isGenerateInvocation = mergedArgs['runMigrations'] === undefined;
+    let opts: Awaited<ReturnType<typeof parseMigrationsOptions>>;
+    try {
+      opts = await parseMigrationsOptions(mergedArgs, fetch);
+    } catch (e) {
+      if (isGenerateInvocation) {
+        reportMigrateGenerateError('resolve_version', e);
+      }
+      throw e;
+    }
     if (opts.type === 'generateMigrations') {
       await generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch);
     } else {
@@ -3566,8 +3746,10 @@ export async function migrate(
         // the error here so `handleErrors` doesn't print a noisy stack after
         // the friendly output.
         if (e instanceof NpmPeerDepsInstallError) {
+          reportMigrateRunError({ code: 'npm_install', error: e });
           return 1;
         }
+        reportMigrateRunError({ code: 'other', error: e });
         throw e;
       }
     }

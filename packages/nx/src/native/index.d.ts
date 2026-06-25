@@ -314,6 +314,24 @@ export interface EventDimensions {
   taskCount: string
   projectCount: string
   cachedTaskCount: string
+  cliSource: string
+  interactive: string
+  excludeAppliedMigrations: string
+  include: string
+  includeSource: string
+  multiMajorChoice: string
+  fetchMethod: string
+  fetchFallbackReason: string
+  createCommits: string
+  agenticOutcome: string
+  agentUsed: string
+  errorName: string
+  errorLocation: string
+  migrationName: string
+  promptChoice: string
+  majorsCrossed: string
+  migrationCount: string
+  appliedCount: string
 }
 
 export declare const enum EventType {

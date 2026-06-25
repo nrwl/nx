@@ -47,15 +47,15 @@
       "packages": {
         "webpack": {
           "version": "^5.101.3",
-          "alwaysAddToPackageJson": true
+          "alwaysAddToPackageJson": "devDependencies"
         },
         "webpack-dev-server": {
           "version": "^5.2.1",
-          "alwaysAddToPackageJson": true
+          "alwaysAddToPackageJson": "devDependencies"
         },
         "webpack-cli": {
           "version": "^7.0.0",
-          "alwaysAddToPackageJson": true
+          "alwaysAddToPackageJson": "devDependencies"
         }
       }
     }

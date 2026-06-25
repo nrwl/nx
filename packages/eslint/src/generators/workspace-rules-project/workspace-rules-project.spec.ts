@@ -32,11 +32,9 @@ describe('@nx/eslint:workspace-rules-project', () => {
     });
     await lintWorkspaceRulesProjectGenerator(tree);
 
-    const td = readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults!;
-    const lint = Array.isArray(td)
-      ? td.find((e) => e.target === 'lint')
-      : td.lint;
-    expect(lint?.inputs).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults.lint.inputs
+    ).toContain('{workspaceRoot}/tools/eslint-rules/**/*');
   });
 
   it('should generate the required files', async () => {

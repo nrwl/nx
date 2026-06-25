@@ -19,10 +19,10 @@ export const vitePluginReactSwcVersion = '^4.3.0';
 export const jsdomVersion = '^27.1.0';
 export const vitePluginDtsVersion = '~4.5.0';
 export const ajvVersion = '^8.0.0';
-export const happyDomVersion = '~9.20.3';
+export const happyDomVersion = '^20.10.4';
 export const edgeRuntimeVmVersion = '~3.0.2';
 export const jitiVersion = '2.4.2';
-export const analogVitestAngular = '~2.1.2';
+export const analogVitestAngular = '~2.6.0';
 
 type VitestVersions = {
   vitestVersion: string;

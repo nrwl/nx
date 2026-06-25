@@ -182,38 +182,6 @@ describe('readTargetsFromPackageJson', () => {
         "options": {},
       }
     `);
-
-    const nxJson3 = {
-      targetDefaults: [
-        {
-          target: 'nx-release-publish',
-          executor: '@nx/js:release-publish',
-          dependsOn: ['build'],
-          options: {
-            dryRun: true,
-          },
-        },
-      ],
-    };
-    const result3 = readTargetsFromPackageJson(
-      packageJson,
-      nxJson3,
-      workspaceRoot,
-      '/root',
-      packageManagerCommand
-    );
-    expect(result3['nx-release-publish']).toMatchInlineSnapshot(`
-      {
-        "dependsOn": [
-          "^nx-release-publish",
-          "build",
-        ],
-        "executor": "@nx/js:release-publish",
-        "options": {
-          "dryRun": true,
-        },
-      }
-    `);
   });
 
   it('should read targets from project.json and package.json', () => {
@@ -886,50 +854,50 @@ catalogs:
 });
 
 describe('readNxMigrateConfig', () => {
-  it('should carry supportsOptionalUpdates from the nx-migrations config', () => {
+  it('should carry supportsOptionalMigrations from the nx-migrations config', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: true,
+        supportsOptionalMigrations: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsOptionalUpdates: true,
+      supportsOptionalMigrations: true,
     });
   });
 
-  it('should carry supportsOptionalUpdates from the ng-update config', () => {
+  it('should carry supportsOptionalMigrations from the ng-update config', () => {
     const config = readNxMigrateConfig({
       'ng-update': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: true,
+        supportsOptionalMigrations: true,
       },
     });
 
     expect(config).toMatchObject({
       migrations: './migrations.json',
-      supportsOptionalUpdates: true,
+      supportsOptionalMigrations: true,
     });
   });
 
-  it('should not set supportsOptionalUpdates when the config omits it', () => {
+  it('should not set supportsOptionalMigrations when the config omits it', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': { migrations: './migrations.json' },
     });
 
-    expect(config.supportsOptionalUpdates).toBeUndefined();
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 
-  it('should not set supportsOptionalUpdates when the config sets it to false', () => {
+  it('should not set supportsOptionalMigrations when the config sets it to false', () => {
     const config = readNxMigrateConfig({
       'nx-migrations': {
         migrations: './migrations.json',
-        supportsOptionalUpdates: false,
+        supportsOptionalMigrations: false,
       },
     });
 
-    expect(config.supportsOptionalUpdates).toBeUndefined();
+    expect(config.supportsOptionalMigrations).toBeUndefined();
   });
 });

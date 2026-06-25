@@ -425,12 +425,6 @@ export function interpolate(template: string, data: any): string {
     );
   }
 
-  if (data.projectRoot == '.' && template.includes('{projectRoot}', 1)) {
-    throw new Error(
-      `Output '${template}' is invalid. When {projectRoot} is '.', it can only be used at the beginning of the expression.`
-    );
-  }
-
   const parts = template.split('/').map((s) => _interpolate(s, data));
 
   return join(...parts).replace('{workspaceRoot}/', '');

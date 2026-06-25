@@ -57,7 +57,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
@@ -112,6 +112,7 @@
     "jest-config": "catalog:jest",
     "jest-resolve": "catalog:jest",
     "jest-util": "catalog:jest",
+    "jsonc-parser": "catalog:",
     "minimatch": "catalog:",
     "picocolors": "catalog:",
     "resolve.exports": "2.0.3",

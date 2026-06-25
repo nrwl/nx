@@ -162,10 +162,10 @@
     "@nx/nest": "workspace:*"
   },
   "peerDependencies": {
-    "@rspack/cli": "^1.0.0",
-    "@rspack/core": "^1.0.0",
-    "@rspack/dev-server": "^1.0.0",
-    "@rspack/plugin-react-refresh": "^1.0.0"
+    "@rspack/cli": "^1.0.0 || ^2.0.0",
+    "@rspack/core": "^1.0.0 || ^2.0.0",
+    "@rspack/dev-server": "^1.0.0 || ^2.0.0",
+    "@rspack/plugin-react-refresh": "^1.0.0 || ^2.0.0"
   },
   "peerDependenciesMeta": {
     "@rspack/cli": {
@@ -183,7 +183,7 @@
   },
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "publishConfig": {
     "access": "public"

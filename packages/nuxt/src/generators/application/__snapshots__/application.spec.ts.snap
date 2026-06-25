@@ -49,9 +49,8 @@ exports[`app Nuxt v4 with app directory structure should create all files in cor
   "my-app/tsconfig.app.json",
   "my-app/tsconfig.json",
   ".gitignore",
-  ".eslintrc.json",
-  ".eslintignore",
-  "my-app/.eslintrc.json",
+  "eslint.config.mjs",
+  "my-app/eslint.config.mjs",
   "my-app/tsconfig.spec.json",
   "vitest.workspace.ts",
   "my-app/vitest.config.ts",
@@ -59,7 +58,7 @@ exports[`app Nuxt v4 with app directory structure should create all files in cor
   "my-app-e2e/src/example.spec.ts",
   "my-app-e2e/playwright.config.mts",
   "my-app-e2e/tsconfig.json",
-  "my-app-e2e/.eslintrc.json",
+  "my-app-e2e/eslint.config.mjs",
   ".vscode/extensions.json",
 ]
 `;
@@ -315,9 +314,8 @@ exports[`app generated files content - as-provided - my-app general application 
   "my-app/tsconfig.app.json",
   "my-app/tsconfig.json",
   ".gitignore",
-  ".eslintrc.json",
-  ".eslintignore",
-  "my-app/.eslintrc.json",
+  "eslint.config.mjs",
+  "my-app/eslint.config.mjs",
   "my-app/tsconfig.spec.json",
   "vitest.workspace.ts",
   "my-app/vitest.config.ts",
@@ -325,7 +323,7 @@ exports[`app generated files content - as-provided - my-app general application 
   "my-app-e2e/src/example.spec.ts",
   "my-app-e2e/playwright.config.mts",
   "my-app-e2e/tsconfig.json",
-  "my-app-e2e/.eslintrc.json",
+  "my-app-e2e/eslint.config.mjs",
   ".vscode/extensions.json",
 ]
 `;
@@ -700,9 +698,8 @@ exports[`app generated files content - as-provided - myApp general application s
   "myApp/tsconfig.app.json",
   "myApp/tsconfig.json",
   ".gitignore",
-  ".eslintrc.json",
-  ".eslintignore",
-  "myApp/.eslintrc.json",
+  "eslint.config.mjs",
+  "myApp/eslint.config.mjs",
   "myApp/tsconfig.spec.json",
   "vitest.workspace.ts",
   "myApp/vitest.config.ts",
@@ -710,7 +707,7 @@ exports[`app generated files content - as-provided - myApp general application s
   "myApp-e2e/src/example.spec.ts",
   "myApp-e2e/playwright.config.mts",
   "myApp-e2e/tsconfig.json",
-  "myApp-e2e/.eslintrc.json",
+  "myApp-e2e/eslint.config.mjs",
   ".vscode/extensions.json",
 ]
 `;

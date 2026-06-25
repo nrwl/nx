@@ -4,17 +4,10 @@ import {
   readProjectConfiguration,
   updateJson,
   type NxJsonConfiguration,
-  type TargetDefaultsRecord,
   type Tree,
 } from '@nx/devkit';
 import * as devkit from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-
-// This migration ran before targetDefaults supported the array shape, so
-// the test fixtures all use the legacy record shape.
-type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaultsRecord;
-};
 import migration, {
   executors,
 } from './remove-tailwind-config-from-ng-packagr-executors';
@@ -137,7 +130,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
   it.each(executors)(
     'should delete "tailwindConfig" option in nx.json target defaults for a target with the "%s" executor',
     async (executor) => {
-      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
@@ -161,7 +154,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       await migration(tree);
 
-      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
         nxJson.targetDefaults.build.options.tailwindConfig
       ).toBeUndefined();
@@ -177,7 +170,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
   it.each(executors)(
     'should delete empty target defaults for a target with the "%s" executor',
     async (executor) => {
-      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.targetDefaults ??= {};
         json.targetDefaults.build = {
           executor,
@@ -198,7 +191,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       await migration(tree);
 
-      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(nxJson.targetDefaults.build).toBeUndefined();
     }
   );
@@ -206,7 +199,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
   it.each(executors)(
     'should delete "tailwindConfig" option in nx.json target defaults for the "%s" executor',
     async (executor) => {
-      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.targetDefaults ??= {};
         json.targetDefaults[executor] = {
           options: {
@@ -229,7 +222,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       await migration(tree);
 
-      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       expect(
         nxJson.targetDefaults[executor].options.tailwindConfig
       ).toBeUndefined();
@@ -246,7 +239,7 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
   it.each(executors)(
     'should delete empty target defaults for a target with the "%s" executor',
     async (executor) => {
-      updateJson<LegacyNxJson>(tree, 'nx.json', (json) => {
+      updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
         json.targetDefaults ??= {};
         json.targetDefaults[executor] = {
           options: {
@@ -266,69 +259,9 @@ describe('remove-tailwind-config-from-ng-packagr-executors migration', () => {
 
       await migration(tree);
 
-      const nxJson = readJson<LegacyNxJson>(tree, 'nx.json');
+      const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
       console.log(nxJson.targetDefaults);
       expect(nxJson.targetDefaults[executor]).toBeUndefined();
     }
   );
-
-  describe('array-shape targetDefaults', () => {
-    it.each(executors)(
-      'should strip "tailwindConfig" from an executor-keyed array entry for "%s"',
-      async (executor) => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-          json.targetDefaults = [
-            {
-              executor,
-              options: { tailwindConfig: '{projectRoot}/tailwind.config.js' },
-              configurations: {
-                development: {
-                  tailwindConfig: '{projectRoot}/tailwind.config.dev.js',
-                },
-              },
-            },
-          ];
-          return json;
-        });
-
-        await migration(tree);
-
-        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-        // The entry's only payload was tailwindConfig — once stripped the
-        // entry has nothing left beyond `executor`, so it gets dropped and
-        // the empty `targetDefaults` is removed entirely.
-        expect(nxJson.targetDefaults).toBeUndefined();
-      }
-    );
-
-    it.each(executors)(
-      'should keep an entry that retains other options after stripping tailwindConfig (executor "%s")',
-      async (executor) => {
-        updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
-          json.targetDefaults = [
-            {
-              target: 'build',
-              executor,
-              options: {
-                project: 'libs/lib1/ng-package.json',
-                tailwindConfig: '{projectRoot}/tailwind.config.js',
-              },
-            },
-          ];
-          return json;
-        });
-
-        await migration(tree);
-
-        const nxJson = readJson<NxJsonConfiguration>(tree, 'nx.json');
-        expect(nxJson.targetDefaults).toEqual([
-          {
-            target: 'build',
-            executor,
-            options: { project: 'libs/lib1/ng-package.json' },
-          },
-        ]);
-      }
-    );
-  });
 });

@@ -6,6 +6,7 @@ import {
 import { getModuleFederationConfig } from './utils';
 import type { NormalModuleReplacementPlugin } from 'webpack';
 import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -14,7 +15,7 @@ export async function withModuleFederationForSSR(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(

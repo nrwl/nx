@@ -177,7 +177,12 @@ nx start-ci-run --distribute-on="5 my-linux-medium-js" --with-env-vars="SOME_AUT
 
 ## Custom node version
 
-Nx Agents come with node LTS installed. If you want to use a different version, you can add a step to install the desired node version.
+Nx Agents come with node LTS installed. If you want to enforce a different version, add a step to install the desired node version. To keep local development, CI, and Nx Agents on the same version, commit the version to your repository and let the install step read it, rather than hardcoding a version in the launch template.
+
+Which file the step reads depends on which step you use:
+
+- The `install-node` step reads a `.nvmrc` file or the `volta.node` field in `package.json`.
+- The mise step reads a `mise.toml` file.
 
 {% tabs %}
 {% tabitem label="mise" %}
@@ -204,9 +209,17 @@ launch-templates:
 ```
 
 {% /tabitem %}
-{% tabitem label="nvm" %}
+{% tabitem label="install-node step" %}
 
-Nx Cloud provides a [pre-built step to install a custom node version](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-node) within your workflow. This step is available as of `v4` of the workflow steps and requires the minimum image version to be `ubuntu22.04-node20.11-v9` or later.
+Nx Cloud provides a [pre-built `install-node` step](https://github.com/nrwl/nx-cloud-workflows/tree/main/workflow-steps/install-node) to install a custom node version within your workflow. This step is available as of `v4` of the workflow steps and requires the minimum image version to be `ubuntu22.04-node20.11-v9` or later.
+
+The step resolves the node version in this order, using the first source it finds:
+
+1. The `node_version` input, if provided
+2. A `.nvmrc` file in the root of the repository
+3. The `volta.node` field in your root `package.json`
+
+If none of these are set, the agent keeps the node version that ships with the image.
 
 ```yaml
 // .nx/workflows/agents.yaml
@@ -223,7 +236,8 @@ launch-templates:
         # note the step is only released as of v4 of the workflow steps
         uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node/main.yaml'
         inputs:
-          # can omit value if a '.nvmrc' file is within the root of the repo
+          # omit this input to read the version from a '.nvmrc'
+          # file or the 'volta.node' field in package.json
           node_version: '21'
 ```
 

@@ -113,7 +113,6 @@ describe('@nx/workspace:generateWorkspaceFiles', () => {
 
   it('should create nx.json', async () => {
     const ajv = new Ajv();
-    ajv.addKeyword('deprecationMessage');
 
     await generateWorkspaceFiles(tree, {
       name: 'proj',

@@ -51,7 +51,7 @@
       "nx-cloud": "latest",
       "nx": "*"
     },
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {

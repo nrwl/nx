@@ -1,17 +1,23 @@
-import { waitForPortOpen } from '@nx/web/internal';
+import { createServer } from 'net';
 
 /**
- * Check if a port is already in use by attempting to connect to it.
- * Uses waitForPortOpen with retries: 0 for an immediate check.
+ * Check if a port is in use by attempting to bind to it. Binding is local and
+ * resolves immediately, so unlike a connection-based check it never stalls on
+ * the OS TCP connect timeout when `localhost` resolves to an unreachable address
+ * (e.g. IPv6 `::1`) -- the cause of the `nx serve` hang in #33909.
  */
-export async function isPortInUse(
+export function isPortInUse(
   port: number,
   host: string = 'localhost'
 ): Promise<boolean> {
-  try {
-    await waitForPortOpen(port, { retries: 0, host });
-    return true; // Port is open/in use
-  } catch {
-    return false; // Port is not in use
-  }
+  return new Promise((resolve) => {
+    const server = createServer();
+    server.once('error', (err: NodeJS.ErrnoException) => {
+      resolve(err.code === 'EADDRINUSE');
+    });
+    server.once('listening', () => {
+      server.close(() => resolve(false));
+    });
+    server.listen(port, host);
+  });
 }

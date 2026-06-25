@@ -5,6 +5,24 @@ import {
 import type { Tree } from 'nx/src/generators/tree';
 import { clean, coerce, major } from 'semver';
 import {
+  // v56 versions
+  expoV56Version,
+  expoV56SplashScreenVersion,
+  expoV56StatusBarVersion,
+  expoV56SystemUiVersion,
+  expoV56CliVersion,
+  babelPresetExpoV56Version,
+  expoV56MetroVersion,
+  expoV56MetroConfigVersion,
+  expoV56MetroRuntimeVersion,
+  jestExpoV56Version,
+  reactV56Version,
+  reactDomV56Version,
+  typesReactV56Version,
+  reactNativeV56Version,
+  metroV56Version,
+  reactNativeWebV56Version,
+  reactTestRendererV56Version,
   // v55 versions
   expoV55Version,
   expoV55SplashScreenVersion,
@@ -12,6 +30,7 @@ import {
   expoV55SystemUiVersion,
   expoV55CliVersion,
   babelPresetExpoV55Version,
+  expoV55MetroVersion,
   expoV55MetroConfigVersion,
   expoV55MetroRuntimeVersion,
   jestExpoV55Version,
@@ -70,6 +89,7 @@ export type ExpoDependenciesVersions = {
   expoSystemUi: string;
   expoCli: string;
   babelPresetExpo: string;
+  expoMetro?: string;
   expoMetroConfig: string;
   expoMetroRuntime: string;
   jestExpo: string;
@@ -95,81 +115,104 @@ const sharedVersions = {
   babelRuntime: babelRuntimeVersion,
 };
 
-// Per-major Expo install lanes. 55 is the latest/default; 53 and 54 are kept
-// for existing workspaces. Anything outside this window routes to 55 — the
+// Per-major Expo install lanes. 56 is the latest/default; 53, 54 and 55 are
+// kept for existing workspaces. Anything outside this window routes to 56 — the
 // below-floor throw is assertSupportedExpoVersion's job, not the router's.
-const expoVersionsByMajor: Record<53 | 54 | 55, ExpoDependenciesVersions> = {
-  53: {
-    expo: expoV53Version,
-    expoSplashScreen: expoV53SplashScreenVersion,
-    expoStatusBar: expoV53StatusBarVersion,
-    expoSystemUi: expoV53SystemUiVersion,
-    expoCli: expoV53CliVersion,
-    babelPresetExpo: babelPresetExpoV53Version,
-    expoMetroConfig: expoV53MetroConfigVersion,
-    expoMetroRuntime: expoV53MetroRuntimeVersion,
-    jestExpo: jestExpoV53Version,
-    react: reactV53Version,
-    reactDom: reactDomV53Version,
-    typesReact: typesReactV53Version,
-    reactNative: reactNativeV53Version,
-    metro: metroV53Version,
-    reactNativeWeb: reactNativeWebV53Version,
-    reactTestRenderer: reactTestRendererV53Version,
-    ...sharedVersions,
-  },
-  54: {
-    expo: expoV54Version,
-    expoSplashScreen: expoV54SplashScreenVersion,
-    expoStatusBar: expoV54StatusBarVersion,
-    expoSystemUi: expoV54SystemUiVersion,
-    expoCli: expoV54CliVersion,
-    babelPresetExpo: babelPresetExpoV54Version,
-    expoMetroConfig: expoV54MetroConfigVersion,
-    expoMetroRuntime: expoV54MetroRuntimeVersion,
-    jestExpo: jestExpoV54Version,
-    react: reactV54Version,
-    reactDom: reactDomV54Version,
-    typesReact: typesReactV54Version,
-    reactNative: reactNativeV54Version,
-    metro: metroV54Version,
-    reactNativeWeb: reactNativeWebV54Version,
-    reactTestRenderer: reactTestRendererV54Version,
-    ...sharedVersions,
-  },
-  55: {
-    expo: expoV55Version,
-    expoSplashScreen: expoV55SplashScreenVersion,
-    expoStatusBar: expoV55StatusBarVersion,
-    expoSystemUi: expoV55SystemUiVersion,
-    expoCli: expoV55CliVersion,
-    babelPresetExpo: babelPresetExpoV55Version,
-    expoMetroConfig: expoV55MetroConfigVersion,
-    expoMetroRuntime: expoV55MetroRuntimeVersion,
-    jestExpo: jestExpoV55Version,
-    react: reactV55Version,
-    reactDom: reactDomV55Version,
-    typesReact: typesReactV55Version,
-    reactNative: reactNativeV55Version,
-    metro: metroV55Version,
-    reactNativeWeb: reactNativeWebV55Version,
-    reactTestRenderer: reactTestRendererV55Version,
-    ...sharedVersions,
-  },
-};
+const expoVersionsByMajor: Record<53 | 54 | 55 | 56, ExpoDependenciesVersions> =
+  {
+    53: {
+      expo: expoV53Version,
+      expoSplashScreen: expoV53SplashScreenVersion,
+      expoStatusBar: expoV53StatusBarVersion,
+      expoSystemUi: expoV53SystemUiVersion,
+      expoCli: expoV53CliVersion,
+      babelPresetExpo: babelPresetExpoV53Version,
+      expoMetroConfig: expoV53MetroConfigVersion,
+      expoMetroRuntime: expoV53MetroRuntimeVersion,
+      jestExpo: jestExpoV53Version,
+      react: reactV53Version,
+      reactDom: reactDomV53Version,
+      typesReact: typesReactV53Version,
+      reactNative: reactNativeV53Version,
+      metro: metroV53Version,
+      reactNativeWeb: reactNativeWebV53Version,
+      reactTestRenderer: reactTestRendererV53Version,
+      ...sharedVersions,
+    },
+    54: {
+      expo: expoV54Version,
+      expoSplashScreen: expoV54SplashScreenVersion,
+      expoStatusBar: expoV54StatusBarVersion,
+      expoSystemUi: expoV54SystemUiVersion,
+      expoCli: expoV54CliVersion,
+      babelPresetExpo: babelPresetExpoV54Version,
+      expoMetroConfig: expoV54MetroConfigVersion,
+      expoMetroRuntime: expoV54MetroRuntimeVersion,
+      jestExpo: jestExpoV54Version,
+      react: reactV54Version,
+      reactDom: reactDomV54Version,
+      typesReact: typesReactV54Version,
+      reactNative: reactNativeV54Version,
+      metro: metroV54Version,
+      reactNativeWeb: reactNativeWebV54Version,
+      reactTestRenderer: reactTestRendererV54Version,
+      ...sharedVersions,
+    },
+    55: {
+      expo: expoV55Version,
+      expoSplashScreen: expoV55SplashScreenVersion,
+      expoStatusBar: expoV55StatusBarVersion,
+      expoSystemUi: expoV55SystemUiVersion,
+      expoCli: expoV55CliVersion,
+      babelPresetExpo: babelPresetExpoV55Version,
+      expoMetro: expoV55MetroVersion,
+      expoMetroConfig: expoV55MetroConfigVersion,
+      expoMetroRuntime: expoV55MetroRuntimeVersion,
+      jestExpo: jestExpoV55Version,
+      react: reactV55Version,
+      reactDom: reactDomV55Version,
+      typesReact: typesReactV55Version,
+      reactNative: reactNativeV55Version,
+      metro: metroV55Version,
+      reactNativeWeb: reactNativeWebV55Version,
+      reactTestRenderer: reactTestRendererV55Version,
+      ...sharedVersions,
+    },
+    56: {
+      expo: expoV56Version,
+      expoSplashScreen: expoV56SplashScreenVersion,
+      expoStatusBar: expoV56StatusBarVersion,
+      expoSystemUi: expoV56SystemUiVersion,
+      expoCli: expoV56CliVersion,
+      babelPresetExpo: babelPresetExpoV56Version,
+      expoMetro: expoV56MetroVersion,
+      expoMetroConfig: expoV56MetroConfigVersion,
+      expoMetroRuntime: expoV56MetroRuntimeVersion,
+      jestExpo: jestExpoV56Version,
+      react: reactV56Version,
+      reactDom: reactDomV56Version,
+      typesReact: typesReactV56Version,
+      reactNative: reactNativeV56Version,
+      metro: metroV56Version,
+      reactNativeWeb: reactNativeWebV56Version,
+      reactTestRenderer: reactTestRendererV56Version,
+      ...sharedVersions,
+    },
+  };
 
 /**
  * Get the appropriate dependency versions based on the installed Expo version.
- * Returns v53 or v54 versions when those are detected, otherwise v55 (latest).
+ * Returns the matching lane for v53/v54/v55 when detected, otherwise v56
+ * (latest).
  */
 export async function getExpoDependenciesVersionsToInstall(
   tree: Tree
 ): Promise<ExpoDependenciesVersions> {
   const installedMajor = await getInstalledExpoMajor(tree);
-  if (installedMajor === 53 || installedMajor === 54) {
+  if (installedMajor === 53 || installedMajor === 54 || installedMajor === 55) {
     return expoVersionsByMajor[installedMajor];
   }
-  return expoVersionsByMajor[55];
+  return expoVersionsByMajor[56];
 }
 
 /**
@@ -177,7 +220,9 @@ export async function getExpoDependenciesVersionsToInstall(
  * the project graph, falling back to the declared package.json version.
  * Returns null when Expo isn't installed.
  */
-async function getInstalledExpoMajor(tree: Tree): Promise<number | null> {
+export async function getInstalledExpoMajor(
+  tree: Tree
+): Promise<number | null> {
   const installedExpoVersion =
     (await getInstalledExpoVersionFromGraph()) ?? getInstalledExpoVersion(tree);
   return installedExpoVersion ? major(installedExpoVersion) : null;

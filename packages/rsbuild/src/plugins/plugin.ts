@@ -168,7 +168,9 @@ async function createRsbuildTargets(
 
   // Required lazily: `@rsbuild/core` is an optional peer dependency, so it
   // may be absent when the plugin is loaded in a workspace that doesn't use
-  // Rsbuild yet (e.g. before a generator installs it).
+  // Rsbuild yet (e.g. before a generator installs it). This path runs in
+  // the CLI/daemon (never Jest), so a plain require works on Node 22.12+
+  // via require(esm) for the pure-ESM @rsbuild/core@2.
   const { loadConfig } =
     require('@rsbuild/core') as typeof import('@rsbuild/core');
   const rsbuildConfig = await loadConfig({

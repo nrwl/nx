@@ -14,6 +14,8 @@ import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
+import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.compile.AbstractCompile
@@ -29,6 +31,27 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
+
+// AGP task classes aren't on our classpath; resolve by name (like isKotlinCompileTask).
+// Maintained allow-list of AGP producers whose outputs feed downstream tasks.
+// FQCNs (esp. internal.tasks.*) can move between AGP majors; verify per version.
+private val agpCopyLikeClasses: List<Class<*>> by lazy {
+  listOf(
+          "com.android.build.gradle.tasks.MergeResources",
+          "com.android.build.gradle.tasks.MergeSourceSetFolders",
+          "com.android.build.gradle.tasks.ProcessApplicationManifest",
+          "com.android.build.gradle.internal.tasks.MergeJavaResourceTask",
+      )
+      .mapNotNull { name ->
+        try {
+          Class.forName(name)
+        } catch (e: Throwable) {
+          null
+        }
+      }
+}
+
+private fun isAgpCopyLikeTask(task: Task): Boolean = agpCopyLikeClasses.any { it.isInstance(task) }
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -124,7 +147,8 @@ private fun processTaskImpl(
     put("taskName", "${projectBuildPath}:${task.name}")
     val providerDependencies = findProviderBasedDependencies(task)
     if (providerDependencies.isNotEmpty()) {
-      put("includeDependsOnTasks", providerDependencies.toList())
+      // sorted(): set iteration order is JVM-run-dependent; keep options hash-stable.
+      put("includeDependsOnTasks", providerDependencies.sorted())
     }
     if (continuous) {
       put("continuous", true)
@@ -191,6 +215,16 @@ fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): S
     }
     if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
       extensions.add("class")
+    }
+    if (depTask is Copy || depTask is Sync || isAgpCopyLikeTask(depTask)) {
+      try {
+        depTask.inputs.files.forEach { f ->
+          if (f.isFile && f.extension.isNotEmpty()) extensions.add(f.extension)
+        }
+      } catch (e: Exception) {
+        task.logger.debug(
+            "Could not read copy/merge source inputs for ${depTask.path}: ${e.message}")
+      }
     }
   }
 
@@ -285,10 +319,12 @@ private fun getInputsForTaskImpl(
     // output directories exist but are empty, so file-based extension discovery misses them)
     dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
 
-    // Add consolidated dependentTasksOutputFiles entries using glob patterns by extension
-    dependentTaskOutputExtensions.forEach { extension ->
-      inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
-    }
+    // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
+    dependentTaskOutputExtensions
+        .filterNot { nonInputDependentOutputExtensions.contains(it) }
+        .forEach { extension ->
+          inputs.add(mapOf("dependentTasksOutputFiles" to "**/*.$extension", "transitive" to true))
+        }
 
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
@@ -578,8 +614,13 @@ fun isContinuous(task: Task): Boolean {
 private val nonCacheableTasks = setOf("bootRun", "run")
 
 fun isCacheable(task: Task): Boolean {
+  // *ToMavenLocal tasks write to ~/.m2 (outside the workspace) — a cache hit skips the real publish
+  if (task.name.endsWith("ToMavenLocal")) return false
   return !nonCacheableTasks.contains(task.name)
 }
+
+// Compiler incremental-compilation state (*.bin) — non-deterministic and not consumed downstream.
+private val nonInputDependentOutputExtensions = setOf("bin")
 
 fun findProviderBasedDependencies(task: Task): Set<String> {
   val taskInternal = task as? TaskInternal ?: return emptySet()

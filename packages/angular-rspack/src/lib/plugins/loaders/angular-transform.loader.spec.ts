@@ -74,6 +74,24 @@ describe('angular-transform.loader', () => {
     );
   });
 
+  it('should emit an empty module when the angular compilation failed', () => {
+    angularTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: {
+          [NG_RSPACK_SYMBOL_NAME]: () => ({
+            typescriptFileCache,
+            angularCompilationFailed: true,
+          }),
+        } as unknown as NgRspackCompilation,
+        resourcePath: '/path/to/file.ts',
+      },
+      'content'
+    );
+
+    expect(callback).toHaveBeenCalledWith(null, '');
+  });
+
   it('should return content when typescriptFileCache does not contain normalizedRequest', () => {
     angularTransformLoader.call(
       {

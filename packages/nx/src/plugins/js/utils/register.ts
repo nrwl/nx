@@ -99,6 +99,10 @@ function ensureEsmLoaderRegistered(opts: { required: boolean }): void {
  * the importing module is itself TypeScript, and the specifier is relative, so
  * it never hijacks resolution that would otherwise succeed.
  *
+ * Used only as the fallback for runtimes without `module.registerHooks()`
+ * (Node < 22.15 / < 23.5); newer runtimes register the in-thread synchronous
+ * twin `nodeNextEsmResolveHook` instead. Keep the two in sync.
+ *
  * Exported so the hook can be exercised directly in unit tests.
  */
 export const NODENEXT_ESM_RESOLVER_SOURCE = `
@@ -126,21 +130,75 @@ export async function resolve(specifier, context, nextResolve) {
 }
 `;
 
+const NODENEXT_EXT_FALLBACK: Record<string, string[]> = {
+  '.js': ['.ts', '.tsx'],
+  '.mjs': ['.mts'],
+  '.cjs': ['.cts'],
+};
+const NODENEXT_TS_PARENT_RE = /\.(?:ts|tsx|mts|cts)(?:$|\?)/;
+
+/**
+ * Synchronous in-thread twin of `NODENEXT_ESM_RESOLVER_SOURCE` for
+ * `module.registerHooks()`: `nextResolve` throws synchronously rather than
+ * rejecting, so this uses try/catch instead of `await`. Keep the two in sync.
+ * Exported for unit tests.
+ */
+export function nodeNextEsmResolveHook(
+  specifier: string,
+  context: { parentURL?: string },
+  nextResolve: (specifier: string, context?: unknown) => { url: string }
+): { url: string } {
+  try {
+    return nextResolve(specifier, context);
+  } catch (err: any) {
+    if (err?.code !== 'ERR_MODULE_NOT_FOUND') throw err;
+    const parent = context.parentURL;
+    if (!parent || !NODENEXT_TS_PARENT_RE.test(parent)) throw err;
+    if (
+      !(
+        specifier.startsWith('./') ||
+        specifier.startsWith('../') ||
+        specifier.startsWith('file:')
+      )
+    ) {
+      throw err;
+    }
+    const m = specifier.match(/(\.(?:js|mjs|cjs))($|\?)/);
+    if (!m) throw err;
+    const fallbacks = NODENEXT_EXT_FALLBACK[m[1]];
+    if (!fallbacks) throw err;
+    const base = specifier.slice(0, m.index);
+    const suffix = specifier.slice(m.index! + m[1].length);
+    for (const ext of fallbacks) {
+      try {
+        return nextResolve(base + ext + suffix, context);
+      } catch {
+        // try the next fallback
+      }
+    }
+    throw err;
+  }
+}
+
 let nodeNextEsmResolverRegistered = false;
 
 /**
- * Register a self-contained ESM resolution hook (via `Module.register`) that
- * rewrites TypeScript NodeNext-style `.js`/`.mjs`/`.cjs` relative specifiers to
- * their `.ts`/`.mts`/`.cts` sources. This is the ESM counterpart to
- * `ensureCjsResolverPatched`: Node's native type stripping loads the `.ts`
- * file, but neither native strip nor Node's ESM resolver rewrites the
- * extension, so `import './foo.js'` from a `.ts` source where only `foo.ts`
- * exists fails with ERR_MODULE_NOT_FOUND without it.
+ * Register an ESM resolution hook that rewrites TypeScript NodeNext-style
+ * `.js`/`.mjs`/`.cjs` relative specifiers to their `.ts`/`.mts`/`.cts` sources.
+ * This is the ESM counterpart to `ensureCjsResolverPatched`: Node's native type
+ * stripping loads the `.ts` file, but neither native strip nor Node's ESM
+ * resolver rewrites the extension, so `import './foo.js'` from a `.ts` source
+ * where only `foo.ts` exists fails with ERR_MODULE_NOT_FOUND without it.
  *
- * The hook is inlined as a `data:` module (see `NODENEXT_ESM_RESOLVER_SOURCE`)
- * and relies only on Node's default resolver, so it needs no ts-node/swc-node.
+ * Prefers `module.registerHooks()` (Node 22.15+ / 23.5+), passing the in-thread
+ * `nodeNextEsmResolveHook`. Falls back to `module.register()` with the inlined
+ * `data:` module (`NODENEXT_ESM_RESOLVER_SOURCE`) on older runtimes that lack
+ * `registerHooks` - `module.register()` emits a runtime DeprecationWarning
+ * (DEP0205) on Node 25.9+/26+, so it is only used when nothing better exists.
+ * Either way the hook relies only on Node's default resolver - no
+ * ts-node/swc-node.
  *
- * Idempotent and best-effort: a no-op when `Module.register` is unavailable,
+ * Idempotent and best-effort: a no-op when no registration API is available,
  * when a TypeScript transpiler is already preloaded (see
  * `isTsTranspilerPreloaded`), or if registration fails.
  */
@@ -149,16 +207,17 @@ export function ensureNodeNextEsmResolverRegistered(): void {
   nodeNextEsmResolverRegistered = true;
 
   const module = require('node:module') as typeof import('node:module');
-  if (typeof module.register !== 'function') return;
 
   // Skip when a transpiler was preloaded via `--require`/`--import` (e.g.
   // `--require ts-node/register`, which Nx uses only when it runs from `.ts`
-  // source). `module.register()` spins up a loader-hook worker thread on which
-  // Node re-runs those preloads, resolved relative to the *current* working
-  // directory - and Nx plugin workers `chdir()` into the analyzed workspace
-  // first. If that workspace can't resolve the preloaded module, the loader
-  // worker throws and can leave module resolution in a bad state, so we must
-  // avoid the call entirely; catching it is not a clean recovery.
+  // source). The `module.register()` fallback below spins up a loader-hook
+  // worker thread on which Node re-runs those preloads, resolved relative to
+  // the *current* working directory - and Nx plugin workers `chdir()` into the
+  // analyzed workspace first. If that workspace can't resolve the preloaded
+  // module, the loader worker throws and can leave module resolution in a bad
+  // state, so we must avoid the call entirely; catching it is not a clean
+  // recovery. `module.registerHooks()` runs in-thread with no such worker, but
+  // we keep the skip uniform so resolver coverage doesn't vary by Node version.
   //
   // Consequence: in that from-`.ts`-source invocation a `type: module` plugin
   // using NodeNext `.js` specifiers won't get this resolver (a preloaded
@@ -166,6 +225,25 @@ export function ensureNodeNextEsmResolverRegistered(): void {
   // unaffected - its workers run compiled `.js` with no preload.
   if (isTsTranspilerPreloaded()) return;
 
+  // Synchronous in-thread hooks (Node 22.15+ / 23.5+). Preferred because
+  // `module.register()` is deprecated (DEP0205) from Node 25.9+/26+.
+  const registerHooks = (
+    module as typeof module & {
+      registerHooks?: (opts: {
+        resolve?: typeof nodeNextEsmResolveHook;
+      }) => unknown;
+    }
+  ).registerHooks;
+  if (typeof registerHooks === 'function') {
+    try {
+      registerHooks.call(module, { resolve: nodeNextEsmResolveHook });
+    } catch {
+      // Best-effort: leave Node's native handling in place rather than failing.
+    }
+    return;
+  }
+
+  if (typeof module.register !== 'function') return;
   try {
     module.register(
       'data:text/javascript,' + encodeURIComponent(NODENEXT_ESM_RESOLVER_SOURCE)
@@ -576,6 +654,11 @@ export function getTranspiler(
   compilerOptions.target = ts.ScriptTarget.ES2021;
   compilerOptions.inlineSourceMap = true;
   compilerOptions.skipLibCheck = true;
+  // TS 6 hard-errors on deprecated options set above (node10 moduleResolution);
+  // ignoreDeprecations exists since TS 5.0 but the value '6.0' is rejected by TS5 (TS5103).
+  if (parseInt(ts.versionMajorMinor, 10) >= 6) {
+    compilerOptions.ignoreDeprecations = '6.0';
+  }
   // These options are different per project, and since they are not needed for transpilation, we can remove them so we have more cache hits.
   compilerOptions.outDir = undefined;
   compilerOptions.outFile = undefined;

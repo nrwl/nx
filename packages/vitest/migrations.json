@@ -109,6 +109,31 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.0.1-happy-dom": {
+      "version": "23.0.1",
+      "requires": {
+        "happy-dom": "<=20.10.4"
+      },
+      "packages": {
+        "happy-dom": {
+          "version": "^20.10.4",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-analog": {
+      "version": "23.1.0-beta.0",
+      "packages": {
+        "@analogjs/vite-plugin-angular": {
+          "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        },
+        "@analogjs/vitest-angular": {
+          "version": "~2.6.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

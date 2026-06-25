@@ -47,7 +47,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
@@ -68,6 +68,10 @@
       "@nx/nx-source": "./internal.ts",
       "types": "./dist/internal.d.ts",
       "default": "./dist/internal.js"
+    },
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
     }
   },
   "dependencies": {

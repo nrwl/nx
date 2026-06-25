@@ -966,14 +966,14 @@ function getOutputs(
   // reflected in the outputs. So, we just include everything that could be
   // produced by the tsc command.
   [
-    { configBaseNameNoExt: config.basenameNoExt, tsConfig: rootTsConfig },
+    { configPath: config.absolutePath, tsConfig: rootTsConfig },
     ...Object.entries(internalProjectReferences).map(
       ([internalConfigPath, internalConfig]) => ({
-        configBaseNameNoExt: basename(internalConfigPath, '.json'),
+        configPath: internalConfigPath,
         tsConfig: internalConfig,
       })
     ),
-  ].forEach(({ configBaseNameNoExt, tsConfig }) => {
+  ].forEach(({ configPath, tsConfig }) => {
     if (tsConfig.options.outFile) {
       const outFileName = basename(tsConfig.options.outFile, '.js');
       const outFileDir = dirname(tsConfig.options.outFile);
@@ -1072,7 +1072,7 @@ function getOutputs(
     outputs.add(
       getTsBuildInfoOutputPath(
         tsConfig,
-        configBaseNameNoExt,
+        configPath,
         workspaceRoot,
         config.project
       )
@@ -1088,7 +1088,7 @@ function getOutputs(
  */
 function getTsBuildInfoOutputPath(
   tsConfig: ParsedTsconfigData,
-  configBaseNameNoExt: string,
+  configPath: string,
   workspaceRoot: string,
   project: ProjectContext
 ): string {
@@ -1110,20 +1110,34 @@ function getTsBuildInfoOutputPath(
     );
   }
 
+  const configPathNoExt = join(
+    dirname(configPath),
+    basename(configPath, '.json')
+  );
+
   if (tsConfig.options.outDir) {
-    return pathToInputOrOutput(
-      joinPathFragments(
-        tsConfig.options.outDir,
-        `${configBaseNameNoExt}.tsbuildinfo`
-      ),
-      workspaceRoot,
-      project
-    );
+    // When rootDir is set, tsc resolves the config path (sans extension)
+    // relative to rootDir against outDir, which can place the file outside
+    // outDir (e.g. rootDir 'src' with the config one level up emits to the
+    // parent of outDir). Without rootDir it just drops the file in outDir.
+    // Mirror tsc's getTsBuildInfoEmitOutputFilePath so the declared output
+    // matches what's emitted.
+    const buildInfoPath = tsConfig.options.rootDir
+      ? `${resolve(
+          tsConfig.options.outDir,
+          relative(tsConfig.options.rootDir, configPathNoExt)
+        )}.tsbuildinfo`
+      : joinPathFragments(
+          tsConfig.options.outDir,
+          `${basename(configPathNoExt)}.tsbuildinfo`
+        );
+
+    return pathToInputOrOutput(buildInfoPath, workspaceRoot, project);
   }
 
   return joinPathFragments(
     '{projectRoot}',
-    `${configBaseNameNoExt}.tsbuildinfo`
+    `${basename(configPathNoExt)}.tsbuildinfo`
   );
 }
 

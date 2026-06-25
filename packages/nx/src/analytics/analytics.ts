@@ -59,40 +59,44 @@ export async function startAnalytics() {
     return;
   }
 
-  if (!isAnalyticsEnabled()) {
-    return;
-  }
-
-  const nxJson = readNxJson(workspaceRoot);
-  const workspaceId = generateWorkspaceId();
-  if (!workspaceId) {
-    // Not a git repo — no telemetry
-    return;
-  }
-  const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
-  const userId = await getTelemetryUserId(workspaceId);
-  const packageManagerInfo = getPackageManagerInfo();
-
-  const nodeVersion = parse(process.version);
-  const nodeVersionString = nodeVersion
-    ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
-    : 'unknown';
-
-  const commonArgs = [
-    workspaceId,
-    userId,
-    nxVersion,
-    packageManagerInfo.name,
-    packageManagerInfo.version,
-    nodeVersionString,
-    os.arch(),
-    os.platform(),
-    os.release(),
-    !!isCI(),
-    isNxCloud,
-  ] as const;
-
+  // Analytics must never break the command that triggered it; callers await
+  // this bare. Nothing below (nx.json read, package-manager version
+  // detection, machine id, telemetry init) may throw past this boundary -
+  // on any failure, continue without telemetry.
   try {
+    if (!isAnalyticsEnabled()) {
+      return;
+    }
+
+    const nxJson = readNxJson(workspaceRoot);
+    const workspaceId = generateWorkspaceId();
+    if (!workspaceId) {
+      // Not a git repo — no telemetry
+      return;
+    }
+    const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
+    const userId = await getTelemetryUserId(workspaceId);
+    const packageManagerInfo = getPackageManagerInfo();
+
+    const nodeVersion = parse(process.version);
+    const nodeVersionString = nodeVersion
+      ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
+      : 'unknown';
+
+    const commonArgs = [
+      workspaceId,
+      userId,
+      nxVersion,
+      packageManagerInfo.name,
+      packageManagerInfo.version,
+      nodeVersionString,
+      os.arch(),
+      os.platform(),
+      os.release(),
+      !!isCI(),
+      isNxCloud,
+    ] as const;
+
     const sessionId = process.env.NX_ANALYTICS_SESSION_ID;
 
     if (sessionId) {
@@ -113,9 +117,13 @@ export async function startAnalytics() {
       flushAnalytics();
     });
   } catch (error) {
-    // If telemetry service fails to initialize, continue without it
+    // If telemetry fails to initialize, continue without it
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(`Failed to initialize telemetry: ${error.message}`);
+      console.log(
+        `Failed to initialize telemetry: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
     }
   }
 }

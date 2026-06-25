@@ -42,7 +42,7 @@
   "executors": "./executors.json",
   "nx-migrations": {
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
@@ -68,7 +68,6 @@
     "@nx/vitest": "workspace:*",
     "@nx/web": "workspace:*",
     "picomatch": "catalog:",
-    "semver": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

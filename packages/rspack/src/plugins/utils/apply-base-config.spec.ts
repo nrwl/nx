@@ -1,6 +1,6 @@
 import { applyBaseConfig } from './apply-base-config';
 import { NormalizedNxAppRspackPluginOptions } from './models';
-import { Configuration } from '@rspack/core';
+import type { Configuration } from '@rspack/core';
 
 describe('apply-base-config libraryTarget handling', () => {
   let options: NormalizedNxAppRspackPluginOptions;
@@ -21,7 +21,7 @@ describe('apply-base-config libraryTarget handling', () => {
     delete global.NX_GRAPH_CREATION;
   });
 
-  it('should not set libraryTarget when user configures library.type', () => {
+  it('should not set libraryTarget when user configures library.type', async () => {
     config.output = {
       library: { type: 'module' },
     };
@@ -31,7 +31,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBeUndefined();
   });
 
-  it('should respect user libraryTarget when set explicitly', () => {
+  it('should respect user libraryTarget when set explicitly', async () => {
     config.output = {
       libraryTarget: 'umd',
     };
@@ -41,7 +41,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('umd');
   });
 
-  it('should default to commonjs for node targets when nothing configured', () => {
+  it('should default to commonjs for node targets when nothing configured', async () => {
     config.output = {};
 
     applyBaseConfig(options, config);
@@ -49,7 +49,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('commonjs');
   });
 
-  it('should default to commonjs-module for async-node targets when nothing configured', () => {
+  it('should default to commonjs-module for async-node targets when nothing configured', async () => {
     options.target = 'async-node';
     config.output = {};
 
@@ -58,7 +58,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('commonjs-module');
   });
 
-  it('should not set libraryTarget for web targets when nothing configured', () => {
+  it('should not set libraryTarget for web targets when nothing configured', async () => {
     options.target = 'web';
     config.output = {};
 
@@ -67,7 +67,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBeUndefined();
   });
 
-  it('should prioritize library.type over libraryTarget when both are present', () => {
+  it('should prioritize library.type over libraryTarget when both are present', async () => {
     config.output = {
       libraryTarget: 'umd',
       library: { type: 'module' },
@@ -78,7 +78,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBeUndefined();
   });
 
-  it('should handle empty output config gracefully', () => {
+  it('should handle empty output config gracefully', async () => {
     config.output = undefined;
 
     applyBaseConfig(options, config);
@@ -86,7 +86,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('commonjs');
   });
 
-  it('should handle undefined library type values', () => {
+  it('should handle undefined library type values', async () => {
     config.output = {
       library: { type: undefined as any },
     };
@@ -96,7 +96,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('commonjs');
   });
 
-  it('should handle explicit undefined libraryTarget', () => {
+  it('should handle explicit undefined libraryTarget', async () => {
     config.output = {
       libraryTarget: undefined,
     };
@@ -106,7 +106,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('commonjs');
   });
 
-  it('should respect empty string libraryTarget', () => {
+  it('should respect empty string libraryTarget', async () => {
     config.output = {
       libraryTarget: '' as any,
     };
@@ -116,7 +116,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('');
   });
 
-  it('should handle complex library configuration', () => {
+  it('should handle complex library configuration', async () => {
     config.output = {
       library: {
         type: 'module',
@@ -131,7 +131,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect((config.output.library as any).name).toBe('MyLib');
   });
 
-  it('should respect user configuration for async-node with library.type', () => {
+  it('should respect user configuration for async-node with library.type', async () => {
     options.target = 'async-node';
     config.output = {
       library: { type: 'module' },
@@ -143,7 +143,7 @@ describe('apply-base-config libraryTarget handling', () => {
     expect((config.output.library as any).type).toBe('module');
   });
 
-  it('should respect user libraryTarget for async-node target', () => {
+  it('should respect user libraryTarget for async-node target', async () => {
     options.target = 'async-node';
     config.output = {
       libraryTarget: 'umd',
@@ -152,5 +152,63 @@ describe('apply-base-config libraryTarget handling', () => {
     applyBaseConfig(options, config);
 
     expect(config.output.libraryTarget).toBe('umd');
+  });
+
+  describe('@rspack/core@2 (pure-ESM) translation', () => {
+    beforeEach(() => {
+      // Force the loaded module to report v2 so the v1/v2 branch in
+      // applyBaseConfig picks the modern output.library.type shape.
+      jest.resetModules();
+      jest.doMock('@rspack/core', () => {
+        const actual = jest.requireActual('@rspack/core');
+        return new Proxy(actual, {
+          get(target, prop) {
+            if (prop === 'rspackVersion') return '2.0.3';
+            return (target as any)[prop];
+          },
+        });
+      });
+    });
+
+    afterEach(() => {
+      jest.dontMock('@rspack/core');
+      jest.resetModules();
+    });
+
+    it('emits output.library.type instead of libraryTarget on v2', async () => {
+      const { applyBaseConfig: applyBaseConfigV2 } = await import(
+        './apply-base-config'
+      );
+      options.target = 'node';
+      config.output = {};
+      applyBaseConfigV2(options, config);
+      expect(config.output.libraryTarget).toBeUndefined();
+      expect((config.output.library as any).type).toBe('commonjs');
+    });
+
+    it('clears a user-provided libraryTarget when translating to library.type on v2', async () => {
+      const { applyBaseConfig: applyBaseConfigV2 } = await import(
+        './apply-base-config'
+      );
+      options.target = 'web';
+      config.output = { libraryTarget: 'commonjs' };
+      applyBaseConfigV2(options, config);
+      expect(config.output.libraryTarget).toBeUndefined();
+      expect((config.output.library as any).type).toBe('commonjs');
+    });
+
+    it('clears a stale libraryTarget when the user already set library.type on v2', async () => {
+      const { applyBaseConfig: applyBaseConfigV2 } = await import(
+        './apply-base-config'
+      );
+      options.target = 'web';
+      config.output = {
+        libraryTarget: 'umd',
+        library: { type: 'module' },
+      };
+      applyBaseConfigV2(options, config);
+      expect(config.output.libraryTarget).toBeUndefined();
+      expect((config.output.library as any).type).toBe('module');
+    });
   });
 });

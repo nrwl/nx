@@ -167,12 +167,15 @@ function buildExpoTargets(
     },
     [options.installTargetName]: {
       executor: '@nx/expo:install',
+      continuous: false,
     },
     [options.prebuildTargetName]: {
       executor: `@nx/expo:prebuild`,
+      continuous: false,
     },
     [options.buildTargetName]: {
       executor: `@nx/expo:build`,
+      continuous: false,
     },
     [options.submitTargetName]: {
       command: `eas submit`,

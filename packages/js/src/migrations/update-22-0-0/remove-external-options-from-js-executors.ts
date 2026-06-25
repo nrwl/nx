@@ -50,69 +50,39 @@ export default async function (tree: Tree) {
     return;
   }
 
-  const cleanEntry = (entry: Record<string, any>) => {
-    if (entry.options) {
-      delete entry.options.external;
-      delete entry.options.externalBuildTargets;
-      if (!Object.keys(entry.options).length) {
-        delete entry.options;
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    if (
+      !executors.includes(targetOrExecutor) &&
+      !executors.includes(targetConfig.executor)
+    ) {
+      continue;
+    }
+
+    if (targetConfig.options) {
+      delete targetConfig.options.external;
+      delete targetConfig.options.externalBuildTargets;
+      if (!Object.keys(targetConfig.options).length) {
+        delete targetConfig.options;
       }
     }
-    Object.entries(entry.configurations ?? {}).forEach(([, config]: any) => {
+
+    Object.entries(targetConfig.configurations ?? {}).forEach(([, config]) => {
       delete config.external;
       delete config.externalBuildTargets;
     });
-  };
 
-  if (Array.isArray(nxJson.targetDefaults)) {
-    const remaining = [];
-    for (const entry of nxJson.targetDefaults) {
-      const matches =
-        executors.includes(entry.executor) || executors.includes(entry.target);
-      if (!matches) {
-        remaining.push(entry);
-        continue;
-      }
-      cleanEntry(entry as any);
-      const meaningfulKeys = Object.keys(entry).filter(
-        (k) =>
-          k !== 'target' &&
-          k !== 'executor' &&
-          k !== 'projects' &&
-          k !== 'plugin'
-      );
-      if (meaningfulKeys.length === 0) continue;
-      remaining.push(entry);
+    if (
+      !Object.keys(targetConfig).length ||
+      (Object.keys(targetConfig).length === 1 &&
+        Object.keys(targetConfig)[0] === 'executor')
+    ) {
+      delete nxJson.targetDefaults[targetOrExecutor];
     }
-    if (remaining.length === 0) {
+
+    if (!Object.keys(nxJson.targetDefaults).length) {
       delete nxJson.targetDefaults;
-    } else {
-      nxJson.targetDefaults = remaining;
-    }
-  } else {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        !executors.includes(targetOrExecutor) &&
-        !executors.includes(targetConfig.executor)
-      ) {
-        continue;
-      }
-
-      cleanEntry(targetConfig as any);
-
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
-      }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
     }
   }
 

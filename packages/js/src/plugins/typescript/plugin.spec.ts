@@ -1111,7 +1111,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                   },
                   "outputs": [
                     "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
-                    "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+                    "{projectRoot}/out-tsc/tsconfig.lib.tsbuildinfo",
                   ],
                   "syncGenerators": [
                     "@nx/js:typescript-sync",
@@ -2954,7 +2954,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     },
                     "outputs": [
                       "{projectRoot}/out-tsc/my-lib/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
-                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/out-tsc/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -2998,7 +2998,7 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
                     "outputs": [
                       "{projectRoot}/tsconfig.tsbuildinfo",
                       "{projectRoot}/out-tsc/my-lib/**/*.{d.ts,d.cts,d.mts}",
-                      "{projectRoot}/out-tsc/my-lib/tsconfig.lib.tsbuildinfo",
+                      "{projectRoot}/out-tsc/tsconfig.lib.tsbuildinfo",
                     ],
                     "syncGenerators": [
                       "@nx/js:typescript-sync",
@@ -3008,6 +3008,37 @@ describe(`Plugin: ${PLUGIN_NAME}`, () => {
               },
             },
           }
+        `);
+      });
+
+      it('should resolve the tsbuildinfo file relative to rootDir, even outside outDir', async () => {
+        // tsc resolves the config path (sans extension) relative to rootDir
+        // against outDir. With rootDir 'src' the config sits one level above
+        // it, so the tsbuildinfo lands at the project root, not inside outDir.
+        configFiles = await applyFilesToTempFsAndContext(tempFs, context, {
+          'libs/my-lib/tsconfig.json': JSON.stringify({
+            files: [],
+            references: [{ path: './tsconfig.lib.json' }],
+          }),
+          'libs/my-lib/tsconfig.lib.json': JSON.stringify({
+            compilerOptions: { outDir: 'dist', rootDir: 'src' },
+            files: ['src/main.ts'],
+          }),
+          'libs/my-lib/package.json': `{}`,
+        });
+
+        const result = await invokeCreateNodesOnMatchingFiles(
+          configFiles,
+          context,
+          { build: { configName: 'tsconfig.lib.json' } }
+        );
+
+        expect(result.projects['libs/my-lib'].targets.build.outputs)
+          .toMatchInlineSnapshot(`
+          [
+            "{projectRoot}/dist/**/*.{js,cjs,mjs,jsx,d.ts,d.cts,d.mts}{,.map}",
+            "{projectRoot}/tsconfig.lib.tsbuildinfo",
+          ]
         `);
       });
 

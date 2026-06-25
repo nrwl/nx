@@ -1,4 +1,4 @@
-import type { NxJsonConfiguration } from '@nx/devkit';
+import type { NxJsonConfiguration, TargetConfiguration } from '@nx/devkit';
 import {
   newWrappedNxWorkspace,
   updateFile,
@@ -19,9 +19,13 @@ describe('nx wrapper / .nx installation', () => {
   beforeAll(() => {
     runNxWrapper = newWrappedNxWorkspace();
     updateJson<NxJsonConfiguration>('nx.json', (json) => {
-      const entries = (json.targetDefaults as any) ?? [];
-      entries.push({ target: 'echo', cache: true });
-      json.targetDefaults = entries;
+      json.targetDefaults ??= {};
+      // The installed (published) nx still types `targetDefaults` as a union
+      // with the array shape until this revert ships, so cast to the record
+      // shape we write here.
+      (json.targetDefaults as Record<string, TargetConfiguration>).echo = {
+        cache: true,
+      };
       json.installation.plugins = {
         '@nx/js': getPublishedVersion(),
       };

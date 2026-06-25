@@ -313,6 +313,8 @@ export interface AngularRspackPluginOptions {
     | boolean
     | {
         entry: string;
+        platform?: 'node' | 'neutral';
+        /** @deprecated Use `platform` instead. */
         experimentalPlatform?: 'node' | 'neutral';
       };
   /**
