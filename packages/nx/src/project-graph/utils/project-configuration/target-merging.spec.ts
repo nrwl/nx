@@ -591,6 +591,76 @@ describe('spread syntax in mergeTargetConfigurations', () => {
     ]);
   });
 
+  describe('source map provenance for unchanged scalars', () => {
+    it('does not re-attribute an executor a later layer re-stamps to the same value', () => {
+      // Mirrors the target-defaults synthesis path: a plugin authored the
+      // executor, and the synthetic default re-stamps the same executor purely
+      // as a merge guard while introducing `cache`. The executor's provenance
+      // must stay with the plugin; only `cache` is credited to the default.
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['vite.config.ts', '@nx/vite/plugin'],
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      const result = mergeTargetConfigurations(
+        { executor: '@nx/vite:build', cache: true },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      expect(result.executor).toBe('@nx/vite:build');
+      // Unchanged executor keeps the plugin attribution.
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'vite.config.ts',
+        '@nx/vite/plugin',
+      ]);
+      // The newly introduced field is credited to the default.
+      expect(sourceMap['targets.build.cache']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
+
+    it('attributes a genuinely new executor to the layer that introduces it', () => {
+      // No prior executor entry — the default authors it, so it correctly
+      // stays credited to the default.
+      const sourceMap: Record<string, SourceInformation> = {};
+      const result = mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        {},
+        sourceMap,
+        ['nx.json', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      expect(result.executor).toBe('nx:run-commands');
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'nx.json',
+        'nx/target-defaults',
+      ]);
+    });
+
+    it('re-attributes a scalar a later layer actually changes', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build.executor': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      mergeTargetConfigurations(
+        { executor: 'nx:run-commands' },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json', 'other-plugin'],
+        'targets.build'
+      );
+
+      // Different value → the changing layer is credited.
+      expect(sourceMap['targets.build.executor']).toEqual([
+        'nx.json',
+        'other-plugin',
+      ]);
+    });
+  });
+
   it('should replace array without spread token', () => {
     const result = mergeTargetConfigurations(
       {
