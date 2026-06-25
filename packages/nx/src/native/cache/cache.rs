@@ -399,9 +399,6 @@ impl NxCache {
             &outputs_path,
             &self.workspace_root
         );
-        // Restore only the declared outputs, confined to the workspace, so a
-        // malicious remote-cache artifact cannot drop files beyond the declared
-        // outputs or escape the workspace through a symlink.
         copy_outputs_into_workspace(&self.workspace_root, outputs_path, &expanded_outputs)
     }
 
@@ -511,12 +508,9 @@ where
     }
 }
 
-/// Normalize declared output paths for cache use. Absolute paths are only
-/// meaningful inside the workspace: an in-workspace absolute path is made
-/// relative to the workspace root, and one pointing outside is dropped (the
-/// cache mirrors the workspace and never reads or writes outside it). Relative
-/// paths that climb out via `..` are dropped for the same reason; the rest pass
-/// through unchanged.
+/// Normalize declared output paths for cache use: relativize an in-workspace
+/// absolute path to the workspace root, and drop any path that resolves outside
+/// the workspace (absolute elsewhere, or relative climbing out via `..`).
 fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> Vec<String> {
     outputs
         .into_iter()

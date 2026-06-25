@@ -226,8 +226,7 @@ impl HttpRemoteCache {
 
             if entry_path == "code" {
                 let code_file_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
-                // Guard the indexing below: a short/empty `code` entry from a
-                // malicious server must not panic (and crash the Node process).
+                // A short/empty `code` entry must not panic on the indexing below.
                 if code_file_bytes.len() < 2 {
                     return Err(anyhow::anyhow!("Invalid exit code in cache artifact"));
                 }
@@ -462,7 +461,6 @@ mod test {
 
     #[test]
     fn extract_rejects_short_code_entry() {
-        // A 1-byte `code` entry must error, not panic on out-of-bounds indexing.
         let temp = TempDir::new().unwrap();
         let cache_dir = temp.join("cache");
         let tar = build_tar_gz(vec![raw_entry("code", EntryType::Regular, None, b"\0")]);
@@ -477,7 +475,6 @@ mod test {
 
     #[test]
     fn extract_rejects_missing_code_entry() {
-        // A tarball without a `code` entry must error, not panic via expect.
         let temp = TempDir::new().unwrap();
         let cache_dir = temp.join("cache");
         let tar = build_tar_gz(vec![terminal_output_entry("done")]);

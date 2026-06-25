@@ -26,13 +26,9 @@ where
 
 /// Copy `src` to `dest`.
 ///
-/// When `boundary` is `Some(root)` the copy is confined to `root` (used when
-/// restoring cache outputs into the workspace): parent directories are created
-/// without following symlinks — a symlink occupying a path under `root` is
-/// replaced with a real directory — and any pre-existing entry at `dest` is
-/// removed instead of written through. This stops a malicious cache artifact
-/// from writing outside the workspace via a planted or pre-existing symlink.
-/// With `None` the original behavior is used.
+/// With `boundary = Some(root)` the copy is confined to `root` (cache restore):
+/// parents are realized as real dirs (any symlink under `root` is replaced) and
+/// existing entries are removed, not written through. `None` keeps the original.
 pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::Result<i64> {
     let dest: PathBuf = remove_trailing_single_dot(dest);
     let dest_parent = dest.parent().unwrap_or(&dest);
@@ -43,8 +39,7 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
     match boundary {
         Some(root) => {
             create_dir_all_within(root, dest_parent)?;
-            // Drop any existing entry first so a stale symlink/dir/file is never
-            // followed or merged into during a restore.
+            // Never follow or merge into a stale entry at the destination.
             remove_path(&dest)?;
         }
         None => {
@@ -72,10 +67,9 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
     Ok(size as i64)
 }
 
-/// Create `dir` and any missing ancestors, but never traverse a symlink at or
-/// below `boundary`: a symlink (or file) occupying such a path is removed and
-/// replaced with a real directory. Components at or above `boundary` are trusted
-/// and left untouched, so this never disturbs e.g. a `/tmp` system symlink.
+/// Create `dir` and missing ancestors without traversing a symlink at or below
+/// `boundary`: such a symlink/file is replaced with a real directory. Paths at
+/// or above `boundary` are trusted and untouched (e.g. a `/tmp` system symlink).
 fn create_dir_all_within(boundary: &Path, dir: &Path) -> io::Result<()> {
     // At or above the boundary: trust the existing tree, only create if missing.
     if dir == boundary || !dir.starts_with(boundary) {
@@ -92,8 +86,7 @@ fn create_dir_all_within(boundary: &Path, dir: &Path) -> io::Result<()> {
     match fs::symlink_metadata(dir) {
         Ok(meta) if meta.file_type().is_dir() => Ok(()),
         Ok(_) => {
-            // A symlink or file occupies the path — remove it (the link itself,
-            // never its target) and create a real directory in its place.
+            // Replace a symlink/file occupying the path with a real directory.
             remove_path(dir)?;
             fs::create_dir(dir)
         }
@@ -106,8 +99,7 @@ fn create_dir_all_within(boundary: &Path, dir: &Path) -> io::Result<()> {
 }
 
 /// Remove the entry at `path` without following a final symlink (the link is
-/// unlinked, never its target); a directory is removed recursively. A missing
-/// path is a no-op.
+/// unlinked, not its target); directories recurse, a missing path is a no-op.
 fn remove_path(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(meta) if meta.file_type().is_dir() => fs::remove_dir_all(path),
@@ -117,11 +109,10 @@ fn remove_path(path: &Path) -> io::Result<()> {
     }
 }
 
-/// Restore the given (already expanded) cache outputs from `outputs_path` into
-/// `workspace_root`. Only the listed outputs are copied — never the whole
-/// extracted cache directory — and every copy is confined to `workspace_root`,
-/// so a malicious cache artifact can neither place files beyond the declared
-/// outputs nor escape the workspace through a symlink.
+/// Restore the given expanded outputs from `outputs_path` into `workspace_root`.
+/// Only the listed outputs are copied (never the whole cache dir) and each copy
+/// is confined to `workspace_root`, so a malicious artifact can't write beyond
+/// the declared outputs or escape via a symlink.
 pub fn copy_outputs_into_workspace(
     workspace_root: &Path,
     outputs_path: &Path,
@@ -218,8 +209,7 @@ fn copy_dir_all(
             0
         } else {
             trace!("Copying file: {:?}", entry.path());
-            // On restore, replace a pre-existing symlink rather than following
-            // it out of the workspace.
+            // On restore, don't follow a pre-existing dest symlink.
             if boundary.is_some() {
                 remove_existing_symlink(&dest_path)?;
             }
