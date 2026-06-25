@@ -87,6 +87,44 @@ const originalStderrWrite = process.stderr.write.bind(process.stderr);
 const originalConsoleLog = console.log.bind(console);
 const originalConsoleError = console.error.bind(console);
 
+/**
+ * Forward every lifecycle call to the TUI's native instance, but supply `endCommand`
+ * with the performance-report payload for its exit popup (the orchestrator calls
+ * `endCommand()` with no arguments; only multi-task runs get a popup). A wrapper
+ * rather than reassigning the instance method, so the native lifecycle is never
+ * mutated; a stale binding without `endCommand` is forwarded as-is.
+ */
+function withPerformanceReportPopup(
+  appLifeCycle: AppLifeCycleClass,
+  tasks: Task[]
+): LifeCycle {
+  if (typeof appLifeCycle.endCommand !== 'function') {
+    return appLifeCycle as unknown as LifeCycle;
+  }
+  const endCommand = () =>
+    appLifeCycle.endCommand(
+      tasks.length > 1
+        ? (getPerformanceSummaryPayload() ?? undefined)
+        : undefined
+    );
+  const forwarded = new Map<PropertyKey, unknown>();
+  return new Proxy(appLifeCycle, {
+    get(target, prop) {
+      if (prop === 'endCommand') {
+        return endCommand;
+      }
+      if (!forwarded.has(prop)) {
+        const value = Reflect.get(target, prop, target);
+        forwarded.set(
+          prop,
+          typeof value === 'function' ? value.bind(target) : value
+        );
+      }
+      return forwarded.get(prop);
+    },
+  }) as unknown as LifeCycle;
+}
+
 async function getTerminalOutputLifeCycle(
   initiatingProject: string,
   initiatingTasks: Task[],
@@ -226,27 +264,9 @@ async function getTerminalOutputLifeCycle(
         workspaceRoot,
         taskGraph
       );
-      lifeCycles.unshift(appLifeCycle);
-
-      // The orchestrator calls the generic `LifeCycle.endCommand()` with no
-      // arguments, but the TUI's native endCommand accepts an optional performance
-      // summary for its exit-countdown popup. Wrap the instance method to inject that
-      // summary — so we're adding an argument the caller never passes, not dropping
-      // one. Only multi-task runs feed the popup; a single-task run exits with no
-      // popup, leaving its report for the terminal flush below. Guarded: if the
-      // native method is somehow absent (stale binding) we skip the popup rather than
-      // break the run, since the report is cosmetic.
-      const typedAppLifeCycle = appLifeCycle as AppLifeCycleClass;
-      const nativeEndCommand =
-        typedAppLifeCycle.endCommand?.bind(typedAppLifeCycle);
-      if (nativeEndCommand) {
-        typedAppLifeCycle.endCommand = () =>
-          nativeEndCommand(
-            tasks.length > 1
-              ? (getPerformanceSummaryPayload() ?? undefined)
-              : undefined
-          );
-      }
+      // Feed the TUI's exit popup the performance report via a forwarding wrapper
+      // (the orchestrator's generic endCommand() takes no arguments).
+      lifeCycles.unshift(withPerformanceReportPopup(appLifeCycle, tasks));
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle

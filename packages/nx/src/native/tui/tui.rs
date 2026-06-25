@@ -510,8 +510,7 @@ impl Tui {
                     // surface a half-switched ("neither") terminal to the caller.
                     self.current_mode = previous_mode;
                     if previous_mode == TuiMode::FullScreen {
-                        let _ =
-                            execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide);
+                        let _ = execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide);
                         let _ = self.terminal_mut().clear();
                     }
                     return Err(e);

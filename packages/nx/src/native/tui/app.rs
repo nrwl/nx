@@ -834,9 +834,7 @@ impl App {
                                 }
                                 return Ok(false);
                             }
-                            KeyCode::F(11) | KeyCode::Enter
-                                if countdown_popup.has_summary() =>
-                            {
+                            KeyCode::F(11) | KeyCode::Enter if countdown_popup.has_summary() => {
                                 // Jump from the report straight into inline in one
                                 // press. Without an explicit arm the popup would
                                 // swallow this key just to dismiss itself, so the
@@ -2939,7 +2937,10 @@ mod tests {
         )
         .unwrap();
 
-        assert!(!report_visible(&app), "`p` should dismiss the focused report");
+        assert!(
+            !report_visible(&app),
+            "`p` should dismiss the focused report"
+        );
         assert!(
             !app.core.state().lock().should_quit(),
             "`p` should cancel the auto-exit countdown"

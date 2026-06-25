@@ -413,10 +413,9 @@ impl CountdownPopup {
             ]));
         }
 
-        // Size the popup to fit the content. Derive the inner width from a
-        // matching chrome block so it tracks the real inner_area width used below
-        // rather than hard-coding the padding arithmetic. Vertical chrome (2
-        // border + 2 padding rows) is added back as +4; overflow scrolls.
+        // Inner width comes from a matching chrome block so it tracks the real
+        // inner_area width below instead of hard-coded padding math; +4 for vertical
+        // chrome, overflow scrolls.
         let inner_width = Block::default()
             .borders(Borders::ALL)
             .padding(Padding::proportional(1))
@@ -428,7 +427,6 @@ impl CountdownPopup {
             .min(safe_area.height.saturating_sub(4))
             .max(5);
 
-        // Center the popup within the safe area.
         let popup_x = safe_area.x + (safe_area.width.saturating_sub(popup_width)) / 2;
         let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
 
@@ -447,8 +445,6 @@ impl CountdownPopup {
 
         let time_remaining = seconds_remaining + 1;
 
-        // Title: "Performance Report" (+ "— exiting in N..." until pinned) with a
-        // report; just "Exiting in N..." without one.
         let mut title_spans = vec![
             Span::raw("  "),
             Span::styled(

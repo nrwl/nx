@@ -14,6 +14,7 @@ import {
   buildSegments,
   mergeIntervals,
   overlap,
+  preDispatchHashTime,
   TimedTask,
 } from './performance-analysis';
 import { formatDuration, formatReport } from './performance-report';
@@ -1083,6 +1084,41 @@ describe('mergeIntervals', () => {
         [4, 12],
       ])
     ).toEqual([[0, 15]]);
+  });
+});
+
+describe('preDispatchHashTime', () => {
+  it('sums hashing that ran before the first task', () => {
+    expect(preDispatchHashTime(1000, [[200, 800]])).toBe(600);
+  });
+
+  it('clips a window that overruns the first task start', () => {
+    // [200, 1500] is only pre-dispatch up to the first task at 1000.
+    expect(preDispatchHashTime(1000, [[200, 1500]])).toBe(800);
+  });
+
+  it('unions overlapping windows so shared time is not double-counted', () => {
+    expect(
+      preDispatchHashTime(1100, [
+        [200, 800],
+        [600, 1000],
+      ])
+    ).toBe(800);
+  });
+
+  it('stops at a gap wider than the threshold, dropping stale hashing', () => {
+    // [0, 500] sits >1s before [2000, 2800] → stale; only the recent window counts.
+    expect(
+      preDispatchHashTime(3000, [
+        [0, 500],
+        [2000, 2800],
+      ])
+    ).toBe(800);
+  });
+
+  it('is 0 when nothing hashed before the first task', () => {
+    expect(preDispatchHashTime(1000, [])).toBe(0);
+    expect(preDispatchHashTime(1000, [[1000, 2000]])).toBe(0); // all after the first task
   });
 });
 

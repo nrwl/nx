@@ -1,7 +1,7 @@
 import * as os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { TaskGraph } from '../../config/task-graph';
-import { NxJsonConfiguration, readNxJson } from '../../config/nx-json';
+import { NxJsonConfiguration } from '../../config/nx-json';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { isCI as isCiEnv } from '../../utils/is-ci';
 import {
@@ -113,14 +113,13 @@ export class PerformanceAnalysis {
     return this.options.skipNxCache === true;
   }
 
-  /** Whether a remote (Nx Cloud) cache is active. */
+  /**
+   * Whether a remote (Nx Cloud) cache is active, from the nx.json handed in at
+   * construction. Assumes no remote cache when it wasn't provided rather than
+   * re-reading nx.json from disk — the CLI path always provides it.
+   */
   private remoteCacheEnabled(): boolean {
-    try {
-      // Prefer the nxJson handed in at construction; re-read only as a fallback.
-      return isNxCloudUsed(this.options.nxJson ?? readNxJson());
-    } catch {
-      return false;
-    }
+    return this.options.nxJson ? isNxCloudUsed(this.options.nxJson) : false;
   }
 
   private isCI(): boolean {
@@ -273,44 +272,6 @@ export class PerformanceAnalysis {
   }
 
   /**
-   * Coordinator hashing wall-clock before the first task started (the run window
-   * would otherwise miss it). Walk back from the first task start, summing merged
-   * hash intervals within {@link PRE_DISPATCH_HASH_GAP} of the previous, stopping at
-   * the first larger gap. Matters on a cached run where hashing dominates but tasks
-   * restore in milliseconds.
-   */
-  private preDispatchHashTime(
-    firstTaskStart: number,
-    hashWindows: Array<[number, number]>
-  ): number {
-    // Clip each window to the pre-dispatch span (anything after the first task is
-    // not pre-dispatch), drop empties, then union overlaps so they don't double-count.
-    const clipped = hashWindows
-      .map(([start, end]): [number, number] => [
-        start,
-        Math.min(end, firstTaskStart),
-      ])
-      .filter(([start, end]) => end > start);
-    const merged = mergeIntervals(clipped);
-
-    // Walk back from the first task, accumulating contiguous hashing. Stop at the
-    // first gap wider than PRE_DISPATCH_HASH_GAP — anything earlier is stale hashing
-    // from a previous run in this process (e.g. the daemon's).
-    let total = 0;
-    let boundary = firstTaskStart;
-    for (let i = merged.length - 1; i >= 0; i--) {
-      const [start, end] = merged[i];
-      const isStale = end < boundary - PRE_DISPATCH_HASH_GAP;
-      if (isStale) {
-        break;
-      }
-      total += end - start;
-      boundary = start;
-    }
-    return total;
-  }
-
-  /**
    * The `--parallel` value, recovered from the thread-pool total reported to
    * startCommand: `total = discrete + continuousCount` (see getThreadPoolSize), so
    * subtracting the continuous count gives it back. Falls back to 1.
@@ -380,8 +341,7 @@ export class PerformanceAnalysis {
     const hashWindows = this.hashWindows();
 
     // Pre-dispatch hashing is part of overhead but not the slot split.
-    const runDuration =
-      taskWindow + this.preDispatchHashTime(runStart, hashWindows);
+    const runDuration = taskWindow + preDispatchHashTime(runStart, hashWindows);
     const overhead = Math.max(0, runDuration - criticalPathDuration);
 
     const {
@@ -477,18 +437,24 @@ function collectHashWindows(): Array<[number, number]> {
 }
 
 /**
- * Sort and union a set of intervals so the result is ordered and non-overlapping.
- * Two intervals merge when the next one starts at or before the previous one's END
- * (`last[1]`), extending that end to cover both.
+ * Union a set of `[start, end]` intervals into an ordered, non-overlapping set, e.g.
+ * `[[1, 3], [2, 5]]` → `[[1, 5]]`. Sort by start, then sweep once: each interval
+ * either extends the previous merged one (if it overlaps or touches it) or begins a
+ * new one.
  */
 export function mergeIntervals(
   intervals: Array<[number, number]>
 ): Array<[number, number]> {
+  const byStart = [...intervals].sort((a, b) => a[0] - b[0]);
   const merged: Array<[number, number]> = [];
-  for (const [start, end] of [...intervals].sort((a, b) => a[0] - b[0])) {
-    const last = merged[merged.length - 1];
-    if (last && start <= last[1]) {
-      last[1] = Math.max(last[1], end);
+  for (const [start, end] of byStart) {
+    const previous = merged[merged.length - 1];
+    // `previous[1]` is the running end of the last merged interval. This interval
+    // overlaps or touches it when its start is at or before that end — so absorb it
+    // by extending the end. Otherwise it's disjoint and starts a new interval.
+    const overlapsPrevious = previous != null && start <= previous[1];
+    if (overlapsPrevious) {
+      previous[1] = Math.max(previous[1], end);
     } else {
       merged.push([start, end]);
     }
@@ -507,6 +473,45 @@ export function overlap(
     sum += Math.max(0, Math.min(b, e) - Math.max(a, s));
   }
   return sum;
+}
+
+/**
+ * Coordinator hashing wall-clock that ran *before* the first task started — the run
+ * window (first task start → last task end) would otherwise miss it. Matters on a
+ * cached run where hashing dominates but the tasks restore in milliseconds.
+ *
+ * `hashWindows` are absolute `[start, end]` spans from nx's `hash*` perf measures.
+ */
+export function preDispatchHashTime(
+  firstTaskStart: number,
+  hashWindows: Array<[number, number]>
+): number {
+  // Keep only the part of each window before the first task, drop any that become
+  // empty, then union overlaps so shared time isn't counted twice.
+  const preDispatchWindows = mergeIntervals(
+    hashWindows
+      .map(([start, end]): [number, number] => [
+        start,
+        Math.min(end, firstTaskStart),
+      ])
+      .filter(([start, end]) => end > start)
+  );
+
+  // Walk newest → oldest, adding each window while it stays contiguous with the one
+  // after it. Stop at the first gap wider than PRE_DISPATCH_HASH_GAP — anything older
+  // is stale hashing from an earlier run in this process (e.g. the daemon's).
+  let total = 0;
+  let contiguousFrom = firstTaskStart;
+  for (let i = preDispatchWindows.length - 1; i >= 0; i--) {
+    const [start, end] = preDispatchWindows[i];
+    const gapTooLarge = end < contiguousFrom - PRE_DISPATCH_HASH_GAP;
+    if (gapTooLarge) {
+      break;
+    }
+    total += end - start;
+    contiguousFrom = start;
+  }
+  return total;
 }
 
 /** Per-task durations, total work, and the run window from the timed tasks. */
