@@ -570,7 +570,7 @@ describe('Nx Running Tests', () => {
           nxJson.targetDefaults ??= {};
           nxJson.targetDefaults[target] = [
             {
-              filter: { projects: libA },
+              filter: { projects: [libA] },
               executor: 'nx:run-commands',
               options: { command: `echo SCOPED-TO-${libA}` },
             },
@@ -611,7 +611,7 @@ describe('Nx Running Tests', () => {
           nxJson.targetDefaults ??= {};
           nxJson.targetDefaults[target] = [
             {
-              filter: { projects: `tag:${tag}` },
+              filter: { projects: [`tag:${tag}`] },
               executor: 'nx:run-commands',
               options: { command: `echo TAGGED-${tag}` },
             },
@@ -659,7 +659,7 @@ describe('Nx Running Tests', () => {
             },
             // Filtered entry — overrides for libA (applied after the catch-all).
             {
-              filter: { projects: libA },
+              filter: { projects: [libA] },
               executor: 'nx:run-commands',
               options: { command: `echo SPECIFIC-${libA}` },
             },
@@ -749,18 +749,18 @@ describe('Nx Running Tests', () => {
         );
 
         const inferredCfg = JSON.parse(
-          runCLI(`show project ${inferredLib} --json`)
+          runCLI(`show target ${inferredLib}:${target} --json`)
         );
         const manualCfg = JSON.parse(
-          runCLI(`show project ${manualLib} --json`)
+          runCLI(`show target ${manualLib}:${target} --json`)
         );
 
         // The default's `outputs` only attaches to the inferred target —
         // its source matches the plugin path the filter names.
-        expect(inferredCfg.targets[target]?.outputs).toEqual([
+        expect(inferredCfg.outputs).toEqual([
           '{workspaceRoot}/source-filter-marker',
         ]);
-        expect(manualCfg.targets[target]?.outputs).toBeUndefined();
+        expect(manualCfg.outputs).toBeUndefined();
       });
     });
 
