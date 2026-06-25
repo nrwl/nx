@@ -262,26 +262,15 @@ describe('PerformanceLifeCycle', () => {
     }
   });
 
-  it('measures scheduling latency: a ready task idle while a slot is free', () => {
+  it('does not count a ready task idle on a free slot as recoverable', () => {
     // parallel=2, both independent. `b` is eligible at the run start but doesn't
-    // start until 100 — 100ms of ready work on a free slot (occ < parallel). Pure
-    // dispatch latency, not contention → schedulingOverhead, not the recoverable split.
+    // start until 100 — 100ms of ready work on a free slot (occ < parallel). That's
+    // dispatch latency, not contention, so it stays out of the recoverable split.
     const a = makeTask('a', { start: 0, end: 10 });
     const b = makeTask('b', { start: 100, end: 110 });
     const s = run(makeGraph([a, b]), 2)!;
 
-    expect(s.schedulingOverhead).toBe(100);
     expect(s.recoverableByParallel + s.recoverableByMachines).toBe(0);
-  });
-
-  it('excludes hashing from scheduling latency', () => {
-    // Same free-slot stall, but the coordinator was hashing [10,60] of it → that
-    // 50ms is hashing, not scheduling, so it's subtracted: 100 − 50 = 50.
-    const a = makeTask('a', { start: 0, end: 10 });
-    const b = makeTask('b', { start: 100, end: 110 });
-    const s = run(makeGraph([a, b]), 2, { hashWindows: [[10, 60]] })!;
-
-    expect(s.schedulingOverhead).toBe(50);
   });
 
   it('displays the critical path (longest chain), not the last-finishing task', () => {

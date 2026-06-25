@@ -55,8 +55,6 @@ export interface PerformanceSummary {
   recoverableByParallel: number;
   recoverableByMachines: number;
   coordinatorOverhead: number;
-  /** Diagnostic, never displayed: dispatch/scheduling latency (eligible with a free slot but unstarted, hashing excluded). */
-  schedulingOverhead: number;
   parallel: number;
   cores: number;
   isCI: boolean;
@@ -325,11 +323,6 @@ export class PerformanceAnalysis {
       cores,
       criticalPathDuration,
     });
-    const schedulingOverhead = computeSchedulingOverhead(
-      segments,
-      parallel,
-      hashWindows
-    );
 
     const criticalPathTop = this.computeCriticalPathTop(
       criticalPathTasks,
@@ -375,7 +368,6 @@ export class PerformanceAnalysis {
       recoverableByParallel,
       recoverableByMachines,
       coordinatorOverhead,
-      schedulingOverhead,
       parallel,
       cores,
       isCI,
@@ -671,19 +663,4 @@ function splitOverhead({
     recoverableByMachines: nonParallelRecoverable + ordinaryByMachines,
     recoverableByParallel: ordinaryBySlots - ordinaryByMachines,
   };
-}
-
-/** Dispatch/scheduling latency: wall-clock with a free slot (occ < parallel) and a task eligible but unstarted, minus hashing in that window. Diagnostic only, never displayed. */
-function computeSchedulingOverhead(
-  segments: Segment[],
-  parallel: number,
-  hashWindows: Array<[number, number]>
-): number {
-  return segments.reduce((sum, s) => {
-    if (s.occ >= parallel || s.waiting === 0) {
-      return sum;
-    }
-    const stalled = s.end - s.start;
-    return sum + Math.max(0, stalled - overlap(s.start, s.end, hashWindows));
-  }, 0);
 }
