@@ -1,6 +1,6 @@
 ---
-title: TypeScript Plugin for Nx
-description: Manage TypeScript and JavaScript libraries in your Nx workspace with automatic typechecking, builds via TSC or SWC, and support for project references and package manager workspaces.
+title: Nx with TypeScript
+description: Nx scales your TypeScript monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [typescript, javascript, js, ts]
 sidebar:
   label: Introduction
@@ -9,7 +9,7 @@ weight: 2
 filter: 'type:References'
 ---
 
-The TypeScript plugin for Nx, `@nx/js`, provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-the-typescript-plugin-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
+The TypeScript plugin for Nx, `@nx/js`, helps you run and maintain a TypeScript monorepo. It provides [generators for creating TypeScript and JavaScript projects](#generate-and-manage-typescript-libraries), and the `@nx/js/typescript` plugin automatically infers [`typecheck` and `build` tasks](#how-the-typescript-plugin-infers-tasks) for your projects using package manager workspaces and TypeScript project references. Maintaining TypeScript project references in a monorepo can be cumbersome, the `@nx/js` plugin comes with a [sync generator](/docs/concepts/sync-generators) to automatically upkeep these references.
 
 You don't need the plugin to use TypeScript with Nx, any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin can help simplify setups and maintenance of TypeScript projects at scale.
 
@@ -311,30 +311,11 @@ nx show project <my-project>
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI considerations for TypeScript projects
+## Set up CI for your TypeScript monorepo
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test typecheck lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
-Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
-
-### Remote caching
-
-Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
-
-### Batch mode
-
-For large monorepos with many TypeScript projects, [TSC batch mode](/docs/technologies/typescript/guides/enable-tsc-batch-mode) can improve build performance by batching compilation across projects.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 
