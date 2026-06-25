@@ -479,7 +479,7 @@ impl TasksList {
 
     /// Whether a completing batch's output is being followed by a focused output
     /// pane in spacebar mode, in which case selection should stay on the batch's
-    /// last task so its output remains visible. Only the spacebar case is checked
+    /// last-completed task so its output remains visible. Only the spacebar case is checked
     /// here; a pinned batch pane is preserved separately in `handle_batch_complete`.
     fn is_terminal_showing_batch(&self) -> bool {
         matches!(self.focus, Focus::MultipleOutput(_)) && self.spacebar_mode

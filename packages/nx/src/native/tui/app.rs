@@ -2500,7 +2500,8 @@ impl App {
     }
 
     /// Handles batch completion by ungrouping tasks back to individual display.
-    /// This is called when a batch reaches a terminal state (success or failure).
+    /// Invoked on every batch-status report; only ungroups once all nested tasks
+    /// are terminal (see the guard below).
     fn handle_batch_complete(&mut self, batch_id: String, final_status: BatchStatus) {
         // Early validation
         if batch_id.is_empty() {
