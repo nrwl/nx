@@ -166,7 +166,7 @@ function run(
   };
   return withEnvironmentVariables(envFor(env), () => {
     const lc = makeLifeCycle(graph, env);
-    lc.setParallel(parallelFromTotal(graph, total));
+    lc.startCommand(total, parallelFromTotal(graph, total));
     for (const taskIds of opts.batches ?? []) {
       lc.registerRunningBatch('batch', { executorName: 'e', taskIds } as never);
     }
@@ -1286,22 +1286,22 @@ describe('parallel value', () => {
   it('reports the --parallel passed at construction (continuous slots excluded)', () =>
     withEnvironmentVariables(envFor({}), () => {
       // The runner hands the lifecycle getThreadPoolSize().discrete = --parallel (with
-      // continuous excluded) via setParallel. Pin that seam + that the lifecycle reports
-      // it verbatim, so a regression in either fails here instead of silently skewing the
-      // recommendations.
+      // continuous excluded) as startCommand's second arg. Pin that seam + that the
+      // lifecycle reports it verbatim, so a regression in either fails here instead of
+      // silently skewing the recommendations.
       const discrete = makeTask('d', { start: 0, end: 1000 });
       const c1 = makeTask('c1', { continuous: true });
       const c2 = makeTask('c2', { continuous: true });
       const graph = makeGraph([discrete, c1, c2]);
 
-      const { discrete: parallel } = getThreadPoolSize(
+      const { discrete: parallel, total } = getThreadPoolSize(
         { parallel: 3 } as any,
         graph
       );
       expect(parallel).toBe(3); // continuous tasks don't count toward --parallel
 
       const lc = makeLifeCycle(graph, {});
-      lc.setParallel(parallel);
+      lc.startCommand(total, parallel);
       lc.endTasks([
         { task: discrete, status: 'success' } as unknown as TaskResult,
       ]);
