@@ -1,13 +1,25 @@
 ---
 title: 'Task Sandboxing'
-description: 'Confine each task to its declared inputs and outputs to catch undeclared dependencies and keep caching correct.'
-keywords: [sandboxing, CI, hermeticity, inputs, outputs, caching]
+description: 'Confine each task to its declared inputs and outputs - catch undeclared dependencies, keep caching correct, and keep your remote cache trustworthy.'
+keywords:
+  [
+    sandboxing,
+    CI,
+    hermeticity,
+    inputs,
+    outputs,
+    caching,
+    build integrity,
+    cache integrity,
+  ]
 sidebar:
   label: Task sandboxing
   order: 15
   badge: new!
 filter: 'type:Features'
 ---
+
+{% video_player src="/docs/images/sandboxing/sandboxing-landscape.mp4" poster="/docs/images/sandboxing/sandboxing-landscape-poster.png" alt="Walkthrough of how task sandboxing protects the remote cache, from undeclared file reads to sandbox violations and strict-mode enforcement" showControls=true autoPlay=false /%}
 
 Task sandboxing confines each task to the files it declares as `inputs` and `outputs` in your
 [project configuration](/docs/reference/project-configuration)
@@ -27,6 +39,46 @@ cluster, then enable sandboxing under **Settings > Add-ons**.
 {% aside type="caution" title="Nx 22.6+ Required" %}
 Task sandboxing requires Nx 22.6 or later.
 {% /aside %}
+
+## Your cache is shared infrastructure
+
+A remote cache sits in the path of nearly every build, and it is one of the least
+audited pieces of infrastructure you run.
+It is shared across every branch and every CI job in your workspace.
+On a cache hit the build never runs, and your pipeline ships bytes that an earlier
+run, on some branch, produced.
+
+A task's cache key is a hash of the inputs you declare, and nothing in a stock
+input-hash cache checks that those declarations cover what the build actually
+reads.
+If a task reads a file that is not in its inputs, a shared config outside the
+project or a source directory nobody listed, changing that file does not change
+the key.
+One hash now stands for two different builds, and the cache cannot tell them
+apart.
+
+Most of the time the cost is a stale artifact, not a malicious one.
+A teammate edits the undeclared file, the key does not change, and CI replays the
+old output on a cache hit.
+A deploy or an `npm publish` then ships a build that is missing the change.
+The feature looks merged but never went out, and because the cause is a file that
+was never in the hash, it is hard to trace.
+
+The same gap has an adversarial form.
+On a shared cache, whoever writes a key first owns it.
+An untrusted branch can build with an edited but undeclared file, seed the key
+with a poisoned artifact, and every run on a clean `main` replays it on a cache
+hit, without building and without the file ever showing up in a diff.
+From there it is a short path to a poisoned release, when a publish job takes the
+same cache hit and packs the poisoned output.
+
+This is not specific to Nx.
+It applies to every remote cache built on input hashing, including the default Nx
+cache when it runs without isolation, and Nx has
+[documented this class of risk](https://nx.app/files/cve-2025-06/) directly.
+The defense is not the choice of tool, it is enforcement: something has to
+guarantee the declared inputs match what the build reads.
+That is what task sandboxing does.
 
 ## Why hermeticity matters
 
@@ -112,7 +164,11 @@ appearing to work.
 In **Warning** mode (recommended when getting started), violations are reported in the Nx Cloud UI
 but tasks continue to completion.
 In **Strict** mode, tasks fail immediately when a violation is detected.
+Because a failing task writes nothing to the cache, an undeclared read cannot
+produce a poisonable artifact in the first place.
 See [Cloud settings](#cloud-settings) to configure the enforcement mode.
+
+![A CI Pipeline Execution failed under strict mode, with a banner reading sandbox violations detected and the run marked as failed](../../../../assets/features/sandboxing-strict-failed-run.png)
 
 ## Investigating violations
 
@@ -154,12 +210,18 @@ with two tiles, **Tasks with violations** and **Clean tasks**, and a table of ev
 count of unexpected reads and writes and when it was last seen.
 Filter by branch or task to narrow it down.
 
+![Sandbox violations dashboard with a Tasks with violations tile, a Clean tasks tile, and a table of tasks listing unexpected reads and writes per task](../../../../assets/features/sandboxing-violations-dashboard.png)
+
 The **How to fix these violations** panel offers two paths.
 **Fix with AI** copies a ready-made prompt for your coding agent that downloads the reports, edits
 the task config, and validates before stopping.
 The manual path gives you the equivalent command sequence.
 Either way, [Fix sandbox violations](/docs/guides/nx-cloud/fix-sandbox-violations) walks through the
 full loop.
+
+![The How to fix these violations panel with a Fix with AI button that copies a ready-made prompt to the clipboard](../../../../assets/features/sandboxing-fix-with-ai-panel.png)
+
+![The copied prompt pasted into a coding agent, which downloads the reports and validates the fixes in a loop](../../../../assets/features/sandboxing-coding-agent.png)
 
 ## Inspecting inputs and outputs
 

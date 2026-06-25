@@ -3,4 +3,4 @@ import { type VideoPlayerProps, VideoPlayer as Default } from '@nx/nx-dev-ui-mar
 type Props = VideoPlayerProps;
 ---
 
-<Default {...Astro.props} />
+<Default client:load {...Astro.props} />

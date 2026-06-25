@@ -12,6 +12,10 @@ export const videoPlayer: Schema = {
       type: 'String',
       required: false,
     },
+    poster: {
+      type: 'String',
+      required: false,
+    },
     link: {
       type: 'String',
       required: false,
@@ -42,6 +46,7 @@ export const videoPlayer: Schema = {
 export type VideoPlayerProps = {
   src: string;
   alt: string;
+  poster?: string;
   link?: string;
   showDescription?: boolean;
   showControls?: boolean;
@@ -52,6 +57,7 @@ export type VideoPlayerProps = {
 export function VideoPlayer({
   src,
   alt,
+  poster,
   link,
   showDescription = false,
   showControls,
@@ -73,6 +79,7 @@ export function VideoPlayer({
               <ClientVideo
                 src={src}
                 alt={alt}
+                poster={poster}
                 showControls={showControls}
                 autoPlay={autoPlay}
                 loop={loop}
@@ -82,6 +89,7 @@ export function VideoPlayer({
             <ClientVideo
               src={src}
               alt={alt}
+              poster={poster}
               showControls={showControls}
               autoPlay={autoPlay}
               loop={loop}
