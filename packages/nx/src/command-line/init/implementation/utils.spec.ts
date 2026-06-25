@@ -25,7 +25,7 @@ describe('utils', () => {
           $schema: './node_modules/nx/schemas/nx-schema.json',
           targetDefaults: {
             build: [
-              { filter: { projects: 'tag:web' }, dependsOn: ['^filtered'] },
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
             ],
           },
         });
@@ -37,7 +37,7 @@ describe('utils', () => {
         ).toMatchObject({
           targetDefaults: {
             build: [
-              { filter: { projects: 'tag:web' }, dependsOn: ['^filtered'] },
+              { filter: { projects: ['tag:web'] }, dependsOn: ['^filtered'] },
               { dependsOn: ['^build'], cache: true },
             ],
           },
@@ -83,7 +83,7 @@ describe('utils', () => {
 
     it('appends a new unfiltered entry instead of merging into a filtered one', () => {
       const targetDefaults: TargetDefaults = {
-        build: [{ filter: { projects: 'tag:web' }, cache: true }],
+        build: [{ filter: { projects: ['tag:web'] }, cache: true }],
       };
 
       upsertTargetDefaultEntry(targetDefaults, 'build', {
@@ -92,7 +92,7 @@ describe('utils', () => {
 
       expect(targetDefaults).toEqual({
         build: [
-          { filter: { projects: 'tag:web' }, cache: true },
+          { filter: { projects: ['tag:web'] }, cache: true },
           { dependsOn: ['^build'] },
         ],
       });

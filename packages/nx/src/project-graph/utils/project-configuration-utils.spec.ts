@@ -805,7 +805,7 @@ describe('project-configuration-utils', () => {
           targetDefaults: {
             build: [
               {
-                filter: { projects: 'tag:scope:web' },
+                filter: { projects: ['tag:scope:web'] },
                 cache: true,
                 inputs: ['web-only'],
               },

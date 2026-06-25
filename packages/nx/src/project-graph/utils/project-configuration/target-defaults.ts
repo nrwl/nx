@@ -459,16 +459,15 @@ function mergeMatchingEntries(
 /**
  * Classify a filter's `projects:` value:
  *   - `empty`: `[]` — matches no project, so the entry never matches.
- *   - `all`: absent or `'*'`/`['*']` — no constraint on the projects axis.
+ *   - `all`: absent or `['*']` — no constraint on the projects axis.
  *   - `evaluate`: a real pattern set the matcher must evaluate.
  */
 function classifyProjectsFilter(
-  projects: string | string[] | undefined
+  projects: string[] | undefined
 ): 'empty' | 'all' | 'evaluate' {
   if (projects === undefined) return 'all';
-  const arr = Array.isArray(projects) ? projects : [projects];
-  if (arr.length === 0) return 'empty';
-  if (arr.every((p) => p === '*')) return 'all';
+  if (projects.length === 0) return 'empty';
+  if (projects.every((p) => p === '*')) return 'all';
   return 'evaluate';
 }
 
@@ -489,9 +488,7 @@ function entryFilterMatches(
     if (!ctx.projectName || !ctx.projectNode) return false;
     // Copy — `findMatchingProjects` prepends `*` for a leading negation and
     // would otherwise mutate the shared nxJson entry.
-    const patterns = Array.isArray(filter.projects)
-      ? [...filter.projects!]
-      : [filter.projects!];
+    const patterns = [...filter.projects!];
     const matched = findMatchingProjects(patterns, {
       [ctx.projectName]: ctx.projectNode,
     });

@@ -79,7 +79,7 @@ export function upsertTargetDefault(
 // What the caller is configuring, used to pick which existing entry to update.
 interface UpsertContext {
   tree: Tree;
-  projects: string | string[] | undefined;
+  projects: string[] | undefined;
   plugin: string | undefined;
   executor: string | undefined;
 }
@@ -144,20 +144,12 @@ function filterCoversContext(
     return false;
   }
   if (filter.projects !== undefined) {
-    const configured =
-      context.projects === undefined
-        ? []
-        : Array.isArray(context.projects)
-          ? context.projects
-          : [context.projects];
+    const configured = context.projects ?? [];
     if (configured.length === 0) {
       return false;
     }
     const nodes = contextProjectNodes(context.tree, configured);
-    const patterns = Array.isArray(filter.projects)
-      ? [...filter.projects]
-      : [filter.projects];
-    const matched = findMatchingProjects(patterns, nodes);
+    const matched = findMatchingProjects([...filter.projects], nodes);
     if (!configured.every((project) => matched.includes(project))) {
       return false;
     }
@@ -489,22 +481,20 @@ export function readTargetDefaultsForTarget(
 // Order-insensitive equality so re-upserts with reordered patterns
 // merge into the same entry rather than appending a duplicate.
 function projectsEqual(
-  a: string | string[] | undefined,
-  b: string | string[] | undefined
+  a: string[] | undefined,
+  b: string[] | undefined
 ): boolean {
   if (a === b) return true;
-  const aArr = a === undefined ? undefined : Array.isArray(a) ? a : [a];
-  const bArr = b === undefined ? undefined : Array.isArray(b) ? b : [b];
-  if (!aArr || !bArr) return false;
-  if (aArr.length !== bArr.length) return false;
-  const aSet = new Set(aArr);
-  if (aSet.size !== aArr.length) {
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  const aSet = new Set(a);
+  if (aSet.size !== a.length) {
     // Duplicates inside one array — fall back to positional comparison so
     // we don't silently merge `['a','a']` with `['a']`.
-    for (let i = 0; i < aArr.length; i++) if (aArr[i] !== bArr[i]) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
     return true;
   }
-  for (const item of bArr) if (!aSet.has(item)) return false;
+  for (const item of b) if (!aSet.has(item)) return false;
   return true;
 }
 

@@ -873,18 +873,9 @@
               "description": "Restrict to targets originated by a specific plugin (e.g. '@nx/vite')."
             },
             "projects": {
-              "oneOf": [
-                {
-                  "type": "string",
-                  "description": "A project name, glob, or tag (e.g. 'tag:dotnet')."
-                },
-                {
-                  "type": "array",
-                  "items": { "type": "string" },
-                  "description": "A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy'])."
-                }
-              ],
-              "description": "Restrict the default to matching projects. Uses findMatchingProjects syntax."
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Restrict the default to matching projects. A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy', 'tag:dotnet']). Uses findMatchingProjects syntax."
             },
             "executor": {
               "type": "string",

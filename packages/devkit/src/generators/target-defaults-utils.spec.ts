@@ -200,7 +200,7 @@ describe('target-defaults-utils', () => {
       // it, so it is the one updated.
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
-        projects: 'app-a',
+        projects: ['app-a'],
         inputs: ['new'],
       });
       updateNxJson(tree, nxJson);
@@ -229,7 +229,7 @@ describe('target-defaults-utils', () => {
       // `app-b` lacks `tag:unit`, so the filtered entry does not cover it.
       upsertTargetDefault(tree, nxJson, {
         target: 'test',
-        projects: 'app-b',
+        projects: ['app-b'],
         inputs: ['new'],
       });
       updateNxJson(tree, nxJson);

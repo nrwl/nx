@@ -92,7 +92,7 @@ describe('jest', () => {
     updateJson<NxJsonConfiguration>(tree, 'nx.json', (json) => {
       json.targetDefaults = {
         test: { executor: '@nx/jest:jest' },
-        '@nx/jest:jest': [{ filter: { projects: 'tag:unit' }, cache: false }],
+        '@nx/jest:jest': [{ filter: { projects: ['tag:unit'] }, cache: false }],
       };
       return json;
     });
@@ -103,7 +103,7 @@ describe('jest', () => {
     // The target-scoped and filtered entries the user authored are left as-is.
     expect(td['test']).toEqual({ executor: '@nx/jest:jest' });
     expect(td['@nx/jest:jest']).toEqual([
-      { filter: { projects: 'tag:unit' }, cache: false },
+      { filter: { projects: ['tag:unit'] }, cache: false },
       // A new unfiltered baseline is appended for the executor.
       expect.objectContaining({
         cache: true,

@@ -54,10 +54,10 @@ export type TargetDefaultEntry = {
   /** Executor the default applies to (e.g. `@nx/js:tsc`). */
   executor?: string;
   /**
-   * Restrict the default to a subset of projects. Accepts any pattern
+   * Restrict the default to a subset of projects. Accepts any patterns
    * supported by `findMatchingProjects`.
    */
-  projects?: string | string[];
+  projects?: string[];
   /** Restrict the default to targets originated by a specific plugin. */
   plugin?: string;
 } & Partial<TargetConfiguration>;
@@ -76,11 +76,11 @@ export type TargetDefaultFilter = {
    */
   plugin?: string;
   /**
-   * Restrict the default to a subset of projects. Accepts any pattern
+   * Restrict the default to a subset of projects. Accepts any patterns
    * supported by `findMatchingProjects` (project names, globs, `tag:foo`,
    * directory globs, negation with `!`).
    */
-  projects?: string | string[];
+  projects?: string[];
   /**
    * Restrict the default to targets that resolve to a specific executor
    * (e.g. `@nx/jest:jest`). This narrows *within* a named target key, in
