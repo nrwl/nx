@@ -59,6 +59,10 @@ import { StaticRunOneTerminalOutputLifeCycle } from './life-cycles/static-run-on
 import { StoreRunInformationLifeCycle } from './life-cycles/store-run-information-life-cycle';
 import { getTasksHistoryLifeCycle } from './life-cycles/task-history-life-cycle';
 import { TaskProfilingLifeCycle } from './life-cycles/task-profiling-life-cycle';
+import {
+  PerformanceLifeCycle,
+  flushPerformanceReport,
+} from './life-cycles/performance-life-cycle';
 import { TaskResultsLifeCycle } from './life-cycles/task-results-life-cycle';
 import { TaskTelemetryLifeCycle } from './life-cycles/task-telemetry-life-cycle';
 import { TaskTimingsLifeCycle } from './life-cycles/task-timings-life-cycle';
@@ -219,7 +223,9 @@ async function getTerminalOutputLifeCycle(
         workspaceRoot,
         taskGraph
       );
-      lifeCycles.unshift(appLifeCycle);
+      // The native endCommand renders the perf report in the exit popup; the runner
+      // sources the payload and CompositeLifeCycle forwards it here.
+      lifeCycles.unshift(appLifeCycle as unknown as LifeCycle);
 
       /**
        * Patch stdout.write and stderr.write methods to pass Nx Cloud client logs to the TUI via the lifecycle
@@ -578,6 +584,11 @@ export async function runCommandForTasks(
   } catch (e) {
     restoreTerminal?.();
     throw e;
+  } finally {
+    // Print the report once, on success or failure (restoreTerminal has run in both
+    // paths). No-ops if a multi-task TUI run already delivered it via the popup; its own
+    // try/catch means it never masks `e`.
+    flushPerformanceReport();
   }
 }
 
@@ -984,7 +995,7 @@ export async function invokeTasksRunner({
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(lifeCycle),
+    ...constructLifeCycles(lifeCycle, taskGraph, nxJson, nxArgs.skipNxCache),
     taskResultsLifecycle,
   ]);
 
@@ -1078,7 +1089,12 @@ export async function invokeTasksRunner({
   return taskResultsLifecycle.getTaskResults();
 }
 
-export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
+export function constructLifeCycles(
+  lifeCycle: LifeCycle,
+  taskGraph: TaskGraph,
+  nxJson?: NxJsonConfiguration,
+  skipNxCache?: boolean
+): LifeCycle[] {
   const lifeCycles = [] as LifeCycle[];
   lifeCycles.push(new StoreRunInformationLifeCycle());
   lifeCycles.push(lifeCycle);
@@ -1088,6 +1104,7 @@ export function constructLifeCycles(lifeCycle: LifeCycle): LifeCycle[] {
   if (process.env.NX_PROFILE) {
     lifeCycles.push(new TaskProfilingLifeCycle(process.env.NX_PROFILE));
   }
+  lifeCycles.push(new PerformanceLifeCycle(taskGraph, { skipNxCache, nxJson }));
   lifeCycles.push(new TaskTelemetryLifeCycle());
   const historyLifeCycle = getTasksHistoryLifeCycle();
   lifeCycles.push(historyLifeCycle);

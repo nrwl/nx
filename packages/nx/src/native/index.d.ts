@@ -34,7 +34,7 @@ export declare class AppLifeCycle {
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
-  endCommand(): void
+  endCommand(summary?: PerformanceSummaryPayload | undefined | null): void
   __init(doneCallback: (() => unknown)): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
@@ -275,6 +275,15 @@ export interface CachedResult {
   size?: number
 }
 
+/**
+ * Cache hits vs total; present only when there was a cache outcome. A bypassed
+ * cache is signalled separately by `cache_skipped`.
+ */
+export interface CacheStat {
+  hits: number
+  total: number
+}
+
 export declare function canInstallNxConsole(): Promise<boolean>
 
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
@@ -374,6 +383,13 @@ export declare function findImports(projectFileMap: Record<string, Array<string>
  * This should be called before process exit
  */
 export declare function flushTelemetry(): void
+
+/**
+ * The single duration formatter — used by the task list, terminal report, and TUI
+ * popup. Exposed to JS as `formatDuration` so all three share one implementation.
+ * 0 (or sub-millisecond) → "<1ms", then "470ms", "13.4s", "1m 30s".
+ */
+export declare function formatDuration(ms: number): string
 
 export declare function getBinaryTarget(): string
 
@@ -524,6 +540,15 @@ export declare function killProcessTree(rootPid: number, signal?: string | numbe
  */
 export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
 
+/**
+ * A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+ * popup never hardcodes a URL.
+ */
+export interface Link {
+  text: string
+  href: string
+}
+
 export declare function logDebug(message: string): void
 
 /** Combined metadata for groups and processes */
@@ -563,6 +588,28 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/**
+ * Structured run report shown in the exit-countdown popup. The TUI builds the
+ * visual from these numbers rather than receiving a pre-formatted string.
+ */
+export interface PerformanceSummaryPayload {
+  runDurationMs: number
+  criticalPathMs: number
+  criticalPathTaskCount: number
+  recoverableMs: number
+  cache?: CacheStat
+  cacheSkipped: boolean
+  /** Already in display order; a multi-line entry embeds a task list. */
+  recommendations: Array<string>
+  /** The docs footer link, rendered as a bullet and hyperlinked. */
+  footer: Link
+  /**
+   * Phrases already in `recommendations` to hyperlink in place (e.g. the
+   * remote-cache CTA); empty when none apply.
+   */
+  links: Array<Link>
+}
 
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
