@@ -346,6 +346,97 @@ impl CountdownPopup {
         }
     }
 
+    /// Report-mode content: the report body, then the docs link (its index is returned
+    /// for the OSC 8 injection), then the "longest tasks" rec so its list ends the popup.
+    fn report_mode_content(
+        &self,
+        mut content: Vec<Line<'static>>,
+    ) -> (Vec<Line<'static>>, Option<usize>) {
+        // The docs link is a "- " item, hyperlinked by the OSC 8 injection below (or
+        // left as plain text if that's skipped).
+        let url_line_index = content.len();
+        content.push(Line::from(vec![
+            Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
+            Span::styled(
+                self.summary.as_ref().unwrap().footer.text.clone(),
+                Style::default().fg(THEME.info),
+            ),
+        ]));
+        content.extend(self.longest_tasks_lines());
+        (content, Some(url_line_index))
+    }
+
+    /// Exit-dialog content shown when there's no report (e.g. q pressed mid-run) — just
+    /// the interactive hints.
+    fn exit_dialog_content() -> Vec<Line<'static>> {
+        vec![
+            Line::from(vec![
+                Span::styled("• Press ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled("q to exit immediately ", Style::default().fg(THEME.info)),
+                Span::styled("or ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled("any other key ", Style::default().fg(THEME.info)),
+                Span::styled(
+                    "to keep the TUI running and interactively explore the results.",
+                    Style::default().fg(THEME.secondary_fg),
+                ),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled(
+                    "• Learn how to configure auto-exit and more in the docs: ",
+                    Style::default().fg(THEME.secondary_fg),
+                ),
+                Span::styled(
+                    "https://nx.dev/terminal-ui",
+                    Style::default().fg(THEME.info),
+                ),
+            ]),
+        ]
+    }
+
+    /// The popup title spans: "NX Performance Report — exiting in N..." with a report
+    /// (the countdown drops once pinned), or "NX Exiting in N..." without one.
+    fn build_title_spans(&self, has_report: bool, time_remaining: u64) -> Vec<Span<'static>> {
+        let mut spans = vec![
+            Span::raw("  "),
+            Span::styled(
+                " NX ",
+                Style::default()
+                    .add_modifier(Modifier::BOLD)
+                    .bg(THEME.info)
+                    .fg(THEME.primary_fg),
+            ),
+        ];
+        if has_report {
+            spans.push(Span::styled(
+                "  Performance Report  ",
+                Style::default().fg(THEME.primary_fg),
+            ));
+            if !self.pinned {
+                spans.push(Span::styled(
+                    "— exiting in ",
+                    Style::default().fg(THEME.primary_fg),
+                ));
+                spans.push(Span::styled(
+                    format!("{time_remaining}"),
+                    Style::default().fg(THEME.info),
+                ));
+                spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
+            }
+        } else {
+            spans.push(Span::styled(
+                "  Exiting in ",
+                Style::default().fg(THEME.primary_fg),
+            ));
+            spans.push(Span::styled(
+                format!("{time_remaining}"),
+                Style::default().fg(THEME.info),
+            ));
+            spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
+        }
+        spans
+    }
+
     pub fn render(&mut self, f: &mut Frame<'_>, area: Rect) {
         // Guard against rendering outside buffer bounds (can happen while the
         // user resizes the window before it stabilizes).
@@ -364,52 +455,15 @@ impl CountdownPopup {
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
 
-        // Two modes: with a report (run finished) → the Performance Report;
-        // without one (e.g. q pressed mid-run) → the original exit dialog with
-        // just the interactive hints.
-        let mut content: Vec<Line> = Vec::new();
-        // Presence gates the OSC 8 injection below; the stored index is unused.
-        let mut url_line_index: Option<usize> = None;
         let report = self.build_report_lines();
         let has_report = !report.is_empty();
-        if has_report {
-            content.extend(report);
-            // The docs link is a "- " recommendation item, hyperlinked by the OSC 8
-            // injection below (or left as plain text if that's skipped).
-            url_line_index = Some(content.len());
-            content.push(Line::from(vec![
-                Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
-                Span::styled(
-                    self.summary.as_ref().unwrap().footer.text.clone(),
-                    Style::default().fg(THEME.info),
-                ),
-            ]));
-            // The "speed up the longest tasks" rec goes LAST so its task list
-            // ends the report.
-            content.extend(self.longest_tasks_lines());
+        // Two modes: a finished run shows the Performance Report; otherwise (e.g. q
+        // pressed mid-run) the original exit dialog with just the interactive hints.
+        let (content, url_line_index) = if has_report {
+            self.report_mode_content(report)
         } else {
-            content.push(Line::from(vec![
-                Span::styled("• Press ", Style::default().fg(THEME.secondary_fg)),
-                Span::styled("q to exit immediately ", Style::default().fg(THEME.info)),
-                Span::styled("or ", Style::default().fg(THEME.secondary_fg)),
-                Span::styled("any other key ", Style::default().fg(THEME.info)),
-                Span::styled(
-                    "to keep the TUI running and interactively explore the results.",
-                    Style::default().fg(THEME.secondary_fg),
-                ),
-            ]));
-            content.push(Line::from(""));
-            content.push(Line::from(vec![
-                Span::styled(
-                    "• Learn how to configure auto-exit and more in the docs: ",
-                    Style::default().fg(THEME.secondary_fg),
-                ),
-                Span::styled(
-                    "https://nx.dev/terminal-ui",
-                    Style::default().fg(THEME.info),
-                ),
-            ]));
-        }
+            (Self::exit_dialog_content(), None)
+        };
 
         let seconds_remaining = if let Some(start_time) = self.start_time {
             let elapsed = start_time.elapsed();
@@ -423,44 +477,7 @@ impl CountdownPopup {
         };
         let time_remaining = seconds_remaining + 1;
 
-        // Title (left) and the close hint (top-right) of the border.
-        let mut title_spans = vec![
-            Span::raw("  "),
-            Span::styled(
-                " NX ",
-                Style::default()
-                    .add_modifier(Modifier::BOLD)
-                    .bg(THEME.info)
-                    .fg(THEME.primary_fg),
-            ),
-        ];
-        if has_report {
-            title_spans.push(Span::styled(
-                "  Performance Report  ",
-                Style::default().fg(THEME.primary_fg),
-            ));
-            if !self.pinned {
-                title_spans.push(Span::styled(
-                    "— exiting in ",
-                    Style::default().fg(THEME.primary_fg),
-                ));
-                title_spans.push(Span::styled(
-                    format!("{}", time_remaining),
-                    Style::default().fg(THEME.info),
-                ));
-                title_spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
-            }
-        } else {
-            title_spans.push(Span::styled(
-                "  Exiting in ",
-                Style::default().fg(THEME.primary_fg),
-            ));
-            title_spans.push(Span::styled(
-                format!("{}", time_remaining),
-                Style::default().fg(THEME.info),
-            ));
-            title_spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
-        }
+        let title_spans = self.build_title_spans(has_report, time_remaining);
         let close_hint = vec![
             Span::styled(" (esc) ", Style::default().fg(THEME.secondary_fg)),
             Span::styled("✕  ", Style::default().fg(THEME.info)),

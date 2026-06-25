@@ -101,18 +101,6 @@ export class PerformanceAnalysis {
     private readonly options: PerformanceLifeCycleOptions
   ) {}
 
-  // === Environment (read from env vars / nx.json; tests drive these via env + mocks) ===
-
-  private hashWindows(): Array<[number, number]> {
-    return collectHashWindows();
-  }
-
-  private cacheSkipped(): boolean {
-    // `skipNxCache` already folds in NX_SKIP_NX_CACHE / NX_DISABLE_NX_CACHE,
-    // normalized once in command-line-utils — don't re-read those env vars here.
-    return this.options.skipNxCache === true;
-  }
-
   /**
    * Whether a remote (Nx Cloud) cache is active, from the nx.json handed in at
    * construction. Assumes no remote cache when it wasn't provided rather than
@@ -120,20 +108,6 @@ export class PerformanceAnalysis {
    */
   private remoteCacheEnabled(): boolean {
     return this.options.nxJson ? isNxCloudUsed(this.options.nxJson) : false;
-  }
-
-  private isCI(): boolean {
-    // Shared helper: checks the full set of CI env vars, not just `CI`.
-    return !!isCiEnv();
-  }
-
-  /**
-   * Whether the run is already distributing across machines (Agents/DTE).
-   * Future: source this from the light client (isCloudEnabled &&
-   * isDistributedExecution()) instead of reading the env var directly.
-   */
-  private distributingTasks(): boolean {
-    return !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
   }
 
   // === Analysis (pure functions of the collected timings + task graph) ===
@@ -336,7 +310,7 @@ export class PerformanceAnalysis {
     const cores = detectCoreCount();
 
     const segments = buildSegments(timed, eligible, parallel);
-    const hashWindows = this.hashWindows();
+    const hashWindows = collectHashWindows();
 
     // Pre-dispatch hashing is part of overhead but not the slot split.
     const runDuration = taskWindow + preDispatchHashTime(runStart, hashWindows);
@@ -366,7 +340,9 @@ export class PerformanceAnalysis {
     );
 
     const { cacheHits, cacheableCount } = this.computeCacheStats();
-    const cacheSkipped = this.cacheSkipped();
+    // `skipNxCache` already folds in NX_SKIP_NX_CACHE / NX_DISABLE_NX_CACHE
+    // (normalized in command-line-utils) — don't re-read those env vars here.
+    const cacheSkipped = this.options.skipNxCache === true;
     const remoteCacheEnabled = this.remoteCacheEnabled();
 
     // Coordinator-dominated: hashing/scheduling outweighs task work by >3x the
@@ -375,8 +351,11 @@ export class PerformanceAnalysis {
       coordinatorOverhead >= MEANINGFUL_OVERHEAD &&
       coordinatorOverhead > 3 * criticalPathDuration;
 
-    const isCI = this.isCI();
-    const distributing = this.distributingTasks();
+    // isCiEnv() checks the full set of CI env vars, not just `CI`.
+    const isCI = !!isCiEnv();
+    // TODO: source from the light client's isDistributedExecution() rather than the env var.
+    const distributing =
+      !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
     const structuredRecommendations = buildRecommendation({
       recoverableByParallel,
       recoverableByMachines,

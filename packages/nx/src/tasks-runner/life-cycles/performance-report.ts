@@ -118,8 +118,8 @@ const PARALLEL_LEAD_FRACTION = 0.2;
 
 /**
  * Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". The single
- * implementation lives in Rust (`format_report_duration`); this re-exports it so the
- * terminal report and the TUI popup format durations identically.
+ * implementation lives in Rust (exposed to JS as `formatDuration`); this re-exports
+ * it so the terminal report and the TUI popup format durations identically.
  */
 export function formatDuration(ms: number): string {
   return nativeFormatDuration(ms);
