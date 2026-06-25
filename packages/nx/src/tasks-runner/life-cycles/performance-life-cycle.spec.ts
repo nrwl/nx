@@ -6,14 +6,16 @@ import { withEnvironmentVariables } from '../../internal-testing-utils/with-envi
 import * as nxCloudUtils from '../../utils/nx-cloud-utils';
 import { TaskResult } from '../life-cycle';
 import {
-  buildSegments,
-  mergeIntervals,
-  overlap,
   PerformanceLifeCycle,
   flushPerformanceReport,
   getPerformanceSummaryPayload,
-  TimedTask,
 } from './performance-life-cycle';
+import {
+  buildSegments,
+  mergeIntervals,
+  overlap,
+  TimedTask,
+} from './performance-analysis';
 import { formatDuration, formatReport } from './performance-report';
 import { getThreadPoolSize } from '../task-orchestrator';
 
@@ -187,12 +189,12 @@ describe('PerformanceLifeCycle', () => {
     expect(s.runDuration).toBe(0);
     expect(s.overhead).toBe(0);
     const report = formatReport(s);
-    expect(report).toContain('Run duration:              0ms');
+    expect(report).toContain('Run duration:              <1ms');
     expect(report).not.toContain('NaN');
     expect(report).not.toContain('Infinity');
   });
 
-  it('reports zero overhead and a dependency-gated chain for a single chain', () => {
+  it('reports zero overhead for a single dependency chain', () => {
     const a = makeTask('a', { start: 0, end: 10 });
     const b = makeTask('b', { start: 10, end: 20 });
     const c = makeTask('c', { start: 20, end: 30 });
@@ -201,8 +203,6 @@ describe('PerformanceLifeCycle', () => {
     expect(s.runDuration).toBe(30);
     expect(s.criticalPathDuration).toBe(30);
     expect(s.overhead).toBe(0);
-    expect(s.finishChain.map((g) => g.id)).toEqual(['a', 'b', 'c']);
-    expect(s.finishChain.map((g) => g.gate)).toEqual(['root', 'dep', 'dep']);
   });
 
   it('reports zero overhead when everything runs in parallel', () => {
@@ -214,8 +214,6 @@ describe('PerformanceLifeCycle', () => {
     expect(s.runDuration).toBe(10);
     expect(s.overhead).toBe(0);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.finishChain).toHaveLength(1);
-    expect(s.finishChain[0].gate).toBe('root');
   });
 
   it('attributes slot queuing (spare cores) to recoverable-by-parallelism', () => {
@@ -243,11 +241,6 @@ describe('PerformanceLifeCycle', () => {
       // Single core → no --parallel headroom, so agents is the lever (CI run).
       expect(recs).toContain('Nx Agents');
     }
-    // `b` finished last but is NOT on the critical path (`a` is, same duration);
-    // the finish lineage still surfaces b's slot wait so the bucket has a source.
-    const bLink = s.finishChain.find((g) => g.id === 'b')!;
-    expect(bLink.gate).toBe('slot');
-    expect(bLink.wait).toBe(1000);
   });
 
   it('measures scheduling latency: a ready task idle while a slot is free', () => {
@@ -272,15 +265,14 @@ describe('PerformanceLifeCycle', () => {
     expect(s.schedulingOverhead).toBe(50);
   });
 
-  it('displays the critical path, separate from the finish lineage, when they diverge', () => {
+  it('displays the critical path (longest chain), not the last-finishing task', () => {
     // parallel=1: `a` holds the only slot 0–1000 (the critical path); `b` queues
-    // and finishes last (the finish lineage). We display `a`; b's off-path slot
-    // wait lives in the recoverable-by-parallel bucket.
+    // and finishes last. We display `a`; b's off-path slot wait lives in the
+    // recoverable-by-parallel bucket.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const s = run(makeGraph([a, b]), 1)!;
 
-    expect(s.finishChain.map((c) => c.id)).toEqual(['b']); // attribution basis
     expect(s.criticalPathTop.map((t) => t.id)).toEqual(['a']); // the critical path
   });
 
@@ -315,7 +307,6 @@ describe('PerformanceLifeCycle', () => {
     expect(s.recoverableByParallel).toBe(0);
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
-    expect(s.finishChain[0]).toMatchObject({ id: 'x', gate: 'other' });
     // Coordinator (5s) dwarfs the work (1s critical path) → dominated: recommend
     // Nx Agents (CI run), drop the longest-tasks section, and don't restate the
     // coordinator-overhead number (it's a header stat).
@@ -458,9 +449,8 @@ describe('PerformanceLifeCycle', () => {
     const graph = makeGraph([serve, d, e2e], {}, { e2e: ['serve'] });
     const s = run(graph, 1)!;
 
-    const e2eLink = s.finishChain.find((g) => g.id === 'e2e')!;
-    expect(e2eLink.wait).toBe(0);
-    expect(e2eLink.gate).toBe('root');
+    // e2e waited only for serve to come up (eligibility, not contention), so the
+    // 3000 is coordinator overhead, not recoverable.
     expect(s.recoverableByParallel).toBe(0);
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(3000);
@@ -476,7 +466,6 @@ describe('PerformanceLifeCycle', () => {
     expect(s.overhead).toBe(0);
     expect(s.coordinatorOverhead).toBe(0);
     expect(s.recoverableByParallel).toBe(0);
-    expect(s.finishChain.map((g) => g.id)).toEqual(['a', 'b']);
   });
 
   it('treats a parallelism:false task as occupying the whole pool', () => {
@@ -607,19 +596,6 @@ describe('PerformanceLifeCycle', () => {
     expect(formatReport(s)).not.toContain('Recommendation');
   });
 
-  it('classifies a free-slot wait that overlaps a hashing window as hashing', () => {
-    const core = makeTask('core', { start: 0, end: 1000 });
-    const t = makeTask('t', { start: 3000, end: 4000 });
-    const graph = makeGraph([core, t], { t: ['core'] });
-    // t is eligible at 1000 but starts at 3000 with free slots; the coordinator
-    // was hashing 1000–3000.
-    const s = run(graph, 4, { hashWindows: [[1000, 3000]] })!;
-
-    const tLink = s.finishChain.find((g) => g.id === 't')!;
-    expect(tLink.gate).toBe('hashing');
-    expect(s.recoverableByParallel).toBe(0);
-  });
-
   it('counts pre-dispatch hashing that ran before the first task (cached/fast run)', () => {
     // The task restores in 100ms (1000→1100), but the coordinator hashed 200→800
     // first. That 600ms of pre-dispatch hashing is overhead the task window misses.
@@ -667,7 +643,9 @@ describe('PerformanceLifeCycle', () => {
     const build = makeTask('build', { start: 0, end: 20 });
     const s = run(makeGraph([serve, build]), 2)!;
 
-    expect(s.finishChain.map((g) => g.id)).toEqual(['build']);
+    // Only `build` is a discrete task; `serve` (continuous) is excluded entirely.
+    expect(s.criticalPathTaskCount).toBe(1);
+    expect(s.criticalPathTop.map((t) => t.id)).toEqual(['build']);
   });
 
   it('recovers discrete parallelism when continuous tasks share the pool', () => {
@@ -869,8 +847,8 @@ describe('formatDuration', () => {
   });
 
   it('handles zero and sub-millisecond instants', () => {
-    expect(formatDuration(0)).toBe('0ms');
-    expect(formatDuration(0.4)).toBe('0ms'); // rounds toward zero
+    expect(formatDuration(0)).toBe('<1ms');
+    expect(formatDuration(0.4)).toBe('<1ms'); // rounds to 0
     expect(formatDuration(0.6)).toBe('1ms');
   });
 
@@ -1022,7 +1000,7 @@ describe('formatReport', () => {
         "  Run duration:              1.0s
           Cache:                     0/1 hit (0%)
           Critical path:             1.0s   (1 task)
-          Recoverable time:          0ms
+          Recoverable time:          <1ms
 
           Recommendations:
             - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.

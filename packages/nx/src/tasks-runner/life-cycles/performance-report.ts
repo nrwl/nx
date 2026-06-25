@@ -1,6 +1,7 @@
 import type { Link, PerformanceSummaryPayload } from '../../native';
+import { formatDuration as nativeFormatDuration } from '../../native';
 import { supportsHyperlinks, terminalLink } from '../../utils/terminal-link';
-import type { PerformanceSummary } from './performance-life-cycle';
+import type { PerformanceSummary } from './performance-analysis';
 
 const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
@@ -115,17 +116,13 @@ export const MEANINGFUL_OVERHEAD = 1000;
 /** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
 
-/** Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". */
+/**
+ * Format a millisecond duration as e.g. "3m 30s", "13.4s", or "470ms". The single
+ * implementation lives in Rust (`format_report_duration`); this re-exports it so the
+ * terminal report and the TUI popup format durations identically.
+ */
 export function formatDuration(ms: number): string {
-  if (ms < 1000) {
-    return `${Math.round(ms)}ms`;
-  }
-  const seconds = Math.round(ms / 100) / 10;
-  if (seconds >= 60) {
-    const totalSeconds = Math.round(ms / 1000);
-    return `${Math.floor(totalSeconds / 60)}m ${totalSeconds % 60}s`;
-  }
-  return `${seconds.toFixed(1)}s`;
+  return nativeFormatDuration(ms);
 }
 
 /** Append "s" unless `count` is 1 (regular plurals only). */
