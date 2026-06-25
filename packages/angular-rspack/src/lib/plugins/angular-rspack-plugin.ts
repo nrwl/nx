@@ -157,9 +157,15 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
         if (!watchRunInitialized && compilation.errors.length > 0) {
           const stats = compilation.getStats();
+          const statsOptions = {
+            children: true,
+            errors: true,
+            errorDetails: true,
+            errorStack: true,
+          };
           const compilationError = statsErrorsToString(
-            stats.toJson(),
-            getStatsOptions(this.#_options.verbose)
+            stats.toJson(statsOptions),
+            statsOptions
           );
           callback(new Error(compilationError));
         } else {
