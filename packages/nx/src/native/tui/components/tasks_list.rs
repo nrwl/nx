@@ -176,6 +176,24 @@ pub enum TaskStatus {
     Stopped,
 }
 
+impl TaskStatus {
+    /// Whether the task has reached a terminal state (finished; it will not
+    /// transition again). Exhaustive on purpose: a new non-terminal variant
+    /// won't compile until it is classified here.
+    pub fn is_terminal(&self) -> bool {
+        match self {
+            TaskStatus::Success
+            | TaskStatus::Failure
+            | TaskStatus::Skipped
+            | TaskStatus::LocalCacheKeptExisting
+            | TaskStatus::LocalCache
+            | TaskStatus::RemoteCache
+            | TaskStatus::Stopped => true,
+            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared => false,
+        }
+    }
+}
+
 impl std::str::FromStr for TaskStatus {
     type Err = String;
 
@@ -464,14 +482,9 @@ impl TasksList {
     pub fn is_batch_complete(&self, batch_id: &str) -> bool {
         match self.get_batch_group_by_id(batch_id) {
             Some(batch_group) => batch_group.nested_tasks.iter().all(|id| {
-                self.task_lookup.get(id).is_some_and(|task| {
-                    // Closed-world: any status outside the active set counts as
-                    // terminal. Revisit if a new non-terminal variant is added.
-                    !matches!(
-                        task.status,
-                        TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
-                    )
-                })
+                self.task_lookup
+                    .get(id)
+                    .is_some_and(|task| task.status.is_terminal())
             }),
             None => false,
         }
@@ -681,14 +694,7 @@ impl TasksList {
                     let all_completed = batch_group.nested_tasks.iter().all(|task_id| {
                         self.task_lookup
                             .get(task_id)
-                            .map(|task| {
-                                !matches!(
-                                    task.status,
-                                    TaskStatus::InProgress
-                                        | TaskStatus::Shared
-                                        | TaskStatus::NotStarted
-                                )
-                            })
+                            .map(|task| task.status.is_terminal())
                             .unwrap_or(false)
                     });
 

@@ -455,10 +455,7 @@ impl App {
 
     /// Check if a task status is considered complete
     fn is_status_complete(status: TaskStatus) -> bool {
-        !matches!(
-            status,
-            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
-        )
+        status.is_terminal()
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
@@ -2520,6 +2517,12 @@ impl App {
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
             .map_or(false, |tasks_list| tasks_list.is_batch_complete(&batch_id));
         if !all_tasks_complete {
+            // A nested task isn't terminal yet (an intermediate re-run report, or
+            // a stuck/aborted task). Breadcrumb if a batch ever stays grouped.
+            trace!(
+                "Deferring batch '{}' completion: nested tasks not all terminal yet",
+                batch_id
+            );
             return;
         }
 
