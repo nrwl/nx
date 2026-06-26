@@ -1378,6 +1378,62 @@ describe('project-configuration-utils', () => {
         result: ReturnType<typeof mergeCreateNodesResults>
       ) => result.configurationSourceMaps['libs/a'];
 
+      it('attributes the target node and executor to a default plugin (project.json), not target defaults', () => {
+        const result = mergeCreateNodesResults(
+          [],
+          [
+            [
+              [
+                'nx/core/project-json',
+                'libs/a/project.json',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: { build: { executor: '@nx/js:tsc' } },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        const PROJECT_JSON: SourceInformation = [
+          'libs/a/project.json',
+          'nx/core/project-json',
+        ];
+        // Synthesis runs before the default layer, but the project.json plugin
+        // — not target defaults — owns the target node and its executor.
+        expect(sm['targets.build']).toEqual(PROJECT_JSON);
+        expect(sm['targets.build.executor']).toEqual(PROJECT_JSON);
+        // The default-introduced `cache` is still credited to target defaults.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes the target node to a specified plugin, not target defaults', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+        const sm = sourceMapFor(result);
+        // The target node belongs to the plugin that introduced the target,
+        // even though target defaults later stamped fields onto it.
+        expect(sm['targets.build']).toEqual(PLUGIN);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+      });
+
       it('keeps the plugin executor attribution while crediting a target-default-introduced field (object form)', () => {
         const result = mergeCreateNodesResults(
           vitePluginResult(),

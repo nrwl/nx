@@ -23,6 +23,7 @@ import {
   SourceInformation,
   ConfigurationSourceMaps,
   targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
 } from './source-maps';
 import {
   deepClone,
@@ -162,7 +163,7 @@ export function createTargetDefaultsResults(
       .sort((a, b) => a - b);
     for (const index of indices) {
       results.push([
-        'nx/target-defaults',
+        TARGET_DEFAULTS_PLUGIN_NAME,
         targetDefaultSourceFile(key, isArrayForm ? index : undefined),
         { projects: syntheticProjectsByKeyIndex[key][index] },
       ]);
@@ -560,7 +561,8 @@ function resolveSourcePlugin(
   ];
 
   for (const candidate of candidates) {
-    if (candidate && candidate !== 'nx/target-defaults') return candidate;
+    if (candidate && candidate !== TARGET_DEFAULTS_PLUGIN_NAME)
+      return candidate;
   }
   return undefined;
 }

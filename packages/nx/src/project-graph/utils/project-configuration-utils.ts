@@ -35,6 +35,10 @@ import type {
   ConfigurationSourceMaps,
   SourceInformation,
 } from './project-configuration/source-maps';
+import {
+  targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
+} from './project-configuration/source-maps';
 
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
@@ -449,11 +453,33 @@ export function mergeCreateNodesResults(
   //    above. The stale default-plugin entry in
   //    `defaultConfigurationSourceMaps` must NOT clobber the base
   //    attribution that the specified plugin / TD already recorded.
+  const mainRootMap = nodesManager.getRootMap();
   for (const root in defaultConfigurationSourceMaps) {
     const existing = (configurationSourceMaps[root] ??= {});
     const incoming = defaultConfigurationSourceMaps[root];
+
+    // A default plugin's targets are synthesized into the main rootmap by
+    // target defaults *before* the default layer is applied, so target
+    // defaults wrote the main source map's entry for the target node and its
+    // `executor`/`command` first — even though it never authored them (it only
+    // stamps the executor/command as a merge guard and cannot bring a target
+    // into existence). For those identity keys, the real default plugin's
+    // attribution must override the target-defaults stamp.
+    const identityKeys = new Set<string>();
+    for (const targetName in mainRootMap[root]?.targets ?? {}) {
+      const base = targetSourceMapKey(targetName);
+      identityKeys.add(base);
+      identityKeys.add(`${base}.executor`);
+      identityKeys.add(`${base}.command`);
+    }
+
     for (const key in incoming) {
       if (existing[key] === undefined) {
+        existing[key] = incoming[key];
+      } else if (
+        identityKeys.has(key) &&
+        existing[key][1] === TARGET_DEFAULTS_PLUGIN_NAME
+      ) {
         existing[key] = incoming[key];
       }
     }

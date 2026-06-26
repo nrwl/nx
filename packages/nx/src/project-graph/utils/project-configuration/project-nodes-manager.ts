@@ -13,7 +13,10 @@ import {
 import { validateProject } from './target-normalization';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
-import { targetSourceMapKey } from './source-maps';
+import {
+  recordTargetIdentitySourceMapInfo,
+  targetSourceMapKey,
+} from './source-maps';
 
 import { minimatch } from 'minimatch';
 import { isGlobPattern } from '../../../utils/globs';
@@ -171,7 +174,15 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        sourceMap[targetSourceMapKey(targetName)] = sourceInformation;
+        // A target default stamping fields onto an existing target must not
+        // steal provenance for the target's existence; real plugins still win
+        // last. Field-level attribution is handled inside
+        // `mergeTargetConfigurations`.
+        recordTargetIdentitySourceMapInfo(
+          sourceMap,
+          targetSourceMapKey(targetName),
+          sourceInformation
+        );
       }
 
       const normalizedTarget = skipTargetNormalization

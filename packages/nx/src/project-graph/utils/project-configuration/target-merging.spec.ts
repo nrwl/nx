@@ -689,6 +689,43 @@ describe('spread syntax in mergeTargetConfigurations', () => {
         'nx/target-defaults',
       ]);
     });
+
+    it('does not let a target default steal the target node key from a plugin', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['vite.config.ts', '@nx/vite/plugin'],
+      };
+      // A target default merges onto the plugin's target, adding `cache`.
+      mergeTargetConfigurations(
+        { executor: '@nx/vite:build', cache: true },
+        { executor: '@nx/vite:build' },
+        sourceMap,
+        ['nx.json#targetDefaults.build', 'nx/target-defaults'],
+        'targets.build'
+      );
+
+      // The plugin still owns the target node — the target default only
+      // stamped a field onto it.
+      expect(sourceMap['targets.build']).toEqual([
+        'vite.config.ts',
+        '@nx/vite/plugin',
+      ]);
+    });
+
+    it('lets a real plugin claim the target node key last (target defaults aside)', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // A second real plugin augments the same target — real plugins win last.
+      mergeTargetConfigurations(
+        { executor: 'nx:run-commands', cache: true },
+        { executor: 'nx:run-commands' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+    });
   });
 
   it('should replace array without spread token', () => {
