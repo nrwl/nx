@@ -106,6 +106,11 @@ function linksToPerformanceDocs(recommendations: Recommendation[]): boolean {
   );
 }
 
+/** The footer candidate's criteria: show the generic "learn more" footer only when no recommendation already links to that same page. Shared by every renderer (terminal, TUI, GitHub summary) so the footer stays aligned across them. */
+function shouldShowFooter(recommendations: Recommendation[]): boolean {
+  return !linksToPerformanceDocs(recommendations);
+}
+
 /** The popup links for the phrase-style CTAs in a recommendation list (url links live inline in the strings). */
 function recommendationLinks(recommendations: Recommendation[]): Link[] {
   return recommendations.flatMap((rec) =>
@@ -122,10 +127,6 @@ const LOW_CACHE_HIT_RATE = 0.1;
 export const MEANINGFUL_OVERHEAD = 1000;
 /** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
-
-// Single Rust implementation, re-exported so the terminal report and the TUI popup
-// format durations ("3m 30s", "13.4s", "470ms") identically.
-export { formatDuration };
 
 /** Append "s" unless `count` is 1 (regular plurals only). */
 function pluralize(count: number, noun: string): string {
@@ -155,7 +156,130 @@ function formatTopTaskRows(
 /** An Nx Agents URL link, built from the link definition so the URL text never has to be scanned back out of the assembled report. */
 const agentsLink: RecLink = urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
 
-/** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Distribute advice is omitted unless `canDistribute` AND it can recover at least {@link PARALLEL_LEAD_FRACTION} of the run. */
+/** Everything a lever candidate inspects to decide whether it applies and to build itself. */
+interface RecommendationContext {
+  recoverableByParallel: number;
+  recoverableByMachines: number;
+  /** Slot time recoverable by parallelism or more machines (the two halves' sum). */
+  recoverable: number;
+  coordinatorDominated: boolean;
+  runDuration: number;
+  parallel: number;
+  cores: number;
+  canDistribute: boolean;
+  distributing: boolean;
+  criticalPathTop: Array<{ id: string; duration: number }>;
+}
+
+/** A speed lever that knows the run shape it applies to and the advice it yields. */
+interface LeverCandidate {
+  /** Whether this lever diagnoses the run's bottleneck. */
+  isApplicable(c: RecommendationContext): boolean;
+  /** The advice to show; may be empty when the lever applies but its only fix is CI-gated. */
+  build(c: RecommendationContext): Recommendation[];
+}
+
+/**
+ * Mutually-exclusive speed levers, highest priority first. The first whose `isApplicable`
+ * is true wins — even when its `build` yields nothing (a machine-bound run outside CI has
+ * no local fix, but the bottleneck is still diagnosed, so the critical-path fallback is
+ * skipped). When none applies the run is critical-path-bound.
+ */
+const LEVER_CANDIDATES: LeverCandidate[] = [
+  {
+    // Already on agents: more agents (not local --parallel) is the parallelism lever.
+    isApplicable: (c) =>
+      c.distributing &&
+      c.runDuration > 0 &&
+      c.recoverable >= PARALLEL_LEAD_FRACTION * c.runDuration,
+    build: (c) => [
+      [`Add more Nx Agents to recover up to ${formatDuration(c.recoverable)}.`],
+    ],
+  },
+  {
+    // Slot-bound with spare cores: the lever is local --parallel. Whole-phrase link to the
+    // perf docs (the same page the footer points at, so the footer drops when this shows);
+    // the period stays outside the link.
+    isApplicable: (c) =>
+      !c.distributing &&
+      c.runDuration > 0 &&
+      c.recoverableByParallel >= PARALLEL_LEAD_FRACTION * c.runDuration &&
+      c.recoverableByParallel >= c.recoverableByMachines,
+    build: (c) => [
+      [
+        phraseLink(
+          `Increase parallelism to recover up to ${formatDuration(
+            c.recoverableByParallel
+          )}`,
+          NX_PERFORMANCE_LINK
+        ),
+        `.`,
+      ],
+    ],
+  },
+  {
+    // At the core ceiling and still queuing. Agents for CPU-bound work; otherwise only the
+    // I/O-bound --parallel tip applies.
+    isApplicable: (c) =>
+      !c.distributing &&
+      c.recoverableByMachines >= MEANINGFUL_OVERHEAD &&
+      c.parallel >= c.cores,
+    build: (c) => {
+      const base = `You're at this machine's ${c.cores} ${pluralize(
+        c.cores,
+        'core'
+      )} and tasks are still queuing for a slot.`;
+      return [
+        c.canDistribute
+          ? [
+              `${base} If they're CPU-bound, distribute across machines with Nx Agents → `,
+              agentsLink,
+              `; if they're I/O-bound, a higher --parallel may help instead.`,
+            ]
+          : [`${base} If they're I/O-bound, a higher --parallel may help.`],
+      ];
+    },
+  },
+  {
+    // Below the core ceiling but still machine-bound (a parallelism:false task monopolizes
+    // the pool, or volume exceeds the cores): only more machines can free those slots, and
+    // that lever only exists in CI.
+    isApplicable: (c) =>
+      !c.distributing &&
+      c.recoverableByMachines >= MEANINGFUL_OVERHEAD &&
+      c.parallel < c.cores,
+    build: (c) =>
+      c.canDistribute
+        ? [
+            [
+              `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → `,
+              agentsLink,
+              `.`,
+            ],
+          ]
+        : [],
+  },
+  {
+    // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are the
+    // only lever; locally nothing actionable.
+    isApplicable: (c) =>
+      !c.distributing &&
+      c.recoverableByMachines < MEANINGFUL_OVERHEAD &&
+      c.coordinatorDominated,
+    build: (c) =>
+      c.canDistribute
+        ? [
+            [
+              `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → `,
+              agentsLink,
+              `.`,
+            ],
+          ]
+        : [],
+  },
+];
+
+/** Actionable levers to go faster, one rec per lever (see {@link LEVER_CANDIDATES}). When no lever applies the run is critical-path-bound: shorten the chain's longest tasks, and — only in CI when it recovers at least {@link PARALLEL_LEAD_FRACTION} of the run — distribute the rest. */
 export function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
@@ -167,116 +291,33 @@ export function buildRecommendation(args: {
   distributing: boolean;
   criticalPathTop: Array<{ id: string; duration: number }>;
 }): Recommendation[] {
-  const {
-    recoverableByParallel,
-    recoverableByMachines,
-    coordinatorDominated,
-    runDuration,
-    parallel,
-    cores,
-    canDistribute,
-    distributing,
-    criticalPathTop,
-  } = args;
+  const c: RecommendationContext = {
+    ...args,
+    recoverable: args.recoverableByParallel + args.recoverableByMachines,
+  };
 
-  if (distributing) {
-    // Already on agents: more agents (not local --parallel) is the parallelism lever;
-    // the cores/machine framing below doesn't apply to a distributed run.
-    const recoverable = recoverableByParallel + recoverableByMachines;
-    if (
-      runDuration > 0 &&
-      recoverable >= PARALLEL_LEAD_FRACTION * runDuration
-    ) {
-      return [
-        [`Add more Nx Agents to recover up to ${formatDuration(recoverable)}.`],
-      ];
-    }
-  } else {
-    // Slot-bound with spare cores: the lever is local --parallel, not agents.
-    if (
-      runDuration > 0 &&
-      recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
-      recoverableByParallel >= recoverableByMachines
-    ) {
-      // Whole-phrase link to the perf docs (the same page the footer points at, so
-      // the footer is dropped when this rec is shown); period stays outside the link.
-      return [
-        [
-          phraseLink(
-            `Increase parallelism to recover up to ${formatDuration(
-              recoverableByParallel
-            )}`,
-            NX_PERFORMANCE_LINK
-          ),
-          `.`,
-        ],
-      ];
-    }
-    // Machine-bound: contention a higher local --parallel can't recover.
-    if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
-      if (parallel >= cores) {
-        // At the core ceiling and still queuing. Agents for CPU-bound work;
-        // otherwise only the I/O-bound --parallel tip applies.
-        const base = `You're at this machine's ${cores} ${pluralize(
-          cores,
-          'core'
-        )} and tasks are still queuing for a slot.`;
-        return [
-          canDistribute
-            ? [
-                `${base} If they're CPU-bound, distribute across machines with Nx Agents → `,
-                agentsLink,
-                `; if they're I/O-bound, a higher --parallel may help instead.`,
-              ]
-            : [`${base} If they're I/O-bound, a higher --parallel may help.`],
-        ];
-      }
-      // Below the core ceiling but still machine-bound (a parallelism:false task
-      // monopolizes the pool, or volume exceeds the cores): only more machines can
-      // free those slots, and that lever only exists in CI.
-      return canDistribute
-        ? [
-            [
-              `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → `,
-              agentsLink,
-              `.`,
-            ],
-          ]
-        : [];
-    }
-    // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are
-    // the only lever; locally nothing actionable.
-    if (coordinatorDominated) {
-      return canDistribute
-        ? [
-            [
-              `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → `,
-              agentsLink,
-              `.`,
-            ],
-          ]
-        : [];
-    }
+  const lever = LEVER_CANDIDATES.find((candidate) => candidate.isApplicable(c));
+  if (lever) {
+    return lever.build(c);
   }
   // Critical-path-bound: shorten the chain's longest tasks and distribute the rest.
   // Nothing ran (fully cached) → no rec.
-  if (criticalPathTop.length === 0) {
+  if (c.criticalPathTop.length === 0) {
     return [];
   }
   const speedUp: Recommendation = [
     [
       `Speed up or split the longest tasks on the critical path:`,
-      ...formatTopTaskRows(criticalPathTop),
+      ...formatTopTaskRows(c.criticalPathTop),
     ].join('\n'),
   ];
   const recommendations: Recommendation[] = [speedUp];
-  // Only distribute when it can recover a meaningful slice of the run; a sequential
-  // chain (nothing recoverable) gains nothing from more machines.
-  const recoverable = recoverableByParallel + recoverableByMachines;
+  // Only distribute when it can recover a meaningful slice of the run; a sequential chain
+  // (nothing recoverable) gains nothing from more machines.
   if (
-    canDistribute &&
-    runDuration > 0 &&
-    recoverable >= PARALLEL_LEAD_FRACTION * runDuration
+    c.canDistribute &&
+    c.runDuration > 0 &&
+    c.recoverable >= PARALLEL_LEAD_FRACTION * c.runDuration
   ) {
     recommendations.push([
       `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → `,
@@ -399,7 +440,7 @@ export function formatReport(s: PerformanceSummary): string {
   // utm-tagged footer (a url link): with OSC 8 the clean URL shows and hides the utm
   // in the target; without it the tagged URL prints verbatim. Dropped when a rec
   // already links to the same perf docs page (e.g. the parallelism lever).
-  if (!linksToPerformanceDocs(recommendations)) {
+  if (shouldShowFooter(recommendations)) {
     const footer: Recommendation = [
       `  ${NX_PERFORMANCE_LABEL} → `,
       urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
@@ -407,6 +448,112 @@ export function formatReport(s: PerformanceSummary): string {
     lines.push('', render(footer));
   }
   // No trailing newline — the caller's console.log adds the line terminator.
+  return lines.join('\n');
+}
+
+/** A task that failed during the run, for the GitHub Actions summary's failed-tasks table. */
+export interface FailedTask {
+  id: string;
+  duration: number;
+}
+
+/**
+ * A recommendation as Markdown: every link becomes `[text](href)` (no OSC 8, unlike the
+ * terminal renderer). A phrase link reads as prose, so the whole sentence is the link
+ * text; a url link's visible text is the bare URL (a terminal affordance for shells
+ * without OSC 8), so Markdown gives it a readable "Learn more" label instead — the href
+ * already carries the destination. The critical-path rec embeds newline-separated,
+ * space-aligned task rows; collapse them to `<br>`-joined lines so they render inside the
+ * list item.
+ */
+function recommendationToMarkdownString(rec: Recommendation): string {
+  return rec
+    .map((part) => {
+      if (!isRecLink(part)) {
+        return part;
+      }
+      const text = part.style === 'phrase' ? part.visible : 'Learn more';
+      return `[${text}](${part.href})`;
+    })
+    .join('')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('<br>');
+}
+
+/** Escape the Markdown table cell delimiter so a task id containing `|` can't break the row. */
+function escapeTableCell(value: string): string {
+  return value.replace(/\|/g, '\\|');
+}
+
+/**
+ * The performance report as GitHub-flavored Markdown for the Actions job summary
+ * (`$GITHUB_STEP_SUMMARY`). Mirrors {@link formatReport}'s content — the same stats and
+ * recommendations — and, when the run had failures, surfaces them in a Failed tasks table
+ * (the terminal report has no table). Links render as Markdown links rather than OSC 8
+ * hyperlinks.
+ *
+ * `command` (the nx command, e.g. `run-many -t build`) is appended to the heading so
+ * stacked reports from multiple nx commands in one job summary stay distinguishable.
+ */
+export function formatReportMarkdown(
+  s: PerformanceSummary,
+  failedTasks: FailedTask[],
+  command = ''
+): string {
+  const fmt = formatDuration;
+  const recoverable = recoverableTime(s);
+  const recoverablePct =
+    s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
+  const cache = cacheStat(s);
+
+  // Headline stats as a borderless two-column table, mirroring the terminal stat lines.
+  const lines = [
+    command
+      ? `## ⚡ Nx Performance Report — \`${command}\``
+      : '## ⚡ Nx Performance Report',
+    '',
+    '| | |',
+    '| :-- | :-- |',
+    `| **Run duration** | ${fmt(s.runDuration)} |`,
+    ...(cache ? [`| **Cache** | ${cache} |`] : []),
+    `| **Critical path** | ${fmt(s.criticalPathDuration)} (${
+      s.criticalPathTaskCount
+    } ${pluralize(s.criticalPathTaskCount, 'task')}) |`,
+    `| **Recoverable time** | ${
+      recoverable > 0
+        ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
+        : fmt(recoverable)
+    } |`,
+  ];
+
+  // The failures are the actionable part of a CI summary, so list them (slowest first)
+  // right under the stats. A green run shows no table at all.
+  if (failedTasks.length > 0) {
+    lines.push(
+      '',
+      `### ❌ Failed tasks (${failedTasks.length})`,
+      '',
+      '| Task | Duration |',
+      '| :-- | --: |',
+      ...failedTasks.map(
+        (t) => `| \`${escapeTableCell(t.id)}\` | ${fmt(t.duration)} |`
+      )
+    );
+  }
+
+  const recommendations = orderedRecommendations(s);
+  if (recommendations.length > 0) {
+    lines.push('', '### Recommendations', '');
+    for (const rec of recommendations) {
+      lines.push(`- ${recommendationToMarkdownString(rec)}`);
+    }
+  }
+
+  if (shouldShowFooter(recommendations)) {
+    lines.push('', `[${NX_PERFORMANCE_LABEL}](${NX_PERFORMANCE_LINK})`);
+  }
   return lines.join('\n');
 }
 
@@ -437,9 +584,9 @@ export function buildExitSummaryPayload(
     recommendations: recommendations.map(recommendationToPayloadString),
     // Dropped when a rec already links to the same perf docs page (the popup then
     // renders no footer bullet).
-    footer: linksToPerformanceDocs(recommendations)
-      ? undefined
-      : { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
+    footer: shouldShowFooter(recommendations)
+      ? { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK }
+      : undefined,
     // Phrase links (e.g. the remote-cache CTA) carry their href as data so the
     // popup hyperlinks the phrase in place; surfaced only when shown.
     links: recommendationLinks(recommendations),

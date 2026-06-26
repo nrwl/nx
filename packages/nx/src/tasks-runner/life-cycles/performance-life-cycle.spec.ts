@@ -1,4 +1,6 @@
 import * as os from 'node:os';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import type { NxJsonConfiguration } from '../../config/nx-json';
 import { Task, TaskGraph } from '../../config/task-graph';
@@ -19,10 +21,12 @@ import {
   preDispatchHashTime,
   TimedTask,
 } from './performance-analysis';
+import { formatDuration } from '../../native';
 import {
   buildExitSummaryPayload,
-  formatDuration,
+  FailedTask,
   formatReport,
+  formatReportMarkdown,
   recommendationToPayloadString,
 } from './performance-report';
 import { getThreadPoolSize } from '../task-orchestrator';
@@ -223,6 +227,34 @@ describe('PerformanceLifeCycle', () => {
     expect(s.runDuration).toBe(30);
     expect(s.criticalPathDuration).toBe(30);
     expect(s.overhead).toBe(0);
+  });
+
+  it('falls back to startTasks/endTasks wall-clock when the runner leaves task.startTime/endTime unset (Nx Cloud coordinator)', () => {
+    // The local orchestrator stamps task.startTime/endTime; the Nx Cloud coordinator drives
+    // the lifecycle hooks without them. startTasks captures the start and endTasks falls
+    // back to "now" for the end, so a cloud run still produces (and prints) a report.
+    const a = makeTask('a'); // no startTime/endTime on the task object
+    const b = makeTask('b');
+    const graph = makeGraph([a, b], { b: ['a'] });
+    const s = withEnvironmentVariables(envFor({}), () => {
+      const lc = makeLifeCycle(graph);
+      lc.startCommand(2, 1);
+      const now = jest.spyOn(Date, 'now');
+      now.mockReturnValue(1000);
+      lc.startTasks([a]);
+      now.mockReturnValue(2000);
+      lc.endTasks([{ task: a, status: 'success' }] as unknown as TaskResult[]);
+      now.mockReturnValue(2000);
+      lc.startTasks([b]);
+      now.mockReturnValue(4000);
+      lc.endTasks([{ task: b, status: 'success' }] as unknown as TaskResult[]);
+      now.mockRestore();
+      return lc.getSummary();
+    });
+
+    expect(s).not.toBeNull();
+    expect(s!.runDuration).toBe(3000); // a 1000–2000, b 2000–4000
+    expect(s!.criticalPathDuration).toBe(3000); // a → b chain, no overhead
   });
 
   it('reports zero overhead when everything runs in parallel', () => {
@@ -1121,6 +1153,171 @@ describe('formatReport', () => {
   });
 });
 
+describe('getFailedTasks', () => {
+  /** Build a lifecycle, feed it a finished run, and return it so getFailedTasks can be inspected. */
+  function fed(
+    graph: TaskGraph,
+    statuses: Record<string, TaskResult['status']> = {}
+  ): PerformanceLifeCycle {
+    return withEnvironmentVariables(envFor({}), () => {
+      const lc = makeLifeCycle(graph);
+      lc.endTasks(
+        Object.values(graph.tasks).map(
+          (task) =>
+            ({ task, status: statuses[task.id] }) as unknown as TaskResult
+        )
+      );
+      return lc;
+    });
+  }
+
+  it('lists only the failed tasks, slowest first, with their durations', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 0, end: 3000 });
+    const c = makeTask('c', { start: 0, end: 2000 });
+    const lc = fed(makeGraph([a, b, c]), {
+      a: 'failure',
+      b: 'failure',
+      c: 'success', // excluded — it passed
+    });
+
+    expect(lc.getFailedTasks()).toEqual([
+      { id: 'b', duration: 3000 },
+      { id: 'a', duration: 1000 },
+    ]);
+  });
+
+  it('returns nothing when no task failed', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 0, end: 2000 });
+    const lc = fed(makeGraph([a, b]), { a: 'success', b: 'local-cache' });
+
+    expect(lc.getFailedTasks()).toEqual([]);
+  });
+
+  it('excludes continuous tasks and tasks without a complete window', () => {
+    const failed = makeTask('failed', { start: 0, end: 1000 });
+    const serve = makeTask('serve', { start: 0, continuous: true }); // no end time
+    const partial = makeTask('partial', { start: 5 }); // started, never finished
+    const lc = fed(makeGraph([failed, serve, partial]), {
+      failed: 'failure',
+      serve: 'failure',
+      partial: 'failure',
+    });
+
+    expect(lc.getFailedTasks().map((t) => t.id)).toEqual(['failed']);
+  });
+});
+
+describe('formatReportMarkdown', () => {
+  it('renders the report with a Failed tasks table as Markdown (snapshot)', () => {
+    // A CI run with a cold cache and no remote yields the richest report; the failed
+    // task is surfaced right under the stats.
+    const a = makeTask('a', { start: 0, end: 3000 });
+    const b = makeTask('b', { start: 0, end: 1000 });
+    const s = run(makeGraph([a, b]), 2, {
+      statuses: { a: 'failure', b: 'success' },
+      remoteCacheEnabled: false,
+      isCI: true,
+    })!;
+    const failedTasks: FailedTask[] = [{ id: 'a', duration: 3000 }];
+
+    expect(formatReportMarkdown(s, failedTasks, 'run-many -t build'))
+      .toMatchInlineSnapshot(`
+      "## ⚡ Nx Performance Report — \`run-many -t build\`
+
+      | | |
+      | :-- | :-- |
+      | **Run duration** | 3.0s |
+      | **Cache** | 0/1 hit (0%) |
+      | **Critical path** | 3.0s (1 task) |
+      | **Recoverable time** | <1ms |
+
+      ### ❌ Failed tasks (1)
+
+      | Task | Duration |
+      | :-- | --: |
+      | \`a\` | 3.0s |
+
+      ### Recommendations
+
+      - [Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm=performance-report).
+      - Speed up or split the longest tasks on the critical path:<br>a    3.0s
+
+      [Learn how to improve your run's performance](https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report)"
+    `);
+  });
+
+  it('omits the Failed tasks section when nothing failed', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
+
+    expect(formatReportMarkdown(s, [])).not.toContain('Failed tasks');
+  });
+
+  it('puts the nx command in the heading so stacked reports stay distinguishable', () => {
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
+
+    expect(formatReportMarkdown(s, [], 'run-many -t build test')).toContain(
+      '## ⚡ Nx Performance Report — `run-many -t build test`'
+    );
+    // No command (e.g. the programmatic path) → plain heading, no trailing dash.
+    const plain = formatReportMarkdown(s, []);
+    expect(plain).toContain('## ⚡ Nx Performance Report\n');
+    expect(plain).not.toContain('Report — ');
+  });
+
+  it('labels a url (docs) link rather than printing the raw URL as the link text', () => {
+    // Machine-bound contention surfaces a distribute-across-machines recommendation — a
+    // url-style link; Markdown should label it rather than print the raw URL.
+    const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
+    const q = makeTask('q', { start: 1200, end: 2000 });
+    const s = run(makeGraph([np, q]), 2, { isCI: true })!;
+    const md = formatReportMarkdown(s, []);
+
+    expect(md).toContain(
+      '[Learn more](https://nx.dev/ci/features/distribute-task-execution?utm=performance-report)'
+    );
+    // The bare URL is never the visible link text.
+    expect(md).not.toContain(
+      '[https://nx.dev/ci/features/distribute-task-execution]'
+    );
+  });
+
+  it('renders a phrase recommendation as a single Markdown link (whole sentence linked)', () => {
+    // A cold cache with no remote surfaces the remote-cache CTA — a phrase link.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const s = run(makeGraph([a]), 1, {
+      statuses: { a: 'success' }, // 0/1 hit → low hit rate
+      remoteCacheEnabled: false,
+      isCI: true,
+    })!;
+
+    expect(formatReportMarkdown(s, [])).toContain(
+      '[Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm=performance-report)'
+    );
+  });
+
+  it('drops the redundant footer when a recommendation already links to the perf docs', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    // The parallelism lever links to the perf docs (the same page the footer points at),
+    // so the GitHub summary drops the generic footer — aligned with the terminal and TUI.
+    const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1)!;
+
+    if (cores >= 2) {
+      const md = formatReportMarkdown(s, []);
+      expect(md).toContain('Increase parallelism to recover up to');
+      expect(md).not.toContain("[Learn how to improve your run's performance]");
+    }
+  });
+});
+
 describe('overlap', () => {
   it('sums the overlap of [a,b] with each interval', () => {
     expect(overlap(0, 10, [[5, 15]])).toBe(5);
@@ -1336,13 +1533,102 @@ describe('flushPerformanceReport', () => {
       expect(() => flushPerformanceReport()).not.toThrow();
     }));
 
+  it('appends the report (command in heading, failed-tasks table) to the GitHub Actions job summary', () => {
+    const dir = mkdtempSync(join(os.tmpdir(), 'nx-perf-gha-'));
+    const summaryFile = join(dir, 'summary.md');
+    const originalArgv = process.argv;
+    // currentNxCommand() reads argv after the node + nx-bin entries.
+    process.argv = ['node', '/path/to/nx', 'run-many', '-t', 'build'];
+    try {
+      withEnvironmentVariables(
+        {
+          ...envFor({}),
+          GITHUB_ACTIONS: 'true',
+          GITHUB_STEP_SUMMARY: summaryFile,
+          // Simulate a top-level invocation; `nx test` sets this on the jest task's env.
+          NX_TASK_TARGET_PROJECT: null,
+        },
+        () => {
+          const a = makeTask('a', { start: 0, end: 1000 });
+          feedActive(makeGraph([a]), 'failure');
+          flushPerformanceReport();
+        }
+      );
+
+      const written = readFileSync(summaryFile, 'utf-8');
+      expect(written).toContain(
+        '## ⚡ Nx Performance Report — `run-many -t build`'
+      );
+      expect(written).toContain('### ❌ Failed tasks (1)');
+      expect(written).toContain('| `a` | 1.0s |');
+      // Trailing newline so a later step's summary content starts on its own line.
+      expect(written.endsWith('\n')).toBe(true);
+    } finally {
+      process.argv = originalArgv;
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not write a job summary outside GitHub Actions', () => {
+    const dir = mkdtempSync(join(os.tmpdir(), 'nx-perf-gha-'));
+    const summaryFile = join(dir, 'summary.md');
+    try {
+      withEnvironmentVariables(
+        // GITHUB_STEP_SUMMARY points somewhere writable, but GITHUB_ACTIONS is unset.
+        {
+          ...envFor({}),
+          GITHUB_ACTIONS: null,
+          GITHUB_STEP_SUMMARY: summaryFile,
+        },
+        () => {
+          const a = makeTask('a', { start: 0, end: 1000 });
+          feedActive(makeGraph([a]));
+          flushPerformanceReport();
+        }
+      );
+
+      expect(existsSync(summaryFile)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('does not write a job summary for a nested nx run (only the outer run writes)', () => {
+    const dir = mkdtempSync(join(os.tmpdir(), 'nx-perf-gha-'));
+    const summaryFile = join(dir, 'summary.md');
+    try {
+      withEnvironmentVariables(
+        {
+          ...envFor({}),
+          GITHUB_ACTIONS: 'true',
+          GITHUB_STEP_SUMMARY: summaryFile,
+          // Set on every task's env by Nx; a nested nx inherits it, marking it as not
+          // the top-level invocation.
+          NX_TASK_TARGET_PROJECT: 'some-app',
+        },
+        () => {
+          const a = makeTask('a', { start: 0, end: 1000 });
+          feedActive(makeGraph([a]));
+          flushPerformanceReport();
+        }
+      );
+
+      expect(existsSync(summaryFile)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
   // Constructing a lifecycle registers it as the module-level
   // `activePerformanceLifeCycle`, which is what flush reads.
-  function feedActive(graph: TaskGraph) {
+  function feedActive(
+    graph: TaskGraph,
+    status: TaskResult['status'] = 'success'
+  ) {
     const lc = makeLifeCycle(graph);
     lc.endTasks(
       Object.values(graph.tasks).map(
-        (task) => ({ task, status: 'success' }) as unknown as TaskResult
+        (task) => ({ task, status }) as unknown as TaskResult
       )
     );
   }
