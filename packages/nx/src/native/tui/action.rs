@@ -3,7 +3,7 @@ use crate::native::tasks::types::{Task, TaskResult};
 use super::{
     app::Focus,
     components::{task_selection_manager::SelectionEntry, tasks_list::TaskStatus},
-    lifecycle::{BatchInfo, TuiMode},
+    lifecycle::{BatchInfo, BatchStatus, TuiMode},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -44,6 +44,7 @@ pub enum Action {
     ShowHint(String),
     SwitchMode(TuiMode),
     StartBatch(String, BatchInfo),
+    EndBatch(String, BatchStatus),
     ExpandBatch(String),
     CollapseBatch(String),
 }
