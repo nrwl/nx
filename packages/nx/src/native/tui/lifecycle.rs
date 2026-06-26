@@ -126,9 +126,6 @@ pub struct PerformanceSummaryPayload {
     pub cache_skipped: bool,
     /// Already in display order; a multi-line entry embeds a task list.
     pub recommendations: Vec<String>,
-    /// The docs footer link, rendered as a bullet and hyperlinked. Absent when a
-    /// recommendation already links to the same perf docs page (no footer bullet).
-    pub footer: Option<Link>,
     /// Phrases already in `recommendations` to hyperlink in place (e.g. the
     /// remote-cache CTA); empty when none apply.
     pub links: Vec<Link>,

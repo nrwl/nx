@@ -12,7 +12,6 @@ const UTM = '?utm=performance-report';
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
-const NX_PERFORMANCE_LABEL = `Learn how to improve your run's performance`;
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
@@ -97,18 +96,6 @@ function recommendationToTerminalString(
         : `${part.visible} → ${part.href}`;
     })
     .join('');
-}
-
-/** True when a shown rec already links to the perf docs, making the generic footer (which points at the same page) redundant. */
-function linksToPerformanceDocs(recommendations: Recommendation[]): boolean {
-  return recommendations.some((rec) =>
-    rec.some((part) => isRecLink(part) && part.href === NX_PERFORMANCE_LINK)
-  );
-}
-
-/** The footer candidate's criteria: show the generic "learn more" footer only when no recommendation already links to that same page. Shared by every renderer (terminal, TUI, GitHub summary) so the footer stays aligned across them. */
-function shouldShowFooter(recommendations: Recommendation[]): boolean {
-  return !linksToPerformanceDocs(recommendations);
 }
 
 /** The popup links for the phrase-style CTAs in a recommendation list (url links live inline in the strings). */
@@ -437,16 +424,6 @@ export function formatReport(s: PerformanceSummary): string {
       );
     }
   }
-  // utm-tagged footer (a url link): with OSC 8 the clean URL shows and hides the utm
-  // in the target; without it the tagged URL prints verbatim. Dropped when a rec
-  // already links to the same perf docs page (e.g. the parallelism lever).
-  if (shouldShowFooter(recommendations)) {
-    const footer: Recommendation = [
-      `  ${NX_PERFORMANCE_LABEL} → `,
-      urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
-    ];
-    lines.push('', render(footer));
-  }
   // No trailing newline — the caller's console.log adds the line terminator.
   return lines.join('\n');
 }
@@ -551,9 +528,6 @@ export function formatReportMarkdown(
     }
   }
 
-  if (shouldShowFooter(recommendations)) {
-    lines.push('', `[${NX_PERFORMANCE_LABEL}](${NX_PERFORMANCE_LINK})`);
-  }
   return lines.join('\n');
 }
 
@@ -582,11 +556,6 @@ export function buildExitSummaryPayload(
     // The napi payload ships plain strings; a phrase link (the remote-cache CTA)
     // stays URL-less here and is re-linked from `links` by the popup.
     recommendations: recommendations.map(recommendationToPayloadString),
-    // Dropped when a rec already links to the same perf docs page (the popup then
-    // renders no footer bullet).
-    footer: shouldShowFooter(recommendations)
-      ? { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK }
-      : undefined,
     // Phrase links (e.g. the remote-cache CTA) carry their href as data so the
     // popup hyperlinks the phrase in place; surfaced only when shown.
     links: recommendationLinks(recommendations),

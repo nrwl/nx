@@ -857,9 +857,9 @@ describe('exit summary payload (TUI countdown)', () => {
       expect(Array.isArray(payload!.recommendations)).toBe(true);
     }));
 
-  it('carries the footer + remote-cache links as data (popup hardcodes no URLs)', () =>
+  it('carries the remote-cache CTA link text as data (popup hardcodes no URLs)', () =>
     withEnvironmentVariables(envFor({}), () => {
-      // Cold cache, remote off → the remote-cache CTA is recommended, so it's
+      // Cold cache, remote off → the remote-cache CTA is recommended (a phrase link),
       // surfaced as a link for the popup to hyperlink in place.
       const a = makeTask('a', { start: 0, end: 1000 });
       const graph = makeGraph([a]);
@@ -867,11 +867,6 @@ describe('exit summary payload (TUI countdown)', () => {
       lc.endTasks([{ task: a, status: 'success' } as unknown as TaskResult]);
 
       const payload = getPerformanceSummaryPayload()!;
-      // The docs footer link travels as data (label + tagged href).
-      expect(payload.footer).toEqual({
-        text: "Learn how to improve your run's performance",
-        href: 'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report',
-      });
       // The CTA link text matches the phrase in the recommendation, so the popup
       // links the text it was handed without a byte-identical constant of its own.
       expect(payload.links).toEqual([
@@ -975,16 +970,12 @@ describe('formatReport', () => {
     expect(report).toContain('Recommendation:');
   });
 
-  it('OSC 8-links the footer and agents URLs when hyperlinks are supported', () => {
-    // The snapshot test pins the no-OSC-8 form (FORCE_HYPERLINK=0); this pins the
-    // other branch: with hyperlinks on, the footer AND agents URL become OSC 8
-    // links whose visible text is the clean URL and whose target carries the utm tag.
+  it('OSC 8-links the agents URL when hyperlinks are supported', () => {
+    // The snapshot test pins the no-OSC-8 form (FORCE_HYPERLINK=0); this pins the other
+    // branch: with hyperlinks on, the agents URL becomes an OSC 8 link whose visible text
+    // is the clean URL and whose target carries the utm tag.
     const OSC8 = ']8;;';
     const BEL = '';
-    const footerHref =
-      'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report';
-    const footerVisible =
-      'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
     const agentsHref =
       'https://nx.dev/ci/features/distribute-task-execution?utm=performance-report';
     const agentsVisible =
@@ -994,7 +985,7 @@ describe('formatReport', () => {
     process.env.FORCE_HYPERLINK = '1';
     try {
       // CI + cold cache + recoverable machine-bound contention (40% of the run) → the
-      // report carries both the agents rec and the footer.
+      // report carries the agents rec.
       const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
       const q = makeTask('q', { start: 1200, end: 2000 });
       const s = run(makeGraph([np, q]), 2, {
@@ -1004,10 +995,7 @@ describe('formatReport', () => {
       })!;
       const report = formatReport(s);
 
-      expect(report).toContain(`${OSC8}${footerHref}${BEL}${footerVisible}`);
       expect(report).toContain(`${OSC8}${agentsHref}${BEL}${agentsVisible}`);
-      // Outside the escape the clean visible URL is shown, not the tagged target.
-      expect(report).not.toContain(`→ ${footerHref}`);
     } finally {
       if (prev === undefined) {
         delete process.env.FORCE_HYPERLINK;
@@ -1041,7 +1029,7 @@ describe('formatReport', () => {
     }
   });
 
-  it('links the parallelism lever to the perf docs and drops the now-redundant footer', () => {
+  it('links the parallelism lever to the perf docs', () => {
     const cores =
       typeof os.availableParallelism === 'function'
         ? os.availableParallelism()
@@ -1049,8 +1037,7 @@ describe('formatReport', () => {
     const PERF_DOCS =
       'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report';
     // parallel=1, spare cores: `b` queues for the only slot → 50% recoverable by
-    // --parallel, so the parallelism lever shows. It now links to the same perf docs
-    // the footer points at, so the generic footer is dropped (no duplicate link).
+    // --parallel, so the parallelism lever shows, and it links to the perf docs.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 2000 });
     const s = run(makeGraph([a, b]), 1)!;
@@ -1059,15 +1046,9 @@ describe('formatReport', () => {
       const report = formatReport(s);
       expect(report).toContain('Increase parallelism to recover up to 1.0s');
       expect(report).toContain(PERF_DOCS); // the lever carries the link
-      // The generic "Learn how to improve..." footer is gone (it pointed at the same page).
-      expect(report).not.toContain(
-        "Learn how to improve your run's performance"
-      );
 
-      // The TUI payload likewise omits the footer; the phrase rides in `links` so the
-      // popup still hyperlinks it.
+      // The phrase rides in the TUI payload's `links` so the popup hyperlinks it.
       const payload = buildExitSummaryPayload(s);
-      expect(payload.footer).toBeUndefined();
       expect(payload.links).toContainEqual({
         text: 'Increase parallelism to recover up to 1.0s',
         href: PERF_DOCS,
@@ -1114,7 +1095,7 @@ describe('formatReport', () => {
 
   it('renders the full report deterministically (snapshot)', () => {
     // Layout/wording safety net. A CI run with cold cache and no remote yields the
-    // richest report (cache CTA + agents + speed-up table + footer). FORCE_HYPERLINK=0
+    // richest report (cache CTA + agents + speed-up table). FORCE_HYPERLINK=0
     // pins clean text (no OSC 8 escape bytes) so the snapshot is TTY-independent.
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '0';
@@ -1139,9 +1120,7 @@ describe('formatReport', () => {
             - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
             - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
             - Speed up or split the longest tasks on the critical path:
-                np    1.2s
-
-          Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report"
+                np    1.2s"
       `);
     } finally {
       if (prev === undefined) {
@@ -1242,9 +1221,7 @@ describe('formatReportMarkdown', () => {
       ### Recommendations
 
       - [Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm=performance-report).
-      - Speed up or split the longest tasks on the critical path:<br>a    3.0s
-
-      [Learn how to improve your run's performance](https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report)"
+      - Speed up or split the longest tasks on the critical path:<br>a    3.0s"
     `);
   });
 
@@ -1297,24 +1274,6 @@ describe('formatReportMarkdown', () => {
     expect(formatReportMarkdown(s, [])).toContain(
       '[Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm=performance-report)'
     );
-  });
-
-  it('drops the redundant footer when a recommendation already links to the perf docs', () => {
-    const cores =
-      typeof os.availableParallelism === 'function'
-        ? os.availableParallelism()
-        : os.cpus().length;
-    // The parallelism lever links to the perf docs (the same page the footer points at),
-    // so the GitHub summary drops the generic footer — aligned with the terminal and TUI.
-    const a = makeTask('a', { start: 0, end: 1000 });
-    const b = makeTask('b', { start: 1000, end: 2000 });
-    const s = run(makeGraph([a, b]), 1)!;
-
-    if (cores >= 2) {
-      const md = formatReportMarkdown(s, []);
-      expect(md).toContain('Increase parallelism to recover up to');
-      expect(md).not.toContain("[Learn how to improve your run's performance]");
-    }
   });
 });
 

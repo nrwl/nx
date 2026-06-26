@@ -213,18 +213,21 @@ impl CountdownPopup {
         };
         lines.push(stat_line("Recoverable time", recoverable));
 
-        // Only single-line recs go here; the multi-line "speed up the longest
-        // tasks" rec is rendered LAST (after the docs link) by `longest_tasks_lines`.
-        lines.push(Line::from(""));
-        lines.push(Line::from(Span::styled(
-            "Recommendations:",
-            Style::default().fg(THEME.secondary_fg),
-        )));
-        for rec in s.recommendations.iter().filter(|r| !r.contains('\n')) {
+        // Only single-line recs go here; the multi-line "speed up the longest tasks" rec
+        // is rendered LAST by `longest_tasks_lines`. Skip the whole section (header
+        // included) when there's nothing to recommend — e.g. a fully-cached run.
+        if !s.recommendations.is_empty() {
+            lines.push(Line::from(""));
             lines.push(Line::from(Span::styled(
-                format!("- {rec}"),
-                Style::default().fg(THEME.primary_fg),
+                "Recommendations:",
+                Style::default().fg(THEME.secondary_fg),
             )));
+            for rec in s.recommendations.iter().filter(|r| !r.contains('\n')) {
+                lines.push(Line::from(Span::styled(
+                    format!("- {rec}"),
+                    Style::default().fg(THEME.primary_fg),
+                )));
+            }
         }
 
         lines
@@ -346,25 +349,16 @@ impl CountdownPopup {
         }
     }
 
-    /// Report-mode content: the report body, then the docs link (its index is returned
-    /// for the OSC 8 injection), then the "longest tasks" rec so its list ends the popup.
+    /// Report-mode content: the report body, then the "longest tasks" rec so its list
+    /// ends the popup.
     fn report_mode_content(
         &self,
         mut content: Vec<Line<'static>>,
     ) -> (Vec<Line<'static>>, Option<usize>) {
-        // The docs link is a "- " item, hyperlinked by the OSC 8 injection below (or
-        // left as plain text if that's skipped). Absent when a rec already links to
-        // the same perf docs page.
         let url_line_index = content.len();
-        if let Some(footer) = self.summary.as_ref().and_then(|s| s.footer.as_ref()) {
-            content.push(Line::from(vec![
-                Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
-                Span::styled(footer.text.clone(), Style::default().fg(THEME.info)),
-            ]));
-        }
         content.extend(self.longest_tasks_lines());
-        // Some(..) marks report mode so the OSC 8 pass runs for the footer (if any)
-        // and the recommendation links; the index value itself is unused.
+        // Some(..) marks report mode so the OSC 8 pass runs for the recommendation
+        // links; the index value itself is unused.
         (content, Some(url_line_index))
     }
 
@@ -598,11 +592,8 @@ impl CountdownPopup {
         // Turn the report's links into real OSC 8 hyperlinks (see inject_osc8).
         if url_line_index.is_some() {
             if let Some(s) = self.summary.as_ref() {
-                // The docs footer link (when present), then any recommendation phrases
-                // (labels and hrefs from the payload); a phrase that isn't shown isn't found.
-                if let Some(footer) = s.footer.as_ref() {
-                    inject_osc8(f, inner_area, &footer.text, &footer.href);
-                }
+                // Hyperlink the recommendation phrases (labels and hrefs from the
+                // payload); a phrase that isn't shown isn't found.
                 for link in &s.links {
                     inject_osc8(f, inner_area, &link.text, &link.href);
                 }
@@ -680,10 +671,8 @@ mod tests {
     use ratatui::Terminal;
     use ratatui::backend::TestBackend;
 
-    // The footer + remote-cache link text/hrefs the payload carries (built in TS);
-    // the popup must render and hyperlink exactly these.
-    const FOOTER_LABEL: &str = "Learn how to improve your run's performance";
-    const FOOTER_HREF: &str = "https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report";
+    // The remote-cache CTA text/href the payload carries (built in TS); the popup must
+    // render and hyperlink exactly these.
     const CACHE_PHRASE: &str =
         "Drastically reduce your run duration by sharing a cache across your team and CI";
     const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
@@ -697,10 +686,6 @@ mod tests {
             cache: None,
             cache_skipped: false,
             recommendations,
-            footer: Some(Link {
-                text: FOOTER_LABEL.to_string(),
-                href: FOOTER_HREF.to_string(),
-            }),
             links: Vec::new(),
         }
     }
@@ -766,6 +751,19 @@ mod tests {
     }
 
     #[test]
+    fn omits_the_recommendations_section_when_there_are_none() {
+        // A fully-cached run has nothing to recommend; the header must not render alone.
+        let mut popup = CountdownPopup::new();
+        popup.set_summary(summary_with(vec![]));
+
+        let text = render_to_string(&mut popup);
+        assert!(
+            !text.contains("Recommendations:"),
+            "no recommendations → no Recommendations header"
+        );
+    }
+
+    #[test]
     fn renders_zero_duration_without_nan_or_inf() {
         // A zero run duration must hit the recoverable-percentage guard rather
         // than divide by zero and leak NaN/inf.
@@ -821,65 +819,6 @@ mod tests {
     }
 
     #[test]
-    fn osc8_link_lands_on_the_url_line_even_when_a_prior_rec_wraps() {
-        // A long recommendation wrapping to several rows sits right before the
-        // docs-link line. The OSC 8 escape must land on the link line (word-wrap
-        // aware), not on a wrapped tail of the recommendation as a character-wrap
-        // estimate did.
-        let long_rec = "You're at this machine's 8 cores and tasks are still \
-            queuing for a slot. If they're CPU-bound, distribute across machines \
-            with Nx Agents → https://nx.dev/ci/features/distribute-task-execution; \
-            if they're I/O-bound, a higher --parallel may help instead."
-            .to_string();
-        let mut popup = CountdownPopup::new();
-        popup.set_summary(summary_with(vec![long_rec]));
-
-        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
-        terminal
-            .draw(|f| {
-                let area = f.area();
-                popup.render(f, area);
-            })
-            .unwrap();
-
-        let buffer = terminal.backend().buffer().clone();
-        // Exactly one cell carries the OSC 8 sequence.
-        let mut escape: Option<(u16, u16)> = None;
-        for y in 0..buffer.area.height {
-            for x in 0..buffer.area.width {
-                if let Some(cell) = buffer.cell((x, y)) {
-                    if cell.symbol().contains("\x1b]8;;") {
-                        assert!(escape.is_none(), "more than one OSC 8 cell injected");
-                        escape = Some((x, y));
-                    }
-                }
-            }
-        }
-        let (x, y) = escape.expect("OSC 8 link cell should be injected");
-        let sym = buffer.cell((x, y)).unwrap().symbol();
-        assert!(sym.contains(FOOTER_HREF), "link target missing");
-        assert!(sym.contains(FOOTER_LABEL), "link label missing");
-        // It sits right after the "- " bullet, not inside a recommendation row.
-        assert_eq!(buffer.cell((x - 2, y)).unwrap().symbol(), "-");
-        assert_eq!(buffer.cell((x - 1, y)).unwrap().symbol(), " ");
-        // Regression check: the label must NOT remain as plain text anywhere (the
-        // ForcedWidth escape cell replaces it). The misplaced-link bug left the
-        // label drawn plainly on the real link row.
-        for yy in 0..buffer.area.height {
-            let mut text = String::new();
-            for xx in 0..buffer.area.width {
-                let s = buffer.cell((xx, yy)).unwrap().symbol();
-                // Mask the escape cell so its embedded label isn't counted.
-                text.push_str(if s.contains('\x1b') { "\u{0}" } else { s });
-            }
-            assert!(
-                !text.contains(FOOTER_LABEL),
-                "label left as plain text on row {yy} — link misplaced"
-            );
-        }
-    }
-
-    #[test]
     fn remote_cache_rec_links_the_whole_phrase_across_rows() {
         // The remote-cache rec is the whole sentence as a link; it wraps to
         // multiple rows, so each rendered row-segment must be linked.
@@ -907,10 +846,7 @@ mod tests {
             for x in 0..buffer.area.width {
                 let sym = buffer.cell((x, y)).unwrap().symbol();
                 if sym.contains("\x1b]8;;") {
-                    assert!(
-                        sym.contains(CACHE_HREF) || sym.contains(FOOTER_HREF),
-                        "unexpected OSC 8 target"
-                    );
+                    assert!(sym.contains(CACHE_HREF), "unexpected OSC 8 target");
                     if sym.contains(CACHE_HREF) {
                         cache_links += 1;
                     }
@@ -938,42 +874,6 @@ mod tests {
             assert!(
                 !text.contains("team and CI"),
                 "phrase end (wrapped row) left unlinked on row {y}"
-            );
-        }
-    }
-
-    #[test]
-    fn omits_the_footer_bullet_when_the_payload_has_no_footer() {
-        // When a rec already links to the perf docs, the TS side sends no footer; the
-        // popup must render no generic footer bullet (the rec phrase still links).
-        let rec = "Increase parallelism to recover up to 39.4s.".to_string();
-        let mut s = summary_with(vec![rec]);
-        s.footer = None;
-        s.links = vec![Link {
-            text: "Increase parallelism to recover up to 39.4s".to_string(),
-            href: FOOTER_HREF.to_string(),
-        }];
-        let mut popup = CountdownPopup::new();
-        popup.set_summary(s);
-
-        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
-        terminal
-            .draw(|f| {
-                let area = f.area();
-                popup.render(f, area);
-            })
-            .unwrap();
-        let buffer = terminal.backend().buffer().clone();
-
-        // The generic footer label never appears (the rec's own label is different).
-        for y in 0..buffer.area.height {
-            let mut text = String::new();
-            for x in 0..buffer.area.width {
-                text.push_str(buffer.cell((x, y)).unwrap().symbol());
-            }
-            assert!(
-                !text.contains(FOOTER_LABEL),
-                "footer label rendered despite an absent footer on row {y}"
             );
         }
     }
