@@ -13,6 +13,7 @@ import {
 } from '../../tasks-runner/utils';
 import { updateJson } from '../../generators/utils/json';
 import { PackageJson } from '../../utils/package-json';
+import { targetDefaultConfigs } from '../utils/target-defaults';
 
 export default async function (tree: Tree) {
   // If the workspace doesn't have a nx.json, don't make any changes
@@ -55,12 +56,18 @@ export default async function (tree: Tree) {
   }
 
   if (nxJson.targetDefaults) {
-    for (const [_, target] of Object.entries(nxJson.targetDefaults)) {
-      // Array value form carries filters this migration doesn't handle.
-      if (Array.isArray(target) || !target.outputs) {
-        continue;
+    // `targetDefaultConfigs` yields the live config block(s) of both value
+    // forms (plain object and filtered array), so legacy outputs get prefixed
+    // regardless of shape; any `filter` on an array entry is left untouched.
+    for (const value of Object.values(nxJson.targetDefaults)) {
+      for (const config of targetDefaultConfigs(value)) {
+        if (config.outputs) {
+          config.outputs = transformLegacyOutputs(
+            '{projectRoot}',
+            config.outputs
+          );
+        }
       }
-      target.outputs = transformLegacyOutputs('{projectRoot}', target.outputs);
     }
 
     updateNxJson(tree, nxJson);
