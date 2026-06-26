@@ -583,4 +583,34 @@ mod test {
             normalize_outputs(ws, vec!["dist".to_string(), "../../escape".to_string()]).is_err()
         );
     }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_relativizes_in_workspace_absolute_paths() {
+        let ws = Path::new(r"C:\ws\root");
+        // A drive-letter absolute path inside the workspace is relativized and
+        // its separators normalized to forward slashes.
+        let out = normalize_outputs(
+            ws,
+            vec!["dist".to_string(), r"C:\ws\root\build\app".to_string()],
+        )
+        .unwrap();
+        assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
+        let ws = Path::new(r"C:\ws\root");
+        // Absolute path on the same drive but outside the workspace.
+        assert!(normalize_outputs(ws, vec![r"C:\Windows\System32".to_string()]).is_err());
+        // Absolute path on a different drive.
+        assert!(normalize_outputs(ws, vec![r"D:\elsewhere".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec![r"..\..\escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), r"..\..\escape".to_string()]).is_err()
+        );
+    }
 }
