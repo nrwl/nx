@@ -1205,18 +1205,18 @@ describe('formatReportMarkdown', () => {
       .toMatchInlineSnapshot(`
       "## ⚡ Nx Performance Report — \`run-many -t build\`
 
+      ### ❌ Failed tasks (1)
+
+      | Task | Duration |
+      | :-- | --: |
+      | \`a\` | 3.0s |
+
       | | |
       | :-- | :-- |
       | **Run duration** | 3.0s |
       | **Cache** | 0/1 hit (0%) |
       | **Critical path** | 3.0s (1 task) |
       | **Recoverable time** | <1ms |
-
-      ### ❌ Failed tasks (1)
-
-      | Task | Duration |
-      | :-- | --: |
-      | \`a\` | 3.0s |
 
       ### Recommendations
 

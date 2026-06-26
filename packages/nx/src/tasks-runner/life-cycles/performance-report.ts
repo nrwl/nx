@@ -485,28 +485,14 @@ export function formatReportMarkdown(
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const cache = cacheStat(s);
 
-  // Headline stats as a borderless two-column table, mirroring the terminal stat lines.
   const lines = [
     command
       ? `## ⚡ Nx Performance Report — \`${command}\``
       : '## ⚡ Nx Performance Report',
-    '',
-    '| | |',
-    '| :-- | :-- |',
-    `| **Run duration** | ${fmt(s.runDuration)} |`,
-    ...(cache ? [`| **Cache** | ${cache} |`] : []),
-    `| **Critical path** | ${fmt(s.criticalPathDuration)} (${
-      s.criticalPathTaskCount
-    } ${pluralize(s.criticalPathTaskCount, 'task')}) |`,
-    `| **Recoverable time** | ${
-      recoverable > 0
-        ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
-        : fmt(recoverable)
-    } |`,
   ];
 
-  // The failures are the actionable part of a CI summary, so list them (slowest first)
-  // right under the stats. A green run shows no table at all.
+  // Failures are the headline of a CI summary, so they go first — above the performance
+  // stats, slowest first. A green run shows no table at all.
   if (failedTasks.length > 0) {
     lines.push(
       '',
@@ -519,6 +505,23 @@ export function formatReportMarkdown(
       )
     );
   }
+
+  // Headline stats as a borderless two-column table, mirroring the terminal stat lines.
+  lines.push(
+    '',
+    '| | |',
+    '| :-- | :-- |',
+    `| **Run duration** | ${fmt(s.runDuration)} |`,
+    ...(cache ? [`| **Cache** | ${cache} |`] : []),
+    `| **Critical path** | ${fmt(s.criticalPathDuration)} (${
+      s.criticalPathTaskCount
+    } ${pluralize(s.criticalPathTaskCount, 'task')}) |`,
+    `| **Recoverable time** | ${
+      recoverable > 0
+        ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
+        : fmt(recoverable)
+    } |`
+  );
 
   const recommendations = orderedRecommendations(s);
   if (recommendations.length > 0) {
