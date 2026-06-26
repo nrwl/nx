@@ -951,6 +951,87 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
+    it('should keep a target-default contribution when an incompatible default plugin replaces the specified target', () => {
+      // Polyglot repro: a specified plugin infers `test-native` as an
+      // `nx:run-commands` invocation, while a default plugin infers the same
+      // target with an incompatible `@monodon/rust:test` executor. Because the
+      // executors are incompatible, the default plugin wholesale-replaces the
+      // specified target. A target-name-keyed default (`outputs`) must ride
+      // along with the *winning* (default) executor frame and survive that
+      // replace — if synthesis layered it onto the soon-to-be-discarded
+      // run-commands frame instead, the replace would silently drop it.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/poly-lib/MyLib.Tests.csproj',
+            {
+              projects: {
+                'libs/poly-lib': {
+                  name: 'poly-lib',
+                  root: 'libs/poly-lib',
+                  targets: {
+                    'test-native': {
+                      command: 'dotnet test',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            '@monodon/rust',
+            'libs/poly-lib/Cargo.toml',
+            {
+              projects: {
+                'libs/poly-lib': {
+                  name: 'poly-lib',
+                  root: 'libs/poly-lib',
+                  targets: {
+                    'test-native': {
+                      executor: '@monodon/rust:test',
+                      options: { release: true },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            'test-native': {
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const testTarget =
+        result.projectRootMap['libs/poly-lib'].targets!['test-native'];
+      // Default plugin's executor wins the incompatible replace...
+      expect(testTarget.executor).toEqual('@monodon/rust:test');
+      expect(testTarget.options).toEqual({ release: true });
+      // ...and the target default's `outputs` survived rather than being
+      // dropped along with the discarded run-commands frame. This is the
+      // contribution the executor/command pre-stamp in synthesis protects.
+      expect(testTarget.outputs).toEqual(['{projectRoot}/dist']);
+      expect(errors).toEqual([]);
+    });
+
     it('should not apply a target-name-keyed default with a foreign executor when project.json declares an empty target alongside an inferred command target', () => {
       // Same incompatibility, but project.json declares `{}` for the
       // target — historically the trigger that asks target-defaults to
