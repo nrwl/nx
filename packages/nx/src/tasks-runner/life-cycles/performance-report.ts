@@ -99,6 +99,13 @@ function recommendationToTerminalString(
     .join('');
 }
 
+/** True when a shown rec already links to the perf docs, making the generic footer (which points at the same page) redundant. */
+function linksToPerformanceDocs(recommendations: Recommendation[]): boolean {
+  return recommendations.some((rec) =>
+    rec.some((part) => isRecLink(part) && part.href === NX_PERFORMANCE_LINK)
+  );
+}
+
 /** The popup links for the phrase-style CTAs in a recommendation list (url links live inline in the strings). */
 function recommendationLinks(recommendations: Recommendation[]): Link[] {
   return recommendations.flatMap((rec) =>
@@ -148,7 +155,7 @@ function formatTopTaskRows(
 /** An Nx Agents URL link, built from the link definition so the URL text never has to be scanned back out of the assembled report. */
 const agentsLink: RecLink = urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
 
-/** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Agents advice is omitted unless `canDistribute`. */
+/** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Distribute advice is omitted unless `canDistribute` AND it can recover at least {@link PARALLEL_LEAD_FRACTION} of the run. */
 export function buildRecommendation(args: {
   recoverableByParallel: number;
   recoverableByMachines: number;
@@ -191,11 +198,17 @@ export function buildRecommendation(args: {
       recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
       recoverableByParallel >= recoverableByMachines
     ) {
+      // Whole-phrase link to the perf docs (the same page the footer points at, so
+      // the footer is dropped when this rec is shown); period stays outside the link.
       return [
         [
-          `Increase parallelism to recover up to ${formatDuration(
-            recoverableByParallel
-          )}.`,
+          phraseLink(
+            `Increase parallelism to recover up to ${formatDuration(
+              recoverableByParallel
+            )}`,
+            NX_PERFORMANCE_LINK
+          ),
+          `.`,
         ],
       ];
     }
@@ -257,7 +270,14 @@ export function buildRecommendation(args: {
     ].join('\n'),
   ];
   const recommendations: Recommendation[] = [speedUp];
-  if (canDistribute) {
+  // Only distribute when it can recover a meaningful slice of the run; a sequential
+  // chain (nothing recoverable) gains nothing from more machines.
+  const recoverable = recoverableByParallel + recoverableByMachines;
+  if (
+    canDistribute &&
+    runDuration > 0 &&
+    recoverable >= PARALLEL_LEAD_FRACTION * runDuration
+  ) {
     recommendations.push([
       `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → `,
       agentsLink,
@@ -377,12 +397,15 @@ export function formatReport(s: PerformanceSummary): string {
     }
   }
   // utm-tagged footer (a url link): with OSC 8 the clean URL shows and hides the utm
-  // in the target; without it the tagged URL prints verbatim.
-  const footer: Recommendation = [
-    `  ${NX_PERFORMANCE_LABEL} → `,
-    urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
-  ];
-  lines.push('', render(footer));
+  // in the target; without it the tagged URL prints verbatim. Dropped when a rec
+  // already links to the same perf docs page (e.g. the parallelism lever).
+  if (!linksToPerformanceDocs(recommendations)) {
+    const footer: Recommendation = [
+      `  ${NX_PERFORMANCE_LABEL} → `,
+      urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
+    ];
+    lines.push('', render(footer));
+  }
   // No trailing newline — the caller's console.log adds the line terminator.
   return lines.join('\n');
 }
@@ -412,7 +435,11 @@ export function buildExitSummaryPayload(
     // The napi payload ships plain strings; a phrase link (the remote-cache CTA)
     // stays URL-less here and is re-linked from `links` by the popup.
     recommendations: recommendations.map(recommendationToPayloadString),
-    footer: { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
+    // Dropped when a rec already links to the same perf docs page (the popup then
+    // renders no footer bullet).
+    footer: linksToPerformanceDocs(recommendations)
+      ? undefined
+      : { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
     // Phrase links (e.g. the remote-cache CTA) carry their href as data so the
     // popup hyperlinks the phrase in place; surfaced only when shown.
     links: recommendationLinks(recommendations),

@@ -353,16 +353,18 @@ impl CountdownPopup {
         mut content: Vec<Line<'static>>,
     ) -> (Vec<Line<'static>>, Option<usize>) {
         // The docs link is a "- " item, hyperlinked by the OSC 8 injection below (or
-        // left as plain text if that's skipped).
+        // left as plain text if that's skipped). Absent when a rec already links to
+        // the same perf docs page.
         let url_line_index = content.len();
-        content.push(Line::from(vec![
-            Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
-            Span::styled(
-                self.summary.as_ref().unwrap().footer.text.clone(),
-                Style::default().fg(THEME.info),
-            ),
-        ]));
+        if let Some(footer) = self.summary.as_ref().and_then(|s| s.footer.as_ref()) {
+            content.push(Line::from(vec![
+                Span::styled("- ", Style::default().fg(THEME.secondary_fg)),
+                Span::styled(footer.text.clone(), Style::default().fg(THEME.info)),
+            ]));
+        }
         content.extend(self.longest_tasks_lines());
+        // Some(..) marks report mode so the OSC 8 pass runs for the footer (if any)
+        // and the recommendation links; the index value itself is unused.
         (content, Some(url_line_index))
     }
 
@@ -596,9 +598,11 @@ impl CountdownPopup {
         // Turn the report's links into real OSC 8 hyperlinks (see inject_osc8).
         if url_line_index.is_some() {
             if let Some(s) = self.summary.as_ref() {
-                // The docs footer link, then any recommendation phrases (labels and
-                // hrefs from the payload); a phrase that isn't shown isn't found.
-                inject_osc8(f, inner_area, &s.footer.text, &s.footer.href);
+                // The docs footer link (when present), then any recommendation phrases
+                // (labels and hrefs from the payload); a phrase that isn't shown isn't found.
+                if let Some(footer) = s.footer.as_ref() {
+                    inject_osc8(f, inner_area, &footer.text, &footer.href);
+                }
                 for link in &s.links {
                     inject_osc8(f, inner_area, &link.text, &link.href);
                 }
@@ -693,10 +697,10 @@ mod tests {
             cache: None,
             cache_skipped: false,
             recommendations,
-            footer: Link {
+            footer: Some(Link {
                 text: FOOTER_LABEL.to_string(),
                 href: FOOTER_HREF.to_string(),
-            },
+            }),
             links: Vec::new(),
         }
     }
@@ -934,6 +938,42 @@ mod tests {
             assert!(
                 !text.contains("team and CI"),
                 "phrase end (wrapped row) left unlinked on row {y}"
+            );
+        }
+    }
+
+    #[test]
+    fn omits_the_footer_bullet_when_the_payload_has_no_footer() {
+        // When a rec already links to the perf docs, the TS side sends no footer; the
+        // popup must render no generic footer bullet (the rec phrase still links).
+        let rec = "Increase parallelism to recover up to 39.4s.".to_string();
+        let mut s = summary_with(vec![rec]);
+        s.footer = None;
+        s.links = vec![Link {
+            text: "Increase parallelism to recover up to 39.4s".to_string(),
+            href: FOOTER_HREF.to_string(),
+        }];
+        let mut popup = CountdownPopup::new();
+        popup.set_summary(s);
+
+        let mut terminal = Terminal::new(TestBackend::new(74, 60)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                popup.render(f, area);
+            })
+            .unwrap();
+        let buffer = terminal.backend().buffer().clone();
+
+        // The generic footer label never appears (the rec's own label is different).
+        for y in 0..buffer.area.height {
+            let mut text = String::new();
+            for x in 0..buffer.area.width {
+                text.push_str(buffer.cell((x, y)).unwrap().symbol());
+            }
+            assert!(
+                !text.contains(FOOTER_LABEL),
+                "footer label rendered despite an absent footer on row {y}"
             );
         }
     }

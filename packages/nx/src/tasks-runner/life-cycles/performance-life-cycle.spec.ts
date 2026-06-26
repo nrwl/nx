@@ -20,6 +20,7 @@ import {
   TimedTask,
 } from './performance-analysis';
 import {
+  buildExitSummaryPayload,
   formatDuration,
   formatReport,
   recommendationToPayloadString,
@@ -361,9 +362,10 @@ describe('PerformanceLifeCycle', () => {
     expect(report).toContain('on the critical path');
   });
 
-  it('recommends the biggest critical-path tasks (and agents in CI) when no parallelism lever helps', () => {
-    // Pure dependency chain at its floor (no overhead). Advice names the longest
-    // tasks to speed up and (in CI) offers agents — not a higher --parallel.
+  it('recommends the biggest critical-path tasks but not agents for a pure chain (nothing to recover) in CI', () => {
+    // Pure dependency chain at its floor: zero recoverable time. More machines
+    // can't shorten a sequential chain, so advice names the longest tasks to speed
+    // up only — no agents, no higher --parallel.
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 1000, end: 4000 });
     const c = makeTask('c', { start: 4000, end: 5000 });
@@ -377,10 +379,28 @@ describe('PerformanceLifeCycle', () => {
     expect(recs).toContain('longest tasks on the critical path');
     expect(recs).toContain('b'); // the longest task, listed inline
     expect(s.criticalPathTop[0].id).toBe('b');
-    // A separate rec offers Nx Agents; neither suggests a higher --parallel.
+    // Nothing for agents to recover (and no spare slot for --parallel either).
+    expect(recs).not.toContain('Nx Agents');
+    expect(recs).not.toContain('--parallel');
+    expect(recStrings(s).length).toBe(1); // just speed-up
+  });
+
+  it('recommends agents for a critical-path-bound CI run that can still recover a meaningful slice', () => {
+    // Machine-bound contention below the 1s absolute floor: `np` (parallelism:false)
+    // monopolizes the pool 0–1200 while `q` queues, so 800ms of a 2.0s run (40%, above
+    // the 20% lead) is recoverable only by more machines. Below the floor it lands in
+    // the critical-path case, where the gate still lets the agents advice through.
+    const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
+    const q = makeTask('q', { start: 1200, end: 2000 });
+    const s = run(makeGraph([np, q]), 2, { isCI: true })!;
+
+    expect(s.recoverableByMachines).toBe(800);
+    expect(s.recoverableByMachines).toBeLessThan(1000); // below the absolute floor
+    const recs = recStrings(s).join('\n');
+    expect(recs).toContain('Speed up or split');
     expect(recs).toContain('Nx Agents');
     expect(recs).not.toContain('--parallel');
-    expect(recStrings(s).length).toBe(2); // speed-up + distribute, separate
+    expect(recStrings(s).length).toBe(2); // speed-up + distribute
   });
 
   it('keeps a small --parallel win in the header, not the recommendation', () => {
@@ -941,10 +961,12 @@ describe('formatReport', () => {
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '1';
     try {
-      // CI + cold cache → the report carries both the agents rec and the footer.
-      const a = makeTask('a', { start: 0, end: 1000 });
-      const s = run(makeGraph([a]), 1, {
-        statuses: { a: 'success' },
+      // CI + cold cache + recoverable machine-bound contention (40% of the run) → the
+      // report carries both the agents rec and the footer.
+      const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
+      const q = makeTask('q', { start: 1200, end: 2000 });
+      const s = run(makeGraph([np, q]), 2, {
+        statuses: { np: 'success', q: 'success' },
         remoteCacheEnabled: false,
         isCI: true,
       })!;
@@ -987,13 +1009,49 @@ describe('formatReport', () => {
     }
   });
 
-  it('lists recommendations as bullets in priority order (cache, agents, then tasks)', () => {
-    // A CI run with a cache lever (low hits, remote off) yields all three, ordered
-    // cache → distribute(agents) → speed-up (the deep manual work) LAST.
+  it('links the parallelism lever to the perf docs and drops the now-redundant footer', () => {
+    const cores =
+      typeof os.availableParallelism === 'function'
+        ? os.availableParallelism()
+        : os.cpus().length;
+    const PERF_DOCS =
+      'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report';
+    // parallel=1, spare cores: `b` queues for the only slot → 50% recoverable by
+    // --parallel, so the parallelism lever shows. It now links to the same perf docs
+    // the footer points at, so the generic footer is dropped (no duplicate link).
     const a = makeTask('a', { start: 0, end: 1000 });
+    const b = makeTask('b', { start: 1000, end: 2000 });
+    const s = run(makeGraph([a, b]), 1)!;
+
+    if (cores >= 2) {
+      const report = formatReport(s);
+      expect(report).toContain('Increase parallelism to recover up to 1.0s');
+      expect(report).toContain(PERF_DOCS); // the lever carries the link
+      // The generic "Learn how to improve..." footer is gone (it pointed at the same page).
+      expect(report).not.toContain(
+        "Learn how to improve your run's performance"
+      );
+
+      // The TUI payload likewise omits the footer; the phrase rides in `links` so the
+      // popup still hyperlinks it.
+      const payload = buildExitSummaryPayload(s);
+      expect(payload.footer).toBeUndefined();
+      expect(payload.links).toContainEqual({
+        text: 'Increase parallelism to recover up to 1.0s',
+        href: PERF_DOCS,
+      });
+    }
+  });
+
+  it('lists recommendations as bullets in priority order (cache, agents, then tasks)', () => {
+    // A CI run with a cache lever (low hits, remote off) and recoverable machine-bound
+    // contention (40% of the run) yields all three, ordered cache → distribute(agents)
+    // → speed-up (the deep manual work) LAST.
+    const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
+    const q = makeTask('q', { start: 1200, end: 2000 });
     const report = formatReport(
-      run(makeGraph([a]), 1, {
-        statuses: { a: 'success' }, // 0/1 hit
+      run(makeGraph([np, q]), 2, {
+        statuses: { np: 'success', q: 'success' }, // 0/2 hit
         remoteCacheEnabled: false,
         isCI: true,
       })!
@@ -1029,23 +1087,27 @@ describe('formatReport', () => {
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '0';
     try {
-      const a = makeTask('a', { start: 0, end: 1000 });
-      const s = run(makeGraph([a]), 1, {
-        statuses: { a: 'success' }, // 0/1 hit, cold cache
+      // `np` (parallelism:false) monopolizes the pool 0–1200 while `q` queues, so
+      // 800ms of the 2.0s run is recoverable by more machines (40%, above the lead) —
+      // a critical-path-bound run that still earns the agents rec.
+      const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
+      const q = makeTask('q', { start: 1200, end: 2000 });
+      const s = run(makeGraph([np, q]), 2, {
+        statuses: { np: 'success', q: 'success' }, // 0/2 hit, cold cache
         remoteCacheEnabled: false,
         isCI: true,
       })!;
       expect(formatReport(s)).toMatchInlineSnapshot(`
-        "  Run duration:      1.0s
-          Cache:             0/1 hit (0%)
-          Critical path:     1.0s (1 task)
-          Recoverable time:  <1ms
+        "  Run duration:      2.0s
+          Cache:             0/2 hit (0%)
+          Critical path:     1.2s (1 task)
+          Recoverable time:  800ms (40% of the run)
 
           Recommendations:
             - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
             - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
             - Speed up or split the longest tasks on the critical path:
-                a    1.0s
+                np    1.2s
 
           Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report"
       `);
