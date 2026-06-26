@@ -4,11 +4,7 @@ import { TaskGraph } from '../../config/task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { isCI as isCiEnv } from '../../utils/is-ci';
-import {
-  buildRecommendation,
-  MEANINGFUL_OVERHEAD,
-  type Recommendation,
-} from './performance-report';
+import { MEANINGFUL_OVERHEAD } from './performance-report';
 import { TaskResult } from '../life-cycle';
 
 const CACHE_HIT_STATUSES = new Set([
@@ -66,8 +62,10 @@ export interface PerformanceSummary {
   parallel: number;
   cores: number;
   isCI: boolean;
-  /** One structured rec per lever (with link parts); drives the report + payload renderers. */
-  structuredRecommendations: Recommendation[];
+  /** In CI and not already distributing — so suggesting Nx Agents is actionable. */
+  canDistribute: boolean;
+  /** Already running on Nx Agents (NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT set). */
+  distributing: boolean;
   /** Coordinator overhead outweighs task work, so the longest tasks aren't the lever (typical cached run). */
   coordinatorDominated: boolean;
   cacheHits: number;
@@ -354,18 +352,6 @@ export class PerformanceAnalysis {
     // TODO: source from the light client's isDistributedExecution() rather than the env var.
     const distributing =
       !!process.env.NX_CLOUD_DISTRIBUTED_EXECUTION_AGENT_COUNT;
-    const structuredRecommendations = buildRecommendation({
-      recoverableByParallel,
-      recoverableByMachines,
-      coordinatorDominated,
-      runDuration,
-      parallel,
-      cores,
-      // Can only start distributing in CI when not already doing so.
-      canDistribute: isCI && !distributing,
-      distributing,
-      criticalPathTop,
-    });
 
     return {
       runDuration,
@@ -379,7 +365,9 @@ export class PerformanceAnalysis {
       parallel,
       cores,
       isCI,
-      structuredRecommendations,
+      // Can only start distributing in CI when not already doing so.
+      canDistribute: isCI && !distributing,
+      distributing,
       coordinatorDominated,
       cacheHits,
       cacheableCount,

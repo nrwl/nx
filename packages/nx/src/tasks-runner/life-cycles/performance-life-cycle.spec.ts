@@ -24,6 +24,7 @@ import {
 import { formatDuration } from '../../native';
 import {
   buildExitSummaryPayload,
+  buildRecommendations,
   FailedTask,
   formatReport,
   formatReportMarkdown,
@@ -187,7 +188,7 @@ function run(
 
 /** The lever recommendations as plain strings — what production re-derives for the report/payload. */
 const recStrings = (s: PerformanceSummary): string[] =>
-  s.structuredRecommendations.map(recommendationToPayloadString);
+  buildRecommendations(s).map(recommendationToPayloadString);
 
 describe('PerformanceLifeCycle', () => {
   it('returns null when there are no discrete task timings', () => {
@@ -349,12 +350,11 @@ describe('PerformanceLifeCycle', () => {
     expect(s.recoverableByMachines).toBe(0);
     expect(s.coordinatorOverhead).toBe(5000);
     // Coordinator (5s) dwarfs the work (1s critical path) → dominated: recommend
-    // Nx Agents (CI run), drop the longest-tasks section, and don't restate the
-    // coordinator-overhead number (it's a header stat).
+    // distributing across machines (CI run), drop the longest-tasks section, and don't
+    // restate the coordinator-overhead number (it's a header stat).
     expect(s.coordinatorDominated).toBe(true);
     const recs = recStrings(s).join('\n');
-    expect(recs).toContain('about as fast as this machine');
-    expect(recs).toContain('Nx Agents');
+    expect(recs).toContain('Distribute across machines with Nx Agents');
     expect(recs).not.toContain('coordinator overhead');
     expect(recs).not.toContain('Speed up or split');
     expect(formatReport(s)).not.toContain('longest tasks on the critical path');
@@ -597,7 +597,7 @@ describe('PerformanceLifeCycle', () => {
     expect(recStrings(s).join('\n')).toContain('Nx Agents');
   });
 
-  it('drops agents (keeps the --parallel tip) for a machine-bound run outside CI', () => {
+  it('makes no distribute rec for a machine-bound run outside CI (the lever is CI-only)', () => {
     const cores = Math.max(
       typeof os.availableParallelism === 'function'
         ? os.availableParallelism()
@@ -610,9 +610,8 @@ describe('PerformanceLifeCycle', () => {
     const waiter = makeTask('w', { start: 1000, end: 2000 });
     const s = run(makeGraph([...fillers, waiter]), cores, { isCI: false })!;
 
-    const recs = recStrings(s).join('\n');
-    expect(recs).not.toContain('Nx Agents');
-    expect(recs).toContain('a higher --parallel may help');
+    // The distribute lever is CI-only, so a machine-bound local run gets no agents rec.
+    expect(recStrings(s).join('\n')).not.toContain('Nx Agents');
   });
 
   it('makes no recommendation (and lists no tasks) when the critical path was fully cached', () => {
@@ -970,22 +969,21 @@ describe('formatReport', () => {
     expect(report).toContain('Recommendation:');
   });
 
-  it('OSC 8-links the agents URL when hyperlinks are supported', () => {
+  it('OSC 8-links the distribute phrase when hyperlinks are supported', () => {
     // The snapshot test pins the no-OSC-8 form (FORCE_HYPERLINK=0); this pins the other
-    // branch: with hyperlinks on, the agents URL becomes an OSC 8 link whose visible text
-    // is the clean URL and whose target carries the utm tag.
+    // branch: with hyperlinks on, the distribute phrase becomes an OSC 8 link whose visible
+    // text is the phrase and whose target carries the utm-tagged agents URL.
     const OSC8 = ']8;;';
     const BEL = '';
     const agentsHref =
       'https://nx.dev/ci/features/distribute-task-execution?utm=performance-report';
-    const agentsVisible =
-      'https://nx.dev/ci/features/distribute-task-execution';
+    const phrase = 'Distribute across machines with Nx Agents';
 
     const prev = process.env.FORCE_HYPERLINK;
     process.env.FORCE_HYPERLINK = '1';
     try {
-      // CI + cold cache + recoverable machine-bound contention (40% of the run) → the
-      // report carries the agents rec.
+      // CI + cold cache + recoverable contention (40% of the run) → the report carries
+      // the distribute rec.
       const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
       const q = makeTask('q', { start: 1200, end: 2000 });
       const s = run(makeGraph([np, q]), 2, {
@@ -995,7 +993,7 @@ describe('formatReport', () => {
       })!;
       const report = formatReport(s);
 
-      expect(report).toContain(`${OSC8}${agentsHref}${BEL}${agentsVisible}`);
+      expect(report).toContain(`${OSC8}${agentsHref}${BEL}${phrase}`);
     } finally {
       if (prev === undefined) {
         delete process.env.FORCE_HYPERLINK;
@@ -1074,7 +1072,7 @@ describe('formatReport', () => {
     expect(report).toContain('- Drastically reduce your run duration');
     expect(report).toMatch(/- Speed up or split/);
     const cacheAt = report.indexOf('Drastically reduce');
-    const distributeAt = report.indexOf('Distribute tasks');
+    const distributeAt = report.indexOf('Distribute across machines');
     const speedUpAt = report.indexOf('Speed up or split');
     expect(cacheAt).toBeGreaterThanOrEqual(0);
     expect(cacheAt).toBeLessThan(distributeAt);
@@ -1118,7 +1116,7 @@ describe('formatReport', () => {
 
           Recommendations:
             - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-            - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
+            - Distribute across machines with Nx Agents → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
             - Speed up or split the longest tasks on the critical path:
                 np    1.2s"
       `);
@@ -1245,20 +1243,16 @@ describe('formatReportMarkdown', () => {
     expect(plain).not.toContain('Report — ');
   });
 
-  it('labels a url (docs) link rather than printing the raw URL as the link text', () => {
-    // Machine-bound contention surfaces a distribute-across-machines recommendation — a
-    // url-style link; Markdown should label it rather than print the raw URL.
+  it('renders the distribute recommendation as a phrase Markdown link', () => {
+    // Machine-bound contention surfaces a distribute-across-machines rec — a phrase link
+    // Markdown renders as the whole sentence linked (to the utm-tagged agents URL).
     const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
     const q = makeTask('q', { start: 1200, end: 2000 });
     const s = run(makeGraph([np, q]), 2, { isCI: true })!;
     const md = formatReportMarkdown(s, []);
 
     expect(md).toContain(
-      '[Learn more](https://nx.dev/ci/features/distribute-task-execution?utm=performance-report)'
-    );
-    // The bare URL is never the visible link text.
-    expect(md).not.toContain(
-      '[https://nx.dev/ci/features/distribute-task-execution]'
+      '[Distribute across machines with Nx Agents](https://nx.dev/ci/features/distribute-task-execution?utm=performance-report)'
     );
   });
 
