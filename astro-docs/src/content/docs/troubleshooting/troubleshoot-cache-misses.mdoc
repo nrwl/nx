@@ -9,9 +9,7 @@ Problem: A task is being executed when you expect it to be replayed from the cac
 ## Check 1: Check if your task is marked as cacheable:
 
 - Check the task has a "Cacheable" label in the Project Details View. You can do so by running `nx show project <project-name> --web` or by checking it in [Nx Console](/docs/guides/nx-console/console-project-details).
-- If you're using a version lower than Nx 17.2.0, check:
-  - the target configuration in the project's `project.json` file has `"cache": true` set, or
-  - the target configuration in `nx.json#targetDefaults` has `"cache": true` set, or
+- Check the target configuration has `"cache": true` set, either in the project's `project.json` or in `nx.json#targetDefaults`.
 
 ## Check 2: Check if the output of your task is changing the inputs of your task
 
