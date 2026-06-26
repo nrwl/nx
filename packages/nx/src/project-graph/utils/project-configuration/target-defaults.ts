@@ -186,6 +186,13 @@ function targetDefaultSourceFile(key: string, index?: number): string {
 // `(root, targetName)` — only the fields the matcher needs. Incompatible
 // pairs wholesale-replace specified with default; compatible pairs let
 // the default's executor win, otherwise the specified's.
+//
+// INVARIANT: this is a forward-prediction of what `mergeTargetConfigurations`
+// (gated by `isCompatibleTarget`) produces for `executor`/`command`. Synthesis
+// runs before the real merge, so it must reproduce that precedence here. If the
+// merge's compatibility or executor-precedence rules change, update this in
+// lockstep; the end-to-end agreement is exercised by the synthesis tests in
+// `project-configuration-utils.spec.ts`.
 function effectiveTargetForLookup(
   specifiedTarget: TargetConfiguration | undefined,
   defaultTarget: TargetConfiguration | undefined,
@@ -538,8 +545,13 @@ function resolveSourcePlugin(
 ): string | undefined {
   // Default-plugin attribution overrides specified-plugin attribution in the
   // merge, so check it first. The executor/command keys carry the plugin that
-  // created the target; the top-level `targets.<name>` key only tracks the
-  // last writer.
+  // *created* the target, which is what `filter.plugin` ("targets originated by
+  // X") means. The top-level `targets.<name>` node key is deliberately NOT used
+  // as a fallback: it tracks the last writer, so a later plugin augmenting the
+  // target would mis-attribute it. The trade-off is that a target with neither
+  // an executor nor a command (a rare, non-runnable shape) resolves to no
+  // source plugin and won't match a `filter.plugin` default — accepted, since
+  // every runnable target carries one of these keys.
   const executorKey = `${targetSourceMapKey(targetName)}.executor`;
   const commandKey = `${targetSourceMapKey(targetName)}.command`;
   const candidates: (string | undefined)[] = [
