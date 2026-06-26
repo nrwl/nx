@@ -243,7 +243,7 @@ impl NxCache {
         trace!("Successfully wrote terminal outputs ({} bytes)", total_size);
 
         // Expand the outputs
-        let outputs = normalize_outputs(&self.workspace_root, outputs);
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(&self.workspace_root, outputs)?;
         trace!("Successfully expanded {} outputs", expanded_outputs.len());
 
@@ -390,7 +390,7 @@ impl NxCache {
     ) -> anyhow::Result<i64> {
         let outputs_path = Path::new(&cached_result.outputs_path);
 
-        let outputs = normalize_outputs(&self.workspace_root, outputs);
+        let outputs = normalize_outputs(&self.workspace_root, outputs)?;
         let expanded_outputs = _expand_outputs(outputs_path, outputs)?;
 
         trace!(
@@ -509,29 +509,27 @@ where
 }
 
 /// Normalize declared output paths for cache use: relativize an in-workspace
-/// absolute path to the workspace root, and drop any path that resolves outside
-/// the workspace (absolute elsewhere, or relative climbing out via `..`).
-fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> Vec<String> {
+/// absolute path to the workspace root. Errors if any path resolves outside the
+/// workspace (absolute elsewhere, or relative climbing out via `..`).
+fn normalize_outputs(workspace_root: &Path, outputs: Vec<String>) -> anyhow::Result<Vec<String>> {
     outputs
         .into_iter()
-        .filter_map(|output| {
+        .map(|output| {
             let path = Path::new(&output);
             let relative = if path.is_absolute() {
-                match path.strip_prefix(workspace_root) {
-                    Ok(rel) => rel,
-                    Err(_) => {
-                        trace!("Skipping cache output outside the workspace: {}", output);
-                        return None;
-                    }
-                }
+                path.strip_prefix(workspace_root).map_err(|_| {
+                    anyhow::anyhow!("Cache output is outside the workspace: {}", output)
+                })?
             } else {
                 path
             };
             if escapes_workspace(relative) {
-                trace!("Skipping cache output outside the workspace: {}", output);
-                return None;
+                return Err(anyhow::anyhow!(
+                    "Cache output is outside the workspace: {}",
+                    output
+                ));
             }
-            Some(relative.to_normalized_string())
+            Ok(relative.to_normalized_string())
         })
         .collect()
 }
@@ -567,22 +565,22 @@ mod test {
         let out = normalize_outputs(
             ws,
             vec!["dist".to_string(), "/ws/root/build/app".to_string()],
-        );
+        )
+        .unwrap();
         assert_eq!(out, vec!["dist".to_string(), "build/app".to_string()]);
     }
 
     #[cfg(unix)]
     #[test]
-    fn normalize_outputs_skips_paths_outside_workspace() {
+    fn normalize_outputs_errors_on_paths_outside_workspace() {
         let ws = Path::new("/ws/root");
-        let out = normalize_outputs(
-            ws,
-            vec![
-                "/etc/cron.d/evil".to_string(),
-                "../../escape".to_string(),
-                "dist".to_string(),
-            ],
+        // Absolute path outside the workspace.
+        assert!(normalize_outputs(ws, vec!["/etc/cron.d/evil".to_string()]).is_err());
+        // Relative path climbing out via `..`.
+        assert!(normalize_outputs(ws, vec!["../../escape".to_string()]).is_err());
+        // A valid output alongside an escaping one still errors.
+        assert!(
+            normalize_outputs(ws, vec!["dist".to_string(), "../../escape".to_string()]).is_err()
         );
-        assert_eq!(out, vec!["dist".to_string()]);
     }
 }
