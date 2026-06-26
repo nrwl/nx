@@ -53,7 +53,7 @@ jobs:
       - name: Use the package manager cache if available
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -95,7 +95,7 @@ jobs:
       - name: Use the package manager cache if available
         uses: actions/setup-node@v3
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install dependencies
@@ -294,7 +294,7 @@ Run agents directly on Bitbucket Pipelines with the workflow below:
 
 ```yaml
 // bitbucket-pipelines.yml
-image: node:20
+image: node:22
 
 clone:
   depth: full
@@ -351,7 +351,7 @@ Run agents directly on GitLab with the workflow below:
 
 ```yaml
 // .gitlab-ci.yml
-image: node:18
+image: node:22
 
 # Creating template for DTE agents
 .dte-agent:
