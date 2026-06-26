@@ -300,8 +300,10 @@ function buildSyntheticTargetsForRoot(
  * catch-all entries (and `executor`-filtered entries when an executor is
  * supplied) contribute.
  *
- * The normalized map is cached per `targetDefaults` reference so repeated
- * reads against the same nx.json don't re-normalize.
+ * Normalization runs per call. It is just an array-wrap of each key's value
+ * (cheap relative to graph construction), and `targetDefaults` is mutable and
+ * read through this exported entry point — caching by object identity would
+ * return stale matches when a caller edits a key between reads.
  */
 export function readTargetDefaultsForTarget(
   targetName: string,
@@ -316,7 +318,7 @@ export function readTargetDefaultsForTarget(
 ): Partial<TargetConfiguration> | null {
   if (!targetDefaults) return null;
   return resolveTargetDefault(
-    getCachedNormalizedEntries(targetDefaults),
+    normalizeTargetDefaults(targetDefaults),
     targetName,
     {
       executor,
@@ -326,19 +328,6 @@ export function readTargetDefaultsForTarget(
       command: opts?.command,
     }
   );
-}
-
-const normalizedEntriesCache = new WeakMap<object, NormalizedTargetDefaults>();
-
-function getCachedNormalizedEntries(
-  targetDefaults: TargetDefaults
-): NormalizedTargetDefaults {
-  let entries = normalizedEntriesCache.get(targetDefaults);
-  if (!entries) {
-    entries = normalizeTargetDefaults(targetDefaults);
-    normalizedEntriesCache.set(targetDefaults, entries);
-  }
-  return entries;
 }
 
 interface MatchContext {
