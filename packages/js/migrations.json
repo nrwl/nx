@@ -37,6 +37,14 @@
       },
       "factory": "./dist/src/migrations/update-23-1-0/add-ignore-deprecations-for-ts6",
       "documentation": "./dist/src/migrations/update-23-1-0/add-ignore-deprecations-for-ts6.md"
+    },
+    "23-1-0-add-node-types-to-ts-node-config": {
+      "version": "23.1.0-beta.5",
+      "description": "Adds `\"types\": [\"node\"]` to `ts-node.compilerOptions` blocks using node/node10/classic resolution and lacking a `types` field, so ts-node keeps resolving node globals (e.g. `module` in jest.config.ts) on TypeScript 6, where those resolutions no longer auto-load @types/node.",
+      "requires": {
+        "typescript": ">=6.0.0"
+      },
+      "factory": "./dist/src/migrations/update-23-1-0/add-node-types-to-ts-node-config"
     }
   },
   "packageJsonUpdates": {
