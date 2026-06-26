@@ -608,10 +608,6 @@ async function normalizeArgsMiddleware(
         );
       }
 
-      // Always enable Nx Cloud for AI agents - ignore --nxCloud=skip since the AI
-      // may pass it without asking the user. Nx Cloud is required for the full experience.
-      argv.nxCloud = 'yes';
-
       // Skip GitHub push prompts in AI mode - we'll provide instructions in the success output
       argv.skipGitHubPush = true;
     } else {
