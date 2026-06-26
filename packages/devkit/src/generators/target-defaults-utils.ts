@@ -145,16 +145,31 @@ function filterCoversContext(
   }
   if (filter.projects !== undefined) {
     const configured = context.projects ?? [];
-    if (configured.length === 0) {
-      return false;
-    }
     const nodes = contextProjectNodes(context.tree, configured);
-    const matched = findMatchingProjects([...filter.projects], nodes);
-    if (!configured.every((project) => matched.includes(project))) {
+    if (!projectsFilterCovers(filter.projects, nodes, configured)) {
       return false;
     }
   }
   return true;
+}
+
+/**
+ * Whether a `filter.projects` pattern set covers *every* required project name:
+ * each must be returned by `findMatchingProjects` against `nodes`. An empty
+ * `requiredNames` can never be "covered", so the entry falls through to the
+ * generic baseline. Shared by the upsert and update paths so the coverage
+ * semantics live in one place.
+ */
+function projectsFilterCovers(
+  patterns: string[],
+  nodes: Record<string, ContextProjectNode>,
+  requiredNames: string[]
+): boolean {
+  if (requiredNames.length === 0) {
+    return false;
+  }
+  const matched = findMatchingProjects([...patterns], nodes);
+  return requiredNames.every((name) => matched.includes(name));
 }
 
 function contextProjectNodes(
@@ -270,6 +285,12 @@ function* logicalTargetDefaultEntries(
 
 // Mirrors `isGlobPattern` from `nx/src/utils/globs.ts`, which isn't on the
 // devkit-exports surface guaranteed across the supported nx version range.
+//
+// Known limitation: a `:` is also legal in a target name, so a target literally
+// named e.g. `e2e:ci` is classified as an executor key here. This matches how
+// the rest of the target-defaults stack disambiguates keys (executor-shaped
+// keys win), and such target names are vanishingly rare — accepted rather than
+// worked around.
 const GLOB_CHARACTERS = new Set(['*', '|', '{', '}', '(', ')', '[']);
 function isExecutorLikeKey(key: string): boolean {
   if (!key.includes(':')) return false;
@@ -448,13 +469,9 @@ function entryMatchesContext(
 
   if (projects !== undefined && entry.filter?.projects !== undefined) {
     const patterns = Array.isArray(entry.filter.projects)
-      ? [...entry.filter.projects]
+      ? entry.filter.projects
       : [entry.filter.projects];
-    const matched = findMatchingProjects(patterns, projects);
-    if (
-      projectNames.length === 0 ||
-      !projectNames.every((name) => matched.includes(name))
-    ) {
+    if (!projectsFilterCovers(patterns, projects, projectNames)) {
       return false;
     }
   }
@@ -478,8 +495,9 @@ export function readTargetDefaultsForTarget(
   );
 }
 
-// Order-insensitive equality so re-upserts with reordered patterns
-// merge into the same entry rather than appending a duplicate.
+// Order-insensitive equality so re-upserts with reordered patterns merge into
+// the same entry rather than appending a duplicate. Comparing sorted copies
+// keeps duplicates significant (`['a','a']` ≠ `['a']`) without special-casing.
 function projectsEqual(
   a: string[] | undefined,
   b: string[] | undefined
@@ -487,15 +505,9 @@ function projectsEqual(
   if (a === b) return true;
   if (!a || !b) return false;
   if (a.length !== b.length) return false;
-  const aSet = new Set(a);
-  if (aSet.size !== a.length) {
-    // Duplicates inside one array — fall back to positional comparison so
-    // we don't silently merge `['a','a']` with `['a']`.
-    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
-    return true;
-  }
-  for (const item of b) if (!aSet.has(item)) return false;
-  return true;
+  const sortedA = [...a].sort();
+  const sortedB = [...b].sort();
+  return sortedA.every((value, i) => value === sortedB[i]);
 }
 
 export function addBuildTargetDefaults(
