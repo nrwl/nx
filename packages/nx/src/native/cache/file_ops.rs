@@ -1,4 +1,4 @@
-use std::path::{Component, Path, PathBuf};
+use std::path::{Path, PathBuf};
 use std::{fs, io};
 
 use fs_extra::error::ErrorKind;
@@ -50,24 +50,15 @@ pub fn _copy_impl(src: &Path, dest: &Path, boundary: Option<&Path>) -> anyhow::R
         }
     }
 
-    // Check symlink before dir: `is_dir()` follows symlinks, so a cache output
-    // shipped as a symlink-to-dir would otherwise be followed and its (possibly
-    // external) target contents copied into the workspace.
+    // Check symlink before dir: `is_dir()` follows symlinks, so a symlinked
+    // output must be recreated as a link, not followed (which would copy its
+    // target's contents in). The link is recreated verbatim even if it points
+    // outside the workspace — it is only a pointer, and we never write *through*
+    // a symlink (create_dir_all_within realizes parents as real directories).
     let size = if src.is_symlink() {
-        let target = fs::read_link(&src)?;
-        // On restore, refuse a cache symlink whose target escapes the workspace.
-        if let Some(root) = boundary {
-            if symlink_target_escapes(root, &dest, &target) {
-                return Err(anyhow::anyhow!(
-                    "Refusing to restore cache symlink {:?} escaping the workspace: {:?}",
-                    dest,
-                    target
-                ));
-            }
-        }
         trace!("Copying symlink: {:?}", &src);
         remove_existing_symlink(&dest)?;
-        symlink(target, &dest)?;
+        symlink(fs::read_link(&src)?, &dest)?;
         0
     } else if src.is_dir() {
         trace!("Copying directory: {:?}", &src);
@@ -176,36 +167,6 @@ fn symlink<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<(
 /// Removes an existing symlink at `path` if one exists.
 /// Uses `symlink_metadata` which does not follow symlinks, so it correctly
 /// detects dangling symlinks that `is_file()`/`is_dir()` would miss.
-/// Whether a symlink placed at `link_path` pointing to `target` would resolve
-/// outside `boundary` once followed. Absolute targets are checked directly;
-/// relative targets are resolved against the symlink's own directory. The check
-/// is lexical (collapses `.`/`..`, no symlink resolution) — sufficient because
-/// restore realizes every parent directory within `boundary` as a real
-/// directory, so there are no intermediate symlinks left to follow.
-fn symlink_target_escapes(boundary: &Path, link_path: &Path, target: &Path) -> bool {
-    let resolved = if target.is_absolute() {
-        target.to_path_buf()
-    } else {
-        link_path.parent().unwrap_or(link_path).join(target)
-    };
-    !lexically_normalize(&resolved).starts_with(lexically_normalize(boundary))
-}
-
-/// Collapse `.` and `..` components lexically, without touching the filesystem.
-fn lexically_normalize(path: &Path) -> PathBuf {
-    let mut normalized = PathBuf::new();
-    for component in path.components() {
-        match component {
-            Component::ParentDir => {
-                normalized.pop();
-            }
-            Component::CurDir => {}
-            other => normalized.push(other.as_os_str()),
-        }
-    }
-    normalized
-}
-
 fn remove_existing_symlink(path: &Path) -> io::Result<()> {
     match fs::symlink_metadata(path) {
         Ok(meta) if meta.file_type().is_symlink() => {
@@ -246,22 +207,9 @@ fn copy_dir_all(
             dirs_copied += 1;
             subdir_size
         } else if ty.is_symlink() {
-            let target = fs::read_link(entry.path())?;
-            // On restore, refuse a cache symlink whose target escapes the workspace.
-            if let Some(root) = boundary {
-                if symlink_target_escapes(root, &dest_path, &target) {
-                    return Err(io::Error::new(
-                        io::ErrorKind::Other,
-                        format!(
-                            "Refusing to restore cache symlink {:?} escaping the workspace: {:?}",
-                            dest_path, target
-                        ),
-                    ));
-                }
-            }
             trace!("Copying symlink: {:?}", entry.path());
             remove_existing_symlink(&dest_path)?;
-            symlink(target, dest_path)?;
+            symlink(fs::read_link(entry.path())?, dest_path)?;
             symlinks_copied += 1;
             0
         } else {
@@ -446,32 +394,34 @@ mod test {
 
     #[cfg(unix)]
     #[test]
-    fn restore_rejects_symlinked_output_escaping_workspace() {
+    fn restore_recreates_escaping_symlink_without_following_it() {
         use std::os::unix::fs::symlink;
 
-        // A directory outside the workspace whose contents an attacker wants
-        // exfiltrated into the build outputs.
+        // A directory outside the workspace.
         let outside = TempDir::new().unwrap();
         outside.child("secret.txt").write_str("SECRET").unwrap();
 
-        // A malicious artifact ships the declared output `dist` as a symlink to
-        // that external directory (`unpack_in` creates such symlinks).
+        // The declared output `dist` is a symlink pointing outside the workspace.
         let cache = TempDir::new().unwrap();
         symlink(outside.path(), cache.join("dist")).unwrap();
 
         let workspace = TempDir::new().unwrap();
         let expanded = vec!["dist".to_string()];
-        let result = copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded);
+        copy_outputs_into_workspace(workspace.path(), cache.path(), &expanded).unwrap();
 
-        // The escaping symlink must be rejected — not recreated, not followed.
+        // The symlink is recreated verbatim — a pointer outside the workspace is
+        // allowed; nothing was written *through* it.
+        let dist = workspace.join("dist");
         assert!(
-            result.is_err(),
-            "a cache symlink escaping the workspace must be rejected"
+            dist.symlink_metadata().unwrap().file_type().is_symlink(),
+            "the symlink should be recreated, not rejected"
         );
-        assert!(
-            workspace.join("dist").symlink_metadata().is_err(),
-            "no symlink must be left in the workspace"
-        );
+        assert_eq!(dist.read_link().unwrap(), outside.path());
+
+        // The target's contents were NOT copied into the workspace as real files
+        // (the symlink was not followed): removing the link leaves nothing behind.
+        remove_path(&dist).unwrap();
+        assert!(!dist.join("secret.txt").exists());
         assert!(outside.child("secret.txt").exists());
     }
 
