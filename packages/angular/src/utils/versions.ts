@@ -2,8 +2,8 @@ import { join } from 'path';
 
 export const nxVersion = require(join('@nx/angular', 'package.json')).version;
 
-export const angularVersion = '~22.0.0';
-export const angularDevkitVersion = '~22.0.0';
+export const angularVersion = '~22.0.4';
+export const angularDevkitVersion = '~22.0.4';
 export const ngPackagrVersion = '~22.0.0';
 export const ngrxVersion = '^21.0.0';
 export const rxjsVersion = '~7.8.0';
