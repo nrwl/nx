@@ -18,12 +18,14 @@ use crate::native::tasks::inputs::{
 };
 use crate::native::tasks::utils;
 use crate::native::utils::find_matching_projects;
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 #[napi]
 pub struct HashPlanner {
     nx_json: NxJson,
     project_graph: Arc<ProjectGraph>,
+    /// Each external node mapped to its transitive project-node deps, memoized per instance.
+    external_deps_mapped: OnceLock<HashMap<String, Vec<String>>>,
 }
 
 #[napi]
@@ -39,6 +41,7 @@ impl HashPlanner {
         Self {
             nx_json,
             project_graph: Arc::clone(project_graph),
+            external_deps_mapped: OnceLock::new(),
         }
     }
 
@@ -51,7 +54,9 @@ impl HashPlanner {
 
         trace!("Starting get_plans_internal for {} tasks", task_ids.len());
 
-        let external_deps_mapped = self.setup_external_deps();
+        let external_deps_mapped = self
+            .external_deps_mapped
+            .get_or_init(|| self.compute_external_deps());
         let setup_duration = function_start.elapsed();
 
         trace!("External deps setup completed in {:?}", setup_duration);
@@ -70,7 +75,7 @@ impl HashPlanner {
                     &task.target.project,
                     &task.target.target,
                     &inputs.self_inputs,
-                    &external_deps_mapped,
+                    external_deps_mapped,
                 )?;
 
                 let self_inputs = self.self_and_deps_inputs(
@@ -78,7 +83,7 @@ impl HashPlanner {
                     task,
                     &inputs,
                     &task_graph,
-                    &external_deps_mapped,
+                    external_deps_mapped,
                     &mut Box::new(hashbrown::HashSet::from([task.target.project.as_str()])),
                 )?;
 
@@ -151,7 +156,7 @@ impl HashPlanner {
         project_name: &str,
         target_name: &str,
         self_inputs: &[Input],
-        external_deps_map: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        external_deps_map: &'a HashMap<String, Vec<String>>,
     ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
@@ -186,10 +191,10 @@ impl HashPlanner {
             );
             trace!(
                 "Add External Instructions for dependencies of executor {existing_package}: {:?}",
-                &external_deps_map[&existing_package]
+                &external_deps_map[existing_package]
             );
             external_deps.push(existing_package);
-            external_deps.extend(&external_deps_map[&existing_package]);
+            external_deps.extend(&external_deps_map[existing_package]);
             Ok(Some(
                 external_deps
                     .iter()
@@ -230,10 +235,10 @@ impl HashPlanner {
                             );
                             trace!(
                                 "Add External Instructions for dependencies of External Input {external_node_name}: {:?}",
-                                &external_deps_map[&external_node_name]
+                                &external_deps_map[external_node_name]
                             );
                             external_deps.push(external_node_name);
-                            external_deps.extend(&external_deps_map[&external_node_name]);
+                            external_deps.extend(&external_deps_map[external_node_name]);
                         }
                     }
                     _ => continue,
@@ -260,7 +265,7 @@ impl HashPlanner {
         task: &Task,
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
-        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[project_name];
@@ -286,18 +291,21 @@ impl HashPlanner {
             .collect())
     }
 
-    fn setup_external_deps(&self) -> hashbrown::HashMap<&String, Vec<&String>> {
+    fn compute_external_deps(&self) -> HashMap<String, Vec<String>> {
         self.project_graph
             .external_nodes
             .keys()
             .map(|external_node| {
                 (
-                    external_node,
+                    external_node.clone(),
                     utils::find_all_project_node_dependencies(
                         external_node,
                         &self.project_graph,
                         false,
-                    ),
+                    )
+                    .into_iter()
+                    .cloned()
+                    .collect(),
                 )
             })
             .collect()
@@ -310,7 +318,7 @@ impl HashPlanner {
         inputs: &[Input],
         task_graph: &TaskGraph,
         project_deps: &'a [String],
-        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         if inputs.len() == 1 {
@@ -350,7 +358,7 @@ impl HashPlanner {
         input: &Input,
         task_graph: &TaskGraph,
         project_deps: &'a [String],
-        external_deps_mapped: &hashbrown::HashMap<&String, Vec<&'a String>>,
+        external_deps_mapped: &'a HashMap<String, Vec<String>>,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut deps_inputs: Vec<HashInstruction> = Vec::with_capacity(project_deps.len());
