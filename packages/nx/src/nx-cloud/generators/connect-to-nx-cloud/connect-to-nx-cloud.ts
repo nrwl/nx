@@ -166,6 +166,20 @@ function addNxCloudIdToNxJson(
   }
 }
 
+/**
+ * Collapse `nx-init` flavors (e.g. `nx-init-angular`, `nx-init-npm-repo`) to
+ * `nx-init` before persisting the workspace's installationSource, so acquisition
+ * dashboards that filter on the exact `nx-init` source still count flavored
+ * inits. Every other source (e.g. `nx-connect`, `nx-console`) is left verbatim.
+ */
+export function normalizeWorkspaceInstallationSource(
+  installationSource: string
+): string {
+  return installationSource.startsWith('nx-init')
+    ? 'nx-init'
+    : installationSource;
+}
+
 export async function connectToNxCloud(
   tree: Tree,
   schema: ConnectToNxCloudOptions,
@@ -204,17 +218,21 @@ export async function connectToNxCloud(
   )
     return null;
 
+  const workspaceInstallationSource = normalizeWorkspaceInstallationSource(
+    schema.installationSource
+  );
+
   try {
     responseFromCreateNxCloudWorkspaceV2 = await createNxCloudWorkspaceV2(
       getRootPackageName(tree, schema.directory),
-      schema.installationSource,
+      workspaceInstallationSource,
       getNxInitDate()
     );
   } catch (e) {
     if (e.response?.status === 404) {
       responseFromCreateNxCloudWorkspaceV1 = await createNxCloudWorkspaceV1(
         getRootPackageName(tree, schema.directory),
-        schema.installationSource,
+        workspaceInstallationSource,
         getNxInitDate()
       );
     } else {
