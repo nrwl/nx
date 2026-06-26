@@ -455,10 +455,7 @@ impl App {
 
     /// Check if a task status is considered complete
     fn is_status_complete(status: TaskStatus) -> bool {
-        !matches!(
-            status,
-            TaskStatus::NotStarted | TaskStatus::InProgress | TaskStatus::Shared
-        )
+        status.is_terminal()
     }
 
     pub fn print_task_terminal_output(&mut self, task_id: String, output: String) {
@@ -624,8 +621,11 @@ impl App {
             return;
         }
 
-        // Success and failure trigger ungrouping
-        self.handle_batch_complete(batch_id, status);
+        // Success and failure trigger ungrouping. Route through the action queue
+        // (like StartBatch) so completion is applied on the event-loop thread
+        // AFTER the nested tasks' queued status/timing updates. Otherwise the
+        // direct call races those updates and ungroups against stale component state.
+        self.dispatch_action(Action::EndBatch(batch_id, status));
     }
 
     pub fn handle_event(
@@ -1487,6 +1487,9 @@ impl App {
             }
             Action::StartBatch(batch_id, batch_info) => {
                 self.handle_batch_start(batch_id.clone(), batch_info.clone());
+            }
+            Action::EndBatch(batch_id, status) => {
+                self.handle_batch_complete(batch_id.clone(), *status);
             }
             _ => {}
         }
@@ -2494,10 +2497,32 @@ impl App {
     }
 
     /// Handles batch completion by ungrouping tasks back to individual display.
-    /// This is called when a batch reaches a terminal state (success or failure).
+    /// Invoked on every batch-status report; only ungroups once all nested tasks
+    /// are terminal (see the guard below).
     fn handle_batch_complete(&mut self, batch_id: String, final_status: BatchStatus) {
         // Early validation
         if batch_id.is_empty() {
+            return;
+        }
+
+        // A batch reports its status on every run iteration, and incomplete
+        // batches are re-run for their remaining tasks. Only complete (ungroup +
+        // clean up) once every nested task has reached a terminal state, so an
+        // intermediate report doesn't prematurely ungroup and then re-group.
+        // Safe to read component state here: EndBatch is processed on the
+        // event-loop thread after the nested tasks' queued status updates.
+        let all_tasks_complete = self
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .map_or(false, |tasks_list| tasks_list.is_batch_complete(&batch_id));
+        if !all_tasks_complete {
+            // A nested task isn't terminal yet (an intermediate re-run report, or
+            // a stuck/aborted task). Breadcrumb if a batch ever stays grouped.
+            trace!(
+                "Deferring batch '{}' completion: nested tasks not all terminal yet",
+                batch_id
+            );
             return;
         }
 
