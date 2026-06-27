@@ -202,8 +202,8 @@ catalogs:
       specifier: ^17.6.2
       version: 17.7.2
     yargs-parser:
-      specifier: 21.1.1
-      version: 21.1.1
+      specifier: ^22.0.0
+      version: 22.0.0
   eslint:
     '@angular-eslint/eslint-plugin':
       specifier: ^22.0.0
@@ -1371,7 +1371,7 @@ importers:
         version: 17.7.2
       yargs-parser:
         specifier: 'catalog:'
-        version: 21.1.1
+        version: 22.0.0
       zone.js:
         specifier: catalog:angular
         version: 0.16.2
@@ -2689,7 +2689,7 @@ importers:
         version: 2.8.1
       yargs-parser:
         specifier: 'catalog:'
-        version: 21.1.1
+        version: 22.0.0
     devDependencies:
       jest:
         specifier: catalog:jest
@@ -3001,7 +3001,7 @@ importers:
         version: 2.8.1
       yargs-parser:
         specifier: 'catalog:'
-        version: 21.1.1
+        version: 22.0.0
     devDependencies:
       nx:
         specifier: workspace:*
@@ -3467,7 +3467,7 @@ importers:
         version: 17.7.2
       yargs-parser:
         specifier: 'catalog:'
-        version: 21.1.1
+        version: 22.0.0
     optionalDependencies:
       '@nx/nx-darwin-arm64':
         specifier: '*'
@@ -4293,7 +4293,7 @@ importers:
         version: 2.8.1
       yargs-parser:
         specifier: 'catalog:'
-        version: 21.1.1
+        version: 22.0.0
     devDependencies:
       nx:
         specifier: workspace:*
