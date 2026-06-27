@@ -1228,6 +1228,61 @@ describe('@nx/docker', () => {
         '--tag apps-api'
       );
     });
+
+    it('should omit imageRef from run target command when skipDefaultTag is true', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const results = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: true,
+          },
+        },
+        context
+      );
+
+      const targets = results[0][1].projects['proj'].targets;
+      expect(targets['docker:run'].command).toBe('docker run {args}');
+    });
+
+    it('should include imageRef in run target command when skipDefaultTag is false or undefined', async () => {
+      await tempFs.createFiles({
+        'proj/Dockerfile': 'FROM node:18',
+        'proj/project.json': '{}',
+      });
+
+      const resultsFalse = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+            skipDefaultTag: false,
+          },
+        },
+        context
+      );
+      expect(
+        resultsFalse[0][1].projects['proj'].targets['docker:run'].command
+      ).toBe('docker run {args} proj');
+
+      const resultsUndefined = await createNodesFunction(
+        ['proj/Dockerfile'],
+        {
+          buildTarget: {
+            name: 'build',
+          },
+        },
+        context
+      );
+      expect(
+        resultsUndefined[0][1].projects['proj'].targets['docker:run'].command
+      ).toBe('docker run {args} proj');
+    });
   });
 
   describe('target configurations', () => {
