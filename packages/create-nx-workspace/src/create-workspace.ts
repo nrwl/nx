@@ -24,7 +24,7 @@ import {
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
-import { cloneTemplate } from './utils/template/clone-template';
+import { downloadTemplate } from './utils/template/download-template';
 import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
@@ -81,7 +81,6 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       throw new Error(
         `Invalid template. Only templates from the 'nrwl' GitHub org are supported.`
       );
-    const templateUrl = `https://github.com/${options.template}`;
     const workingDir = (options.workingDir ?? process.cwd()).replace(
       /\\/g,
       '/'
@@ -93,14 +92,14 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     // Use spinner for human mode, progress logs for AI mode
     let workspaceSetupSpinner: any;
     if (aiMode) {
-      logProgress('cloning', `Cloning template ${options.template}...`);
+      logProgress('downloading', `Downloading template ${options.template}...`);
     } else {
       const ora = require('ora');
       workspaceSetupSpinner = ora(`Creating workspace from template`).start();
     }
 
     try {
-      await cloneTemplate(templateUrl, name, workingDir);
+      await downloadTemplate(options.template, directory);
 
       // Remove npm lockfile from template since we'll generate the correct one
       const npmLockPath = join(directory, 'package-lock.json');

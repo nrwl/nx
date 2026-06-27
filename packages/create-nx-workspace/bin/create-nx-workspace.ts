@@ -842,6 +842,26 @@ function isCurrentDirReference(folderName: string): boolean {
   return folderName === '.' || folderName === './';
 }
 
+const INERT_FILE_PATTERN = /^(README|LICEN[CS]E)(\..+)?$/i;
+
+/**
+ * A directory is "functionally empty" when every entry is safe to scaffold
+ * over: a dotfile/dotdir (`.git`, `.gitignore`, `.github`, ...) or a README /
+ * LICENSE. This matches a freshly created GitHub repo, so
+ * `create-nx-workspace .` works in place there. Any real content (e.g.
+ * `src/`, `package.json`) makes it non-empty. README/LICENSE are allowed
+ * because the generated workspace replaces them.
+ *
+ * @visibleForTesting
+ */
+export function isFunctionallyEmpty(dir: string): boolean {
+  return readdirSync(dir, { withFileTypes: true }).every(
+    (entry) =>
+      entry.name.startsWith('.') ||
+      (entry.isFile() && INERT_FILE_PATTERN.test(entry.name))
+  );
+}
+
 /**
  * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
  * workspace name and a `workingDir` override so that downstream functions
@@ -858,7 +878,7 @@ export function resolveSpecialFolderName(
   // User wants to init in the current directory
   if (isCurrentDirReference(folderName)) {
     const cwd = resolve(process.cwd());
-    if (readdirSync(cwd).length > 0) {
+    if (!isFunctionallyEmpty(cwd)) {
       throw new CnwError(
         'DIRECTORY_EXISTS',
         `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
@@ -908,10 +928,11 @@ export async function determineFolder(
     validateWorkspaceName(folderName);
 
     // When input is "." or "./", resolveSpecialFolderName already validated
-    // the directory is empty. The target always "exists" because it IS the
-    // current working directory, so skip the existsSync check and default
-    // the workspace name to the directory name.
+    // the directory is functionally empty. The target always "exists" because
+    // it IS the current working directory, so skip the existsSync check and
+    // default the workspace name to the directory name.
     if (isCurrentDirReference(rawFolderName)) {
+      parsedArgs.useCurrentDir = true;
       return folderName;
     }
 
@@ -944,7 +965,35 @@ export async function determineFolder(
     return folderName;
   }
 
+  // Interactive, no name given. If the current directory is functionally
+  // empty and its name is a valid workspace name, offer to scaffold in place
+  // rather than into a subfolder.
+  const cwd = resolve(process.cwd());
+  const cwdName = basename(cwd);
+  if (isFunctionallyEmpty(cwd) && /^[a-zA-Z]/.test(cwdName)) {
+    if (await promptCreateInCurrentDir(cwdName)) {
+      parsedArgs.workingDir = dirname(cwd);
+      parsedArgs.useCurrentDir = true;
+      return cwdName;
+    }
+  }
+
   return promptForFolder(parsedArgs);
+}
+
+async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
+  const { useCurrentDir } = await enquirer.prompt<{
+    useCurrentDir: 'Yes' | 'No';
+  }>([
+    {
+      name: 'useCurrentDir',
+      message: `Create workspace in the current directory (${dirName})?`,
+      type: 'autocomplete',
+      choices: [{ name: 'Yes' }, { name: 'No' }],
+      initial: 0,
+    },
+  ]);
+  return useCurrentDir === 'Yes';
 }
 
 async function promptForFolder(

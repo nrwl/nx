@@ -10,6 +10,13 @@ export interface CreateWorkspaceOptions {
    * Used when the user provides "." or an absolute path as the workspace name.
    */
   workingDir?: string;
+  /**
+   * @description Scaffold into the current directory in place. Set when the
+   * user passes "." / "./" (or confirms the interactive prompt). The cwd is
+   * functionally empty but may hold inert files (.git, README, LICENSE), so
+   * downstream empty-directory guards are relaxed.
+   */
+  useCurrentDir?: boolean;
   packageManager: PackageManager; // Package manager to use
   nxCloud: NxCloud; // Enable Nx Cloud
   useGitHub?: boolean; // Will you be using GitHub as your git hosting provider?

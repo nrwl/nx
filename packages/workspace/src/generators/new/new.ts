@@ -47,6 +47,11 @@ interface Schema {
   workspaceGlobs?: string | string[];
   useProjectJson?: boolean;
   aiAgents?: Agent[] | Agent;
+  // Internal: set by create-nx-workspace when scaffolding into the current
+  // directory, which is functionally empty but may already contain inert files
+  // (.git, README, LICENSE). create-nx-workspace owns that policy, so skip the
+  // generator's own empty-directory guard.
+  skipEmptyDirCheck?: boolean;
 }
 
 export interface NormalizedSchema extends Schema {
@@ -126,6 +131,7 @@ function validateOptions(options: Schema, host: Tree) {
   }
 
   if (
+    !options.skipEmptyDirCheck &&
     host.exists(options.name) &&
     !host.isFile(options.name) &&
     host.children(options.name).length > 0

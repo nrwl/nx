@@ -37,11 +37,15 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
   // See: https://github.com/nrwl/nx/issues/31834
   delete (options as any).skipInstall;
 
-  // workingDir is consumed by CNW itself, not passed to `nx new`
-  const { workingDir: _workingDir, ...nxNewOptions } = options;
+  // workingDir and useCurrentDir are consumed by CNW itself, not passed to `nx new`
+  const { workingDir: _workingDir, useCurrentDir, ...nxNewOptions } = options;
 
   const args = unparse({
     ...nxNewOptions,
+    // Scaffolding into the current directory: it is functionally empty but may
+    // contain inert files (.git, README), so relax the generator's
+    // empty-directory guard.
+    ...(useCurrentDir ? { skipEmptyDirCheck: true } : {}),
   }).join(' ');
 
   const pmc = getPackageManagerCommand(packageManager);
