@@ -2584,8 +2584,8 @@ importers:
         specifier: 'catalog:'
         version: 2.3.6
       flat:
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: ^6.0.1
+        version: 6.0.1
       open:
         specifier: ^8.4.0
         version: 8.4.2
@@ -3406,8 +3406,8 @@ importers:
         specifier: 3.2.0
         version: 3.2.0
       flat:
-        specifier: ^5.0.2
-        version: 5.0.2
+        specifier: ^6.0.1
+        version: 6.0.1
       ignore:
         specifier: ^7.0.5
         version: 7.0.5
@@ -18037,6 +18037,11 @@ packages:
 
   flat@5.0.2:
     resolution: {integrity: sha512-b6suED+5/3rTpUBdG1gupIl8MPFCAMA0QXwmljLhvCUKcUvdE4gWky9zpuGCcXHOsz4J9wPGNWq6OKpmIzz3hQ==}
+    hasBin: true
+
+  flat@6.0.1:
+    resolution: {integrity: sha512-/3FfIa8mbrg3xE7+wAhWeV+bd7L2Mof+xtZb5dRDKZ+wDvYJK4WDYeIOuOhre5Yv5aQObZrlbRmk3RTSiuQBtw==}
+    engines: {node: '>=18'}
     hasBin: true
 
   flatted@3.3.4:
@@ -44285,6 +44290,8 @@ snapshots:
       keyv: 4.5.4
 
   flat@5.0.2: {}
+
+  flat@6.0.1: {}
 
   flatted@3.3.4: {}
 
