@@ -479,7 +479,10 @@ export function normalizeSchema(
   };
 }
 
-export function addStorybookToNamedInputs(tree: Tree) {
+export function addStorybookToNamedInputs(
+  tree: Tree,
+  schema: StorybookConfigureSchema
+) {
   const nxJson = readNxJson(tree);
 
   if (nxJson.namedInputs) {
@@ -503,6 +506,7 @@ export function addStorybookToNamedInputs(tree: Tree) {
       }
 
       if (
+        schema.uiFramework !== '@storybook/angular' &&
         !nxJson.namedInputs.production.includes(
           '!{projectRoot}/tsconfig.storybook.json'
         )
@@ -517,7 +521,11 @@ export function addStorybookToNamedInputs(tree: Tree) {
   }
 }
 
-export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
+export function addStorybookToTargetDefaults(
+  tree: Tree,
+  schema: StorybookConfigureSchema,
+  setCache = true
+) {
   const nxJson = readNxJson(tree);
 
   nxJson.targetDefaults ??= {};
@@ -553,6 +561,7 @@ export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
   }
 
   if (
+    schema.uiFramework !== '@storybook/angular' &&
     !nxJson.targetDefaults['build-storybook'].inputs.includes(
       '{projectRoot}/tsconfig.storybook.json'
     )
@@ -662,8 +671,8 @@ export function getTsConfigPath(
     path?.length > 0
       ? path
       : getProjectType(tree, root, projectType) === 'application'
-        ? 'tsconfig.app.json'
-        : 'tsconfig.lib.json'
+      ? 'tsconfig.app.json'
+      : 'tsconfig.lib.json'
   );
 }
 
