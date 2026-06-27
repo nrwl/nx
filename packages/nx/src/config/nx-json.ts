@@ -243,6 +243,16 @@ export interface NxReleaseVersionConfiguration {
    * dependency does not necessarily mean the consumer itself is an RC.
    */
   applyPreidToDependents?: boolean;
+  /**
+   * Controls the semver bump type applied to dependents when a dependency is versioned.
+   * - 'patch' (default): always bump dependents by a patch version
+   * - 'minor': always bump dependents by a minor version
+   * - 'major': always bump dependents by a major version
+   * - 'match': use the same bump type as the dependency that triggered the bump
+   *
+   * This is 'patch' by default for backward compatibility.
+   */
+  dependentBumpType?: 'patch' | 'minor' | 'major' | 'match';
 }
 
 export interface NxReleaseChangelogConfiguration {
