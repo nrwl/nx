@@ -1,4 +1,4 @@
-import { needsShellQuoting } from './shell-quoting';
+import { needsShellQuoting, wrapArgIntoQuotesIfNeeded } from './shell-quoting';
 
 describe('needsShellQuoting', () => {
   it.each([
@@ -39,5 +39,30 @@ describe('needsShellQuoting', () => {
     ['empty string', ''],
   ])('returns false for %s: %j', (_, value) => {
     expect(needsShellQuoting(value)).toBe(false);
+  });
+});
+
+describe('wrapArgIntoQuotesIfNeeded', () => {
+  it('preserves a JSON value containing braces, commas, and double quotes', () => {
+    expect(
+      wrapArgIntoQuotesIfNeeded('{"slug":"test","displayName":"Test"}')
+    ).toBe('"{\\"slug\\":\\"test\\",\\"displayName\\":\\"Test\\"}"');
+  });
+
+  it('preserves a JSON value passed as --key=value', () => {
+    expect(wrapArgIntoQuotesIfNeeded('--data={"a":1}')).toBe(
+      '--data="{\\"a\\":1}"'
+    );
+  });
+
+  it('leaves plain args untouched', () => {
+    expect(wrapArgIntoQuotesIfNeeded('--name')).toBe('--name');
+    expect(wrapArgIntoQuotesIfNeeded('value')).toBe('value');
+  });
+
+  it('does not re-quote args that are already quoted', () => {
+    expect(wrapArgIntoQuotesIfNeeded("'already quoted'")).toBe(
+      "'already quoted'"
+    );
   });
 });

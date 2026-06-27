@@ -7,6 +7,7 @@ import {
   PseudoTerminal,
 } from '../../tasks-runner/pseudo-terminal';
 import { getPackageManagerCommand } from '../../utils/package-manager';
+import { wrapArgIntoQuotesIfNeeded } from '../../utils/shell-quoting';
 
 export interface RunScriptOptions {
   script: string;
@@ -19,7 +20,12 @@ export default async function (
 ) {
   const pm = getPackageManagerCommand();
   try {
-    let command = pm.run(options.script, options.__unparsed__.join(' '));
+    // Args run via `shell: true`; quote so metachars like `{}` in JSON values
+    // are not reinterpreted by the shell.
+    let command = pm.run(
+      options.script,
+      options.__unparsed__.map(wrapArgIntoQuotesIfNeeded).join(' ')
+    );
     let cwd = path.join(
       context.root,
       context.projectsConfigurations.projects[context.projectName].root
