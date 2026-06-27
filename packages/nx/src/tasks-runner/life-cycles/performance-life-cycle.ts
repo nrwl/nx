@@ -5,7 +5,6 @@ import {
   buildExitSummaryPayload,
   formatReport,
   formatReportMarkdown,
-  type FailedTask,
 } from './performance-report';
 import { LifeCycle, TaskResult } from '../life-cycle';
 import { isTuiEnabled } from '../is-tui-enabled';
@@ -131,30 +130,6 @@ export class PerformanceLifeCycle implements LifeCycle {
       this.options
     ).summary();
   }
-
-  /**
-   * The tasks that failed during the run, slowest first, for the GitHub Actions summary's
-   * failed-tasks table. Continuous tasks and tasks without a complete window are excluded
-   * (a failed task ran to a non-zero exit, so it has both timestamps).
-   */
-  getFailedTasks(): FailedTask[] {
-    const rows: FailedTask[] = [];
-    for (const [id, timing] of this.timings) {
-      if (
-        timing.continuous ||
-        timing.startTime == null ||
-        timing.endTime == null ||
-        this.statuses.get(id) !== 'failure'
-      ) {
-        continue;
-      }
-      rows.push({
-        id,
-        duration: Math.max(0, timing.endTime - timing.startTime),
-      });
-    }
-    return rows.sort((a, b) => b.duration - a.duration);
-  }
 }
 
 /** The most recently constructed performance lifecycle, read after the run. Cleared once consumed. */
@@ -224,7 +199,7 @@ export function flushPerformanceReport(): void {
     console.log(formatReport(summary));
     // In GitHub Actions, also append the report (plus a per-task table) to the job
     // summary page. Independent of the console.log above so neither masks the other.
-    writePerformanceReportToGitHubActions(lifeCycle, summary);
+    writePerformanceReportToGitHubActions(summary);
   } catch (e) {
     // Best-effort report; never let it affect the run's exit behavior. Surface the
     // cause only under verbose logging.
@@ -246,7 +221,6 @@ export function flushPerformanceReport(): void {
  * same "NX is already running" signal `nx exec` uses).
  */
 function writePerformanceReportToGitHubActions(
-  lifeCycle: PerformanceLifeCycle,
   summary: PerformanceSummary
 ): void {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
@@ -258,11 +232,7 @@ function writePerformanceReportToGitHubActions(
     return;
   }
   try {
-    const report = formatReportMarkdown(
-      summary,
-      lifeCycle.getFailedTasks(),
-      currentNxCommand()
-    );
+    const report = formatReportMarkdown(summary, currentNxCommand());
     appendFileSync(summaryPath, `${report}\n`);
   } catch (e) {
     if (process.env.NX_VERBOSE_LOGGING === 'true') {

@@ -4,7 +4,7 @@ import { TaskGraph } from '../../config/task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
 import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { isCI as isCiEnv } from '../../utils/is-ci';
-import { MEANINGFUL_OVERHEAD } from './performance-report';
+import { MEANINGFUL_OVERHEAD, type FailedTask } from './performance-report';
 import { TaskResult } from '../life-cycle';
 
 const CACHE_HIT_STATUSES = new Set([
@@ -53,6 +53,8 @@ export interface PerformanceSummary {
   criticalPathTaskCount: number;
   /** Longest critical-path tasks that ran (desc, capped at a few), cache hits excluded; empty when the path was fully cached. */
   criticalPathTop: Array<{ id: string; duration: number }>;
+  /** Tasks that failed (slowest first), for the GitHub Actions summary's failed-tasks table. Continuous tasks and tasks without a complete window are excluded. */
+  failedTasks: FailedTask[];
   /** runDuration − criticalPathDuration. */
   overhead: number;
   /** Overhead split by lever; these + coordinatorOverhead sum to `overhead`. Their sum is the slot-contention time (derived, never stored, so the halves can't drift). */
@@ -289,6 +291,30 @@ export class PerformanceAnalysis {
     return { cacheHits, cacheableCount: cacheHits + cacheRan };
   }
 
+  /**
+   * The tasks that failed during the run, slowest first, for the GitHub Actions summary's
+   * failed-tasks table. Continuous tasks and tasks without a complete window are excluded
+   * (a failed task ran to a non-zero exit, so it has both timestamps).
+   */
+  private computeFailedTasks(): FailedTask[] {
+    const rows: FailedTask[] = [];
+    for (const [id, timing] of this.timings) {
+      if (
+        timing.continuous ||
+        timing.startTime == null ||
+        timing.endTime == null ||
+        this.statuses.get(id) !== 'failure'
+      ) {
+        continue;
+      }
+      rows.push({
+        id,
+        duration: Math.max(0, timing.endTime - timing.startTime),
+      });
+    }
+    return rows.sort((a, b) => b.duration - a.duration);
+  }
+
   /** The structured performance summary, or `null` when no discrete task timings were recorded. */
   summary(): PerformanceSummary | null {
     const timed = this.timedTasks();
@@ -358,6 +384,7 @@ export class PerformanceAnalysis {
       criticalPathDuration,
       criticalPathTaskCount: criticalPathTasks.length,
       criticalPathTop,
+      failedTasks: this.computeFailedTasks(),
       overhead,
       recoverableByParallel,
       recoverableByMachines,

@@ -389,8 +389,7 @@ function escapeTableCell(value: string): string {
  */
 export function formatReportMarkdown(
   s: PerformanceSummary,
-  failedTasks: FailedTask[],
-  command = ''
+  command: string
 ): string {
   const fmt = formatDuration;
   const recoverable = recoverableTime(s);
@@ -398,14 +397,11 @@ export function formatReportMarkdown(
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const cache = cacheStat(s);
 
-  const lines = [
-    command
-      ? `## ⚡ Nx Performance Report — \`${command}\``
-      : '## ⚡ Nx Performance Report',
-  ];
+  const lines = [`## ⚡ Nx Performance Report — \`${command}\``];
 
   // Failures are the headline of a CI summary, so they go first — above the performance
   // stats, slowest first. A green run shows no table at all.
+  const failedTasks = s.failedTasks;
   if (failedTasks.length > 0) {
     lines.push(
       '',

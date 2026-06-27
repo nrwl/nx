@@ -25,7 +25,6 @@ import { formatDuration } from '../../native';
 import {
   buildExitSummaryPayload,
   buildRecommendations,
-  FailedTask,
   formatReport,
   formatReportMarkdown,
   recommendationToPayloadString,
@@ -1130,12 +1129,12 @@ describe('formatReport', () => {
   });
 });
 
-describe('getFailedTasks', () => {
-  /** Build a lifecycle, feed it a finished run, and return it so getFailedTasks can be inspected. */
-  function fed(
+describe('summary.failedTasks', () => {
+  /** Build a lifecycle, feed it a finished run, and return its summary so `failedTasks` can be inspected. */
+  function summaryOf(
     graph: TaskGraph,
     statuses: Record<string, TaskResult['status']> = {}
-  ): PerformanceLifeCycle {
+  ): PerformanceSummary {
     return withEnvironmentVariables(envFor({}), () => {
       const lc = makeLifeCycle(graph);
       lc.endTasks(
@@ -1144,7 +1143,7 @@ describe('getFailedTasks', () => {
             ({ task, status: statuses[task.id] }) as unknown as TaskResult
         )
       );
-      return lc;
+      return lc.getSummary()!;
     });
   }
 
@@ -1152,13 +1151,13 @@ describe('getFailedTasks', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 0, end: 3000 });
     const c = makeTask('c', { start: 0, end: 2000 });
-    const lc = fed(makeGraph([a, b, c]), {
+    const s = summaryOf(makeGraph([a, b, c]), {
       a: 'failure',
       b: 'failure',
       c: 'success', // excluded — it passed
     });
 
-    expect(lc.getFailedTasks()).toEqual([
+    expect(s.failedTasks).toEqual([
       { id: 'b', duration: 3000 },
       { id: 'a', duration: 1000 },
     ]);
@@ -1167,22 +1166,22 @@ describe('getFailedTasks', () => {
   it('returns nothing when no task failed', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 0, end: 2000 });
-    const lc = fed(makeGraph([a, b]), { a: 'success', b: 'local-cache' });
+    const s = summaryOf(makeGraph([a, b]), { a: 'success', b: 'local-cache' });
 
-    expect(lc.getFailedTasks()).toEqual([]);
+    expect(s.failedTasks).toEqual([]);
   });
 
   it('excludes continuous tasks and tasks without a complete window', () => {
     const failed = makeTask('failed', { start: 0, end: 1000 });
     const serve = makeTask('serve', { start: 0, continuous: true }); // no end time
     const partial = makeTask('partial', { start: 5 }); // started, never finished
-    const lc = fed(makeGraph([failed, serve, partial]), {
+    const s = summaryOf(makeGraph([failed, serve, partial]), {
       failed: 'failure',
       serve: 'failure',
       partial: 'failure',
     });
 
-    expect(lc.getFailedTasks().map((t) => t.id)).toEqual(['failed']);
+    expect(s.failedTasks.map((t) => t.id)).toEqual(['failed']);
   });
 });
 
@@ -1197,10 +1196,7 @@ describe('formatReportMarkdown', () => {
       remoteCacheEnabled: false,
       isCI: true,
     })!;
-    const failedTasks: FailedTask[] = [{ id: 'a', duration: 3000 }];
-
-    expect(formatReportMarkdown(s, failedTasks, 'run-many -t build'))
-      .toMatchInlineSnapshot(`
+    expect(formatReportMarkdown(s, 'run-many -t build')).toMatchInlineSnapshot(`
       "## ⚡ Nx Performance Report — \`run-many -t build\`
 
       ### ❌ Failed tasks (1)
@@ -1227,20 +1223,16 @@ describe('formatReportMarkdown', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
 
-    expect(formatReportMarkdown(s, [])).not.toContain('Failed tasks');
+    expect(formatReportMarkdown(s, '')).not.toContain('Failed tasks');
   });
 
   it('puts the nx command in the heading so stacked reports stay distinguishable', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
 
-    expect(formatReportMarkdown(s, [], 'run-many -t build test')).toContain(
+    expect(formatReportMarkdown(s, 'run-many -t build test')).toContain(
       '## ⚡ Nx Performance Report — `run-many -t build test`'
     );
-    // No command (e.g. the programmatic path) → plain heading, no trailing dash.
-    const plain = formatReportMarkdown(s, []);
-    expect(plain).toContain('## ⚡ Nx Performance Report\n');
-    expect(plain).not.toContain('Report — ');
   });
 
   it('renders the distribute recommendation as a phrase Markdown link', () => {
@@ -1249,7 +1241,7 @@ describe('formatReportMarkdown', () => {
     const np = makeTask('np', { start: 0, end: 1200, parallelism: false });
     const q = makeTask('q', { start: 1200, end: 2000 });
     const s = run(makeGraph([np, q]), 2, { isCI: true })!;
-    const md = formatReportMarkdown(s, []);
+    const md = formatReportMarkdown(s, '');
 
     expect(md).toContain(
       '[Distribute across machines with Nx Agents](https://nx.dev/ci/features/distribute-task-execution?utm=performance-report)'
@@ -1265,7 +1257,7 @@ describe('formatReportMarkdown', () => {
       isCI: true,
     })!;
 
-    expect(formatReportMarkdown(s, [])).toContain(
+    expect(formatReportMarkdown(s, '')).toContain(
       '[Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm=performance-report)'
     );
   });
