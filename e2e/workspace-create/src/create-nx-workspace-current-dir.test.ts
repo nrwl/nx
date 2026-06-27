@@ -39,11 +39,16 @@ describe('create-nx-workspace current directory', () => {
     }
   }, 120000);
 
-  it('scaffolds in place when the current directory is functionally empty', () => {
-    // Mirror a freshly created GitHub repo: .git + README + LICENSE present.
+  it('scaffolds in place in a real (functionally empty) git repo and preserves it', () => {
+    // Mirror a freshly created GitHub repo: a real git repo with a remote +
+    // README + LICENSE, nothing else.
     const dir = `${e2eCwd}/${uniq('cwd-funcempty')}`;
-    mkdirSync(`${dir}/.git`, { recursive: true });
-    writeFileSync(`${dir}/.git/config`, 'preexisting');
+    mkdirSync(dir, { recursive: true });
+    execSync('git init', { cwd: dir, stdio: 'pipe' });
+    execSync('git remote add origin https://example.com/my-repo.git', {
+      cwd: dir,
+      stdio: 'pipe',
+    });
     writeFileSync(`${dir}/.gitignore`, 'node_modules\n');
     writeFileSync(`${dir}/README.md`, '# preexisting\n');
     writeFileSync(`${dir}/LICENSE`, 'MIT\n');
@@ -52,8 +57,13 @@ describe('create-nx-workspace current directory', () => {
 
       expect(existsSync(`${dir}/nx.json`)).toBeTruthy();
       expect(existsSync(`${dir}/package.json`)).toBeTruthy();
-      // The user's existing git repo is preserved.
-      expect(existsSync(`${dir}/.git/config`)).toBeTruthy();
+      // The user's existing git repo (and its remote) must survive - CNW
+      // detects the repo and skips git initialization.
+      const remote = execSync('git remote get-url origin', {
+        cwd: dir,
+        encoding: 'utf-8',
+      }).trim();
+      expect(remote).toBe('https://example.com/my-repo.git');
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

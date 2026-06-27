@@ -87,6 +87,17 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     );
     directory = join(workingDir, name);
 
+    // downloadTemplate extracts into `directory`, creating it and overwriting
+    // files. That is intended only when scaffolding into the current directory.
+    // Otherwise refuse to write over an existing path (the CLI already guards
+    // this in determineFolder; this protects direct createWorkspace() callers).
+    if (!options.useCurrentDir && existsSync(directory)) {
+      throw new CnwError(
+        'DIRECTORY_EXISTS',
+        `The directory '${directory}' already exists. Choose a different name or remove the existing directory.`
+      );
+    }
+
     const aiMode = isAiAgent();
 
     // Use spinner for human mode, progress logs for AI mode
