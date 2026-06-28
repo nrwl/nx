@@ -11,17 +11,11 @@ import { CnwError } from '../error-utils';
 const DEFAULT_BRANCHES = ['main', 'master'];
 
 /**
- * Download an nrwl template repository as a tarball and extract it into
- * `directory`.
+ * Download an nrwl template repository and extract it into `directory`.
  *
- * Using a tarball instead of `git clone` means git is never required (fresh
- * machines, CI, and AI agents often have no git or no configured user, and
- * `git clone` can fail for many reasons). The tarball also contains no `.git`,
- * so the template can be extracted into a directory that already holds the
- * user's repository - the basis for scaffolding into the current directory.
- *
- * The directory may already exist and contain inert files; existing files
- * (e.g. README) are overwritten by the template.
+ * git is not required (fresh machines / CI / AI agents may have none), and an
+ * existing `.git` in `directory` is left intact, so this can scaffold into the
+ * current directory. Existing files (e.g. README) are overwritten.
  *
  * @param template GitHub repo slug, e.g. `nrwl/react-template`.
  * @param directory Absolute path to extract into.
