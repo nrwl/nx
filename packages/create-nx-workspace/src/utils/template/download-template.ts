@@ -1,6 +1,7 @@
-import { createWriteStream, mkdirSync } from 'node:fs';
+import { createWriteStream, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { Readable } from 'node:stream';
+import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web';
 import { pipeline } from 'node:stream/promises';
 import { createGunzip } from 'node:zlib';
 import * as tar from 'tar-stream';
@@ -49,11 +50,17 @@ export async function downloadTemplate(
     );
   }
 
+  // Only remove the directory on failure if we created it - never delete a
+  // pre-existing dir (e.g. the user's current directory).
+  const dirPreexisted = existsSync(directory);
   mkdirSync(directory, { recursive: true });
 
   try {
     await extractTarball(body, directory);
   } catch (e) {
+    if (!dirPreexisted) {
+      rmSync(directory, { recursive: true, force: true });
+    }
     const message = e instanceof Error ? e.message : String(e);
     throw new CnwError(
       'TEMPLATE_CLONE_FAILED',
@@ -69,19 +76,22 @@ async function extractTarball(
   const extract = tar.extract();
 
   extract.on('entry', (header, stream, next) => {
+    // Drain the entry and move to the next one without writing anything.
+    const skip = () => {
+      stream.on('end', next);
+      stream.resume();
+    };
+
     // GitHub wraps everything in a top-level `<repo>-<branch>/` directory.
     // Strip that first segment so files land directly in `directory`.
     const relativePath = header.name.split('/').slice(1).join('/');
 
-    // Top-level dir entry or unsupported type (symlink, pax header): drain
-    // and move on.
+    // Top-level dir entry or unsupported type (symlink, pax header).
     if (
       !relativePath ||
       (header.type !== 'file' && header.type !== 'directory')
     ) {
-      stream.on('end', next);
-      stream.resume();
-      return;
+      return skip();
     }
 
     const destPath = join(directory, relativePath);
@@ -90,16 +100,12 @@ async function extractTarball(
     // (zip-slip) via `..` entries.
     const rel = relative(directory, destPath);
     if (rel.startsWith('..') || isAbsolute(rel)) {
-      stream.on('end', next);
-      stream.resume();
-      return;
+      return skip();
     }
 
     if (header.type === 'directory') {
       mkdirSync(destPath, { recursive: true });
-      stream.on('end', next);
-      stream.resume();
-      return;
+      return skip();
     }
 
     mkdirSync(dirname(destPath), { recursive: true });
@@ -114,6 +120,10 @@ async function extractTarball(
   // pipeline (unlike a manual .pipe() chain) forwards errors from every stage -
   // a network drop on the source or a corrupt/truncated gzip rejects here and
   // destroys all streams, so the caller can wrap it in a CnwError.
-  // Cast: web ReadableStream (DOM) vs node:stream/web differ structurally.
-  await pipeline(Readable.fromWeb(body as any), createGunzip(), extract);
+  // Cast: the global (DOM) ReadableStream and node:stream/web differ structurally.
+  await pipeline(
+    Readable.fromWeb(body as NodeWebReadableStream<Uint8Array>),
+    createGunzip(),
+    extract
+  );
 }

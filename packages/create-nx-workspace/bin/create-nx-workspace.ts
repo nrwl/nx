@@ -827,9 +827,13 @@ function invariant(
   }
 }
 
+/** Workspace names must start with a letter. */
+export function isValidWorkspaceName(name: string): boolean {
+  return /^[a-zA-Z]/.test(name);
+}
+
 export function validateWorkspaceName(name: string): void {
-  const pattern = /^[a-zA-Z]/;
-  if (!pattern.test(name)) {
+  if (!isValidWorkspaceName(name)) {
     throw new CnwError(
       'INVALID_WORKSPACE_NAME',
       `The workspace name "${name}" is invalid. Workspace names must start with a letter. Examples of valid names: myapp, MyApp, my-app, my_app`
@@ -970,11 +974,13 @@ export async function determineFolder(
   // rather than into a subfolder.
   const cwd = resolve(process.cwd());
   const cwdName = basename(cwd);
-  if (isFunctionallyEmpty(cwd) && /^[a-zA-Z]/.test(cwdName)) {
+  if (isFunctionallyEmpty(cwd) && isValidWorkspaceName(cwdName)) {
     if (await promptCreateInCurrentDir(cwdName)) {
-      parsedArgs.workingDir = dirname(cwd);
+      // Converge on the same resolution as the user typing ".".
+      const resolved = resolveSpecialFolderName('.')!;
+      parsedArgs.workingDir = resolved.workingDir;
       parsedArgs.useCurrentDir = true;
-      return cwdName;
+      return resolved.name;
     }
   }
 
@@ -1010,7 +1016,7 @@ async function promptForFolder(
         if (!value) {
           return 'Folder name cannot be empty';
         }
-        if (!/^[a-zA-Z]/.test(value)) {
+        if (!isValidWorkspaceName(value)) {
           return 'Workspace name must start with a letter';
         }
         if (existsSync(value)) {
