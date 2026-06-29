@@ -260,12 +260,12 @@ export function isProjectConfigurationsError(
 
 /**
  * This error should be thrown when a `createNodesV2` function hits a recoverable error.
- * It allows Nx to recieve partial results and continue processing for better UX.
+ * It allows Nx to receive partial results and continue processing for better UX.
  */
 export class AggregateCreateNodesError extends Error {
   public pluginIndex: number | undefined;
   /**
-   * Throwing this error from a `createNodesV2` function will allow Nx to continue processing and recieve partial results from your plugin.
+   * Throwing this error from a `createNodesV2` function will allow Nx to continue processing and receive partial results from your plugin.
    * @example
    * export async function createNodesV2(
    *  files: string[],
