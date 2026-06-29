@@ -36,9 +36,17 @@ Nx provides a utility (`nx list`) that lists both core and community plugins. Yo
 }
 ```
 
-{% aside type="caution" title="Unmaintained Plugins" %}
-We reserve the right to remove unmaintained plugins from the registry. If the plugins become maintained again, they can be resubmitted to the registry.
-{% /aside %}
+### Ongoing maintenance requirements
+
+An automated check runs once a month and removes plugins that meet any of these criteria:
+
+- The GitHub repository no longer exists or has been archived
+- No npm publish in the last 24 months
+- The declared `@nx/devkit` (or `@nx/workspace`/`nx`) range does not support any of the last three Nx major versions
+
+The 24-month cutoff reflects the Nx release cadence. Nx ships a major version every six months, so a plugin with no publish in two years is four Nx majors behind — past the point where compatibility can be assumed.
+
+If a removed plugin becomes maintained again, you can resubmit it.
 
 Once those criteria are met, you can submit your plugin by following the steps below:
 
