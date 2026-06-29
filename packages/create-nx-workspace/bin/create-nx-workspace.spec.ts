@@ -2,7 +2,6 @@ import {
   validateWorkspaceName,
   resolveSpecialFolderName,
   determineFolder,
-  isFunctionallyEmpty,
 } from './create-nx-workspace';
 import { CnwError } from '../src/utils/error-utils';
 import {
@@ -65,6 +64,7 @@ describe('determineFolder', () => {
 
   beforeEach(() => {
     originalCwd = process.cwd();
+    (require('enquirer').default.prompt as jest.Mock).mockReset();
   });
 
   afterEach(() => {
@@ -100,12 +100,10 @@ describe('determineFolder', () => {
     rmSync(tmpDir, { recursive: true });
   });
 
-  it('should resolve "." in a functionally empty dir (only .git/README/LICENSE)', async () => {
+  it('should scaffold "." in place even when the cwd is not empty', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    mkdirSync(join(tmpDir, '.git'));
-    writeFileSync(join(tmpDir, '.gitignore'), 'node_modules\n');
-    writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
-    writeFileSync(join(tmpDir, 'LICENSE'), 'MIT\n');
+    writeFileSync(join(tmpDir, 'package.json'), '{}');
+    mkdirSync(join(tmpDir, 'src'));
     process.chdir(tmpDir);
 
     const parsedArgs = makeParsedArgs({ positional: '.', interactive: false });
@@ -114,19 +112,6 @@ describe('determineFolder', () => {
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
     expect(parsedArgs.useCurrentDir).toBe(true);
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('should throw DIRECTORY_EXISTS for "." when cwd has real files', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    writeFileSync(join(tmpDir, 'package.json'), '{}');
-    process.chdir(tmpDir);
-
-    const parsedArgs = makeParsedArgs({ positional: '.', interactive: false });
-
-    await expect(determineFolder(parsedArgs)).rejects.toThrow(CnwError);
-    await expect(determineFolder(parsedArgs)).rejects.toThrow(/nx init/);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -140,22 +125,6 @@ describe('determineFolder', () => {
 
     expect(result).toBe(basename(tmpDir));
     expect(parsedArgs.workingDir).toBe(dirname(tmpDir));
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('should return directory basename for "." in interactive mode after confirm', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    process.chdir(tmpDir);
-    (require('enquirer').default.prompt as jest.Mock).mockResolvedValueOnce({
-      useCurrentDir: 'Yes',
-    });
-
-    const parsedArgs = makeParsedArgs({ positional: '.', interactive: true });
-    const result = await determineFolder(parsedArgs);
-
-    expect(result).toBe(basename(tmpDir));
-    expect(parsedArgs.useCurrentDir).toBe(true);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -200,72 +169,6 @@ describe('determineFolder', () => {
   });
 });
 
-describe('isFunctionallyEmpty', () => {
-  let tmpDir: string;
-
-  beforeEach(() => {
-    tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-empty-')));
-  });
-
-  afterEach(() => {
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('should be true for an empty directory', () => {
-    expect(isFunctionallyEmpty(tmpDir)).toBe(true);
-  });
-
-  it('should be true for a fresh GitHub repo (.git, .gitignore, README, LICENSE)', () => {
-    mkdirSync(join(tmpDir, '.git'));
-    mkdirSync(join(tmpDir, '.github'));
-    writeFileSync(join(tmpDir, '.gitignore'), 'node_modules\n');
-    writeFileSync(join(tmpDir, '.gitattributes'), '* text=auto\n');
-    writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
-    writeFileSync(join(tmpDir, 'LICENSE'), 'MIT\n');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(true);
-  });
-
-  it('should allow README and LICENSE in any case/extension', () => {
-    writeFileSync(join(tmpDir, 'readme.txt'), 'x\n');
-    writeFileSync(join(tmpDir, 'License.md'), 'x\n');
-    writeFileSync(join(tmpDir, 'LICENCE'), 'x\n');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(true);
-  });
-
-  it('should be false when a real source file is present', () => {
-    writeFileSync(join(tmpDir, 'index.ts'), 'export {};\n');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
-  });
-
-  it('should be false when package.json is present', () => {
-    writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
-    writeFileSync(join(tmpDir, 'package.json'), '{}');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
-  });
-
-  it('should be false when a non-dot source directory is present', () => {
-    mkdirSync(join(tmpDir, 'src'));
-    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
-  });
-
-  it('should be false for a directory named README/LICENSE (only files are inert)', () => {
-    mkdirSync(join(tmpDir, 'README'));
-    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
-  });
-
-  it('should ignore a node_modules directory', () => {
-    mkdirSync(join(tmpDir, 'node_modules'));
-    writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(true);
-  });
-
-  it('should still be false when node_modules sits next to real source', () => {
-    mkdirSync(join(tmpDir, 'node_modules'));
-    writeFileSync(join(tmpDir, 'package.json'), '{}');
-    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
-  });
-});
-
 describe('resolveSpecialFolderName', () => {
   let originalCwd: string;
 
@@ -284,35 +187,11 @@ describe('resolveSpecialFolderName', () => {
   });
 
   describe('"." and "./"', () => {
-    it('should throw DIRECTORY_EXISTS when cwd is non-empty', () => {
-      // cwd is the repo root, which is definitely non-empty
-      try {
-        resolveSpecialFolderName('.');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-        expect((e as CnwError).message).toContain('nx init');
-      }
-    });
-
-    it('should throw DIRECTORY_EXISTS for "./" in non-empty directory', () => {
-      try {
-        resolveSpecialFolderName('./');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-      }
-    });
-
-    it('should resolve "." to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "." to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('.');
-
-      expect(result).toEqual({
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -320,13 +199,11 @@ describe('resolveSpecialFolderName', () => {
       rmSync(tmpDir, { recursive: true });
     });
 
-    it('should resolve "./" to basename and parent workingDir when cwd is empty', () => {
+    it('should resolve "./" to basename and parent workingDir', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('./');
-
-      expect(result).toEqual({
+      expect(resolveSpecialFolderName('./')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
@@ -334,38 +211,18 @@ describe('resolveSpecialFolderName', () => {
       rmSync(tmpDir, { recursive: true });
     });
 
-    it('should resolve "." when cwd only holds inert files (.git/README/LICENSE)', () => {
+    it('should resolve "." regardless of the cwd contents', () => {
       const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-      mkdirSync(join(tmpDir, '.git'));
-      writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
-      writeFileSync(join(tmpDir, 'LICENSE'), 'MIT\n');
+      writeFileSync(join(tmpDir, 'package.json'), '{}');
+      mkdirSync(join(tmpDir, 'src'));
       process.chdir(tmpDir);
 
-      const result = resolveSpecialFolderName('.');
-
-      expect(result).toEqual({
+      expect(resolveSpecialFolderName('.')).toEqual({
         name: basename(tmpDir),
         workingDir: dirname(tmpDir),
       });
 
       rmSync(tmpDir, { recursive: true });
-    });
-
-    it('should throw DIRECTORY_EXISTS when cwd has real files', () => {
-      const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-      writeFileSync(join(tmpDir, 'index.ts'), 'export {};\n');
-      process.chdir(tmpDir);
-
-      try {
-        resolveSpecialFolderName('.');
-        fail('Expected CnwError to be thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(CnwError);
-        expect((e as CnwError).code).toBe('DIRECTORY_EXISTS');
-        expect((e as CnwError).message).toContain('nx init');
-      } finally {
-        rmSync(tmpDir, { recursive: true });
-      }
     });
   });
 
@@ -406,7 +263,7 @@ describe('resolveSpecialFolderName', () => {
   });
 });
 
-describe('determineFolder - interactive current directory prompt', () => {
+describe('determineFolder - explicit "." confirmation', () => {
   const enquirer = require('enquirer').default;
   const { isCI } = require('../src/utils/ci/is-ci');
   let originalCwd: string;
@@ -421,9 +278,9 @@ describe('determineFolder - interactive current directory prompt', () => {
     process.chdir(originalCwd);
   });
 
-  function noNameArgs() {
+  function dotArgs() {
     return {
-      _: [],
+      _: ['.'],
       $0: 'create-nx-workspace',
       name: '',
       interactive: true,
@@ -437,7 +294,7 @@ describe('determineFolder - interactive current directory prompt', () => {
       useCurrentDir: 'Yes',
     });
 
-    const parsedArgs = noNameArgs();
+    const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
 
     expect(result).toBe(basename(tmpDir));
@@ -448,57 +305,14 @@ describe('determineFolder - interactive current directory prompt', () => {
     rmSync(tmpDir, { recursive: true });
   });
 
-  it('falls back to the name prompt when the user declines', async () => {
+  it('falls back to a named subfolder when the user declines', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
     (enquirer.prompt as jest.Mock)
       .mockResolvedValueOnce({ useCurrentDir: 'No' })
       .mockResolvedValueOnce({ folderName: 'myorg' });
 
-    const parsedArgs = noNameArgs();
-    const result = await determineFolder(parsedArgs);
-
-    expect(result).toBe('myorg');
-    expect(parsedArgs.useCurrentDir).toBeUndefined();
-    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('does not offer the current directory when it has real files', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    writeFileSync(join(tmpDir, 'package.json'), '{}');
-    process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock).mockResolvedValueOnce({
-      folderName: 'myorg',
-    });
-
-    const parsedArgs = noNameArgs();
-    const result = await determineFolder(parsedArgs);
-
-    expect(result).toBe('myorg');
-    // Only the folder-name prompt ran, not the current-directory confirm.
-    expect(enquirer.prompt).toHaveBeenCalledTimes(1);
-    expect(
-      JSON.stringify((enquirer.prompt as jest.Mock).mock.calls[0][0])
-    ).not.toContain('current directory');
-
-    rmSync(tmpDir, { recursive: true });
-  });
-
-  it('confirms before scaffolding into the current dir for an explicit "." and falls back to a subfolder on decline', async () => {
-    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
-    process.chdir(tmpDir);
-    (enquirer.prompt as jest.Mock)
-      .mockResolvedValueOnce({ useCurrentDir: 'No' })
-      .mockResolvedValueOnce({ folderName: 'myorg' });
-
-    const parsedArgs = {
-      _: ['.'],
-      $0: 'create-nx-workspace',
-      name: '',
-      interactive: true,
-    } as any;
+    const parsedArgs = dotArgs();
     const result = await determineFolder(parsedArgs);
 
     expect(result).toBe('myorg');

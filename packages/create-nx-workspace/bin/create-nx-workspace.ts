@@ -47,7 +47,7 @@ import {
   CnwErrorCode,
   mapErrorToBodyLines,
 } from '../src/utils/error-utils';
-import { existsSync, readdirSync } from 'fs';
+import { existsSync } from 'fs';
 import { basename, dirname, isAbsolute, join, resolve } from 'path';
 import { isCI } from '../src/utils/ci/is-ci';
 import { isGhCliAvailable } from '../src/utils/git/git';
@@ -846,29 +846,6 @@ function isCurrentDirReference(folderName: string): boolean {
   return folderName === '.' || folderName === './';
 }
 
-const INERT_FILE_PATTERN = /^(README|LICEN[CS]E)(\..+)?$/i;
-// Directories that are safe to scaffold over - regenerable, not user source.
-const INERT_DIRS = new Set(['node_modules']);
-
-/**
- * A directory is "functionally empty" when every entry is safe to scaffold
- * over: a dotfile/dotdir (`.git`, `.gitignore`, `.github`, ...), a README /
- * LICENSE, or a regenerable dir like `node_modules`. This matches a freshly
- * created GitHub repo, so `create-nx-workspace .` works in place there. Any
- * real content (e.g. `src/`, `package.json`) makes it non-empty.
- * README/LICENSE are allowed because the generated workspace replaces them.
- *
- * @visibleForTesting
- */
-export function isFunctionallyEmpty(dir: string): boolean {
-  return readdirSync(dir, { withFileTypes: true }).every(
-    (entry) =>
-      entry.name.startsWith('.') ||
-      (entry.isDirectory() && INERT_DIRS.has(entry.name)) ||
-      (entry.isFile() && INERT_FILE_PATTERN.test(entry.name))
-  );
-}
-
 /**
  * Resolves special folder name patterns (`.`, `./`, absolute paths) into a
  * workspace name and a `workingDir` override so that downstream functions
@@ -882,15 +859,9 @@ export function isFunctionallyEmpty(dir: string): boolean {
 export function resolveSpecialFolderName(
   folderName: string
 ): { name: string; workingDir: string } | null {
-  // User wants to init in the current directory
+  // User wants to scaffold in the current directory.
   if (isCurrentDirReference(folderName)) {
     const cwd = resolve(process.cwd());
-    if (!isFunctionallyEmpty(cwd)) {
-      throw new CnwError(
-        'DIRECTORY_EXISTS',
-        `The current directory is not empty. Use "nx init" to add Nx to an existing project.`
-      );
-    }
     return { name: basename(cwd), workingDir: dirname(cwd) };
   }
 
@@ -934,10 +905,9 @@ export async function determineFolder(
 
     validateWorkspaceName(folderName);
 
-    // When input is "." or "./", resolveSpecialFolderName already validated
-    // the directory is functionally empty. The target always "exists" because
-    // it IS the current working directory, so skip the existsSync check and
-    // default the workspace name to the directory name.
+    // When input is "." or "./", scaffold into the current directory. The
+    // target always "exists" because it IS the cwd, so skip the existsSync
+    // check and use the directory name as the workspace name.
     if (isCurrentDirReference(rawFolderName)) {
       // Interactively confirm before scaffolding into the current directory;
       // non-interactive (CI/AI) proceeds without prompting.
@@ -979,21 +949,6 @@ export async function determineFolder(
     const folderName = basename(cwd);
     validateWorkspaceName(folderName);
     return folderName;
-  }
-
-  // Interactive, no name given. If the current directory is functionally
-  // empty and its name is a valid workspace name, offer to scaffold in place
-  // rather than into a subfolder.
-  const cwd = resolve(process.cwd());
-  const cwdName = basename(cwd);
-  if (isFunctionallyEmpty(cwd) && isValidWorkspaceName(cwdName)) {
-    if (await promptCreateInCurrentDir(cwdName)) {
-      // Converge on the same resolution as the user typing ".".
-      const resolved = resolveSpecialFolderName('.')!;
-      parsedArgs.workingDir = resolved.workingDir;
-      parsedArgs.useCurrentDir = true;
-      return resolved.name;
-    }
   }
 
   return promptForFolder(parsedArgs);

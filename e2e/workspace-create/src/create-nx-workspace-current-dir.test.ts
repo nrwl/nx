@@ -39,10 +39,10 @@ describe('create-nx-workspace current directory', () => {
     }
   }, 120000);
 
-  it('scaffolds in place in a real (functionally empty) git repo and preserves it', () => {
+  it('scaffolds in place in an existing git repo and preserves it', () => {
     // Mirror a freshly created GitHub repo: a real git repo with a remote +
-    // README + LICENSE, nothing else.
-    const dir = `${e2eCwd}/${uniq('cwd-funcempty')}`;
+    // README + LICENSE.
+    const dir = `${e2eCwd}/${uniq('cwd-gitrepo')}`;
     mkdirSync(dir, { recursive: true });
     execSync('git init', { cwd: dir, stdio: 'pipe' });
     execSync('git remote add origin https://example.com/my-repo.git', {
@@ -69,25 +69,16 @@ describe('create-nx-workspace current directory', () => {
     }
   }, 120000);
 
-  it('errors when the current directory has real files', () => {
+  it('scaffolds in place without deleting unrelated pre-existing files', () => {
     const dir = `${e2eCwd}/${uniq('cwd-nonempty')}`;
     mkdirSync(dir, { recursive: true });
-    writeFileSync(`${dir}/index.ts`, 'export {};\n');
+    writeFileSync(`${dir}/keep-me.txt`, 'keep\n');
     try {
-      // execSync's thrown error.message only carries stderr; CNW prints the
-      // failure to stdout, so assert on the captured stdout/stderr instead.
-      let error: any;
-      try {
-        createInCurrentDir(dir);
-      } catch (e) {
-        error = e;
-      }
-      expect(error).toBeDefined();
-      expect(`${error.stdout ?? ''}${error.stderr ?? ''}`).toMatch(
-        /not empty|nx init/
-      );
-      // The workspace must not have been scaffolded.
-      expect(existsSync(`${dir}/nx.json`)).toBeFalsy();
+      createInCurrentDir(dir);
+
+      expect(existsSync(`${dir}/nx.json`)).toBeTruthy();
+      // Files not part of the template are left untouched.
+      expect(existsSync(`${dir}/keep-me.txt`)).toBeTruthy();
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
