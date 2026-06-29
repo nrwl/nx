@@ -18,6 +18,11 @@ jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
 }));
 
+jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
+  ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
+  createLockFile: jest.fn(() => 'lock-file-content'),
+}));
+
 describe('getUpdatedPackageJsonContent', () => {
   it('should update fields for commonjs only (default)', () => {
     const json = getUpdatedPackageJsonContent(
@@ -663,5 +668,56 @@ describe('updatePackageJson', () => {
         "version": "0.0.3",
       }
     `);
+  });
+
+  it('should drop pnpm overrides from the manifest when a lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(
+        { ...rootPackageJson, pnpm: { overrides: { external1: '1.0.0' } } },
+        null,
+        2
+      ),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    // The accompanying pruned lockfile drops `overrides`, so the manifest must
+    // too, or pnpm <=10 aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    expect(distPackageJson.pnpm).toBeUndefined();
+  });
+
+  it('should keep pnpm overrides in the manifest when no lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(
+        { ...rootPackageJson, pnpm: { overrides: { external1: '1.0.0' } } },
+        null,
+        2
+      ),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    expect(distPackageJson.pnpm).toEqual({ overrides: { external1: '1.0.0' } });
   });
 });
