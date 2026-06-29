@@ -5,13 +5,14 @@ import {
   readFile,
   runCLI,
   uniq,
+  updateFile,
   updateJson,
   runCommand,
   tmpProjPath,
 } from '@nx/e2e-utils';
-import { cpSync, mkdtempSync, rmSync } from 'fs';
+import { cpSync, mkdtempSync, realpathSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, sep } from 'path';
 
 const installCmd = {
   pnpm: 'pnpm install --frozen-lockfile',
@@ -23,9 +24,15 @@ const installCmd = {
 // install there. This isolates the install from the surrounding workspace
 // (pnpm-workspace.yaml, parent node_modules) so the assertion is really
 // "the pruned dist is self-sufficient" — i.e. the actual deployment contract.
+//
+// `resolveChecks` asserts each copied workspace module's own npm deps actually
+// resolve from the installed dist. A plain `pnpm install --frozen-lockfile`
+// succeeds even when those deps are silently skipped, so the exit code alone
+// isn't enough to prove the deployment works. Regression for #36066.
 function installPrunedDist(
   packageManager: 'pnpm' | 'yarn' | 'npm',
-  distPath: string
+  distPath: string,
+  resolveChecks: { fromDir: string; deps: string[] }[] = []
 ) {
   const installDir = mkdtempSync(join(tmpdir(), 'prune-lockfile-install-'));
   try {
@@ -37,6 +44,27 @@ function installPrunedDist(
       cwd: installDir,
       failOnError: true,
     });
+    // realpath both sides: macOS tmpdir is a symlink and require.resolve
+    // returns the canonical path, so a raw prefix check would mismatch.
+    const realInstallDir = realpathSync(installDir);
+    for (const { fromDir, deps } of resolveChecks) {
+      for (const dep of deps) {
+        // Resolve as Node would from the workspace module's dir. A throw means
+        // the dep never shipped; resolving outside the dist (a global/NODE_PATH
+        // hit) is also a miss. Either way the pruned dist isn't self-sufficient.
+        let resolved: string;
+        try {
+          resolved = realpathSync(
+            require.resolve(dep, { paths: [join(installDir, fromDir)] })
+          );
+        } catch {
+          throw new Error(
+            `'${dep}' (dependency of ${fromDir}) is missing from the pruned dist`
+          );
+        }
+        expect(resolved.startsWith(realInstallDir + sep)).toBe(true);
+      }
+    }
   } finally {
     rmSync(installDir, { recursive: true, force: true });
   }
@@ -74,6 +102,13 @@ describe('js:prune-lockfile executor', () => {
           `generate @nx/js:lib ${nodelib} --bundler=tsc --linter=eslint --unitTestRunner=jest`
         );
 
+        // Give the lib an npm dep the app doesn't have, so we can assert it
+        // gets installed in the pruned dist (the workspace module's own
+        // production deps must ship with it).
+        updateJson(`${nodelib}/package.json`, (json) => {
+          json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
+          return json;
+        });
         updateJson(`${nodeapp}/package.json`, (json) => {
           json.dependencies = {
             ...json.dependencies,
@@ -96,7 +131,12 @@ describe('js:prune-lockfile executor', () => {
         runCLI(`copy-workspace-modules ${nodeapp}`);
 
         checkFilesExist(`${nodeapp}/dist/${lockfile}`);
-        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
+        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`), [
+          {
+            fromDir: `workspace_modules/@${scope}/${nodelib}`,
+            deps: ['lodash'],
+          },
+        ]);
       });
 
       // app -> lib-a -> lib-b with lib-b having an npm dep. The pruned lockfile
@@ -158,7 +198,9 @@ describe('js:prune-lockfile executor', () => {
         runCLI(`prune-lockfile ${nodeapp}`);
         runCLI(`copy-workspace-modules ${nodeapp}`);
 
-        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`));
+        installPrunedDist(packageManager, tmpProjPath(`${nodeapp}/dist`), [
+          { fromDir: `workspace_modules/@${scope}/${libb}`, deps: ['lodash'] },
+        ]);
       });
     }
   );
@@ -222,6 +264,88 @@ describe('js:prune-lockfile executor', () => {
       );
 
       installPrunedDist('npm', tmpProjPath(`${nodeapp}/dist`));
+    });
+  });
+
+  // Root pnpm `overrides` is config pnpm 11 reads only from pnpm-workspace.yaml
+  // and records in the lockfile. The standalone pruned dist ships a config-less
+  // pnpm-workspace.yaml, so the pruned lockfile must drop `overrides` or
+  // `pnpm install --frozen-lockfile` aborts with
+  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Proves the strip (#36055) and the
+  // emitted workspace file (#36066) compose: deps still install, config is gone.
+  describe('package manager pnpm (standalone pruned dist with root overrides)', () => {
+    let scope: string;
+
+    beforeAll(() => {
+      scope = newProject({
+        packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
+        preset: 'ts',
+        packageManager: 'pnpm',
+      });
+    });
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should strip incompatible config yet keep workspace-module deps installable', () => {
+      const nodeapp = uniq('nodeapp');
+      const nodelib = uniq('nodelib');
+
+      runCLI(
+        `generate @nx/node:app ${nodeapp} --linter=eslint --unitTestRunner=jest`
+      );
+      runCLI(
+        `generate @nx/js:lib ${nodelib} --bundler=tsc --linter=eslint --unitTestRunner=jest`
+      );
+
+      // The lib pulls an npm dep so the dist must install it; the root override
+      // targets that same dep so it lands in the workspace lockfile's config.
+      updateJson(`${nodelib}/package.json`, (json) => {
+        json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
+        return json;
+      });
+      updateFile(
+        'pnpm-workspace.yaml',
+        (content) => `${content}\noverrides:\n  lodash: 4.17.21\n`
+      );
+      updateJson(`${nodeapp}/package.json`, (json) => {
+        json.dependencies = {
+          ...json.dependencies,
+          [`@${scope}/${nodelib}`]: 'workspace:*',
+        };
+        json.nx.targets['prune-lockfile'] = {
+          executor: '@nx/js:prune-lockfile',
+          options: { buildTarget: 'build' },
+        };
+        json.nx.targets['copy-workspace-modules'] = {
+          executor: '@nx/js:copy-workspace-modules',
+          options: { buildTarget: 'build' },
+        };
+        return json;
+      });
+      runCommand(`pnpm install`);
+
+      // Precondition: the override is recorded in the workspace lockfile, so the
+      // assertions below exercise the strip rather than passing as a no-op.
+      expect(readFile('pnpm-lock.yaml')).toContain('overrides:');
+
+      runCLI(`build ${nodeapp}`);
+      runCLI(`prune-lockfile ${nodeapp}`);
+      runCLI(`copy-workspace-modules ${nodeapp}`);
+
+      checkFilesExist(`${nodeapp}/dist/pnpm-lock.yaml`);
+      checkFilesExist(`${nodeapp}/dist/pnpm-workspace.yaml`);
+      // The strip dropped the unsatisfiable config from the pruned lockfile.
+      expect(readFile(`${nodeapp}/dist/pnpm-lock.yaml`)).not.toContain(
+        'overrides:'
+      );
+
+      installPrunedDist('pnpm', tmpProjPath(`${nodeapp}/dist`), [
+        {
+          fromDir: `workspace_modules/@${scope}/${nodelib}`,
+          deps: ['lodash'],
+        },
+      ]);
     });
   });
 });
