@@ -55,7 +55,7 @@ export interface nxViteTsPathsOptions {
  * the `vite-tsconfig-paths` package. The inferred `@nx/vite/plugin` already
  * ensures projects extend the workspace base tsconfig, so the community
  * plugin handles monorepo path resolution end-to-end. See
- * https://nx.dev/docs/technologies/build-tools/vite/configure-vite for details.
+ * https://nx.dev/technologies/build-tools/vite/api for details.
  */
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
   warnNxViteTsPathsDeprecation();
