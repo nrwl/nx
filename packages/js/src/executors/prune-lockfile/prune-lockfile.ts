@@ -28,6 +28,7 @@ export default async function pruneLockfileExecutor(
   logger.log('Pruning lockfile...');
   const outputDirectory = getOutputDir(schema, context);
   const packageJson = getPackageJson(schema, context);
+  mergeAllowScripts(packageJson);
   const packageManager = detectPackageManager(workspaceRoot);
 
   if (packageManager === 'bun') {
@@ -80,6 +81,26 @@ function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
   return {
     lockfileName,
     lockFile,
+  };
+}
+
+/**
+ * npm reads the `allowScripts` install-script allowlist only from the install
+ * root, but `npm approve-scripts` writes it to the workspace root, so it never
+ * lives in the project package.json the prune output is built from. Carry the
+ * root allowlist over, with project-level entries preserved and winning on
+ * conflict. Mirrors the `pnpm.allowBuilds` handling in createPackageJson.
+ */
+function mergeAllowScripts(packageJson: PackageJson) {
+  const rootPackageJson: PackageJson = readJsonFile(
+    join(workspaceRoot, 'package.json')
+  );
+  if (!rootPackageJson.allowScripts) {
+    return;
+  }
+  packageJson.allowScripts = {
+    ...rootPackageJson.allowScripts,
+    ...packageJson.allowScripts,
   };
 }
 
