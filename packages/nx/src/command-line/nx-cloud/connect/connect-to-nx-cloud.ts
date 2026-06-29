@@ -232,21 +232,6 @@ export async function connectExistingRepoToNxCloudPrompt(
   key: MessageKey = 'setupNxCloud'
 ): Promise<MessageOptionKey> {
   const res = await nxCloudPrompt(key, utmMediumForCommand(command));
-  await recordStat({
-    command,
-    nxVersion,
-    useCloud: res === 'yes',
-    meta: {
-      type: 'complete',
-      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
-      nxCloudArg: res,
-      nodeVersion: process.versions.node,
-      os: process.platform,
-      packageManager: detectPackageManager(),
-      aiAgent: isAiAgent(),
-      isCI: isCI(),
-    },
-  });
   return res;
 }
 
