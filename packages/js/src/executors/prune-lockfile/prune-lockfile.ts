@@ -20,6 +20,15 @@ import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
+// pnpm only installs a copied workspace module's own (transitive) production
+// dependencies when the module is declared as a workspace package. Without
+// this file pnpm ignores the workspace_modules importer blocks in the pruned
+// lockfile and those deps never get installed, breaking the app at runtime.
+const PNPM_WORKSPACE_YAML = `packages:
+  - 'workspace_modules/*'
+  - 'workspace_modules/@*/*'
+`;
+
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
   context: ExecutorContext
@@ -39,16 +48,20 @@ export default async function pruneLockfileExecutor(
       JSON.stringify(packageJson, null, 2)
     );
   } else {
-    const { lockfileName, lockFile } = createPrunedLockfile(
-      packageJson,
-      context.projectGraph
-    );
+    const { lockfileName, lockFile, hasWorkspaceModules } =
+      createPrunedLockfile(packageJson, context.projectGraph, packageManager);
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
+    if (packageManager === 'pnpm' && hasWorkspaceModules) {
+      writeFileSync(
+        join(outputDirectory, 'pnpm-workspace.yaml'),
+        PNPM_WORKSPACE_YAML
+      );
+    }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
 
@@ -57,13 +70,17 @@ export default async function pruneLockfileExecutor(
   };
 }
 
-function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
-  const packageManager = detectPackageManager(workspaceRoot);
+function createPrunedLockfile(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  packageManager: ReturnType<typeof detectPackageManager>
+) {
   const lockfileName = getLockFileName(packageManager);
   const lockFile = createLockFile(packageJson, graph, packageManager);
 
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
+  let hasWorkspaceModules = false;
   for (const [pkgName, pkgVersion] of Object.entries(
     packageJson.dependencies ?? {}
   )) {
@@ -74,12 +91,14 @@ function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
       workspacePackages.has(pkgName)
     ) {
       packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+      hasWorkspaceModules = true;
     }
   }
 
   return {
     lockfileName,
     lockFile,
+    hasWorkspaceModules,
   };
 }
 
