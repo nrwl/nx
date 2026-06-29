@@ -182,10 +182,12 @@ export async function initializeGitRepo(
     () => false
   );
   if (insideRepo) {
-    output.log({
-      title:
-        'Directory is already under version control. Skipping initialization of git.',
-    });
+    if (process.env.NX_VERBOSE_LOGGING === 'true') {
+      output.log({
+        title:
+          'Directory is already under version control. Skipping initialization of git.',
+      });
+    }
     return;
   }
   const defaultBase = options.defaultBase || deduceDefaultBase();
