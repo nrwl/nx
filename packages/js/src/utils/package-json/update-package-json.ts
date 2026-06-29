@@ -73,6 +73,9 @@ export function updatePackageJson(
         root: context.root,
         // By default we remove devDependencies since this is a production build.
         isProduction: true,
+        // Only drop baked pnpm config from the manifest when a pruned lockfile
+        // accompanies it; otherwise a fresh install needs it to resolve.
+        prunedLockfile: !!options.generateLockfile,
       },
       fileMap
     );

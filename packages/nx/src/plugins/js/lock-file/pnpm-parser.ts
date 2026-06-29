@@ -687,10 +687,10 @@ export function stringifyPnpmLockfile(
  * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their effect is already baked into the
  * resolved snapshots, so removing them keeps the install identical.
  *
- * `patchedDependencies` is deliberately kept: patches are applied at install
- * time and snapshot keys reference their `patch_hash`, so dropping the
- * declaration would leave dangling references. Pruned output therefore does not
- * carry patches (the patch files cannot be shipped either).
+ * `patchedDependencies` is deliberately kept: snapshot keys reference its
+ * `patch_hash`, so dropping the declaration would leave dangling references. The
+ * patch files themselves are not part of the pruned output, so a workspace that
+ * relies on `pnpm patch` is not fully supported by pruning.
  */
 function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
   delete lockfile.overrides;
