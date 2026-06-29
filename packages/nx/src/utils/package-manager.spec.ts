@@ -27,6 +27,8 @@ import {
   modifyPnpmWorkspaceYamlToFitNewDirectory,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  packageRegistryPack,
+  packageRegistryView,
   parseVersionFromPackageManagerField,
   PackageManager,
 } from './package-manager';
@@ -785,6 +787,80 @@ describe('package-manager', () => {
       expect(commands.publish(...publishCmdParam)).toEqual(
         'bun publish --cwd="dist/packages/my-pkg" --json --registry="https://registry.npmjs.org/" --tag=latest'
       );
+    });
+  });
+
+  describe('packageRegistryView', () => {
+    let execMock: jest.SpyInstance;
+
+    beforeEach(() => {
+      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout: '' });
+        return undefined;
+      }) as any);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('should force npm to bypass devEngines enforcement when substituting npm in a yarn workspace', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'yarn' } });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('npm view');
+      expect(options.env.npm_config_force).toBe('true');
+    });
+
+    it('should not force when querying through pnpm', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('pnpm view');
+      expect(options.env?.npm_config_force).toBeUndefined();
+    });
+  });
+
+  describe('packageRegistryPack', () => {
+    let execMock: jest.SpyInstance;
+
+    beforeEach(() => {
+      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout: 'nx-1.0.0.tgz' });
+        return undefined;
+      }) as any);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('should force npm to bypass devEngines enforcement', async () => {
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('npm pack');
+      expect(options.env.npm_config_force).toBe('true');
     });
   });
 });

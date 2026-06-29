@@ -632,8 +632,15 @@ export async function packageRegistryView(
   // Quote the spec so range operators (e.g. `>=0.0.0`) are not parsed as shell
   // redirections.
   const spec = version ? `${pkg}@${version}` : pkg;
+  // npm enforces `devEngines.packageManager` on every command, even a read-only
+  // `view`; in a yarn/bun workspace we run npm, so a non-npm pin with
+  // `onFail: error` aborts the lookup. force downgrades that to a warning.
+  // Scoped to npm so a `pnpm view` spawn is left untouched.
   const { stdout } = await execAsync(`${pm} view "${spec}" ${args}`, {
     windowsHide: true,
+    ...(pm === 'npm'
+      ? { env: { ...process.env, npm_config_force: 'true' } }
+      : {}),
   });
   return stdout.toString().trim();
 }
@@ -655,6 +662,9 @@ export async function packageRegistryPack(
   const { stdout } = await execAsync(`${pm} pack ${pkg}@${version}`, {
     cwd,
     windowsHide: true,
+    // npm enforces `devEngines.packageManager` even on `pack`; force keeps the
+    // download working in workspaces that pin a non-npm manager (onFail: error).
+    env: { ...process.env, npm_config_force: 'true' },
   });
 
   const tarballPath = stdout.trim();
