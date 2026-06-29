@@ -16,7 +16,7 @@ describe('create-nx-workspace current directory', () => {
   function createInCurrentDir(dir: string): string {
     const pmc = getPackageManagerCommand({ packageManager });
     return execSync(
-      `${pmc.createWorkspace} . --preset=apps --no-interactive --package-manager=${packageManager}`,
+      `${pmc.createWorkspace} . --template=empty --no-interactive --package-manager=${packageManager}`,
       {
         cwd: dir,
         stdio: 'pipe',
