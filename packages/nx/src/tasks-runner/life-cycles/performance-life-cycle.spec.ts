@@ -1147,7 +1147,7 @@ describe('summary.failedTasks', () => {
     });
   }
 
-  it('lists only the failed tasks, slowest first, with their durations', () => {
+  it('lists only the failed task ids, slowest first', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const b = makeTask('b', { start: 0, end: 3000 });
     const c = makeTask('c', { start: 0, end: 2000 });
@@ -1157,10 +1157,7 @@ describe('summary.failedTasks', () => {
       c: 'success', // excluded — it passed
     });
 
-    expect(s.failedTasks).toEqual([
-      { id: 'b', duration: 3000 },
-      { id: 'a', duration: 1000 },
-    ]);
+    expect(s.failedTasks).toEqual(['b', 'a']);
   });
 
   it('returns nothing when no task failed', () => {
@@ -1181,12 +1178,12 @@ describe('summary.failedTasks', () => {
       partial: 'failure',
     });
 
-    expect(s.failedTasks.map((t) => t.id)).toEqual(['failed']);
+    expect(s.failedTasks).toEqual(['failed']);
   });
 });
 
 describe('formatReportMarkdown', () => {
-  it('renders the report with a Failed tasks table as Markdown (snapshot)', () => {
+  it('renders the report with a failed-tasks list as Markdown (snapshot)', () => {
     // A CI run with a cold cache and no remote yields the richest report; the failed
     // task is surfaced right under the stats.
     const a = makeTask('a', { start: 0, end: 3000 });
@@ -1199,18 +1196,16 @@ describe('formatReportMarkdown', () => {
     expect(formatReportMarkdown(s, 'run-many -t build')).toMatchInlineSnapshot(`
       "## Nx Run Report — \`run-many -t build\`
 
-      ### ❌ Failed tasks (1)
+      ### ❌ 1 failed task
 
-      | Task | Duration |
-      | :-- | --: |
-      | \`a\` | 3.0s |
+      - \`a\`
 
-      | | |
-      | :-- | :-- |
-      | **Run duration** | 3.0s |
-      | **Cache** | 0/1 hit (0%) |
-      | **Critical path** | 3.0s (1 task) |
-      | **Recoverable time** | <1ms |
+      ### Performance
+
+      - **Run duration:** 3.0s
+      - **Cache:** 0/1 hit (0%)
+      - **Critical path:** 3.0s (1 task)
+      - **Recoverable time:** <1ms
 
       ### Recommendations
 
@@ -1219,12 +1214,12 @@ describe('formatReportMarkdown', () => {
     `);
   });
 
-  it('reports success instead of a Failed tasks table when nothing failed', () => {
+  it('reports success instead of a failed-tasks list when nothing failed', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
 
     const md = formatReportMarkdown(s, '');
-    expect(md).not.toContain('Failed tasks');
+    expect(md).not.toContain('failed task');
     expect(md).toContain('### ✅ All tasks succeeded');
   });
 
@@ -1504,8 +1499,8 @@ describe('flushPerformanceReport', () => {
 
       const written = readFileSync(summaryFile, 'utf-8');
       expect(written).toContain('## Nx Run Report — `run-many -t build`');
-      expect(written).toContain('### ❌ Failed tasks (1)');
-      expect(written).toContain('| `a` | 1.0s |');
+      expect(written).toContain('### ❌ 1 failed task');
+      expect(written).toContain('- `a`');
       // Trailing newline so a later step's summary content starts on its own line.
       expect(written.endsWith('\n')).toBe(true);
     } finally {

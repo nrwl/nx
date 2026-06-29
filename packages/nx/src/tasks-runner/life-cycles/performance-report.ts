@@ -348,12 +348,6 @@ export function formatReport(s: PerformanceSummary): string {
   return lines.join('\n');
 }
 
-/** A task that failed during the run, for the GitHub Actions summary's failed-tasks table. */
-export interface FailedTask {
-  id: string;
-  duration: number;
-}
-
 /**
  * A recommendation as Markdown: every link becomes `[phrase](href)` (no OSC 8, unlike the
  * terminal renderer) — the whole sentence reads as prose and is the link text. The
@@ -372,17 +366,11 @@ function recommendationToMarkdownString(rec: Recommendation): string {
     .join('<br>');
 }
 
-/** Escape the Markdown table cell delimiter so a task id containing `|` can't break the row. */
-function escapeTableCell(value: string): string {
-  return value.replace(/\|/g, '\\|');
-}
-
 /**
  * The performance report as GitHub-flavored Markdown for the Actions job summary
  * (`$GITHUB_STEP_SUMMARY`). Mirrors {@link formatReport}'s content — the same stats and
- * recommendations — and, when the run had failures, surfaces them in a Failed tasks table
- * (the terminal report has no table). Links render as Markdown links rather than OSC 8
- * hyperlinks.
+ * recommendations — and, when the run had failures, lists them above the stats. Links
+ * render as Markdown links rather than OSC 8 hyperlinks.
  *
  * `command` (the nx command, e.g. `run-many -t build`) is appended to the heading so
  * stacked reports from multiple nx commands in one job summary stay distinguishable.
@@ -405,33 +393,32 @@ export function formatReportMarkdown(
   if (failedTasks.length > 0) {
     lines.push(
       '',
-      `### ❌ Failed tasks (${failedTasks.length})`,
+      `### ❌ ${failedTasks.length} failed ${pluralize(
+        failedTasks.length,
+        'task'
+      )}`,
       '',
-      '| Task | Duration |',
-      '| :-- | --: |',
-      ...failedTasks.map(
-        (t) => `| \`${escapeTableCell(t.id)}\` | ${fmt(t.duration)} |`
-      )
+      ...failedTasks.map((id) => `- \`${id}\``)
     );
   } else {
     lines.push('', '### ✅ All tasks succeeded');
   }
 
-  // Headline stats as a borderless two-column table, mirroring the terminal stat lines.
+  // Headline stats as a bold-label list, mirroring the terminal stat lines.
   lines.push(
     '',
-    '| | |',
-    '| :-- | :-- |',
-    `| **Run duration** | ${fmt(s.runDuration)} |`,
-    ...(cache ? [`| **Cache** | ${cache} |`] : []),
-    `| **Critical path** | ${fmt(s.criticalPathDuration)} (${
+    '### Performance',
+    '',
+    `- **Run duration:** ${fmt(s.runDuration)}`,
+    ...(cache ? [`- **Cache:** ${cache}`] : []),
+    `- **Critical path:** ${fmt(s.criticalPathDuration)} (${
       s.criticalPathTaskCount
-    } ${pluralize(s.criticalPathTaskCount, 'task')}) |`,
-    `| **Recoverable time** | ${
+    } ${pluralize(s.criticalPathTaskCount, 'task')})`,
+    `- **Recoverable time:** ${
       recoverable > 0
         ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
         : fmt(recoverable)
-    } |`
+    }`
   );
 
   const recommendations = buildRecommendations(s);
