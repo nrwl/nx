@@ -1197,7 +1197,7 @@ describe('formatReportMarkdown', () => {
       isCI: true,
     })!;
     expect(formatReportMarkdown(s, 'run-many -t build')).toMatchInlineSnapshot(`
-      "## ⚡ Nx Performance Report — \`run-many -t build\`
+      "## Nx Run Report — \`run-many -t build\`
 
       ### ❌ Failed tasks (1)
 
@@ -1231,7 +1231,7 @@ describe('formatReportMarkdown', () => {
     const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
 
     expect(formatReportMarkdown(s, 'run-many -t build test')).toContain(
-      '## ⚡ Nx Performance Report — `run-many -t build test`'
+      '## Nx Run Report — `run-many -t build test`'
     );
   });
 
@@ -1501,9 +1501,7 @@ describe('flushPerformanceReport', () => {
       );
 
       const written = readFileSync(summaryFile, 'utf-8');
-      expect(written).toContain(
-        '## ⚡ Nx Performance Report — `run-many -t build`'
-      );
+      expect(written).toContain('## Nx Run Report — `run-many -t build`');
       expect(written).toContain('### ❌ Failed tasks (1)');
       expect(written).toContain('| `a` | 1.0s |');
       // Trailing newline so a later step's summary content starts on its own line.

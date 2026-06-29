@@ -397,7 +397,7 @@ export function formatReportMarkdown(
     s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
   const cache = cacheStat(s);
 
-  const lines = [`## ⚡ Nx Performance Report — \`${command}\``];
+  const lines = [`## Nx Run Report — \`${command}\``];
 
   // Failures are the headline of a CI summary, so they go first — above the performance
   // stats, slowest first. A green run shows no table at all.
