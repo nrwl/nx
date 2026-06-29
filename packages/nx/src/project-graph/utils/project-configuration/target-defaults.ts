@@ -493,21 +493,6 @@ function mergeMatchingEntries(
 }
 
 /**
- * Classify a filter's `projects:` value:
- *   - `empty`: `[]` — matches no project, so the entry never matches.
- *   - `all`: absent or `['*']` — no constraint on the projects axis.
- *   - `evaluate`: a real pattern set the matcher must evaluate.
- */
-function classifyProjectsFilter(
-  projects: string[] | undefined
-): 'empty' | 'all' | 'evaluate' {
-  if (projects === undefined) return 'all';
-  if (projects.length === 0) return 'empty';
-  if (projects.every((p) => p === '*')) return 'all';
-  return 'evaluate';
-}
-
-/**
  * Test a single entry's `filter` against the resolution context. A missing
  * filter is a catch-all (always matches). Otherwise every present criterion
  * (`projects`, `plugin`, `executor`) must agree.
@@ -518,24 +503,20 @@ function entryFilterMatches(
 ): boolean {
   if (!filter) return true;
 
-  const projectsKind = classifyProjectsFilter(filter.projects);
-  if (projectsKind === 'empty') return false;
-  if (projectsKind === 'evaluate') {
-    if (!ctx.projectName || !ctx.projectNode) return false;
-    // Copy — `findMatchingProjects` prepends `*` for a leading negation and
-    // would otherwise mutate the shared nxJson entry.
-    const patterns = [...filter.projects!];
-    const matched = findMatchingProjects(patterns, {
+  if (filter.projects) {
+    const matched = findMatchingProjects([...filter.projects], {
       [ctx.projectName]: ctx.projectNode,
     });
-    if (!matched.includes(ctx.projectName)) return false;
+    if (!matched.length) {
+      return false;
+    }
   }
 
-  if (filter.plugin !== undefined && filter.plugin !== ctx.sourcePlugin) {
+  if (filter.plugin && filter.plugin !== ctx.sourcePlugin) {
     return false;
   }
 
-  if (filter.executor !== undefined && filter.executor !== ctx.executor) {
+  if (filter.executor && filter.executor !== ctx.executor) {
     return false;
   }
 
