@@ -22,5 +22,11 @@ describe('@nx/angular/tailwind deprecation warning', () => {
         msg.includes('"@nx/angular/tailwind" is deprecated')
     );
     expect(deprecationWarnings).toHaveLength(1);
+    expect(deprecationWarnings[0][0]).toContain(
+      'https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects'
+    );
+    expect(deprecationWarnings[0][0]).not.toContain(
+      'https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular\n'
+    );
   });
 });
