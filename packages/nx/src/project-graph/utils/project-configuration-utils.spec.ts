@@ -1500,6 +1500,71 @@ describe('project-configuration-utils', () => {
         ]);
       });
 
+      it('attributes a run-commands options identity stamped onto a default-plugin winner to the plugin, not target defaults (#36067)', () => {
+        const result = mergeCreateNodesResults(
+          // Inferred run-commands `build` (the losing target).
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: { command: 'vite build' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          // project.json run-commands with its own `commands` — command-
+          // incompatible, so it replaces the inferred target and wins.
+          [
+            [
+              [
+                'nx/core/project-json',
+                'libs/a/project.json',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: { commands: ['vite build > /dev/null'] },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        const PROJECT_JSON: SourceInformation = [
+          'libs/a/project.json',
+          'nx/core/project-json',
+        ];
+        // The synthetic stamps the winner's run-commands `options.commands` as a
+        // merge guard so the defaults survive the incompatible replace — but
+        // project.json, not target defaults, authored the commands.
+        expect(sm['targets.build.options.commands']).toEqual(PROJECT_JSON);
+      });
+
       it('attributes the target node to a specified plugin, not target defaults', () => {
         const result = mergeCreateNodesResults(
           vitePluginResult(),

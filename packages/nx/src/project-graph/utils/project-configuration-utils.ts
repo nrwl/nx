@@ -461,9 +461,11 @@ export function mergeCreateNodesResults(
     // A default plugin's targets are synthesized into the main rootmap by
     // target defaults *before* the default layer is applied, so target
     // defaults wrote the main source map's entry for the target node and its
-    // `executor`/`command` first — even though it never authored them (it only
-    // stamps the executor/command as a merge guard and cannot bring a target
-    // into existence). For those identity keys, the real default plugin's
+    // identity fields first — even though it never authored them (it only
+    // stamps them as a merge guard and cannot bring a target into existence).
+    // The identity fields are the executor/command plus, for run-commands, the
+    // `options.command`/`options.commands` the synthetic copies from the winner
+    // to stay compatible (#36067). For those keys, the real default plugin's
     // attribution must override the target-defaults stamp.
     const identityKeys = new Set<string>();
     for (const targetName in mainRootMap[root]?.targets ?? {}) {
@@ -471,6 +473,8 @@ export function mergeCreateNodesResults(
       identityKeys.add(base);
       identityKeys.add(`${base}.executor`);
       identityKeys.add(`${base}.command`);
+      identityKeys.add(`${base}.options.command`);
+      identityKeys.add(`${base}.options.commands`);
     }
 
     for (const key in incoming) {
