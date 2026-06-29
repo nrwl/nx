@@ -160,15 +160,34 @@ function buildSyntheticTargetForRoot(
     targetDefaultsConfig
   );
   if (targetDefaults && isCompatibleTarget(resolvedDefault, targetDefaults)) {
-    // Stamp executor/command so the default layer merges cleanly on top.
-    return {
-      ...targetDefaults,
-      executor: resolvedDefault.executor,
-      command: resolvedDefault.command,
-    };
+    // Stamp the default's identity so the default layer merges cleanly on top.
+    const synthetic: TargetConfiguration = { ...targetDefaults };
+    stampTargetIdentity(synthetic, resolvedDefault);
+    return synthetic;
   }
 
   return undefined;
+}
+
+// Copies `source`'s identity (executor, command, and — for run-commands — its
+// options.command/commands) onto `target` so the two compare compatible and
+// the synthetic isn't dropped when the default replaces the specified target
+// downstream (#36067). run-commands compatibility keys off
+// options.command/commands, not the top-level command, so both are carried.
+function stampTargetIdentity(
+  target: TargetConfiguration,
+  source: TargetConfiguration
+): void {
+  target.executor = source.executor;
+  target.command = source.command;
+  if (source.executor !== 'nx:run-commands') return;
+  const { command, commands } = source.options ?? {};
+  if (command === undefined && commands === undefined) return;
+  target.options = {
+    ...target.options,
+    ...(command !== undefined ? { command } : {}),
+    ...(commands !== undefined ? { commands } : {}),
+  };
 }
 
 function readAndPrepareTargetDefaults(
