@@ -854,7 +854,6 @@ function normalizeLockfile(
   if (!lockfileToSave.pnpmfileChecksum) {
     delete lockfileToSave.pnpmfileChecksum;
   }
-  delete lockfileToSave['catalogs'];
   return lockfileToSave;
 }
 
