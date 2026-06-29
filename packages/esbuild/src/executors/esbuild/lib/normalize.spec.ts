@@ -1,12 +1,13 @@
 import { normalizeOptions } from './normalize';
 import { ExecutorContext } from '@nx/devkit';
 import { readTsConfig } from '@nx/js';
+import { loadConfigFile } from '@nx/devkit/internal';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 jest.mock<typeof import('@nx/js')>('@nx/js', () => {
-  const actualModule = jest.requireActual('@nx/js');
-
   return {
-    ...actualModule,
     readTsConfig: jest.fn(() => ({
       fileNames: [],
       errors: [],
@@ -21,7 +22,12 @@ jest.mock('@nx/js/internal', () => ({
   isUsingTsSolutionSetup: jest.fn(() => false),
 }));
 
+jest.mock('@nx/devkit/internal', () => ({
+  loadConfigFile: jest.fn(),
+}));
+
 describe('normalizeOptions', () => {
+  let tmpRoot: string | undefined;
   const context: ExecutorContext = {
     root: '/',
     cwd: '/',
@@ -50,9 +56,17 @@ describe('normalizeOptions', () => {
     },
   };
 
-  it('should handle single entry point options', () => {
+  afterEach(() => {
+    (loadConfigFile as jest.MockedFunction<typeof loadConfigFile>).mockReset();
+    if (tmpRoot) {
+      rmSync(tmpRoot, { recursive: true, force: true });
+      tmpRoot = undefined;
+    }
+  });
+
+  it('should handle single entry point options', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -81,9 +95,9 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should handle multiple entry point options', () => {
+  it('should handle multiple entry point options', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -114,9 +128,9 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should support custom output file name', () => {
+  it('should support custom output file name', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -146,8 +160,8 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it('should validate against multiple entry points + outputFileName', () => {
-    expect(() =>
+  it('should validate against multiple entry points + outputFileName', async () => {
+    await expect(
       normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
@@ -161,12 +175,12 @@ describe('normalizeOptions', () => {
         },
         context
       )
-    ).toThrow(/Cannot use/);
+    ).rejects.toThrow(/Cannot use/);
   });
 
-  it('should add package.json to assets array if generatePackageJson is false', () => {
+  it('should add package.json to assets array if generatePackageJson is false', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -195,7 +209,7 @@ describe('normalizeOptions', () => {
     });
   });
 
-  it("should use the tsconfig declaration option if the declaration option isn't defined", () => {
+  it("should use the tsconfig declaration option if the declaration option isn't defined", async () => {
     (
       readTsConfig as jest.MockedFunction<typeof readTsConfig>
     ).mockImplementationOnce(() => ({
@@ -207,7 +221,7 @@ describe('normalizeOptions', () => {
     }));
 
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -220,9 +234,9 @@ describe('normalizeOptions', () => {
     ).toEqual(expect.objectContaining({ declaration: true }));
   });
 
-  it('should override thirdParty if bundle:false', () => {
+  it('should override thirdParty if bundle:false', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -237,9 +251,9 @@ describe('normalizeOptions', () => {
     ).toEqual(expect.objectContaining({ thirdParty: false }));
   });
 
-  it('should override skipTypeCheck if declaration:true', () => {
+  it('should override skipTypeCheck if declaration:true', async () => {
     expect(
-      normalizeOptions(
+      await normalizeOptions(
         {
           main: 'apps/myapp/src/index.ts',
           outputPath: 'dist/apps/myapp',
@@ -252,5 +266,43 @@ describe('normalizeOptions', () => {
         context
       )
     ).toEqual(expect.objectContaining({ skipTypeCheck: false }));
+  });
+
+  it('should load ESM esbuild config files', async () => {
+    tmpRoot = mkdtempSync(join(tmpdir(), 'nx-esbuild-config-'));
+    writeFileSync(
+      join(tmpRoot, 'esbuild.config.mjs'),
+      'export default { sourcemap: true, define: { __TEST__: "true" } };'
+    );
+    (
+      loadConfigFile as jest.MockedFunction<typeof loadConfigFile>
+    ).mockResolvedValue({
+      sourcemap: true,
+      define: { __TEST__: 'true' },
+    });
+
+    await expect(
+      normalizeOptions(
+        {
+          main: 'apps/myapp/src/index.ts',
+          outputPath: 'dist/apps/myapp',
+          tsConfig: 'apps/myapp/tsconfig.app.json',
+          assets: [],
+          generatePackageJson: true,
+          esbuildConfig: 'esbuild.config.mjs',
+        },
+        { ...context, root: tmpRoot, cwd: tmpRoot }
+      )
+    ).resolves.toEqual(
+      expect.objectContaining({
+        userDefinedBuildOptions: {
+          sourcemap: true,
+          define: { __TEST__: 'true' },
+        },
+      })
+    );
+    expect(loadConfigFile).toHaveBeenCalledWith(
+      join(tmpRoot, 'esbuild.config.mjs')
+    );
   });
 });
