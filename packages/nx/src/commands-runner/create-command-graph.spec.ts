@@ -94,4 +94,40 @@ describe('createCommandGraph', () => {
       roots: ['dep2'],
     });
   });
+  
+  it('should create command graph when --excludeTaskDependencies is true', () => {
+    const projectGraph = {
+      dependencies: {
+        dep1: [{ target: 'dep2', type: 'static', source: 'dep1' }],
+        dep2: [],
+      },
+      nodes: {
+        dep1: {
+          type: 'lib' as 'lib',
+          name: 'dep1',
+          data: {
+            files: [],
+            root: 'dep1',
+          },
+        },
+        dep2: {
+          type: 'lib' as 'lib',
+          name: 'dep2',
+          data: {
+            files: [],
+            root: 'dep2',
+          },
+        },
+      },
+    };
+    const result = createCommandGraph(
+      projectGraph,
+      ['dep1'],
+      { excludeTaskDependencies: true }
+    );
+    expect(result).toEqual({
+      dependencies: { dep1: [] },
+      roots: ['dep1'],
+    });
+  });
 });
