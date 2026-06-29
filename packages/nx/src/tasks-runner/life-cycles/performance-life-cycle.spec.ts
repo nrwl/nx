@@ -1219,11 +1219,13 @@ describe('formatReportMarkdown', () => {
     `);
   });
 
-  it('omits the Failed tasks section when nothing failed', () => {
+  it('reports success instead of a Failed tasks table when nothing failed', () => {
     const a = makeTask('a', { start: 0, end: 1000 });
     const s = run(makeGraph([a]), 1, { statuses: { a: 'success' } })!;
 
-    expect(formatReportMarkdown(s, '')).not.toContain('Failed tasks');
+    const md = formatReportMarkdown(s, '');
+    expect(md).not.toContain('Failed tasks');
+    expect(md).toContain('### ✅ All tasks succeeded');
   });
 
   it('puts the nx command in the heading so stacked reports stay distinguishable', () => {

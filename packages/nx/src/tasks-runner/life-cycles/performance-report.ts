@@ -399,8 +399,8 @@ export function formatReportMarkdown(
 
   const lines = [`## Nx Run Report — \`${command}\``];
 
-  // Failures are the headline of a CI summary, so they go first — above the performance
-  // stats, slowest first. A green run shows no table at all.
+  // The run's outcome is the headline of a CI summary, so it goes first — above the
+  // performance stats. Failures list the slowest tasks; a green run states it succeeded.
   const failedTasks = s.failedTasks;
   if (failedTasks.length > 0) {
     lines.push(
@@ -413,6 +413,8 @@ export function formatReportMarkdown(
         (t) => `| \`${escapeTableCell(t.id)}\` | ${fmt(t.duration)} |`
       )
     );
+  } else {
+    lines.push('', '### ✅ All tasks succeeded');
   }
 
   // Headline stats as a borderless two-column table, mirroring the terminal stat lines.
