@@ -888,6 +888,105 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
+    it('should apply target defaults when project.json overrides an inferred run-commands target with different commands (#36067)', () => {
+      // Repro for #36067: an inferred plugin (@nx/vite) contributes a
+      // `build` target as an `nx:run-commands` invocation, and project.json
+      // overrides it with its own `nx:run-commands` `commands`. The two are
+      // command-incompatible, so project.json replaces the inferred target —
+      // but the target-name-keyed default's `dependsOn`/`cache`/`inputs`/
+      // `outputs` must still ride onto the winning project.json target. Before
+      // the fix, the synthetic defaults stayed pinned to the inferred command
+      // identity and were dropped when project.json replaced the base.
+      const specifiedResults = [
+        [
+          [
+            '@nx/vite',
+            'packages/graphql-schema/vite.config.ts',
+            {
+              projects: {
+                'packages/graphql-schema': {
+                  name: 'graphql-schema',
+                  root: 'packages/graphql-schema',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: { command: 'vite build' },
+                      cache: true,
+                      inputs: ['inferred-input'],
+                      outputs: ['{projectRoot}/dist-inferred'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'packages/graphql-schema/project.json',
+            {
+              projects: {
+                'packages/graphql-schema': {
+                  name: 'graphql-schema',
+                  root: 'packages/graphql-schema',
+                  targets: {
+                    build: {
+                      executor: 'nx:run-commands',
+                      options: {
+                        cwd: 'packages/graphql-schema',
+                        commands: [
+                          'vite build > /dev/null',
+                          'tsgo -p tsconfig.lib.json',
+                        ],
+                        parallel: false,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            build: {
+              dependsOn: ['generate', '^build'],
+              cache: true,
+              inputs: ['production', '^production'],
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['packages/graphql-schema'].targets!['build'];
+      // project.json's command wins the incompatible replace...
+      expect(buildTarget.options).toEqual(
+        expect.objectContaining({
+          commands: ['vite build > /dev/null', 'tsgo -p tsconfig.lib.json'],
+        })
+      );
+      // ...and the target defaults still apply to the winning target.
+      expect(buildTarget.dependsOn).toEqual(['generate', '^build']);
+      expect(buildTarget.cache).toEqual(true);
+      expect(buildTarget.inputs).toEqual(['production', '^production']);
+      expect(buildTarget.outputs).toEqual(['{projectRoot}/dist']);
+      expect(errors).toEqual([]);
+    });
+
     it('should merge multiple specified plugins contributing to the same project', () => {
       const specifiedResults = [
         [
