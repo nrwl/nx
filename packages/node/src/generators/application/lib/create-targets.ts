@@ -140,17 +140,26 @@ export function getPruneTargets(
   'prune-lockfile': TargetConfiguration;
   'copy-workspace-modules': TargetConfiguration;
 } {
-  const lockFileName =
-    getLockFileName(detectPackageManager() ?? 'npm') ?? 'package-lock.json';
+  const packageManager = detectPackageManager() ?? 'npm';
+  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  const pruneLockfileOutputs = [
+    `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+    `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
+  ];
+  if (packageManager === 'pnpm') {
+    // The executor emits this so pnpm honors the workspace_modules importers
+    // in the pruned lockfile. Missing outputs are skipped, so it's safe to
+    // declare even when no workspace modules are present.
+    pruneLockfileOutputs.push(
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`
+    );
+  }
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
-      outputs: [
-        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
-        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
-      ],
+      outputs: pruneLockfileOutputs,
       options: {
         buildTarget,
       },
