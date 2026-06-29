@@ -182,6 +182,39 @@ describe('readTargetsFromPackageJson', () => {
         "options": {},
       }
     `);
+
+    const nxJson3 = {
+      targetDefaults: {
+        'nx-release-publish': [
+          {
+            filter: { executor: '@nx/js:release-publish' },
+            dependsOn: ['build'],
+            options: {
+              dryRun: true,
+            },
+          },
+        ],
+      },
+    };
+    const result3 = readTargetsFromPackageJson(
+      packageJson,
+      nxJson3,
+      workspaceRoot,
+      '/root',
+      packageManagerCommand
+    );
+    expect(result3['nx-release-publish']).toMatchInlineSnapshot(`
+      {
+        "dependsOn": [
+          "^nx-release-publish",
+          "build",
+        ],
+        "executor": "@nx/js:release-publish",
+        "options": {
+          "dryRun": true,
+        },
+      }
+    `);
   });
 
   it('should read targets from project.json and package.json', () => {

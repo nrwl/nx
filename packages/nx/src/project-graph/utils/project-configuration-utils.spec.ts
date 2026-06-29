@@ -754,6 +754,141 @@ describe('project-configuration-utils', () => {
       expect(buildTarget.inputs).toEqual(['explicit', 'inferred']);
     });
 
+    it('should apply projects-filtered defaults to a project that only a default plugin contributed', () => {
+      // ~45% of projects in a typical workspace are default-plugin-only
+      // (project.json / package.json reader output, no specified-plugin
+      // contribution). The merge-twice flow's preview pass must include
+      // these projects in the name view fed to findMatchingProjects so
+      // that `projects:` filters apply correctly.
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'libs/lib-a/project.json',
+            {
+              projects: {
+                'libs/lib-a': {
+                  name: 'lib-a',
+                  root: 'libs/lib-a',
+                  tags: ['scope:web'],
+                  targets: {
+                    build: { executor: 'nx:noop' },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/lib-b/project.json',
+            {
+              projects: {
+                'libs/lib-b': {
+                  name: 'lib-b',
+                  root: 'libs/lib-b',
+                  tags: ['scope:api'],
+                  targets: {
+                    build: { executor: 'nx:noop' },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        [],
+        defaultResults as any,
+        {
+          targetDefaults: {
+            build: [
+              {
+                filter: { projects: ['tag:scope:web'] },
+                cache: true,
+                inputs: ['web-only'],
+              },
+            ],
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const libATarget = result.projectRootMap['libs/lib-a'].targets!['build'];
+      const libBTarget = result.projectRootMap['libs/lib-b'].targets!['build'];
+
+      // lib-a matches the tag filter: cache + inputs from the default apply.
+      expect(libATarget.cache).toBe(true);
+      expect(libATarget.inputs).toEqual(['web-only']);
+      // lib-b doesn't match: no cache, default plugin only.
+      expect(libBTarget.cache).toBeUndefined();
+      expect(libBTarget.inputs).toBeUndefined();
+
+      expect(errors).toEqual([]);
+    });
+
+    it('should fall back to a less-specific compatible default when the most-specific match is incompatible', () => {
+      // A workspace has a generic `{ target: 'build', cache: true }`
+      // default and a specific-but-incompatible `{ target: 'build',
+      // executor: 'foreign:build', cache: false }`. The matcher's best
+      // candidate is the specific one (executorOnly outranks
+      // exactTarget), but that entry's executor is incompatible with
+      // the project's actual `nx:run-commands` target. We should fall
+      // back to the generic default rather than dropping all defaults.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/dotnet-lib/MyLib.csproj',
+            {
+              projects: {
+                'libs/dotnet-lib': {
+                  name: 'dotnet-lib',
+                  root: 'libs/dotnet-lib',
+                  targets: {
+                    build: {
+                      command: 'dotnet build',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        [],
+        {
+          targetDefaults: {
+            build: [
+              // Generic — compatible with anything (no executor set).
+              { cache: true, inputs: ['default'] },
+              // Specific — incompatible with the dotnet `command` target.
+              {
+                filter: { executor: '@monodon/rust:build' },
+                cache: false,
+              },
+            ],
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const buildTarget =
+        result.projectRootMap['libs/dotnet-lib'].targets!['build'];
+      // Inferred command preserved; generic default's cache + inputs apply.
+      expect(buildTarget.executor).toEqual('nx:run-commands');
+      expect(buildTarget.cache).toBe(true);
+      expect(buildTarget.inputs).toEqual(['default']);
+      expect(errors).toEqual([]);
+    });
+
     it('should not let a target-name-keyed default with a foreign executor replace an inferred command target', () => {
       // Repro: a polyglot workspace has a target-name keyed default
       // (`test-native`) configured for the rust plugin's executor, and
@@ -791,11 +926,13 @@ describe('project-configuration-utils', () => {
         [],
         {
           targetDefaults: {
-            'test-native': {
-              executor: '@monodon/rust:test',
-              options: {},
-              cache: true,
-            },
+            'test-native': [
+              {
+                filter: { executor: '@monodon/rust:test' },
+                options: {},
+                cache: true,
+              },
+            ],
           },
         },
         '/tmp/test',
@@ -811,6 +948,87 @@ describe('project-configuration-utils', () => {
       expect(testTarget.options).toEqual(
         expect.objectContaining({ command: 'dotnet test' })
       );
+      expect(errors).toEqual([]);
+    });
+
+    it('should keep a target-default contribution when an incompatible default plugin replaces the specified target', () => {
+      // Polyglot repro: a specified plugin infers `test-native` as an
+      // `nx:run-commands` invocation, while a default plugin infers the same
+      // target with an incompatible `@monodon/rust:test` executor. Because the
+      // executors are incompatible, the default plugin wholesale-replaces the
+      // specified target. A target-name-keyed default (`outputs`) must ride
+      // along with the *winning* (default) executor frame and survive that
+      // replace — if synthesis layered it onto the soon-to-be-discarded
+      // run-commands frame instead, the replace would silently drop it.
+      const specifiedResults = [
+        [
+          [
+            '@nx/dotnet',
+            'libs/poly-lib/MyLib.Tests.csproj',
+            {
+              projects: {
+                'libs/poly-lib': {
+                  name: 'poly-lib',
+                  root: 'libs/poly-lib',
+                  targets: {
+                    'test-native': {
+                      command: 'dotnet test',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            '@monodon/rust',
+            'libs/poly-lib/Cargo.toml',
+            {
+              projects: {
+                'libs/poly-lib': {
+                  name: 'poly-lib',
+                  root: 'libs/poly-lib',
+                  targets: {
+                    'test-native': {
+                      executor: '@monodon/rust:test',
+                      options: { release: true },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            'test-native': {
+              outputs: ['{projectRoot}/dist'],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const testTarget =
+        result.projectRootMap['libs/poly-lib'].targets!['test-native'];
+      // Default plugin's executor wins the incompatible replace...
+      expect(testTarget.executor).toEqual('@monodon/rust:test');
+      expect(testTarget.options).toEqual({ release: true });
+      // ...and the target default's `outputs` survived rather than being
+      // dropped along with the discarded run-commands frame. This is the
+      // contribution the executor/command pre-stamp in synthesis protects.
+      expect(testTarget.outputs).toEqual(['{projectRoot}/dist']);
       expect(errors).toEqual([]);
     });
 
@@ -868,11 +1086,13 @@ describe('project-configuration-utils', () => {
         defaultResults as any,
         {
           targetDefaults: {
-            'test-native': {
-              executor: '@monodon/rust:test',
-              options: {},
-              cache: true,
-            },
+            'test-native': [
+              {
+                filter: { executor: '@monodon/rust:test' },
+                options: {},
+                cache: true,
+              },
+            ],
           },
         },
         '/tmp/test',
@@ -1206,6 +1426,415 @@ describe('project-configuration-utils', () => {
         'libs/a/base.config.ts',
         '@acme/base',
       ]);
+    });
+
+    describe('target defaults source map attribution', () => {
+      // A plugin that infers a `build` target on libs/a, optionally tagged.
+      const vitePluginResult = (
+        tags?: string[]
+      ): CreateNodesResultEntry[][] => [
+        [
+          [
+            '@nx/vite/plugin',
+            'libs/a/vite.config.ts',
+            {
+              projects: {
+                'libs/a': {
+                  name: 'a',
+                  root: 'libs/a',
+                  ...(tags ? { tags } : {}),
+                  targets: { build: { executor: '@nx/vite:build' } },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const PLUGIN: SourceInformation = [
+        'libs/a/vite.config.ts',
+        '@nx/vite/plugin',
+      ];
+      const sourceMapFor = (
+        result: ReturnType<typeof mergeCreateNodesResults>
+      ) => result.configurationSourceMaps['libs/a'];
+
+      it('attributes the target node and executor to a default plugin (project.json), not target defaults', () => {
+        const result = mergeCreateNodesResults(
+          [],
+          [
+            [
+              [
+                'nx/core/project-json',
+                'libs/a/project.json',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: { build: { executor: '@nx/js:tsc' } },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        const PROJECT_JSON: SourceInformation = [
+          'libs/a/project.json',
+          'nx/core/project-json',
+        ];
+        // Synthesis runs before the default layer, but the project.json plugin
+        // — not target defaults — owns the target node and its executor.
+        expect(sm['targets.build']).toEqual(PROJECT_JSON);
+        expect(sm['targets.build.executor']).toEqual(PROJECT_JSON);
+        // The default-introduced `cache` is still credited to target defaults.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes a run-commands options identity stamped onto a default-plugin winner to the plugin, not target defaults (#36067)', () => {
+        const result = mergeCreateNodesResults(
+          // Inferred run-commands `build` (the losing target).
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: { command: 'vite build' },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          // project.json run-commands with its own `commands` — command-
+          // incompatible, so it replaces the inferred target and wins.
+          [
+            [
+              [
+                'nx/core/project-json',
+                'libs/a/project.json',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: {
+                          executor: 'nx:run-commands',
+                          options: { commands: ['vite build > /dev/null'] },
+                        },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        const PROJECT_JSON: SourceInformation = [
+          'libs/a/project.json',
+          'nx/core/project-json',
+        ];
+        // The synthetic stamps the winner's run-commands `options.commands` as a
+        // merge guard so the defaults survive the incompatible replace — but
+        // project.json, not target defaults, authored the commands.
+        expect(sm['targets.build.options.commands']).toEqual(PROJECT_JSON);
+      });
+
+      it('attributes the target node to a specified plugin, not target defaults', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+        const sm = sourceMapFor(result);
+        // The target node belongs to the plugin that introduced the target,
+        // even though target defaults later stamped fields onto it.
+        expect(sm['targets.build']).toEqual(PLUGIN);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+      });
+
+      it('keeps the plugin executor attribution while crediting a target-default-introduced field (object form)', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.executor).toBe('@nx/vite:build');
+        expect(build.cache).toBe(true);
+
+        const sm = sourceMapFor(result);
+        // The plugin authored the executor — the target default re-stamps the
+        // same value as a merge guard but must not steal provenance.
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        // The newly introduced `cache` is credited to the target default, at
+        // the object-form location (no array index).
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes each matching array entry to its own element location', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                { cache: true },
+                {
+                  filter: { plugin: '@nx/vite/plugin' },
+                  inputs: ['vite.config.ts'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+        expect(build.inputs).toEqual(['vite.config.ts']);
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        // Catch-all entry → index 0; the plugin-filtered entry → index 1.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build[0]',
+          'nx/target-defaults',
+        ]);
+        expect(sm['targets.build.inputs']).toEqual([
+          'nx.json#targetDefaults.build[1]',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('credits the target default for an executor the plugin did not author', () => {
+        // The plugin target has no executor — the target default introduces it,
+        // so the executor provenance correctly belongs to the target default.
+        const specified: CreateNodesResultEntry[][] = [
+          [
+            [
+              '@nx/vite/plugin',
+              'libs/a/vite.config.ts',
+              {
+                projects: {
+                  'libs/a': {
+                    name: 'a',
+                    root: 'libs/a',
+                    targets: { build: { options: { foo: 1 } } },
+                  },
+                },
+              },
+            ],
+          ],
+        ];
+
+        const result = mergeCreateNodesResults(
+          specified,
+          [],
+          {
+            targetDefaults: {
+              build: { executor: 'nx:run-commands', cache: true },
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.executor).toBe('nx:run-commands');
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('does not reattribute a scalar a target default re-stamps to the same value', () => {
+        const result = mergeCreateNodesResults(
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: { executor: '@nx/vite:build', cache: true },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const sm = sourceMapFor(result);
+        // `cache` is unchanged (plugin already set `true`) — provenance stays
+        // with the plugin, not the target default.
+        expect(sm['targets.build.cache']).toEqual(PLUGIN);
+      });
+
+      it('reattributes a scalar a target default actually changes', () => {
+        const result = mergeCreateNodesResults(
+          [
+            [
+              [
+                '@nx/vite/plugin',
+                'libs/a/vite.config.ts',
+                {
+                  projects: {
+                    'libs/a': {
+                      name: 'a',
+                      root: 'libs/a',
+                      targets: {
+                        build: { executor: '@nx/vite:build', cache: false },
+                      },
+                    },
+                  },
+                },
+              ],
+            ],
+          ],
+          [],
+          { targetDefaults: { build: { cache: true } } },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+
+        const sm = sourceMapFor(result);
+        // Value changed false → true, so the target default is credited.
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.build',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('attributes a projects-filtered default by element, matching on tags', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(['web']),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                {
+                  filter: { projects: ['tag:web'] },
+                  outputs: ['{workspaceRoot}/dist'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.outputs).toEqual(['{workspaceRoot}/dist']);
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        expect(sm['targets.build.outputs']).toEqual([
+          'nx.json#targetDefaults.build[0]',
+          'nx/target-defaults',
+        ]);
+      });
+
+      it('does not apply (or attribute) a projects-filtered default that does not match', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(['web']),
+          [],
+          {
+            targetDefaults: {
+              build: [
+                {
+                  filter: { projects: ['tag:api'] },
+                  outputs: ['{workspaceRoot}/dist'],
+                },
+              ],
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.outputs).toBeUndefined();
+        expect(sourceMapFor(result)['targets.build.outputs']).toBeUndefined();
+      });
+
+      it('attributes the executor-key default and leaves the name-key default unconsulted', () => {
+        const result = mergeCreateNodesResults(
+          vitePluginResult(),
+          [],
+          {
+            targetDefaults: {
+              // Executor key wins over the name key for a matching target.
+              '@nx/vite:build': { cache: true },
+              build: { inputs: ['should-not-apply'] },
+            },
+          },
+          '/tmp/test',
+          []
+        );
+
+        const build = result.projectRootMap['libs/a'].targets!.build;
+        expect(build.cache).toBe(true);
+        // Name-key default must not apply when the executor key matched.
+        expect(build.inputs).toBeUndefined();
+
+        const sm = sourceMapFor(result);
+        expect(sm['targets.build.executor']).toEqual(PLUGIN);
+        expect(sm['targets.build.cache']).toEqual([
+          'nx.json#targetDefaults.@nx/vite:build',
+          'nx/target-defaults',
+        ]);
+        expect(sm['targets.build.inputs']).toBeUndefined();
+      });
     });
   });
 

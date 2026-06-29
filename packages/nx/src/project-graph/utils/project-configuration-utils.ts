@@ -35,6 +35,10 @@ import type {
   ConfigurationSourceMaps,
   SourceInformation,
 } from './project-configuration/source-maps';
+import {
+  targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
+} from './project-configuration/source-maps';
 
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
@@ -324,11 +328,19 @@ function mergeCreateNodesResultsFromSinglePlugin(
 /**
  * Merges create nodes results into a single rootMap.
  *
- * Default plugin results are merged twice: first into an intermediate
- * rootMap with unresolved spread sentinels preserved, so target
- * defaults selection sees the real merged shape of defaults; then
- * applied as a single layer onto the main rootMap where the preserved
- * spreads resolve against the specified + target-defaults base.
+ * Specified plugin results are merged once into the manager. Default
+ * plugin results are first staged into an intermediate rootMap (with
+ * `'...'` spreads deferred) so that synthesis can read each layer's
+ * contribution without re-running the merge. The synthetic result from
+ * `createTargetDefaultsResults` is then merged into the manager, and
+ * the staged intermediate is replayed on top — that replay is where
+ * deferred spreads expand against the final (specified + synth) base.
+ *
+ * Synthesis itself doesn't materialize a second rootMap. Per
+ * (root, target) it does an on-the-fly merge of the two layered
+ * contributions to learn the eventual executor/command, then matches
+ * defaults against that merged shape. This keeps specified-plugin
+ * merge work to a single pass.
  */
 export function mergeCreateNodesResults(
   specifiedResults: CreateNodesResultEntry[][],
@@ -386,7 +398,9 @@ export function mergeCreateNodesResults(
   const targetDefaultsResults = createTargetDefaultsResults(
     nodesManager.getRootMap(),
     intermediateDefaultRootMap,
-    nxJsonConfiguration
+    nxJsonConfiguration,
+    configurationSourceMaps,
+    defaultConfigurationSourceMaps
   );
 
   if (targetDefaultsResults.length > 0) {
@@ -439,11 +453,37 @@ export function mergeCreateNodesResults(
   //    above. The stale default-plugin entry in
   //    `defaultConfigurationSourceMaps` must NOT clobber the base
   //    attribution that the specified plugin / TD already recorded.
+  const mainRootMap = nodesManager.getRootMap();
   for (const root in defaultConfigurationSourceMaps) {
     const existing = (configurationSourceMaps[root] ??= {});
     const incoming = defaultConfigurationSourceMaps[root];
+
+    // A default plugin's targets are synthesized into the main rootmap by
+    // target defaults *before* the default layer is applied, so target
+    // defaults wrote the main source map's entry for the target node and its
+    // identity fields first — even though it never authored them (it only
+    // stamps them as a merge guard and cannot bring a target into existence).
+    // The identity fields are the executor/command plus, for run-commands, the
+    // `options.command`/`options.commands` the synthetic copies from the winner
+    // to stay compatible (#36067). For those keys, the real default plugin's
+    // attribution must override the target-defaults stamp.
+    const identityKeys = new Set<string>();
+    for (const targetName in mainRootMap[root]?.targets ?? {}) {
+      const base = targetSourceMapKey(targetName);
+      identityKeys.add(base);
+      identityKeys.add(`${base}.executor`);
+      identityKeys.add(`${base}.command`);
+      identityKeys.add(`${base}.options.command`);
+      identityKeys.add(`${base}.options.commands`);
+    }
+
     for (const key in incoming) {
       if (existing[key] === undefined) {
+        existing[key] = incoming[key];
+      } else if (
+        identityKeys.has(key) &&
+        existing[key][1] === TARGET_DEFAULTS_PLUGIN_NAME
+      ) {
         existing[key] = incoming[key];
       }
     }

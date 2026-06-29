@@ -11,6 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
@@ -141,7 +142,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
@@ -152,9 +153,12 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.server ??= {};
-  nxJson.targetDefaults.server.cache ??= true;
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'server',
+  });
+  if (!existing || existing.cache === undefined) {
+    upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
+  }
   updateNxJson(tree, nxJson);
 }
 

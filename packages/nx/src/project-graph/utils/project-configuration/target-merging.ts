@@ -5,7 +5,10 @@ import {
   TargetConfiguration,
   TargetMetadata,
 } from '../../../config/workspace-json-project-json';
-import { recordSourceMapKeysByIndex } from './source-maps';
+import {
+  recordSourceMapKeysByIndex,
+  recordTargetIdentitySourceMapInfo,
+} from './source-maps';
 
 import type { SourceInformation } from './source-maps';
 import {
@@ -527,9 +530,17 @@ export function mergeTargetConfigurations(
     }
   }
 
-  // Update source map once after loop
+  // Update source map once after loop. Real plugins win last, but a target
+  // default — which only stamps fields onto an existing target and never
+  // authors its existence — must not steal the node key from the plugin that
+  // introduced the target. An incompatible replace clears these keys above, so
+  // a replacing real plugin still re-owns the node.
   if (projectConfigSourceMap) {
-    projectConfigSourceMap[targetIdentifier] = sourceInformation;
+    recordTargetIdentitySourceMapInfo(
+      projectConfigSourceMap,
+      targetIdentifier,
+      sourceInformation
+    );
   }
 
   // merge options if there are any

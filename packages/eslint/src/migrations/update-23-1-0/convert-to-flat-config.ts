@@ -246,6 +246,10 @@ function findRemovedFormatterTargets(tree: Tree): string[] {
     if (name !== 'lint' && name !== ESLINT_LINT_EXECUTOR) {
       continue;
     }
+    if (Array.isArray(target)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
     const optionSets: Array<[string | null, Record<string, any> | undefined]> =
       [[null, target.options], ...Object.entries(target.configurations ?? {})];
     collectRemovedFormatters(`targetDefaults["${name}"]`, optionSets);
@@ -311,6 +315,10 @@ function findUnsupportedFlatConfigOptionTargets(tree: Tree): string[] {
   const targetDefaults = readNxJson(tree)?.targetDefaults ?? {};
   for (const [name, target] of Object.entries(targetDefaults)) {
     if (name !== 'lint' && name !== ESLINT_LINT_EXECUTOR) {
+      continue;
+    }
+    if (Array.isArray(target)) {
+      // This migration predates the filtered array value form; values are plain objects here.
       continue;
     }
     const optionSets: Array<[string | null, Record<string, any> | undefined]> =

@@ -13,6 +13,7 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
+import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
@@ -284,8 +285,15 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
+      readTargetDefaultsForTarget(
+        'nx-release-publish',
+        nxJson?.targetDefaults,
+        '@nx/js:release-publish'
+      ) ?? {};
     res['nx-release-publish'] = {
       executor: '@nx/js:release-publish',
       ...nxReleasePublishTargetDefaults,

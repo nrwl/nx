@@ -235,13 +235,8 @@ function createNxJson(
     targetDefaults:
       process.env.NX_ADD_PLUGINS === 'false'
         ? {
-            build: {
-              cache: true,
-              dependsOn: ['^build'],
-            },
-            lint: {
-              cache: true,
-            },
+            build: { cache: true, dependsOn: ['^build'] },
+            lint: { cache: true },
           }
         : undefined,
     analytics,
@@ -257,7 +252,10 @@ function createNxJson(
       sharedGlobals: [],
     };
     if (process.env.NX_ADD_PLUGINS === 'false') {
-      nxJson.targetDefaults.build.inputs = ['production', '^production'];
+      const build = nxJson.targetDefaults?.build;
+      if (build && !Array.isArray(build)) {
+        build.inputs = ['production', '^production'];
+      }
       nxJson.useInferencePlugins = false;
     }
   }

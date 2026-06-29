@@ -137,7 +137,7 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 
 Per-project paths don't make sense as workspace defaults, so the option is removed without rewriting individual project Jest configs. A warning is logged so the setup file path can be added to each project's Jest config manually if needed.
 
-Remove the option from a target default using the `@nx/jest:jest` executor as the key:
+Remove the option from a target default entry matching on the `@nx/jest:jest` executor:
 
 ##### Before
 
