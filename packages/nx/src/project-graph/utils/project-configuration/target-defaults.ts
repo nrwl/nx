@@ -193,11 +193,23 @@ function targetDefaultSourceFile(key: string, index?: number): string {
 // merge's compatibility or executor-precedence rules change, update this in
 // lockstep; the end-to-end agreement is exercised by the synthesis tests in
 // `project-configuration-utils.spec.ts`.
+type EffectiveTarget = {
+  executor: string | undefined;
+  command: string | undefined;
+  // For a run-commands winner, the command identity (`options.command`/
+  // `options.commands`) of the target the real merge lands on.
+  // `isCompatibleTarget` keys run-commands compatibility off these, not the
+  // top-level `command`, so the synthetic must carry them or it's
+  // incompatible-replaced and dropped when the winner uses the
+  // `options.commands` form (#36067).
+  options?: { command?: unknown; commands?: unknown };
+};
+
 function effectiveTargetForLookup(
   specifiedTarget: TargetConfiguration | undefined,
   defaultTarget: TargetConfiguration | undefined,
   root: string
-): { executor: string | undefined; command: string | undefined } | undefined {
+): EffectiveTarget | undefined {
   const resolvedSpecified = specifiedTarget
     ? resolveCommandSyntacticSugar(specifiedTarget, root)
     : undefined;
@@ -207,29 +219,47 @@ function effectiveTargetForLookup(
 
   if (resolvedSpecified && resolvedDefault) {
     if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-      return {
-        executor: resolvedDefault.executor,
-        command: resolvedDefault.command,
-      };
+      return effectiveFromWinner(resolvedDefault);
     }
     return {
       executor: resolvedDefault.executor ?? resolvedSpecified.executor,
       command: resolvedDefault.command ?? resolvedSpecified.command,
+      options:
+        runCommandsCommandIdentity(resolvedDefault) ??
+        runCommandsCommandIdentity(resolvedSpecified),
     };
   }
   if (resolvedSpecified) {
-    return {
-      executor: resolvedSpecified.executor,
-      command: resolvedSpecified.command,
-    };
+    return effectiveFromWinner(resolvedSpecified);
   }
   if (resolvedDefault) {
-    return {
-      executor: resolvedDefault.executor,
-      command: resolvedDefault.command,
-    };
+    return effectiveFromWinner(resolvedDefault);
   }
   return undefined;
+}
+
+function effectiveFromWinner(target: TargetConfiguration): EffectiveTarget {
+  return {
+    executor: target.executor,
+    command: target.command,
+    options: runCommandsCommandIdentity(target),
+  };
+}
+
+// run-commands command identity lives in `options.command`/`options.commands`,
+// not the top-level `command`. Returns just those fields (when present) for a
+// run-commands target so the synthetic can be stamped to stay compatible with
+// the winning target downstream (#36067). Undefined for any other executor.
+function runCommandsCommandIdentity(
+  target: TargetConfiguration
+): { command?: unknown; commands?: unknown } | undefined {
+  if (target.executor !== 'nx:run-commands') return undefined;
+  const { command, commands } = target.options ?? {};
+  if (command === undefined && commands === undefined) return undefined;
+  return {
+    ...(command !== undefined ? { command } : {}),
+    ...(commands !== undefined ? { commands } : {}),
+  };
 }
 
 /**
@@ -237,17 +267,18 @@ function effectiveTargetForLookup(
  * `targetName` at `root` (empty when no defaults apply). Emitting per entry
  * rather than a single pre-merged target lets source maps attribute fields to
  * the specific array element they came from; the entries merge downstream in
- * document order. Each synthetic stamps the effective executor/command so
- * neither merge neighbor can incompatible-replace it and drop its contributions.
+ * document order. Each synthetic stamps the effective executor/command (and the
+ * winner's run-commands options identity) so neither merge neighbor can
+ * incompatible-replace it and drop its contributions.
  *
- * @param effective The `(executor, command)` shape the real merge will
- *   land on. Used both as the executor filter context and as the locked
- *   shape stamped onto the synthetic.
+ * @param effective The shape the real merge will land on. Used both as the
+ *   executor filter context and as the locked identity stamped onto the
+ *   synthetic.
  */
 function buildSyntheticTargetsForRoot(
   targetName: string,
   root: string,
-  effective: { executor: string | undefined; command: string | undefined },
+  effective: EffectiveTarget,
   targetDefaults: NormalizedTargetDefaults,
   projectName: string | undefined,
   projectNode: MatcherProjectNode | undefined,
@@ -290,6 +321,12 @@ function buildSyntheticTargetsForRoot(
     }
     if (effective.command !== undefined) {
       synthetic.command = effective.command;
+    }
+    // run-commands compatibility keys off options.command/commands, not the
+    // top-level command. Stamp the winner's so the synthetic stays compatible
+    // when the winning target uses the options.commands form (#36067).
+    if (effective.options !== undefined) {
+      synthetic.options = { ...synthetic.options, ...effective.options };
     }
 
     synthetics.push({ key: resolved.key, index, target: synthetic });
