@@ -148,6 +148,10 @@ pub enum HashInstruction {
     TsConfiguration(String),
     TaskOutput(String, Vec<String>),
     External(String),
+    /// A task's full transitive set of external dependencies, collapsed into a
+    /// single instruction (sorted, deduped node names) so each task carries one
+    /// folded external hash instead of thousands of `External` instructions.
+    ExternalDependencies(Vec<String>),
     AllExternalDependencies,
     JsonFileSet {
         project_name: Option<String>,
@@ -211,6 +215,8 @@ impl fmt::Display for HashInstruction {
                     format!("{task_output}:{dep_outputs}")
                 }
                 HashInstruction::External(external) => external.to_string(),
+                HashInstruction::ExternalDependencies(externals) =>
+                    format!("external-deps:[{}]", externals.join(",")),
                 HashInstruction::ProjectConfiguration(project_name) => {
                     format!("{project_name}:ProjectConfiguration")
                 }

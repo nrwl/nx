@@ -104,6 +104,8 @@ impl HashPlanner {
                 inputs.par_sort();
                 inputs.dedup();
 
+                collapse_external_dependencies(&mut inputs);
+
                 Ok((id.to_string(), inputs))
             })
             .collect();
@@ -540,6 +542,25 @@ impl HashPlanner {
             }
         }
         Ok(result)
+    }
+}
+
+/// Collapses the individual `External` instructions in a (sorted, deduped) instruction
+/// list into a single `ExternalDependencies` instruction. A task that depends on a large
+/// package can otherwise carry thousands of `External` instructions; folding them into one
+/// keeps each task's plan small and lets the hasher fold the closure once. `inputs` must
+/// already be sorted and deduped so the collected names are too.
+fn collapse_external_dependencies(inputs: &mut Vec<HashInstruction>) {
+    let mut external_names: Vec<String> = Vec::new();
+    inputs.retain(|instruction| match instruction {
+        HashInstruction::External(name) => {
+            external_names.push(name.clone());
+            false
+        }
+        _ => true,
+    });
+    if !external_names.is_empty() {
+        inputs.push(HashInstruction::ExternalDependencies(external_names));
     }
 }
 
