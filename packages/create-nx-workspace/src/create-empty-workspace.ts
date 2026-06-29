@@ -42,9 +42,8 @@ export async function createEmptyWorkspace<T extends CreateWorkspaceOptions>(
 
   const args = unparse({
     ...nxNewOptions,
-    // Scaffolding into the current directory: it is functionally empty but may
-    // contain inert files (.git, README), so relax the generator's
-    // empty-directory guard.
+    // Scaffolding into the current directory: relax the generator's
+    // empty-directory guard so it can write into a non-empty cwd.
     ...(useCurrentDir ? { skipEmptyDirCheck: true } : {}),
   }).join(' ');
 

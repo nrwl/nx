@@ -960,7 +960,7 @@ async function promptCreateInCurrentDir(dirName: string): Promise<boolean> {
   }>([
     {
       name: 'useCurrentDir',
-      message: `Create workspace in the current directory (${dirName})?`,
+      message: `Create workspace in the current directory (${dirName})? Existing files may be overwritten.`,
       type: 'autocomplete',
       choices: [{ name: 'Yes' }, { name: 'No' }],
       initial: 0,

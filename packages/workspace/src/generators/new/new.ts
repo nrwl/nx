@@ -48,9 +48,9 @@ interface Schema {
   useProjectJson?: boolean;
   aiAgents?: Agent[] | Agent;
   // Internal: set by create-nx-workspace when scaffolding into the current
-  // directory, which is functionally empty but may already contain inert files
-  // (.git, README, LICENSE). create-nx-workspace owns that policy, so skip the
-  // generator's own empty-directory guard.
+  // directory. Skips the generator's empty-directory guard so it can write into
+  // a non-empty cwd (existing files that collide with generated files are
+  // overwritten).
   skipEmptyDirCheck?: boolean;
 }
 

@@ -26,7 +26,10 @@ export async function downloadTemplate(
   directory: string
 ): Promise<void> {
   let body: ReadableStream<Uint8Array> | undefined;
-  let lastError: unknown;
+  const attempts: string[] = [];
+  // A thrown fetch is a connectivity problem; a non-ok response is a missing
+  // branch/repo. Distinguish them so the error code (and its hints) are right.
+  let networkError = false;
   for (const branch of DEFAULT_BRANCHES) {
     const url = `https://github.com/${template}/archive/refs/heads/${branch}.tar.gz`;
     try {
@@ -35,18 +38,17 @@ export async function downloadTemplate(
         body = res.body;
         break;
       }
-      lastError = new Error(`HTTP ${res.status} for ${url}`);
+      attempts.push(`${branch}: HTTP ${res.status}`);
     } catch (e) {
-      lastError = e;
+      networkError = true;
+      attempts.push(`${branch}: ${e instanceof Error ? e.message : String(e)}`);
     }
   }
 
   if (!body) {
-    const message =
-      lastError instanceof Error ? lastError.message : String(lastError);
     throw new CnwError(
-      'TEMPLATE_CLONE_FAILED',
-      `Failed to download template '${template}': ${message}`
+      networkError ? 'NETWORK_ERROR' : 'TEMPLATE_CLONE_FAILED',
+      `Failed to download template '${template}' (${attempts.join('; ')})`
     );
   }
 
@@ -82,39 +84,46 @@ async function extractTarball(
       stream.resume();
     };
 
-    // GitHub wraps everything in a top-level `<repo>-<branch>/` directory.
-    // Strip that first segment so files land directly in `directory`.
-    const relativePath = header.name.split('/').slice(1).join('/');
+    try {
+      // GitHub wraps everything in a top-level `<repo>-<branch>/` directory.
+      // Strip that first segment so files land directly in `directory`.
+      const relativePath = header.name.split('/').slice(1).join('/');
 
-    // Top-level dir entry or unsupported type (symlink, pax header).
-    if (
-      !relativePath ||
-      (header.type !== 'file' && header.type !== 'directory')
-    ) {
-      return skip();
+      // Top-level dir entry or unsupported type (symlink, pax header).
+      if (
+        !relativePath ||
+        (header.type !== 'file' && header.type !== 'directory')
+      ) {
+        return skip();
+      }
+
+      const destPath = join(directory, relativePath);
+
+      // Defense-in-depth against a malicious tarball escaping the target dir
+      // (zip-slip) via `..` entries.
+      const rel = relative(directory, destPath);
+      if (rel.startsWith('..') || isAbsolute(rel)) {
+        return skip();
+      }
+
+      if (header.type === 'directory') {
+        mkdirSync(destPath, { recursive: true });
+        return skip();
+      }
+
+      mkdirSync(dirname(destPath), { recursive: true });
+      const writeStream = createWriteStream(destPath, { mode: header.mode });
+      // Surface a write failure to the pipeline below so it rejects and tears
+      // down every stream.
+      writeStream.on('error', (err) => extract.destroy(err));
+      writeStream.on('close', next);
+      stream.pipe(writeStream);
+    } catch (err) {
+      // A synchronous failure here (e.g. mkdirSync hitting EACCES/ENOSPC, or a
+      // path component that is a file) would otherwise escape the awaited
+      // pipeline; route it so the operation rejects instead of crashing.
+      extract.destroy(err as Error);
     }
-
-    const destPath = join(directory, relativePath);
-
-    // Defense-in-depth against a malicious tarball escaping the target dir
-    // (zip-slip) via `..` entries.
-    const rel = relative(directory, destPath);
-    if (rel.startsWith('..') || isAbsolute(rel)) {
-      return skip();
-    }
-
-    if (header.type === 'directory') {
-      mkdirSync(destPath, { recursive: true });
-      return skip();
-    }
-
-    mkdirSync(dirname(destPath), { recursive: true });
-    const writeStream = createWriteStream(destPath, { mode: header.mode });
-    // Surface a write failure to the pipeline below so it rejects and tears
-    // down every stream.
-    writeStream.on('error', (err) => extract.destroy(err));
-    writeStream.on('close', next);
-    stream.pipe(writeStream);
   });
 
   // pipeline (unlike a manual .pipe() chain) forwards errors from every stage -

@@ -12,9 +12,8 @@ export interface CreateWorkspaceOptions {
   workingDir?: string;
   /**
    * @description Scaffold into the current directory in place. Set when the
-   * user passes "." / "./" (or confirms the interactive prompt). The cwd is
-   * functionally empty but may hold inert files (.git, README, LICENSE), so
-   * downstream empty-directory guards are relaxed.
+   * user passes "." / "./". Relaxes the empty-directory guard, so existing
+   * files in the cwd that collide with generated files are overwritten.
    */
   useCurrentDir?: boolean;
   packageManager: PackageManager; // Package manager to use
