@@ -1,6 +1,6 @@
 import { appendFileSync } from 'node:fs';
 import type { BatchInfo, PerformanceSummaryPayload } from '../../native';
-import { Task, TaskGraph } from '../../config/task-graph';
+import { TaskGraph } from '../../config/task-graph';
 import {
   buildExitSummaryPayload,
   formatReport,
@@ -38,8 +38,6 @@ export class PerformanceLifeCycle implements LifeCycle {
   private readonly batchSiblings = new Map<string, string[]>();
   /** Resolved `--parallel`, set by the runner via {@link startCommand}'s second arg once the thread pool is sized. */
   private parallel = 1;
-  /** taskId → wall-clock start captured in {@link startTasks}, a fallback for runners that don't stamp `task.startTime` (the Nx Cloud coordinator). */
-  private readonly startTimings = new Map<string, number>();
 
   constructor(
     private readonly taskGraph: TaskGraph,
@@ -69,40 +67,16 @@ export class PerformanceLifeCycle implements LifeCycle {
     }
   }
 
-  /**
-   * Capture each task's wall-clock start — a fallback the local orchestrator's
-   * `task.startTime` shadows. The Nx Cloud coordinator drives the lifecycle hooks without
-   * stamping the task objects, so this (with the `Date.now()` end fallback in
-   * {@link endTasks}) is the only timing it provides — the same fallback
-   * `task-history-life-cycle` keeps.
-   */
-  startTasks(tasks: Task[]): void {
-    for (const task of tasks) {
-      if (!this.startTimings.has(task.id)) {
-        this.startTimings.set(task.id, Date.now());
-      }
-    }
-  }
-
   endTasks(taskResults: TaskResult[]): void {
     // Called incrementally (per group/batch); accumulate so the last call sees every timing.
     for (const { task, status } of taskResults) {
       const entry = this.entry(task.id);
-      // Prefer the runner-stamped times; fall back to the startTasks start and a "now" end
-      // when the runner leaves them unset (the Nx Cloud coordinator reports results without
-      // stamping task.startTime/endTime). `!= null`, not truthiness: a synthetic timeline
-      // can legitimately start at 0.
-      const startTime = task.startTime ?? this.startTimings.get(task.id);
-      if (startTime != null) {
-        entry.startTime = startTime;
+      // `!= null`, not truthiness: synthetic/relative timelines can legitimately start at 0.
+      if (task.startTime != null) {
+        entry.startTime = task.startTime;
       }
       if (task.endTime != null) {
         entry.endTime = task.endTime;
-      } else if (task.startTime == null && !entry.continuous) {
-        // The Nx Cloud coordinator stamps neither time; pair the startTasks start with a
-        // "now" end. A locally-killed task (has a start, no end) stays window-less and
-        // excluded, as before.
-        entry.endTime = Date.now();
       }
       if (status != null) {
         this.statuses.set(task.id, status);

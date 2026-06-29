@@ -229,34 +229,6 @@ describe('PerformanceLifeCycle', () => {
     expect(s.overhead).toBe(0);
   });
 
-  it('falls back to startTasks/endTasks wall-clock when the runner leaves task.startTime/endTime unset (Nx Cloud coordinator)', () => {
-    // The local orchestrator stamps task.startTime/endTime; the Nx Cloud coordinator drives
-    // the lifecycle hooks without them. startTasks captures the start and endTasks falls
-    // back to "now" for the end, so a cloud run still produces (and prints) a report.
-    const a = makeTask('a'); // no startTime/endTime on the task object
-    const b = makeTask('b');
-    const graph = makeGraph([a, b], { b: ['a'] });
-    const s = withEnvironmentVariables(envFor({}), () => {
-      const lc = makeLifeCycle(graph);
-      lc.startCommand(2, 1);
-      const now = jest.spyOn(Date, 'now');
-      now.mockReturnValue(1000);
-      lc.startTasks([a]);
-      now.mockReturnValue(2000);
-      lc.endTasks([{ task: a, status: 'success' }] as unknown as TaskResult[]);
-      now.mockReturnValue(2000);
-      lc.startTasks([b]);
-      now.mockReturnValue(4000);
-      lc.endTasks([{ task: b, status: 'success' }] as unknown as TaskResult[]);
-      now.mockRestore();
-      return lc.getSummary();
-    });
-
-    expect(s).not.toBeNull();
-    expect(s!.runDuration).toBe(3000); // a 1000–2000, b 2000–4000
-    expect(s!.criticalPathDuration).toBe(3000); // a → b chain, no overhead
-  });
-
   it('reports zero overhead when everything runs in parallel', () => {
     const tasks = ['a', 'b', 'c', 'd', 'e'].map((id) =>
       makeTask(id, { start: 0, end: 10 })
