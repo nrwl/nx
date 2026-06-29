@@ -847,14 +847,16 @@ function isCurrentDirReference(folderName: string): boolean {
 }
 
 const INERT_FILE_PATTERN = /^(README|LICEN[CS]E)(\..+)?$/i;
+// Directories that are safe to scaffold over - regenerable, not user source.
+const INERT_DIRS = new Set(['node_modules']);
 
 /**
  * A directory is "functionally empty" when every entry is safe to scaffold
- * over: a dotfile/dotdir (`.git`, `.gitignore`, `.github`, ...) or a README /
- * LICENSE. This matches a freshly created GitHub repo, so
- * `create-nx-workspace .` works in place there. Any real content (e.g.
- * `src/`, `package.json`) makes it non-empty. README/LICENSE are allowed
- * because the generated workspace replaces them.
+ * over: a dotfile/dotdir (`.git`, `.gitignore`, `.github`, ...), a README /
+ * LICENSE, or a regenerable dir like `node_modules`. This matches a freshly
+ * created GitHub repo, so `create-nx-workspace .` works in place there. Any
+ * real content (e.g. `src/`, `package.json`) makes it non-empty.
+ * README/LICENSE are allowed because the generated workspace replaces them.
  *
  * @visibleForTesting
  */
@@ -862,6 +864,7 @@ export function isFunctionallyEmpty(dir: string): boolean {
   return readdirSync(dir, { withFileTypes: true }).every(
     (entry) =>
       entry.name.startsWith('.') ||
+      (entry.isDirectory() && INERT_DIRS.has(entry.name)) ||
       (entry.isFile() && INERT_FILE_PATTERN.test(entry.name))
   );
 }
@@ -936,6 +939,15 @@ export async function determineFolder(
     // it IS the current working directory, so skip the existsSync check and
     // default the workspace name to the directory name.
     if (isCurrentDirReference(rawFolderName)) {
+      // Interactively confirm before scaffolding into the current directory;
+      // non-interactive (CI/AI) proceeds without prompting.
+      if (parsedArgs.interactive && !isCI()) {
+        if (!(await promptCreateInCurrentDir(folderName))) {
+          // Declined - fall back to creating a named subfolder under the cwd.
+          parsedArgs.workingDir = undefined;
+          return promptForFolder(parsedArgs);
+        }
+      }
       parsedArgs.useCurrentDir = true;
       return folderName;
     }

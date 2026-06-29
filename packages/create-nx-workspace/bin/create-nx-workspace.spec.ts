@@ -144,14 +144,18 @@ describe('determineFolder', () => {
     rmSync(tmpDir, { recursive: true });
   });
 
-  it('should return directory basename for "." in interactive mode', async () => {
+  it('should return directory basename for "." in interactive mode after confirm', async () => {
     const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
     process.chdir(tmpDir);
+    (require('enquirer').default.prompt as jest.Mock).mockResolvedValueOnce({
+      useCurrentDir: 'Yes',
+    });
 
     const parsedArgs = makeParsedArgs({ positional: '.', interactive: true });
     const result = await determineFolder(parsedArgs);
 
     expect(result).toBe(basename(tmpDir));
+    expect(parsedArgs.useCurrentDir).toBe(true);
 
     rmSync(tmpDir, { recursive: true });
   });
@@ -246,6 +250,18 @@ describe('isFunctionallyEmpty', () => {
 
   it('should be false for a directory named README/LICENSE (only files are inert)', () => {
     mkdirSync(join(tmpDir, 'README'));
+    expect(isFunctionallyEmpty(tmpDir)).toBe(false);
+  });
+
+  it('should ignore a node_modules directory', () => {
+    mkdirSync(join(tmpDir, 'node_modules'));
+    writeFileSync(join(tmpDir, 'README.md'), '# repo\n');
+    expect(isFunctionallyEmpty(tmpDir)).toBe(true);
+  });
+
+  it('should still be false when node_modules sits next to real source', () => {
+    mkdirSync(join(tmpDir, 'node_modules'));
+    writeFileSync(join(tmpDir, 'package.json'), '{}');
     expect(isFunctionallyEmpty(tmpDir)).toBe(false);
   });
 });
@@ -466,6 +482,31 @@ describe('determineFolder - interactive current directory prompt', () => {
     expect(
       JSON.stringify((enquirer.prompt as jest.Mock).mock.calls[0][0])
     ).not.toContain('current directory');
+
+    rmSync(tmpDir, { recursive: true });
+  });
+
+  it('confirms before scaffolding into the current dir for an explicit "." and falls back to a subfolder on decline', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-test-')));
+    process.chdir(tmpDir);
+    (enquirer.prompt as jest.Mock)
+      .mockResolvedValueOnce({ useCurrentDir: 'No' })
+      .mockResolvedValueOnce({ folderName: 'myorg' });
+
+    const parsedArgs = {
+      _: ['.'],
+      $0: 'create-nx-workspace',
+      name: '',
+      interactive: true,
+    } as any;
+    const result = await determineFolder(parsedArgs);
+
+    expect(result).toBe('myorg');
+    // Declined in-place -> not a current-dir scaffold, and workingDir cleared
+    // so the subfolder lands under the cwd.
+    expect(parsedArgs.useCurrentDir).toBeFalsy();
+    expect(parsedArgs.workingDir).toBeUndefined();
+    expect(enquirer.prompt).toHaveBeenCalledTimes(2);
 
     rmSync(tmpDir, { recursive: true });
   });
