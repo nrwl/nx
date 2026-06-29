@@ -27,6 +27,7 @@ import { createRequire } from 'module';
 import { extname, join } from 'path';
 import { existsSync } from 'fs';
 import { performance } from 'perf_hooks';
+import { GLOBAL_NX_INSTALLATION_DOCS_URL } from '../src/utils/documentation-links';
 // Register the performance observer as early as possible so any
 // `performance.mark` / `measure` anywhere downstream is captured. The module
 // is side-effect only and its heavy deps (analytics, daemon logger) are
@@ -328,7 +329,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx'
+      `For more information, see ${GLOBAL_NX_INSTALLATION_DOCS_URL}`
     );
     output.warn({
       title: `It's time to update Nx 🎉`,
