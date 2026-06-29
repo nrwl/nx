@@ -669,7 +669,36 @@ export function stringifyPnpmLockfile(
     packages: sortObjectByKeys(snapshots),
   };
 
+  stripStandaloneLockfileConfig(output);
+
   return stringifyToPnpmYaml(output);
+}
+
+/**
+ * Removes settings a standalone, pruned lockfile cannot satisfy on its own.
+ *
+ * A pruned build output ships only `package.json` and the lockfile. The
+ * `@nx/js:prune-lockfile` executor may also emit a `pnpm-workspace.yaml`, but
+ * one that declares only the copied workspace modules (never `overrides`,
+ * `settings`, or `catalogs`). pnpm 11 no longer reads the `pnpm` field from
+ * `package.json` either, so the lockfile's stored config has no backing source
+ * in the output. pnpm validates these settings against that (now absent) config
+ * and aborts `pnpm install --frozen-lockfile` with
+ * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their effect is already baked into the
+ * resolved snapshots, so removing them keeps the install identical.
+ *
+ * `patchedDependencies` is deliberately kept: patches are applied at install
+ * time and snapshot keys reference their `patch_hash`, so dropping the
+ * declaration would leave dangling references. Pruned output therefore does not
+ * carry patches (the patch files cannot be shipped either).
+ */
+function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
+  delete lockfile.overrides;
+  delete lockfile.packageExtensionsChecksum;
+  delete lockfile.ignoredOptionalDependencies;
+  delete lockfile.pnpmfileChecksum;
+  delete lockfile.settings;
+  delete (lockfile as { catalogs?: unknown }).catalogs;
 }
 
 function mapSnapshots(

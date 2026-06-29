@@ -1085,6 +1085,55 @@ describe('pnpm LockFile utility', () => {
 
         expect(result).not.toContain('catalogs');
       });
+
+      it('should strip standalone-incompatible config from the pruned lockfile but keep patches', () => {
+        const typescriptPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json.fixture'
+          )
+        );
+        // The v9 fixture already carries a `settings:` block; add the remaining
+        // config pnpm validates on a frozen install, plus a patch (kept).
+        const lockFileWithConfig = lockFile.replace(
+          'lockfileVersion:',
+          [
+            'overrides:',
+            '  foo: 1.0.0',
+            'packageExtensionsChecksum: sha256-abc',
+            'pnpmfileChecksum: sha256-def',
+            'ignoredOptionalDependencies:',
+            '  - fsevents',
+            'patchedDependencies:',
+            '  fsevents:',
+            '    hash: sha256-patch',
+            '    path: patches/fsevents.patch',
+            '',
+            'lockfileVersion:',
+          ].join('\n')
+        );
+
+        // Guard against a vacuous `settings:` assertion: the block comes from
+        // the fixture, not the injected config above.
+        expect(lockFileWithConfig).toMatch(/^settings:/m);
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithConfig,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        // Validated against config the standalone output lacks -> stripped.
+        expect(result).not.toMatch(/^overrides:/m);
+        expect(result).not.toMatch(/^packageExtensionsChecksum:/m);
+        expect(result).not.toMatch(/^pnpmfileChecksum:/m);
+        expect(result).not.toMatch(/^ignoredOptionalDependencies:/m);
+        expect(result).not.toMatch(/^settings:/m);
+        // Snapshot keys reference the patch hash -> must be kept.
+        expect(result).toMatch(/^patchedDependencies:/m);
+      });
     });
   });
 
@@ -1714,7 +1763,15 @@ importers:
         packageJson,
         '/virtual'
       );
-      expect(result).toEqual(lockFile);
+      // Nothing is pruned here, so the output matches the input except for the
+      // settings block, which is stripped from standalone output.
+      const expected = lockFile.replace(
+        'settings:\n  autoInstallPeers: true\n  excludeLinksFromLockfile: false\n\n',
+        ''
+      );
+      // Guard against the replace silently no-op'ing if the fixture changes.
+      expect(expected).not.toEqual(lockFile);
+      expect(result).toEqual(expected);
     });
   });
 
