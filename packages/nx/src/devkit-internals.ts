@@ -164,7 +164,6 @@ export {
 export {
   createPackageJson,
   findProjectsNpmDependencies,
-  stripPrunedLockfilePnpmConfig,
 } from './plugins/js/package-json/create-package-json';
 export {
   TargetProjectLocator,
