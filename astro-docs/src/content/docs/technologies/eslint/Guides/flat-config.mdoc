@@ -167,6 +167,30 @@ For additional details, head over to [ESLint's official blog post](https://eslin
 
 Since version 16.8.0, Nx supports the usage of flat config in the [@nx/eslint:lint](/docs/technologies/eslint/executors#lint) executor and `@nx/*` generators, and provides an automated config conversion from `.eslintrc.json` config files.
 
+## Nx flat config presets
+
+The `@nx/eslint-plugin` package exports reusable flat config presets from `nxPlugin.configs`. Generated Nx workspaces commonly compose them like this:
+
+```js
+const nxPlugin = require('@nx/eslint-plugin');
+
+module.exports = [
+  ...nxPlugin.configs['flat/base'],
+  ...nxPlugin.configs['flat/typescript'],
+  ...nxPlugin.configs['flat/javascript'],
+];
+```
+
+| Preset            | Purpose                                                                                                                                                                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `flat/base`       | Registers the `@nx` ESLint plugin and ignores Nx's local `.nx` workspace data. Include this before adding Nx rules such as `@nx/enforce-module-boundaries`.                                                                                  |
+| `flat/typescript` | Applies to TypeScript files (`.ts`, `.tsx`, `.cts`, and `.mts`). It combines ESLint and `typescript-eslint` recommended rules, configures the TypeScript parser with the workspace root, and keeps Nx's default TypeScript rule adjustments. |
+| `flat/javascript` | Applies to JavaScript files (`.js`, `.jsx`, `.cjs`, and `.mjs`). It combines ESLint and `typescript-eslint` recommended rules, configures browser and Node globals, and keeps Nx's default JavaScript rule adjustments.                      |
+
+The TypeScript and JavaScript presets are intentionally workspace-wide and avoid framework-specific rules. Framework presets such as React and Angular are layered in by the relevant Nx generators when those projects need them.
+
+If `prettier` and `eslint-config-prettier` are installed, the TypeScript and JavaScript presets include `eslint-config-prettier` last so it can turn off conflicting formatting rules.
+
 ## Converting workspace from .eslintrc.json to flat config
 
 To convert workspace ESLint configurations from `.eslintrc.json` to flat config you need to run:
