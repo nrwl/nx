@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
-    "importHelpers": true
+    "importHelpers": true,
+    "strict": false,
+    "noUncheckedSideEffectImports": false
   }
 }

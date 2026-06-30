@@ -5,7 +5,8 @@
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
     "strict": true,
-    "lib": ["DOM", "es2022"]
+    "lib": ["DOM", "es2022"],
+    "ignoreDeprecations": "6.0"
   },
   "files": [],
   "include": [],
