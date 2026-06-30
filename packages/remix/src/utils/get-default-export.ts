@@ -4,9 +4,13 @@ import {
   isFunctionDeclaration,
   ScriptTarget,
   SyntaxKind,
+  type FunctionDeclaration,
 } from 'typescript';
 
-export function getDefaultExport(tree: Tree, path: string) {
+export function getDefaultExport(
+  tree: Tree,
+  path: string
+): FunctionDeclaration | undefined {
   const contents = tree.read(path, 'utf-8');
 
   const sourceFile = createSourceFile(path, contents, ScriptTarget.ESNext);
