@@ -6,6 +6,7 @@ import {
   readJsonFile,
   workspaceRoot,
 } from '@nx/devkit';
+import { getCatalogManager } from '@nx/devkit/internal';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
@@ -20,6 +21,57 @@ import { lstatSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+
+type CopiedManifest = {
+  dependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
+  [key: string]: unknown;
+};
+
+const DEPENDENCY_SECTIONS = [
+  'dependencies',
+  'optionalDependencies',
+  'devDependencies',
+  'peerDependencies',
+] as const;
+
+// Resolve `catalog:` references in a copied module manifest to the version the
+// workspace pinned. Returns whether anything changed.
+function resolveCatalogReferences(
+  packageJson: CopiedManifest,
+  manager: ReturnType<typeof getCatalogManager>
+): boolean {
+  if (!manager) {
+    return false;
+  }
+  let modified = false;
+  for (const section of DEPENDENCY_SECTIONS) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const [name, version] of Object.entries(deps)) {
+      if (!manager.isCatalogReference(version)) {
+        continue;
+      }
+      const resolved = manager.resolveCatalogReference(
+        workspaceRoot,
+        name,
+        version
+      );
+      if (!resolved) {
+        throw new Error(
+          `Could not resolve catalog reference for package ${name}@${version}.`
+        );
+      }
+      deps[name] = resolved;
+      modified = true;
+    }
+  }
+  return modified;
+}
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
@@ -46,6 +98,7 @@ function handleWorkspaceModules(
   }
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
+  const catalogManager = getCatalogManager(workspaceRoot);
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -90,7 +143,7 @@ function handleWorkspaceModules(
 
     // Read the copied module's package.json to process its dependencies
     const copiedPackageJsonPath = join(newWorkspaceModulePath, 'package.json');
-    let copiedPackageJson: { dependencies?: Record<string, string> };
+    let copiedPackageJson: CopiedManifest;
     try {
       copiedPackageJson = JSON.parse(
         readFileSync(copiedPackageJsonPath, 'utf-8')
@@ -100,30 +153,38 @@ function handleWorkspaceModules(
       return;
     }
 
-    // Process and update dependencies
-    if (copiedPackageJson.dependencies) {
-      let packageJsonModified = false;
+    // The standalone dist ships no catalog definition, so resolve any
+    // `catalog:` references to the version the workspace pinned.
+    let packageJsonModified = resolveCatalogReferences(
+      copiedPackageJson,
+      catalogManager
+    );
 
-      for (const [depName, depVersion] of Object.entries(
-        copiedPackageJson.dependencies
-      )) {
+    // Rewrite sibling workspace-module deps to file: paths and recurse. Cover
+    // both prod-installed sections - the pruned lockfile emits directory
+    // packages for workspace modules in either, so leaving one un-rewritten
+    // would leave the manifest specifier out of sync with the lockfile.
+    for (const section of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = copiedPackageJson[section];
+      if (!deps) {
+        continue;
+      }
+      for (const depName of Object.keys(deps)) {
         if (workspaceModules.has(depName)) {
           const relativePath = calculateRelativePath(pkgName, depName);
-          copiedPackageJson.dependencies[depName] = `file:${relativePath}`;
+          deps[depName] = `file:${relativePath}`;
           packageJsonModified = true;
           processModule(depName);
         }
       }
+    }
 
-      if (packageJsonModified) {
-        writeFileSync(
-          copiedPackageJsonPath,
-          JSON.stringify(copiedPackageJson, null, 2)
-        );
-        logger.verbose(
-          `Updated package.json for ${pkgName} with relative workspace module paths.`
-        );
-      }
+    if (packageJsonModified) {
+      writeFileSync(
+        copiedPackageJsonPath,
+        JSON.stringify(copiedPackageJson, null, 2)
+      );
+      logger.verbose(`Updated package.json for ${pkgName}.`);
     }
   }
 

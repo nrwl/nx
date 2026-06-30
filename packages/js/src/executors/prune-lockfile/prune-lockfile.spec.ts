@@ -4,6 +4,8 @@ import { getCatalogManager } from '@nx/devkit/internal';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import { type PackageJson } from 'nx/src/utils/package-json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';
@@ -161,6 +163,77 @@ describe('pruneLockfileExecutor - allowScripts', () => {
     await runExecutor();
 
     expect(readGeneratedPackageJson().allowScripts).toBeUndefined();
+  });
+});
+
+describe('pruneLockfileExecutor - workspace module dependencies', () => {
+  const mockGetWorkspacePackages =
+    getWorkspacePackagesFromGraph as jest.MockedFunction<
+      typeof getWorkspacePackagesFromGraph
+    >;
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('prune-lockfile');
+    mockWorkspaceRoot = tempFs.tempDir;
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+    jest.clearAllMocks();
+  });
+
+  it('rewrites only graph workspace packages, leaving non-workspace file: deps alone', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: {
+          '@myorg/lib': 'workspace:*',
+          vendored: 'file:./vendor/vendored.tgz',
+          lodash: '^4.17.21',
+        },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    // Only @myorg/lib is an actual workspace project in the graph.
+    mockGetWorkspacePackages.mockReturnValueOnce(
+      new Map([['@myorg/lib', { data: { root: 'libs/lib' } } as any]])
+    );
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    expect(generated.dependencies).toEqual({
+      // a real workspace project -> rewritten to its copied directory
+      '@myorg/lib': 'file:./workspace_modules/@myorg/lib',
+      // a non-workspace local file: dep -> left untouched
+      vendored: 'file:./vendor/vendored.tgz',
+      // a registry dep -> left untouched
+      lodash: '^4.17.21',
+    });
   });
 });
 
