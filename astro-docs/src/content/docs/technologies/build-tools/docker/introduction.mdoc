@@ -38,6 +38,71 @@ The `@nx/docker` plugin will create a task for any project that has a Dockerfile
 
 To view inferred tasks for a project, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-project` in the command line.
 
+### Create a Dockerfile for a Node project
+
+The `@nx/docker` plugin infers tasks from an existing `Dockerfile`. It does not generate the file itself. For Node projects, use the `@nx/node` Docker generator to create a Dockerfile that works with the inferred Docker targets:
+
+```shell
+nx g @nx/node:setup-docker --project=my-app
+```
+
+You can also create a new Node app with a Dockerfile:
+
+```shell
+nx g @nx/node:app apps/api --docker
+```
+
+The generated Dockerfile copies the project's build output into the image and installs dependencies from the pruned package files produced by the `prune` target.
+
+{% tabs syncKey="package-manager" %}
+{% tabitem label="npm" %}
+
+```dockerfile
+# apps/api/Dockerfile
+FROM docker.io/node:lts-alpine
+
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+WORKDIR /app
+
+COPY dist .
+
+# You can remove this install step if you build with the `--bundle` option.
+# The bundled output includes external dependencies.
+RUN npm --omit=dev -f install
+
+CMD ["node", "main.js"]
+```
+
+{% /tabitem %}
+{% tabitem label="pnpm" %}
+
+```dockerfile
+# apps/api/Dockerfile
+FROM docker.io/node:lts-alpine
+
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+RUN corepack enable
+
+WORKDIR /app
+
+COPY dist .
+
+# You can remove this install step if you build with the `--bundle` option.
+# The bundled output includes external dependencies.
+RUN pnpm install
+
+CMD ["node", "main.js"]
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+Yarn workspaces follow the pnpm pattern with Corepack enabled and `yarn install` as the install command. For the full Node pruning workflow, see [Pruning Projects for Deployment](/docs/technologies/node/guides/deploying-node-projects#use-pruned-output-in-docker).
+
 ### @nx/docker configuration
 
 The `@nx/docker` plugin is configured in the `plugins` array in `nx.json`.
