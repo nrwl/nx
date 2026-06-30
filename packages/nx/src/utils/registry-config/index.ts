@@ -69,6 +69,13 @@ function resolveSpawnRegistryEnv(
         : getYarnClassicSpawnRegistryEnv(packageName, root);
     case 'bun':
       return getBunSpawnRegistryEnv(packageName, root, packageManagerVersion);
+    default: {
+      // A new PackageManager member fails typecheck here until it is classified
+      // above; getNpmSpawnRegistryEnv catches the throw and falls open to no
+      // bridging.
+      const _exhaustive: never = packageManager;
+      throw new Error(`Unhandled package manager: ${_exhaustive}`);
+    }
   }
 }
 
