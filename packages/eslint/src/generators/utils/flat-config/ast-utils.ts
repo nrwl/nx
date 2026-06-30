@@ -27,7 +27,7 @@ export function removeOverridesFromLintConfig(content: string): string {
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
 
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
@@ -87,7 +87,7 @@ export function addPatternsToFlatConfigIgnoresBlock(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -131,7 +131,7 @@ export function hasFlatConfigIgnoresBlock(content: string): boolean {
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -180,7 +180,7 @@ export function hasOverride(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -372,7 +372,7 @@ export function replaceOverride(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
   if (!exportsArray) {
@@ -490,7 +490,7 @@ export function addImportToFlatConfig(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
 
   if (format === 'mjs') {
     return addESMImportToFlatConfig(source, printer, content, variable, imp);
@@ -783,7 +783,7 @@ export function removeImportFromFlatConfig(
     ts.ScriptKind.JS
   );
 
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   if (format === 'mjs') {
     return removeImportFromFlatConfigESM(source, content, variable, imp);
   } else {
@@ -1066,7 +1066,7 @@ export function removePlugin(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
   if (format === 'mjs') {
     ts.forEachChild(source, function analyze(node) {
@@ -1229,7 +1229,7 @@ export function removeCompatExtends(
     ts.ScriptKind.JS
   );
   const changes: StringChange[] = [];
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const exportsArray =
     format === 'mjs' ? findExportDefault(source) : findModuleExports(source);
 
@@ -1298,7 +1298,7 @@ export function removePredefinedConfigs(
     true,
     ts.ScriptKind.JS
   );
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   const changes: StringChange[] = [];
   let removeImport = true;
   const exportsArray =
@@ -1371,7 +1371,14 @@ export function addPluginsToExportsBlock(
  */
 export function addFlatCompatToFlatConfig(content: string) {
   const result = addImportToFlatConfig(content, 'js', '@eslint/js');
-  const format = content.includes('export default') ? 'mjs' : 'cjs';
+  const source = ts.createSourceFile(
+    '',
+    content,
+    ts.ScriptTarget.Latest,
+    true,
+    ts.ScriptKind.JS
+  );
+  const format = isEsmExport(source) ? 'mjs' : 'cjs';
   if (result.includes('const compat = new FlatCompat')) {
     return result;
   }
