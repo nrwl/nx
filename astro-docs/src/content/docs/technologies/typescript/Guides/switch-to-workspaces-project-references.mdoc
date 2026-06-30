@@ -156,6 +156,12 @@ Run your package manager's install command (e.g. `npm install`) **before** delet
 Unlike npm and yarn, pnpm only symlinks workspace packages that are listed as dependencies in a project's `package.json`. Each project must declare its workspace dependencies explicitly. As a quick workaround, you can add all workspace packages to the root `package.json` under `devDependencies`, but the recommended long-term approach is to list them in each project's own `package.json`.
 {% /aside %}
 
+{% aside type="caution" title="Angular build tooling limitations" %}
+Angular's build tooling does not fully support TypeScript project references in every setup yet, especially libraries that expose multiple entrypoints. This is tracked upstream in [angular/angular#37276](https://github.com/angular/angular/issues/37276).
+
+If an Angular app starts failing during Vite or esbuild dependency optimization with errors such as `Could not resolve "./..."` after you remove `compilerOptions.paths`, keep path aliases for the affected packages as a pragmatic workaround until Angular's upstream support covers your case. You can still use workspace linking for the rest of the repository.
+{% /aside %}
+
 Copy the `paths` entries before deleting them. You'll need them as a reference for creating project `package.json` files and `references` in `tsconfig.json`.
 
 {% tabs %}
