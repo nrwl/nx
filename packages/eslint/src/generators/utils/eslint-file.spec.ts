@@ -1,4 +1,4 @@
-import { readJson, updateJson, type Tree } from '@nx/devkit';
+import { logger, readJson, updateJson, type Tree } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
@@ -854,6 +854,20 @@ module.exports = [
       const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
       expect(content).not.toContain('projectService');
       expect(content).toContain("project: ['./tsconfig.json']");
+    });
+
+    it('warns and leaves the config untouched when it is not a plain array export', () => {
+      const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+      const original = `export default tseslint.config({ files: ['**/*.ts'], rules: {} });\n`;
+      tree.write('libs/test/eslint.config.mjs', original);
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      expect(tree.read('libs/test/eslint.config.mjs', 'utf-8')).toBe(original);
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not enable typed linting')
+      );
+      warn.mockRestore();
     });
   });
 });

@@ -2,6 +2,7 @@ import {
   addDependenciesToPackageJson,
   type GeneratorCallback,
   joinPathFragments,
+  logger,
   names,
   offsetFromRoot,
   readJson,
@@ -367,7 +368,18 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
   // inside a `.cjs` config.
   const format = determineEslintConfigFormat(content);
   const block = generateTypedLintingFlatConfigOverride(format);
-  tree.write(fileName, addBlockToFlatConfigExport(content, block));
+  const updated = addBlockToFlatConfigExport(content, block);
+  if (updated === content) {
+    // `addBlockToFlatConfigExport` only edits a plain array export
+    // (`export default [...]` / `module.exports = [...]`). A wrapper config such
+    // as `export default tseslint.config(...)` is left untouched, so warn rather
+    // than silently dropping the request.
+    logger.warn(
+      `Could not enable typed linting in "${fileName}" because its ESLint flat config is not a plain array export. Add \`languageOptions: { parserOptions: { projectService: true } }\` to enable typed linting.`
+    );
+    return;
+  }
+  tree.write(fileName, updated);
 }
 
 export function addOverrideToLintConfig(
