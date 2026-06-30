@@ -650,6 +650,10 @@ export function shouldStreamOutput(
   return false;
 }
 
+export function isCacheableTask(task: Task): boolean {
+  return task.cache;
+}
+
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (
