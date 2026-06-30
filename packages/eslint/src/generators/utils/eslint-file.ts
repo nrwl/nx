@@ -231,8 +231,9 @@ export type TypedLintingShape = 'project-service' | 'parser-options-project';
  * configured and which shape it uses, so callers can preserve the user's
  * existing configuration when adding new overrides.
  *
- * - `'project-service'`: modern typescript-eslint v8 shape using
- *   `parserOptions.projectService` (with `tsconfigRootDir`).
+ * - `'project-service'`: modern typescript-eslint v8 shape with an explicit
+ *   `parserOptions.projectService` (`true`, `false`, or an object). A `false`
+ *   opt-out still counts so callers preserve it instead of overwriting it.
  * - `'parser-options-project'`: legacy shape using `parserOptions.project`.
  * - `null`: no typed-linting parser options detected.
  */
@@ -243,7 +244,9 @@ export function detectTypedLintingShape(
   // isn't mistaken for a real setting.
   const source = stripComments(content);
   // Tolerate both JS/TS source (`projectService:`) and JSON (`"projectService":`).
-  if (/\bprojectService["']?\s*:\s*(?:true|\{)/.test(source)) {
+  // An explicit `false` counts too, so we preserve a user's opt-out instead of
+  // appending a conflicting `projectService: true`.
+  if (/\bprojectService["']?\s*:\s*(?:true|false|\{)/.test(source)) {
     return 'project-service';
   }
   if (parserOptionsHasProject(source)) {
@@ -284,9 +287,24 @@ function extractBalancedBraces(
 ): string | null {
   let depth = 0;
   for (let i = openIndex; i < content.length; i++) {
-    if (content[i] === '{') {
+    const ch = content[i];
+    // Skip string literals so braces inside a value (e.g. a glob like
+    // `'packages/{app}/tsconfig.json'`) aren't counted toward the depth.
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++;
+      while (i < content.length) {
+        if (content[i] === '\\') {
+          i++;
+        } else if (content[i] === ch) {
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (ch === '{') {
       depth++;
-    } else if (content[i] === '}' && --depth === 0) {
+    } else if (ch === '}' && --depth === 0) {
       return content.slice(openIndex, i + 1);
     }
   }
