@@ -239,7 +239,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
   });
 
-  it('applies all three pins on a chain root carrying a deprecated option', async () => {
+  it('applies all pins on a chain root carrying a deprecated option', async () => {
     tree.write(
       'tsconfig.json',
       JSON.stringify({ compilerOptions: { moduleResolution: 'node' } }, null, 2)
@@ -251,6 +251,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     expect(json.compilerOptions.strict).toBe(false);
     expect(json.compilerOptions.noUncheckedSideEffectImports).toBe(false);
+    expect(json.compilerOptions.types).toEqual(['*']);
   });
 
   describe('strict-pin pass', () => {
@@ -464,6 +465,90 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       const json = readJson(tree, 'tsconfig.json');
       expect(json.compilerOptions.strict).toBe(false);
       expect(json.compilerOptions.noUncheckedSideEffectImports).toBe(false);
+    });
+  });
+
+  describe('types-pin pass', () => {
+    it('adds types ["*"] to a chain root without an explicit types key', async () => {
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          {
+            compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.base.json');
+      expect(json.compilerOptions.types).toEqual(['*']);
+    });
+
+    it('does not touch types on a file that has "extends"', async () => {
+      tree.write(
+        'tsconfig.app.json',
+        JSON.stringify(
+          { extends: './tsconfig.json', compilerOptions: { module: 'esnext' } },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.app.json');
+      expect(json.compilerOptions.types).toBeUndefined();
+    });
+
+    it('does not overwrite an explicit types list', async () => {
+      tree.write(
+        'tsconfig.json',
+        JSON.stringify(
+          { compilerOptions: { types: ['node'], module: 'esnext' } },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.json');
+      expect(json.compilerOptions.types).toEqual(['node']);
+    });
+
+    it('does not overwrite an explicit empty types array (deliberate opt-out)', async () => {
+      tree.write(
+        'tsconfig.json',
+        JSON.stringify(
+          { compilerOptions: { types: [], module: 'esnext' } },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.json');
+      expect(json.compilerOptions.types).toEqual([]);
+    });
+
+    it('skips solution-style containers with files:[] and no include', async () => {
+      tree.write(
+        'tsconfig.json',
+        JSON.stringify(
+          { files: [], references: [{ path: './packages/a' }] },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.json');
+      expect(json.compilerOptions).toBeUndefined();
     });
   });
 });
