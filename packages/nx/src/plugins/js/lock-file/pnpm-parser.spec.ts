@@ -3024,6 +3024,89 @@ snapshots:
         /'@myorg\/lib-b@file:workspace_modules\/@myorg\/lib-b':\s+dependencies:\s+lodash: 4\.17\.21/
       );
     });
+
+    it('should emit a directory package for a workspace module in the app optionalDependencies', () => {
+      // The app itself lists @myorg/lib-a under optionalDependencies. The root
+      // importer must reference it as a file: directory package under the same
+      // section; otherwise pnpm install --frozen-lockfile fails on the
+      // manifest/lockfile mismatch and copy-workspace-modules never ships it.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    optionalDependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        optionalDependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // lib-a is emitted as a directory package...
+      expect(result).toContain(
+        `'@myorg/lib-a@file:workspace_modules/@myorg/lib-a':`
+      );
+      // ...referenced from the root importer under optionalDependencies via file:.
+      expect(result).toMatch(
+        /optionalDependencies:\s+'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: file:workspace_modules\/@myorg\/lib-a/
+      );
+      // lib-a still carries its own npm dep in its snapshot closure.
+      expect(result).toMatch(
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+lodash: 4\.17\.21/
+      );
+    });
   });
 
   describe('missing .modules.yaml', () => {

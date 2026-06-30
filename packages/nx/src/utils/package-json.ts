@@ -717,3 +717,26 @@ function generatePackageManagerFiles(
       break;
   }
 }
+
+/**
+ * Drop the pnpm config fields (`overrides`, `ignoredOptionalDependencies`,
+ * `packageExtensions`) a pruned standalone lockfile already resolves into its
+ * snapshots, then drop an emptied `pnpm` block. Re-declaring them next to a
+ * pruned lockfile makes pnpm <=10 fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+ * Shared by every prune path that ships a manifest beside a generated lockfile.
+ *
+ * Counterpart to `stripStandaloneLockfileConfig` in the pnpm lock-file parser,
+ * which strips the matching fields from the generated lockfile; keep the two in
+ * sync when pnpm adds config fields.
+ */
+export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
+  if (!packageJson.pnpm) {
+    return;
+  }
+  delete packageJson.pnpm.overrides;
+  delete packageJson.pnpm.ignoredOptionalDependencies;
+  delete packageJson.pnpm.packageExtensions;
+  if (Object.keys(packageJson.pnpm).length === 0) {
+    delete packageJson.pnpm;
+  }
+}

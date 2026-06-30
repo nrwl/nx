@@ -582,12 +582,14 @@ export function stringifyPnpmLockfile(
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const { snapshot: rootSnapshot, importers: requiredImporters } =
     mapRootSnapshot(
       packageJson,
       importers,
       packages,
       graph,
+      workspaceModules,
       +lockfileVersion,
       workspaceRoot
     );
@@ -596,8 +598,6 @@ export function stringifyPnpmLockfile(
     graph.externalNodes,
     +lockfileVersion
   );
-
-  const workspaceModules = getWorkspacePackagesFromGraph(graph);
 
   // Walk transitive workspace deps so every module copy-workspace-modules
   // writes to disk gets a matching directory-package entry. Without this, pnpm
@@ -687,6 +687,10 @@ export function stringifyPnpmLockfile(
  * `pnpm install --frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their
  * effect is already baked into the resolved snapshots, so removing them keeps the
  * install identical.
+ *
+ * The manifest-side counterpart is `stripPrunedLockfilePnpmConfig` in
+ * `utils/package-json`, which removes the matching `pnpm.*` fields from the
+ * emitted `package.json`; keep the two in sync when pnpm adds config fields.
  *
  * `patchedDependencies` is deliberately kept: snapshot keys reference its
  * `patch_hash`, so dropping the declaration would leave dangling references. The
@@ -843,10 +847,10 @@ function mapRootSnapshot(
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
+  workspaceModules: ReturnType<typeof getWorkspacePackagesFromGraph>,
   lockfileVersion: number,
   workspaceRoot: string
 ) {
-  const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const catalogManager = getCatalogManager(workspaceRoot);
   const snapshot: ProjectSnapshot = { specifiers: {} };
   const importers: Record<string, string> = {};
@@ -874,12 +878,21 @@ function mapRootSnapshot(
         }
 
         if (workspaceModules.has(packageName)) {
+          // The app may declare the module under dependencies or
+          // optionalDependencies; route the lockfile entry into the matching
+          // section so the importer snapshot stays in sync with the manifest.
+          const targetSection =
+            depType === 'optionalDependencies'
+              ? 'optionalDependencies'
+              : 'dependencies';
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
             const workspaceDep =
-              importerSnapshot.dependencies &&
-              importerSnapshot.dependencies[packageName];
+              (importerSnapshot.dependencies &&
+                importerSnapshot.dependencies[packageName]) ||
+              (importerSnapshot.optionalDependencies &&
+                importerSnapshot.optionalDependencies[packageName]);
             if (workspaceDep) {
               const workspaceDepImporterPath = workspaceDep.replace(
                 'link:',
@@ -894,8 +907,8 @@ function mapRootSnapshot(
               // the directory package key's ref (no leading `./`).
               snapshot.specifiers[packageName] =
                 `file:./workspace_modules/${packageName}`;
-              snapshot.dependencies = snapshot.dependencies || {};
-              snapshot.dependencies[packageName] =
+              snapshot[targetSection] = snapshot[targetSection] || {};
+              snapshot[targetSection][packageName] =
                 `file:workspace_modules/${packageName}`;
               break;
             }

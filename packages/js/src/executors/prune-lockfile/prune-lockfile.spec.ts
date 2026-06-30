@@ -235,6 +235,55 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
       lodash: '^4.17.21',
     });
   });
+
+  it('rewrites workspace packages declared under optionalDependencies', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        optionalDependencies: { '@myorg/optional-lib': 'workspace:*' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValueOnce(
+      new Map([
+        ['@myorg/optional-lib', { data: { root: 'libs/optional-lib' } } as any],
+      ])
+    );
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    // a workspace project under optionalDependencies -> rewritten to its copy
+    expect(generated.optionalDependencies).toEqual({
+      '@myorg/optional-lib': 'file:./workspace_modules/@myorg/optional-lib',
+    });
+    // a registry dep in dependencies is left untouched
+    expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
+  });
 });
 
 describe('resolveCatalogReferences', () => {
