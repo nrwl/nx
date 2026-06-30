@@ -152,7 +152,7 @@ catalogs:
     ts-node: '10.9.1'
     tsconfig-paths: '^4.1.2'
     tslib: '^2.3.0'
-    typescript: 'npm:@typescript/typescript6@^6.0.0'
+    typescript: '~6.0.3'
   swc:
     '@swc/core': '^1.15.8'
     '@swc/helpers': '0.5.18'

@@ -306,7 +306,7 @@
     "tsx": "^4.20.5",
     "typedoc": "0.25.12",
     "typedoc-plugin-markdown": "3.17.1",
-    "typescript": "catalog:typescript",
+    "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-7": "npm:typescript@7.0.1-rc",
     "typescript-eslint": "^8.58.2",
     "unified": "^11.0.4",
