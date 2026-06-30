@@ -59,6 +59,7 @@ export async function addLinterToCyProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
+  const enableTypedLinting = isTypedLintingEnabled(options);
   if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
@@ -66,7 +67,7 @@ export async function addLinterToCyProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
@@ -99,7 +100,8 @@ export async function addLinterToCyProject(
     isEslintConfigSupported(tree)
   ) {
     const overrides = [];
-    if (useFlatConfig(tree)) {
+    const isFlatConfig = useFlatConfig(tree);
+    if (isFlatConfig) {
       addPredefinedConfigToFlatLintConfig(
         tree,
         projectConfig.root,
@@ -144,14 +146,13 @@ export async function addLinterToCyProject(
     // `parserOptions.projectService`, so we don't emit `parserOptions.project`
     // here. For legacy `.eslintrc` configs, fall back to the typescript-eslint
     // v7 shape that the legacy stack supports.
-    const enableTypedLinting = isTypedLintingEnabled(options);
     const legacyParserOptions =
-      !useFlatConfig(tree) && enableTypedLinting
+      !isFlatConfig && enableTypedLinting
         ? { project: `${projectConfig.root}/tsconfig.*?.json` }
         : undefined;
     if (options.overwriteExisting) {
       overrides.unshift({
-        files: useFlatConfig(tree)
+        files: isFlatConfig
           ? // For flat configs we don't need to specify the files
             undefined
           : ['*.ts', '*.tsx', '*.js', '*.jsx'],
@@ -159,15 +160,9 @@ export async function addLinterToCyProject(
         rules: {},
       });
       replaceOverridesInLintConfig(tree, projectConfig.root, overrides);
-      // `replaceOverridesInLintConfig` strips all file-scoped overrides in flat
-      // configs, including the typed-linting block emitted by
-      // `lintProjectGenerator`. Re-add it when typed linting is enabled.
-      if (useFlatConfig(tree) && enableTypedLinting) {
-        addTypedLintingToFlatConfig(tree, projectConfig.root);
-      }
     } else {
       overrides.unshift({
-        files: useFlatConfig(tree)
+        files: isFlatConfig
           ? // For flat configs we don't need to specify the files
             undefined
           : [
@@ -180,12 +175,13 @@ export async function addLinterToCyProject(
       overrides.forEach((override) =>
         addOverrideToLintConfig(tree, projectConfig.root, override)
       );
-      // When cypress is added to an existing eslint config (lintProjectGenerator
-      // didn't run because the file already existed), the projectService block
-      // isn't there yet, so add it ourselves.
-      if (useFlatConfig(tree) && enableTypedLinting) {
-        addTypedLintingToFlatConfig(tree, projectConfig.root);
-      }
+    }
+
+    // `lintProjectGenerator` only sets up the projectService block when it
+    // creates the config, and `replaceOverridesInLintConfig` strips it. For a
+    // flat config, re-add it here when typed linting is enabled.
+    if (isFlatConfig && enableTypedLinting) {
+      addTypedLintingToFlatConfig(tree, projectConfig.root);
     }
   }
 

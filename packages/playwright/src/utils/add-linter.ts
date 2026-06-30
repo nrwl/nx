@@ -51,6 +51,7 @@ export async function addLinterToPlaywrightProject(
   const projectConfig = readProjectConfiguration(tree, options.project);
 
   const eslintFile = findEslintFile(tree, projectConfig.root);
+  const enableTypedLinting = isTypedLintingEnabled(options);
   if (!eslintFile) {
     tasks.push(
       await lintProjectGenerator(tree, {
@@ -58,7 +59,7 @@ export async function addLinterToPlaywrightProject(
         linter: options.linter,
         skipFormat: true,
         tsConfigPaths: [joinPathFragments(projectConfig.root, 'tsconfig.json')],
-        enableTypedLinting: isTypedLintingEnabled(options),
+        enableTypedLinting,
         skipPackageJson: options.skipPackageJson,
         rootProject: options.rootProject,
         addPlugin: options.addPlugin,
@@ -102,10 +103,11 @@ export async function addLinterToPlaywrightProject(
         files: ['*.ts', '*.js'],
         rules: {},
       });
-      // `lintProjectGenerator` only runs when the project has no ESLint config,
-      // so an existing flat config never received the projectService block. Emit
-      // it here when typed linting is requested (idempotent if already present).
-      if (isTypedLintingEnabled(options)) {
+      // `lintProjectGenerator` only runs when the project has no ESLint config
+      // (it already emits the projectService block in that case). For an
+      // existing flat config it didn't run, so emit the block here when typed
+      // linting is requested.
+      if (eslintFile && enableTypedLinting) {
         addTypedLintingToFlatConfig(tree, projectConfig.root);
       }
     } else {
@@ -125,7 +127,7 @@ export async function addLinterToPlaywrightProject(
         // Only emit `parserOptions.project` here on the legacy `.eslintrc`
         // stack. Flat configs use `parserOptions.projectService` emitted by
         // `lintProjectGenerator`.
-        parserOptions: isTypedLintingEnabled(options)
+        parserOptions: enableTypedLinting
           ? { project: `${projectConfig.root}/tsconfig.*?.json` }
           : undefined,
         rules: {},

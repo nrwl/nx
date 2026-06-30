@@ -861,6 +861,16 @@ function removeImportFromFlatConfigCJS(
 }
 
 /**
+ * Whether a flat config uses an ESM `export default` (vs CJS `module.exports`).
+ * AST-based so a commented-out `export default` in a CJS file isn't misdetected.
+ */
+export function isEsmExport(source: ts.SourceFile): boolean {
+  return source.statements.some(
+    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
+  );
+}
+
+/**
  * Injects new ts.expression to the end of the module.exports or export default array.
  */
 export function addBlockToFlatConfigExport(
@@ -881,10 +891,7 @@ export function addBlockToFlatConfigExport(
 
   // AST-based format detection so `module.exports = [...]` files with a
   // commented-out `export default` example aren't mis-routed to the ESM path.
-  const hasExportDefault = source.statements.some(
-    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
-  );
-  const format: 'mjs' | 'cjs' = hasExportDefault ? 'mjs' : 'cjs';
+  const format: 'mjs' | 'cjs' = isEsmExport(source) ? 'mjs' : 'cjs';
 
   // find the export default array statement
   if (format === 'mjs') {

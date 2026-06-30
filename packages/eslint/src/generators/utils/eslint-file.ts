@@ -34,6 +34,7 @@ import {
   generateTypedLintingFlatConfigOverride,
   hasFlatConfigIgnoresBlock,
   hasOverride,
+  isEsmExport,
   overrideNeedsCompat,
   removeOverridesFromLintConfig,
   replaceOverride,
@@ -205,18 +206,15 @@ export function determineEslintConfigFormat(content: string): 'mjs' | 'cjs' {
     true
   );
 
-  // Check if there's an `export default` in the AST
-  const hasExportDefault = sourceFile.statements.some(
-    (statement) => ts.isExportAssignment(statement) && !statement.isExportEquals
-  );
-
-  return hasExportDefault ? 'mjs' : 'cjs';
+  return isEsmExport(sourceFile) ? 'mjs' : 'cjs';
 }
 
 /**
- * Returns whether typed linting was requested for a generator. Accepts both
- * the new `enableTypedLinting` flag and the deprecated `setParserOptionsProject`
- * flag (removed in Nx v24). Either one set to a truthy value enables the feature.
+ * Returns whether typed linting was requested for a generator. Accepts both the
+ * new `enableTypedLinting` flag and the deprecated `setParserOptionsProject`
+ * flag (slated for removal in Nx v24); either one set to a truthy value enables
+ * the feature. This is intentional: a generator whose `enableTypedLinting`
+ * schema default is `false` must still honor a user who set the deprecated flag.
  */
 export function isTypedLintingEnabled(options: {
   enableTypedLinting?: boolean;
@@ -240,22 +238,100 @@ export type TypedLintingShape = 'project-service' | 'parser-options-project';
 export function detectTypedLintingShape(
   content: string
 ): TypedLintingShape | null {
+  // Strip comments first so commented-out config (e.g. `// projectService: true`)
+  // isn't mistaken for a real setting.
+  const source = stripComments(content);
   // Tolerate both JS/TS source (`projectService:`) and JSON (`"projectService":`).
-  if (/\bprojectService["']?\s*:\s*(?:true|\{)/.test(content)) {
+  if (/\bprojectService["']?\s*:\s*(?:true|\{)/.test(source)) {
     return 'project-service';
   }
-  // Match `parserOptions: { ... project: [` (or `: 'path'` / `: "path"`).
-  // The `[\['"]` anchor prevents false positives where `project` appears as a
-  // nested key name (e.g., `parserOptions: { project: { tsconfig: 'x' } }`)
-  // or in comments like `// configure for your project`.
-  if (
-    /\bparserOptions["']?\s*:\s*\{[\s\S]*?\bproject["']?\s*:\s*[\['"]/.test(
-      content
-    )
-  ) {
+  if (parserOptionsHasProject(source)) {
     return 'parser-options-project';
   }
   return null;
+}
+
+/**
+ * Whether a `project` array/string is set *inside* a `parserOptions` object.
+ * Scans the balanced braces of each `parserOptions` block instead of a single
+ * open-ended regex, so a `project` key in an unrelated block (e.g.
+ * `settings['import/resolver'].typescript.project`) is not a false match. The
+ * `[\['"]` anchor still ignores a nested `project: { ... }` object key.
+ */
+function parserOptionsHasProject(content: string): boolean {
+  const parserOptions = /\bparserOptions["']?\s*:\s*\{/g;
+  let match: RegExpExecArray | null;
+  while ((match = parserOptions.exec(content)) !== null) {
+    const block = extractBalancedBraces(
+      content,
+      match.index + match[0].length - 1
+    );
+    if (block !== null && /\bproject["']?\s*:\s*[\['"]/.test(block)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Returns the substring from the `{` at `openIndex` to its matching `}`
+ * (inclusive), or `null` when the braces are unbalanced.
+ */
+function extractBalancedBraces(
+  content: string,
+  openIndex: number
+): string | null {
+  let depth = 0;
+  for (let i = openIndex; i < content.length; i++) {
+    if (content[i] === '{') {
+      depth++;
+    } else if (content[i] === '}' && --depth === 0) {
+      return content.slice(openIndex, i + 1);
+    }
+  }
+  return null;
+}
+
+/**
+ * Removes `//` line and block comments while preserving string literals, so a
+ * comment marker inside a string (e.g. a URL) is left intact.
+ */
+function stripComments(content: string): string {
+  let result = '';
+  for (let i = 0; i < content.length; i++) {
+    const ch = content[i];
+    if (ch === '"' || ch === "'" || ch === '`') {
+      result += ch;
+      i++;
+      while (i < content.length) {
+        result += content[i];
+        if (content[i] === '\\') {
+          result += content[++i] ?? '';
+        } else if (content[i] === ch) {
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (ch === '/' && content[i + 1] === '/') {
+      while (i < content.length && content[i] !== '\n') i++;
+      result += '\n';
+      continue;
+    }
+    if (ch === '/' && content[i + 1] === '*') {
+      i += 2;
+      while (
+        i < content.length &&
+        !(content[i] === '*' && content[i + 1] === '/')
+      )
+        i++;
+      i++;
+      continue;
+    }
+    result += ch;
+  }
+  return result;
 }
 
 /**
@@ -281,9 +357,10 @@ export function addTypedLintingToFlatConfig(tree: Tree, root: string): void {
     return;
   }
   const content = tree.read(fileName, 'utf8');
-  // Idempotent: skip if a project-service block already exists (e.g. the config
-  // was generated with typed linting), so we don't append a duplicate.
-  if (detectTypedLintingShape(content) === 'project-service') {
+  // Idempotent: skip if typed linting is already configured in any shape
+  // (modern `projectService` or legacy `parserOptions.project`), so we don't
+  // append a duplicate or a second, conflicting block.
+  if (detectTypedLintingShape(content) !== null) {
     return;
   }
   // AST-based detection avoids string false-positives like `// export default ...`
@@ -322,7 +399,7 @@ export function addOverrideToLintConfig(
     }
 
     let content = tree.read(fileName, 'utf8');
-    const format = content.includes('export default') ? 'mjs' : 'cjs';
+    const format = determineEslintConfigFormat(content);
 
     const flatOverride = generateFlatOverride(override, format);
     // Check if the provided override using legacy eslintrc properties or plugins, if so we need to add compat
@@ -464,7 +541,7 @@ export function replaceOverridesInLintConfig(
       }
     }
     let content = tree.read(fileName, 'utf8');
-    const format = content.includes('export default') ? 'mjs' : 'cjs';
+    const format = determineEslintConfigFormat(content);
     // Check if any of the provided overrides using legacy eslintrc properties or plugins, if so we need to add compat
     if (overrides.some(overrideNeedsCompat)) {
       content = addFlatCompatToFlatConfig(content);

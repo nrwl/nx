@@ -48,18 +48,6 @@ export async function addLintingGenerator(
   tasks.push(lintTask);
 
   if (isEslintConfigSupported(tree)) {
-    const eslintFile = findEslintFile(tree, options.projectRoot);
-    // Carry over typed linting config when it exists, regardless of the shape
-    // (modern `projectService` or legacy `parserOptions.project`). When no
-    // project-level config exists yet (e.g. only a root config), there's
-    // nothing to carry over.
-    const eslintFileContent = eslintFile
-      ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-      : null;
-    const hasTypedLinting =
-      !!eslintFileContent &&
-      detectTypedLintingShape(eslintFileContent) !== null;
-
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
         tree,
@@ -99,6 +87,17 @@ export async function addLintingGenerator(
         rules: {},
       });
     } else {
+      // Legacy `.eslintrc` overrides are fully replaced below, which would drop
+      // an existing `parserOptions.project`. Detect it first so we can carry it
+      // over. (Flat configs keep typed linting via `lintProjectGenerator`, so
+      // this is only needed on the legacy stack.)
+      const eslintFile = findEslintFile(tree, options.projectRoot);
+      const eslintFileContent = eslintFile
+        ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+        : null;
+      const hasTypedLinting =
+        !!eslintFileContent &&
+        detectTypedLintingShape(eslintFileContent) !== null;
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
