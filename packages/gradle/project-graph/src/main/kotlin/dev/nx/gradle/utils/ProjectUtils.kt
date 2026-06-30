@@ -334,11 +334,6 @@ fun resolveTargetName(
     targetNameOverrides: Map<String, String>,
     targetNamePrefix: String
 ): String {
-  val baseName =
-      if (depTask.name == "test" && targetNameOverrides.containsKey("testTargetName")) {
-        targetNameOverrides["testTargetName"]!!
-      } else {
-        depTask.name
-      }
+  val baseName = targetNameOverrides["${depTask.name}TargetName"] ?: depTask.name
   return if (targetNamePrefix.isNotEmpty()) "$targetNamePrefix$baseName" else baseName
 }
