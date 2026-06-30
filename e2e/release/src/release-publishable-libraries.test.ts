@@ -151,10 +151,8 @@ describe('release publishable libraries', () => {
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
       - Speed up or split the longest tasks on the critical path:
       {project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -220,10 +218,8 @@ describe('release publishable libraries', () => {
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
       - Speed up or split the longest tasks on the critical path:
       {project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -287,10 +283,8 @@ describe('release publishable libraries', () => {
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
       - Speed up or split the longest tasks on the critical path:
       {project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -352,10 +346,8 @@ describe('release publishable libraries', () => {
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
       - Speed up or split the longest tasks on the critical path:
       {project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 
@@ -421,10 +413,8 @@ describe('release publishable libraries', () => {
       Recoverable time: {DURATION}
       Recommendations:
       - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm=performance-report.
-      - Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → https://nx.dev/ci/features/distribute-task-execution?utm=performance-report.
       - Speed up or split the longest tasks on the critical path:
       {project-name}:nx-release-publish    {DURATION}
-      Learn how to improve your run's performance → https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution?utm=performance-report
     `);
   });
 });

@@ -602,8 +602,6 @@ export interface PerformanceSummaryPayload {
   cacheSkipped: boolean
   /** Already in display order; a multi-line entry embeds a task list. */
   recommendations: Array<string>
-  /** The docs footer link, rendered as a bullet and hyperlinked. */
-  footer: Link
   /**
    * Phrases already in `recommendations` to hyperlink in place (e.g. the
    * remote-cache CTA); empty when none apply.

@@ -411,12 +411,12 @@ export function runNgAdd(
 /**
  * Replaces the run-to-run durations / core counts in Nx's performance report with
  * stable placeholders so the report can stay in snapshots. Scoped to the report
- * block (between `Run duration:` and the `Learn how to improve …` footer); no-op
- * when no report is present.
+ * block (from `Run duration:` to the next `NX` section header or end of output);
+ * no-op when no report is present.
  */
 export function normalizePerformanceReport(output: string): string {
   return output.replace(
-    /\n[ \t]*Run duration:[\s\S]*?Learn how to improve your run's performance → \S+/g,
+    /\n[ \t]*Run duration:[\s\S]*?(?=\n[ \t]*\n(?:[ \t]*\n)*[ \t]*NX |\s*$)/g,
     (block) =>
       block
         // Durations: match the minute form ("1m 30s") first so its "30s" isn't matched

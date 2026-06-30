@@ -12,13 +12,13 @@ const UTM = '?utm=performance-report';
 const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
 const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
 const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
-const NX_PERFORMANCE_LABEL = `Learn how to improve your run's performance`;
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
  */
 const NX_REMOTE_CACHE_CTA =
   'Drastically reduce your run duration by sharing a cache across your team and CI';
+const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
 
 /**
  * A recommendation built from structured parts so the link text comes from the
@@ -30,30 +30,20 @@ type RecPart = string | RecLink;
 export type Recommendation = RecPart[];
 
 /**
- * A docs link inside a recommendation, in one of two styles:
- *
- * - `url`   — the URL itself is the visible text. The clean URL shows (and is the
- *   OSC 8 label), the utm-tagged URL is the click target. Without OSC 8 the tagged
- *   URL prints verbatim (e.g. the agents recs, the footer).
- * - `phrase` — a sentence is the visible text and the whole of it links to the
- *   tagged URL. Without OSC 8 the tagged URL is appended as ` → <url>` (the
- *   remote-cache CTA). The payload string for a phrase link is URL-less: the Rust
- *   popup re-links the phrase from {@link PerformanceSummaryPayload.links}.
+ * A docs link inside a recommendation: a sentence is the visible text and the whole of
+ * it links to the utm-tagged URL. With OSC 8 the phrase is a hyperlink; without it the
+ * tagged URL is appended as ` → <url>`. The payload string is URL-less — the Rust popup
+ * re-links the phrase from {@link PerformanceSummaryPayload.links}.
  */
 interface RecLink {
-  /** Visible label: the clean URL (`url`) or the sentence (`phrase`). */
+  /** Visible label: the sentence that links. */
   visible: string;
-  /** OSC 8 click target / appended URL: always the utm-tagged URL. */
+  /** OSC 8 click target / appended URL: the utm-tagged URL. */
   href: string;
-  style: 'url' | 'phrase';
-}
-
-function urlLink(cleanUrl: string, taggedUrl: string): RecLink {
-  return { visible: cleanUrl, href: taggedUrl, style: 'url' };
 }
 
 function phraseLink(phrase: string, taggedUrl: string): RecLink {
-  return { visible: phrase, href: taggedUrl, style: 'phrase' };
+  return { visible: phrase, href: taggedUrl };
 }
 
 function isRecLink(part: RecPart): part is RecLink {
@@ -61,24 +51,18 @@ function isRecLink(part: RecPart): part is RecLink {
 }
 
 /**
- * The recommendation string the napi payload ships and the Rust popup matches
- * against. A `url` link keeps its tagged URL inline; a `phrase` link is URL-less
- * (the popup re-links it from {@link PerformanceSummaryPayload.links}).
+ * The recommendation string the napi payload ships and the Rust popup matches against.
+ * Links are URL-less (the popup re-links them from {@link PerformanceSummaryPayload.links}).
  */
 export function recommendationToPayloadString(rec: Recommendation): string {
-  return rec
-    .map((part) =>
-      !isRecLink(part) ? part : part.style === 'url' ? part.href : part.visible
-    )
-    .join('');
+  return rec.map((part) => (!isRecLink(part) ? part : part.visible)).join('');
 }
 
 /**
- * The recommendation as a terminal string. With OSC 8 each link becomes a
- * hyperlink (clean URL or whole phrase as the visible label, tagged URL the
- * target). Without it, a `url` link prints its tagged URL and a `phrase` link
- * gets ` → <tagged url>` appended — `terminalLink` can't do this since it drops
- * the URL entirely when hyperlinks are off.
+ * The recommendation as a terminal string. With OSC 8 the phrase becomes a hyperlink
+ * (the phrase visible, the tagged URL the target); without it the tagged URL is appended
+ * as ` → <url>` — `terminalLink` can't do this since it drops the URL when hyperlinks
+ * are off.
  */
 function recommendationToTerminalString(
   rec: Recommendation,
@@ -89,22 +73,18 @@ function recommendationToTerminalString(
       if (!isRecLink(part)) {
         return part;
       }
-      if (hyperlinks) {
-        return terminalLink(part.visible, part.href);
-      }
-      return part.style === 'url'
-        ? part.href
+      return hyperlinks
+        ? terminalLink(part.visible, part.href)
         : `${part.visible} → ${part.href}`;
     })
     .join('');
 }
 
-/** The popup links for the phrase-style CTAs in a recommendation list (url links live inline in the strings). */
+/** The popup links (phrase + href) for every link in a recommendation list, for OSC 8 re-linking. */
 function recommendationLinks(recommendations: Recommendation[]): Link[] {
   return recommendations.flatMap((rec) =>
     rec
       .filter(isRecLink)
-      .filter((part) => part.style === 'phrase')
       .map((part) => ({ text: part.visible, href: part.href }))
   );
 }
@@ -115,10 +95,6 @@ const LOW_CACHE_HIT_RATE = 0.1;
 export const MEANINGFUL_OVERHEAD = 1000;
 /** Recommend --parallel when recoverable slot time is at least this fraction of the run. */
 const PARALLEL_LEAD_FRACTION = 0.2;
-
-// Single Rust implementation, re-exported so the terminal report and the TUI popup
-// format durations ("3m 30s", "13.4s", "470ms") identically.
-export { formatDuration };
 
 /** Append "s" unless `count` is 1 (regular plurals only). */
 function pluralize(count: number, noun: string): string {
@@ -145,147 +121,161 @@ function formatTopTaskRows(
   });
 }
 
-/** An Nx Agents URL link, built from the link definition so the URL text never has to be scanned back out of the assembled report. */
-const agentsLink: RecLink = urlLink(NX_AGENTS_URL, NX_AGENTS_LINK);
-
-/** Actionable levers to go faster, one rec per lever. The critical-path case has two (shorten the chain, distribute the rest). Agents advice is omitted unless `canDistribute`. */
-export function buildRecommendation(args: {
+/** Everything a recommendation candidate inspects to decide whether it applies and to build itself. */
+interface RecommendationContext {
   recoverableByParallel: number;
   recoverableByMachines: number;
+  /** Slot time recoverable by parallelism or more machines (the two halves' sum). */
+  recoverable: number;
   coordinatorDominated: boolean;
   runDuration: number;
-  parallel: number;
-  cores: number;
   canDistribute: boolean;
   distributing: boolean;
   criticalPathTop: Array<{ id: string; duration: number }>;
-}): Recommendation[] {
-  const {
-    recoverableByParallel,
-    recoverableByMachines,
-    coordinatorDominated,
-    runDuration,
-    parallel,
-    cores,
-    canDistribute,
-    distributing,
-    criticalPathTop,
-  } = args;
-
-  if (distributing) {
-    // Already on agents: more agents (not local --parallel) is the parallelism lever;
-    // the cores/machine framing below doesn't apply to a distributed run.
-    const recoverable = recoverableByParallel + recoverableByMachines;
-    if (
-      runDuration > 0 &&
-      recoverable >= PARALLEL_LEAD_FRACTION * runDuration
-    ) {
-      return [
-        [`Add more Nx Agents to recover up to ${formatDuration(recoverable)}.`],
-      ];
-    }
-  } else {
-    // Slot-bound with spare cores: the lever is local --parallel, not agents.
-    if (
-      runDuration > 0 &&
-      recoverableByParallel >= PARALLEL_LEAD_FRACTION * runDuration &&
-      recoverableByParallel >= recoverableByMachines
-    ) {
-      return [
-        [
-          `Increase parallelism to recover up to ${formatDuration(
-            recoverableByParallel
-          )}.`,
-        ],
-      ];
-    }
-    // Machine-bound: contention a higher local --parallel can't recover.
-    if (recoverableByMachines >= MEANINGFUL_OVERHEAD) {
-      if (parallel >= cores) {
-        // At the core ceiling and still queuing. Agents for CPU-bound work;
-        // otherwise only the I/O-bound --parallel tip applies.
-        const base = `You're at this machine's ${cores} ${pluralize(
-          cores,
-          'core'
-        )} and tasks are still queuing for a slot.`;
-        return [
-          canDistribute
-            ? [
-                `${base} If they're CPU-bound, distribute across machines with Nx Agents → `,
-                agentsLink,
-                `; if they're I/O-bound, a higher --parallel may help instead.`,
-              ]
-            : [`${base} If they're I/O-bound, a higher --parallel may help.`],
-        ];
-      }
-      // Below the core ceiling but still machine-bound (a parallelism:false task
-      // monopolizes the pool, or volume exceeds the cores): only more machines can
-      // free those slots, and that lever only exists in CI.
-      return canDistribute
-        ? [
-            [
-              `Tasks are queuing for a slot that a higher --parallel can't free on one machine. Distribute across machines with Nx Agents → `,
-              agentsLink,
-              `.`,
-            ],
-          ]
-        : [];
-    }
-    // Coordinator-dominated (tasks fast or cached), machine ~maxed: in CI agents are
-    // the only lever; locally nothing actionable.
-    if (coordinatorDominated) {
-      return canDistribute
-        ? [
-            [
-              `This run was about as fast as this machine can do it. Distribute the work across multiple machines with Nx Agents to make it faster → `,
-              agentsLink,
-              `.`,
-            ],
-          ]
-        : [];
-    }
-  }
-  // Critical-path-bound: shorten the chain's longest tasks and distribute the rest.
-  // Nothing ran (fully cached) → no rec.
-  if (criticalPathTop.length === 0) {
-    return [];
-  }
-  const speedUp: Recommendation = [
-    [
-      `Speed up or split the longest tasks on the critical path:`,
-      ...formatTopTaskRows(criticalPathTop),
-    ].join('\n'),
-  ];
-  const recommendations: Recommendation[] = [speedUp];
-  if (canDistribute) {
-    recommendations.push([
-      `Distribute tasks across multiple machines with Nx Agents to increase parallelism without overwhelming resource usage → `,
-      agentsLink,
-      `.`,
-    ]);
-  }
-  return recommendations;
+  cacheHits: number;
+  cacheableCount: number;
+  cacheSkipped: boolean;
+  remoteCacheEnabled: boolean;
 }
 
+/** A single recommendation: the criteria under which it applies and the advice it yields. */
+interface RecommendationCandidate {
+  isApplicable(c: RecommendationContext): boolean;
+  build(c: RecommendationContext): Recommendation;
+}
+
+// Bottleneck predicates, shared so the speed levers below stay mutually exclusive: a run
+// gets one parallelism lever, never both "raise --parallel" and "distribute". Each names
+// the run shape it diagnoses.
+
+/** Spare cores: raising local --parallel recovers a meaningful slice and is the dominant half. */
+const parallelLeverApplies = (c: RecommendationContext): boolean =>
+  !c.distributing &&
+  c.runDuration > 0 &&
+  c.recoverableByParallel >= PARALLEL_LEAD_FRACTION * c.runDuration &&
+  c.recoverableByParallel >= c.recoverableByMachines;
+
+/** Already on agents: more agents recovers a meaningful slice. */
+const agentsLeverApplies = (c: RecommendationContext): boolean =>
+  c.distributing &&
+  c.runDuration > 0 &&
+  c.recoverable >= PARALLEL_LEAD_FRACTION * c.runDuration;
+
 /**
- * Recommendations in display order, cheapest first: "recover up to X" → remote-cache
- * → other levers → "speed up / split" LAST (deepest manual work, the only multi-line
- * rec). Shared by the report and TUI payload.
+ * Machine-bound: slots a higher local --parallel can't free (the core ceiling, or a
+ * parallelism:false task / volume monopolizing the pool) — only more machines free them.
  */
-function orderedRecommendations(s: PerformanceSummary): Recommendation[] {
-  const levers = [...s.structuredRecommendations];
-  const cacheAdvice = buildCacheAdvice(s);
-  // Classify by the rec's plain text — the structured link parts don't affect order.
-  const text = recommendationToPayloadString;
-  const isRecoverLever = (r: Recommendation) =>
-    text(r).includes('recover up to');
-  const isLongestTasks = (r: Recommendation) => text(r).includes('\n');
-  return [
-    ...levers.filter(isRecoverLever),
-    ...(cacheAdvice ? [cacheAdvice] : []),
-    ...levers.filter((r) => !isRecoverLever(r) && !isLongestTasks(r)),
-    ...levers.filter(isLongestTasks),
-  ];
+const machineBound = (c: RecommendationContext): boolean =>
+  !c.distributing && c.recoverableByMachines >= MEANINGFUL_OVERHEAD;
+
+/** Coordinator-dominated and not machine-bound: the machine is ~maxed on overhead. */
+const coordinatorBound = (c: RecommendationContext): boolean =>
+  !c.distributing &&
+  c.recoverableByMachines < MEANINGFUL_OVERHEAD &&
+  c.coordinatorDominated;
+
+/** No parallelism/machine/coordinator lever is the bottleneck → the critical path is. */
+const criticalPathBound = (c: RecommendationContext): boolean =>
+  !parallelLeverApplies(c) &&
+  !agentsLeverApplies(c) &&
+  !machineBound(c) &&
+  !coordinatorBound(c);
+
+/**
+ * Every recommendation the report can make, in display order — cheapest lever first, the
+ * deep "speed up the longest tasks" work last. The report shows exactly the applicable
+ * ones: `RECOMMENDATIONS.filter((r) => r.isApplicable(c))`. Each carries its own criteria;
+ * the bottleneck predicates above keep the speed levers mutually exclusive.
+ */
+const RECOMMENDATIONS: RecommendationCandidate[] = [
+  {
+    // Spare cores: the lever is local --parallel. Whole-phrase link to the perf docs; the
+    // period stays outside the link.
+    isApplicable: parallelLeverApplies,
+    build: (c) => [
+      phraseLink(
+        `Increase parallelism to recover up to ${formatDuration(
+          c.recoverableByParallel
+        )}`,
+        NX_PERFORMANCE_LINK
+      ),
+      `.`,
+    ],
+  },
+  {
+    // Already on agents: more agents (not local --parallel) is the parallelism lever.
+    isApplicable: agentsLeverApplies,
+    build: (c) => [
+      `Add more Nx Agents to recover up to ${formatDuration(c.recoverable)}.`,
+    ],
+  },
+  {
+    // Barely-used cache with no remote: set up Nx Cloud. Whole-phrase link; the payload
+    // string stays URL-less (the popup re-links the phrase).
+    isApplicable: (c) =>
+      !c.cacheSkipped &&
+      c.cacheableCount > 0 &&
+      !c.remoteCacheEnabled &&
+      c.cacheHits / c.cacheableCount <= LOW_CACHE_HIT_RATE,
+    build: () => [phraseLink(NX_REMOTE_CACHE_CTA, NX_REMOTE_CACHE_LINK), `.`],
+  },
+  {
+    // Cache skipped: drop the flag to restore unchanged tasks instantly.
+    isApplicable: (c) => c.cacheSkipped,
+    build: () => [
+      `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`,
+    ],
+  },
+  {
+    // Machine-bound, coordinator-dominated, or a recoverable critical-path-bound run: more
+    // machines help, and that lever only exists in CI (canDistribute). Excludes the
+    // --parallel case so the two parallelism levers never show together.
+    isApplicable: (c) =>
+      c.canDistribute &&
+      !parallelLeverApplies(c) &&
+      (machineBound(c) ||
+        coordinatorBound(c) ||
+        (criticalPathBound(c) &&
+          c.runDuration > 0 &&
+          c.recoverable >= PARALLEL_LEAD_FRACTION * c.runDuration)),
+    build: () => [phraseLink(NX_DISTRIBUTE_CTA, NX_AGENTS_LINK), `.`],
+  },
+  {
+    // Critical-path-bound: shorten the chain's longest tasks (the deepest manual work, the
+    // only multi-line rec). Nothing ran (fully cached) → it doesn't apply.
+    isApplicable: (c) => criticalPathBound(c) && c.criticalPathTop.length > 0,
+    build: (c) => [
+      [
+        `Speed up or split the longest tasks on the critical path:`,
+        ...formatTopTaskRows(c.criticalPathTop),
+      ].join('\n'),
+    ],
+  },
+];
+
+/**
+ * The recommendations the report shows, in display order: every candidate in
+ * {@link RECOMMENDATIONS} whose criteria apply to this run. Shared by the terminal report,
+ * the GitHub-summary Markdown, and the TUI payload.
+ */
+export function buildRecommendations(s: PerformanceSummary): Recommendation[] {
+  const c: RecommendationContext = {
+    recoverableByParallel: s.recoverableByParallel,
+    recoverableByMachines: s.recoverableByMachines,
+    recoverable: recoverableTime(s),
+    coordinatorDominated: s.coordinatorDominated,
+    runDuration: s.runDuration,
+    canDistribute: s.canDistribute,
+    distributing: s.distributing,
+    criticalPathTop: s.criticalPathTop,
+    cacheHits: s.cacheHits,
+    cacheableCount: s.cacheableCount,
+    cacheSkipped: s.cacheSkipped,
+    remoteCacheEnabled: s.remoteCacheEnabled,
+  };
+  return RECOMMENDATIONS.filter((r) => r.isApplicable(c)).map((r) =>
+    r.build(c)
+  );
 }
 
 /** Top-of-report cache stat: hit rate or skip marker. Null when there's no cache outcome. */
@@ -298,28 +288,6 @@ function cacheStat(s: PerformanceSummary): string | null {
   }
   const pct = Math.round((s.cacheHits / s.cacheableCount) * 100);
   return `${s.cacheHits}/${s.cacheableCount} hit (${pct}%)`;
-}
-
-/**
- * Bottom-of-report cache advice, only when there's a lever: a skipped cache (drop
- * the flag) or a barely-used cache with no remote (set up Nx Cloud).
- */
-function buildCacheAdvice(s: PerformanceSummary): Recommendation | null {
-  if (s.cacheSkipped) {
-    return [
-      `Cache: drop --skip-nx-cache to restore unchanged tasks instantly.`,
-    ];
-  }
-  if (s.cacheableCount === 0) {
-    return null;
-  }
-  const hitRate = s.cacheHits / s.cacheableCount;
-  if (!s.remoteCacheEnabled && hitRate <= LOW_CACHE_HIT_RATE) {
-    // Whole-phrase link: the sentence is the visible text, the tagged URL the
-    // target. The payload string stays URL-less (the popup re-links the phrase).
-    return [phraseLink(NX_REMOTE_CACHE_CTA, NX_REMOTE_CACHE_LINK), `.`];
-  }
-  return null;
 }
 
 /** The full performance report as a terminal string (the TUI popup renders natively from {@link buildExitSummaryPayload} instead). */
@@ -353,7 +321,7 @@ export function formatReport(s: PerformanceSummary): string {
     ),
   ];
   const hyperlinks = supportsHyperlinks();
-  const recommendations = orderedRecommendations(s);
+  const recommendations = buildRecommendations(s);
   const render = (r: Recommendation) =>
     recommendationToTerminalString(r, hyperlinks);
   // A rec may be multi-line (the critical-path one embeds a task list); indent
@@ -376,14 +344,91 @@ export function formatReport(s: PerformanceSummary): string {
       );
     }
   }
-  // utm-tagged footer (a url link): with OSC 8 the clean URL shows and hides the utm
-  // in the target; without it the tagged URL prints verbatim.
-  const footer: Recommendation = [
-    `  ${NX_PERFORMANCE_LABEL} → `,
-    urlLink(NX_PERFORMANCE_URL, NX_PERFORMANCE_LINK),
-  ];
-  lines.push('', render(footer));
   // No trailing newline — the caller's console.log adds the line terminator.
+  return lines.join('\n');
+}
+
+/**
+ * A recommendation as Markdown: every link becomes `[phrase](href)` (no OSC 8, unlike the
+ * terminal renderer) — the whole sentence reads as prose and is the link text. The
+ * critical-path rec embeds newline-separated, space-aligned task rows; collapse them to
+ * `<br>`-joined lines so they render inside the list item.
+ */
+function recommendationToMarkdownString(rec: Recommendation): string {
+  return rec
+    .map((part) =>
+      !isRecLink(part) ? part : `[${part.visible}](${part.href})`
+    )
+    .join('')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join('<br>');
+}
+
+/**
+ * The performance report as GitHub-flavored Markdown for the Actions job summary
+ * (`$GITHUB_STEP_SUMMARY`). Mirrors {@link formatReport}'s content — the same stats and
+ * recommendations — and, when the run had failures, lists them above the stats. Links
+ * render as Markdown links rather than OSC 8 hyperlinks.
+ *
+ * `command` (the nx command, e.g. `run-many -t build`) is appended to the heading so
+ * stacked reports from multiple nx commands in one job summary stay distinguishable.
+ */
+export function formatReportMarkdown(
+  s: PerformanceSummary,
+  command: string
+): string {
+  const fmt = formatDuration;
+  const recoverable = recoverableTime(s);
+  const recoverablePct =
+    s.runDuration > 0 ? Math.round((recoverable / s.runDuration) * 100) : 0;
+  const cache = cacheStat(s);
+
+  const lines = [`## Nx Run Report — \`${command}\``];
+
+  // The run's outcome is the headline of a CI summary, so it goes first — above the
+  // performance stats. Failures list the slowest tasks; a green run states it succeeded.
+  const failedTasks = s.failedTasks;
+  if (failedTasks.length > 0) {
+    lines.push(
+      '',
+      `### ❌ ${failedTasks.length} failed ${pluralize(
+        failedTasks.length,
+        'task'
+      )}`,
+      '',
+      ...failedTasks.map((id) => `- \`${id}\``)
+    );
+  } else {
+    lines.push('', '### ✅ All tasks succeeded');
+  }
+
+  // Headline stats as a bold-label list, mirroring the terminal stat lines.
+  lines.push(
+    '',
+    '### Performance',
+    '',
+    `- **Run duration:** ${fmt(s.runDuration)}`,
+    ...(cache ? [`- **Cache:** ${cache}`] : []),
+    `- **Critical path:** ${fmt(s.criticalPathDuration)} (${
+      s.criticalPathTaskCount
+    } ${pluralize(s.criticalPathTaskCount, 'task')})`,
+    `- **Recoverable time:** ${
+      recoverable > 0
+        ? `${fmt(recoverable)} (${recoverablePct}% of the run)`
+        : fmt(recoverable)
+    }`
+  );
+
+  const recommendations = buildRecommendations(s);
+  if (recommendations.length > 0) {
+    lines.push('', '### Recommendations', '');
+    for (const rec of recommendations) {
+      lines.push(`- ${recommendationToMarkdownString(rec)}`);
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -397,7 +442,7 @@ export function buildExitSummaryPayload(
   s: PerformanceSummary
 ): PerformanceSummaryPayload {
   const hasCache = s.cacheableCount > 0;
-  const recommendations = orderedRecommendations(s);
+  const recommendations = buildRecommendations(s);
   return {
     runDurationMs: s.runDuration,
     criticalPathMs: s.criticalPathDuration,
@@ -412,7 +457,6 @@ export function buildExitSummaryPayload(
     // The napi payload ships plain strings; a phrase link (the remote-cache CTA)
     // stays URL-less here and is re-linked from `links` by the popup.
     recommendations: recommendations.map(recommendationToPayloadString),
-    footer: { text: NX_PERFORMANCE_LABEL, href: NX_PERFORMANCE_LINK },
     // Phrase links (e.g. the remote-cache CTA) carry their href as data so the
     // popup hyperlinks the phrase in place; surfaced only when shown.
     links: recommendationLinks(recommendations),
