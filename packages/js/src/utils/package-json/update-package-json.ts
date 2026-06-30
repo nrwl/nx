@@ -1,5 +1,8 @@
 import { createLockFile, getLockFileName } from '@nx/devkit/internal';
-import { createPackageJson } from '@nx/devkit/internal';
+import {
+  createPackageJson,
+  stripPrunedLockfilePnpmConfig,
+} from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -94,6 +97,12 @@ export function updatePackageJson(
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
       : { name: context.projectName, version: '0.0.1' };
+    // The buildable-deps branch above strips pnpm config via createPackageJson's
+    // prunedLockfile flag; mirror it here so a verbatim manifest paired with a
+    // pruned lockfile does not trip ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    if (options.generateLockfile) {
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }
   }
 
   if (packageJson.type === 'module') {
