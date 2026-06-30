@@ -6,7 +6,6 @@ use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -16,6 +15,7 @@ use tracing::debug;
 /// Duration before status messages are automatically cleared
 const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_secs(3);
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
@@ -781,20 +781,19 @@ impl InlineApp {
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
                     use ratatui::text::Line;
-                    use ratatui::widgets::Paragraph;
 
                     let height = lines_to_render as u16;
 
                     // Call insert_before on the dereferenced Terminal
                     // This only works with inline viewport
                     if let Ok(()) = tui.insert_before(height, |buf| {
-                        // Convert batched scrollback lines to ratatui Lines
-                        let lines: Vec<Line> =
-                            batch.iter().map(|line| Line::from(line.as_str())).collect();
+                        // Convert batched scrollback lines to owned ratatui Lines
+                        let lines: Vec<Line<'static>> =
+                            batch.iter().map(|line| Line::from(line.clone())).collect();
 
                         // Create a paragraph with the buffered scrollback content
                         let paragraph =
-                            Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
+                            NxParagraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
 
                         // Render using the Widget trait
                         use ratatui::widgets::Widget;
@@ -993,7 +992,7 @@ impl InlineApp {
             Span::styled(task_name.clone(), status_style),
         ];
 
-        f.render_widget(Paragraph::new(Line::from(left_spans)), chunks[0]);
+        f.render_widget(NxParagraph::new(Line::from(left_spans)), chunks[0]);
 
         // Build right side: status msg + esc hint + interactive hint (if space) + cloud message (if space) + duration
         let mut right_spans = Vec::new();
@@ -1032,7 +1031,7 @@ impl InlineApp {
                 ));
             }
         }
-        f.render_widget(Paragraph::new(Line::from(right_spans)), chunks[1]);
+        f.render_widget(NxParagraph::new(Line::from(right_spans)), chunks[1]);
     }
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
@@ -1057,9 +1056,9 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::layout::Alignment;
         use ratatui::style::Style;
-        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::widgets::{Block, Borders};
 
-        let message = Paragraph::new(" Waiting for tasks to start... ")
+        let message = NxParagraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
             .block(Block::default().borders(Borders::NONE));

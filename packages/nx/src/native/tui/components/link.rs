@@ -96,7 +96,12 @@ impl Link {
         &self.href
     }
 
-    fn style(&self) -> Style {
+    /// The text shown for the link (distinct from the opened `href`).
+    pub fn display(&self) -> &str {
+        &self.display
+    }
+
+    pub(crate) fn style(&self) -> Style {
         let mut style = Style::default()
             .fg(THEME.info)
             .add_modifier(Modifier::UNDERLINED);

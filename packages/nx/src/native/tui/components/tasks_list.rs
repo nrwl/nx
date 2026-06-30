@@ -6,9 +6,7 @@ use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{
-        Block, Cell, Paragraph, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table,
-    },
+    widgets::{Block, Cell, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table},
 };
 use serde::{Deserialize, Serialize};
 use std::any::Any;
@@ -20,6 +18,7 @@ use super::link::{Link, LinkRegistry};
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::{
     tasks::types::{Task, TaskResult},
     tui::{
@@ -1973,7 +1972,7 @@ impl TasksList {
             Line::from(vec![Span::styled(instruction_text, filter_style)]),
         ];
 
-        let filter_paragraph = Paragraph::new(filter_lines).alignment(Alignment::Left);
+        let filter_paragraph = NxParagraph::new(filter_lines).alignment(Alignment::Left);
         f.render_widget(filter_paragraph, filter_area);
     }
 
@@ -2723,17 +2722,17 @@ impl TasksList {
 
         // No URL present: render the message as-is if it fits, otherwise truncate.
         if !message.contains("https://") {
-            let message_line = Line::from(Span::styled(message.as_str(), message_style));
+            let message_line = Line::from(Span::styled(message.clone(), message_style));
             if message_line.width() <= available_width as usize {
                 let cloud_message_paragraph =
-                    Paragraph::new(message_line).alignment(Alignment::Left);
+                    NxParagraph::new(message_line).alignment(Alignment::Left);
                 f.render_widget(cloud_message_paragraph, cloud_message_area);
                 return;
             }
             let max_message_render_len = available_width.saturating_sub(3) as usize; // Reserve for "..."
             let truncated_message = format!("{}...", &message[..max_message_render_len]);
             let cloud_message_paragraph =
-                Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
+                NxParagraph::new(Line::from(Span::styled(truncated_message, message_style)))
                     .alignment(Alignment::Left);
             f.render_widget(cloud_message_paragraph, cloud_message_area);
             return;
@@ -2760,8 +2759,9 @@ impl TasksList {
                 width: prefix_width,
                 ..cloud_message_area
             };
-            let prefix_paragraph = Paragraph::new(Line::from(Span::styled(prefix, message_style)))
-                .alignment(Alignment::Left);
+            let prefix_paragraph =
+                NxParagraph::new(Line::from(Span::styled(prefix.to_string(), message_style)))
+                    .alignment(Alignment::Left);
             f.render_widget(prefix_paragraph, prefix_area);
             cloud_message_area.x.saturating_add(prefix_width)
         } else {

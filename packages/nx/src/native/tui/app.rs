@@ -11,7 +11,6 @@ use ratatui::layout::{Alignment, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::io;
 use std::io::Write;
@@ -36,6 +35,7 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::nx_paragraph::NxParagraph;
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -1572,7 +1572,7 @@ impl App {
                         // without any vertical padding to prevent index out of bounds errors
                         if frame_area.height < 3 {
                             let paragraph =
-                                Paragraph::new(vec![message]).alignment(Alignment::Center);
+                                NxParagraph::new(vec![message]).alignment(Alignment::Center);
 
                             // Create a safe area that's guaranteed to be within bounds
                             let safe_area = Rect {
@@ -1605,7 +1605,7 @@ impl App {
                         // Add the message
                         lines.push(message);
 
-                        let paragraph = Paragraph::new(lines).alignment(Alignment::Center);
+                        let paragraph = NxParagraph::new(lines).alignment(Alignment::Center);
 
                         // Create a safe area that's guaranteed to be within bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
                         let safe_area = Rect {
@@ -2905,7 +2905,7 @@ impl App {
             width,
             height: 1,
         };
-        let badge = Paragraph::new(Line::from(Span::styled(
+        let badge = NxParagraph::new(Line::from(Span::styled(
             label,
             Style::reset()
                 .add_modifier(Modifier::BOLD)

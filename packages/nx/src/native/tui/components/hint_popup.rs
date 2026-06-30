@@ -4,11 +4,12 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Padding},
 };
 use std::any::Any;
 use std::time::{Duration, Instant};
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
 use super::Component;
@@ -114,7 +115,7 @@ impl HintPopup {
         self.last_area = Some(popup_area);
 
         let content = vec![Line::from(vec![Span::styled(
-            &self.message,
+            self.message.clone(),
             Style::default().fg(THEME.primary_fg),
         )])];
 
@@ -147,7 +148,7 @@ impl HintPopup {
         // The text area sits inside the border + padding.
         self.content_area = Some(block.inner(popup_area));
 
-        let popup = Paragraph::new(content)
+        let popup = NxParagraph::new(content)
             .block(block)
             .wrap(ratatui::widgets::Wrap { trim: true });
 

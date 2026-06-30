@@ -6,14 +6,15 @@ use ratatui::{
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, StatefulWidget, Widget,
+        Block, BorderType, Borders, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        StatefulWidget, Widget,
     },
 };
 use std::{io, sync::Arc, time::Instant};
 use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
@@ -626,7 +627,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         if safe_area.width < 5 || safe_area.height < 5 {
             // Just render a minimal indicator instead of a full pane
             let text = "...";
-            let paragraph = Paragraph::new(text)
+            let paragraph = NxParagraph::new(text)
                 .style(Style::default().fg(THEME.secondary_fg))
                 .alignment(Alignment::Center);
             Widget::render(paragraph, safe_area, buf);
@@ -729,7 +730,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -752,7 +753,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -773,7 +774,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -795,7 +796,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 message_style,
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -824,7 +825,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 message_style,
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -1030,10 +1031,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 height: 1,
                             };
 
-                            Paragraph::new(bottom_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(bottom_right_area, buf);
+                            Widget::render(
+                                NxParagraph::new(bottom_text)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style),
+                                bottom_right_area,
+                                buf,
+                            );
                         }
                     }
 
@@ -1064,10 +1068,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 height: 1,
                             };
 
-                            Paragraph::new(help_line)
-                                .alignment(Alignment::Left)
-                                .style(border_style)
-                                .render(bottom_left_area, buf);
+                            Widget::render(
+                                NxParagraph::new(help_line)
+                                    .alignment(Alignment::Left)
+                                    .style(border_style),
+                                bottom_left_area,
+                                buf,
+                            );
                         }
                     }
 
@@ -1089,10 +1096,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 height: 1,
                             };
 
-                            Paragraph::new(padding_text.clone())
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(top_right_area, buf);
+                            Widget::render(
+                                NxParagraph::new(padding_text.clone())
+                                    .alignment(Alignment::Right)
+                                    .style(border_style),
+                                top_right_area,
+                                buf,
+                            );
 
                             // Bottom padding (only if interactive status is not being displayed)
                             if !show_interactive_status {
@@ -1105,10 +1115,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                     height: 1,
                                 };
 
-                                Paragraph::new(padding_text)
-                                    .alignment(Alignment::Right)
-                                    .style(border_style)
-                                    .render(bottom_right_area, buf);
+                                Widget::render(
+                                    NxParagraph::new(padding_text)
+                                        .alignment(Alignment::Right)
+                                        .style(border_style),
+                                    bottom_right_area,
+                                    buf,
+                                );
                             }
                         }
                     }
@@ -1141,10 +1154,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                     height: 1,
                                 };
 
-                                Paragraph::new(duration_line)
-                                    .alignment(Alignment::Right)
-                                    .style(border_style)
-                                    .render(duration_area, buf);
+                                Widget::render(
+                                    NxParagraph::new(duration_line)
+                                        .alignment(Alignment::Right)
+                                        .style(border_style),
+                                    duration_area,
+                                    buf,
+                                );
                             }
                         }
                     }

@@ -1,14 +1,14 @@
 use super::{Component, Frame};
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState,
+        Block, BorderType, Borders, Clear, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
     },
 };
 use std::any::Any;
@@ -386,7 +386,7 @@ impl HelpPopup {
         let scroll_end = (self.scroll_offset + self.viewport_height).min(content.len());
         let visible_content = content[scroll_start..scroll_end].to_vec();
 
-        let popup = Paragraph::new(visible_content)
+        let popup = NxParagraph::new(visible_content)
             .block(block)
             .alignment(Alignment::Left)
             .wrap(ratatui::widgets::Wrap { trim: true });
@@ -420,14 +420,14 @@ impl HelpPopup {
 
             // Render padding text
             f.render_widget(
-                Paragraph::new(top_text)
+                NxParagraph::new(top_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
-                Paragraph::new(bottom_text)
+                NxParagraph::new(bottom_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 bottom_right_area,

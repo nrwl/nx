@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use crate::native::tasks::types::TaskGraph;
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
 use crate::native::tui::status_icons;
@@ -12,8 +13,8 @@ use ratatui::{
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, StatefulWidget, Widget,
+        Block, BorderType, Borders, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        StatefulWidget, Widget,
     },
 };
 
@@ -298,10 +299,13 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&top_area, buf) {
-            Paragraph::new(padding_text.clone())
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(top_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text.clone())
+                    .alignment(Alignment::Right)
+                    .style(style),
+                top_area,
+                buf,
+            );
         }
 
         // Render bottom padding
@@ -313,10 +317,13 @@ impl<'a> DependencyView<'a> {
         };
 
         if Self::fits_in_buffer(&bottom_area, buf) {
-            Paragraph::new(padding_text)
-                .alignment(Alignment::Right)
-                .style(style)
-                .render(bottom_area, buf);
+            Widget::render(
+                NxParagraph::new(padding_text)
+                    .alignment(Alignment::Right)
+                    .style(style),
+                bottom_area,
+                buf,
+            );
         }
     }
 
@@ -330,7 +337,7 @@ impl<'a> DependencyView<'a> {
             no_deps_style,
         )])];
 
-        let paragraph = Paragraph::new(no_deps_message)
+        let paragraph = NxParagraph::new(no_deps_message)
             .alignment(Alignment::Center)
             .style(Style::default());
 
@@ -505,7 +512,7 @@ impl<'a> DependencyView<'a> {
         state.dep_row_x_range = (content_area.x, content_area.x + content_area.width);
 
         let visible_lines: Vec<Line> = lines[start..end].to_vec();
-        let paragraph = Paragraph::new(visible_lines)
+        let paragraph = NxParagraph::new(visible_lines)
             .alignment(Alignment::Left)
             .style(Style::default());
 
@@ -614,7 +621,7 @@ impl<'a> StatefulWidget for DependencyView<'a> {
                 Style::default().fg(THEME.secondary_fg),
             )])];
 
-            let paragraph = Paragraph::new(message_line)
+            let paragraph = NxParagraph::new(message_line)
                 .alignment(Alignment::Center)
                 .style(Style::default());
 
