@@ -147,6 +147,7 @@ export {
 export {
   createPackageJson,
   findProjectsNpmDependencies,
+  stripPrunedLockfilePnpmConfig,
 } from './plugins/js/package-json/create-package-json';
 export {
   TargetProjectLocator,
@@ -255,7 +256,10 @@ export type {
   PackageJson,
   PackageJsonDependencySection,
 } from './utils/package-json';
-export { readNxMigrateConfig } from './utils/package-json';
+export {
+  readNxMigrateConfig,
+  stripPrunedLockfilePnpmConfig,
+} from './utils/package-json';
 export type { PackageManagerCommands } from './utils/package-manager';
 // Sourced from the leaf module rather than ./utils/plugins: the barrel index
 // pulls output.ts and core-plugins.ts into the eager closure for a function that

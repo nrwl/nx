@@ -927,7 +927,7 @@ describe('createPackageJson', () => {
       );
 
       // The lockfile bakes overrides into its snapshots, so none are declared
-      // here - neither the root nor a project's own.
+      // here: neither the root nor a project's own.
       expect(
         createPackageJson('lib1', graph, { root: '', prunedLockfile: true })
       ).toEqual({
