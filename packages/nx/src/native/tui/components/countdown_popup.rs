@@ -150,6 +150,12 @@ pub struct CountdownPopup {
     scrollbar_state: ScrollbarState,
     content_height: usize,
     viewport_height: usize,
+    /// Screen rect of the bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing.
+    last_area: Option<Rect>,
+    /// Screen rect of the inner text area (inside the border, clear of the
+    /// scrollbar) from the last render, used to bound text selection/links.
+    content_area: Option<Rect>,
     /// The run report shown above the hint text (None until set).
     summary: Option<PerformanceSummaryPayload>,
     /// When pinned, the auto-exit countdown is stopped and the popup stays open
@@ -167,6 +173,8 @@ impl CountdownPopup {
             scrollbar_state: ScrollbarState::default(),
             content_height: 0,
             viewport_height: 0,
+            last_area: None,
+            content_area: None,
             summary: None,
             pinned: false,
         }
@@ -263,6 +271,16 @@ impl CountdownPopup {
 
     pub fn is_scrollable(&self) -> bool {
         self.content_height > self.viewport_height
+    }
+
+    /// The bordered popup box drawn last frame, if visible.
+    pub fn last_area(&self) -> Option<Rect> {
+        self.last_area
+    }
+
+    /// The inner text area drawn last frame, if visible.
+    pub fn content_area(&self) -> Option<Rect> {
+        self.content_area
     }
 
     pub fn start_countdown(&mut self, duration_secs: u64) {
@@ -544,6 +562,9 @@ impl CountdownPopup {
 
         let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
 
+        // Record the popup box so the app can hit-test mouse events against it.
+        self.last_area = Some(popup_area);
+
         let mut block = Block::default()
             .title(Line::from(title_spans))
             .title_alignment(Alignment::Left)
@@ -557,7 +578,12 @@ impl CountdownPopup {
         }
 
         let inner_area = block.inner(popup_area);
+        // Record the inner text area so the app can bound selection/link hit-tests.
+        self.content_area = Some(inner_area);
         self.viewport_height = inner_area.height as usize;
+        // The text area sits inside the border + padding, so it never includes
+        // the scrollbar (drawn on the far-right border column).
+        self.content_area = Some(inner_area);
 
         // Content height in wrapped rows, driving the scrollbar and the scroll
         // bound in scroll_down.
@@ -651,6 +677,9 @@ impl Component for CountdownPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
+        } else {
+            self.last_area = None;
+            self.content_area = None;
         }
         Ok(())
     }

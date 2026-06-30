@@ -16,6 +16,7 @@ use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
 use super::help_text::HelpText;
+use super::link::{Link, LinkRegistry};
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };
@@ -259,6 +260,9 @@ pub struct TasksList {
     filter_persisted: bool, // Whether the filter is in a persisted state
     spacebar_mode: bool,    // Whether we're in spacebar mode (output follows selection)
     cloud_message: Option<String>,
+    /// Structured Nx Cloud link (display label, href URL). When set, it renders
+    /// as a clickable label in place of the raw `cloud_message`.
+    cloud_link: Option<(String, String)>,
     max_parallel: usize, // Maximum number of parallel tasks
     title_text: String,
     pub action_tx: Option<UnboundedSender<Action>>,
@@ -272,8 +276,38 @@ pub struct TasksList {
     // and running batch groups, in start order. Excludes tasks nested in a batch
     // (the batch group represents them).
     in_progress_entries: Vec<SelectionEntry>,
-    needs_sort: bool,            // Deferred sort flag - sort once per render frame
+    needs_sort: bool, // Deferred sort flag - sort once per render frame
+    /// Screen rect of the scrollable rows area (the table minus its header
+    /// overhead), captured during render so mouse clicks can map a row to an
+    /// entry. Each visible viewport entry occupies one row.
+    rows_hit_area: Option<Rect>,
+    /// External links (currently the Nx Cloud message link) recorded during
+    /// render. The app hit-tests this on click to open the link.
+    link_registry: LinkRegistry,
+    /// Screen rect of the table's text region (excluding the scrollbar column),
+    /// captured during render so a drag can select task ids/statuses/durations.
+    text_selection_area: Option<Rect>,
     perf_report_available: bool, // Whether the performance report exists yet (run finished)
+}
+
+/// Outcome of a mouse click landing inside the task list, returned to the App so
+/// it can react (focus, mode switch, or open a link) outside the component's
+/// borrow.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TaskListClick {
+    /// A task/batch row was selected.
+    Select,
+    /// A task/batch row was double-clicked — open and focus it in the main
+    /// terminal pane area (the same as pressing Enter on the row).
+    OpenInPane,
+}
+
+/// Returns true if the terminal cell `(col, row)` falls within `rect`.
+fn point_in_rect(col: u16, row: u16, rect: Rect) -> bool {
+    col >= rect.x
+        && col < rect.x.saturating_add(rect.width)
+        && row >= rect.y
+        && row < rect.y.saturating_add(rect.height)
 }
 
 impl TasksList {
@@ -310,6 +344,7 @@ impl TasksList {
             filter_persisted: false,
             spacebar_mode: false,
             cloud_message: None,
+            cloud_link: None,
             max_parallel: DEFAULT_MAX_PARALLEL,
             title_text,
             action_tx: None,
@@ -321,6 +356,9 @@ impl TasksList {
             terminal_width: None,
             in_progress_entries: Vec::new(),
             needs_sort: false,
+            rows_hit_area: None,
+            link_registry: LinkRegistry::new(),
+            text_selection_area: None,
             perf_report_available: false,
         };
 
@@ -1947,6 +1985,76 @@ impl TasksList {
         total_entries > dynamic_viewport_height
     }
 
+    /// The table's text region from the last render, used to bound a drag-based
+    /// text selection (and exclude the scrollbar).
+    pub fn selection_area(&self) -> Option<Rect> {
+        self.text_selection_area
+    }
+
+    /// Resolve a left-click at terminal cell `(col, row)` within the task list.
+    ///
+    /// The cloud link is checked first; otherwise the row is mapped to a viewport
+    /// entry (rows begin `TABLE_HEADER_OVERHEAD_ROWS` below the table top and are
+    /// one entry tall). A task/batch row updates the selection and returns
+    /// `Select`, or `OpenInPane` on a double-click; a single click on a batch row
+    /// also toggles its expansion. Returns `None` when the click doesn't land on
+    /// anything actionable (header, blank row, gap).
+    pub fn handle_click(&mut self, col: u16, row: u16, is_double: bool) -> Option<TaskListClick> {
+        // External links (e.g. the cloud message) are hit-tested by the app via
+        // `link_registry`, before row clicks, so they aren't handled here.
+        let area = self.rows_hit_area?;
+        if !point_in_rect(col, row, area) {
+            return None;
+        }
+
+        // Rows begin below the header overhead; clicks above that aren't rows.
+        let first_row_y = area.y.saturating_add(TABLE_HEADER_OVERHEAD_ROWS);
+        if row < first_row_y {
+            return None;
+        }
+        let index = (row - first_row_y) as usize;
+
+        // Map the row index to the visible viewport entry. Blank/placeholder
+        // rows are `None` and are not selectable.
+        let entry = {
+            let manager = self.selection_manager.lock();
+            manager
+                .get_viewport_entries()
+                .into_iter()
+                .nth(index)
+                .flatten()
+        }?;
+
+        match &entry {
+            SelectionEntry::Task(task_id) => {
+                self.selection_manager.lock().select_task(task_id);
+            }
+            SelectionEntry::BatchGroup(batch_id) => {
+                self.selection_manager.lock().select_batch_group(batch_id);
+                // A single click on a batch row toggles its expansion so the
+                // mouse can open/close batches like the ←/→ keys do. (The first
+                // click of a double-click toggles; the second opens it in a pane.)
+                if !is_double {
+                    let expanded = self
+                        .get_batch_group_by_id(batch_id)
+                        .map(|batch| batch.is_expanded)
+                        .unwrap_or(false);
+                    if expanded {
+                        self.collapse_batch(batch_id);
+                    } else {
+                        self.expand_batch(batch_id);
+                    }
+                }
+            }
+        }
+
+        if is_double {
+            Some(TaskListClick::OpenInPane)
+        } else {
+            Some(TaskListClick::Select)
+        }
+    }
+
     /// Renders the main task table with scrollbar if needed.
     fn render_task_table(
         &mut self,
@@ -1956,6 +2064,9 @@ impl TasksList {
         needs_scrollbar: bool,
         scroll_metrics: &ScrollMetrics,
     ) {
+        // Record the table rect for mouse hit-testing. Rows start
+        // TABLE_HEADER_OVERHEAD_ROWS below the top and are one viewport entry tall.
+        self.rows_hit_area = Some(table_area);
         let visible_entries = self.selection_manager.lock().get_viewport_entries();
         let selected_style = Style::default()
             .fg(THEME.primary_fg)
@@ -2288,6 +2399,11 @@ impl TasksList {
 
         f.render_widget(t, table_render_area);
 
+        // The text region is the table minus the scrollbar/padding, so a drag
+        // selection never grabs the scrollbar glyph. (Set after rendering to
+        // avoid overlapping the immutable `header` borrow above.)
+        self.text_selection_area = Some(table_render_area);
+
         // Render scrollbar if needed
         if let Some(scrollbar_area) = scrollbar_area {
             // Position scrollbar below top_margin + header, spanning the spacing row and content
@@ -2567,87 +2683,106 @@ impl TasksList {
         help_text.render(f, help_text_area);
     }
 
-    /// Renders messages received from Nx Cloud
-    fn render_cloud_message(&self, f: &mut Frame<'_>, cloud_message_area: Rect, is_dimmed: bool) {
-        if let Some(message) = &self.cloud_message {
-            let available_width = cloud_message_area.width;
-            // Ensure minimum width to render anything
-            if available_width == 0 || cloud_message_area.height == 0 {
-                return;
-            }
+    /// Renders messages received from Nx Cloud.
+    ///
+    /// When the message contains a URL, the URL is rendered as a clickable
+    /// [`Link`] (recorded in `link_registry` for the app to hit-test). The link
+    /// truncates its display with an ellipsis when space is tight while still
+    /// opening the full href.
+    fn render_cloud_message(
+        &mut self,
+        f: &mut Frame<'_>,
+        cloud_message_area: Rect,
+        is_dimmed: bool,
+    ) {
+        let available_width = cloud_message_area.width;
+        if available_width == 0 || cloud_message_area.height == 0 {
+            return;
+        }
 
-            let message_style = if is_dimmed {
-                Style::default().fg(THEME.secondary_fg).dim()
-            } else {
-                Style::default().fg(THEME.secondary_fg)
-            };
+        // A structured cloud link takes precedence: render its label as a
+        // clickable link that opens the (different) href. Clone so the borrow of
+        // `self.cloud_link` ends before we touch `&mut self.link_registry`.
+        if let Some((label, url)) = self.cloud_link.clone() {
+            let link = Link::new(label, url).dim(is_dimmed);
+            f.render_stateful_widget(&link, cloud_message_area, &mut self.link_registry);
+            return;
+        }
 
-            // No URL present in the message, render the message as is if it fits, otherwise truncate
-            if !message.contains("https://") {
-                let message_line = Line::from(Span::styled(message.as_str(), message_style));
-                // Line fits as is
-                if message_line.width() <= available_width as usize {
-                    let cloud_message_paragraph =
-                        Paragraph::new(message_line).alignment(Alignment::Left);
-                    f.render_widget(cloud_message_paragraph, cloud_message_area);
-                    return;
-                }
-                // Line doesn't fit, truncate
-                let max_message_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_message =
-                    format!("{}...", &message[..max_message_render_len as usize]);
-                let cloud_message_paragraph =
-                    Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
-                        .alignment(Alignment::Left);
-                f.render_widget(cloud_message_paragraph, cloud_message_area);
-                return;
-            }
+        // Clone so the borrow of `self.cloud_message` ends before we render the
+        // link, which needs `&mut self.link_registry`.
+        let Some(message) = self.cloud_message.clone() else {
+            return;
+        };
 
-            // Find URL position
-            let url_start_pos = message.find("https://").unwrap_or(message.len());
-            // Figure out the "prefix" (i.e. any message contents before the URL)
-            let prefix = &message[0..url_start_pos];
-            let url = &message[url_start_pos..];
+        let message_style = if is_dimmed {
+            Style::default().fg(THEME.secondary_fg).dim()
+        } else {
+            Style::default().fg(THEME.secondary_fg)
+        };
 
-            let prefix_len = prefix.len() as u16;
-            let url_len = url.len() as u16;
-
-            let mut spans = vec![];
-
-            let url_style = if is_dimmed {
-                Style::default().fg(THEME.info).underlined().dim()
-            } else {
-                Style::default().fg(THEME.info).underlined()
-            };
-
-            // Determine what fits, prioritizing the URL
-            if url_len <= available_width {
-                // Full URL Fits, check if the full message does, and if so, render the full thing
-                if prefix_len + url_len <= available_width {
-                    spans.push(Span::styled(prefix, message_style));
-                    spans.push(Span::styled(url, url_style));
-                } else {
-                    // Only URL fits, do not render the prefix
-                    spans.push(Span::styled(url, url_style));
-                }
-            } else if available_width >= MIN_CLOUD_URL_WIDTH {
-                // Full URL doesn't fit, but Truncated URL does.
-                let max_url_render_len = available_width.saturating_sub(3); // Reserve for "..."
-                let truncated_url = format!("{}...", &url[..max_url_render_len as usize]);
-                spans.push(Span::styled(truncated_url, url_style));
-            } else {
-                // Not enough space for even truncated URL, show nothing...
-                // Hopefully in this situation user can make their terminal bigger or switch layout mode
-            }
-
-            if !spans.is_empty() {
-                let message_line = Line::from(spans);
+        // No URL present: render the message as-is if it fits, otherwise truncate.
+        if !message.contains("https://") {
+            let message_line = Line::from(Span::styled(message.as_str(), message_style));
+            if message_line.width() <= available_width as usize {
                 let cloud_message_paragraph =
                     Paragraph::new(message_line).alignment(Alignment::Left);
-
                 f.render_widget(cloud_message_paragraph, cloud_message_area);
+                return;
             }
+            let max_message_render_len = available_width.saturating_sub(3) as usize; // Reserve for "..."
+            let truncated_message = format!("{}...", &message[..max_message_render_len]);
+            let cloud_message_paragraph =
+                Paragraph::new(Line::from(Span::styled(truncated_message, message_style)))
+                    .alignment(Alignment::Left);
+            f.render_widget(cloud_message_paragraph, cloud_message_area);
+            return;
         }
+
+        // Split into a plain-text prefix and the URL.
+        let url_start_pos = message.find("https://").unwrap_or(message.len());
+        let prefix = &message[0..url_start_pos];
+        let url = &message[url_start_pos..];
+        let prefix_width = Span::raw(prefix).width() as u16;
+        let url_width = Span::raw(url).width() as u16;
+
+        // The full URL doesn't fit and there isn't even room for a useful
+        // truncation: render nothing (user can widen the terminal).
+        if url_width > available_width && available_width < MIN_CLOUD_URL_WIDTH {
+            return;
+        }
+
+        // Show the prefix only when it fits alongside the full URL; otherwise the
+        // URL link takes the whole row (the link truncates itself if needed).
+        let show_prefix = prefix_width > 0 && prefix_width + url_width <= available_width;
+        let link_x = if show_prefix {
+            let prefix_area = Rect {
+                width: prefix_width,
+                ..cloud_message_area
+            };
+            let prefix_paragraph = Paragraph::new(Line::from(Span::styled(prefix, message_style)))
+                .alignment(Alignment::Left);
+            f.render_widget(prefix_paragraph, prefix_area);
+            cloud_message_area.x.saturating_add(prefix_width)
+        } else {
+            cloud_message_area.x
+        };
+
+        let link_width = cloud_message_area.right().saturating_sub(link_x);
+        if link_width == 0 {
+            return;
+        }
+        let link_area = Rect {
+            x: link_x,
+            y: cloud_message_area.y,
+            width: link_width,
+            height: 1,
+        };
+
+        // Display text and href are the same here (the URL); a caller that wants
+        // friendly text like "View in Nx Cloud" passes a distinct display.
+        let link = Link::new(url, url).dim(is_dimmed);
+        f.render_stateful_widget(&link, link_area, &mut self.link_registry);
     }
 }
 
@@ -2658,6 +2793,11 @@ impl Component for TasksList {
     }
 
     fn draw(&mut self, f: &mut Frame<'_>, area: Rect) -> Result<()> {
+        // Reset per-frame link hit-testing; repopulated as the cloud message
+        // renders below. (The app also clears this before the draw pass, but
+        // clearing here keeps the component correct when drawn directly, e.g. in
+        // tests.)
+        self.link_registry.clear();
         // Flush any pending sort before rendering
         self.prepare_for_render();
 
@@ -2668,7 +2808,9 @@ impl Component for TasksList {
         // --- 1. Initial Context ---
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
         let is_dimmed = !self.is_task_list_focused();
-        let has_cloud_message = self.cloud_message.is_some();
+        // A structured cloud link takes precedence over a raw cloud message, but
+        // either counts as "has cloud content" for laying out the bottom bar.
+        let has_cloud_message = self.cloud_message.is_some() || self.cloud_link.is_some();
 
         // --- 2. Determine Bottom Layout Mode ---
         enum BottomLayoutMode {
@@ -2681,7 +2823,10 @@ impl Component for TasksList {
         if has_cloud_message {
             // Calculate the actual cloud message width that will be rendered
             // This accounts for the URL-only fallback when the full message doesn't fit
-            let cloud_text_width = if let Some(message) = &self.cloud_message {
+            let cloud_text_width = if let Some((label, _url)) = &self.cloud_link {
+                // A structured link renders just its (short) label.
+                Span::raw(label.as_str()).width() as u16
+            } else if let Some(message) = &self.cloud_message {
                 if message.contains("https://") {
                     let url_start_pos = message.find("https://").unwrap_or(message.len());
                     let prefix = &message[0..url_start_pos];
@@ -3037,6 +3182,9 @@ impl Component for TasksList {
             Action::UpdateCloudMessage(message) => {
                 self.cloud_message = Some(message);
             }
+            Action::UpdateCloudLink(label, url) => {
+                self.cloud_link = Some((label, url));
+            }
             Action::ScrollUp => {
                 self.scroll_up();
             }
@@ -3073,6 +3221,14 @@ impl Component for TasksList {
             _ => {}
         }
         Ok(None)
+    }
+
+    fn link_registry(&self) -> Option<&LinkRegistry> {
+        Some(&self.link_registry)
+    }
+
+    fn link_registry_mut(&mut self) -> Option<&mut LinkRegistry> {
+        Some(&mut self.link_registry)
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -4055,6 +4211,113 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn cloud_message_url_is_registered_as_a_clickable_link() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::Success,
+                ))
+                .unwrap();
+        }
+
+        let url = "https://nx.app/runs/KnGk4A47qk";
+        tasks_list
+            .update(Action::UpdateCloudMessage(format!(
+                "View logs and run details at {url}"
+            )))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        let registry = tasks_list
+            .link_registry()
+            .expect("the task list exposes a link registry");
+
+        // Every clickable cell resolves to the full URL, and the clickable region
+        // spans exactly the URL's width on a single row (the prefix text is not
+        // part of the link).
+        let mut hits = 0usize;
+        for y in 0..15u16 {
+            for x in 0..120u16 {
+                if let Some(href) = registry.hit_test(x, y) {
+                    assert_eq!(href, url, "only the cloud URL should be clickable");
+                    hits += 1;
+                }
+            }
+        }
+        assert_eq!(
+            hits,
+            url.chars().count(),
+            "the clickable region matches the URL width"
+        );
+    }
+
+    #[test]
+    fn cloud_link_renders_label_and_opens_url() {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(120, 15);
+
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::Success,
+                ))
+                .unwrap();
+        }
+
+        let label = "View in Nx Cloud";
+        let url = "https://nx.app/runs/KnGk4A47qk";
+        tasks_list
+            .update(Action::UpdateCloudLink(label.to_string(), url.to_string()))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        // The friendly label is drawn (not the URL) and clicking anywhere on it
+        // opens the full URL. Scan row-major so horizontal text is contiguous.
+        let buffer = terminal.backend().buffer().clone();
+        let rendered: String = (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer[(x, y)].symbol().to_string())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        assert!(
+            rendered.contains(label),
+            "the friendly label should be rendered somewhere"
+        );
+        assert!(
+            !rendered.contains(url),
+            "the raw URL should not be shown when a structured link is set"
+        );
+
+        let registry = tasks_list
+            .link_registry()
+            .expect("the task list exposes a link registry");
+        let mut hits = 0usize;
+        for y in 0..15u16 {
+            for x in 0..120u16 {
+                if let Some(href) = registry.hit_test(x, y) {
+                    assert_eq!(href, url, "the link opens the full URL");
+                    hits += 1;
+                }
+            }
+        }
+        assert_eq!(
+            hits,
+            label.chars().count(),
+            "the clickable region matches the label width"
+        );
     }
 
     #[test]

@@ -23,6 +23,50 @@ use crate::native::tui::utils::{
 use crate::native::tui::vt100_adapter::Vt100CttScreen;
 use crate::native::tui::{action::Action, pty::PtyInstance};
 
+/// A text selection within a terminal pane, tracked in absolute content
+/// (visual-row, column) coordinates so it stays anchored to the text as the
+/// pane scrolls.
+#[derive(Debug, Clone, Copy)]
+struct TextSelection {
+    anchor: (usize, usize),
+    cursor: (usize, usize),
+    /// Whether a drag is currently in progress (vs. a finalized selection).
+    dragging: bool,
+}
+
+impl TextSelection {
+    /// Normalized `(start, end)` with `start <= end` in reading order.
+    fn range(&self) -> ((usize, usize), (usize, usize)) {
+        if self.anchor <= self.cursor {
+            (self.anchor, self.cursor)
+        } else {
+            (self.cursor, self.anchor)
+        }
+    }
+
+    /// True once the selection spans more than its origin cell (a real drag).
+    fn is_nonempty(&self) -> bool {
+        self.anchor != self.cursor
+    }
+
+    /// Whether content cell `(row, col)` falls inside the selection (inclusive).
+    fn contains(&self, row: usize, col: usize) -> bool {
+        let (start, end) = self.range();
+        let after_start = row > start.0 || (row == start.0 && col >= start.1);
+        let before_end = row < end.0 || (row == end.0 && col <= end.1);
+        after_start && before_end
+    }
+}
+
+/// Copy `text` to the system clipboard, returning whether it succeeded. Keeps
+/// the `Clipboard::new()` / `set_text` dance in one place so the selection and
+/// full-output copy paths stay in sync.
+fn copy_to_clipboard(text: &str) -> bool {
+    Clipboard::new()
+        .and_then(|mut clipboard| clipboard.set_text(text))
+        .is_ok()
+}
+
 /// Configuration for terminal pane layout and display constants
 #[derive(Debug, Clone)]
 struct TerminalPaneConfig {
@@ -53,6 +97,11 @@ pub struct TerminalPaneData {
     scroll_momentum: ScrollMomentum,
     // Transient status message with timestamp for auto-clear
     pub status_message: Option<(String, Instant)>,
+    /// Active text selection within this pane, if any (NXC-3946).
+    selection: Option<TextSelection>,
+    /// Inner content rect (inside borders/padding) captured during the last
+    /// render, used to translate mouse coordinates into content coordinates.
+    last_content_area: Option<Rect>,
 }
 
 impl TerminalPaneData {
@@ -64,6 +113,8 @@ impl TerminalPaneData {
             can_be_interactive: false,
             scroll_momentum: ScrollMomentum::new(),
             status_message: None,
+            selection: None,
+            last_content_area: None,
         }
     }
 
@@ -116,24 +167,31 @@ impl TerminalPaneData {
                     pty_mut.scroll_down(12);
                     return Ok(None);
                 }
-                // Handle 'c' for copying when not in interactive mode
+                // Handle 'c' for copying when not in interactive mode. Prefer an
+                // active selection; fall back to copying the whole output.
                 KeyCode::Char('c') if !self.is_interactive => {
-                    let status_message = if let Some(screen) = pty.get_screen() {
-                        // Unformatted output (no ANSI escape codes)
-                        let output = screen.all_contents();
-                        match Clipboard::new() {
-                            Ok(mut clipboard) => {
-                                if clipboard.set_text(output).is_ok() {
-                                    Some("Output copied")
-                                } else {
-                                    Some("Copy failed")
-                                }
+                    let status_message =
+                        if let Some(sel) = self.selection.filter(|s| s.is_nonempty()) {
+                            let (start, end) = sel.range();
+                            let text = pty.selected_text(start, end);
+                            if text.is_empty() {
+                                None
+                            } else if copy_to_clipboard(&text) {
+                                Some("Selection copied")
+                            } else {
+                                Some("Copy failed")
                             }
-                            Err(_) => Some("Copy failed"),
-                        }
-                    } else {
-                        None
-                    };
+                        } else if let Some(screen) = pty.get_screen() {
+                            // Unformatted output (no ANSI escape codes)
+                            let output = screen.all_contents();
+                            if copy_to_clipboard(&output) {
+                                Some("Output copied")
+                            } else {
+                                Some("Copy failed")
+                            }
+                        } else {
+                            None
+                        };
                     // Set status message outside the pty borrow
                     if let Some(msg) = status_message {
                         self.status_message = Some((msg.to_owned(), Instant::now()));
@@ -224,6 +282,130 @@ impl TerminalPaneData {
                 ScrollDirection::Down => pty_mut.scroll_down(scroll_amount),
             }
         }
+    }
+
+    /// Public entry point for mouse-wheel scrolling of the terminal output.
+    /// Reuses the same momentum model as keyboard scrolling so the wheel and
+    /// arrow keys feel consistent.
+    pub fn handle_mouse_scroll(&mut self, direction: ScrollDirection) {
+        self.scroll(direction);
+    }
+
+    // --- Text selection (NXC-3946) -------------------------------------------
+
+    /// Translate a terminal cell `(col, row)` into absolute content coordinates
+    /// `(visual_row, column)` within this pane, if the pane has rendered content
+    /// and the cell falls inside the content area.
+    pub fn content_coords_at(&self, col: u16, row: u16) -> Option<(usize, usize)> {
+        let area = self.last_content_area?;
+        if col < area.x
+            || col >= area.x.saturating_add(area.width)
+            || row < area.y
+            || row >= area.y.saturating_add(area.height)
+        {
+            return None;
+        }
+        let pty = self.pty.as_ref()?;
+        let screen_row = (row - area.y) as usize;
+        let screen_col = (col - area.x) as usize;
+        // Map the on-screen row to an absolute content row: the top visible row
+        // is `total - viewport_height - scrollback` rows from the start.
+        let top = pty
+            .get_total_content_rows()
+            .saturating_sub(area.height as usize)
+            .saturating_sub(pty.get_scroll_offset());
+        Some((top + screen_row, screen_col))
+    }
+
+    /// Like [`content_coords_at`](Self::content_coords_at) but clamps the cell
+    /// into the content area first, so a drag that strays outside the pane still
+    /// extends the selection to the nearest edge.
+    pub fn content_coords_clamped(&self, col: u16, row: u16) -> Option<(usize, usize)> {
+        let area = self.last_content_area?;
+        if area.width == 0 || area.height == 0 {
+            return None;
+        }
+        let c = col.clamp(area.x, area.x + area.width - 1);
+        let r = row.clamp(area.y, area.y + area.height - 1);
+        self.content_coords_at(c, r)
+    }
+
+    /// Vertical edge of the content area the cell is at, for drag auto-scroll:
+    /// `-1` at/above the top edge, `1` at/below the bottom edge, `0` otherwise.
+    pub fn content_edge(&self, row: u16) -> i8 {
+        match self.last_content_area {
+            Some(area) if area.height > 0 => {
+                if row <= area.y {
+                    -1
+                } else if row >= area.y + area.height - 1 {
+                    1
+                } else {
+                    0
+                }
+            }
+            _ => 0,
+        }
+    }
+
+    /// Begin a selection drag at the given content coordinates.
+    pub fn begin_selection(&mut self, row: usize, col: usize) {
+        self.selection = Some(TextSelection {
+            anchor: (row, col),
+            cursor: (row, col),
+            dragging: true,
+        });
+    }
+
+    /// Update the in-progress selection's cursor to new content coordinates.
+    pub fn update_selection(&mut self, row: usize, col: usize) {
+        if let Some(sel) = &mut self.selection
+            && sel.dragging
+        {
+            sel.cursor = (row, col);
+        }
+    }
+
+    /// Finish the current selection drag. A plain click (no movement) clears the
+    /// selection. Returns true if a non-empty selection remains.
+    pub fn finish_selection(&mut self) -> bool {
+        if let Some(sel) = &mut self.selection {
+            sel.dragging = false;
+            if !sel.is_nonempty() {
+                self.selection = None;
+                return false;
+            }
+            return true;
+        }
+        false
+    }
+
+    /// Clear any selection.
+    pub fn clear_selection(&mut self) {
+        self.selection = None;
+    }
+
+    /// Copy the current selection to the clipboard and set a status message.
+    pub fn copy_selection(&mut self) {
+        let Some(sel) = self.selection else {
+            return;
+        };
+        if !sel.is_nonempty() {
+            return;
+        }
+        let Some(pty) = self.pty.as_ref() else {
+            return;
+        };
+        let (start, end) = sel.range();
+        let text = pty.selected_text(start, end);
+        if text.is_empty() {
+            return;
+        }
+        let msg = if copy_to_clipboard(&text) {
+            "Selection copied"
+        } else {
+            "Copy failed"
+        };
+        self.status_message = Some((msg.to_owned(), Instant::now()));
     }
 }
 
@@ -432,7 +614,7 @@ impl<'a> TerminalPane<'a> {
 impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // Clamp to the buffer to avoid rendering outside bounds
         let safe_area = area.intersection(*buf.area());
         if safe_area.width == 0 || safe_area.height == 0 {
@@ -653,20 +835,36 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let inner_area = block.inner(safe_area);
 
+        // Record the content rect so mouse events can map cells to content
+        // coordinates for text selection. Scoped so the mutable borrow ends
+        // before the immutable render borrow below.
+        if let Some(pty_data) = &mut self.pty_data {
+            pty_data.last_content_area = Some(inner_area);
+        }
+
         if let Some(pty_data) = &self.pty_data {
             if let Some(pty) = &pty_data.pty {
-                if let Some(screen) = pty.get_screen() {
-                    let viewport_height = inner_area.height;
+                // Read every value that needs the parser lock BEFORE acquiring the
+                // `screen` read guard below. parking_lot's RwLock is non-reentrant
+                // and writer-preferring: a blocking `read()` taken while `screen`
+                // is still held deadlocks the render thread against the PTY's
+                // output-writer thread the moment that thread has a `write()`
+                // queued. That is what froze the entire TUI when selecting text in
+                // a pane that was still producing output.
+                let viewport_height = inner_area.height;
+                let current_scroll = pty.get_scroll_offset();
+                // Calculate content based on expected dimensions, not current PTY
+                // dimensions. This prevents scrollbar flash when the PTY hasn't
+                // been resized yet.
+                let total_content_rows =
+                    self.calculate_content_rows_for_viewport(pty, viewport_height);
+                // Absolute content-row count used to map the selection overlay,
+                // matching `content_coords_at`'s basis.
+                let selection_content_rows = pty.get_total_content_rows();
 
+                if let Some(screen) = pty.get_screen() {
                     // Cache expected viewport height for consistent calculations
                     state.expected_viewport_height = Some(viewport_height);
-
-                    let current_scroll = pty.get_scroll_offset();
-
-                    // Calculate content based on expected dimensions, not current PTY dimensions
-                    // This prevents scrollbar flash when PTY hasn't been resized yet
-                    let total_content_rows =
-                        self.calculate_content_rows_for_viewport(pty, viewport_height);
                     let scrollable_rows =
                         total_content_rows.saturating_sub(viewport_height as usize);
 
@@ -689,6 +887,27 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     let pseudo_term =
                         PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
                     Widget::render(pseudo_term, safe_area, buf);
+
+                    // Overlay the text-selection highlight (NXC-3946). tui-term has
+                    // no selection concept, so we reverse-video the selected cells
+                    // after it has rendered. Map each visible cell to its content
+                    // row and test it against the selection.
+                    if let Some(selection) = pty_data.selection {
+                        let top = selection_content_rows
+                            .saturating_sub(inner_area.height as usize)
+                            .saturating_sub(current_scroll);
+                        for sy in 0..inner_area.height {
+                            let content_row = top + sy as usize;
+                            for sx in 0..inner_area.width {
+                                if selection.contains(content_row, sx as usize)
+                                    && let Some(cell) =
+                                        buf.cell_mut((inner_area.x + sx, inner_area.y + sy))
+                                {
+                                    cell.modifier |= Modifier::REVERSED;
+                                }
+                            }
+                        }
+                    }
 
                     // Only render scrollbar if needed
                     if needs_scrollbar {
@@ -939,6 +1158,54 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 mod tests {
     use super::*;
     use ratatui::layout::Rect;
+
+    #[test]
+    fn test_text_selection_contains_inclusive_range() {
+        let sel = TextSelection {
+            anchor: (1, 2),
+            cursor: (3, 4),
+            dragging: false,
+        };
+        // Before the start of the selection.
+        assert!(!sel.contains(1, 1));
+        assert!(!sel.contains(0, 9));
+        // Start cell is inclusive.
+        assert!(sel.contains(1, 2));
+        // A fully-covered middle row.
+        assert!(sel.contains(2, 0));
+        assert!(sel.contains(2, 999));
+        // End row is covered up to and including the end column.
+        assert!(sel.contains(3, 4));
+        assert!(!sel.contains(3, 5));
+    }
+
+    #[test]
+    fn test_text_selection_normalizes_reversed_drag() {
+        // Dragging up/left puts the cursor before the anchor; the range should
+        // still be normalized.
+        let sel = TextSelection {
+            anchor: (3, 4),
+            cursor: (1, 2),
+            dragging: true,
+        };
+        assert!(sel.contains(1, 2));
+        assert!(sel.contains(2, 10));
+        assert!(sel.contains(3, 4));
+        assert!(!sel.contains(1, 1));
+        assert!(!sel.contains(3, 5));
+    }
+
+    #[test]
+    fn test_text_selection_empty_is_single_cell() {
+        let sel = TextSelection {
+            anchor: (2, 5),
+            cursor: (2, 5),
+            dragging: true,
+        };
+        assert!(!sel.is_nonempty());
+        assert!(sel.contains(2, 5));
+        assert!(!sel.contains(2, 6));
+    }
 
     // Helper function to create a TerminalPane for testing
     fn create_terminal_pane() -> TerminalPane<'static> {

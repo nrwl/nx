@@ -8,6 +8,7 @@ use super::{
     action::Action,
     tui::{Event, Frame},
 };
+use link::LinkRegistry;
 
 pub mod countdown_popup;
 pub mod dependency_view;
@@ -15,6 +16,7 @@ pub mod help_popup;
 pub mod help_text;
 pub mod hint_popup;
 pub mod layout_manager;
+pub mod link;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;
@@ -103,6 +105,19 @@ pub trait Component: Any + Send {
     ///
     /// * `Result<()>` - An Ok result or an error.
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()>;
+
+    /// The component's clickable external links recorded during the last
+    /// `draw`, if it has any. The app hit-tests these on click. Components
+    /// without links use the default (`None`).
+    fn link_registry(&self) -> Option<&LinkRegistry> {
+        None
+    }
+
+    /// Mutable access to the link registry so the app can clear it at the start
+    /// of each draw pass (the component repopulates it while drawing).
+    fn link_registry_mut(&mut self) -> Option<&mut LinkRegistry> {
+        None
+    }
 
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;

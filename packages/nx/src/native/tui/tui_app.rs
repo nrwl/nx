@@ -392,6 +392,15 @@ pub trait TuiApp: Send {
             .map(|s| s.to_string())
     }
 
+    /// Set a structured Nx Cloud link (display label + href URL) to display.
+    ///
+    /// Default implementation stores the link directly in TuiState.
+    /// Mode-specific implementations override this to also dispatch a UI action
+    /// so the rendered TasksList picks the link up.
+    fn set_cloud_link(&mut self, label: String, url: String) {
+        self.state().lock().set_cloud_link(Some((label, url)));
+    }
+
     /// Set the run report shown in the exit-countdown popup.
     ///
     /// Default implementation is a no-op; mode-specific implementations forward

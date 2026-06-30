@@ -33,11 +33,16 @@ pub enum Action {
     UpdateTaskStatus(String, TaskStatus),
     SetTaskTiming(String, i64, i64),
     UpdateCloudMessage(String),
+    /// Set a structured Nx Cloud link to render as a clickable label (display
+    /// label, href URL). Distinct from `UpdateCloudMessage` so the displayed
+    /// text and the opened URL can differ (e.g. "View in Nx Cloud").
+    UpdateCloudLink(String, String),
     UpdateFocus(Focus),
     StartCommand(Option<u32>),
     StartTasks(Vec<Task>),
     EndTasks(Vec<TaskResult>),
     ToggleDebugMode,
+    ToggleMouseCapture,
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,

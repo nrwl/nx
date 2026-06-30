@@ -712,6 +712,55 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
+    /// Extract the plain text covered by a selection expressed in absolute
+    /// visual-row + column coordinates (both ends inclusive).
+    ///
+    /// The terminal content is wrapped to the current column count so the row
+    /// indices line up with what's rendered on screen, then sliced by column.
+    /// Trailing whitespace is trimmed per line, matching how terminals copy.
+    pub fn selected_text(&self, start: (usize, usize), end: (usize, usize)) -> String {
+        let (contents, cols) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            let (_, cols) = screen.size();
+            (screen.all_contents(), cols)
+        };
+
+        let rows = split_formatted_into_visual_rows(&contents, cols as usize);
+        if rows.is_empty() {
+            return String::new();
+        }
+
+        let (start_row, start_col) = start;
+        let (end_row, end_col) = end;
+        if start_row >= rows.len() {
+            return String::new();
+        }
+        let end_row = end_row.min(rows.len() - 1);
+
+        let mut out = String::new();
+        for (offset, line) in rows[start_row..=end_row].iter().enumerate() {
+            let row = start_row + offset;
+            let chars: Vec<char> = line.chars().collect();
+            let len = chars.len();
+            let (from, to) = if start_row == end_row {
+                (start_col.min(len), (end_col + 1).min(len))
+            } else if row == start_row {
+                (start_col.min(len), len)
+            } else if row == end_row {
+                (0, (end_col + 1).min(len))
+            } else {
+                (0, len)
+            };
+            let slice: String = chars[from..to.max(from)].iter().collect();
+            out.push_str(slice.trim_end());
+            if row != end_row {
+                out.push('\n');
+            }
+        }
+        out
+    }
+
     /// Checks if the process is likely in interactive/raw mode
     /// Uses both alternate screen detection and cursor movement patterns
     pub fn handles_arrow_keys(&self) -> bool {
@@ -853,6 +902,27 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect cursor hide as interactive"
         );
+    }
+
+    #[test]
+    fn test_selected_text_single_and_multi_row() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"line one\r\nline two\r\nline three\r\n");
+
+        // Single row, partial columns.
+        assert_eq!(pty.selected_text((0, 0), (0, 3)), "line");
+        // Whole second row (trailing whitespace trimmed).
+        assert_eq!(pty.selected_text((1, 0), (1, 20)), "line two");
+        // Spanning two rows: tail of row 0 + head of row 1.
+        assert_eq!(pty.selected_text((0, 5), (1, 3)), "one\nline");
+    }
+
+    #[test]
+    fn test_selected_text_out_of_range_is_empty() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"hello\r\n");
+        // A start row past the content yields nothing rather than panicking.
+        assert_eq!(pty.selected_text((9999, 0), (9999, 5)), "");
     }
 
     #[test]
