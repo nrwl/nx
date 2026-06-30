@@ -191,6 +191,48 @@ describe('getPnpmSpawnRegistryEnv', () => {
       });
     });
 
+    it('expands ${VAR} references in auth.ini values before bridging', () => {
+      process.env.NX_TEST_NPM_TOKEN = 'real-token';
+      try {
+        writeAuthIni(
+          [
+            'registry=https://reg-g.example.com/',
+            '//reg-g.example.com/:_authToken=${NX_TEST_NPM_TOKEN}',
+          ].join('\n')
+        );
+        expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+          npm_config_registry: 'https://reg-g.example.com/',
+          'npm_config_//reg-g.example.com/:_authToken': 'real-token',
+        });
+      } finally {
+        delete process.env.NX_TEST_NPM_TOKEN;
+      }
+    });
+
+    it('re-keys a bare auth.ini _authToken onto the default registry', () => {
+      writeAuthIni('_authToken=bare-secret');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        'npm_config_//registry.npmjs.org/:_authToken': 'bare-secret',
+      });
+    });
+
+    it('re-keys a bare auth.ini _auth onto the configured default registry', () => {
+      writeYaml('registries:\n  default: https://reg-a.example.com/\n');
+      writeAuthIni('_auth=YmFzZTY0');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        npm_config_registry: 'https://reg-a.example.com/',
+        'npm_config_//reg-a.example.com/:_auth': 'YmFzZTY0',
+      });
+    });
+
+    it('prefers a workspace .npmrc bare auth over auth.ini when re-keying', () => {
+      writeFileSync(join(root, '.npmrc'), '_authToken=project-token');
+      writeAuthIni('_authToken=ini-token');
+      expect(getPnpmSpawnRegistryEnv('is-even', root, '11.5.0')).toEqual({
+        'npm_config_//registry.npmjs.org/:_authToken': 'project-token',
+      });
+    });
+
     it('lets the workspace .npmrc beat auth.ini (pnpm layer order)', () => {
       writeFileSync(
         join(root, '.npmrc'),
