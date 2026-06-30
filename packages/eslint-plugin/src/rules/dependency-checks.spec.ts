@@ -153,6 +153,51 @@ describe('Dependency checks (eslint)', () => {
     expect(failures.length).toEqual(0);
   });
 
+  it('should not report used external dependencies as obsolete when external node metadata is missing', () => {
+    const packageJson = {
+      name: '@mycompany/liba',
+      dependencies: {
+        lit: '^3.0.0',
+      },
+    };
+
+    const fileSys = {
+      './libs/liba/package.json': JSON.stringify(packageJson, null, 2),
+      './libs/liba/src/index.ts': '',
+      './package.json': JSON.stringify(rootPackageJson, null, 2),
+    };
+    vol.fromJSON(fileSys, '/root');
+
+    const failures = runRule(
+      {},
+      `/root/libs/liba/package.json`,
+      JSON.stringify(packageJson, null, 2),
+      {
+        nodes: {
+          liba: {
+            name: 'liba',
+            type: 'lib',
+            data: {
+              root: 'libs/liba',
+              targets: {
+                build: {},
+              },
+            },
+          },
+        },
+        externalNodes: {},
+        dependencies: {},
+      },
+      {
+        liba: [
+          createFile(`libs/liba/src/main.ts`, ['npm:lit@3.0.0']),
+          createFile(`libs/liba/package.json`, ['npm:lit@3.0.0']),
+        ],
+      }
+    );
+    expect(failures.length).toEqual(0);
+  });
+
   it('should exclude files not matching input of the build target', () => {
     const packageJson = {
       name: '@mycompany/liba',
