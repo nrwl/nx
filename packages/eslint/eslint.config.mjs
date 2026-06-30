@@ -41,6 +41,7 @@ export default [
             '@nx/eslint',
             '@nx/jest',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             '@angular-devkit/core',
             '@typescript-eslint/eslint-plugin',

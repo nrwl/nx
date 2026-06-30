@@ -47,6 +47,7 @@ export default [
             'nx',
             'prettier',
             'typescript',
+            '@typescript/typescript6',
             '@angular-devkit/schematics',
             '@angular-devkit/core',
             '@angular-devkit/architect',

@@ -58,6 +58,7 @@ export default [
             '@nx/workspace',
             'prettier',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'verdaccio',
             'source-map-support',

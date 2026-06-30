@@ -45,6 +45,7 @@ export default [
             // runtime (see src/utils/versions.ts).
             '@nx/vite',
             'typescript',
+            '@typescript/typescript6',
             'vite',
             'eslint',
             '@nx/eslint',

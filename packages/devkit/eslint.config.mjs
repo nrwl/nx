@@ -58,6 +58,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             'prettier',
             'rxjs',
             '@angular-devkit/core',

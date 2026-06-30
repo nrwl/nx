@@ -103,6 +103,7 @@ export default [
             '@nx/jest',
             '@nx/playwright',
             'typescript',
+            '@typescript/typescript6',
             'react',
             'webpack',
             '@babel/plugin-proposal-decorators',
