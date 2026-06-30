@@ -62,7 +62,7 @@ impl TextSelection {
 /// Copy `text` to the system clipboard, returning whether it succeeded. Keeps
 /// the `Clipboard::new()` / `set_text` dance in one place so the selection and
 /// full-output copy paths stay in sync.
-fn copy_to_clipboard(text: &str) -> bool {
+pub(crate) fn copy_to_clipboard(text: &str) -> bool {
     Clipboard::new()
         .and_then(|mut clipboard| clipboard.set_text(text))
         .is_ok()

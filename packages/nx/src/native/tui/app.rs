@@ -40,7 +40,9 @@ use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
 use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
-use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
+use super::components::terminal_pane::{
+    TerminalPane, TerminalPaneData, TerminalPaneState, copy_to_clipboard,
+};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
@@ -2822,10 +2824,13 @@ impl App {
             return;
         }
         let text = self.region_selected_text(&sel);
-        if !text.trim().is_empty()
-            && let Ok(mut clipboard) = arboard::Clipboard::new()
-        {
-            let _ = clipboard.set_text(text);
+        if text.trim().is_empty() {
+            return;
+        }
+        // Surface a failure the same way the pane copy path does, instead of
+        // dropping the text on the floor when the clipboard is unavailable.
+        if !copy_to_clipboard(&text) {
+            self.dispatch_action(Action::ShowHint("Copy failed".to_string()));
         }
     }
 
