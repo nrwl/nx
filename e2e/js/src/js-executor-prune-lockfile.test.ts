@@ -10,7 +10,7 @@ import {
   runCommand,
   tmpProjPath,
 } from '@nx/e2e-utils';
-import { cpSync, mkdtempSync, realpathSync, rmSync } from 'fs';
+import { cpSync, existsSync, mkdtempSync, realpathSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, sep } from 'path';
 
@@ -48,6 +48,10 @@ function installPrunedDist(
     // returns the canonical path, so a raw prefix check would mismatch.
     const realInstallDir = realpathSync(installDir);
     for (const { fromDir, deps } of resolveChecks) {
+      // The workspace module must actually be copied into the dist. Otherwise
+      // require.resolve below walks up from a missing dir and can pass on a
+      // hoisted copy of the dep, making the resolve assertions vacuous.
+      expect(existsSync(join(installDir, fromDir))).toBe(true);
       for (const dep of deps) {
         // Resolve as Node would from the workspace module's dir. A throw means
         // the dep never shipped; resolving outside the dist (a global/NODE_PATH

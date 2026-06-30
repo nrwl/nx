@@ -45,10 +45,11 @@ export function createPackageJson(
     skipOverrides?: boolean;
     /**
      * Set when a pruned pnpm lockfile is emitted alongside this package.json.
-     * The lockfile bakes overrides and ignoredOptionalDependencies into its
-     * resolved snapshots, so they are dropped from the manifest to avoid
-     * ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on pnpm <=10. Leave unset when only a
-     * package.json is generated, so a fresh install still resolves with them.
+     * The lockfile bakes overrides, ignoredOptionalDependencies, and
+     * packageExtensions into its resolved snapshots and checksums, so they are
+     * dropped from the manifest to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH on
+     * pnpm <=10. Leave unset when only a package.json is generated, so a fresh
+     * install still resolves with them.
      */
     prunedLockfile?: boolean;
   } = {},
@@ -311,17 +312,19 @@ export function createPackageJson(
   }
   // endregion Overrides/Resolutions
 
-  // When a pruned pnpm lockfile ships alongside, it bakes overrides and
-  // ignoredOptionalDependencies into its resolved snapshots. Re-declaring them
-  // here makes pnpm <=10 fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (pnpm 11
-  // ignores the package.json `pnpm` field anyway), so drop both the root-merged
-  // and project-level copies. Then drop an emptied pnpm block.
+  // When a pruned pnpm lockfile ships alongside, it bakes overrides,
+  // ignoredOptionalDependencies, and packageExtensions into its resolved
+  // snapshots and checksums. Re-declaring them here makes pnpm <=10 fail with
+  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (pnpm 11 ignores the package.json `pnpm`
+  // field anyway), so drop both the root-merged and project-level copies, then
+  // drop an emptied pnpm block.
   if (options.prunedLockfile && packageJson.pnpm) {
     delete packageJson.pnpm.overrides;
     delete packageJson.pnpm.ignoredOptionalDependencies;
-  }
-  if (packageJson.pnpm && Object.keys(packageJson.pnpm).length === 0) {
-    delete packageJson.pnpm;
+    delete packageJson.pnpm.packageExtensions;
+    if (Object.keys(packageJson.pnpm).length === 0) {
+      delete packageJson.pnpm;
+    }
   }
 
   return packageJson;
