@@ -88,4 +88,21 @@ describe('add-pnpm-workspace-output-to-prune-lockfile migration', () => {
 
     expect(pruneOutputs('api')).toEqual(outputs);
   });
+
+  it('skips prune targets without an outputs array', async () => {
+    (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
+    addProjectConfiguration(tree, 'api', {
+      root: 'apps/api',
+      targets: {
+        'prune-lockfile': {
+          executor: '@nx/js:prune-lockfile',
+          options: { buildTarget: 'build' },
+        },
+      },
+    });
+
+    await migrate(tree);
+
+    expect(pruneOutputs('api')).toBeUndefined();
+  });
 });
