@@ -36,6 +36,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             'postcss-loader',
             '@rspack/cli',
             '@nx/workspace',

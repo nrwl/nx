@@ -27,6 +27,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             '@typescript-eslint/parser',
             '@angular-eslint/eslint-plugin',
             'angular-eslint',

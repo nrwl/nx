@@ -30,6 +30,7 @@ export default [
             'eslint',
             'prettier',
             'typescript',
+            '@typescript/typescript6',
             'react',
             'react-native',
             '@nx/jest',

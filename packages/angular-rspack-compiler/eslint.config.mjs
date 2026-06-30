@@ -29,6 +29,10 @@ export default [
             '{projectRoot}/vite.config.{js,ts,mjs,mts}',
           ],
           ignoredDependencies: [
+            // typescript resolves to the @typescript/typescript6 alias; keep
+            // the published `typescript` dep but skip both names here.
+            'typescript',
+            '@typescript/typescript6',
             '@angular/core',
             // Loaded via a dynamic runtime import in load-compiler-cli.ts (its
             // nodenext-incompatible types are shimmed locally), so static

@@ -40,6 +40,7 @@ export default [
           ignoredDependencies: [
             'nx',
             'typescript',
+            '@typescript/typescript6',
             '@swc/core',
             'postcss',
             'postcss-modules',
