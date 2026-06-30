@@ -1096,6 +1096,26 @@ The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks-
 }
 ```
 
+## Disabling AI Agent Configuration Detection
+
+The `neverConfigureAiAgents` property in `nx.json` controls whether Nx automatically detects AI agent configuration drift (Claude, Codex, Copilot, Cursor, Gemini, opencode) and prints the `Run "nx configure-ai-agents" to update.` disclaimer after task runs.
+
+Set it to `true` to disable both the runtime disclaimer and the daemon's background status computation. The `nx configure-ai-agents` command itself remains usable when explicitly invoked.
+
+```json
+// nx.json
+{
+  "neverConfigureAiAgents": true
+}
+```
+
+You can also override this on a per-invocation basis with the `NX_NEVER_CONFIGURE_AI_AGENTS` environment variable. The env var takes precedence over `nx.json`:
+
+- `NX_NEVER_CONFIGURE_AI_AGENTS=true` — disable detection and disclaimer for this invocation.
+- `NX_NEVER_CONFIGURE_AI_AGENTS=false` — enable for this invocation, even if `nx.json` opts out.
+
+This is useful in monorepos where AI agent configuration is not applicable to every developer — for example, MCP detection depends on each developer's local editor setup, so the disclaimer can produce noise that the workspace cannot resolve centrally.
+
 ## Conformance
 
 The `conformance` property in `nx.json` configures the usage of [Nx Conformance](/docs/enterprise/conformance).
