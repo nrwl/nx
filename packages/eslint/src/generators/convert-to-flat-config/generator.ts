@@ -32,6 +32,7 @@ import {
   ESLINT_FLAT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { ESLint } from 'eslint';
+import { coerce } from 'semver';
 import {
   convertEslintJsonToFlatConfig,
   renameLegacyEslintrcFile,
@@ -482,6 +483,12 @@ function processConvertedConfig(
     devDependencies['@eslint/js'] = eslintVersion;
   }
 
+  // The flat/angular presets import the umbrella `angular-eslint` package; add
+  // it when the converted config references them so the result resolves.
+  if (content.includes('flat/angular')) {
+    devDependencies['angular-eslint'] = resolveAngularEslintVersion(tree);
+  }
+
   // Direct invocation is an opt-in upgrade, so by default existing pins are
   // overwritten to land the workspace on the latest flat-config-ready stack.
   // Migrations pass `keepExistingVersions` so the version bump stays owned by
@@ -493,4 +500,25 @@ function processConvertedConfig(
     'package.json',
     keepExistingVersions
   );
+}
+
+// The umbrella `angular-eslint` and the scoped `@angular-eslint/*` packages
+// release in lockstep, so pin the umbrella to the major already installed,
+// falling back to the latest major nx generates when none is present. @nx/eslint
+// can't read the canonical pin from @nx/angular without inverting the package
+// dependency (@nx/angular depends on @nx/eslint), so the fallback is hardcoded;
+// keep it in sync with `angularEslintVersion` in packages/angular/src/utils/versions.ts.
+function resolveAngularEslintVersion(tree: Tree): string {
+  const installed =
+    getDependencyVersionFromPackageJson(
+      tree,
+      '@angular-eslint/eslint-plugin'
+    ) ??
+    getDependencyVersionFromPackageJson(
+      tree,
+      '@angular-eslint/template-parser'
+    );
+  const installedMajor = installed ? coerce(installed)?.major : undefined;
+
+  return installedMajor != null ? `^${installedMajor}.0.0` : '^22.0.0';
 }

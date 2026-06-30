@@ -270,6 +270,58 @@ describe('convert-to-flat-config generator', () => {
       ).toEqual(eslintrcVersion);
     });
 
+    it('adds the umbrella angular-eslint package when converting a config that uses the @nx/angular preset', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      // An Angular eslintrc workspace has the scoped packages installed; the
+      // umbrella is what the flat/angular preset needs and what is missing.
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...(json.devDependencies ?? {}),
+          '@angular-eslint/eslint-plugin': '^21.5.0',
+        };
+        return json;
+      });
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.extends = ['plugin:@nx/angular'];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toContain('flat/angular');
+      // Pinned to the installed @angular-eslint major.
+      expect(
+        readJson(tree, 'package.json').devDependencies['angular-eslint']
+      ).toEqual('^21.0.0');
+    });
+
+    it('falls back to the latest angular-eslint major when no @angular-eslint packages are installed', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.extends = ['plugin:@nx/angular'];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      expect(tree.read('eslint.config.cjs', 'utf-8')).toContain('flat/angular');
+      expect(
+        readJson(tree, 'package.json').devDependencies['angular-eslint']
+      ).toEqual('^22.0.0');
+    });
+
     it('should add global eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
