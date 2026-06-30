@@ -41,7 +41,13 @@ export async function formatFiles(
 
   let prettier: typeof Prettier;
   try {
-    prettier = await import('prettier');
+    const imported = await import('prettier');
+    // Prettier 2.x (CommonJS) exposes resolveConfig/getFileInfo only on
+    // `.default` under Node's ESM interop; 3.x (ESM) has them on the namespace.
+    prettier =
+      typeof (imported as any).resolveConfig === 'function'
+        ? imported
+        : ((imported as any).default ?? imported);
     /**
      * Even after we discovered prettier in node_modules, we need to be sure that the user is intentionally using prettier
      * before proceeding to format with it.

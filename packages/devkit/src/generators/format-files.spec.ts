@@ -136,4 +136,40 @@ describe('formatFiles', () => {
       expect(pathKeys).toEqual(['@a/lib', '@z/lib']);
     });
   });
+
+  describe('Prettier 2.x CommonJS interop', () => {
+    it('reaches the Prettier API on `.default` when the namespace lacks it', async () => {
+      // Prettier 2.x is CommonJS; under Node's ESM interop its API (resolveConfig,
+      // getFileInfo, format) is reachable only via `.default`, not on the module
+      // namespace. Without the `.default` fallback, `prettier.resolveConfig` is
+      // undefined, the per-file call throws, the error is swallowed, and the file
+      // is silently left unformatted. (Real Prettier isn't used here: Prettier 3
+      // dynamic-imports parsers internally, which jest's VM can't run.)
+      const format = jest.fn(async (text: string) => `/* formatted */ ${text}`);
+      const getFileInfo = jest.fn(async () => ({
+        ignored: false,
+        inferredParser: 'typescript',
+      }));
+      const resolveConfig = jest.fn(async () => ({}));
+      jest.doMock('prettier', () => ({
+        __esModule: true,
+        default: { resolveConfig, getFileInfo, format, version: '2.6.2' },
+      }));
+      const { formatFiles } = require('./format-files');
+
+      tree.write('.prettierrc', JSON.stringify({ singleQuote: true }));
+      tree.write('test.ts', 'const x = 1');
+
+      await formatFiles(tree);
+
+      // The `.default` API was actually used; on the namespace these are
+      // undefined, so without the fallback they would never be called and the
+      // file would be left untouched.
+      expect(resolveConfig).toHaveBeenCalled();
+      expect(format).toHaveBeenCalled();
+      expect(tree.read('test.ts', 'utf-8')).toBe('/* formatted */ const x = 1');
+
+      jest.dontMock('prettier');
+    });
+  });
 });
