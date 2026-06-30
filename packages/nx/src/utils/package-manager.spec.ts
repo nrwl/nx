@@ -896,6 +896,10 @@ describe('package-manager', () => {
     });
 
     it('should run from the workspace root and apply the registry overlay to the spawn env', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({
@@ -909,8 +913,12 @@ describe('package-manager', () => {
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
       );
+      // The overlay is keyed on the detected workspace package manager and its
+      // resolved version; assert all four args so a miswired PM/version is caught.
       expect(overlaySpy.mock.calls[0][0]).toBe('nx');
       expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
+      expect(overlaySpy.mock.calls[0][2]).toBe('bun');
+      expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
     });
   });
 
@@ -938,7 +946,8 @@ describe('package-manager', () => {
       await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
 
       const [cmd, options] = execMock.mock.calls[0];
-      expect(cmd).toContain('npm pack');
+      // Spec is quoted so range operators are not parsed as shell redirections.
+      expect(cmd).toContain('npm pack "nx@1.0.0"');
       expect(options.env.npm_config_force).toBe('true');
     });
 
@@ -959,6 +968,10 @@ describe('package-manager', () => {
     });
 
     it('should pass --pack-destination and run from the workspace root with the overlay', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'bun' } });
+      jest.spyOn(childProcess, 'execSync').mockReturnValue('1.2.0' as any);
       const overlaySpy = jest
         .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
         .mockReturnValue({
@@ -973,8 +986,12 @@ describe('package-manager', () => {
       expect(options.env.npm_config_registry).toBe(
         'https://sentinel.example.com/'
       );
+      // The overlay is keyed on the detected workspace package manager and its
+      // resolved version; assert all four args so a miswired PM/version is caught.
       expect(overlaySpy.mock.calls[0][0]).toBe('nx');
       expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
+      expect(overlaySpy.mock.calls[0][2]).toBe('bun');
+      expect(overlaySpy.mock.calls[0][3]).toBe('1.2.0');
     });
   });
 });

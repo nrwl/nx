@@ -55,6 +55,12 @@ describe('readNpmrcEntries / readNpmrcMap', () => {
     expect(read('key=a\\;b')?.get('key')).toBe('a;b');
   });
 
+  it('returns a double-quoted value verbatim when it is not valid JSON', () => {
+    // ini's unsafe() JSON-decodes double-quoted values; an invalid escape makes
+    // JSON.parse throw, so the raw value (quotes included) is returned as-is.
+    expect(read('key="bad\\escape"')?.get('key')).toBe('"bad\\escape"');
+  });
+
   it('skips blank lines and full-line comments', () => {
     const map = read(
       ['# comment', '; comment', '', 'registry=https://r/'].join('\n')
