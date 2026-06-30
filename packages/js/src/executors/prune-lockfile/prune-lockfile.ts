@@ -21,18 +21,11 @@ import {
   createLockFile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { stripPrunedLockfilePnpmConfig } from 'nx/src/plugins/js/package-json/create-package-json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
-
-// pnpm only installs a copied workspace module's own (transitive) production
-// dependencies when the module is declared as a workspace package. Without
-// this file pnpm ignores the workspace_modules importer blocks in the pruned
-// lockfile and those deps never get installed, breaking the app at runtime.
-const PNPM_WORKSPACE_YAML = `packages:
-  - 'workspace_modules/*'
-  - 'workspace_modules/@*/*'
-`;
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -53,20 +46,20 @@ export default async function pruneLockfileExecutor(
       JSON.stringify(packageJson, null, 2)
     );
   } else {
-    const { lockfileName, lockFile, hasWorkspaceModules } =
-      createPrunedLockfile(packageJson, context.projectGraph, packageManager);
+    const { lockfileName, lockFile } = createPrunedLockfile(
+      packageJson,
+      context.projectGraph,
+      packageManager
+    );
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
+    // The pruned lockfile bakes pnpm config into its snapshots, so strip the
+    // manifest's pnpm config to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    stripPrunedLockfilePnpmConfig(packageJson);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
-    if (packageManager === 'pnpm' && hasWorkspaceModules) {
-      writeFileSync(
-        join(outputDirectory, 'pnpm-workspace.yaml'),
-        PNPM_WORKSPACE_YAML
-      );
-    }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
 
@@ -85,25 +78,20 @@ function createPrunedLockfile(
 
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  let hasWorkspaceModules = false;
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
+  // Point every workspace-module dependency at its copied directory so the
+  // standalone output installs them as pnpm `file:` directory dependencies.
+  // Gate strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+  // local path (e.g. a vendored tarball) is left alone, since
+  // copy-workspace-modules only ever copies actual workspace projects.
+  for (const pkgName of Object.keys(packageJson.dependencies ?? {})) {
+    if (workspacePackages.has(pkgName)) {
       packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
-      hasWorkspaceModules = true;
     }
   }
 
   return {
     lockfileName,
     lockFile,
-    hasWorkspaceModules,
   };
 }
 
