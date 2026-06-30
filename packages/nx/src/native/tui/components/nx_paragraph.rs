@@ -638,6 +638,46 @@ mod tests {
     }
 
     #[test]
+    fn a_link_label_that_wraps_mid_label_is_clickable_on_every_row() {
+        // "hello my dear friend" is one link; at width 10 the label wraps. Every
+        // wrapped row-segment of it must be clickable, and the whole label renders.
+        let area = rect(0, 0, 10, 5);
+        let mut buf = Buffer::empty(area);
+        let mut registry = LinkRegistry::new();
+        let line = NxLine::from_spans(vec![Link::new("hello my dear friend", "u").into()]);
+        StatefulWidget::render(
+            NxParagraph::new(line).wrap(Wrap { trim: true }),
+            area,
+            &mut buf,
+            &mut registry,
+        );
+
+        let mut hit_rows: Vec<u16> = (0..area.height)
+            .flat_map(|y| (0..area.width).map(move |x| (x, y)))
+            .filter(|&(x, y)| registry.hit_test(x, y) == Some("u"))
+            .map(|(_, y)| y)
+            .collect();
+        hit_rows.sort_unstable();
+        hit_rows.dedup();
+        assert!(
+            hit_rows.len() >= 2,
+            "a wrapped link label must be clickable on each of its rows, got {hit_rows:?}"
+        );
+
+        let text: String = (0..area.height)
+            .map(|y| {
+                (0..area.width)
+                    .map(|x| buf[(x, y)].symbol())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("");
+        for word in ["hello", "my", "dear", "friend"] {
+            assert!(text.contains(word), "label word {word:?} did not render");
+        }
+    }
+
+    #[test]
     fn horizontal_scroll_clips_and_shifts_link_rects() {
         let area = rect(0, 0, 10, 1);
         let mut buf = Buffer::empty(area);
