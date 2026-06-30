@@ -16,7 +16,7 @@ export interface Schema {
   js: boolean;
   enableTypedLinting?: boolean;
   /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in v24.
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
    */
   setParserOptionsProject?: boolean;
   addPlugin?: boolean;

@@ -13,7 +13,7 @@ export interface ConfigurationGeneratorSchema {
   linter?: Linter | LinterType;
   enableTypedLinting?: boolean; // default is false
   /**
-   * @deprecated Use `enableTypedLinting` instead. This option will be removed in v24.
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
    */
   setParserOptionsProject?: boolean; // default is false
   /**
