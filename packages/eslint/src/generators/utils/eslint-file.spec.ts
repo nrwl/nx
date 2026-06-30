@@ -689,6 +689,16 @@ module.exports = [
       ).toBe('project-service');
     });
 
+    it('detects an explicit projectService: false opt-out as project-service', () => {
+      // A user who set `projectService: false` made a deliberate choice; it must
+      // be detected so callers don't append a conflicting `projectService: true`.
+      expect(
+        detectTypedLintingShape(
+          'export default [{ languageOptions: { parserOptions: { projectService: false } } }];'
+        )
+      ).toBe('project-service');
+    });
+
     it('detects parser-options-project shape (flat config)', () => {
       expect(
         detectTypedLintingShape(
@@ -729,6 +739,26 @@ module.exports = [
       expect(
         detectTypedLintingShape(
           `export default [{ languageOptions: { parserOptions: { ecmaFeatures: { jsx: true }, project: ['./tsconfig.json'] } } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects parser-options-project across multiple parserOptions blocks', () => {
+      // The first `parserOptions` block has no `project`; the scan must continue
+      // to the second block instead of stopping at the first.
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { ecmaVersion: 2022 } } }, { languageOptions: { parserOptions: { project: ['./tsconfig.json'] } } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('detects parser-options-project when a string value contains a brace', () => {
+      // A `}` inside a string value must not prematurely close the
+      // parserOptions block scan and hide a later `project` key.
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { tsconfigRootDir: 'a } b', project: ['./tsconfig.json'] } } }];`
         )
       ).toBe('parser-options-project');
     });
@@ -854,6 +884,21 @@ module.exports = [
       const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
       expect(content).not.toContain('projectService');
       expect(content).toContain("project: ['./tsconfig.json']");
+    });
+
+    it('honors an explicit projectService: false opt-out', () => {
+      // A user who disabled the project service must not get a conflicting
+      // `projectService: true` block appended on top of their opt-out.
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { projectService: false } }, rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).not.toContain('projectService: true');
+      expect(content).toContain('projectService: false');
     });
 
     it('warns and leaves the config untouched when it is not a plain array export', () => {
