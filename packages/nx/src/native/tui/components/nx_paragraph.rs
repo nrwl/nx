@@ -470,6 +470,7 @@ impl<'a> NxParagraph<'a> {
 
         let rows = self.text.layout_rows(text_area.width, wrap, trim);
         let scroll_y = scroll.0 as usize;
+        let scroll_x = scroll.1;
         for (vis_idx, row) in rows
             .iter()
             .enumerate()
@@ -478,23 +479,39 @@ impl<'a> NxParagraph<'a> {
         {
             let y = text_area.y + (vis_idx - scroll_y) as u16;
             let row_w: u16 = row.iter().map(|p| p.width).sum();
-            let mut x = match alignment {
+            // Row origin before horizontal scroll, per alignment.
+            let aligned_x = match alignment {
                 Alignment::Left => text_area.x,
                 Alignment::Center => text_area.x + text_area.width.saturating_sub(row_w) / 2,
                 Alignment::Right => text_area.x + text_area.width.saturating_sub(row_w),
             };
+            let mut col_in_row: u16 = 0;
             for piece in row {
-                if x >= text_area.right() {
-                    break;
+                // Where the piece's start lands once horizontally scrolled.
+                let start = aligned_x as i32 + col_in_row as i32 - scroll_x as i32;
+                col_in_row = col_in_row.saturating_add(piece.width);
+
+                // Clip the part scrolled off the left edge.
+                let (text, draw_x) = if start >= text_area.x as i32 {
+                    (piece.text.clone(), start as u16)
+                } else {
+                    let hidden = (text_area.x as i32 - start) as u16;
+                    if hidden >= piece.width {
+                        continue; // entirely scrolled off the left
+                    }
+                    (drop_leading_cols(&piece.text, hidden), text_area.x)
+                };
+                if draw_x >= text_area.right() {
+                    continue; // off the right edge
                 }
-                let max = (text_area.right() - x) as usize;
-                let (end_x, _) = buf.set_stringn(x, y, &piece.text, max, piece.style);
+                let max = (text_area.right() - draw_x) as usize;
+                let (end_x, _) = buf.set_stringn(draw_x, y, &text, max, piece.style);
                 if let Some(href) = &piece.href {
-                    let drawn_w = end_x.saturating_sub(x);
+                    let drawn_w = end_x.saturating_sub(draw_x);
                     if drawn_w > 0 {
                         registry.push(
                             Rect {
-                                x,
+                                x: draw_x,
                                 y,
                                 width: drawn_w,
                                 height: 1,
@@ -503,10 +520,23 @@ impl<'a> NxParagraph<'a> {
                         );
                     }
                 }
-                x = end_x;
             }
         }
     }
+}
+
+/// Drop the first `skip` display columns from `text` (for horizontal scroll). A
+/// wide character straddling the boundary is dropped whole.
+fn drop_leading_cols(text: &str, skip: u16) -> String {
+    let mut dropped = 0u16;
+    let mut chars = text.chars();
+    while dropped < skip {
+        match chars.next() {
+            Some(ch) => dropped = dropped.saturating_add(text_width(&ch.to_string())),
+            None => return String::new(),
+        }
+    }
+    chars.as_str().to_string()
 }
 
 impl Widget for NxParagraph<'_> {
@@ -605,6 +635,33 @@ mod tests {
         let rendered: String = (0..10).map(|x| buf[(x, 0)].symbol()).collect();
         assert_eq!(rendered, "plain text");
         assert_eq!(registry.hit_test(0, 0), None);
+    }
+
+    #[test]
+    fn horizontal_scroll_clips_and_shifts_link_rects() {
+        let area = rect(0, 0, 10, 1);
+        let mut buf = Buffer::empty(area);
+        let mut registry = LinkRegistry::new();
+        // "abc" + link "LINK" (cols 3..7) + "defghij", unwrapped (wider than area).
+        let line = NxLine::from_spans(vec![
+            Span::raw("abc").into(),
+            Link::new("LINK", "u").into(),
+            Span::raw("defghij").into(),
+        ]);
+        // Scroll right 4 cols: 'a','b','c','L' are hidden; row starts at 'I'.
+        StatefulWidget::render(
+            NxParagraph::new(line).scroll((0, 4)),
+            area,
+            &mut buf,
+            &mut registry,
+        );
+
+        let rendered: String = (0..10).map(|x| buf[(x, 0)].symbol()).collect();
+        assert_eq!(rendered, "INKdefghij");
+        // Only the visible tail of the link ("INK", screen cols 0..3) is clickable.
+        assert_eq!(registry.hit_test(0, 0), Some("u"));
+        assert_eq!(registry.hit_test(2, 0), Some("u"));
+        assert_eq!(registry.hit_test(3, 0), None); // 'd', past the link
     }
 
     #[test]
