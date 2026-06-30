@@ -720,4 +720,31 @@ describe('updatePackageJson', () => {
     );
     expect(distPackageJson.pnpm).toEqual({ overrides: { external1: '1.0.0' } });
   });
+
+  it('should drop pnpm config from a verbatim manifest when a lockfile is generated', () => {
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'libs/lib1/package.json': JSON.stringify(
+        { ...originalPackageJson, pnpm: { overrides: { lib2: '0.0.1' } } },
+        null,
+        2
+      ),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      // No updateBuildableProjectDepsInPackageJson: exercises the verbatim-manifest
+      // branch, which strips pnpm config directly rather than via createPackageJson.
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    const distPackageJson = JSON.parse(
+      vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
+    );
+    // The accompanying pruned lockfile drops `overrides`, so the manifest must too.
+    expect(distPackageJson.pnpm).toBeUndefined();
+  });
 });

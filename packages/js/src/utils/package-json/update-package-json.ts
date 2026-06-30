@@ -1,8 +1,5 @@
 import { createLockFile, getLockFileName } from '@nx/devkit/internal';
-import {
-  createPackageJson,
-  stripPrunedLockfilePnpmConfig,
-} from '@nx/devkit/internal';
+import { createPackageJson } from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -23,6 +20,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from '@nx/devkit/internal';
 import type { PackageJson } from '@nx/devkit/internal';
+import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
 import { readFileMapCache } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
