@@ -11,7 +11,7 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx', 'typescript'],
+          ignoredDependencies: ['nx', 'typescript', '@typescript/typescript6'],
         },
       ],
     },

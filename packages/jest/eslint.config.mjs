@@ -47,6 +47,7 @@ export default [
             // runtime (see src/utils/versions.ts).
             '@nx/jest',
             'typescript',
+            '@typescript/typescript6',
             'prettier',
             'jest',
             '@jest/types',
