@@ -2540,8 +2540,9 @@ impl App {
         }
     }
 
-    /// Run the deferred task-list click: select the row, open it in the main
-    /// terminal pane on a double-click, or open the cloud link.
+    /// Run the deferred task-list click: select the row, or open it in the main
+    /// terminal pane on a double-click. (A clicked link is handled earlier in
+    /// `handle_left_release`, before this runs.)
     fn perform_task_list_click(&mut self, col: u16, row: u16, is_double: bool) {
         let result = self
             .components
