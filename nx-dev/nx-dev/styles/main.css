@@ -113,6 +113,12 @@ iframe[src*='youtube'] {
   width: max-content;
 }
 
+.prose table:not(.not-prose):not(.not-prose *) {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 .prose iframe:not(.not-prose):not(.not-prose *)[src^="https://staging.nx.app"],
 .prose iframe:not(.not-prose):not(.not-prose *)[src^="https://nx.app"]
 {
