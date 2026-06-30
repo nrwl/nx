@@ -35,6 +35,7 @@ import {
   multiGlobWithWorkspaceContext,
   resetWorkspaceContext,
 } from './workspace-context';
+import { WorkspaceContext } from '../native';
 
 describe('workspace-context /virtual short-circuit', () => {
   beforeEach(() => {
@@ -52,16 +53,25 @@ describe('workspace-context /virtual short-circuit', () => {
     const result = await globWithWorkspaceContext('/virtual', ['**/*.ts']);
 
     expect(mockDaemonGlob).not.toHaveBeenCalled();
-    expect(mockGlob).toHaveBeenCalledWith(['**/*.ts'], undefined);
-    expect(result).toEqual(['virtual-glob-result']);
+    expect(WorkspaceContext).not.toHaveBeenCalled();
+    expect(mockGlob).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
+  });
+
+  it('does not initialize the native workspace context for /virtual', async () => {
+    const result = await globWithWorkspaceContext('/virtual', ['**/*.ts']);
+
+    expect(WorkspaceContext).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 
   it('multiGlobWithWorkspaceContext bypasses the daemon when workspaceRoot is /virtual', async () => {
     const result = await multiGlobWithWorkspaceContext('/virtual', ['**/*.ts']);
 
     expect(mockDaemonMultiGlob).not.toHaveBeenCalled();
-    expect(mockMultiGlob).toHaveBeenCalledWith(['**/*.ts'], undefined);
-    expect(result).toEqual([['virtual-multiglob-result']]);
+    expect(WorkspaceContext).not.toHaveBeenCalled();
+    expect(mockMultiGlob).not.toHaveBeenCalled();
+    expect(result).toEqual([[]]);
   });
 
   it('multiGlobWithWorkspaceContext routes to the daemon for a real workspace root', async () => {
