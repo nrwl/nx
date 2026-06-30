@@ -4335,6 +4335,67 @@ mod tests {
             .is_visible()
     }
 
+    /// Render the focused report once so it records its on-screen box, returning
+    /// that box for inside/outside hit-testing.
+    fn render_report(app: &mut App) -> Rect {
+        let mut terminal =
+            ratatui::Terminal::new(ratatui::backend::TestBackend::new(120, 40)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                if let Some(popup) = app
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                {
+                    let _ = popup.draw(f, area);
+                }
+            })
+            .unwrap();
+        app.active_modal_area().expect("popup recorded its box")
+    }
+
+    #[test]
+    fn clicking_outside_report_dismisses_inside_keeps_open() {
+        let down = |column, row| MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column,
+            row,
+            modifiers: KeyModifiers::NONE,
+        };
+
+        // Outside the box dismisses it.
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+        let modal = render_report(&mut app);
+        assert!(
+            modal.x > 0 && modal.width < 120,
+            "report is a centered box with margins, got {modal:?}"
+        );
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_mouse_event(down(0, 0), &tx);
+        assert!(
+            !report_visible(&app),
+            "a click outside the report box dismisses it"
+        );
+
+        // Inside the box keeps it open.
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+        let modal = render_report(&mut app);
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_mouse_event(
+            down(modal.x + modal.width / 2, modal.y + modal.height / 2),
+            &tx,
+        );
+        assert!(
+            report_visible(&app),
+            "a click inside the report box leaves it open"
+        );
+    }
+
     /// `p` toggles the report: while it is focused, the press dismisses it and
     /// cancels the auto-exit countdown (the reopen half is handled separately when
     /// the popup is not focused).
