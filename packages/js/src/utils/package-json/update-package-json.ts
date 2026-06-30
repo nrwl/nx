@@ -4,7 +4,10 @@ import {
   getLockFileName,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+import {
+  createPackageJson,
+  stripPrunedLockfilePnpmConfig,
+} from 'nx/src/plugins/js/package-json/create-package-json';
 
 import {
   detectPackageManager,
@@ -99,6 +102,12 @@ export function updatePackageJson(
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
       : { name: context.projectName, version: '0.0.1' };
+    // The buildable-deps branch above strips pnpm config via createPackageJson's
+    // prunedLockfile flag; mirror it here so a verbatim manifest paired with a
+    // pruned lockfile does not trip ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    if (options.generateLockfile) {
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }
   }
 
   if (packageJson.type === 'module') {
