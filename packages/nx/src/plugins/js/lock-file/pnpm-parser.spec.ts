@@ -2646,7 +2646,7 @@ snapshots:
       return { nodes, dependencies, externalNodes };
     }
 
-    it('should include importer blocks and npm packages for transitive workspace deps', () => {
+    it('should emit file: directory packages and npm packages for transitive workspace deps', () => {
       // app -> @myorg/lib-a (workspace:*) -> @myorg/lib-b (workspace:*) -> lodash
       const lockFile = `lockfileVersion: '9.0'
 
@@ -2725,17 +2725,34 @@ snapshots:
         '/virtual'
       );
 
-      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
-      expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
-      // Specifier must be `file:` to match what copy-workspace-modules writes
-      // to package.json — `workspace:*` would produce ERR_PNPM_OUTDATED_LOCKFILE.
-      expect(result).toMatch(
-        /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a/
+      // Each workspace module becomes a pnpm `file:` directory package, not an
+      // importer block.
+      expect(result).toContain(
+        `'@myorg/lib-a@file:workspace_modules/@myorg/lib-a':`
       );
-      expect(result).toMatch(
-        /'@myorg\/lib-b':\s+specifier: file:\.\.\/lib-b\s+version: link:\.\.\/lib-b/
+      expect(result).toContain(
+        `'@myorg/lib-b@file:workspace_modules/@myorg/lib-b':`
       );
+      expect(result).toContain(
+        `resolution: {directory: workspace_modules/@myorg/lib-a, type: directory}`
+      );
+      // Root importer references the module via file:, matching what
+      // copy-workspace-modules writes to package.json. `workspace:*` or `link:`
+      // would produce ERR_PNPM_OUTDATED_LOCKFILE.
+      expect(result).toMatch(
+        /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: file:workspace_modules\/@myorg\/lib-a/
+      );
+      // The inter-module edge resolves to the sibling's directory package.
+      expect(result).toContain(
+        `'@myorg/lib-b': file:workspace_modules/@myorg/lib-b`
+      );
+      // lib-b's own npm dep ships in its snapshot closure (regression for
+      // #36066: a workspace module's prod deps must be in its snapshot, or the
+      // deployed app cannot resolve them).
       expect(result).toContain(`lodash@4.17.21:`);
+      expect(result).toMatch(
+        /'@myorg\/lib-b@file:workspace_modules\/@myorg\/lib-b':\s+dependencies:\s+lodash: 4\.17\.21/
+      );
     });
 
     it('should not infinite-loop on circular workspace dependencies', () => {
@@ -2799,11 +2816,22 @@ snapshots: {}`;
         '/virtual'
       );
 
-      expect(result).toContain(`workspace_modules/@myorg/lib-a:`);
-      expect(result).toContain(`workspace_modules/@myorg/lib-b:`);
+      expect(result).toContain(
+        `'@myorg/lib-a@file:workspace_modules/@myorg/lib-a':`
+      );
+      expect(result).toContain(
+        `'@myorg/lib-b@file:workspace_modules/@myorg/lib-b':`
+      );
+      // The cycle resolves to mutual file: directory-package edges.
+      expect(result).toContain(
+        `'@myorg/lib-b': file:workspace_modules/@myorg/lib-b`
+      );
+      expect(result).toContain(
+        `'@myorg/lib-a': file:workspace_modules/@myorg/lib-a`
+      );
     });
 
-    it('should produce a single importer for diamond workspace dependency shapes', () => {
+    it('should produce a single directory package for diamond workspace dependency shapes', () => {
       // app -> lib-a -> shared
       // app -> lib-b -> shared
       const lockFile = `lockfileVersion: '9.0'
@@ -2880,13 +2908,120 @@ snapshots: {}`;
         '/virtual'
       );
 
-      // Exactly one importer block for shared.
-      const sharedImporters =
-        result.match(/workspace_modules\/@myorg\/shared:/g) ?? [];
-      expect(sharedImporters).toHaveLength(1);
-      // Both consumers point at it via the flat layout.
+      // Exactly one directory-package resolution for shared (deduped).
+      const sharedResolutions =
+        result.match(
+          /resolution: \{directory: workspace_modules\/@myorg\/shared,/g
+        ) ?? [];
+      expect(sharedResolutions).toHaveLength(1);
+      // BOTH consumers' snapshots reference the shared directory package - a
+      // bare toContain would pass if only one edge survived a regression.
       expect(result).toMatch(
-        /'@myorg\/shared':\s+specifier: file:\.\.\/shared\s+version: link:\.\.\/shared/
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+'@myorg\/shared': file:workspace_modules\/@myorg\/shared/
+      );
+      expect(result).toMatch(
+        /'@myorg\/lib-b@file:workspace_modules\/@myorg\/lib-b':\s+dependencies:\s+'@myorg\/shared': file:workspace_modules\/@myorg\/shared/
+      );
+      expect(
+        result.match(
+          /'@myorg\/shared': file:workspace_modules\/@myorg\/shared/g
+        ) ?? []
+      ).toHaveLength(2);
+    });
+
+    it('should emit a directory package for a workspace module referenced via optionalDependencies', () => {
+      // app -> @myorg/lib-a (dependency) -> @myorg/lib-b (optionalDependency) -> lodash.
+      // optionalDependencies install in production, so the optional sibling must
+      // also become a file: directory package, or copy-workspace-modules (which
+      // copies the same sections) and the lockfile disagree on what ships.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    optionalDependencies:
+      '@myorg/lib-b':
+        specifier: workspace:*
+        version: link:../lib-b
+
+  libs/lib-b:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+        },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-b': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // lib-b is emitted as a directory package...
+      expect(result).toContain(
+        `'@myorg/lib-b@file:workspace_modules/@myorg/lib-b':`
+      );
+      // ...referenced from lib-a through optionalDependencies, not dependencies...
+      expect(result).toMatch(
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+optionalDependencies:\s+'@myorg\/lib-b': file:workspace_modules\/@myorg\/lib-b/
+      );
+      // ...and lib-b still carries its own npm dep.
+      expect(result).toMatch(
+        /'@myorg\/lib-b@file:workspace_modules\/@myorg\/lib-b':\s+dependencies:\s+lodash: 4\.17\.21/
       );
     });
   });
