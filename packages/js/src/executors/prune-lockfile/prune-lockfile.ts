@@ -14,14 +14,13 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 import {
   type PackageJson,
   type PackageJsonDependencySection,
+  stripPrunedLockfilePnpmConfig,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   getLockFileName,
   createLockFile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { stripPrunedLockfilePnpmConfig } from 'nx/src/plugins/js/package-json/create-package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 import { type PruneLockfileOptions } from './schema';
@@ -80,12 +79,20 @@ function createPrunedLockfile(
 
   // Point every workspace-module dependency at its copied directory so the
   // standalone output installs them as pnpm `file:` directory dependencies.
-  // Gate strictly on graph membership: a `file:`/`link:` spec to a non-workspace
-  // local path (e.g. a vendored tarball) is left alone, since
+  // Cover both prod-installed sections so an app that lists a workspace module
+  // under optionalDependencies stays in sync with the copied modules and the
+  // pruned lockfile. Gate strictly on graph membership: a `file:`/`link:` spec to
+  // a non-workspace local path (e.g. a vendored tarball) is left alone, since
   // copy-workspace-modules only ever copies actual workspace projects.
-  for (const pkgName of Object.keys(packageJson.dependencies ?? {})) {
-    if (workspacePackages.has(pkgName)) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  for (const section of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      if (workspacePackages.has(pkgName)) {
+        deps[pkgName] = `file:./workspace_modules/${pkgName}`;
+      }
     }
   }
 

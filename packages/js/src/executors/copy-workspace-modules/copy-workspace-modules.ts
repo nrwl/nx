@@ -90,10 +90,11 @@ function handleWorkspaceModules(
   outputDirectory: string,
   packageJson: {
     dependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
   },
   projectGraph: ProjectGraph
 ) {
-  if (!packageJson.dependencies) {
+  if (!packageJson.dependencies && !packageJson.optionalDependencies) {
     return;
   }
 
@@ -188,9 +189,16 @@ function handleWorkspaceModules(
     }
   }
 
-  // Process all top-level dependencies
-  for (const [pkgName] of Object.entries(packageJson.dependencies)) {
-    processModule(pkgName);
+  // Seed from both prod-installed sections; processModule dedups via
+  // processedModules, so a module listed in both is copied once.
+  for (const section of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      processModule(pkgName);
+    }
   }
 }
 
