@@ -4,11 +4,6 @@
       "version": "23.0.0-beta.25",
       "description": "Rewrites `@nx/node/src/*` subpath imports now that the `./src/*` subpath is no longer exposed by `@nx/node`'s exports map. Named imports/exports of public symbols are routed to `@nx/node` and the rest to the new `@nx/node/internal` entry; `require`, dynamic `import` and `jest.mock` calls reference the whole module and are routed to `@nx/node/internal`.",
       "implementation": "./dist/src/migrations/update-23-0-0/rewrite-internal-subpath-imports"
-    },
-    "add-pnpm-workspace-output-to-prune-lockfile": {
-      "version": "23.1.0-beta.5",
-      "description": "Adds the `pnpm-workspace.yaml` output to existing `@nx/js:prune-lockfile` targets in pnpm workspaces so the emitted workspace file is captured and restored by the cache.",
-      "implementation": "./dist/src/migrations/update-23-1-0/add-pnpm-workspace-output-to-prune-lockfile"
     }
   },
   "packageJsonUpdates": {
