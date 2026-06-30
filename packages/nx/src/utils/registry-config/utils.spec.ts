@@ -42,6 +42,12 @@ describe('expandEnvVars', () => {
   it('does not expand a bare $VAR (braces are required)', () => {
     expect(expandEnvVars('$TOKEN', { TOKEN: 'secret' })).toBe('$TOKEN');
   });
+
+  it('does not honor a ${VAR:-default} fallback (npm has no default operator)', () => {
+    // npm's ${VAR} substitution has no `:-default` form, so the whole token is
+    // one unknown var name and stays verbatim (unlike berry's nested defaults).
+    expect(expandEnvVars('${TOKEN:-fallback}', {})).toBe('${TOKEN:-fallback}');
+  });
 });
 
 describe('readEnvVar', () => {
