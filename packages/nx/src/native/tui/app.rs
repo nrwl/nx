@@ -320,15 +320,17 @@ impl RegionSnapshot {
     }
 }
 
-/// Maximum delay between two left-clicks (on the same row) to count as a
+/// Maximum delay between two left-clicks (on the same cell) to count as a
 /// double-click. crossterm reports individual button presses, so we detect
 /// double-clicks ourselves.
 const DOUBLE_CLICK_MS: u128 = 400;
 
-/// Open a URL in the user's default browser (NXC-3940). Best-effort: any
-/// failure is ignored so a missing opener can never crash the TUI. The child's
-/// stdio is detached to null so it can't corrupt the terminal we're drawing to.
-fn open_url(url: &str) {
+/// Open a URL in the user's default browser (NXC-3940). Best-effort: a missing
+/// opener can never crash the TUI. Returns `true` if the opener process was
+/// spawned, `false` if it couldn't be (e.g. no `xdg-open` on a headless box) so
+/// the caller can tell the user instead of failing silently. The child's stdio
+/// is detached to null so it can't corrupt the terminal we're drawing to.
+fn open_url(url: &str) -> bool {
     use std::process::{Command, Stdio};
 
     #[cfg(target_os = "macos")]
@@ -351,11 +353,11 @@ fn open_url(url: &str) {
         c
     };
 
-    let _ = cmd
-        .stdin(Stdio::null())
+    cmd.stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
-        .spawn();
+        .spawn()
+        .is_ok()
 }
 
 impl App {
@@ -2141,6 +2143,26 @@ impl App {
         self.dependency_view_states[pane_idx].as_ref()
     }
 
+    /// Mutable counterpart to [`Self::active_dependency_view`], for scrolling the
+    /// dependency view in response to the mouse wheel.
+    fn active_dependency_view_mut(&mut self, pane_idx: usize) -> Option<&mut DependencyViewState> {
+        let pane_sel = if self.spacebar_mode {
+            self.selection_manager.lock().get_selection().cloned()
+        } else {
+            self.pane_tasks[pane_idx].clone()
+        };
+        let SelectionEntry::Task(task_name) = pane_sel? else {
+            return None;
+        };
+        let status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        if !matches!(status, TaskStatus::NotStarted | TaskStatus::Skipped) {
+            return None;
+        }
+        self.dependency_view_states[pane_idx].as_mut()
+    }
+
     /// If `pane_idx` is currently rendering a dependency view, resolve a click at
     /// `(col, row)` to the dependency task under the cursor. Returns `None` when
     /// the pane isn't showing a dependency view or the click missed every row.
@@ -2353,7 +2375,15 @@ impl App {
     ) {
         match self.region_at(col, row) {
             Some(MouseRegionKind::Pane(pane_idx)) => {
-                self.terminal_pane_data[pane_idx].handle_mouse_scroll(direction);
+                // Mirror the keyboard path: a pane showing a dependency view (a
+                // pending/skipped task) scrolls that list; otherwise scroll the
+                // terminal buffer. Without this fork the wheel scrolled the
+                // hidden PTY behind the dependency view.
+                if let Some(dep_state) = self.active_dependency_view_mut(pane_idx) {
+                    dep_state.scroll(direction);
+                } else {
+                    self.terminal_pane_data[pane_idx].handle_mouse_scroll(direction);
+                }
             }
             Some(MouseRegionKind::TaskList) => {
                 // Scrolling the list moves rows under a screen-coordinate
@@ -2395,11 +2425,16 @@ impl App {
     /// Handle a left mouse button press: focus/select what was clicked, begin a
     /// text selection in a pane, and on a double-click drop into the inline view.
     fn handle_left_press(&mut self, col: u16, row: u16) {
-        // Detect a double-click: a second press on the same row within the window.
+        // Detect a double-click: a second press on the same cell within the
+        // window. Matching the column too keeps a click that lands on the same
+        // row but a different region (e.g. task list then a pane) from being
+        // misread as a double-click.
         let now = std::time::Instant::now();
         let is_double = self
             .last_click
-            .map(|(t, _c, r)| r == row && now.duration_since(t).as_millis() <= DOUBLE_CLICK_MS)
+            .map(|(t, c, r)| {
+                c == col && r == row && now.duration_since(t).as_millis() <= DOUBLE_CLICK_MS
+            })
             .unwrap_or(false);
         self.last_click = Some((now, col, row));
 
@@ -2529,7 +2564,7 @@ impl App {
         if let Some(href) = self.link_at(col, row) {
             self.pending_list_click = None;
             self.pending_dep_nav = None;
-            open_url(&href);
+            self.open_url_or_hint(&href);
             return;
         }
 
@@ -2560,6 +2595,17 @@ impl App {
                 self.display_and_focus_current_task_in_terminal_pane(false)
             }
             None => {}
+        }
+    }
+
+    /// Open `href` in the browser, or show a hint with the URL if no opener is
+    /// available (e.g. a headless/SSH session with no `xdg-open`) so the click
+    /// doesn't fail silently and the user can copy the link by hand.
+    fn open_url_or_hint(&self, href: &str) {
+        if !open_url(href) {
+            self.dispatch_action(Action::ShowHint(format!(
+                "Couldn't open a browser. Copy this link: {href}"
+            )));
         }
     }
 
@@ -2702,7 +2748,7 @@ impl App {
                     .active_modal_link_at(col, row)
                     .or_else(|| self.region_url_at(col, row))
                 {
-                    open_url(&href);
+                    self.open_url_or_hint(&href);
                     return;
                 }
                 // Only begin a selection within the text area, so dragging over
@@ -4089,6 +4135,76 @@ mod tests {
         assert!(
             app.core.state().lock().has_user_interacted(),
             "a mouse click marks the user as present so auto-exit won't fire"
+        );
+    }
+
+    #[test]
+    fn double_click_requires_same_column() {
+        let mut app = create_test_app();
+        // A pane fills the right half; a double-click inside it drops to inline.
+        app.mouse_regions = vec![MouseRegion {
+            rect: Rect::new(20, 0, 40, 10),
+            kind: MouseRegionKind::Pane(0),
+        }];
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        // Two quick clicks on the same row but different columns must NOT be read
+        // as a double-click: a same-row click from the task list into a pane used
+        // to drop into inline.
+        app.handle_left_press(25, 3);
+        app.handle_left_press(40, 3);
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(
+            !switched,
+            "two clicks on the same row but different columns are not a double-click"
+        );
+
+        // Two quick clicks on the exact same cell are a real double-click.
+        app.last_click = None;
+        app.handle_left_press(30, 5);
+        app.handle_left_press(30, 5);
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(switched, "two clicks on the same cell are a double-click");
+    }
+
+    #[test]
+    fn wheel_over_dependency_view_scrolls_list_not_pty() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        // A pending task pinned to pane 0 renders a (scrollable) dependency view.
+        app.pane_tasks[0] = Some(SelectionEntry::Task("pending-task".to_string()));
+        app.dependency_view_states[0] = Some(DependencyViewState {
+            current_task: "pending-task".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: (0..30).map(|i| format!("dep{i}")).collect(),
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ratatui::widgets::ScrollbarState::default(),
+            pane_area: Rect::new(20, 0, 40, 8),
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        });
+        app.mouse_regions = vec![MouseRegion {
+            rect: Rect::new(20, 0, 40, 8),
+            kind: MouseRegionKind::Pane(0),
+        }];
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.scroll_at(30, 4, ScrollDirection::Down, &tx);
+
+        assert_eq!(
+            app.dependency_view_states[0]
+                .as_ref()
+                .unwrap()
+                .scroll_offset,
+            1,
+            "the wheel scrolls the dependency view, not the hidden terminal buffer"
         );
     }
 

@@ -5,6 +5,7 @@ use crate::native::tui::action::Action;
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::graph_utils::{get_dependency_chain_failures, is_task_continuous};
+use crate::native::tui::scroll_momentum::ScrollDirection;
 use crate::native::tui::status_icons;
 use crate::native::tui::theme::THEME;
 use ratatui::{
@@ -102,6 +103,19 @@ impl DependencyViewState {
         let max_scroll = content_height.saturating_sub(viewport_height);
         if self.scroll_offset < max_scroll {
             self.scroll_offset += 1;
+        }
+    }
+
+    /// Scroll one row in `direction`, deriving the viewport from the stored pane
+    /// area. Used by the mouse wheel so it scrolls the dependency view itself
+    /// (mirroring the keyboard path) rather than the hidden terminal buffer.
+    pub fn scroll(&mut self, direction: ScrollDirection) {
+        match direction {
+            ScrollDirection::Up => self.scroll_up(),
+            ScrollDirection::Down => {
+                let viewport_height = Self::calculate_viewport_height(self.pane_area);
+                self.scroll_down(viewport_height);
+            }
         }
     }
 
