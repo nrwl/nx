@@ -312,22 +312,34 @@ export function createPackageJson(
   }
   // endregion Overrides/Resolutions
 
-  // When a pruned pnpm lockfile ships alongside, it bakes overrides,
-  // ignoredOptionalDependencies, and packageExtensions into its resolved
-  // snapshots and checksums. Re-declaring them here makes pnpm <=10 fail with
-  // ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (pnpm 11 ignores the package.json `pnpm`
-  // field anyway), so drop both the root-merged and project-level copies, then
-  // drop an emptied pnpm block.
-  if (options.prunedLockfile && packageJson.pnpm) {
-    delete packageJson.pnpm.overrides;
-    delete packageJson.pnpm.ignoredOptionalDependencies;
-    delete packageJson.pnpm.packageExtensions;
-    if (Object.keys(packageJson.pnpm).length === 0) {
-      delete packageJson.pnpm;
-    }
+  // When a pruned pnpm lockfile ships alongside, the manifest must not re-declare
+  // pnpm config the lockfile already baked into its snapshots and checksums, or
+  // pnpm <=10 aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH (pnpm 11 ignores the
+  // package.json `pnpm` field anyway).
+  if (options.prunedLockfile) {
+    stripPrunedLockfilePnpmConfig(packageJson);
   }
 
   return packageJson;
+}
+
+/**
+ * Drop the pnpm config fields (`overrides`, `ignoredOptionalDependencies`,
+ * `packageExtensions`) a pruned standalone lockfile already resolves into its
+ * snapshots, then drop an emptied `pnpm` block. Re-declaring them next to a
+ * pruned lockfile makes pnpm <=10 fail with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+ * Shared by every prune path that ships a manifest beside a generated lockfile.
+ */
+export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
+  if (!packageJson.pnpm) {
+    return;
+  }
+  delete packageJson.pnpm.overrides;
+  delete packageJson.pnpm.ignoredOptionalDependencies;
+  delete packageJson.pnpm.packageExtensions;
+  if (Object.keys(packageJson.pnpm).length === 0) {
+    delete packageJson.pnpm;
+  }
 }
 
 export function findProjectsNpmDependencies(
