@@ -246,6 +246,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.1.0-eslint-plugin-react": {
+      "version": "23.1.0-beta.5",
+      "requires": {
+        "eslint-plugin-react": "<7.35.0"
+      },
+      "packages": {
+        "eslint-plugin-react": {
+          "version": "^7.35.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
