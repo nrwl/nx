@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
-    "paths": {}
+    "paths": {},
+    "strict": false,
+    "noUncheckedSideEffectImports": false
   }
 }
