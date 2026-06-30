@@ -1,4 +1,3 @@
-use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
@@ -25,6 +24,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::clipboard::copy_to_clipboard;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
@@ -491,12 +491,10 @@ impl TuiApp for InlineApp {
                                 // Unformatted output (no ANSI escape codes)
                                 let output = screen.all_contents();
                                 drop(state); // Release lock before clipboard operations
-                                if let Ok(mut clipboard) = Clipboard::new() {
-                                    if clipboard.set_text(output).is_ok() {
-                                        // Show status message in bottom chrome
-                                        self.status_message =
-                                            Some((String::from("Output copied"), Instant::now()));
-                                    }
+                                if copy_to_clipboard(&output) {
+                                    // Show status message in bottom chrome
+                                    self.status_message =
+                                        Some((String::from("Output copied"), Instant::now()));
                                 }
                             }
                         }

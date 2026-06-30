@@ -1,5 +1,6 @@
 pub mod action;
 pub mod app;
+pub mod clipboard;
 pub mod components;
 pub mod config;
 pub mod escape_sequences;

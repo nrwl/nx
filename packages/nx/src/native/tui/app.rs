@@ -27,6 +27,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::clipboard::copy_to_clipboard;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
@@ -40,9 +41,7 @@ use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
 use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
-use super::components::terminal_pane::{
-    TerminalPane, TerminalPaneData, TerminalPaneState, copy_to_clipboard,
-};
+use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
@@ -2703,8 +2702,27 @@ impl App {
         registry.hit_test(col, row).map(str::to_string)
     }
 
-    /// Route a mouse event to the focused popup: scroll its content, dismiss it
-    /// on a click outside, open a clicked link, or drive a text selection.
+    /// Keep the focused modal open on interaction. For the auto-exit report this
+    /// pins it (so its countdown stops) and cancels the pending quit, mirroring
+    /// the keyboard scroll/pin path. Other popups have no countdown, so it's a
+    /// no-op for them.
+    fn pin_active_modal_open(&mut self) {
+        if !matches!(self.focus, Focus::CountdownPopup) {
+            return;
+        }
+        if let Some(p) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            p.pin_open();
+        }
+        self.core.state().lock().cancel_quit();
+    }
+
+    /// Route a mouse event to the focused popup: open a clicked link, dismiss it
+    /// on a click *outside*, or scroll/select inside — any interaction pins the
+    /// auto-exit report open rather than closing it.
     fn handle_modal_mouse(&mut self, mouse: MouseEvent) {
         // Without a recorded area we can't hit-test; swallow the event anyway so
         // it can't leak to the layers underneath.
@@ -2715,32 +2733,39 @@ impl App {
         let inside = area.contains(Position::new(col, row));
 
         match mouse.kind {
-            MouseEventKind::ScrollUp if inside => self.scroll_active_modal(ScrollDirection::Up),
-            MouseEventKind::ScrollDown if inside => self.scroll_active_modal(ScrollDirection::Down),
+            // Scrolling the report pins it open (stopping the auto-exit), exactly
+            // like the keyboard up/down path, so it can't close out mid-scroll.
+            MouseEventKind::ScrollUp if inside => {
+                self.pin_active_modal_open();
+                self.scroll_active_modal(ScrollDirection::Up);
+            }
+            MouseEventKind::ScrollDown if inside => {
+                self.pin_active_modal_open();
+                self.scroll_active_modal(ScrollDirection::Down);
+            }
             MouseEventKind::Down(MouseButton::Left) => {
-                // The exit countdown is a "press anything to stay" prompt, so any
-                // click cancels it (mouse interaction already marked the user as
-                // present in `handle_mouse_event`).
-                if matches!(self.focus, Focus::CountdownPopup) {
-                    self.dismiss_active_modal();
-                    return;
-                }
-                if !inside {
-                    self.dismiss_active_modal();
-                    return;
-                }
-                // A click on a link opens it instead of starting a selection.
-                // Curated `Link`s (friendly display text) take priority over the
-                // raw buffer-scan fallback for literal URLs in free-form text.
+                // A clicked link always wins, in every modal (including the
+                // auto-exit report), so links stay clickable. Opening one pins the
+                // report open so its countdown can't close it under the click.
+                // Curated `Link`s take priority over the raw URL buffer-scan.
                 if let Some(href) = self
                     .active_modal_link_at(col, row)
                     .or_else(|| self.region_url_at(col, row))
                 {
+                    self.pin_active_modal_open();
                     self.open_url_or_hint(&href);
                     return;
                 }
-                // Only begin a selection within the text area, so dragging over
-                // the border or scrollbar doesn't highlight them. A click on the
+                // Only a click *outside* the modal dismisses it.
+                if !inside {
+                    self.dismiss_active_modal();
+                    return;
+                }
+                // A click inside keeps the modal open; for the report that means
+                // pinning it so the countdown stops instead of exiting while read.
+                self.pin_active_modal_open();
+                // Begin a selection only within the text area, so dragging over the
+                // border or scrollbar doesn't highlight them. A click on the
                 // border/padding is swallowed (it's still inside the modal).
                 if let Some(content) = self.active_modal_content_area()
                     && content.contains(Position::new(col, row))
@@ -4073,6 +4098,39 @@ mod tests {
             app.focus = focus;
             assert_eq!(app.active_modal_kind().is_some(), expected, "{focus:?}");
         }
+    }
+
+    #[test]
+    fn interacting_with_report_pins_it_open_and_cancels_quit() {
+        let mut app = create_test_app();
+        // An auto-exit is due and the report popup is focused.
+        app.core
+            .state()
+            .lock()
+            .schedule_quit(std::time::Duration::from_secs(0));
+        app.focus = Focus::CountdownPopup;
+        assert!(
+            app.core.state().lock().should_quit(),
+            "auto-exit is due before any interaction"
+        );
+
+        // A click/scroll inside the report pins it instead of letting it exit.
+        app.pin_active_modal_open();
+
+        assert!(
+            !app.core.state().lock().should_quit(),
+            "interacting with the report cancels the pending auto-exit"
+        );
+        let pinned = app
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+            .map(|p| p.is_pinned());
+        assert_eq!(
+            pinned,
+            Some(true),
+            "the report is pinned open, not dismissed"
+        );
     }
 
     #[test]

@@ -1,4 +1,4 @@
-use arboard::Clipboard;
+use crate::native::tui::clipboard::copy_to_clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     buffer::Buffer,
@@ -57,15 +57,6 @@ impl TextSelection {
         let before_end = row < end.0 || (row == end.0 && col <= end.1);
         after_start && before_end
     }
-}
-
-/// Copy `text` to the system clipboard, returning whether it succeeded. Keeps
-/// the `Clipboard::new()` / `set_text` dance in one place so the selection and
-/// full-output copy paths stay in sync.
-pub(crate) fn copy_to_clipboard(text: &str) -> bool {
-    Clipboard::new()
-        .and_then(|mut clipboard| clipboard.set_text(text))
-        .is_ok()
 }
 
 /// Configuration for terminal pane layout and display constants
