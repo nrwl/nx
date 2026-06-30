@@ -686,7 +686,7 @@ export async function packageRegistryPack(
   // reproduces the config npm cannot read (pnpm-workspace.yaml, .yarnrc(.yml),
   // bunfig.toml). npm prints the tarball basename to stdout.
   const { stdout } = await execAsync(
-    `${pm} pack ${pkg}@${version} --pack-destination "${packDestination}"`,
+    `${pm} pack "${pkg}@${version}" --pack-destination "${packDestination}"`,
     {
       cwd: workspaceRoot,
       windowsHide: true,

@@ -247,7 +247,8 @@ function applyBunAuth(env: NpmConfigEnv, value: BunRegistryValue): void {
 
 function readBunfigInstall(path: string): BunfigInstall | null {
   const parsed = readBunfigRaw(path);
-  // An unparseable bunfig aborts bun itself; skip the surface here.
+  // null: no bunfig present. 'invalid': bun's own parser would reject it (bun
+  // aborts on that). Either way there is no install config to read here.
   if (parsed === null || parsed === 'invalid') {
     return null;
   }
