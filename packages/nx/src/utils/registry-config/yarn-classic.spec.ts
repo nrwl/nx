@@ -330,6 +330,22 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
+  it('expands ${VAR} in a yarn-only ancestor .npmrc auth token before bridging', () => {
+    // yarn classic env-replaces .npmrc values; npm does not expand env-sourced
+    // config, so the bridged token must already be the resolved secret.
+    process.env.NX_TEST_YARN_TOKEN = 'real-token';
+    try {
+      files[`${ROOT}/.npmrc`] = '@types:registry=https://reg-b.example.com/';
+      files['/repo/.npmrc'] =
+        '//reg-b.example.com/:_authToken=${NX_TEST_YARN_TOKEN}';
+      expect(getYarnClassicSpawnRegistryEnv('@types/node', ROOT)).toEqual({
+        'npm_config_//reg-b.example.com/:_authToken': 'real-token',
+      });
+    } finally {
+      delete process.env.NX_TEST_YARN_TOKEN;
+    }
+  });
+
   it('bridges yarn-only nerf-darted _auth, username, and _password for a scoped fetch', () => {
     // All three credential forms live only in an ancestor .npmrc (yarn-only); a
     // scoped fetch authenticates, so they bridge for the spawned npm.
