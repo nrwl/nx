@@ -30,14 +30,19 @@ type CompilerOptions = Record<string, unknown>;
  *    false, downlevelIteration set to any value).
  *
  * 2. default-preserving pass - for every chain root (no "extends" key), pins
- *    the TS6 compiler-option defaults that flipped to a stricter value back to
- *    their pre-TS6 value, but only when the root does not set them explicitly:
+ *    the TS6 compiler-option defaults that changed in a way that breaks existing
+ *    workspaces back to their pre-TS6 value, but only when the root does not set
+ *    them explicitly:
  *      - "strict": false - TS6 treats an absent "strict" as true; TS5 as false.
  *      - "noUncheckedSideEffectImports": false - TS6 defaults it to true, which
  *        turns a bare side-effect import of an asset lacking an ambient
  *        declaration (e.g. `import './styles.css'`) into a hard TS2882 error; it
  *        is a semantic diagnostic, not a deprecation, so `ignoreDeprecations`
  *        cannot silence it.
+ *      - "types": ["*"]. TS6 loads no @types packages when `types` is unset,
+ *        whereas TS5 loaded them all; the "*" wildcard restores that default so
+ *        a config relying on it (e.g. ts-node type-checking jest.config.ts)
+ *        keeps finding @types/node.
  *    Files with "extends" inherit from their chain root and are left untouched.
  *    Pure solution-style containers (root has `"files": []` and no "include")
  *    select no source files, so pinning there is noise and they are skipped.
@@ -68,7 +73,7 @@ export default async function (tree: Tree) {
   }
   if (defaultsPinCount > 0) {
     logger.info(
-      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports") on ${defaultsPinCount} tsconfig chain root(s) to preserve existing behavior.`
+      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports", "types") on ${defaultsPinCount} tsconfig chain root(s) to preserve existing behavior.`
     );
   }
 
@@ -180,12 +185,15 @@ function hasDeprecatedValue(compilerOptions: CompilerOptions): boolean {
   return false;
 }
 
-// TS6 compiler-option defaults that flipped to a stricter value. We pin each
-// back to its pre-TS6 value on chain roots that don't set it, so existing
-// workspaces keep building without adopting a legit TS6 setup.
-const DEFAULT_PRESERVING_PINS: ReadonlyArray<[string, boolean]> = [
+// TS6 compiler-option defaults that changed in a way that breaks existing
+// workspaces. We pin each back to its pre-TS6 value on chain roots that don't
+// set it, so existing workspaces keep building without adopting a legit TS6
+// setup.
+const DEFAULT_PRESERVING_PINS: ReadonlyArray<[string, boolean | string[]]> = [
   ['strict', false],
   ['noUncheckedSideEffectImports', false],
+  // TS6 loads no @types when `types` is unset (TS5 loaded all); "*" restores it.
+  ['types', ['*']],
 ];
 
 function pinPreTs6Defaults(tree: Tree, tsconfigPath: string): boolean {
@@ -228,7 +236,7 @@ function pinPreTs6Defaults(tree: Tree, tsconfigPath: string): boolean {
   let contents = original;
   let changed = false;
   for (const [key, value] of DEFAULT_PRESERVING_PINS) {
-    // An explicit value (true or false) means the user opted in - leave it.
+    // An explicit value means the user opted in; leave it.
     if (key in compilerOptions) {
       continue;
     }
