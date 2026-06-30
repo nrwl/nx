@@ -63,6 +63,7 @@ export default [
             'nx',
             'piscina',
             'typescript',
+            '@typescript/typescript6',
             'vite',
           ],
         },
