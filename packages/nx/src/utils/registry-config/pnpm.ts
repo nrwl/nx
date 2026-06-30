@@ -7,7 +7,9 @@ import {
 } from '../package-manager-config/pnpm-config';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
+  expandEnvVars,
   getPackageScope,
+  nerfDart,
   setCafile,
   setProxies,
   setRegistry,
@@ -144,6 +146,12 @@ function bridgeAuthIni(
   if (!authIni) {
     return;
   }
+  // pnpm's @pnpm/npm-conf runs envReplace on every auth.ini value; a spawned npm
+  // does not expand env-sourced config, so expand `${VAR}` references here before
+  // bridging (e.g. `//host/:_authToken=${NPM_TOKEN}` must carry the real token).
+  for (const [key, value] of authIni) {
+    authIni.set(key, expandEnvVars(value));
+  }
   const projectNpmrc = readNpmrcMap(join(root, '.npmrc')) ?? new Map();
 
   // A registry already injected from the yaml/env (env has the key set) or
@@ -167,6 +175,28 @@ function bridgeAuthIni(
   for (const [key, value] of authIni) {
     if (key.startsWith('//') && !projectNpmrc.has(key)) {
       env[`npm_config_${key}`] = value;
+    }
+  }
+
+  // pnpm's getDefaultCreds applies a bare global _auth/_authToken/username/
+  // _password (no nerf-dart prefix) to the default registry; npm honors auth only
+  // in the nerf-darted form, so re-key the value pnpm would use (workspace .npmrc
+  // layers over auth.ini) onto the resolved default registry's dart.
+  const defaultRegistryDart = nerfDart(
+    env['npm_config_registry'] ?? 'https://registry.npmjs.org/'
+  );
+  if (defaultRegistryDart) {
+    for (const bareKey of [
+      '_authToken',
+      '_auth',
+      'username',
+      '_password',
+    ] as const) {
+      const raw = projectNpmrc.get(bareKey) ?? authIni.get(bareKey);
+      const dartKey = `npm_config_${defaultRegistryDart}:${bareKey}`;
+      if (raw !== undefined && env[dartKey] === undefined) {
+        env[dartKey] = expandEnvVars(raw);
+      }
     }
   }
 

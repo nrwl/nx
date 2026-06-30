@@ -4,6 +4,7 @@ import { dirname, join, resolve } from 'path';
 import { readNpmrcMap } from '../package-manager-config/npmrc';
 import {
   ancestorDirectories,
+  expandEnvVars,
   getPackageScope,
   readEnvVar,
   setCafile,
@@ -442,13 +443,17 @@ function toYarnValueMap(
   if (!map) {
     return null;
   }
+  // yarn classic env-replaces ${VAR} in .npmrc values via normalizeConfig; a
+  // spawned npm does not expand env-sourced config, so expand here before any
+  // bridged auth/registry value reaches npm.
   // npm's ini parser yields strings; coerce the booleans npm itself recognizes
   // so option semantics line up with the .yarnrc side.
   const result = new Map<string, YarnValue>();
   for (const [key, value] of map) {
+    const expanded = expandEnvVars(value);
     result.set(
       key,
-      value === 'true' ? true : value === 'false' ? false : value
+      expanded === 'true' ? true : expanded === 'false' ? false : expanded
     );
   }
   return result;

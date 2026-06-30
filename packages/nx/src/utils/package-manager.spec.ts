@@ -17,6 +17,8 @@ import { parse } from 'yaml';
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
 import * as fileUtils from '../utils/fileutils';
+import * as registryConfig from './registry-config';
+import { workspaceRoot } from './workspace-root';
 import {
   addPackagePathToWorkspaces,
   detectPackageManager,
@@ -833,6 +835,24 @@ describe('package-manager', () => {
       expect(cmd).toContain('pnpm view');
       expect(options.env?.npm_config_force).toBeUndefined();
     });
+
+    it('should run from the workspace root and apply the registry overlay to the spawn env', async () => {
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({
+          npm_config_registry: 'https://sentinel.example.com/',
+        });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [, options] = execMock.mock.calls[0];
+      expect(options.cwd).toBe(workspaceRoot);
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+      expect(overlaySpy.mock.calls[0][0]).toBe('nx');
+      expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
+    });
   });
 
   describe('packageRegistryPack', () => {
@@ -861,6 +881,25 @@ describe('package-manager', () => {
       const [cmd, options] = execMock.mock.calls[0];
       expect(cmd).toContain('npm pack');
       expect(options.env.npm_config_force).toBe('true');
+    });
+
+    it('should pass --pack-destination and run from the workspace root with the overlay', async () => {
+      const overlaySpy = jest
+        .spyOn(registryConfig, 'getNpmSpawnRegistryEnv')
+        .mockReturnValue({
+          npm_config_registry: 'https://sentinel.example.com/',
+        });
+
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('--pack-destination "/tmp/pack"');
+      expect(options.cwd).toBe(workspaceRoot);
+      expect(options.env.npm_config_registry).toBe(
+        'https://sentinel.example.com/'
+      );
+      expect(overlaySpy.mock.calls[0][0]).toBe('nx');
+      expect(overlaySpy.mock.calls[0][1]).toBe(workspaceRoot);
     });
   });
 });
