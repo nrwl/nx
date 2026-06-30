@@ -10,6 +10,7 @@ import {
   addTypedLintingToFlatConfig,
   detectTypedLintingShape,
   findEslintFile,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
 } from './eslint-file';
@@ -713,6 +714,59 @@ module.exports = [
         )
       ).toBeNull();
     });
+
+    it('does not match a `project` key outside the parserOptions block', () => {
+      // `parserOptions` here has no `project`; the only `project` array lives in
+      // an unrelated `settings` block (e.g. eslint-import-resolver-typescript).
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { ecmaVersion: 2022 } }, settings: { 'import/resolver': { typescript: { project: ['./tsconfig.json'] } } } }];`
+        )
+      ).toBeNull();
+    });
+
+    it('detects parser-options-project past a nested object inside parserOptions', () => {
+      expect(
+        detectTypedLintingShape(
+          `export default [{ languageOptions: { parserOptions: { ecmaFeatures: { jsx: true }, project: ['./tsconfig.json'] } } }];`
+        )
+      ).toBe('parser-options-project');
+    });
+
+    it('ignores a commented-out projectService setting', () => {
+      expect(
+        detectTypedLintingShape(
+          `// projectService: true\nexport default [{ rules: {} }];`
+        )
+      ).toBeNull();
+    });
+  });
+
+  describe('isTypedLintingEnabled', () => {
+    it('is enabled by the new flag', () => {
+      expect(isTypedLintingEnabled({ enableTypedLinting: true })).toBe(true);
+    });
+
+    it('falls back to the deprecated setParserOptionsProject flag', () => {
+      expect(isTypedLintingEnabled({ setParserOptionsProject: true })).toBe(
+        true
+      );
+    });
+
+    it('honors the deprecated flag even when enableTypedLinting defaults to false', () => {
+      // A generator whose `enableTypedLinting` schema default is `false` must
+      // still enable typed linting for a user who set the deprecated flag.
+      expect(
+        isTypedLintingEnabled({
+          enableTypedLinting: false,
+          setParserOptionsProject: true,
+        })
+      ).toBe(true);
+    });
+
+    it('is disabled when neither flag is set', () => {
+      expect(isTypedLintingEnabled({})).toBe(false);
+    });
   });
 
   describe('addTypedLintingToFlatConfig', () => {
@@ -785,6 +839,21 @@ module.exports = [
 
       const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
       expect(content.match(/projectService: true/g)).toHaveLength(1);
+    });
+
+    it('does not append a projectService block when a legacy parserOptions.project block exists', () => {
+      // A config already configured with the legacy `parserOptions.project`
+      // shape must not get a second, conflicting projectService block.
+      tree.write(
+        'libs/test/eslint.config.mjs',
+        `export default [{ files: ['**/*.ts'], languageOptions: { parserOptions: { project: ['./tsconfig.json'] } }, rules: {} }];\n`
+      );
+
+      addTypedLintingToFlatConfig(tree, 'libs/test');
+
+      const content = tree.read('libs/test/eslint.config.mjs', 'utf-8');
+      expect(content).not.toContain('projectService');
+      expect(content).toContain("project: ['./tsconfig.json']");
     });
   });
 });

@@ -398,6 +398,15 @@ export async function addLint(
   options: AddLintOptions
 ): Promise<GeneratorCallback> {
   const { lintProjectGenerator } = ensurePackage('@nx/eslint', nxVersion);
+  const {
+    addOverrideToLintConfig,
+    lintConfigHasOverride,
+    isEslintConfigSupported,
+    updateOverrideInLintConfig,
+    addIgnoresToLintConfig,
+    isTypedLintingEnabled,
+    // nx-ignore-next-line
+  } = require('@nx/eslint/internal');
   const projectConfiguration = readProjectConfiguration(tree, options.name);
   const task = await lintProjectGenerator(tree, {
     project: options.name,
@@ -407,25 +416,12 @@ export async function addLint(
       joinPathFragments(options.projectRoot, 'tsconfig.lib.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    // `@nx/js` cannot import `isTypedLintingEnabled` from `@nx/eslint` (the deep
-    // import would resolve to the installed published version, which lacks the
-    // helper), so the merge is inlined here.
-    enableTypedLinting: !!(
-      options.enableTypedLinting || options.setParserOptionsProject
-    ),
+    enableTypedLinting: isTypedLintingEnabled(options),
     rootProject: options.rootProject,
     addPlugin: options.addPlugin,
     // Since the build target is inferred now, we need to let the generator know to add @nx/dependency-checks regardless.
     addPackageJsonDependencyChecks: options.bundler !== 'none',
   });
-  const {
-    addOverrideToLintConfig,
-    lintConfigHasOverride,
-    isEslintConfigSupported,
-    updateOverrideInLintConfig,
-    addIgnoresToLintConfig,
-    // nx-ignore-next-line
-  } = require('@nx/eslint/internal');
 
   // if config is not supported, we don't need to do anything
   if (!isEslintConfigSupported(tree)) {
