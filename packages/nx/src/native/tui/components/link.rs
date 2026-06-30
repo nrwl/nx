@@ -19,7 +19,7 @@
 
 use ratatui::{
     buffer::Buffer,
-    layout::Rect,
+    layout::{Position, Rect},
     style::{Modifier, Style},
     text::Span,
     widgets::StatefulWidget,
@@ -64,7 +64,7 @@ impl LinkRegistry {
         self.hits
             .iter()
             .rev()
-            .find(|hit| point_in_rect(col, row, hit.area))
+            .find(|hit| hit.area.contains(Position::new(col, row)))
             .map(|hit| hit.href.as_str())
     }
 }
@@ -138,13 +138,6 @@ impl StatefulWidget for &Link {
             self.href.clone(),
         );
     }
-}
-
-fn point_in_rect(col: u16, row: u16, rect: Rect) -> bool {
-    col >= rect.x
-        && col < rect.x.saturating_add(rect.width)
-        && row >= rect.y
-        && row < rect.y.saturating_add(rect.height)
 }
 
 /// Display width (in terminal columns) of a string, honouring wide characters.

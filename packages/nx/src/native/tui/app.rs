@@ -7,7 +7,7 @@ use napi::threadsafe_function::ThreadsafeFunction;
 #[cfg(not(test))]
 use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::Mutex;
-use ratatui::layout::{Alignment, Rect, Size};
+use ratatui::layout::{Alignment, Position, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
@@ -174,14 +174,6 @@ enum MouseRegionKind {
     Pane(usize),
 }
 
-/// True if the cell `(col, row)` falls within `rect`.
-fn point_in_rect(col: u16, row: u16, rect: Rect) -> bool {
-    col >= rect.x
-        && col < rect.x.saturating_add(rect.width)
-        && row >= rect.y
-        && row < rect.y.saturating_add(rect.height)
-}
-
 /// A text selection over a rendered region (a popup's text area or the task
 /// list), tracked in screen coordinates. Unlike the PTY selection (which uses
 /// content coordinates and survives scrolling), this reads straight off the
@@ -251,7 +243,7 @@ impl RegionSnapshot {
     /// Resolve a URL at a clicked cell by scanning for a whitespace-delimited
     /// token that looks like a link.
     fn url_at(&self, col: u16, row: u16) -> Option<String> {
-        if !point_in_rect(col, row, self.area) {
+        if !self.area.contains(Position::new(col, row)) {
             return None;
         }
         let cells = self.cells.get((row - self.area.y) as usize)?;
@@ -2351,15 +2343,11 @@ impl App {
     /// Find the topmost hit-test region under a cell, if any. Iterates in
     /// reverse so regions drawn later (on top) win ties.
     fn region_at(&self, col: u16, row: u16) -> Option<MouseRegionKind> {
+        let point = Position::new(col, row);
         self.mouse_regions
             .iter()
             .rev()
-            .find(|r| {
-                col >= r.rect.x
-                    && col < r.rect.x.saturating_add(r.rect.width)
-                    && row >= r.rect.y
-                    && row < r.rect.y.saturating_add(r.rect.height)
-            })
+            .find(|r| r.rect.contains(point))
             .map(|r| r.kind)
     }
 
@@ -2457,7 +2445,7 @@ impl App {
                     self.pending_dep_nav = self
                         .dependency_view_click_target(pane_idx, col, row)
                         .map(|task| (pane_idx, task));
-                    if point_in_rect(col, row, area) {
+                    if area.contains(Position::new(col, row)) {
                         self.region_selection = Some(RegionSelection {
                             anchor: (col, row),
                             cursor: (col, row),
@@ -2487,7 +2475,7 @@ impl App {
                 // Arm a potential text selection if the press is on the table's
                 // text region (not the filter bar, cloud message, etc.).
                 if let Some(area) = self.task_list_selection_area()
-                    && point_in_rect(col, row, area)
+                    && area.contains(Position::new(col, row))
                 {
                     self.region_selection = Some(RegionSelection {
                         anchor: (col, row),
@@ -2724,7 +2712,7 @@ impl App {
             return;
         };
         let (col, row) = (mouse.column, mouse.row);
-        let inside = point_in_rect(col, row, area);
+        let inside = area.contains(Position::new(col, row));
 
         match mouse.kind {
             MouseEventKind::ScrollUp if inside => self.scroll_active_modal(ScrollDirection::Up),
@@ -2755,7 +2743,7 @@ impl App {
                 // the border or scrollbar doesn't highlight them. A click on the
                 // border/padding is swallowed (it's still inside the modal).
                 if let Some(content) = self.active_modal_content_area()
-                    && point_in_rect(col, row, content)
+                    && content.contains(Position::new(col, row))
                 {
                     self.region_selection = Some(RegionSelection {
                         anchor: (col, row),
@@ -4000,16 +3988,6 @@ mod tests {
             area,
             dragging: false,
         }
-    }
-
-    #[test]
-    fn point_in_rect_respects_bounds() {
-        let rect = Rect::new(5, 5, 4, 3); // covers x:5..9, y:5..8
-        assert!(point_in_rect(5, 5, rect));
-        assert!(point_in_rect(8, 7, rect));
-        assert!(!point_in_rect(9, 5, rect), "right edge is exclusive");
-        assert!(!point_in_rect(8, 8, rect), "bottom edge is exclusive");
-        assert!(!point_in_rect(4, 5, rect));
     }
 
     #[test]

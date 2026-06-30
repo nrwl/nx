@@ -3,7 +3,7 @@ use hashbrown::{HashMap, HashSet};
 use parking_lot::Mutex;
 use ratatui::{
     Frame,
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout, Position, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Cell, Row, Scrollbar, ScrollbarOrientation, ScrollbarState, Table},
@@ -299,14 +299,6 @@ pub enum TaskListClick {
     /// A task/batch row was double-clicked — open and focus it in the main
     /// terminal pane area (the same as pressing Enter on the row).
     OpenInPane,
-}
-
-/// Returns true if the terminal cell `(col, row)` falls within `rect`.
-fn point_in_rect(col: u16, row: u16, rect: Rect) -> bool {
-    col >= rect.x
-        && col < rect.x.saturating_add(rect.width)
-        && row >= rect.y
-        && row < rect.y.saturating_add(rect.height)
 }
 
 impl TasksList {
@@ -2002,7 +1994,7 @@ impl TasksList {
         // External links (e.g. the cloud message) are hit-tested by the app via
         // `link_registry`, before row clicks, so they aren't handled here.
         let area = self.rows_hit_area?;
-        if !point_in_rect(col, row, area) {
+        if !area.contains(Position::new(col, row)) {
             return None;
         }
 
