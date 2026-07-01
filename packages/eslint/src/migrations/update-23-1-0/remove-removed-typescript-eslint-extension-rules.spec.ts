@@ -1,13 +1,24 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree } from '@nx/devkit';
+import { type Tree, updateJson } from '@nx/devkit';
 import update from './remove-removed-typescript-eslint-extension-rules';
+
+function declareDevDependency(tree: Tree, pkg: string, version: string): void {
+  updateJson(tree, 'package.json', (json) => {
+    json.devDependencies = { ...json.devDependencies, [pkg]: version };
+    return json;
+  });
+}
 
 describe('remove-removed-typescript-eslint-extension-rules migration', () => {
   let tree: Tree;
 
   beforeEach(() => {
     tree = createTreeWithEmptyWorkspace();
+    // The migration only edits configs when typescript-eslint v8 is present, so
+    // declare it for the rule-editing tests. The version-gate tests below
+    // override this.
+    declareDevDependency(tree, 'typescript-eslint', '^8.0.0');
   });
 
   it('deletes removed formatting rules, renames safe semantic rules, and leaves ban-types for the prompt migration', async () => {
@@ -81,5 +92,55 @@ describe('remove-removed-typescript-eslint-extension-rules migration', () => {
     expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
       '@typescript-eslint/semi'
     );
+  });
+
+  it('runs when only the scoped @typescript-eslint/eslint-plugin v8 is declared', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      delete json.devDependencies['typescript-eslint'];
+      json.devDependencies['@typescript-eslint/eslint-plugin'] = '^8.0.0';
+      return json;
+    });
+    tree.write(
+      'eslint.config.mjs',
+      `export default [
+  { rules: { '@typescript-eslint/no-extra-semi': 'error' } },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).not.toContain(
+      '@typescript-eslint/no-extra-semi'
+    );
+  });
+
+  it('bails when typescript-eslint is absent', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      delete json.devDependencies['typescript-eslint'];
+      return json;
+    });
+    const config = `export default [
+  { rules: { '@typescript-eslint/no-extra-semi': 'error' } },
+];
+`;
+    tree.write('eslint.config.mjs', config);
+
+    await update(tree);
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toEqual(config);
+  });
+
+  it('bails when typescript-eslint is still on v7', async () => {
+    declareDevDependency(tree, 'typescript-eslint', '^7.16.1');
+    const config = `export default [
+  { rules: { '@typescript-eslint/no-extra-semi': 'error' } },
+];
+`;
+    tree.write('eslint.config.mjs', config);
+
+    await update(tree);
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toEqual(config);
   });
 });
