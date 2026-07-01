@@ -20,7 +20,19 @@ describe('@nx/react-native', () => {
   let componentName: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/react-native'] });
+    proj = newProject({
+      packages: [
+        '@nx/cypress',
+        '@nx/jest',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/react-native',
+        '@nx/rollup',
+        '@nx/storybook',
+        '@nx/vite',
+        '@nx/webpack',
+      ],
+    });
     appName = uniq('app');
     runCLI(
       `generate @nx/react-native:app ${appName} --install=false --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`

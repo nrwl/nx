@@ -10,7 +10,11 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
-import { detoxVersion, nxVersion } from '../../utils/versions';
+import {
+  assertSupportedDetoxVersion,
+  detoxVersion,
+  nxVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
 
 export function detoxInitGenerator(host: Tree, schema: Schema) {
@@ -18,6 +22,8 @@ export function detoxInitGenerator(host: Tree, schema: Schema) {
 }
 
 export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
+  assertSupportedDetoxVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const nxJson = readNxJson(host);
@@ -73,7 +79,7 @@ export function updateDependencies(host: Tree, schema: Schema) {
       detox: detoxVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 

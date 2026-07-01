@@ -1,4 +1,4 @@
-import { DevRemoteDefinition } from '@nx/module-federation/src/executors/utils';
+import { DevRemoteDefinition } from '@nx/module-federation/internal';
 import { RspackSsrDevServerOptions } from '../ssr-dev-server/schema';
 
 export type ModuleFederationSsrDevServerOptions = RspackSsrDevServerOptions & {

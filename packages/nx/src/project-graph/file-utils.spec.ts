@@ -10,6 +10,7 @@ jest.mock('fs', () => {
 import {
   calculateFileChanges,
   DeletedFileChange,
+  LockFileChange,
   WholeFileChange,
 } from './file-utils';
 import * as fs from 'fs';
@@ -94,6 +95,22 @@ describe('calculateFileChanges', () => {
     );
 
     expect(changes[0].getChanges()).toEqual([new DeletedFileChange()]);
+  });
+
+  it('should return lock file changes for bun.lockb files', () => {
+    jest.spyOn(fs, 'existsSync').mockReturnValue(true);
+    const changes = calculateFileChanges(
+      ['bun.lockb'],
+      {
+        base: 'sha1',
+        head: 'sha2',
+      },
+      (_, revision) => (revision === 'sha1' ? 'base-lockfile' : 'head-lockfile')
+    );
+
+    expect(changes[0].getChanges()).toEqual([
+      new LockFileChange('base-lockfile', 'head-lockfile'),
+    ]);
   });
 
   it('should ignore *.md changes', () => {

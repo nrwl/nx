@@ -4,7 +4,7 @@
       "cli": "nx",
       "version": "22.0.0-beta.0",
       "description": "Updates next.config.js files to add SVGR webpack configuration directly instead of using the nx.svgr option in withNx.",
-      "factory": "./src/migrations/update-22-0-0/add-svgr-to-next-config"
+      "factory": "./dist/src/migrations/update-22-0-0/add-svgr-to-next-config"
     },
     "update-22-2-0-create-ai-instructions-for-next-16": {
       "cli": "nx",
@@ -13,43 +13,25 @@
         "next": ">=16.0.0"
       },
       "description": "Create AI Instructions to help migrate users workspaces to Next.js 16.",
-      "prompt": "./src/migrations/update-22-2-0/ai-instructions-for-next-16.md"
+      "prompt": "./dist/src/migrations/update-22-2-0/ai-instructions-for-next-16.md"
+    },
+    "update-23-0-0-migrate-create-nodes-v2-import": {
+      "version": "23.0.0-beta.24",
+      "description": "Rename imports of `createNodesV2` from `@nx/next/plugin` to the canonical `createNodes` export.",
+      "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
+      "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "update-23-1-0-create-ai-instructions-for-next-15": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "next": ">=15.0.0 <16.0.0"
+      },
+      "description": "Create AI instructions to help migrate workspaces from Next.js 14 to 15.",
+      "prompt": "./dist/src/migrations/update-23-1-0/ai-instructions-for-next-15.md",
+      "documentation": "./dist/src/migrations/update-23-1-0/upgrade-to-next-15.md"
     }
   },
   "packageJsonUpdates": {
-    "20.7.1-beta.0": {
-      "version": "20.7.1-beta.0",
-      "packages": {
-        "eslint-config-next": {
-          "version": "^15.2.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.7.1-beta.0-next14": {
-      "version": "20.7.1-beta.0",
-      "requires": {
-        "next": "^14.0.0"
-      },
-      "packages": {
-        "next": {
-          "version": "~14.2.26",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
-    "20.7.1-beta.0-next15": {
-      "version": "20.7.1-beta.0",
-      "requires": {
-        "next": "^15.0.0"
-      },
-      "packages": {
-        "next": {
-          "version": "~15.2.4",
-          "alwaysAddToPackageJson": false
-        }
-      }
-    },
     "22.2.0-beta.1": {
       "version": "22.2.0-beta.1",
       "requires": {
@@ -79,6 +61,22 @@
         },
         "eslint-config-next": {
           "version": "^16.1.6",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0": {
+      "version": "23.1.0-beta.0",
+      "requires": {
+        "next": ">=14.0.0 <15.0.0"
+      },
+      "packages": {
+        "next": {
+          "version": "~15.5.18",
+          "alwaysAddToPackageJson": false
+        },
+        "eslint-config-next": {
+          "version": "^15.5.18",
           "alwaysAddToPackageJson": false
         }
       }

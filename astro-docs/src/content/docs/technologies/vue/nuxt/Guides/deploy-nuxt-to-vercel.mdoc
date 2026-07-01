@@ -43,7 +43,7 @@ So, your entire `nuxt.config.ts` file may look something like this:
 
 ```ts
 // apps/my-app/nuxt.config.ts
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { defineNuxtConfig } from 'nuxt/config';
 
 export default defineNuxtConfig({
@@ -66,7 +66,7 @@ export default defineNuxtConfig({
   },
   css: ['~/assets/css/styles.css'],
   vite: {
-    plugins: [nxViteTsPaths()],
+    plugins: [tsconfigPaths()],
   },
   nitro: {
     preset: 'vercel',

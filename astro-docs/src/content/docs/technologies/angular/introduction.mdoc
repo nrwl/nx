@@ -1,6 +1,6 @@
 ---
-title: Angular Plugin for Nx
-description: Use @nx/angular to create, run, and maintain Angular applications and libraries in an Nx workspace.
+title: Nx with Angular
+description: Nx scales your Angular monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [angular]
 sidebar:
   label: Introduction
@@ -9,8 +9,8 @@ weight: 2
 filter: 'type:References'
 ---
 
-[Angular](https://angular.dev) is a framework for building web applications. Nx has first party support for Angular projects. If you're familiar with the Angular CLI, `ng`, then Nx CLI will feel very familiar.
-The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for monorepos.
+[Angular](https://angular.dev) is a framework for building web applications, and Nx is the platform for scaling your Angular monorepo. Nx has first party support for Angular projects, so if you're familiar with the Angular CLI, `ng`, then the Nx CLI will feel very familiar.
+The `@nx/angular` plugin adds [generators](#local-development), Angular CLI builder integration (executors) and migrations so you can run Angular tasks through Nx. With Nx, each project has its own configuration instead of a single `angular.json` file, making it more scalable for Angular monorepos.
 You can use Angular with Nx without the plugin and still get [task caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
 ## Requirements
@@ -19,7 +19,7 @@ The `@nx/angular` plugin supports the following package versions.
 
 | Package         | Supported Versions |
 | --------------- | ------------------ |
-| `@angular/core` | >= 19.0.0 < 22.0.0 |
+| `@angular/core` | >= 20.0.0 < 23.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -123,23 +123,11 @@ nx g @nx/angular:remote apps/login --host=shell
 
 Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
 
-## CI considerations
+## Set up CI for your Angular monorepo
 
-Run only what changed using the project graph:
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-```shell
-nx affected -t build test lint e2e
-```
-
-Enable remote caching for faster CI runs:
-
-```shell
-nx connect
-```
-
-If you use Angular CLI configurations, define a `ci` configuration in `angular.json` and run tasks with `--configuration=ci` for CI-specific settings.
-
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a sample CI setup.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

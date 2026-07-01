@@ -154,7 +154,7 @@ describe('utils', () => {
       ).toEqual(['dist']);
     });
 
-    it('should throw when {projectRoot} is used not at the beginning and the value is .', () => {
+    it('should interpolate {projectRoot} = . used not at the beginning by normalizing the path', () => {
       const data = {
         name: 'myapp',
         type: 'app',
@@ -162,19 +162,42 @@ describe('utils', () => {
           root: '.',
           targets: {
             build: {
-              outputs: ['test/{projectRoot}'],
+              outputs: ['{workspaceRoot}/test/{projectRoot}'],
             },
           },
           files: [],
         },
       };
-      expect(() =>
+      expect(
         getOutputsForTargetAndConfiguration(
           task.target,
           task.overrides,
           data as any
         )
-      ).toThrow();
+      ).toEqual(['test']);
+    });
+
+    it('should interpolate {projectRoot} = . used in the middle by normalizing the path', () => {
+      const data = {
+        name: 'myapp',
+        type: 'app',
+        data: {
+          root: '.',
+          targets: {
+            build: {
+              outputs: ['{workspaceRoot}/dist/{projectRoot}/sub'],
+            },
+          },
+          files: [],
+        },
+      };
+      expect(
+        getOutputsForTargetAndConfiguration(
+          task.target,
+          task.overrides,
+          data as any
+        )
+      ).toEqual(['dist/sub']);
     });
 
     it('should support interpolation based on options', () => {

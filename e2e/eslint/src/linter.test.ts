@@ -33,7 +33,13 @@ describe('Linter', () => {
 
     beforeAll(() => {
       projScope = newProject({
-        packages: ['@nx/react', '@nx/js', '@nx/eslint'],
+        packages: [
+          '@nx/eslint',
+          '@nx/js',
+          '@nx/react',
+          '@nx/vite',
+          '@nx/vitest',
+        ],
       });
       runCLI(
         `generate @nx/react:app apps/${myapp} --tags=validtag --linter eslint --unitTestRunner vitest`
@@ -641,7 +647,14 @@ describe('Linter', () => {
   describe('Root projects migration', () => {
     beforeEach(() =>
       newProject({
-        packages: ['@nx/react', '@nx/js', '@nx/angular', '@nx/node'],
+        packages: [
+          '@nx/angular',
+          '@nx/eslint',
+          '@nx/jest',
+          '@nx/js',
+          '@nx/node',
+          '@nx/react',
+        ],
       })
     );
     afterEach(() => cleanupProject());
@@ -729,41 +742,6 @@ describe('Linter', () => {
       expect(appOverrides).not.toContain('plugin:@nx/typescript');
       e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).not.toContain('plugin:@nx/javascript');
-      expect(e2eOverrides).not.toContain('plugin:@nx/typescript');
-    });
-
-    it('(Angular standalone) should set root project config to app and e2e app and migrate when another lib is added', () => {
-      const myapp = uniq('myapp');
-      const mylib = uniq('mylib');
-
-      runCLI(
-        `generate @nx/angular:app --name=${myapp} --directory="." --linter eslint --no-interactive`
-      );
-      runCLI('reset', { env: { CI: 'false' } });
-      verifySuccessfulStandaloneSetup(myapp);
-
-      let appEslint = readJson('.eslintrc.json');
-      let e2eEslint = readJson('e2e/.eslintrc.json');
-
-      // should have plugin extends
-      let appOverrides = JSON.stringify(appEslint.overrides);
-      expect(appOverrides).toContain('plugin:@nx/typescript');
-      let e2eOverrides = JSON.stringify(e2eEslint.overrides);
-      expect(e2eOverrides).toContain('plugin:@nx/javascript');
-
-      runCLI(
-        `generate @nx/js:lib libs/${mylib} --linter eslint --no-interactive`
-      );
-      runCLI('reset', { env: { CI: 'false' } });
-      verifySuccessfulMigratedSetup(myapp, mylib);
-
-      appEslint = readJson(`.eslintrc.json`);
-      e2eEslint = readJson('e2e/.eslintrc.json');
-
-      // should have no plugin extends
-      appOverrides = JSON.stringify(appEslint.overrides);
-      expect(appOverrides).not.toContain('plugin:@nx/typescript');
-      e2eOverrides = JSON.stringify(e2eEslint.overrides);
       expect(e2eOverrides).not.toContain('plugin:@nx/typescript');
     });
 

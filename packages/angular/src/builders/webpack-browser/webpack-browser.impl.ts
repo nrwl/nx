@@ -6,7 +6,7 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/src/plugins/webpack-nx-build-coordination-plugin';
+import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
@@ -139,8 +139,8 @@ export function executeWebpackBrowserBuilder(
               );
 
               baseWebpackConfig.plugins.push(
-                // @ts-expect-error - difference between angular and webpack plugin definitions bc of webpack versions
-                new WebpackNxBuildCoordinationPlugin(
+                // Cast away the angular/webpack plugin type difference (webpack versions).
+                new (WebpackNxBuildCoordinationPlugin as any)(
                   `nx run-many --target=${
                     context.target.target
                   } --projects=${workspaceDependencies.join(',')}`,

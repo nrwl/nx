@@ -95,6 +95,42 @@ pub enum BatchStatus {
     Failure,
 }
 
+/// A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+/// popup never hardcodes a URL.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct Link {
+    pub text: String,
+    pub href: String,
+}
+
+/// Cache hits vs total; present only when there was a cache outcome. A bypassed
+/// cache is signalled separately by `cache_skipped`.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct CacheStat {
+    pub hits: u32,
+    pub total: u32,
+}
+
+/// Structured run report shown in the exit-countdown popup. The TUI builds the
+/// visual from these numbers rather than receiving a pre-formatted string.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct PerformanceSummaryPayload {
+    pub run_duration_ms: f64,
+    pub critical_path_ms: f64,
+    pub critical_path_task_count: u32,
+    pub recoverable_ms: f64,
+    pub cache: Option<CacheStat>,
+    pub cache_skipped: bool,
+    /// Already in display order; a multi-line entry embeds a task list.
+    pub recommendations: Vec<String>,
+    /// Phrases already in `recommendations` to hyperlink in place (e.g. the
+    /// remote-cache CTA); empty when none apply.
+    pub links: Vec<Link>,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TuiMode {
     FullScreen,
@@ -186,7 +222,7 @@ impl Clone for TuiAppInstance {
 /// Returns `Some(new_mode)` on success, `None` on failure.
 /// On failure, the caller should break out of the event loop.
 #[cfg(not(test))]
-fn switch_mode(
+async fn switch_mode(
     shared_app: &SharedAppInstance,
     tui: &mut Tui,
     target_mode: TuiMode,
@@ -229,11 +265,13 @@ fn switch_mode(
         (guard.get_shared_state(), item)
     };
 
-    // Switch terminal viewport
-    if let Err(e) = tui.switch_mode(target_mode) {
+    // Switch terminal viewport. On failure `tui.switch_mode` rolls the terminal
+    // back to the current mode, so don't tear down the whole run over a viewport
+    // hiccup — tell the user and stay where we are.
+    if let Err(e) = tui.switch_mode(target_mode).await {
         debug!("Failed to switch terminal mode: {}", e);
-        shared_state.lock().quit_immediately();
-        return None;
+        let _ = action_tx.send(Action::ShowHint(format!("Couldn't switch view: {e}")));
+        return Some(tui.current_mode);
     }
 
     // Create new app instance with same state
@@ -402,8 +440,13 @@ impl AppLifeCycle {
     }
 
     #[napi(async_runtime)]
-    pub fn end_command(&self) -> napi::Result<()> {
-        self.with_app(|app| app.end_command());
+    pub fn end_command(&self, summary: Option<PerformanceSummaryPayload>) -> napi::Result<()> {
+        self.with_app(|app| {
+            if let Some(summary) = summary {
+                app.set_exit_summary(summary);
+            }
+            app.end_command();
+        });
         Ok(())
     }
 
@@ -607,7 +650,7 @@ impl AppLifeCycle {
                         // Only switch if target mode differs from current
                         if target_mode != tui_mode {
                             // switch_mode updates the shared app reference in place
-                            match switch_mode(&app, &mut tui, target_mode, &action_tx) {
+                            match switch_mode(&app, &mut tui, target_mode, &action_tx).await {
                                 Some(new_mode) => {
                                     tui_mode = new_mode;
                                     // Force an immediate render

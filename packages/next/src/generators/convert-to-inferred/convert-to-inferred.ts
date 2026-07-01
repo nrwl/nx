@@ -7,6 +7,7 @@ import {
 import { createNodesV2 } from '../../plugins/plugin';
 import { buildPostTargetTransformer } from './lib/build-post-target-transformer';
 import { servePosTargetTransformer } from './lib/serve-post-target-tranformer';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 
 interface Schema {
   project?: string;
@@ -14,6 +15,7 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedNextVersion(tree);
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
 

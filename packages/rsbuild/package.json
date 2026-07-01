@@ -3,6 +3,13 @@
   "description": "The Nx Plugin for Rsbuild contains an Nx plugin, executors and utilities that support building applications using Rsbuild.",
   "version": "0.0.1",
   "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "publishConfig": {
     "access": "public"
   },
@@ -25,7 +32,24 @@
   "author": "Colum Ferry",
   "license": "MIT",
   "homepage": "https://nx.dev",
-  "main": "index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "generators": [
+        "dist/generators.d.ts"
+      ],
+      "config-utils": [
+        "dist/config-utils.d.ts"
+      ],
+      "src/*": [
+        "dist/src/*.d.ts"
+      ],
+      "src/*.js": [
+        "dist/src/*.d.ts"
+      ]
+    }
+  },
   "generators": "./generators.json",
   "executors": "./executors.json",
   "dependencies": {
@@ -40,7 +64,7 @@
     "nx": "workspace:*"
   },
   "peerDependencies": {
-    "@rsbuild/core": "^1.0.0"
+    "@rsbuild/core": "^1.0.0 || ^2.0.0"
   },
   "peerDependenciesMeta": {
     "@rsbuild/core": {
@@ -48,27 +72,40 @@
     }
   },
   "nx-migrations": {
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "exports": {
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
-    "./executors/*/schema.json": "./src/executors/*/schema.json",
-    "./executors/*/schema": "./src/executors/*/schema.d.ts",
-    "./generators/*/schema.json": "./src/generators/*/schema.json",
-    "./generators/*/schema": "./src/generators/*/schema.d.ts",
     "./package.json": {
       "default": "./package.json"
     },
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
     "./generators": {
-      "types": "./generators.d.ts",
-      "default": "./generators.js"
+      "@nx/nx-source": "./generators.ts",
+      "types": "./dist/generators.d.ts",
+      "default": "./dist/generators.js"
     },
     "./config-utils": {
-      "types": "./config-utils.d.ts",
-      "default": "./config-utils.js"
+      "@nx/nx-source": "./config-utils.ts",
+      "types": "./dist/config-utils.d.ts",
+      "default": "./dist/config-utils.js"
+    },
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
     }
   }
 }

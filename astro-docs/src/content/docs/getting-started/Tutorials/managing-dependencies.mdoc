@@ -5,7 +5,7 @@ sidebar:
   order: 2
 ---
 
-{% llm_copy_prompt title="Tutorial 2/8: Understand project dependencies" %}
+{% llm_copy_prompt title="Tutorial 2/7: Understand project dependencies" %}
 Help me understand how my Nx workspace tracks dependencies between projects.
 Use my existing workspace and projects for hands-on examples.
 
@@ -29,7 +29,6 @@ As your workspace grows, projects start depending on each other and on external 
 5. [Caching](/docs/getting-started/tutorials/caching)
 6. [Understanding your workspace](/docs/getting-started/tutorials/understanding-your-workspace)
 7. [Reducing boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
-8. [Setting up CI](/docs/getting-started/tutorials/self-healing-ci-tutorial)
 
 {% /aside %}
 
@@ -52,6 +51,10 @@ Workspace libraries are projects whose source lives in your workspace and are li
 }
 ```
 
+{% aside type="note" title="Setting up an npm workspace?" %}
+See [Use npm Workspaces with Nx](/docs/guides/tips-n-tricks/npm-workspaces) for configuring the `workspaces` field in `package.json` from scratch.
+{% /aside %}
+
 {% /tabitem %}
 {% tabitem label="pnpm" %}
 
@@ -64,6 +67,10 @@ Workspace libraries are projects whose source lives in your workspace and are li
   },
 }
 ```
+
+{% aside type="note" title="Setting up a pnpm workspace?" %}
+See [Use pnpm Workspaces with Nx](/docs/guides/tips-n-tricks/pnpm-workspaces) for configuring `pnpm-workspace.yaml` and the `workspace:` protocol from scratch.
+{% /aside %}
 
 {% /tabitem %}
 {% tabitem label="yarn" %}
@@ -78,6 +85,10 @@ Workspace libraries are projects whose source lives in your workspace and are li
 }
 ```
 
+{% aside type="note" title="Setting up a Yarn workspace?" %}
+See [Use Yarn Workspaces with Nx](/docs/guides/tips-n-tricks/yarn-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
+{% /aside %}
+
 {% /tabitem %}
 {% tabitem label="bun" %}
 
@@ -90,6 +101,10 @@ Workspace libraries are projects whose source lives in your workspace and are li
   },
 }
 ```
+
+{% aside type="note" title="Setting up a Bun workspace?" %}
+See [Use Bun Workspaces with Nx](/docs/guides/tips-n-tricks/bun-workspaces) for configuring the `workspaces` field in `package.json` and the `workspace:` protocol from scratch.
+{% /aside %}
 
 {% /tabitem %}
 {% /tabs %}

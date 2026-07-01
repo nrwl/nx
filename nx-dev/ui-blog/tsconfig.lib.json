@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-blog",
+    "outDir": "dist",
     "declaration": true,
     "composite": true,
     "types": ["node"]

@@ -1,6 +1,6 @@
 ---
 title: Nx vs Turborepo
-description: A data-driven comparison of Nx and Turborepo covering setup complexity, CI performance, and advanced capabilities.
+description: Nx vs Turborepo on the same workspace, with distributed CI in 9m 20s vs 19m 18s, task sandboxing, polyglot builds, generators, and release management.
 filter: 'type:Guides'
 sidebar:
   label: Nx vs Turborepo
@@ -16,21 +16,20 @@ All benchmarks on this page use the same [pnpm workspace](https://github.com/mee
 
 This page starts with the basics, like onboarding, and progressively moves into more advanced capabilities.
 
-| Topic                                               | Nx                                                                | Turborepo                                                 |
-| --------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| [Onboarding](#onboarding)                           | Zero-config or guided `nx init` (+3 lines)                        | Manual `turbo.json` (+144 lines)                          |
-| [Running tasks](#running-tasks)                     | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
-| [Caching](#caching)                                 | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
-| [Task sandboxing](#task-sandboxing)                 | IO tracing + cache poisoning protection                           | Not available                                             |
-| [Code generation](#code-generation)                 | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
-| [Module boundary rules](#module-boundary-rules)     | Tag-based lint rule + conformance rules (polyglot)                | Experimental `turbo boundaries` (since 2024)              |
-| [Polyglot support](#polyglot-support)               | Native support for JS/TS, Java, .NET, Python, Rust                | Any CLI via `package.json` scripts, no native graph       |
-| [AI integration](#ai-integration)                   | Agent skills, MCP, `configure-ai-agents`, self-healing CI         | Official skill, no MCP or CI integration                  |
-| [CI solution](#running-nx-vs-turbo-on-ci)           | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
-| [Cross-repo coordination](#cross-repo-coordination) | Polygraph (synthetic monorepo)                                    | Not available                                             |
-| [Release management](#release-management)           | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
-| [Observability](#observability)                     | Integrated dashboards and AI-powered run analysis                 | Experimental OpenTelemetry (OTLP) export                  |
-| [Developer experience](#developer-experience)       | TUI, IDE extensions, and interactive project graph                | Basic TUI and LSP support                                 |
+| Topic                                           | Nx                                                                | Turborepo                                                 |
+| ----------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| [Onboarding](#onboarding)                       | Zero-config or guided `nx init` (+3 lines)                        | Manual `turbo.json` (+144 lines)                          |
+| [Running tasks](#running-tasks)                 | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
+| [Caching](#caching)                             | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
+| [Task sandboxing](#task-sandboxing)             | IO tracing + cache poisoning protection                           | Not available                                             |
+| [Code generation](#code-generation)             | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
+| [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                | Experimental `turbo boundaries` (since 2024)              |
+| [Polyglot support](#polyglot-support)           | Native support for JS/TS, Java, .NET, Python, Rust                | Any CLI via `package.json` scripts, no native graph       |
+| [AI integration](#ai-integration)               | Agent skills, MCP, `configure-ai-agents`, self-healing CI         | Official skill, no MCP or CI integration                  |
+| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
+| [Release management](#release-management)       | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
+| [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                 | Experimental OpenTelemetry (OTLP) export                  |
+| [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                | Basic TUI and LSP support                                 |
 
 ## Onboarding
 
@@ -346,17 +345,9 @@ Both tools offer visibility into your pipelines, but through different models.
 
 _Nx Agent utilization chart, showing even distribution across CI runners._
 
-For deep dives into resource utilization, see [CI Resource Usage](/docs/guides/nx-cloud/ci-resource-usage).
+For deep dives into resource utilization, see [Resource Usage](/docs/features/ci-features/resource-usage).
 
 **Turborepo** exposes run metrics via experimental **OpenTelemetry (OTLP)**. This is useful if you already have a mature observability stack (like Datadog or Grafana) and want to route build metrics into it, though it requires significant manual setup and maintenance of your own collector and visualization layer.
-
-## Cross-repo coordination
-
-Most organizations don't have a single monorepo. They have several monorepos plus standalone repos across teams.
-
-Nx Cloud's [Polygraph](/docs/enterprise/polygraph) creates a [synthetic monorepo](/docs/concepts/synthetic-monorepos): a unified dependency graph across separate repositories without moving any code. AI agents can read the cross-repo graph, coordinate changes across repos, and manage PRs across repo boundaries.
-
-Turborepo has no cross-repo coordination.
 
 ## Release management
 

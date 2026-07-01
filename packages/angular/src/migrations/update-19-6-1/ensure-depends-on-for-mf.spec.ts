@@ -4,10 +4,10 @@ import {
   readNxJson,
   updateNxJson,
   type NxJsonConfiguration,
-  type TargetDefaultsRecord,
+  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
-import { normalizeTargetDefaults } from '@nx/devkit/internal';
+import { findTargetDefault } from '@nx/devkit/internal';
 import ensureDependsOnForMf from './ensure-depends-on-for-mf';
 
 const WEBPACK_EXECUTOR = '@nx/angular:webpack-browser';
@@ -17,7 +17,7 @@ const NX_MF_DEV_REMOTES = { env: 'NX_MF_DEV_REMOTES' };
 // fixtures here exercise the legacy record shape too. Cast through this
 // helper rather than spread `as any` everywhere.
 type LegacyNxJson = Omit<NxJsonConfiguration, 'targetDefaults'> & {
-  targetDefaults?: TargetDefaultsRecord;
+  targetDefaults?: TargetDefaults;
 };
 
 describe('ensure-depends-on-for-mf', () => {
@@ -25,7 +25,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('adds dependsOn ^build and the dev-remotes env input when the entry already exists', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults = {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production'],
       };
@@ -61,7 +61,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('appends ^build to dependsOn while preserving other existing deps', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults = {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production'],
         dependsOn: ['some-task'],
@@ -83,7 +83,7 @@ describe('ensure-depends-on-for-mf', () => {
     it('leaves an already-correct entry alone (modulo shape upgrade)', async () => {
       const tree = createTreeWithEmptyWorkspace();
       const nxJson = readNxJson(tree) as LegacyNxJson;
-      nxJson.targetDefaults ??= {};
+      nxJson.targetDefaults = {};
       nxJson.targetDefaults[WEBPACK_EXECUTOR] = {
         inputs: ['production', '^production', NX_MF_DEV_REMOTES],
         dependsOn: ['^build'],
@@ -101,72 +101,12 @@ describe('ensure-depends-on-for-mf', () => {
       });
     });
   });
-
-  describe('array-shape input', () => {
-    it('adds dependsOn and dev-remotes input to an existing executor-keyed entry', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      const nxJson = readNxJson(tree);
-      nxJson.targetDefaults = [
-        {
-          executor: WEBPACK_EXECUTOR,
-          inputs: ['production', '^production'],
-        },
-      ];
-      updateNxJson(tree, nxJson);
-      addProject(tree);
-
-      await ensureDependsOnForMf(tree);
-
-      const entry = findWebpackEntry(tree);
-      expect(entry).toEqual({
-        executor: WEBPACK_EXECUTOR,
-        inputs: ['production', '^production', NX_MF_DEV_REMOTES],
-        dependsOn: ['^build'],
-      });
-    });
-
-    it('does not match a target-keyed entry whose name happens to be the executor string', async () => {
-      const tree = createTreeWithEmptyWorkspace();
-      const nxJson = readNxJson(tree);
-      // An entry with `target: '@nx/angular:webpack-browser'` is locator-by-target,
-      // not locator-by-executor — it should not collide with the migration's
-      // executor-keyed default. We expect a *new* executor-keyed entry to be added
-      // alongside it.
-      nxJson.targetDefaults = [
-        {
-          target: WEBPACK_EXECUTOR,
-          inputs: ['legacy-input'],
-        },
-      ];
-      updateNxJson(tree, nxJson);
-      addProject(tree);
-
-      await ensureDependsOnForMf(tree);
-
-      const all = normalizeTargetDefaults(readNxJson(tree).targetDefaults);
-      expect(all).toContainEqual({
-        target: WEBPACK_EXECUTOR,
-        inputs: ['legacy-input'],
-      });
-      expect(all).toContainEqual(
-        expect.objectContaining({
-          executor: WEBPACK_EXECUTOR,
-          dependsOn: ['^build'],
-        })
-      );
-    });
-  });
 });
 
 function findWebpackEntry(tree: Tree) {
-  const entries = normalizeTargetDefaults(readNxJson(tree).targetDefaults);
-  return entries.find(
-    (e) =>
-      e.executor === WEBPACK_EXECUTOR &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  return findTargetDefault(readNxJson(tree).targetDefaults, {
+    executor: WEBPACK_EXECUTOR,
+  });
 }
 
 function addProject(tree: Tree) {

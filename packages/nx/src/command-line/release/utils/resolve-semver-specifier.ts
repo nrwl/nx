@@ -13,7 +13,12 @@ export async function resolveSemverSpecifierFromConventionalCommits(
   projectGraph: ProjectGraph,
   projectNames: string[],
   releaseConfig: NxReleaseConfig,
-  releaseGraph: ReleaseGraph
+  releaseGraph: ReleaseGraph,
+  // The full set of projects in the active release group. For independent
+  // release groups, `projectNames` only contains the single project being
+  // processed, so this is forwarded separately to keep scope matching
+  // accurate against the whole group. Defaults to `projectNames`.
+  releaseGroupProjects: string[] = projectNames
 ): // Map of projectName to semver bump type
 Promise<Map<string, SemverSpecifier | null>> {
   const commits = await getGitDiff(from);
@@ -23,7 +28,8 @@ Promise<Map<string, SemverSpecifier | null>> {
     parsedCommits,
     projectNames,
     releaseConfig,
-    releaseGraph
+    releaseGraph,
+    releaseGroupProjects
   );
   return determineSemverChange(
     relevantCommits,

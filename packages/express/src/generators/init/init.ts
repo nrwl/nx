@@ -6,7 +6,8 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { expressVersion, nxVersion } from '../../utils/versions';
+import { assertSupportedExpressVersion } from '../../utils/assert-supported-express-version';
+import { nxVersion, versions } from '../../utils/versions';
 import type { Schema } from './schema';
 
 function updateDependencies(tree: Tree, schema: Schema) {
@@ -14,13 +15,17 @@ function updateDependencies(tree: Tree, schema: Schema) {
 
   tasks.push(removeDependenciesFromPackageJson(tree, ['@nx/express'], []));
 
+  const pkgVersions = versions(tree);
   tasks.push(
     addDependenciesToPackageJson(
       tree,
-      { express: expressVersion },
-      { '@nx/express': nxVersion },
+      { express: pkgVersions.expressVersion },
+      {
+        '@nx/express': nxVersion,
+        '@types/express': pkgVersions.expressTypingsVersion,
+      },
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions ?? true
     )
   );
 
@@ -28,6 +33,8 @@ function updateDependencies(tree: Tree, schema: Schema) {
 }
 
 export async function initGenerator(tree: Tree, schema: Schema) {
+  assertSupportedExpressVersion(tree);
+
   let installTask: GeneratorCallback = () => {};
   if (!schema.skipPackageJson) {
     installTask = updateDependencies(tree, schema);

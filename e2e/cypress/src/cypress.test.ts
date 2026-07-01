@@ -20,7 +20,15 @@ describe('Cypress E2E Test runner', () => {
   const myapp = uniq('myapp');
 
   beforeAll(() => {
-    newProject({ packages: ['@nx/angular', '@nx/next', '@nx/react'] });
+    newProject({
+      packages: [
+        '@nx/angular',
+        '@nx/next',
+        '@nx/react',
+        '@nx/cypress',
+        '@nx/eslint',
+      ],
+    });
   });
 
   afterAll(() => cleanupProject());

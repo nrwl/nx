@@ -56,11 +56,8 @@ The following resource classes are available:
 
 - `docker_linux_amd64/small`
 - `docker_linux_amd64/medium`
-- `docker_linux_amd64/medium+`
 - `docker_linux_amd64/large`
-- `docker_linux_amd64/large+`
 - `docker_linux_amd64/extra_large`
-- `docker_linux_amd64/extra_large+`
 - `docker_linux_arm64/medium`
 - `docker_linux_arm64/large`
 - `docker_linux_arm64/extra_large`
@@ -74,9 +71,13 @@ A launch template's `image` defines the available base software for the agent ma
 
 {% aside type="tip" title="Looking for Docker in Docker support?" %}
 
-Docker in Docker support (DinD) is currently limited to Organizations on the enterprise plan.
+Docker-in-Docker (DinD) runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Every agent in
+the cluster can run DinD, so your tasks can build and push container images or run Testcontainers.
+Request the add-on under **Settings > Add-ons**.
 
-If you're interested in our [Enterprise plan please reach out!](/contact/sales)
+Nx Enterprise [single-tenant](/docs/enterprise/single-tenant/overview) customers get DinD through
+their dedicated deployment.
 {% /aside %}
 
 ```yaml

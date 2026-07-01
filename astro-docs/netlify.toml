@@ -67,6 +67,11 @@ to = "/docs/getting-started/tutorials/:splat"
 from = "/docs/features/ci-features/self-healing"
 to = "/docs/features/ci-features/self-healing-ci"
 
+# DOC-513: Manual DTE guide renamed to Bring Your Own Compute
+[[redirects]]
+from = "/docs/guides/nx-cloud/manual-dte"
+to = "/docs/guides/nx-cloud/bring-your-own-compute"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
@@ -124,6 +129,42 @@ to = "/docs/reference/deprecated/self-hosted-cache-packages"
 [[redirects]]
 from = "/docs/reference/remote-cache-plugins/shared-fs-cache/generators"
 to = "/docs/reference/deprecated/self-hosted-cache-packages"
+
+# DOC-503: CI page moved out of tutorials to top-level Getting Started
+[[redirects]]
+from = "/docs/getting-started/tutorials/self-healing-ci-tutorial"
+to = "/docs/getting-started/setup-ci"
+
+# Resource usage consolidated into the Nx Cloud add-ons platform feature pages
+[[redirects]]
+from = "/docs/guides/nx-cloud/ci-resource-usage"
+to = "/docs/features/ci-features/resource-usage"
+
+# NXC-4453: Knowledge Base "Installation" section renamed to "Installation and updates"
+[[redirects]]
+from = "/docs/knowledge-base/installation"
+to = "/docs/knowledge-base/installation-and-updates"
+
+# DOC-522: Polygraph is a standalone product, no longer part of Nx Cloud.
+# Reroute the Polygraph-specific docs pages to the standalone landing page.
+# force = true so these win over the catch-all rewrite below.
+[[redirects]]
+from = "/docs/enterprise/polygraph"
+to = "https://trypolygraph.com"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/synthetic-monorepos"
+to = "https://trypolygraph.com"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/enterprise/metadata-only-workspace"
+to = "https://trypolygraph.com"
+status = 301
+force = true
 
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]

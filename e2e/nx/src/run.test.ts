@@ -22,7 +22,18 @@ import * as path from 'path';
 describe('Nx Running Tests', () => {
   let proj: string;
   beforeAll(
-    () => (proj = newProject({ packages: ['@nx/js', '@nx/web', '@nx/node'] }))
+    () =>
+      (proj = newProject({
+        packages: [
+          '@nx/js',
+          '@nx/node',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/web',
+          '@nx/jest',
+          '@nx/playwright',
+        ],
+      }))
   );
   afterAll(() => cleanupProject());
 
@@ -492,15 +503,13 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          const entries = nxJson.targetDefaults ?? [];
-          entries.push({
-            target,
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = {
             executor: 'nx:run-commands',
             options: {
               command: `echo Hello from ${target}`,
             },
-          });
-          nxJson.targetDefaults = entries;
+          };
           return nxJson;
         });
 
@@ -524,14 +533,12 @@ describe('Nx Running Tests', () => {
         const lib = uniq('lib');
 
         updateJson('nx.json', (nxJson) => {
-          const entries = nxJson.targetDefaults ?? [];
-          entries.push({
-            executor: 'nx:run-commands',
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults['nx:run-commands'] = {
             options: {
               command: `echo Hello from ${target}`,
             },
-          });
-          nxJson.targetDefaults = entries;
+          };
           return nxJson;
         });
 
@@ -560,14 +567,14 @@ describe('Nx Running Tests', () => {
         const libB = uniq('libb');
 
         updateJson('nx.json', (nxJson) => {
-          const entries = nxJson.targetDefaults ?? [];
-          entries.push({
-            target,
-            projects: libA,
-            executor: 'nx:run-commands',
-            options: { command: `echo SCOPED-TO-${libA}` },
-          });
-          nxJson.targetDefaults = entries;
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SCOPED-TO-${libA}` },
+            },
+          ];
           return nxJson;
         });
 
@@ -601,14 +608,14 @@ describe('Nx Running Tests', () => {
         const libUntagged = uniq('libuntagged');
 
         updateJson('nx.json', (nxJson) => {
-          const entries = nxJson.targetDefaults ?? [];
-          entries.push({
-            target,
-            projects: `tag:${tag}`,
-            executor: 'nx:run-commands',
-            options: { command: `echo TAGGED-${tag}` },
-          });
-          nxJson.targetDefaults = entries;
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { projects: [`tag:${tag}`] },
+              executor: 'nx:run-commands',
+              options: { command: `echo TAGGED-${tag}` },
+            },
+          ];
           return nxJson;
         });
 
@@ -641,21 +648,22 @@ describe('Nx Running Tests', () => {
         const libB = uniq('libb');
 
         updateJson('nx.json', (nxJson) => {
-          const entries = nxJson.targetDefaults ?? [];
-          // More-specific (filtered) entry — preferred for libA.
-          entries.push({
-            target,
-            projects: libA,
-            executor: 'nx:run-commands',
-            options: { command: `echo SPECIFIC-${libA}` },
-          });
-          // Less-specific (no filter) entry — covers everyone else.
-          entries.push({
-            target,
-            executor: 'nx:run-commands',
-            options: { command: `echo GENERIC-${target}` },
-          });
-          nxJson.targetDefaults = entries;
+          nxJson.targetDefaults ??= {};
+          // Entries apply in document order, last match winning. The catch-all
+          // baseline comes first; the filtered entry overrides it for libA.
+          nxJson.targetDefaults[target] = [
+            // No-filter catch-all — covers everyone else.
+            {
+              executor: 'nx:run-commands',
+              options: { command: `echo GENERIC-${target}` },
+            },
+            // Filtered entry — overrides for libA (applied after the catch-all).
+            {
+              filter: { projects: [libA] },
+              executor: 'nx:run-commands',
+              options: { command: `echo SPECIFIC-${libA}` },
+            },
+          ];
           return nxJson;
         });
 
@@ -668,12 +676,13 @@ describe('Nx Running Tests', () => {
           JSON.stringify({ name: libB, targets: { [target]: {} } })
         );
 
-        // libA matches the specific entry — higher tier wins.
+        // libA matches the filtered entry, which applies after the catch-all
+        // and overrides it.
         const aOut = runCLI(`${target} ${libA} --verbose`);
         expect(aOut).toContain(`SPECIFIC-${libA}`);
         expect(aOut).not.toContain(`GENERIC-${target}`);
 
-        // libB doesn't match the specific filter, falls back to the generic default.
+        // libB doesn't match the filter, so only the catch-all default applies.
         const bOut = runCLI(`${target} ${libB} --verbose`);
         expect(bOut).toContain(`GENERIC-${target}`);
         expect(bOut).not.toContain(`SPECIFIC-${libA}`);
@@ -714,13 +723,13 @@ describe('Nx Running Tests', () => {
 
         updateJson('nx.json', (nxJson) => {
           nxJson.plugins = [...(nxJson.plugins ?? []), pluginPath];
-          const entries = nxJson.targetDefaults ?? [];
-          entries.push({
-            target,
-            plugin: pluginPath,
-            outputs: ['{workspaceRoot}/source-filter-marker'],
-          });
-          nxJson.targetDefaults = entries;
+          nxJson.targetDefaults ??= {};
+          nxJson.targetDefaults[target] = [
+            {
+              filter: { plugin: pluginPath },
+              outputs: ['{workspaceRoot}/source-filter-marker'],
+            },
+          ];
           return nxJson;
         });
 
@@ -740,18 +749,18 @@ describe('Nx Running Tests', () => {
         );
 
         const inferredCfg = JSON.parse(
-          runCLI(`show project ${inferredLib} --json`)
+          runCLI(`show target ${inferredLib}:${target} --json`)
         );
         const manualCfg = JSON.parse(
-          runCLI(`show project ${manualLib} --json`)
+          runCLI(`show target ${manualLib}:${target} --json`)
         );
 
         // The default's `outputs` only attaches to the inferred target —
         // its source matches the plugin path the filter names.
-        expect(inferredCfg.targets[target]?.outputs).toEqual([
+        expect(inferredCfg.outputs).toEqual([
           '{workspaceRoot}/source-filter-marker',
         ]);
-        expect(manualCfg.targets[target]?.outputs).toBeUndefined();
+        expect(manualCfg.outputs).toBeUndefined();
       });
     });
 
@@ -843,7 +852,15 @@ describe('Nx Running Tests', () => {
   describe('run-many', () => {
     it('should build specific and all projects', () => {
       // This is required to ensure the numbers used in the assertions make sense for this test
-      const proj = newProject({ packages: ['@nx/js', '@nx/node', '@nx/web'] });
+      const proj = newProject({
+        packages: [
+          '@nx/js',
+          '@nx/node',
+          '@nx/web',
+          '@nx/jest',
+          '@nx/playwright',
+        ],
+      });
       const appA = uniq('appa-rand');
       const libA = uniq('liba-rand');
       const libB = uniq('libb-rand');

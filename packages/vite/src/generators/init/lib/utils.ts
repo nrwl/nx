@@ -89,7 +89,7 @@ export async function checkDependenciesInstalled(
       jiti: jitiVersion,
     },
     undefined,
-    schema.keepExistingVersions
+    schema.keepExistingVersions ?? true
   );
 }
 

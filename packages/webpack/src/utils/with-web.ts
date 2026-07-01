@@ -6,6 +6,7 @@ import {
   NormalizedWebpackExecutorOptions,
 } from '../executors/webpack/schema';
 import { applyWebConfig } from '../plugins/nx-webpack-plugin/lib/apply-web-config';
+import { warnWebpackComposeHelpersDeprecation } from './deprecation';
 
 const processed = new Set();
 
@@ -36,12 +37,17 @@ export type MergedOptions = Omit<
   WithWebOptions;
 
 /**
+ * @deprecated Will be removed in Nx v24. Use `NxAppWebpackPlugin` from
+ * `@nx/webpack/app-plugin` in a standard webpack config and run
+ * `nx g @nx/webpack:convert-to-inferred`. See
+ * https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.
  * @param {WithWebOptions} pluginOptions
  * @returns {NxWebpackPlugin}
  */
 export function withWeb(
   pluginOptions: WithWebOptions = {}
 ): NxComposableWebpackPlugin {
+  warnWebpackComposeHelpersDeprecation();
   return function configure(
     config: Configuration,
     { options, context }: NxWebpackExecutionContext

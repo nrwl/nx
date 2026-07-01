@@ -18,7 +18,7 @@ use swc_ecma_parser::token::Keyword::{
 };
 use swc_ecma_parser::token::Word::{Ident, Keyword};
 use swc_ecma_parser::token::{BinOpToken, Token, TokenAndSpan};
-use swc_ecma_parser::{Syntax, Tokens, TsConfig};
+use swc_ecma_parser::{StringInput, Syntax, Tokens, TsConfig};
 
 use crate::native::logger::enable_logger;
 
@@ -566,16 +566,61 @@ fn find_specifier_in_require(state: &mut State) -> Option<(String, ImportType)> 
     None
 }
 
+fn line_starts_for_source(source: &str) -> Vec<BytePos> {
+    let mut line_starts = vec![BytePos(0)];
+    let bytes = source.as_bytes();
+    let mut index = 0;
+
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\r' if matches!(bytes.get(index + 1), Some(b'\n')) => {
+                line_starts.push(BytePos((index + 2) as u32));
+                index += 2;
+                continue;
+            }
+            b'\r' | b'\n' => {
+                line_starts.push(BytePos((index + 1) as u32));
+            }
+            _ => {}
+        }
+
+        index += 1;
+    }
+
+    if matches!(line_starts.last(), Some(last) if last.0 as usize == source.len()) {
+        line_starts.pop();
+    }
+
+    line_starts
+}
+
+fn lookup_line(line_starts: &[BytePos], pos: BytePos) -> Option<usize> {
+    line_starts
+        .partition_point(|line_start| *line_start <= pos)
+        .checked_sub(1)
+}
+
+fn line_begin_pos(line_starts: &[BytePos], pos: BytePos) -> Option<BytePos> {
+    lookup_line(line_starts, pos).and_then(|line| line_starts.get(line).copied())
+}
+
 fn process_file(
     (source_project, file_path): (&String, &String),
 ) -> anyhow::Result<Option<ImportResult>> {
     let now = Instant::now();
-    let Ok(cm) = Arc::<SourceMap>::default()
-        .load_file(Path::new(file_path))
+    let Ok(source) = std::fs::read_to_string(file_path)
         .inspect_err(|e| trace!("Unable to load {}: {}", file_path, e))
     else {
         return Ok(None);
     };
+    let source_len = match u32::try_from(source.len()) {
+        Ok(source_len) => source_len,
+        Err(_) => {
+            trace!("Unable to process {}: source file is too large", file_path);
+            return Ok(None);
+        }
+    };
+    let line_starts = line_starts_for_source(&source);
 
     let comments = SingleThreadedComments::default();
 
@@ -589,7 +634,7 @@ fn process_file(
             disallow_ambiguous_jsx_like: false,
         }),
         EsNext,
-        (&*cm).into(),
+        StringInput::new(&source, BytePos(0), BytePos(source_len)),
         Some(&comments),
     );
 
@@ -657,8 +702,9 @@ fn process_file(
             debug!(
                 "{}:{}:{} {}",
                 file_path,
-                cm.lookup_line(err.span_hi()).unwrap() + 1,
-                (err.span_lo() - cm.line_begin_pos(err.span_lo())).0,
+                lookup_line(&line_starts, err.span_hi()).unwrap_or(0) + 1,
+                (err.span_lo() - line_begin_pos(&line_starts, err.span_lo()).unwrap_or(BytePos(0)))
+                    .0,
                 err.kind().msg(),
             );
         }
@@ -674,17 +720,15 @@ fn process_file(
             let comment_text = comment.text.trim();
 
             if comment_text.contains("nx-ignore-next-line") {
-                let line_where_comment_ends = cm
-                    .lookup_line(comment.span.hi)
-                    .expect("Comments end on a line");
-
-                lines_with_nx_ignore_comments.insert(line_where_comment_ends);
+                if let Some(line_where_comment_ends) = lookup_line(&line_starts, comment.span.hi) {
+                    lines_with_nx_ignore_comments.insert(line_where_comment_ends);
+                }
             }
         }
     }
 
     let code_is_not_ignored = |(specifier, pos): (String, BytePos)| {
-        let line_with_code = cm.lookup_line(pos).expect("All code is on a line");
+        let line_with_code = lookup_line(&line_starts, pos).expect("All code is on a line");
         if line_with_code > 0 && lines_with_nx_ignore_comments.contains(&(line_with_code - 1)) {
             None
         } else {
@@ -798,6 +842,35 @@ import 'a4'; import 'a5';
         let result = results.get(0).unwrap();
 
         assert!(result.static_import_expressions.is_empty());
+        assert!(result.dynamic_import_expressions.is_empty());
+    }
+
+    #[test]
+    fn should_not_crash_on_non_narrow_character_with_width_greater_than_two() {
+        let temp_dir = TempDir::new().unwrap();
+        temp_dir
+            .child("test.ts")
+            .write_str(
+                r#"
+            const marker = '៘';
+            import { a } from 'non-narrow-char-dependency';
+            "#,
+            )
+            .unwrap();
+
+        let test_file_path = temp_dir.display().to_string() + "/test.ts";
+
+        let results = find_imports(HashMap::from([(
+            String::from("a"),
+            vec![test_file_path.clone()],
+        )]))
+        .unwrap();
+
+        let result = results.get(0).unwrap();
+        assert_eq!(
+            result.static_import_expressions,
+            vec![String::from("non-narrow-char-dependency")]
+        );
         assert!(result.dynamic_import_expressions.is_empty());
     }
 

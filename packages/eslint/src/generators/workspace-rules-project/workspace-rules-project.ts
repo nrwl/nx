@@ -21,8 +21,8 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { join } from 'path';
-import { nxVersion } from '../../utils/versions';
-import { getTypeScriptEslintVersionToInstall } from '../../utils/version-utils';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
+import { nxVersion, versions } from '../../utils/versions';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 
 export const WORKSPACE_RULES_PROJECT_NAME = 'eslint-rules';
@@ -38,6 +38,8 @@ export async function lintWorkspaceRulesProjectGenerator(
   tree: Tree,
   options: LintWorkspaceRulesProjectGeneratorOptions = {}
 ) {
+  assertSupportedEslintVersion(tree);
+
   const { configurationGenerator } = ensurePackage<typeof import('@nx/jest')>(
     '@nx/jest',
     nxVersion
@@ -97,6 +99,13 @@ export async function lintWorkspaceRulesProjectGenerator(
     (json) => {
       delete json.compilerOptions?.module;
       delete json.compilerOptions?.moduleResolution;
+      // Inherits `module: node16` from the project's base `tsconfig.json`,
+      // which requires `isolatedModules: true` to reliably honor packages'
+      // `exports` maps (e.g. `@typescript-eslint/rule-tester`).
+      json.compilerOptions = {
+        ...json.compilerOptions,
+        isolatedModules: true,
+      };
 
       if (json.include) {
         json.include = json.include.map((v) => {
@@ -121,14 +130,16 @@ export async function lintWorkspaceRulesProjectGenerator(
   // Add swc dependencies
   tasks.push(addSwcRegisterDependencies(tree));
 
-  const typescriptEslintVersion = getTypeScriptEslintVersionToInstall(tree);
+  const { typescriptESLintVersion } = versions(tree);
   tasks.push(
     addDependenciesToPackageJson(
       tree,
       {},
       {
-        '@typescript-eslint/utils': typescriptEslintVersion,
-      }
+        '@typescript-eslint/utils': typescriptESLintVersion,
+      },
+      undefined,
+      true
     )
   );
 
@@ -142,14 +153,15 @@ export async function lintWorkspaceRulesProjectGenerator(
 function findLintTargetDefault(
   td: TargetDefaults | undefined
 ): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'lint' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td?.['lint'];
+  if (value === undefined) return undefined;
+  // A target default value can be a plain config object or an array of
+  // filtered entries; use the filter-less (catch-all) entry.
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _filter, ...rest } = found;
+    return rest;
   }
-  return td['lint'];
+  return value;
 }

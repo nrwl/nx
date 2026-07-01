@@ -11,9 +11,17 @@ import { Schema } from './schema';
 
 describe('app', () => {
   let appTree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     appTree = createTreeWithEmptyWorkspace();
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
   });
 
   it('should generate files', async () => {
@@ -43,6 +51,15 @@ describe('app', () => {
         ],
       }
     `);
+
+    expect(appTree.exists('my-node-app/eslint.config.mjs')).toBeTruthy();
+  });
+
+  it('should generate the .eslintrc.json file (eslintrc)', async () => {
+    process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    await applicationGenerator(appTree, {
+      directory: 'my-node-app',
+    } as Schema);
 
     const eslintrcJson = readJson(appTree, 'my-node-app/.eslintrc.json');
     expect(eslintrcJson).toMatchInlineSnapshot(`
@@ -195,7 +212,7 @@ describe('app', () => {
       expect(readJson(appTree, 'myapp/package.json')).toMatchInlineSnapshot(`
         {
           "dependencies": {
-            "express": "^4.21.2",
+            "express": "^5.1.0",
           },
           "name": "@proj/myapp",
           "nx": {

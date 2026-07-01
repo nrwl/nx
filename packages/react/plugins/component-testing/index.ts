@@ -260,15 +260,13 @@ function buildTargetWebpack(
     parsed.target
   );
 
+  const { resolveUserDefinedWebpackConfig } = require('@nx/webpack/internal');
   const {
     normalizeOptions,
-  } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
-  const {
-    resolveUserDefinedWebpackConfig,
-  } = require('@nx/webpack/src/utils/webpack/resolve-user-defined-webpack-config');
-  const { composePluginsSync } = require('@nx/webpack/src/utils/config');
-  const { withNx } = require('@nx/webpack/src/utils/with-nx');
-  const { withWeb } = require('@nx/webpack/src/utils/with-web');
+    composePluginsSync,
+    withNx,
+    withWeb,
+  } = require('@nx/webpack');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),

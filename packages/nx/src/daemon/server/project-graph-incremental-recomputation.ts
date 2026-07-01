@@ -76,7 +76,10 @@ export let currentSourceMaps: ConfigurationSourceMaps | undefined;
 
 // Maps file path to a version counter that increments on each modification.
 // This lets us detect mid-flight re-modifications when clearing processed files.
-const collectedUpdatedFiles = new Map<string, number>();
+const collectedUpdatedFiles = new Map<
+  string,
+  { version: number; hash: string }
+>();
 const collectedDeletedFiles = new Map<string, number>();
 
 const projectGraphRecomputationListeners = new Set<
@@ -107,35 +110,43 @@ let cacheHasBeenPersisted = false;
 function kickOffRecompute() {
   let myPromise: Promise<SerializedProjectGraph>;
   myPromise = (async () => {
-    // Single read shared with getPluginsSeparated below. This collapses
-    // what would otherwise be two independent nx.json reads (our snap +
-    // the plugin loader's) into one, so the snap hash and the plugin
-    // set the compute uses always reflect the same disk state.
-    const nxJson = readNxJson(workspaceRoot);
-    const myPluginsHash = hashObject(nxJson.plugins ?? []);
+    // Must resolve, never reject: kickOffRecompute() runs fire-and-forget, so
+    // a rejected myPromise crashes the daemon (unhandled rejection). A throwing
+    // prologue (e.g. plugin load fails) becomes an errorResult the next requester surfaces.
+    try {
+      // Single read shared with getPluginsSeparated below. This collapses
+      // what would otherwise be two independent nx.json reads (our snap +
+      // the plugin loader's) into one, so the snap hash and the plugin
+      // set the compute uses always reflect the same disk state.
+      const nxJson = readNxJson(workspaceRoot);
+      const myPluginsHash = hashObject(nxJson.plugins ?? []);
 
-    const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
+      const plugins = await getPluginsSeparated(nxJson, workspaceRoot);
 
-    // Plugin set we just loaded may already be stale vs disk.
-    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      // Plugin set we just loaded may already be stale vs disk.
+      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-    const result = await processFilesAndCreateAndSerializeProjectGraph(plugins);
+      const result =
+        await processFilesAndCreateAndSerializeProjectGraph(plugins);
 
-    // Compute may have run against plugins that are now stale.
-    if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
+      // Compute may have run against plugins that are now stale.
+      if (isStale(myPluginsHash)) return chainToSuccessor(myPromise);
 
-    if (
-      cachedSerializedProjectGraphPromise === myPromise &&
-      result.projectGraph
-    ) {
-      notifyProjectGraphRecomputationListeners(
-        result.projectGraph,
-        result.sourceMaps,
-        result.error
-      );
-      persistProjectGraphToDisk(result);
+      if (
+        cachedSerializedProjectGraphPromise === myPromise &&
+        result.projectGraph
+      ) {
+        notifyProjectGraphRecomputationListeners(
+          result.projectGraph,
+          result.sourceMaps,
+          result.error
+        );
+        persistProjectGraphToDisk(result);
+      }
+      return result;
+    } catch (e) {
+      return errorResult(e);
     }
-    return result;
   })();
   cachedSerializedProjectGraphPromise = myPromise;
 }
@@ -268,9 +279,37 @@ export function scheduleProjectGraphRecomputation(
   deletedFiles: string[]
 ) {
   ++fileChangeCounter;
-  for (let f of [...createdFiles, ...updatedFiles]) {
+
+  // Hash the changed files up front and drop no-op rewrites before they can
+  // trigger an expensive recompute. Restoring a cached task output, a
+  // `git checkout` back to the same content, or a formatter that changes
+  // nothing all rewrite a file (new inode) the watcher reports as changed
+  // even though the bytes are identical. updateFilesInContext updates the
+  // workspace context and returns only the files whose content actually
+  // changed. Hashing here — once per watcher batch — rather than inside the
+  // recompute keeps it off the stale-retry path, which would otherwise see
+  // "no change" after the first pass already updated the context hashes.
+  performance.mark('hash-watched-changes-start');
+  const changedFileHashes =
+    createdFiles.length > 0 ||
+    updatedFiles.length > 0 ||
+    deletedFiles.length > 0
+      ? (updateFilesInContext(
+          workspaceRoot,
+          [...createdFiles, ...updatedFiles],
+          deletedFiles
+        ) ?? {})
+      : {};
+  performance.mark('hash-watched-changes-end');
+  performance.measure(
+    'hash changed files from watcher',
+    'hash-watched-changes-start',
+    'hash-watched-changes-end'
+  );
+
+  for (const [f, hash] of Object.entries(changedFileHashes)) {
     collectedDeletedFiles.delete(f);
-    collectedUpdatedFiles.set(f, fileChangeCounter);
+    collectedUpdatedFiles.set(f, { version: fileChangeCounter, hash });
   }
 
   for (let f of deletedFiles) {
@@ -280,11 +319,7 @@ export function scheduleProjectGraphRecomputation(
 
   // The native watcher already coalesces a burst of events into one batch,
   // so socket + listener notifications dispatch immediately.
-  if (
-    createdFiles.length > 0 ||
-    updatedFiles.length > 0 ||
-    deletedFiles.length > 0
-  ) {
+  if (Object.keys(changedFileHashes).length > 0 || deletedFiles.length > 0) {
     notifyFileChangeListeners({ createdFiles, updatedFiles, deletedFiles });
     notifyFileWatcherSockets(createdFiles, updatedFiles, deletedFiles);
     // Bump generation synchronously so any in-flight compute fails its
@@ -416,22 +451,18 @@ async function processFilesAndCreateAndSerializeProjectGraph(
   };
 
   try {
-    performance.mark('hash-watched-changes-start');
     const updatedFilesSnapshot = new Map(collectedUpdatedFiles);
     const deletedFilesSnapshot = new Map(collectedDeletedFiles);
     const updatedFiles = [...updatedFilesSnapshot.keys()];
     const deletedFiles = [...deletedFilesSnapshot.keys()];
-    let updatedFileHashes = updateFilesInContext(
-      workspaceRoot,
-      updatedFiles,
-      deletedFiles
-    );
-    performance.mark('hash-watched-changes-end');
-    performance.measure(
-      'hash changed files from watcher',
-      'hash-watched-changes-start',
-      'hash-watched-changes-end'
-    );
+    // Hashes were already computed (and the workspace context updated) in
+    // scheduleProjectGraphRecomputation, which also dropped no-op rewrites.
+    // Reuse them so the context isn't re-hashed on every (possibly stale)
+    // recompute attempt.
+    const updatedFileHashes: Record<string, string> = {};
+    for (const [f, { hash }] of updatedFilesSnapshot) {
+      updatedFileHashes[f] = hash;
+    }
     serverLogger.requestLog(
       `Updated workspace context based on watched changes, recomputing project graph...`
     );
@@ -486,8 +517,8 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // from the daemon's view (project graph misses recently added files).
     // Match version-stamps so a file modified mid-flight (higher version)
     // stays in the queue for reprocessing.
-    for (const [f, version] of updatedFilesSnapshot) {
-      if (collectedUpdatedFiles.get(f) === version) {
+    for (const [f, { version }] of updatedFilesSnapshot) {
+      if (collectedUpdatedFiles.get(f)?.version === version) {
         collectedUpdatedFiles.delete(f);
       }
     }

@@ -13,19 +13,16 @@ import {
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
   useFlatConfig,
-  getInstalledEslintVersion,
-  getTypeScriptEslintVersionToInstall,
+  versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Tree } from 'nx/src/generators/tree';
 import { joinPathFragments } from 'nx/src/utils/path';
 import {
-  eslint9__VueEslintConfigTypescriptVersion,
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,
   vueEslintConfigTypescriptVersion,
 } from './versions';
-import { lt } from 'semver';
 
 export async function addLinting(
   host: Tree,
@@ -75,13 +72,9 @@ export async function addLinting(
 
     editEslintConfigFiles(host, options.projectRoot);
 
-    const eslintVersion = getInstalledEslintVersion(host);
     const devDependencies = {
       '@vue/eslint-config-prettier': vueEslintConfigPrettierVersion,
-      '@vue/eslint-config-typescript':
-        eslintVersion && lt(eslintVersion, '9.0.0')
-          ? vueEslintConfigTypescriptVersion
-          : eslint9__VueEslintConfigTypescriptVersion,
+      '@vue/eslint-config-typescript': vueEslintConfigTypescriptVersion,
       'eslint-plugin-vue': eslintPluginVueVersion,
     };
     if (
@@ -89,14 +82,16 @@ export async function addLinting(
       useFlatConfig(host)
     ) {
       devDependencies['@typescript-eslint/parser'] =
-        getTypeScriptEslintVersionToInstall(host);
+        versions(host).typescriptESLintVersion;
     }
 
     if (!options.skipPackageJson) {
       const installTask = addDependenciesToPackageJson(
         host,
         {},
-        devDependencies
+        devDependencies,
+        undefined,
+        true
       );
       tasks.push(installTask);
     }

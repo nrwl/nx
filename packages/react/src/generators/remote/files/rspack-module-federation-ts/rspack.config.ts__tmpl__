@@ -6,6 +6,8 @@ import { join } from 'path';
 import config from './module-federation.config';
 
 export default {
+  // rspack-cli dev mode defaults this on; it breaks module federation.
+  lazyCompilation: false,
   output: {
     path: join(__dirname, '<%= rspackPluginOptions.outputPath %>'),
     publicPath: 'auto'

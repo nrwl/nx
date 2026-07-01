@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/graph/client/spec",
-    "module": "commonjs",
+    "outDir": "out-tsc/spec",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
     "lib": ["DOM"]
   },
+  "exclude": ["out-tsc"],
   "include": [
     "**/*.test.ts",
     "**/*.spec.ts",

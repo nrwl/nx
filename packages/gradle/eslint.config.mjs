@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
     files: ['**/*.json'],
     rules: {
@@ -10,7 +11,7 @@ export default [
         'error',
         {
           buildTargets: ['build-base'],
-          ignoredDependencies: ['nx'],
+          ignoredDependencies: ['nx', 'typescript'],
         },
       ],
     },

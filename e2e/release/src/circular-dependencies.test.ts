@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -13,7 +14,7 @@ import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -91,7 +92,7 @@ xdescribe('nx release circular dependencies', () => {
 
     // This is the verdaccio instance that the e2e tests themselves are working from
     e2eRegistryUrl = execSync('npm config get registry').toString().trim();
-  }, 60000);
+  });
 
   afterAll(() => {
     // Restore original verbose logging value

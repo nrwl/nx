@@ -25,6 +25,7 @@ use crate::native::{
 };
 use dashmap::DashMap;
 use napi::bindgen_prelude::*;
+use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 use tracing::{debug, trace, trace_span};
 
@@ -157,6 +158,12 @@ pub struct TaskHasher {
     root_tsconfig_path: Option<String>,
     options: Option<HasherOptions>,
     external_cache: Arc<DashMap<String, String>>,
+    // Persisted across hash_plans() calls: they only fold the immutable FileData
+    // snapshot, so they never go stale. (Live-disk/exec caches stay per-call — see below.)
+    workspace_file_set_cache: DashMap<String, CachedFileSetHash>,
+    project_file_set_cache: ProjectFileSetCache,
+    // Fold over all externals; identical for every task, so computed once.
+    all_externals_hash: OnceCell<String>,
 }
 #[napi]
 impl TaskHasher {
@@ -186,6 +193,9 @@ impl TaskHasher {
             root_tsconfig_path,
             options,
             external_cache: Arc::new(DashMap::new()),
+            workspace_file_set_cache: DashMap::new(),
+            project_file_set_cache: ProjectFileSetCache::new(),
+            all_externals_hash: OnceCell::new(),
         }
     }
 
@@ -225,13 +235,10 @@ impl TaskHasher {
     where
         F: Fn(&str) -> &'a HashMap<String, String> + Sync,
     {
-        // Create fresh caches for this invocation.
-        // This ensures no stale caches across multiple CLI commands when the daemon holds
-        // the TaskHasher instance.
+        // Per-invocation: these read live disk/exec state (task outputs, shell commands,
+        // json file contents) that can change mid-run, so they must not persist.
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
-        let project_file_set_cache = ProjectFileSetCache::new();
-        let workspace_file_set_cache: DashMap<String, CachedFileSetHash> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
@@ -289,8 +296,8 @@ impl TaskHasher {
                         selectively_hash_tsconfig,
                         task_output_cache: &task_output_cache,
                         runtime_cache: &runtime_cache,
-                        project_file_set_cache: &project_file_set_cache,
-                        workspace_file_set_cache: &workspace_file_set_cache,
+                        project_file_set_cache: &self.project_file_set_cache,
+                        workspace_file_set_cache: &self.workspace_file_set_cache,
                         json_file_set_cache: &json_file_set_cache,
                         cwd: cwd_path,
                         collect_inputs: should_collect_inputs,
@@ -540,11 +547,18 @@ impl TaskHasher {
                 (hashed_external, inputs)
             }
             HashInstruction::AllExternalDependencies => {
-                let hashed_all_externals = hash_all_externals(
-                    sorted_externals,
-                    &self.project_graph.external_nodes,
-                    Arc::clone(&self.external_cache),
-                )?;
+                // Identical for every task, so fold once and reuse (individual externals
+                // are already cached in external_cache).
+                let hashed_all_externals = self
+                    .all_externals_hash
+                    .get_or_try_init(|| {
+                        hash_all_externals(
+                            sorted_externals,
+                            &self.project_graph.external_nodes,
+                            Arc::clone(&self.external_cache),
+                        )
+                    })?
+                    .clone();
                 trace!(parent: &span, "hash_all_externals: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
                     instruction.into()

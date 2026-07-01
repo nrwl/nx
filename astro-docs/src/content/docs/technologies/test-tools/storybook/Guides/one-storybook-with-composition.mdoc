@@ -94,7 +94,7 @@ Update the `libs/storybook-host/.storybook/main.ts` file as shown below:
 ```javascript {% meta="{14-23}" %}
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
@@ -118,7 +118,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [tsconfigPaths()],
     }),
 };
 
@@ -167,7 +167,7 @@ and then change the host Storybook's `main.ts` file to point to these URLs accor
 ```javascript
 // libs/storybook-host/.storybook/main.ts
 import type { StorybookConfig } from '@storybook/react-vite';
-import { nxViteTsPaths } from '@nx/vite/plugins/nx-tsconfig-paths.plugin';
+import tsconfigPaths from 'vite-tsconfig-paths';
 import { mergeConfig } from 'vite';
 
 const config: StorybookConfig = {
@@ -191,7 +191,7 @@ const config: StorybookConfig = {
 
   viteFinal: async (config) =>
     mergeConfig(config, {
-      plugins: [nxViteTsPaths()],
+      plugins: [tsconfigPaths()],
     }),
 };
 

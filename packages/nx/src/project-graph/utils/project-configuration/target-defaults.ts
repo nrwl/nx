@@ -1,32 +1,37 @@
 import { minimatch } from 'minimatch';
+import { join } from 'path';
+import { toProjectName } from '../../../config/to-project-name';
 import {
   NormalizedTargetDefaults,
   NxJsonConfiguration,
-  TargetDefaultEntry,
+  TargetDefaultArrayEntry,
   TargetDefaults,
-  TargetDefaultsRecord,
+  TargetDefaultValue,
 } from '../../../config/nx-json';
 import {
   ProjectConfiguration,
   TargetConfiguration,
 } from '../../../config/workspace-json-project-json';
 import type { ProjectGraphProjectNode } from '../../../config/project-graph';
-import { findMatchingProjects } from '../../../utils/find-matching-projects';
+import {
+  findMatchingProjects,
+  type MatcherProjectNode,
+} from '../../../utils/find-matching-projects';
 import { isGlobPattern } from '../../../utils/globs';
 import type { CreateNodesResult } from '../../plugins/public-api';
 import {
   SourceInformation,
   ConfigurationSourceMaps,
-  targetOptionSourceMapKey,
+  targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
 } from './source-maps';
 import {
   deepClone,
   isCompatibleTarget,
+  mergeTargetConfigurations,
   resolveCommandSyntacticSugar,
 } from './target-merging';
 import { uniqueKeysInObjects } from './utils';
-import { EOL } from 'os';
-import * as pc from 'picocolors';
 
 type CreateNodesResultEntry = readonly [
   plugin: string,
@@ -57,26 +62,25 @@ export function createTargetDefaultsResults(
     return [];
   }
 
-  // Disambiguate `:`-shaped record keys against the actual targets and
-  // executors present in the rootMaps. This is the same idea the v23
-  // `convert-target-defaults-to-array` migration uses against the project
-  // graph — we just consult the rootMaps directly here since we don't have
-  // a graph yet during construction.
-  const entries = normalizeTargetDefaultsAgainstRootMaps(
-    targetDefaultsConfig,
-    specifiedPluginRootMap,
-    defaultPluginRootMap
-  );
-  if (entries.length === 0) {
+  // The nested-array shape keeps target/executor/glob as map keys, so there
+  // is nothing to disambiguate against the rootMaps — normalization simply
+  // wraps each key's value into an array of entries.
+  const targetDefaults = normalizeTargetDefaults(targetDefaultsConfig);
+  if (Object.keys(targetDefaults).length === 0) {
     return [];
   }
 
   // `projectNodesByName` and `rootToName` are only consulted when an entry
-  // has a `projects:` filter — that's the only matcher branch that needs
-  // either the project name or its node. Source-plugin attribution is
+  // has a `filter.projects` filter — that's the only matcher branch that
+  // needs either the project name or its node. Source-plugin attribution is
   // root-keyed via `resolveSourcePlugin`, not name-keyed, so it doesn't
   // need either map. Skip both builds in the common no-filter path.
-  const needsProjectNodes = entries.some((e) => e.projects !== undefined);
+  const needsProjectNodes = Object.values(targetDefaults).some((entries) =>
+    entries.some((e) => e.filter?.projects !== undefined)
+  );
+  const needsSourcePlugin = Object.values(targetDefaults).some((entries) =>
+    entries.some((e) => e.filter?.plugin !== undefined)
+  );
   const projectNodes = needsProjectNodes
     ? buildProjectNodesAndRootToName(
         specifiedPluginRootMap,
@@ -84,7 +88,15 @@ export function createTargetDefaultsResults(
       )
     : undefined;
 
-  const syntheticProjects: Record<string, ProjectConfiguration> = {};
+  // Bucketed by the resolving `targetDefaults` key and the matching entry's
+  // array index, so each array element becomes its own synthetic result with an
+  // element-specific `file`. A given (root, target) resolves from exactly one
+  // key, and that key's entries merge downstream in ascending index order
+  // (document order, later winning) — matching the in-key merge the reader does.
+  const syntheticProjectsByKeyIndex: Record<
+    string,
+    Record<number, Record<string, ProjectConfiguration>>
+  > = {};
 
   const allRoots = new Set<string>([
     ...Object.keys(specifiedPluginRootMap),
@@ -110,54 +122,94 @@ export function createTargetDefaultsResults(
       );
       if (!effective) continue;
 
-      const sourcePlugin = resolveSourcePlugin(
-        root,
-        targetName,
-        specifiedSourceMaps,
-        defaultSourceMaps
-      );
+      const sourcePlugin = needsSourcePlugin
+        ? resolveSourcePlugin(
+            root,
+            targetName,
+            specifiedSourceMaps,
+            defaultSourceMaps
+          )
+        : undefined;
 
-      const syntheticTarget = buildSyntheticTargetForRoot(
+      const syntheticTargets = buildSyntheticTargetsForRoot(
         targetName,
         root,
         effective,
-        entries,
+        targetDefaults,
         projectName,
         projectNode,
         sourcePlugin
       );
 
-      if (!syntheticTarget) continue;
-
-      syntheticProjects[root] ??= { root, targets: {} };
-      syntheticProjects[root].targets[targetName] = syntheticTarget;
+      for (const { key, index, target } of syntheticTargets) {
+        const byIndex = (syntheticProjectsByKeyIndex[key] ??= {});
+        const projectsForEntry = (byIndex[index] ??= {});
+        projectsForEntry[root] ??= { root, targets: {} };
+        projectsForEntry[root].targets[targetName] = target;
+      }
     }
   }
 
-  if (Object.keys(syntheticProjects).length === 0) {
-    return [];
+  // One synthetic result per matching array element, each carrying a `file`
+  // that points at that element so source maps attribute fields to
+  // `nx.json#targetDefaults.<key>[<index>]` (or `.<key>` for the object form).
+  // Emitted in ascending index order within a key so the downstream merge
+  // layers a key's entries in document order, later winning.
+  const results: CreateNodesResultEntry[] = [];
+  for (const key of Object.keys(syntheticProjectsByKeyIndex)) {
+    const isArrayForm = Array.isArray(targetDefaultsConfig[key]);
+    const indices = Object.keys(syntheticProjectsByKeyIndex[key])
+      .map(Number)
+      .sort((a, b) => a - b);
+    for (const index of indices) {
+      results.push([
+        TARGET_DEFAULTS_PLUGIN_NAME,
+        targetDefaultSourceFile(key, isArrayForm ? index : undefined),
+        { projects: syntheticProjectsByKeyIndex[key][index] },
+      ]);
+    }
   }
+  return results;
+}
 
-  return [
-    [
-      'nx/target-defaults',
-      'nx.json',
-      {
-        projects: syntheticProjects,
-      },
-    ],
-  ];
+// Encode the originating nx.json location into a synthetic result's `file`,
+// reusing the `file` field as a location id rather than widening
+// `SourceInformation` to carry a separate path. The object value form has no
+// meaningful index (`nx.json#targetDefaults.build`); the array form points at
+// the specific element (`nx.json#targetDefaults.build[3]`).
+function targetDefaultSourceFile(key: string, index?: number): string {
+  const location = index === undefined ? key : `${key}[${index}]`;
+  return `nx.json#targetDefaults.${location}`;
 }
 
 // Returns the (executor, command) pair the real merge will land on at
 // `(root, targetName)` — only the fields the matcher needs. Incompatible
 // pairs wholesale-replace specified with default; compatible pairs let
 // the default's executor win, otherwise the specified's.
+//
+// INVARIANT: this is a forward-prediction of what `mergeTargetConfigurations`
+// (gated by `isCompatibleTarget`) produces for `executor`/`command`. Synthesis
+// runs before the real merge, so it must reproduce that precedence here. If the
+// merge's compatibility or executor-precedence rules change, update this in
+// lockstep; the end-to-end agreement is exercised by the synthesis tests in
+// `project-configuration-utils.spec.ts`.
+type EffectiveTarget = {
+  executor: string | undefined;
+  command: string | undefined;
+  // For a run-commands winner, the command identity (`options.command`/
+  // `options.commands`) of the target the real merge lands on.
+  // `isCompatibleTarget` keys run-commands compatibility off these, not the
+  // top-level `command`, so the synthetic must carry them or it's
+  // incompatible-replaced and dropped when the winner uses the
+  // `options.commands` form (#36067).
+  options?: { command?: unknown; commands?: unknown };
+};
+
 function effectiveTargetForLookup(
   specifiedTarget: TargetConfiguration | undefined,
   defaultTarget: TargetConfiguration | undefined,
   root: string
-): { executor: string | undefined; command: string | undefined } | undefined {
+): EffectiveTarget | undefined {
   const resolvedSpecified = specifiedTarget
     ? resolveCommandSyntacticSugar(specifiedTarget, root)
     : undefined;
@@ -167,91 +219,135 @@ function effectiveTargetForLookup(
 
   if (resolvedSpecified && resolvedDefault) {
     if (!isCompatibleTarget(resolvedSpecified, resolvedDefault)) {
-      return {
-        executor: resolvedDefault.executor,
-        command: resolvedDefault.command,
-      };
+      return effectiveFromWinner(resolvedDefault);
     }
     return {
       executor: resolvedDefault.executor ?? resolvedSpecified.executor,
       command: resolvedDefault.command ?? resolvedSpecified.command,
+      options:
+        runCommandsCommandIdentity(resolvedDefault) ??
+        runCommandsCommandIdentity(resolvedSpecified),
     };
   }
   if (resolvedSpecified) {
-    return {
-      executor: resolvedSpecified.executor,
-      command: resolvedSpecified.command,
-    };
+    return effectiveFromWinner(resolvedSpecified);
   }
   if (resolvedDefault) {
-    return {
-      executor: resolvedDefault.executor,
-      command: resolvedDefault.command,
-    };
+    return effectiveFromWinner(resolvedDefault);
   }
   return undefined;
 }
 
-/**
- * Returns the synthetic defaults target to insert for `targetName` at
- * `root`, or undefined if no defaults apply. The synthetic stamps the
- * effective executor/command so neither merge neighbor can
- * incompatible-replace it and drop its contributions.
- *
- * @param effective The `(executor, command)` shape the real merge will
- *   land on. Used both to pick the highest-ranked compatible default
- *   (falling back to less-specific matches if the best one would be
- *   incompatible) and as the locked shape stamped onto the synthetic.
- */
-function buildSyntheticTargetForRoot(
-  targetName: string,
-  root: string,
-  effective: { executor: string | undefined; command: string | undefined },
-  targetDefaults: NormalizedTargetDefaults,
-  projectName: string | undefined,
-  projectNode: ProjectGraphProjectNode | undefined,
-  sourcePlugin: string | undefined
-): TargetConfiguration | undefined {
-  const rawTargetDefaults = findBestTargetDefault(
-    targetName,
-    effective.executor,
-    projectName,
-    projectNode,
-    sourcePlugin,
-    targetDefaults,
-    effective.command,
-    (candidate) =>
-      isCompatibleTarget(
-        { executor: effective.executor, command: effective.command },
-        candidate
-      )
-  );
-  if (!rawTargetDefaults) return undefined;
+function effectiveFromWinner(target: TargetConfiguration): EffectiveTarget {
+  return {
+    executor: target.executor,
+    command: target.command,
+    options: runCommandsCommandIdentity(target),
+  };
+}
 
-  const synthetic = resolveCommandSyntacticSugar(
-    deepClone(rawTargetDefaults),
-    root
-  );
-
-  // Pre-stamp executor/command from the effective shape so the
-  // synthetic can't be incompatible-replaced during the real merge.
-  if (effective.executor !== undefined) synthetic.executor = effective.executor;
-  if (effective.command !== undefined) synthetic.command = effective.command;
-
-  return synthetic;
+// run-commands command identity lives in `options.command`/`options.commands`,
+// not the top-level `command`. Returns just those fields (when present) for a
+// run-commands target so the synthetic can be stamped to stay compatible with
+// the winning target downstream (#36067). Undefined for any other executor.
+function runCommandsCommandIdentity(
+  target: TargetConfiguration
+): { command?: unknown; commands?: unknown } | undefined {
+  if (target.executor !== 'nx:run-commands') return undefined;
+  const { command, commands } = target.options ?? {};
+  if (command === undefined && commands === undefined) return undefined;
+  return {
+    ...(command !== undefined ? { command } : {}),
+    ...(commands !== undefined ? { commands } : {}),
+  };
 }
 
 /**
- * Public, backwards-compatible reader that looks up the most-specific
- * target default for a given target. Accepts either the new array shape
- * or the legacy record shape (devkit support).
+ * Returns one synthetic defaults target per matching `targetDefaults` entry for
+ * `targetName` at `root` (empty when no defaults apply). Emitting per entry
+ * rather than a single pre-merged target lets source maps attribute fields to
+ * the specific array element they came from; the entries merge downstream in
+ * document order. Each synthetic stamps the effective executor/command (and the
+ * winner's run-commands options identity) so neither merge neighbor can
+ * incompatible-replace it and drop its contributions.
  *
- * When called without project context, entries that require a `projects`
- * filter or a `plugin` filter are skipped.
+ * @param effective The shape the real merge will land on. Used both as the
+ *   executor filter context and as the locked identity stamped onto the
+ *   synthetic.
+ */
+function buildSyntheticTargetsForRoot(
+  targetName: string,
+  root: string,
+  effective: EffectiveTarget,
+  targetDefaults: NormalizedTargetDefaults,
+  projectName: string | undefined,
+  projectNode: MatcherProjectNode | undefined,
+  sourcePlugin: string | undefined
+): { key: string; index: number; target: TargetConfiguration }[] {
+  const resolved = resolveTargetDefaultMatches(targetDefaults, targetName, {
+    executor: effective.executor,
+    projectName,
+    projectNode,
+    sourcePlugin,
+    command: effective.command,
+  });
+  if (!resolved) return [];
+
+  const synthetics: {
+    key: string;
+    index: number;
+    target: TargetConfiguration;
+  }[] = [];
+  for (const { index, config } of resolved.matches) {
+    const synthetic = resolveCommandSyntacticSugar(deepClone(config), root);
+
+    // Compatibility guard, per entry: an entry incompatible with the effective
+    // target shape (e.g. it sets a foreign `executor`) would wholesale-replace
+    // the inferred/specified target during the real merge. Drop just that
+    // entry rather than corrupt the target; compatible siblings still apply.
+    if (
+      !isCompatibleTarget(
+        { executor: effective.executor, command: effective.command },
+        synthetic
+      )
+    ) {
+      continue;
+    }
+
+    // Pre-stamp executor/command from the effective shape so the
+    // synthetic can't be incompatible-replaced during the real merge.
+    if (effective.executor !== undefined) {
+      synthetic.executor = effective.executor;
+    }
+    if (effective.command !== undefined) {
+      synthetic.command = effective.command;
+    }
+    // run-commands compatibility keys off options.command/commands, not the
+    // top-level command. Stamp the winner's so the synthetic stays compatible
+    // when the winning target uses the options.commands form (#36067).
+    if (effective.options !== undefined) {
+      synthetic.options = { ...synthetic.options, ...effective.options };
+    }
+
+    synthetics.push({ key: resolved.key, index, target: synthetic });
+  }
+  return synthetics;
+}
+
+/**
+ * Public reader that resolves the target defaults applying to a given
+ * target. Accepts the nested map shape (a value is either a plain config
+ * object or an array of filtered entries).
  *
- * The normalized entries are cached per `targetDefaults` reference so
- * repeated reads against the same nx.json don't re-normalize (and don't
- * re-fire the legacy-record-shape warning).
+ * When called without project/plugin context, filtered entries that require
+ * a `projects` or `plugin` filter cannot match and are skipped — only
+ * catch-all entries (and `executor`-filtered entries when an executor is
+ * supplied) contribute.
+ *
+ * Normalization runs per call. It is just an array-wrap of each key's value
+ * (cheap relative to graph construction), and `targetDefaults` is mutable and
+ * read through this exported entry point — caching by object identity would
+ * return stale matches when a caller edits a key between reads.
  */
 export function readTargetDefaultsForTarget(
   targetName: string,
@@ -265,436 +361,198 @@ export function readTargetDefaultsForTarget(
   }
 ): Partial<TargetConfiguration> | null {
   if (!targetDefaults) return null;
-  return findBestTargetDefault(
+  return resolveTargetDefault(
+    normalizeTargetDefaults(targetDefaults),
     targetName,
-    executor,
-    opts?.projectName,
-    opts?.projectNode,
-    opts?.sourcePlugin,
-    getCachedNormalizedEntries(targetDefaults),
-    opts?.command
+    {
+      executor,
+      projectName: opts?.projectName,
+      projectNode: opts?.projectNode,
+      sourcePlugin: opts?.sourcePlugin,
+      command: opts?.command,
+    }
   );
 }
 
-const normalizedEntriesCache = new WeakMap<object, NormalizedTargetDefaults>();
-
-function getCachedNormalizedEntries(
-  targetDefaults: TargetDefaults
-): NormalizedTargetDefaults {
-  // WeakMap keys must be objects — both array and record forms are objects,
-  // so this is safe regardless of shape.
-  const key = targetDefaults as unknown as object;
-  let entries = normalizedEntriesCache.get(key);
-  if (!entries) {
-    entries = normalizeTargetDefaults(targetDefaults);
-    normalizedEntriesCache.set(key, entries);
-  }
-  return entries;
-}
-
-type MatchKind =
-  | 'targetAndExecutor'
-  | 'executorOnly'
-  | 'exactTarget'
-  | 'globTarget'
-  | 'filterOnly';
-
-interface Candidate {
-  config: Partial<TargetConfiguration>;
-  tier: number;
-  matchKind: MatchKind;
-  index: number;
+interface MatchContext {
+  executor: string | undefined;
+  projectName: string | undefined;
+  projectNode: MatcherProjectNode | undefined;
+  sourcePlugin: string | undefined;
+  command: string | undefined;
 }
 
 /**
- * Find the highest-specificity `targetDefaults` entry that applies to the
- * given (target, project, sourcePlugin) tuple. Ties are broken by match
- * kind, then by later array index. Returns the config slice with filter
- * keys (`target`, `projects`, `plugin`) stripped.
+ * Resolve the merged target default for `targetName` against the normalized
+ * map. Two levels of lookup:
  *
- * Tier = (1 if a target/executor locator matched, else 0) + 1 per
- * applied filter (`projects`, `plugin`). So locator-bearing entries:
- *   - tier 3: target/executor + projects + plugin
- *   - tier 2: target/executor + projects, or target/executor + plugin
- *   - tier 1: target/executor alone
- * And filter-only entries (no `target` and no `executor`):
- *   - tier 2: projects + plugin
- *   - tier 1: projects alone, or plugin alone
- *
- * `executor` matching contributes to matchKind only, not to tier — it's
- * not a filter, it's a refinement of the match. Within the same tier,
- * tie-break order (highest first):
- *   targetAndExecutor > executorOnly > exactTarget > globTarget > filterOnly
- *
- * `filterOnly` ranks below every locator-bearing kind, so a filter-only
- * entry can never tie-break ahead of one that names a target or executor
- * at the same tier.
- *
- * `executor` only acts as an "injector" (matches a target with neither
- * executor nor command) when the entry also sets `target`. Executor-only
- * entries require the workspace target to actually have an executor.
- *
- * When `predicate` is provided, ranked candidates are iterated and the
- * first one that satisfies the predicate is returned. This lets synthesis
- * fall back to a less-specific compatible default when the most-specific
- * match would be incompatible with the target it's being applied to.
- * Without a predicate, the highest-ranked candidate is returned directly.
+ * 1. **Outer key selection** — preserves the long-standing record-shape
+ *    precedence: the executor key (when the target has that executor and the
+ *    key exists) wins, then the exact target-name key, then glob keys
+ *    (longest first). Keys are tried in that order and the first key with *any*
+ *    matching entry wins — even one contributing an empty config, so an empty
+ *    `{}` catch-all still wins and does not fall through. A key whose entries
+ *    all fail their `filter` contributes nothing and falls through to the next,
+ *    matching the record matcher's "key must apply" behavior.
+ * 2. **Inner accumulate-and-merge** — within the selected key's array, every
+ *    entry whose `filter` matches is merged in document order via
+ *    `mergeTargetConfigurations`, so later matches override earlier ones
+ *    field by field. An entry with no `filter` is a catch-all that always
+ *    matches.
  */
-export function findBestTargetDefault(
+function resolveTargetDefault(
+  normalized: NormalizedTargetDefaults,
   targetName: string,
-  executor: string | undefined,
-  projectName: string | undefined,
-  projectNode:
-    | (Pick<ProjectGraphProjectNode, 'name'> & {
-        data: Pick<ProjectConfiguration, 'root' | 'tags'>;
-      })
-    | undefined,
-  sourcePlugin: string | undefined,
-  entries: NormalizedTargetDefaults,
-  targetCommand?: string | undefined,
-  predicate?: (config: Partial<TargetConfiguration>) => boolean
+  ctx: MatchContext
 ): Partial<TargetConfiguration> | null {
-  if (!entries?.length) return null;
-
-  // Single greedy best-so-far loop in both the predicate and no-predicate
-  // paths. With a predicate, we filter candidates as they appear and only
-  // promote one to `best` when it passes — equivalent to the previous
-  // "collect-all + sort + first-passing" approach because `beats` is a
-  // total order, but without the sort allocation.
-  let best: Candidate | null = null;
-  for (let i = 0; i < entries.length; i++) {
-    const candidate = matchEntry(
-      entries[i],
-      i,
-      targetName,
-      executor,
-      projectName,
-      projectNode,
-      sourcePlugin,
-      targetCommand
-    );
-    if (!candidate) continue;
-    if (predicate && !predicate(candidate.config)) continue;
-    if (!best || beats(candidate, best)) {
-      best = candidate;
-    }
+  for (const key of orderedMatchingKeys(normalized, targetName, ctx.executor)) {
+    const merged = mergeMatchingEntries(normalized[key], ctx);
+    if (merged) return merged;
   }
-  return best ? best.config : null;
+  return null;
 }
 
 /**
- * Classify the runtime intent of an entry's `projects:` value:
- *   - `none`: filter is absent — the entry is unscoped on the projects axis.
- *   - `empty`: filter is `[]` — matches no project, so the whole entry is
- *     dead. Treated as a never-match by the matcher rather than allowing
- *     the entry to silently apply nowhere (which is almost always a bug).
- *   - `wildcard`: filter is exactly `'*'` or `['*']` (or any combination of
- *     pure-wildcard patterns) — matches every project, equivalent to no
- *     filter at all. Doesn't count toward the broadcast guard or the
- *     specificity tier so the entry doesn't outrank a real, narrower one.
- *   - `filter`: a real pattern set the matcher needs to evaluate.
+ * For synthesis: the matching entries — with their original array indices — of
+ * the first key that has any match (same key precedence as
+ * {@link resolveTargetDefault}). Unlike that reader, the entries are NOT merged
+ * here: each becomes its own synthetic node so source maps attribute fields to
+ * the specific `targetDefaults` array element they came from, and the in-key
+ * merge happens downstream in document (index) order.
  */
-function classifyProjectsFilter(
-  projects: string | string[] | undefined
-): 'none' | 'empty' | 'wildcard' | 'filter' {
-  if (projects === undefined) return 'none';
-  const arr = Array.isArray(projects) ? projects : [projects];
-  if (arr.length === 0) return 'empty';
-  if (arr.every((p) => p === '*')) return 'wildcard';
-  return 'filter';
-}
-
-/**
- * Test a single `targetDefaults` entry against the (target, executor,
- * project, plugin, command) tuple of the target being resolved. Returns
- * a `Candidate` with its tier and match kind, or null when the entry
- * doesn't apply.
- *
- * The match facts (`targetName`, `executor`, `projectName`, `projectNode`,
- * `sourcePlugin`, `targetCommand`) are passed in instead of being read
- * from the graph node here because callers — `findBestTargetDefault` and
- * `buildSyntheticTargetForRoot` — work in different graph contexts. The
- * synthetic builder, in particular, evaluates against the *effective*
- * executor/command (what the merge will land on), which doesn't always
- * equal the node's current executor; threading the values explicitly
- * keeps that asymmetry visible at the call sites.
- */
-function matchEntry(
-  entry: TargetDefaultEntry | undefined,
-  index: number,
+function resolveTargetDefaultMatches(
+  normalized: NormalizedTargetDefaults,
   targetName: string,
-  executor: string | undefined,
-  projectName: string | undefined,
-  projectNode:
-    | (Pick<ProjectGraphProjectNode, 'name'> & {
-        data: Pick<ProjectConfiguration, 'root' | 'tags'>;
-      })
-    | undefined,
-  sourcePlugin: string | undefined,
-  targetCommand: string | undefined
-): Candidate | null {
-  if (!entry) return null;
-  // `normalizeTargetDefaults` already drops entries with neither locator
-  // nor real filter. Empty-array `projects:` is an explicit never-match
-  // shape — kept by the normalizer because it's named, rejected here.
-  const projectsKind = classifyProjectsFilter(entry.projects);
-  if (projectsKind === 'empty') return null;
-
-  let targetKind: 'exact' | 'glob' | null = null;
-  if (entry.target !== undefined) {
-    if (entry.target === targetName) targetKind = 'exact';
-    else if (isGlobPattern(entry.target) && minimatch(targetName, entry.target))
-      targetKind = 'glob';
-    else return null;
-  }
-
-  let executorMatched = false;
-  if (entry.executor !== undefined) {
-    if (executor && executor === entry.executor) {
-      executorMatched = true;
-    } else if (targetKind !== null && !executor && !targetCommand) {
-      // Bare target with no executor — safe to inject the entry's
-      // executor because the target locator has already narrowed the match.
-      executorMatched = true;
-    } else {
-      return null;
+  ctx: MatchContext
+): {
+  key: string;
+  matches: { index: number; config: Partial<TargetConfiguration> }[];
+} | null {
+  for (const key of orderedMatchingKeys(normalized, targetName, ctx.executor)) {
+    const entries = normalized[key];
+    const matches: { index: number; config: Partial<TargetConfiguration> }[] =
+      [];
+    for (let index = 0; index < entries.length; index++) {
+      if (!entryFilterMatches(entries[index].filter, ctx)) continue;
+      matches.push({ index, config: stripFilter(entries[index]) });
+    }
+    if (matches.length > 0) {
+      return { key, matches };
     }
   }
-
-  // Locator-bearing entries get a base tier of 1 (the locator match);
-  // filter-only entries start at 0 so a single filter doesn't tie a
-  // single locator. Filters then add 1 each — with the matchKind
-  // tie-break below, filter-only always loses to locator-bearing at
-  // the same final tier.
-  const hasLocator = targetKind !== null || executorMatched;
-  let tier = hasLocator ? 1 : 0;
-
-  if (projectsKind === 'filter') {
-    if (!projectName || !projectNode) return null;
-    // Copy — `findMatchingProjects` prepends `*` for a leading negation
-    // and would otherwise mutate the shared nxJson entry.
-    const patterns = Array.isArray(entry.projects)
-      ? [...entry.projects!]
-      : [entry.projects!];
-    const matched = findMatchingProjects(patterns, {
-      [projectName]: projectNode as ProjectGraphProjectNode,
-    });
-    if (!matched.includes(projectName)) return null;
-    tier++;
-  }
-
-  if (entry.plugin !== undefined) {
-    if (entry.plugin !== sourcePlugin) return null;
-    tier++;
-  }
-
-  // Safety net for callers (e.g. direct unit-test calls) that bypass
-  // `normalizeTargetDefaults`: an entry with no locator and no real
-  // filter has tier 0 after processing — it would broadcast to every
-  // (root, target) in the workspace.
-  if (!hasLocator && tier === 0) return null;
-
-  const matchKind: MatchKind =
-    targetKind !== null && executorMatched
-      ? 'targetAndExecutor'
-      : executorMatched
-        ? 'executorOnly'
-        : targetKind === 'exact'
-          ? 'exactTarget'
-          : targetKind === 'glob'
-            ? 'globTarget'
-            : 'filterOnly';
-
-  return {
-    config: stripFilterKeys(entry),
-    tier,
-    matchKind,
-    index,
-  };
+  return null;
 }
 
 /**
- * Specificity ordering for two candidate matches. Higher specificity
- * wins because the more specific entry is the one the user most likely
- * wrote to override a broader rule.
- *
- * 1. Tier — entries with `projects` or `plugin` filters are scoped
- *    narrower than unfiltered entries, so they outrank.
- * 2. Match kind — within the same tier, more locator slots is more
- *    specific: `target+executor` > `executor-only` > `exactTarget` >
- *    `globTarget` > `filterOnly`. Note `executor-only` outranks
- *    `exactTarget`: a workspace-wide rule keyed on a specific executor
- *    is treated as more intentional than a target-name rule that might
- *    accidentally catch unrelated executors. `filterOnly` (no `target`
- *    and no `executor`, just `projects` and/or `plugin`) sits at the
- *    bottom — it's the explicit "least specific" tier that lets a bare
- *    `plugin: '@nx/jest/plugin'` apply to every jest-attributed target
- *    while still losing to any entry that names the target or executor.
- * 3. Tie-break — later array index wins, so users can append an entry
- *    to override earlier ones without rewriting them.
+ * The candidate map keys for `targetName`, in record-shape precedence order
+ * (highest first): executor key, exact name key, then glob keys longest
+ * first (the longest glob is the most specific match). Yields lazily so the
+ * glob scan is skipped entirely when an exact key already resolves a match.
  */
-function beats(a: Candidate, b: Candidate): boolean {
-  if (a.tier !== b.tier) return a.tier > b.tier;
-  const aRank = matchKindRank(a.matchKind);
-  const bRank = matchKindRank(b.matchKind);
-  if (aRank !== bRank) return aRank > bRank;
-  return a.index > b.index;
-}
-
-function matchKindRank(kind: MatchKind): number {
-  switch (kind) {
-    case 'targetAndExecutor':
-      return 4;
-    case 'executorOnly':
-      return 3;
-    case 'exactTarget':
-      return 2;
-    case 'globTarget':
-      return 1;
-    case 'filterOnly':
-      return 0;
+function* orderedMatchingKeys(
+  normalized: NormalizedTargetDefaults,
+  targetName: string,
+  executor: string | undefined
+): Iterable<string> {
+  if (executor && normalized[executor]) {
+    yield executor;
   }
+  if (normalized[targetName] && targetName !== executor) {
+    yield targetName;
+  }
+  const globKeys = Object.keys(normalized)
+    .filter(
+      (key) =>
+        key !== targetName &&
+        key !== executor &&
+        isGlobPattern(key) &&
+        minimatch(targetName, key)
+    )
+    .sort((a, b) => b.length - a.length);
+  yield* globKeys;
 }
 
-/** Removes keys used only for locating the defaults, leaving the merge payload. */
-function stripFilterKeys(
-  entry: TargetDefaultEntry
+/**
+ * Merge every entry in `entries` whose `filter` matches `ctx`, in document
+ * order with later matches winning. Returns null when no entry matched.
+ */
+function mergeMatchingEntries(
+  entries: TargetDefaultArrayEntry[],
+  ctx: MatchContext
+): Partial<TargetConfiguration> | null {
+  let acc: Partial<TargetConfiguration> | null = null;
+  for (const entry of entries) {
+    if (!entryFilterMatches(entry.filter, ctx)) continue;
+    const config = stripFilter(entry);
+    // A lone matching entry is returned without merging so deferred `'...'`
+    // spread tokens survive for the downstream merge; only a second match
+    // triggers a merge, later entry winning.
+    acc = acc === null ? config : mergeTargetConfigurations(config, acc);
+  }
+  return acc;
+}
+
+/**
+ * Test a single entry's `filter` against the resolution context. A missing
+ * filter is a catch-all (always matches). Otherwise every present criterion
+ * (`projects`, `plugin`, `executor`) must agree.
+ */
+function entryFilterMatches(
+  filter: TargetDefaultArrayEntry['filter'],
+  ctx: MatchContext
+): boolean {
+  if (!filter) return true;
+
+  if (filter.projects) {
+    const matched = findMatchingProjects([...filter.projects], {
+      [ctx.projectName]: ctx.projectNode,
+    });
+    if (!matched.length) {
+      return false;
+    }
+  }
+
+  if (filter.plugin && filter.plugin !== ctx.sourcePlugin) {
+    return false;
+  }
+
+  if (filter.executor && filter.executor !== ctx.executor) {
+    return false;
+  }
+
+  return true;
+}
+
+/** Removes the `filter` namespace, leaving the merge payload. */
+function stripFilter(
+  entry: TargetDefaultArrayEntry
 ): Partial<TargetConfiguration> {
-  const { target, projects, plugin, ...rest } = entry;
+  const { filter, ...rest } = entry;
   return rest;
 }
 
-let hasWarnedAboutLegacyRecordShape = false;
-
 /**
- * Accept either the new array shape or the legacy record shape and return
- * a normalized array. Record entries become `{ target: key, ...value }`
- * — except executor-shaped keys (e.g. `@nx/vite:test`, `nx:run-commands`)
- * which become `{ executor: key, ...value }` so the matcher treats them
- * as executor matches rather than target-name matches.
- *
- * Disambiguation here is purely syntactic — `:` in a record key is
- * genuinely ambiguous (target names can contain `:`). Callers that have
- * access to the workspace's targets (the graph-construction path, the
- * v23 migration) should prefer
- * {@link normalizeTargetDefaultsAgainstRootMaps} or the migration's
- * graph-based classifier so that ambiguous keys get classified by what
- * the workspace actually contains. The warning below points end-users
- * at `nx repair`, which runs the migration that durably resolves the
- * ambiguity in nx.json on disk.
+ * Normalize the public `targetDefaults` map to the internal shape: every
+ * key's value becomes an array of entries (a bare object → a single catch-all
+ * entry).
  */
 export function normalizeTargetDefaults(
   raw: TargetDefaults | undefined
 ): NormalizedTargetDefaults {
-  if (!raw) return [];
-  const entries = Array.isArray(raw) ? raw : recordToEntries(raw);
-  return entries.filter(isWellFormedEntry);
-}
-
-function recordToEntries(raw: TargetDefaultsRecord): TargetDefaultEntry[] {
-  warnAboutLegacyRecordShapeOnce();
-  const out: TargetDefaultEntry[] = [];
+  if (!raw) return {};
+  const normalized: NormalizedTargetDefaults = {};
   for (const key of Object.keys(raw)) {
-    const value = raw[key] ?? {};
-    out.push(...syntacticallyClassifyLegacyKey(key, value));
+    normalized[key] = normalizeTargetDefaultValue(raw[key]);
   }
-  return out;
+  return normalized;
 }
 
-/**
- * An entry is well-formed when it has at least one locator (`target` /
- * `executor`) or a real filter (`projects` resolving to something other
- * than empty/wildcard, or `plugin`). Pre-filtering here lets the matcher
- * trust its inputs and skip the per-entry broadcast guard.
- */
-function isWellFormedEntry(entry: TargetDefaultEntry): boolean {
-  if (entry.target !== undefined) return true;
-  if (entry.executor !== undefined) return true;
-  if (entry.plugin !== undefined) return true;
-  return classifyProjectsFilter(entry.projects) === 'filter';
-}
-
-/**
- * Same shape contract as {@link normalizeTargetDefaults}, but classifies
- * `:`-shaped record keys against the targets and executors actually
- * present in the supplied rootMaps. When a key matches a target name in
- * the workspace, it becomes a `target:` entry; when it matches an
- * executor, an `executor:` entry; when it matches both, both entries are
- * emitted (matching the v23 migration's "duplicate rather than guess"
- * behavior so neither side of the match silently drops). Falls back to
- * the syntactic heuristic when there's no evidence either way.
- */
-export function normalizeTargetDefaultsAgainstRootMaps(
-  raw: TargetDefaults | undefined,
-  ...rootMaps: Record<string, ProjectConfiguration>[]
-): NormalizedTargetDefaults {
-  if (!raw) return [];
-  if (Array.isArray(raw)) return raw;
-  warnAboutLegacyRecordShapeOnce();
-
-  const targetNames = new Set<string>();
-  const executors = new Set<string>();
-  for (const map of rootMaps) {
-    for (const cfg of Object.values(map)) {
-      const targets = cfg?.targets;
-      if (!targets) continue;
-      for (const [name, target] of Object.entries(targets)) {
-        targetNames.add(name);
-        if (target?.executor) executors.add(target.executor);
-      }
-    }
-  }
-
-  const out: TargetDefaultEntry[] = [];
-  for (const key of Object.keys(raw)) {
-    const value = (raw as TargetDefaultsRecord)[key] ?? {};
-    if (isGlobPattern(key)) {
-      out.push({ ...value, target: key });
-      continue;
-    }
-    const matchesTarget = targetNames.has(key);
-    const matchesExecutor = executors.has(key);
-    if (matchesTarget && matchesExecutor) {
-      out.push({ ...value, target: key }, { ...value, executor: key });
-    } else if (matchesExecutor) {
-      out.push({ ...value, executor: key });
-    } else if (matchesTarget) {
-      out.push({ ...value, target: key });
-    } else {
-      out.push(...syntacticallyClassifyLegacyKey(key, value));
-    }
-  }
-  return out;
-}
-
-function syntacticallyClassifyLegacyKey(
-  key: string,
-  value: Partial<TargetConfiguration>
-): TargetDefaultEntry[] {
-  return [
-    key.includes(':') && !isGlobPattern(key)
-      ? { ...value, executor: key }
-      : { ...value, target: key },
-  ];
-}
-
-function warnAboutLegacyRecordShapeOnce() {
-  if (hasWarnedAboutLegacyRecordShape) return;
-  hasWarnedAboutLegacyRecordShape = true;
-  // Written to stderr (not stdout) so commands with structured stdout —
-  // e.g. `nx show project --json` — remain parseable.
-  const title = pc.yellow(
-    'NX  nx.json uses the legacy record-shape `targetDefaults`'
-  );
-  const bodyLines = [
-    'The object/record form of `targetDefaults` is deprecated. Nx still reads it for now, but the array form is required to use the new `projects` and `plugin` filters.',
-    'Run `nx repair` to automatically convert `targetDefaults` to the array shape.',
-  ];
-  process.stderr.write(
-    `${EOL}${title}${EOL}${EOL}${bodyLines
-      .map((l) => `  ${l}`)
-      .join(EOL)}${EOL}${EOL}`
-  );
+function normalizeTargetDefaultValue(
+  value: TargetDefaultValue | undefined
+): TargetDefaultArrayEntry[] {
+  if (Array.isArray(value)) return value;
+  // A bare config object is functionally a one-element array.
+  return [value ?? {}];
 }
 
 function resolveSourcePlugin(
@@ -703,11 +561,17 @@ function resolveSourcePlugin(
   specifiedSourceMaps: ConfigurationSourceMaps | undefined,
   defaultSourceMaps: ConfigurationSourceMaps | undefined
 ): string | undefined {
-  // Default-plugin attribution overrides specified-plugin attribution in
-  // the merge, so we check it first. Only the executor/command keys are
-  // reliable — the top-level `targets.<name>` key tracks the last writer.
-  const executorKey = targetOptionSourceMapKey(targetName, 'executor');
-  const commandKey = targetOptionSourceMapKey(targetName, 'command');
+  // Default-plugin attribution overrides specified-plugin attribution in the
+  // merge, so check it first. The executor/command keys carry the plugin that
+  // *created* the target, which is what `filter.plugin` ("targets originated by
+  // X") means. The top-level `targets.<name>` node key is deliberately NOT used
+  // as a fallback: it tracks the last writer, so a later plugin augmenting the
+  // target would mis-attribute it. The trade-off is that a target with neither
+  // an executor nor a command (a rare, non-runnable shape) resolves to no
+  // source plugin and won't match a `filter.plugin` default — accepted, since
+  // every runnable target carries one of these keys.
+  const executorKey = `${targetSourceMapKey(targetName)}.executor`;
+  const commandKey = `${targetSourceMapKey(targetName)}.command`;
   const candidates: (string | undefined)[] = [
     pluginFromSourceMap(defaultSourceMaps, root, executorKey),
     pluginFromSourceMap(defaultSourceMaps, root, commandKey),
@@ -716,7 +580,8 @@ function resolveSourcePlugin(
   ];
 
   for (const candidate of candidates) {
-    if (candidate && candidate !== 'nx/target-defaults') return candidate;
+    if (candidate && candidate !== TARGET_DEFAULTS_PLUGIN_NAME)
+      return candidate;
   }
   return undefined;
 }
@@ -730,48 +595,52 @@ function pluginFromSourceMap(
   return entry?.[1];
 }
 
-// Walks both layered rootMaps and produces a name → ProjectGraphProjectNode
-// view for `findMatchingProjects` to consult. Default-plugin-only
-// projects are included — they're the bulk of typical workspaces and
-// `projects:` filters need to apply to them too. Tags are unioned across
-// layers so tag-based filters see all contributions.
-//
-// We don't reuse `mergeProjectConfigurationIntoRootMap` here: it does a
-// full project-config merge (targets, named inputs, source maps, ...)
-// keyed by root, while this function only needs name + tags keyed by
-// name. The full merge would be substantial wasted work on every graph
-// build.
+// Builds a name → MatcherProjectNode view for `findMatchingProjects` to
+// consult, across both layered rootMaps. Tags are unioned across layers. A
+// full `mergeProjectConfigurationIntoRootMap` would be overkill — the matcher
+// only needs `data.root`/`data.tags`.
 function buildProjectNodesAndRootToName(
   specifiedPluginRootMap: Record<string, ProjectConfiguration>,
   defaultPluginRootMap: Record<string, ProjectConfiguration>
 ): {
-  projectNodesByName: Record<string, ProjectGraphProjectNode>;
+  projectNodesByName: Record<string, MatcherProjectNode>;
   rootToName: Map<string, string>;
 } {
-  const projectNodesByName: Record<string, ProjectGraphProjectNode> = {};
+  const projectNodesByName: Record<string, MatcherProjectNode> = {};
   const rootToName = new Map<string, string>();
-  const addFromMap = (map: Record<string, ProjectConfiguration>) => {
-    for (const root of Object.keys(map)) {
-      const cfg = map[root];
-      const name = cfg?.name;
-      if (!name) continue;
-      if (projectNodesByName[name]) {
-        const existingTags = projectNodesByName[name].data.tags ?? [];
-        const newTags = cfg.tags ?? [];
-        projectNodesByName[name].data.tags = Array.from(
-          new Set([...existingTags, ...newTags])
-        );
-      } else {
-        projectNodesByName[name] = {
-          name,
-          type: cfg.projectType === 'application' ? 'app' : 'lib',
-          data: { root, tags: cfg.tags ?? [] },
-        } as ProjectGraphProjectNode;
-        rootToName.set(root, name);
-      }
+  const roots = new Set<string>([
+    ...Object.keys(specifiedPluginRootMap),
+    ...Object.keys(defaultPluginRootMap),
+  ]);
+  for (const root of roots) {
+    const specifiedCfg = specifiedPluginRootMap[root];
+    const defaultCfg = defaultPluginRootMap[root];
+    // Synthesis runs before name inference, so an unnamed `project.json` has no
+    // `name` yet. Derive it the same way normalization will — `toProjectName`
+    // on the `project.json` path — so `projects:`/`tag:` filters resolve
+    // instead of silently no-opping for the common unnamed-`project.json` case.
+    // We don't gate on the file existing: if it truly doesn't, the project has
+    // no valid name and the graph errors downstream anyway; here the derived
+    // name is only used for filtering. Default-plugin name wins over specified,
+    // matching the real merge's layering.
+    const name =
+      defaultCfg?.name ??
+      specifiedCfg?.name ??
+      toProjectName(join(root, 'project.json'));
+    const tags = Array.from(
+      new Set([...(specifiedCfg?.tags ?? []), ...(defaultCfg?.tags ?? [])])
+    );
+    rootToName.set(root, name);
+    if (projectNodesByName[name]) {
+      const existingTags = projectNodesByName[name].data.tags ?? [];
+      projectNodesByName[name].data.tags = Array.from(
+        new Set([...existingTags, ...tags])
+      );
+    } else {
+      // `findMatchingProjects` only reads `data.root`/`data.tags`; the name
+      // is carried by the map key and `rootToName`.
+      projectNodesByName[name] = { data: { root, tags } };
     }
-  };
-  addFromMap(specifiedPluginRootMap);
-  addFromMap(defaultPluginRootMap);
+  }
   return { projectNodesByName, rootToName };
 }

@@ -21,8 +21,15 @@
     "CLI"
   ],
   "bin": {
-    "create-nx-workspace": "./bin/index.js"
+    "create-nx-workspace": "./dist/bin/index.js"
   },
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo"
+  ],
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -30,7 +37,7 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "axios": "1.16.0",
+    "axios": "1.16.1",
     "chalk": "catalog:",
     "enquirer": "catalog:",
     "flat": "^5.0.2",
@@ -42,5 +49,25 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
+  },
+  "typesVersions": {
+    "*": {
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
   }
 }

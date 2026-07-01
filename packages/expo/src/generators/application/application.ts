@@ -25,6 +25,7 @@ import { addE2e } from './lib/add-e2e';
 import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { initRootBabelConfig } from '../../utils/init-root-babel-config';
+import { assertSupportedExpoVersion } from '../../utils/versions';
 export async function expoApplicationGenerator(
   host: Tree,
   schema: Schema
@@ -40,6 +41,8 @@ export async function expoApplicationGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedExpoVersion(host);
+
   const tasks: GeneratorCallback[] = [];
   const addTsPlugin = shouldConfigureTsSolutionSetup(
     host,

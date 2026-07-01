@@ -31,7 +31,17 @@ import { join } from 'path';
 describe('Nx Commands', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/web', '@nx/angular', '@nx/next'],
+      packages: [
+        '@nx/angular',
+        '@nx/eslint',
+        '@nx/jest',
+        '@nx/next',
+        '@nx/playwright',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/web',
+        '@nx/webpack',
+      ],
     })
   );
 
@@ -1040,7 +1050,7 @@ describe('migrate', () => {
     );
 
     expect(output).toContain(
-      `Error: Providing a custom commit prefix requires --create-commits to be enabled`
+      `A custom migrate commit prefix requires commits to be enabled`
     );
   });
 

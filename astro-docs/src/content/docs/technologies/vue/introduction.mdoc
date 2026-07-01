@@ -1,13 +1,13 @@
 ---
-title: Vue Plugin for Nx
-description: The Nx Plugin for Vue contains generators for managing Vue applications and libraries within an Nx workspace, including setup and configuration.
+title: Nx with Vue
+description: Nx scales your Vue monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: 'Introduction'
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx plugin for [Vue](https://vuejs.org/).
+The `@nx/vue` plugin adds first-class [Vue](https://vuejs.org/) support to an Nx workspace, so you can scaffold, build, and test apps and libraries in a Vue monorepo.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ The `@nx/vue` plugin supports the following package versions.
 
 | Package | Supported Versions |
 | ------- | ------------------ |
-| `vue`   | ^3.5.13            |
+| `vue`   | ^3.0.0             |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -54,3 +54,9 @@ To generate a Vue library, run the following:
 ```shell
 nx g @nx/vue:lib libs/my-lib
 ```
+
+## Set up CI for your Vue monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

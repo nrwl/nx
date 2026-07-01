@@ -14,6 +14,7 @@ import { buildPostTargetTransformer } from './lib/build-post-target-transformer'
 import { servePostTargetTransformer } from './lib/serve-post-target-transformer';
 import { createNodesV2 } from '../../plugins/plugin';
 import { storybookVersion } from '../../utils/versions';
+import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 interface Schema {
   project?: string;
@@ -21,6 +22,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedStorybookVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationLogs = new AggregatedLog();
   const migratedProjects = await migrateProjectExecutorsToPlugin(
@@ -64,7 +67,9 @@ export async function convertToInferred(tree: Tree, options: Schema) {
   const installTask = addDependenciesToPackageJson(
     tree,
     {},
-    { storybook: storybookVersion }
+    { storybook: storybookVersion },
+    undefined,
+    true
   );
 
   return runTasksInSerial(installTask, () => {

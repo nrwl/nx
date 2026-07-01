@@ -48,13 +48,10 @@ describe('configurationGenerator', () => {
     });
 
     const td = readJson(tree, 'nx.json').targetDefaults;
-    const rollupEntry = Array.isArray(td)
-      ? td.find((e) => e.executor === '@nx/rollup:rollup')
-      : td['@nx/rollup:rollup'];
+    const rollupEntry = td['@nx/rollup:rollup'];
     expect(rollupEntry).toEqual({
       cache: true,
       dependsOn: ['^build'],
-      executor: '@nx/rollup:rollup',
       inputs: [
         'default',
         '^default',

@@ -5,11 +5,7 @@ import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
-import {
-  NxJsonConfiguration,
-  TargetDefaults,
-  TargetDefaultsRecord,
-} from '../config/nx-json';
+import { NxJsonConfiguration } from '../config/nx-json';
 import {
   ProjectConfiguration,
   ProjectMetadata,
@@ -53,6 +49,8 @@ export type PackageJsonDependencySection =
 export interface NxMigrationsConfiguration {
   migrations?: string;
   packageGroup?: PackageGroup;
+  /** Signals the package supports `nx migrate --include`. */
+  supportsOptionalMigrations?: boolean;
 }
 
 type PackageOverride = { [key: string]: string | PackageOverride };
@@ -102,6 +100,9 @@ export interface PackageJson {
     ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
+  // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
+  // or git specs; `true` approves, `false` denies.
+  allowScripts?: Record<string, boolean>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
@@ -130,6 +131,7 @@ export interface NxPackageJson extends PackageJson {
   'nx-migrations'?: {
     migrations?: string;
     packageGroup?: (string | { package: string; version: string })[];
+    supportsOptionalMigrations?: boolean;
   };
 }
 
@@ -163,6 +165,9 @@ export function readNxMigrateConfig(
       ...(fromJson.migrations ? { migrations: fromJson.migrations } : {}),
       ...(fromJson.packageGroup
         ? { packageGroup: normalizePackageGroup(fromJson.packageGroup) }
+        : {}),
+      ...(fromJson.supportsOptionalMigrations
+        ? { supportsOptionalMigrations: true }
         : {}),
     };
   };
@@ -280,8 +285,11 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      readCompatibleTargetDefaultsForTarget(
+      readTargetDefaultsForTarget(
         'nx-release-publish',
         nxJson?.targetDefaults,
         '@nx/js:release-publish'
@@ -301,22 +309,6 @@ export function readTargetsFromPackageJson(
   }
 
   return res;
-}
-
-function readCompatibleTargetDefaultsForTarget(
-  targetName: string,
-  targetDefaults: TargetDefaults | undefined,
-  executor?: string
-): Partial<TargetConfiguration> | null {
-  if (
-    targetDefaults &&
-    !Array.isArray(targetDefaults) &&
-    Object.prototype.hasOwnProperty.call(targetDefaults, targetName)
-  ) {
-    return (targetDefaults as TargetDefaultsRecord)[targetName] ?? null;
-  }
-
-  return readTargetDefaultsForTarget(targetName, targetDefaults, executor);
 }
 
 /**
@@ -405,25 +397,26 @@ export function readModulePackageJson(
  * Prepares all necessary information for installing a package to a temporary directory.
  * This is used by both sync and async installation functions.
  */
-function preparePackageInstallation(pkg: string, requiredVersion: string) {
+function preparePackageInstallation(
+  pkg: string,
+  requiredVersion: string,
+  packageManager: PackageManager
+) {
   const { dir: tempDir, cleanup } = createTempNpmDirectory?.() ?? {
     dir: dirSync().name,
     cleanup: () => {},
   };
 
   console.log(`Fetching ${pkg}...`);
-  const packageManager = detectPackageManager(workspaceRoot);
   const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
   generatePackageManagerFiles(tempDir, packageManager);
 
+  // For pnpm, `addDev` is `pnpm add -Dw` when the workspace has a
+  // pnpm-workspace.yaml. `createTempNpmDirectory` copies a sanitized copy of
+  // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  let addCommand = pmCommands.addDev;
-  if (packageManager === 'pnpm') {
-    addCommand = 'pnpm add -D'; // we need to ensure that we are not using workspace command
-  }
-
-  const installCommand = `${addCommand} ${pkg}@${requiredVersion} ${
+  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
 
@@ -450,13 +443,14 @@ function preparePackageInstallation(pkg: string, requiredVersion: string) {
 
 export function installPackageToTmp(
   pkg: string,
-  requiredVersion: string
+  requiredVersion: string,
+  packageManager: PackageManager
 ): {
   tempDir: string;
   cleanup: () => void;
 } {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(pkg, requiredVersion, packageManager);
 
   if (preInstallCommand) {
     // ensure package.json and repo in tmp folder is set to a proper package manager state
@@ -473,13 +467,14 @@ export function installPackageToTmp(
 
 export async function installPackageToTmpAsync(
   pkg: string,
-  requiredVersion: string
+  requiredVersion: string,
+  packageManager: PackageManager
 ): Promise<{
   tempDir: string;
   cleanup: () => void;
 }> {
   const { tempDir, cleanup, preInstallCommand, installCommand, execOptions } =
-    preparePackageInstallation(pkg, requiredVersion);
+    preparePackageInstallation(pkg, requiredVersion, packageManager);
 
   try {
     if (preInstallCommand) {

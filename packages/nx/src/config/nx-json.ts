@@ -3,6 +3,11 @@ import { dirname, join } from 'node:path';
 import type ChangelogRenderer from '../../release/changelog-renderer';
 import type { ChangelogRenderOptions } from '../../release/changelog-renderer';
 import type { validReleaseVersionPrefixes } from '../command-line/release/utils/release-graph';
+import type { AgentId } from '../command-line/migrate/agentic/cli-args';
+import type {
+  MigrateInclude,
+  MultiMajorMode,
+} from '../command-line/migrate/command-object';
 import { readJsonFile } from '../utils/fileutils';
 import type { PackageManager } from '../utils/package-manager';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -32,45 +37,103 @@ export interface NxAffectedConfig {
 }
 
 /**
- * A single entry in the array-shaped `targetDefaults` configuration.
- * Supports filtering the default's applicability by project set and/or the
- * plugin that originated the target.
+ * A logical, flat view of a single target default — the shape devkit helpers
+ * (`upsertTargetDefault` / `findTargetDefault`) and generators author and read.
+ * It is **not** the on-disk shape: `upsertTargetDefault` translates it into the
+ * map-and-array storage form ({@link TargetDefaults}), and `findTargetDefault`
+ * resolves the storage form back to one of these flat entries. Keeping this
+ * flat shape stable is what lets generator call sites read `e.target` /
+ * `e.projects` / `e.plugin` without knowing about `filter`.
  *
- * Either `target` or `executor` must be set. An entry with both narrows
- * the match further (target name AND executor must agree).
+ * Either `target` or `executor` locates the entry; `projects` / `plugin`
+ * narrow it; the remaining `TargetConfiguration` fields are the payload.
  */
 export type TargetDefaultEntry = {
-  /**
-   * Target name or glob pattern (e.g. `build`, `e2e-ci--*`). When omitted,
-   * the entry matches by `executor` alone.
-   */
+  /** Target name or glob pattern (e.g. `build`, `e2e-ci--*`). */
   target?: string;
+  /** Executor the default applies to (e.g. `@nx/js:tsc`). */
+  executor?: string;
   /**
-   * Restrict the default to a subset of projects. Accepts any pattern
-   * supported by `findMatchingProjects` (project names, globs, `tag:foo`,
-   * directory globs, negation with `!`).
+   * Restrict the default to a subset of projects. Accepts any patterns
+   * supported by `findMatchingProjects`.
    */
-  projects?: string | string[];
+  projects?: string[];
+  /** Restrict the default to targets originated by a specific plugin. */
+  plugin?: string;
+} & Partial<TargetConfiguration>;
+
+/**
+ * The `filter` namespace narrows where a {@link TargetDefaultArrayEntry}
+ * applies. An entry with no `filter` is a catch-all baseline that applies to
+ * every variant of its target key; an entry with a `filter` applies only
+ * where the listed criteria all match.
+ */
+export type TargetDefaultFilter = {
   /**
    * Restrict the default to targets originated by a specific plugin
    * (e.g. `@nx/vite`). Matches against the plugin that wrote the target's
    * `executor` or `command`.
    */
   plugin?: string;
+  /**
+   * Restrict the default to a subset of projects. Accepts any patterns
+   * supported by `findMatchingProjects` (project names, globs, `tag:foo`,
+   * directory globs, negation with `!`).
+   */
+  projects?: string[];
+  /**
+   * Restrict the default to targets that resolve to a specific executor
+   * (e.g. `@nx/jest:jest`). This narrows *within* a named target key, in
+   * addition to the long-standing top-level executor-key form.
+   */
+  executor?: string;
+};
+
+/**
+ * A single entry in the array-shaped value of a `targetDefaults` key.
+ * Carries an optional {@link TargetDefaultFilter} alongside the
+ * `TargetConfiguration` fields that get applied when the filter matches.
+ *
+ * Within a key's array, entries apply in document order, last match winning.
+ */
+export type TargetDefaultArrayEntry = {
+  filter?: TargetDefaultFilter;
 } & Partial<TargetConfiguration>;
 
 /**
- * @deprecated Use the array-shaped {@link TargetDefaultEntry}[] form instead.
- * Retained so devkit helpers can still read nx.json files that predate the
- * migration.
- * @todo(v24) Remove this type and all branches that read it.
+ * The value stored under a `targetDefaults` key. Either today's plain config
+ * object (used when no filtering is needed) or an ordered array of filtered
+ * entries (used once a key needs to vary defaults by plugin/projects/executor).
+ *
+ * The two forms are equivalent for the unfiltered case: `{ cache: true }` and
+ * `[{ cache: true }]` mean the same thing.
+ *
+ * `filter` is only meaningful on array entries; the bare object form forbids it
+ * (`filter?: never`) so a stray filter on the unfiltered form is a type error
+ * rather than a silently-ignored field.
  */
-export type TargetDefaultsRecord = Record<string, Partial<TargetConfiguration>>;
+export type TargetDefaultValue =
+  | (Partial<TargetConfiguration> & { filter?: never })
+  | TargetDefaultArrayEntry[];
 
-export type TargetDefaults = TargetDefaultEntry[] | TargetDefaultsRecord;
+/**
+ * `targetDefaults` is a map keyed by logical target name (`build`, `test`),
+ * glob (`e2e-ci--*`), or executor (`@nx/js:tsc`). Each value is either a plain
+ * config object or an ordered array of filtered entries — see
+ * {@link TargetDefaultValue}. The map shape is additive: existing record-shaped
+ * configs remain valid because every value is allowed to be a bare object.
+ */
+export type TargetDefaults = Record<string, TargetDefaultValue>;
 
-/** Internal-only: the post-normalization shape consumed by the nx core matcher. */
-export type NormalizedTargetDefaults = TargetDefaultEntry[];
+/**
+ * Internal-only: the post-normalization shape consumed by the nx core matcher.
+ * Every key's value is normalized to an array, so a bare object value is
+ * wrapped into a single-element `[entry]`.
+ */
+export type NormalizedTargetDefaults = Record<
+  string,
+  TargetDefaultArrayEntry[]
+>;
 
 export type TargetDependencies = Record<
   string,
@@ -726,6 +789,64 @@ export interface NxSyncConfiguration {
   disabledTaskSyncGenerators?: string[];
 }
 
+export interface NxMigrateConfiguration {
+  /**
+   * Whether to automatically create a git commit after each migration runs.
+   * Equivalent to the `--create-commits` flag. Defaults to `false`.
+   */
+  createCommits?: boolean;
+
+  /**
+   * Commit message prefix applied to each migration commit when commits are
+   * enabled (via `createCommits` or `--create-commits`). Equivalent to the
+   * `--commit-prefix` flag. Defaults to `"chore: [nx migration] "`.
+   */
+  commitPrefix?: string;
+
+  /**
+   * Restricts which packages to migrate. Only applies to target packages that
+   * support optional updates. Equivalent to the `--include` flag.
+   * - `required`: the target package and the related packages it ships with.
+   * - `optional`: the optional dependency updates those packages recommend.
+   * - `all`: everything (default).
+   */
+  include?: MigrateInclude;
+
+  /**
+   * How to handle a migration that crosses more than one major version.
+   * Equivalent to the `--multi-major-mode` flag. The `NX_MULTI_MAJOR_MODE`
+   * environment variable takes precedence over this setting.
+   * - `direct`: migrate straight to the requested target.
+   * - `gradual`: migrate to the smallest recommended step.
+   */
+  multiMajorMode?: MultiMajorMode;
+
+  /**
+   * Whether `nx migrate` resolves package versions via the npm registry
+   * (faster) instead of a package-manager install. The
+   * `NX_MIGRATE_USE_REGISTRY_RESOLUTION` and legacy
+   * `NX_MIGRATE_SKIP_REGISTRY_FETCH` env vars take precedence over this.
+   * Defaults to `true`.
+   */
+  useRegistryResolution?: boolean;
+
+  /**
+   * Default for the agentic flow used by `nx migrate --run-migrations`.
+   * Equivalent to the `--agentic` flag.
+   * - `false`: never use the agentic flow.
+   * - `true`: use the agentic flow and resolve the installed agent.
+   * - an agent id (`"claude-code"`, `"codex"`, `"opencode"`): always use that agent.
+   */
+  agentic?: boolean | AgentId;
+
+  /**
+   * Whether to run agent-driven validation after generator-only migrations when
+   * the agentic flow is enabled. Equivalent to the `--validate` flag. Defaults
+   * to `true` when the agentic flow is enabled.
+   */
+  validate?: boolean;
+}
+
 /**
  * Nx.json configuration
  *
@@ -747,7 +868,9 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    */
   namedInputs?: { [inputName: string]: (string | InputDefinition)[] };
   /**
-   * Dependencies between different target names across all projects
+   * Default configuration applied to targets across all projects. Entries
+   * match targets by target name and/or executor, optionally narrowed by
+   * the `projects` and `plugin` filters.
    */
   targetDefaults?: TargetDefaults;
   /**
@@ -898,6 +1021,11 @@ export interface NxJsonConfiguration<T = '*' | string[]> {
    * Configuration for the `nx sync` command.
    */
   sync?: NxSyncConfiguration;
+
+  /**
+   * Configuration for the `nx migrate` command.
+   */
+  migrate?: NxMigrateConfiguration;
 
   /**
    * Sets the maximum size of the local cache. Accepts a number followed by a unit (e.g. 100MB). Accepted units are B, KB, MB, and GB.

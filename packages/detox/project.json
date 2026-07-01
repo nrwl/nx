@@ -5,8 +5,8 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/detox/README.md"],
-      "command": "node ./scripts/copy-readme.js detox",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js detox packages/detox/readme-template.md packages/detox/README.md",
       "inputs": ["copyReadme"]
     }
   }

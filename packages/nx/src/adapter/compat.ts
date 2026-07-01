@@ -83,6 +83,7 @@ export const allowedWorkspaceExtensions = [
   'neverConnectToCloud',
   'analytics',
   'sync',
+  'migrate',
   'useLegacyCache',
   'maxCacheSize',
   'tui',

@@ -1,27 +1,23 @@
 ---
-title: Rspack Plugin for Nx
-description: The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
+title: Nx with Rspack
+description: Use Rspack with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace.
+The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace. It helps you run, cache, and scale builds across an Rspack monorepo, with executors and generators that wire each project into the workspace.
 
 ## Requirements
 
 The `@nx/rspack` plugin supports the following package versions.
 
-| Package        | Supported Versions | Default Installed |
-| -------------- | ------------------ | ----------------- |
-| `@rspack/core` | `^1.0.0`           | `1.6.8`           |
+| Package        | Supported Versions     | Default Installed |
+| -------------- | ---------------------- | ----------------- |
+| `@rspack/core` | `^1.0.0` \|\| `^2.0.0` | `2.0.3`           |
 
 [Nx generators](/docs/features/generate-code) install the latest supported version automatically when scaffolding new projects. When `@rspack/core` is already installed in your workspace, generators detect the installed version and keep it in place rather than overwriting it.
-
-{% aside type="caution" title="@rspack/core v2 not yet supported" %}
-`@rspack/core@2` ships as a pure-ESM package, which `@nx/rspack` (CommonJS) cannot currently load synchronously. Support is tracked separately; until then, pin `@rspack/core` to `^1`.
-{% /aside %}
 
 ## Setting up @nx/rspack
 
@@ -94,3 +90,9 @@ nx g @nx/react:app my-app --bundler=rspack
 You can use the `@nx/rspack:configuration` generator to change your React to use Rspack. This generator will modify your project's configuration to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
 You can read more about this generator on the [`@nx/rspack:configuration`](/docs/technologies/build-tools/rspack/generators#configuration) generator page.
+
+## Set up CI for your Rspack monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

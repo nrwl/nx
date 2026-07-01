@@ -1,21 +1,21 @@
 ---
-title: Nuxt Plugin for Nx
-description: The Nx Plugin for Nuxt contains generators for managing Nuxt applications within an Nx workspace, including setup and configuration.
+title: Nx with Nuxt
+description: Nx scales your Nuxt monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx plugin for [Nuxt](https://nuxt.com/).
+The `@nx/nuxt` plugin lets you build and scale a Nuxt monorepo with [Nuxt](https://nuxt.com/), adding generators, task inference, and caching to your projects.
 
 ## Requirements
 
 The `@nx/nuxt` plugin supports the following package versions.
 
-| Package | Supported Versions  |
-| ------- | ------------------- |
-| `nuxt`  | ^3.10.0 \|\| ^4.0.0 |
+| Package | Supported Versions |
+| ------- | ------------------ |
+| `nuxt`  | ^3.0.0 \|\| ^4.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -117,3 +117,9 @@ This command performs several actions:
 1. It will build the Nuxt application and generate the static HTML files.
 2. It will serve the static HTML files using a simple HTTP server.
 3. It will run the Cypress tests against the served static HTML files.
+
+## Set up CI for your Nuxt monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

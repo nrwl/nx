@@ -14,7 +14,10 @@ import {
 import { ast, query } from '@phenomnomnominal/tsquery';
 import * as ts from 'typescript';
 import { createNodesV2, type WebpackPluginOptions } from '../../plugins/plugin';
-import { webpackCliVersion } from '../../utils/versions';
+import {
+  webpackCliVersion,
+  assertSupportedWebpackVersion,
+} from '../../utils/versions';
 import {
   buildPostTargetTransformerFactory,
   servePostTargetTransformerFactory,
@@ -28,6 +31,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedWebpackVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
   const migrationContext: MigrationContext = {
     logger: new AggregatedLog(),

@@ -1,0 +1,573 @@
+// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+
+exports[`@nx/react:provider generates a provider for the rsbuild bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-provider",
+  "projectType": "application",
+  "root": "apps/my-provider",
+  "sourceRoot": "apps/my-provider/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild build",
+        "cwd": "apps/my-provider",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild dev",
+        "cwd": "apps/my-provider",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:provider generates a provider for the rsbuild bundler: rsbuild tree 1`] = `
+{
+  "apps/my-provider/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-provider (standalone)</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- Rsbuild's html plugin injects the entry script automatically. -->
+  </body>
+</html>
+",
+  "apps/my-provider/package.json": "{
+  "name": "my-provider",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rsbuild dev --port 3101",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview --port 3101"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@module-federation/rsbuild-plugin": "^2.5.0",
+    "@rsbuild/core": "^1.4.0",
+    "@rsbuild/plugin-react": "^1.3.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~6.0.3"
+  }
+}
+",
+  "apps/my-provider/project.json": "{
+  "name": "my-provider",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-provider/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "rsbuild dev",
+        "cwd": "apps/my-provider"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rsbuild build",
+        "cwd": "apps/my-provider"
+      }
+    }
+  }
+}
+",
+  "apps/my-provider/rsbuild.config.ts": "import { defineConfig } from '@rsbuild/core';
+import { pluginReact } from '@rsbuild/plugin-react';
+import { pluginModuleFederation } from '@module-federation/rsbuild-plugin';
+
+const PORT = 3101;
+const NAME = 'my_provider';
+
+export default defineConfig({
+  server: {
+    port: PORT,
+    // Allow cross-origin fetches from a consumer on a different port.
+    headers: { 'Access-Control-Allow-Origin': '*' },
+  },
+  // assetPrefix:true tells rsbuild to emit chunks with the dev-server URL as
+  // their public path. Without it a consumer on a different port asks its
+  // own origin for the federated chunks and gets the SPA-fallback HTML.
+  dev: { assetPrefix: true },
+  html: { template: './index.html' },
+  source: { entry: { index: './src/index.ts' } },
+  plugins: [
+    pluginReact(),
+    pluginModuleFederation({
+      name: NAME,
+      filename: 'remoteEntry.js',
+      exposes: {
+        './App': './src/App.tsx',
+      },
+      shared: ['react', 'react-dom'],
+    }),
+  ],
+});
+",
+  "apps/my-provider/src/App.tsx": "// Exposed by the federation plugin as 'my-provider/App'.
+// Consumers render it lazily via \`lazyProvider('my-provider', 'App')\`.
+export function App() {
+  return (
+    <section data-testid="my-provider">
+      <h1>Hello from my-provider</h1>
+    </section>
+  );
+}
+
+export default App;
+",
+  "apps/my-provider/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-provider/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom, etc.) is evaluated. Dynamic
+// \`import('./bootstrap')\` defers the real entry until federation is ready.
+import('./bootstrap');
+export {};
+",
+  "apps/my-provider/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+}
+`;
+
+exports[`@nx/react:provider generates a provider for the rspack bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-provider",
+  "projectType": "application",
+  "root": "apps/my-provider",
+  "sourceRoot": "apps/my-provider/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack build --mode=production",
+        "cwd": "apps/my-provider",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack serve --mode=development",
+        "cwd": "apps/my-provider",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:provider generates a provider for the rspack bundler: rspack tree 1`] = `
+{
+  "apps/my-provider/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-provider (standalone)</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <!-- HtmlRspackPlugin injects the entry script automatically; do not add it here. -->
+  </body>
+</html>
+",
+  "apps/my-provider/package.json": "{
+  "name": "my-provider",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "rspack serve --mode=development",
+    "build": "rspack build --mode=production"
+  },
+  "dependencies": {
+    "@module-federation/enhanced": "^2.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@rspack/cli": "^2.0.3",
+    "@rspack/core": "^2.0.3",
+    "@rspack/dev-server": "2.0.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "typescript": "~6.0.3"
+  }
+}
+",
+  "apps/my-provider/project.json": "{
+  "name": "my-provider",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-provider/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "rspack serve --mode=development",
+        "cwd": "apps/my-provider"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "rspack build --mode=production",
+        "cwd": "apps/my-provider"
+      }
+    }
+  }
+}
+",
+  "apps/my-provider/rspack.config.ts": "import { defineConfig } from '@rspack/cli';
+import { rspack } from '@rspack/core';
+import { ModuleFederationPlugin } from '@module-federation/enhanced/rspack';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// __dirname is undefined when @rspack/cli loads this config as ESM (it
+// does, because the file uses \`import\` statements). Derive it from the
+// module URL so the config works regardless of how the loader interprets it.
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const PORT = 8101;
+const NAME = 'my_provider';
+
+// Read mode from the rspack CLI arg (\`--mode=development|production\`) so the
+// config works the same on Windows + POSIX without depending on a shell
+// \`NODE_ENV=...\` prefix.
+export default defineConfig((_env, argv) => {
+  const isDev = argv.mode !== 'production';
+  return {
+    context: __dirname,
+    entry: { main: './src/index.ts' },
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      publicPath: 'auto',
+      uniqueName: NAME,
+      clean: true,
+    },
+    devServer: {
+      port: PORT,
+      historyApiFallback: true,
+      hot: true,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    },
+    resolve: { extensions: ['...', '.ts', '.tsx', '.jsx'] },
+    module: {
+      rules: [
+        {
+          test: /\\.(j|t)sx?$/,
+          exclude: [/node_modules/],
+          use: {
+            loader: 'builtin:swc-loader',
+            options: {
+              jsc: {
+                parser: { syntax: 'typescript', tsx: true },
+                transform: {
+                  react: { runtime: 'automatic', development: isDev },
+                },
+              },
+              env: {
+                targets:
+                  'Chrome >= 87, Firefox >= 78, Edge >= 88, Safari >= 14',
+              },
+            },
+          },
+        },
+      ],
+    },
+    plugins: [
+      // excludeChunks is REQUIRED on a provider: without it the federation
+      // remoteEntry chunk gets injected into the standalone HTML and breaks
+      // direct serves.
+      new rspack.HtmlRspackPlugin({
+        template: './index.html',
+        excludeChunks: [NAME],
+      }),
+      new ModuleFederationPlugin({
+        name: NAME,
+        filename: 'remoteEntry.js',
+        exposes: {
+          './App': './src/App.tsx',
+        },
+        shared: ['react', 'react-dom'],
+      }),
+    ],
+  };
+});
+",
+  "apps/my-provider/src/App.tsx": "// Exposed by the federation plugin as 'my-provider/App'.
+// Consumers render it lazily via \`lazyProvider('my-provider', 'App')\`.
+export function App() {
+  return (
+    <section data-testid="my-provider">
+      <h1>Hello from my-provider</h1>
+    </section>
+  );
+}
+
+export default App;
+",
+  "apps/my-provider/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-provider/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom, etc.) is evaluated. Dynamic
+// \`import('./bootstrap')\` defers the real entry until federation is ready.
+import('./bootstrap');
+export {};
+",
+  "apps/my-provider/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+}
+`;
+
+exports[`@nx/react:provider generates a provider for the vite bundler: project.json 1`] = `
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "my-provider",
+  "projectType": "application",
+  "root": "apps/my-provider",
+  "sourceRoot": "apps/my-provider/src",
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/my-provider",
+      },
+    },
+    "serve": {
+      "continuous": true,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite",
+        "cwd": "apps/my-provider",
+      },
+    },
+  },
+}
+`;
+
+exports[`@nx/react:provider generates a provider for the vite bundler: vite tree 1`] = `
+{
+  "apps/my-provider/index.html": "<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>my-provider (standalone)</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>
+",
+  "apps/my-provider/package.json": "{
+  "name": "my-provider",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 5101 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 5101 --strictPort"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "^1.15.5",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.13"
+  }
+}
+",
+  "apps/my-provider/project.json": "{
+  "name": "my-provider",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/my-provider/src",
+  "projectType": "application",
+  "targets": {
+    "serve": {
+      "executor": "nx:run-commands",
+      "continuous": true,
+      "options": {
+        "command": "vite",
+        "cwd": "apps/my-provider"
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "vite build",
+        "cwd": "apps/my-provider"
+      }
+    }
+  }
+}
+",
+  "apps/my-provider/src/App.tsx": "// Exposed by the federation plugin as 'my-provider/App'.
+// Consumers render it lazily via \`lazyProvider('my-provider', 'App')\`.
+export function App() {
+  return (
+    <section data-testid="my-provider">
+      <h1>Hello from my-provider</h1>
+    </section>
+  );
+}
+
+export default App;
+",
+  "apps/my-provider/src/bootstrap.tsx": "import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { App } from './App';
+
+const container = document.getElementById('root');
+if (!container) throw new Error('#root element not found');
+
+createRoot(container).render(
+  <StrictMode>
+    <App />
+  </StrictMode>,
+);
+",
+  "apps/my-provider/src/index.ts": "// Indirection required by Module Federation: the federation runtime must boot
+// before any shared dependency (React, react-dom, etc.) is evaluated. Dynamic
+// \`import('./bootstrap')\` defers the real entry until federation is ready.
+import('./bootstrap');
+export {};
+",
+  "apps/my-provider/tsconfig.json": "{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+",
+  "apps/my-provider/vite.config.ts": "import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { federation } from '@module-federation/vite';
+
+// Port deliberately avoids 5000 (macOS AirTunes binds it on 0.0.0.0, leading
+// to silent EADDRINUSE on 127.0.0.1). Override \`--port\` only if 5000+ is free.
+const PORT = 5101;
+
+export default defineConfig({
+  server: {
+    port: PORT,
+    strictPort: true,
+    origin: \`http://localhost:\${PORT}\`,
+    host: '127.0.0.1',
+    // Allow cross-origin fetches of mf-manifest.json + chunks from a consumer
+    // running on a different port. Vite 8 narrows the default CORS allowlist
+    // to specific localhost patterns; setting \`cors: true\` emits a wildcard
+    // \`Access-Control-Allow-Origin: *\` for dev which is what federation needs.
+    cors: true,
+  },
+  preview: { port: PORT, strictPort: true, cors: true },
+  build: { target: 'chrome89' },
+  plugins: [
+    federation({
+      name: 'my_provider',
+      filename: 'remoteEntry.js',
+      exposes: {
+        './App': './src/App.tsx',
+      },
+      shared: {
+        react: { singleton: true },
+        'react-dom': { singleton: true },
+      },
+    }),
+    react(),
+  ],
+});
+",
+}
+`;

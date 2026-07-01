@@ -1,6 +1,6 @@
 ---
-title: ESLint Plugin for Nx
-description: Learn how to set up and use the @nx/eslint plugin to integrate ESLint with Nx, enabling caching and providing code generators for ESLint configuration.
+title: Nx with ESLint
+description: Use ESLint with Nx to lint projects across your monorepo, with caching, affected-only runs, and module boundary rules.
 sidebar:
   label: Introduction
 weight: 2
@@ -13,9 +13,9 @@ The ESLint plugin integrates [ESLint](https://eslint.org/) with Nx. Run ESLint t
 
 The `@nx/eslint` plugin supports the following package versions.
 
-| Package  | Supported Versions |
-| -------- | ------------------ |
-| `eslint` | ^8.0.0 \|\| ^9.0.0 |
+| Package  | Supported Versions  |
+| -------- | ------------------- |
+| `eslint` | ^9.0.0 \|\| ^10.0.0 |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -41,7 +41,6 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 
 - `.eslintrc`
 - `.eslintrc.js`
-- `.eslintrc.mjs`
 - `.eslintrc.cjs`
 - `.eslintrc.yaml`
 - `.eslintrc.yml`
@@ -49,6 +48,9 @@ The `@nx/eslint` plugin will create a task for any project that has an ESLint co
 - `eslint.config.js`
 - `eslint.config.mjs`
 - `eslint.config.cjs`
+- `eslint.config.ts`
+- `eslint.config.mts`
+- `eslint.config.cts`
 
 Because ESLint applies configuration files to all subdirectories, the `@nx/eslint` plugin will also infer tasks for projects in subdirectories. So, if there is an ESLint configuration file in the root of the repository, every project will have an inferred ESLint task.
 
@@ -93,3 +95,9 @@ nx lint my-project
 ## ESLint plugin
 
 Read about our dedicated ESLint plugin - [eslint-plugin-nx](/docs/technologies/eslint/eslint-plugin).
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

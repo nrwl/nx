@@ -172,7 +172,8 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
     if (thirdPartyPackageName) {
       const confirmed = await confirmThirdPartyPreset(
         thirdPartyPackageName,
-        options.interactive
+        options.interactive,
+        options.trustThirdPartyPreset
       );
       if (!confirmed) {
         throw new CnwError(

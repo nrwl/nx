@@ -36,9 +36,7 @@ jobs:
         node_version:
           - 22
           - 24
-          # TODO: re-enable once playwright ships the yauzl fix for node 26 extract hang.
-          # See https://github.com/microsoft/playwright/issues/40724
-          # - 26
+          - 26
         exclude:
           # macos skips the oldest node to keep the macos matrix slim
           - os: macos-latest
@@ -226,9 +224,12 @@ jobs:
           if ! brew list applesimutils &>/dev/null; then
             echo 'Installing applesimutils...'
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            # Homebrew now refuses to load formulae from third-party taps unless trusted
+            brew trust wix/brew
             HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
               echo 'Failed to install applesimutils, retrying with update...'
               brew update
+              brew trust wix/brew
               HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
             }
           else

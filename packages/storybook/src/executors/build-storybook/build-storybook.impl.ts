@@ -1,9 +1,7 @@
 import { ExecutorContext, logger } from '@nx/devkit';
 import type { CLIOptions } from 'storybook/internal/types';
 import {
-  pleaseUpgrade,
   storybookConfigExistsCheck,
-  storybookMajorVersion,
   getInstalledStorybookVersion,
 } from '../../utils/utilities';
 import { gte } from 'semver';
@@ -16,10 +14,6 @@ export default async function buildStorybookExecutor(
   warnStorybookBuildExecutorDeprecation();
 
   storybookConfigExistsCheck(options.configDir, context.projectName);
-  const storybookMajor = storybookMajorVersion();
-  if (storybookMajor > 0 && storybookMajor <= 7) {
-    throw pleaseUpgrade();
-  }
 
   const buildOptions: CLIOptions = options;
   logger.info(`NX Storybook builder starting ...`);

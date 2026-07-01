@@ -1,17 +1,13 @@
 ---
-title: .NET Plugin for Nx
-description: This plugin allows .NET projects to be run through Nx.
+title: Nx with .NET
+description: Nx scales your .NET monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: 'Introduction'
 weight: 2
 filter: 'type:References'
 ---
 
-{% aside type="caution" title="Experimental Plugin" %}
-The `@nx/dotnet` plugin is currently experimental. Features and APIs may change.
-{% /aside %}
-
-[.NET](https://dotnet.microsoft.com/) is a free, cross-platform, open-source developer platform for building many different types of applications. With .NET, you can use multiple languages, editors, and libraries to build for web, mobile, desktop, games, IoT, and more.
+Nx brings smart task execution and caching to your .NET monorepo. [.NET](https://dotnet.microsoft.com/) is a free, cross-platform, open-source developer platform for building many different types of applications. With .NET, you can use multiple languages, editors, and libraries to build for web, mobile, desktop, games, IoT, and more.
 
 The Nx plugin for .NET registers .NET projects in your Nx workspace. It allows MSBuild tasks to be run through Nx. Nx effortlessly makes your [CI faster](/docs/guides/nx-cloud/setup-ci).
 
@@ -229,3 +225,9 @@ nx build my-app --configuration release
 # Build with Debug configuration (usually the default)
 nx build my-app --configuration debug
 ```
+
+## Set up CI for your .NET monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

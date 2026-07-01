@@ -10,6 +10,24 @@ import { runLocalRelease } from '../../scripts/local-registry/populate-storage';
 
 export default async function (globalConfig: Config.ConfigGlobals) {
   try {
+    // TEMP DIAGNOSTIC (cache-miss hunt): log the exact checkout + any working-tree
+    // drift on the agent. Distinguishes "runs are on different SHAs" from
+    // "same SHA but a task mutated the tree". Safe to remove once resolved.
+    if (process.env.CI) {
+      try {
+        const head = execSync('git rev-parse HEAD').toString().trim();
+        const porcelain = execSync('git status --porcelain').toString().trim();
+        console.log(
+          `\n=== [tree-state] target=${process.env.NX_TASK_TARGET_TARGET} HEAD=${head} ===\n` +
+            `git status --porcelain:\n${porcelain || '(clean)'}\n`
+        );
+      } catch (err) {
+        console.log(
+          `[tree-state] diagnostic failed: ${(err as Error).message}`
+        );
+      }
+    }
+
     const isVerbose: boolean =
       process.env.NX_VERBOSE_LOGGING === 'true' || !!globalConfig.verbose;
 

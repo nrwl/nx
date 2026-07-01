@@ -4,8 +4,7 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "outDir": "../../dist/out-tsc",
-    "module": "commonjs",
+    "outDir": "dist/spec",
     "types": ["jest", "node"]
   },
   "include": [

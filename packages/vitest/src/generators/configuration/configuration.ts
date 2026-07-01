@@ -33,10 +33,9 @@ import {
 import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
-import {
-  getInstalledViteMajorVersion,
-  getVitestDependenciesVersionsToInstall,
-} from '../../utils/version-utils';
+import { getInstalledViteMajorVersion } from '../../utils/version-utils';
+import { versions } from '../../utils/versions';
+import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 
 /**
@@ -86,6 +85,8 @@ export async function configurationGeneratorInternal(
   schema: VitestGeneratorSchema,
   hasPlugin = false
 ) {
+  assertSupportedVitestVersion(tree);
+
   // Setting default to jsdom since it is the most common use case (React, Web).
   // The @nx/js:lib generator specifically sets this to node to be more generic.
   schema.testEnvironment ??= 'jsdom';
@@ -296,6 +297,18 @@ getTestBed().initTestEnvironment(
   return runTasksInSerial(...tasks);
 }
 
+function addTypeIfMissing(json: any, type: string): void {
+  if (json.compilerOptions?.types?.includes(type)) {
+    return;
+  }
+  if (json.compilerOptions?.types) {
+    json.compilerOptions.types.push(type);
+  } else {
+    json.compilerOptions ??= {};
+    json.compilerOptions.types = [type];
+  }
+}
+
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
@@ -309,14 +322,10 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.spec.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        // vite/client is correct for anything vitest runs through vite;
+        // guarded so it's a no-op when react/vue already set it.
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
 
         if (setupFile) {
           json.files = [...(json.files ?? []), setupFile];
@@ -346,14 +355,8 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
         return json;
       }
     );
@@ -435,24 +438,24 @@ function createFiles(
   });
 }
 
-async function getCoverageProviderDependency(
+function getCoverageProviderDependency(
   tree: Tree,
   coverageProvider: VitestGeneratorSchema['coverageProvider']
-): Promise<Record<string, string>> {
-  const { vitestCoverageV8, vitestCoverageIstanbul } =
-    await getVitestDependenciesVersionsToInstall(tree);
+): Record<string, string> {
+  const { vitestCoverageV8Version, vitestCoverageIstanbulVersion } =
+    versions(tree);
   switch (coverageProvider) {
     case 'v8':
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
     case 'istanbul':
       return {
-        '@vitest/coverage-istanbul': vitestCoverageIstanbul,
+        '@vitest/coverage-istanbul': vitestCoverageIstanbulVersion,
       };
     default:
       return {
-        '@vitest/coverage-v8': vitestCoverageV8,
+        '@vitest/coverage-v8': vitestCoverageV8Version,
       };
   }
 }
@@ -529,16 +532,15 @@ function findTestDefault(
   td: TargetDefaults | undefined,
   target: string
 ): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === target &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td?.[target];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
   }
-  return td[target];
+  return value;
 }
 
 export default configurationGenerator;

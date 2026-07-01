@@ -20,7 +20,7 @@ import {
   getGlobalFlatEslintConfiguration,
 } from './global-eslint-config';
 import { useFlatConfig } from '../../utils/flat-config';
-import { eslintVersion, nxVersion } from '../../utils/versions';
+import { nxVersion, versions } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addImportToFlatConfig,
@@ -65,6 +65,7 @@ export function migrateConfigToMonorepoStyle(
   } else {
     if (useFlatConfig(tree)) {
       // we need this for the compat
+      const { eslintVersion } = versions(tree);
       addDependenciesToPackageJson(
         tree,
         {},
@@ -72,7 +73,7 @@ export function migrateConfigToMonorepoStyle(
           '@eslint/js': eslintVersion,
         },
         undefined,
-        keepExistingVersions
+        keepExistingVersions ?? true
       );
       tree.write(
         tree.exists(`eslint.config.${eslintConfigFormat}`)
@@ -131,7 +132,9 @@ export function migrateConfigToMonorepoStyle(
     {},
     {
       '@nx/eslint-plugin': nxVersion,
-    }
+    },
+    undefined,
+    keepExistingVersions ?? true
   );
 }
 

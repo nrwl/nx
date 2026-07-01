@@ -12,7 +12,14 @@ import {
 describe('Build React applications and libraries with Rsbuild', () => {
   beforeAll(() => {
     newProject({
-      packages: ['@nx/react'],
+      packages: [
+        '@nx/react',
+        '@nx/rsbuild',
+        '@nx/vite',
+        '@nx/vitest',
+        '@nx/jest',
+        '@nx/eslint',
+      ],
     });
   });
 

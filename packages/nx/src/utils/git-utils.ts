@@ -1,4 +1,6 @@
 import { exec, ExecOptions, execSync } from 'child_process';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
 import { dirname, join, posix, sep } from 'path';
 import { logger } from './logger';
 
@@ -342,6 +344,104 @@ export function getVcsRemoteInfo(directory?: string): VcsRemoteInfo | null {
   }
 }
 
+export function isGitRepository(directory?: string): boolean {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', {
+      stdio: 'ignore',
+      cwd: directory,
+      windowsHide: true,
+    });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Sync companion to `GitRepository.hasUncommittedChanges` for callers that
+// can't drop into the async class (e.g. the migrate orchestrator, which
+// branches on this before spawning subprocesses synchronously).
+export function hasUncommittedChanges(directory?: string): boolean {
+  try {
+    const out = execSync('git status --porcelain', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    return out.trim() !== '';
+  } catch {
+    return false;
+  }
+}
+
+// Returns a content-sensitive sha1 snapshot of the working tree state for
+// before/after comparison. Hashes three probes:
+//   1. `git diff HEAD` with defensive flags — every byte of tracked-file
+//      changes. `--no-ext-diff` / `--no-textconv` neuter user/repo driver
+//      overrides so output is deterministic; `--binary` keeps binary
+//      edits from collapsing to "Binary files differ".
+//   2. `git status --porcelain=v1 -uall` — untracked paths the diff
+//      omits. `-uall` expands untracked directories per-file.
+//   3. Untracked file content bytes — so a same-path content edit on an
+//      already-untracked file does not collapse against the baseline.
+//
+// Each probe is wrapped independently with a failure sentinel so a
+// single-sided git error (e.g. `git diff HEAD` on an initial-commit-less
+// repo) cannot mask surviving signal from the others.
+export function getUncommittedChangesSnapshot(directory?: string): string {
+  const hasher = crypto.createHash('sha1');
+  const cwd = directory ?? process.cwd();
+  const execOpts = {
+    encoding: 'utf8' as const,
+    cwd,
+    stdio: ['ignore', 'pipe', 'pipe'] as ['ignore', 'pipe', 'pipe'],
+    windowsHide: true,
+    maxBuffer: 64 * 1024 * 1024,
+  };
+
+  let diffOutput: string;
+  try {
+    diffOutput = execSync(
+      'git diff HEAD --no-color --no-ext-diff --no-textconv --binary',
+      execOpts
+    );
+  } catch {
+    diffOutput = '<diff-unavailable>';
+  }
+  hasher.update('diff:').update(diffOutput).update('\0');
+
+  let statusOutput: string;
+  try {
+    statusOutput = execSync('git status --porcelain=v1 -uall', execOpts);
+  } catch {
+    statusOutput = '<status-unavailable>';
+  }
+  hasher.update('status:').update(statusOutput).update('\0');
+
+  let untrackedRaw: string;
+  try {
+    untrackedRaw = execSync(
+      'git ls-files --others --exclude-standard -z',
+      execOpts
+    );
+  } catch {
+    untrackedRaw = '';
+  }
+  const untrackedPaths = untrackedRaw.split('\0').filter(Boolean).sort();
+  hasher.update('untracked:');
+  for (const p of untrackedPaths) {
+    hasher.update(p).update('\0');
+    try {
+      hasher.update(fs.readFileSync(join(cwd, p)));
+    } catch {
+      hasher.update('<file-unreadable>');
+    }
+    hasher.update('\0');
+  }
+
+  return hasher.digest('hex');
+}
+
 export function commitChanges(
   commitMessage: string,
   directory?: string
@@ -372,6 +472,52 @@ export function commitChanges(
     }
   }
 
+  return getLatestCommitSha(directory);
+}
+
+/**
+ * Throws on git failure with the real stderr attached. Use this when the
+ * caller needs to distinguish hook rejection / GPG signing failures / LFS
+ * lock errors from a successful no-op. Callers should pre-check
+ * `hasUncommittedChanges` to avoid the "nothing to commit" rejection
+ * (which `git commit` exits non-zero for).
+ *
+ * Returns `null` (rather than throwing) when the commit itself succeeded
+ * but `git rev-parse HEAD` failed transiently — by contract the diff is
+ * no longer in the working tree, so callers must NOT report it as such.
+ */
+export function tryCommitChanges(
+  commitMessage: string,
+  directory: string
+): string | null {
+  try {
+    execSync('git add -A', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      cwd: directory,
+      windowsHide: true,
+    });
+    execSync('git commit --no-verify -F -', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      input: commitMessage,
+      cwd: directory,
+      windowsHide: true,
+    });
+  } catch (err) {
+    const stderr = (err as { stderr?: Buffer | string })?.stderr?.toString();
+    const stdout = (err as { stdout?: Buffer | string })?.stdout?.toString();
+    const detail = [stderr, stdout]
+      .map((s) => s?.trim())
+      .filter(Boolean)
+      .join('\n');
+    // `{ cause }` preserves structured fields (.signal, .status, .code)
+    // for callers to inspect; otherwise only stderr/stdout text survives.
+    throw new Error(
+      detail || (err instanceof Error ? err.message : String(err)),
+      { cause: err }
+    );
+  }
   return getLatestCommitSha(directory);
 }
 

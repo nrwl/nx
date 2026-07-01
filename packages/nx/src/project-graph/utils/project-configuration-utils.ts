@@ -35,6 +35,10 @@ import type {
   ConfigurationSourceMaps,
   SourceInformation,
 } from './project-configuration/source-maps';
+import {
+  targetSourceMapKey,
+  TARGET_DEFAULTS_PLUGIN_NAME,
+} from './project-configuration/source-maps';
 
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
@@ -153,11 +157,10 @@ export async function createProjectConfigurationsWithPlugins(
       name: pluginName,
     },
   ] of allCreateNodesPlugins.entries()) {
-    const [pattern, createNodes] = createNodesTuple;
+    const [, createNodes] = createNodesTuple;
 
     const matchingConfigFiles: string[] = findMatchingConfigFiles(
       allProjectFiles[index],
-      pattern,
       include,
       exclude
     );
@@ -450,11 +453,37 @@ export function mergeCreateNodesResults(
   //    above. The stale default-plugin entry in
   //    `defaultConfigurationSourceMaps` must NOT clobber the base
   //    attribution that the specified plugin / TD already recorded.
+  const mainRootMap = nodesManager.getRootMap();
   for (const root in defaultConfigurationSourceMaps) {
     const existing = (configurationSourceMaps[root] ??= {});
     const incoming = defaultConfigurationSourceMaps[root];
+
+    // A default plugin's targets are synthesized into the main rootmap by
+    // target defaults *before* the default layer is applied, so target
+    // defaults wrote the main source map's entry for the target node and its
+    // identity fields first — even though it never authored them (it only
+    // stamps them as a merge guard and cannot bring a target into existence).
+    // The identity fields are the executor/command plus, for run-commands, the
+    // `options.command`/`options.commands` the synthetic copies from the winner
+    // to stay compatible (#36067). For those keys, the real default plugin's
+    // attribution must override the target-defaults stamp.
+    const identityKeys = new Set<string>();
+    for (const targetName in mainRootMap[root]?.targets ?? {}) {
+      const base = targetSourceMapKey(targetName);
+      identityKeys.add(base);
+      identityKeys.add(`${base}.executor`);
+      identityKeys.add(`${base}.command`);
+      identityKeys.add(`${base}.options.command`);
+      identityKeys.add(`${base}.options.commands`);
+    }
+
     for (const key in incoming) {
       if (existing[key] === undefined) {
+        existing[key] = incoming[key];
+      } else if (
+        identityKeys.has(key) &&
+        existing[key][1] === TARGET_DEFAULTS_PLUGIN_NAME
+      ) {
         existing[key] = incoming[key];
       }
     }
@@ -548,30 +577,14 @@ function createMatcher(
 
 export function findMatchingConfigFiles(
   projectFiles: string[],
-  pattern: string,
   include: string[],
   exclude: string[]
 ): string[] {
-  const matchingConfigFiles: string[] = [];
-
-  // Create matchers once, outside the loop
+  // projectFiles already comes from multiGlobWithWorkspaceContext for the
+  // plugin's createNodes pattern, so only include/exclude filters remain here.
   // Empty include means include everything, empty exclude means exclude nothing
   const includes = createMatcher(include, true);
   const excludes = createMatcher(exclude, false);
 
-  for (const file of projectFiles) {
-    if (minimatch(file, pattern, { dot: true })) {
-      if (!includes(file)) {
-        continue;
-      }
-
-      if (excludes(file)) {
-        continue;
-      }
-
-      matchingConfigFiles.push(file);
-    }
-  }
-
-  return matchingConfigFiles;
+  return projectFiles.filter((file) => includes(file) && !excludes(file));
 }

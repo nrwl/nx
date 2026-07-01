@@ -1,6 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as fs from 'fs';
+import * as devkitInternals from 'nx/src/devkit-internals';
 import { resolve } from 'path';
 
 const realFs = jest.requireActual<typeof import('fs')>('fs');
@@ -28,7 +29,7 @@ const mockLoadFormatter = jest.fn().mockReturnValue(mockFormatter);
 const mockIsPathIgnored = jest.fn().mockReturnValue(Promise.resolve(false));
 const mockOutputFixes = jest.fn();
 
-const VALID_ESLINT_VERSION = '7.6';
+const VALID_ESLINT_VERSION = '8.0';
 
 let mockReports: any[] = [{ results: [], usedDeprecatedRules: [] }];
 const mockLintFiles = jest.fn().mockImplementation(() => mockReports);
@@ -163,11 +164,14 @@ describe('Linter Builder', () => {
   });
 
   it('should throw if the eslint version is not supported', async () => {
-    MockESLint.version = '1.6';
+    jest.spyOn(devkitInternals, 'readModulePackageJson').mockReturnValueOnce({
+      packageJson: { name: 'eslint', version: '7.32.0' },
+      path: '',
+    });
     setupMocks();
     const result = lintExecutor(createValidRunBuilderOptions(), mockContext);
     await expect(result).rejects.toThrow(
-      /ESLint must be version 7.6 or higher/
+      'Unsupported version of `eslint` detected'
     );
   });
 
