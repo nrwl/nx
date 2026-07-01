@@ -80,6 +80,19 @@ export declare class HashPlanInspector {
    * ProjectConfiguration is skipped for now. Cwd is skipped as it's ambient.
    */
   inspectInputs(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>): Record<string, HashInputs>
+  /**
+   * Statically determines which of `files` are covered by each task's
+   * `dependentTasksOutputFiles` inputs. A file is covered when it matches the
+   * `dependentTasksOutputFiles` glob AND lies within one of the upstream
+   * task's declared outputs (exact/glob match or directory containment).
+   *
+   * Unlike `inspect_inputs`, this is pure pattern matching with no disk
+   * access, so it reports a match even when the upstream tasks have not yet
+   * produced their outputs. The dependency-graph walk (including transitive
+   * and diamond deduplication) was already performed by the planner when it
+   * emitted the `TaskOutput` instructions consumed here.
+   */
+  checkDependentTaskOutputFiles(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, files: Array<string>): Record<string, string[]>
 }
 
 export declare class HashPlanner {

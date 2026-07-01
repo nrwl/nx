@@ -4,6 +4,7 @@ import type {
 } from '../../../config/project-graph';
 import type { ProjectConfiguration } from '../../../config/workspace-json-project-json';
 import type { HashInputs } from '../../../native';
+import { _resetContextForTesting } from '../../../hasher/check-task-files';
 
 export let graph: ProjectGraph = {
   nodes: {},
@@ -102,7 +103,10 @@ jest.mock('../../../tasks-runner/utils', () => {
 jest.mock('../../../hasher/hash-plan-inspector', () => ({
   HashPlanInspector: jest.fn().mockImplementation(() => ({
     init: jest.fn().mockResolvedValue(undefined),
-    inspectTaskInputs: jest.fn().mockImplementation(() => mockHashInputs),
+    // Opaque native plan reference; only its truthiness matters to the caller.
+    getPlansReferenceForTask: jest.fn().mockReturnValue({}),
+    inspectInputsFromPlan: jest.fn().mockImplementation(() => mockHashInputs),
+    checkDependentTaskOutputFiles: jest.fn().mockReturnValue({}),
   })),
 }));
 
@@ -112,6 +116,9 @@ performance.measure = jest.fn();
 const originalCwd = process.cwd;
 
 export function setupBeforeEach() {
+  // Reset the module-level context cache in check-task-files so each test
+  // loads a fresh project graph and HashPlanInspector instance.
+  _resetContextForTesting();
   jest.spyOn(console, 'log').mockImplementation(() => {});
   jest.spyOn(process, 'exit').mockImplementation((() => {}) as any);
   performance.mark('init-local');

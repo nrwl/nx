@@ -1,6 +1,8 @@
+use crate::native::glob::build_glob_set;
 use crate::native::tasks::hashers::{
-    ProjectFileSetCache, collect_json_input_files, hash_project_files_with_inputs_cached,
-    hash_workspace_files_with_inputs, resolve_task_output_files,
+    ProjectFileSetCache, collect_json_input_files, filter_output_files_by_glob,
+    hash_project_files_with_inputs_cached, hash_workspace_files_with_inputs,
+    resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::HashInstruction;
@@ -119,6 +121,25 @@ impl HashPlanInspector {
             .collect())
     }
 
+    /// Statically determines which of `files` are covered by each task's
+    /// `dependentTasksOutputFiles` inputs. A file is covered when it matches the
+    /// `dependentTasksOutputFiles` glob AND lies within one of the upstream
+    /// task's declared outputs (exact/glob match or directory containment).
+    ///
+    /// Unlike `inspect_inputs`, this is pure pattern matching with no disk
+    /// access, so it reports a match even when the upstream tasks have not yet
+    /// produced their outputs. The dependency-graph walk (including transitive
+    /// and diamond deduplication) was already performed by the planner when it
+    /// emitted the `TaskOutput` instructions consumed here.
+    #[napi(ts_return_type = "Record<string, string[]>")]
+    pub fn check_dependent_task_output_files(
+        &self,
+        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        files: Vec<String>,
+    ) -> anyhow::Result<HashMap<String, Vec<String>>> {
+        match_dependent_task_output_files(hash_plans, &files)
+    }
+
     /// Resolves a single `HashInstruction` into its structured inputs without hashing.
     /// Context-dependent variants are handled explicitly with access to workspace files,
     /// project graph, etc. Context-free variants fall through to `instruction.into()`.
@@ -202,5 +223,173 @@ impl HashPlanInspector {
             // Context-free variants: delegate to From<&HashInstruction>
             other => Ok(other.into()),
         }
+    }
+}
+
+/// Returns, per task, which of `files` are covered by that task's
+/// `dependentTasksOutputFiles` inputs. Extracted as a free function so the
+/// matching logic can be unit-tested without constructing a NAPI `External`.
+fn match_dependent_task_output_files(
+    hash_plans: &HashMap<String, Vec<HashInstruction>>,
+    files: &[String],
+) -> anyhow::Result<HashMap<String, Vec<String>>> {
+    let mut result: HashMap<String, Vec<String>> = HashMap::new();
+
+    for (task_id, instructions) in hash_plans.iter() {
+        let mut matched: HashSet<String> = HashSet::new();
+
+        for instruction in instructions {
+            let HashInstruction::TaskOutput(glob, outputs) = instruction else {
+                continue;
+            };
+
+            // Apply the `dependentTasksOutputFiles` glob to the candidate paths —
+            // the same selection `resolve_task_output_files` applies to a
+            // dependency's on-disk output files, shared via
+            // `filter_output_files_by_glob`.
+            let glob_matched = filter_output_files_by_glob(glob, files.iter().cloned())?;
+            if glob_matched.is_empty() {
+                continue;
+            }
+
+            // Statically confirm each selected path lies within an upstream
+            // output (glob match or directory containment) — the disk-free
+            // counterpart to enumerating the outputs' files on disk.
+            let output_glob = build_glob_set(outputs)?;
+            for file in glob_matched {
+                let within_outputs = output_glob.is_match(&file)
+                    || outputs
+                        .iter()
+                        .any(|output| file.starts_with(&format!("{output}/")));
+                if within_outputs {
+                    matched.insert(file);
+                }
+            }
+        }
+
+        if !matched.is_empty() {
+            let mut files: Vec<String> = matched.into_iter().collect();
+            files.sort();
+            result.insert(task_id.clone(), files);
+        }
+    }
+
+    Ok(result)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn plan_with_task_output(
+        task_id: &str,
+        glob: &str,
+        outputs: &[&str],
+    ) -> HashMap<String, Vec<HashInstruction>> {
+        let mut plans = HashMap::new();
+        plans.insert(
+            task_id.to_string(),
+            vec![HashInstruction::TaskOutput(
+                glob.to_string(),
+                outputs.iter().map(|o| o.to_string()).collect(),
+            )],
+        );
+        plans
+    }
+
+    #[test]
+    fn matches_when_glob_and_upstream_output_both_cover_the_file() {
+        let plans = plan_with_task_output("myproj:build", "**/*.d.ts", &["libs/dep/dist"]);
+        let files = vec!["libs/dep/dist/index.d.ts".to_string()];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert_eq!(
+            result.get("myproj:build"),
+            Some(&vec!["libs/dep/dist/index.d.ts".to_string()])
+        );
+    }
+
+    #[test]
+    fn does_not_match_when_path_matches_glob_but_no_upstream_output_covers_it() {
+        let plans = plan_with_task_output("myproj:build", "**/*.d.ts", &["libs/dep/dist"]);
+        let files = vec!["libs/somewhere-else/index.d.ts".to_string()];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn does_not_match_when_path_is_inside_output_but_does_not_match_glob() {
+        let plans = plan_with_task_output("myproj:build", "**/*.d.ts", &["libs/dep/dist"]);
+        // .js is inside the output dir but does not match the **/*.d.ts glob.
+        let files = vec!["libs/dep/dist/index.js".to_string()];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn matches_via_directory_containment() {
+        let plans = plan_with_task_output("myproj:build", "**/*", &["dist/libs/myproj"]);
+        let files = vec!["dist/libs/myproj/deep/file.js".to_string()];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert_eq!(
+            result.get("myproj:build"),
+            Some(&vec!["dist/libs/myproj/deep/file.js".to_string()])
+        );
+    }
+
+    #[test]
+    fn unions_matches_across_multiple_upstream_task_outputs() {
+        // The planner emits one TaskOutput instruction per upstream task that has
+        // outputs; a file matches if it is covered by ANY of them.
+        let mut plans = HashMap::new();
+        plans.insert(
+            "myproj:build".to_string(),
+            vec![
+                HashInstruction::TaskOutput(
+                    "**/*.d.ts".to_string(),
+                    vec!["libs/dep/dist".to_string()],
+                ),
+                HashInstruction::TaskOutput(
+                    "**/*.d.ts".to_string(),
+                    vec!["libs/other/dist".to_string()],
+                ),
+            ],
+        );
+        let files = vec![
+            "libs/dep/dist/a.d.ts".to_string(),
+            "libs/other/dist/b.d.ts".to_string(),
+            "libs/unrelated/c.d.ts".to_string(),
+        ];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert_eq!(
+            result.get("myproj:build"),
+            Some(&vec![
+                "libs/dep/dist/a.d.ts".to_string(),
+                "libs/other/dist/b.d.ts".to_string(),
+            ])
+        );
+    }
+
+    #[test]
+    fn ignores_non_task_output_instructions() {
+        let mut plans = HashMap::new();
+        plans.insert(
+            "myproj:build".to_string(),
+            vec![HashInstruction::WorkspaceFileSet(vec!["**/*".to_string()])],
+        );
+        let files = vec!["libs/dep/dist/index.d.ts".to_string()];
+
+        let result = match_dependent_task_output_files(&plans, &files).unwrap();
+
+        assert!(result.is_empty());
     }
 }

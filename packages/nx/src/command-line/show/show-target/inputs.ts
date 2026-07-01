@@ -1,7 +1,7 @@
 import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
 import type { HashInputs } from '../../../native';
-import { workspaceRoot } from '../../../utils/workspace-root';
-import { handleImport } from '../../../utils/handle-import';
+import { getTaskRawInputs } from '../../../hasher/check-task-files';
+import { createTaskId } from '../../../tasks-runner/utils';
 import type { ShowTargetInputsOptions } from '../command-object';
 import {
   resolveTarget,
@@ -10,7 +10,6 @@ import {
   hasCustomHasher,
   pc,
   printList,
-  type ResolvedTarget,
 } from './utils';
 
 // ── Handler ─────────────────────────────────────────────────────────
@@ -32,16 +31,22 @@ export async function showTargetInputsHandler(
     return;
   }
 
-  const hashInputs = await resolveInputFiles(t);
+  const { projectName, targetName, configuration } = t;
+  const taskId = createTaskId(projectName, targetName, configuration);
+
+  const hashInputs = await getTaskRawInputs(taskId);
+  if (!hashInputs) {
+    throw new Error(`Could not find hash plan for task "${taskId}".`);
+  }
 
   if (args.check !== undefined) {
     const checkItems = deduplicateFolderEntries(args.check);
     const results = checkItems.map((input) =>
-      resolveCheckFromInputs(input, t.projectName, t.targetName, hashInputs)
+      resolveCheckFromInputs(input, projectName, targetName, hashInputs)
     );
 
     if (results.length >= 2) {
-      renderBatchCheckInputs(results, t.projectName, t.targetName);
+      renderBatchCheckInputs(results, projectName, targetName);
     } else {
       for (const data of results) renderCheckInput(data);
     }
@@ -54,8 +59,8 @@ export async function showTargetInputsHandler(
   }
 
   renderInputs(
-    { project: t.projectName, target: t.targetName, ...hashInputs },
-    t.node.data.targets[t.targetName].inputs,
+    { project: projectName, target: targetName, ...hashInputs },
+    t.node.data.targets[targetName].inputs,
     args
   );
 }
@@ -63,36 +68,6 @@ export async function showTargetInputsHandler(
 // ── Data resolution ─────────────────────────────────────────────────
 
 type CheckInputResult = ReturnType<typeof resolveCheckFromInputs>;
-
-async function resolveInputFiles(t: ResolvedTarget): Promise<HashInputs> {
-  const { projectName, targetName, configuration, graph, nxJson } = t;
-  const { HashPlanInspector } = (await handleImport(
-    '../../../hasher/hash-plan-inspector.js',
-    __dirname
-  )) as typeof import('../../../hasher/hash-plan-inspector');
-
-  const inspector = new HashPlanInspector(graph, workspaceRoot, nxJson);
-  await inspector.init();
-
-  const plan = inspector.inspectTaskInputs({
-    project: projectName,
-    target: targetName,
-    configuration,
-  });
-
-  const targetConfig = graph.nodes[projectName]?.data?.targets?.[targetName];
-  const effectiveConfig = configuration ?? targetConfig?.defaultConfiguration;
-  const taskId = effectiveConfig
-    ? `${projectName}:${targetName}:${effectiveConfig}`
-    : `${projectName}:${targetName}`;
-  const result = plan[taskId];
-  if (!result) {
-    throw new Error(
-      `Could not find hash plan for task "${taskId}". Available tasks: ${Object.keys(plan).join(', ')}`
-    );
-  }
-  return result;
-}
 
 function resolveCheckFromInputs(
   rawValue: string,

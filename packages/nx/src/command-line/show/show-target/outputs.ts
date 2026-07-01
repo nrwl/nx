@@ -1,4 +1,8 @@
-import { getOutputsForTargetAndConfiguration } from '../../../tasks-runner/utils';
+import {
+  checkFilesAreOutputs,
+  getTaskOutputPatterns,
+} from '../../../hasher/check-task-files';
+import { createTaskId } from '../../../tasks-runner/utils';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import type { ShowTargetOutputsOptions } from '../command-object';
 import {
@@ -16,12 +20,15 @@ export async function showTargetOutputsHandler(
   args: ShowTargetOutputsOptions
 ): Promise<void> {
   const t = await resolveTarget(args);
-  const outputsData = resolveOutputsData(t);
+
+  const taskId = createTaskId(t.projectName, t.targetName, t.configuration);
+
+  const outputsData = await resolveOutputsData(t, taskId);
 
   if (args.check !== undefined) {
     const checkItems = deduplicateFolderEntries(args.check);
-    const results = checkItems.map((o) =>
-      resolveCheckOutputData(o, outputsData)
+    const results = await Promise.all(
+      checkItems.map((o) => resolveCheckOutputData(o, outputsData, taskId))
     );
 
     if (results.length >= 2) {
@@ -46,16 +53,12 @@ export async function showTargetOutputsHandler(
 
 // ── Data resolution ─────────────────────────────────────────────────
 
-type OutputsData = ReturnType<typeof resolveOutputsData>;
-type CheckOutputResult = ReturnType<typeof resolveCheckOutputData>;
+type OutputsData = Awaited<ReturnType<typeof resolveOutputsData>>;
+type CheckOutputResult = Awaited<ReturnType<typeof resolveCheckOutputData>>;
 
-function resolveOutputsData(t: ResolvedTarget) {
+async function resolveOutputsData(t: ResolvedTarget, taskId: string) {
   const { projectName, targetName, configuration, node } = t;
-  const resolvedOutputs = getOutputsForTargetAndConfiguration(
-    { project: projectName, target: targetName, configuration },
-    {},
-    node
-  );
+  const resolvedOutputs = await getTaskOutputPatterns(taskId);
 
   const targetConfig = node.data.targets?.[targetName];
   const configuredOutputs: string[] = targetConfig?.outputs ?? [];
@@ -91,27 +94,18 @@ function resolveOutputsData(t: ResolvedTarget) {
   };
 }
 
-function resolveCheckOutputData(
+async function resolveCheckOutputData(
   rawFileToCheck: string,
-  outputsData: OutputsData
+  outputsData: OutputsData,
+  taskId: string
 ) {
   const fileToCheck = normalizePath(rawFileToCheck);
   const { outputPaths, expandedOutputs } = outputsData;
 
-  let matchedOutput: string | null = null;
-  for (const outputPath of outputPaths) {
-    const normalizedOutput = outputPath.replace(/\\/g, '/');
-    if (
-      fileToCheck === normalizedOutput ||
-      fileToCheck.startsWith(normalizedOutput + '/')
-    ) {
-      matchedOutput = outputPath;
-      break;
-    }
-  }
-  if (!matchedOutput && expandedOutputs.includes(fileToCheck)) {
-    matchedOutput = fileToCheck;
-  }
+  // Delegate the direct-match decision to checkFilesAreOutputs (handles
+  // exact, prefix, and glob matching via minimatch).
+  const matchedOutput =
+    (await checkFilesAreOutputs(taskId, [fileToCheck])).matched.length > 0;
 
   let containedOutputPaths: string[] = [];
   let containedExpandedOutputs: string[] = [];
