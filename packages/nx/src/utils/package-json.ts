@@ -27,6 +27,7 @@ import {
   PackageManager,
   PackageManagerCommands,
 } from './package-manager';
+import { nxVersion } from './versions';
 import { workspaceRoot } from './workspace-root';
 
 export interface NxProjectPackageJsonConfiguration
@@ -416,7 +417,14 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
+  // When installing anything other than `nx` itself, pin `nx` in the temp
+  // install to the version this process is running. `@nx/devkit`'s peer
+  // range spans +/- 1 major, so an unpinned temp install can float `nx` to
+  // a newer major next to the requested package, and code loaded from the
+  // temp dir (e.g. a plugin pulled in via `ensurePackage`) would then run
+  // against a different nx than the workspace (see #36144).
+  const nxPin = pkg === 'nx' ? '' : ` nx@${nxVersion}`;
+  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion}${nxPin} ${
     pmCommands.ignoreScriptsFlag ?? ''
   }`;
 
