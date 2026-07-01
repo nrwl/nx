@@ -329,6 +329,9 @@ describe('js:prune-lockfile executor', () => {
 
       // The lib pulls an npm dep so the dist must install it; the root override
       // targets that same dep so it lands in the workspace lockfile's config.
+      // Write the override to both pnpm-workspace.yaml (read by pnpm >=10) and
+      // package.json pnpm.overrides (read by pnpm <10, the corepack default in
+      // CI temp dirs) so it lands whichever pnpm resolves the install.
       updateJson(`${nodelib}/package.json`, (json) => {
         json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
         return json;
@@ -337,6 +340,13 @@ describe('js:prune-lockfile executor', () => {
         'pnpm-workspace.yaml',
         (content) => `${content}\noverrides:\n  lodash: 4.17.21\n`
       );
+      updateJson('package.json', (json) => {
+        json.pnpm = {
+          ...json.pnpm,
+          overrides: { ...json.pnpm?.overrides, lodash: '4.17.21' },
+        };
+        return json;
+      });
       updateJson(`${nodeapp}/package.json`, (json) => {
         json.dependencies = {
           ...json.dependencies,
