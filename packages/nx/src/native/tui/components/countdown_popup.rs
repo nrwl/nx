@@ -1,116 +1,67 @@
 use color_eyre::eyre::Result;
 use ratatui::{
     Frame,
-    buffer::CellDiffOption,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
+        Block, BorderType, Borders, Clear, Padding, Scrollbar, ScrollbarOrientation,
         ScrollbarState, Wrap,
     },
 };
 use std::any::Any;
-use std::num::NonZeroU16;
 use std::time::{Duration, Instant};
 
-use crate::native::tui::lifecycle::PerformanceSummaryPayload;
+use crate::native::tui::lifecycle::{Link as SummaryLink, PerformanceSummaryPayload};
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration, pluralize};
 
 use super::Component;
+use super::link::{Link, LinkRegistry};
+use super::nx_paragraph::{NxLine, NxParagraph, NxSpan, NxText};
 
-/// Word-wrapped row count for `lines` at `width`, using the same wrapping the
-/// Paragraph applies — a hand-rolled character-wrap estimate diverges from
-/// ratatui's word wrapping.
-fn wrapped_rows(lines: &[Line], width: u16) -> usize {
-    if lines.is_empty() {
-        return 0;
+/// Convert a styled line into an `NxLine`, turning any occurrence of a known
+/// link phrase into a clickable [`Link`]. Replaces the old buffer-scanning OSC 8
+/// injection: the link's rendered position now falls out of `NxParagraph`'s
+/// placement instead of being recovered after the fact.
+fn linkify_line(line: Line<'static>, links: &[SummaryLink]) -> NxLine {
+    let mut out: Vec<NxSpan> = Vec::new();
+    for span in line.spans {
+        linkify_span(span, links, &mut out);
     }
-    Paragraph::new(lines.to_vec())
-        .wrap(Wrap { trim: false })
-        .line_count(width.max(1))
+    NxLine::from_spans(out)
 }
 
-/// Make `visible` a clickable OSC 8 hyperlink to `href` by rewriting the buffer:
-/// ratatui's text path strips the escape framing from cells (ratatui#1028), so we
-/// scan for the rendered text and replace each per-row run with one self-contained
-/// OSC 8 cell (ForcedWidth = the run's width), blanking the rest. Whitespace is
-/// collapsed when matching so a wrapped phrase still matches; no match → no-op.
-fn inject_osc8(f: &mut Frame<'_>, inner_area: Rect, visible: &str, href: &str) {
-    if visible.is_empty() {
-        return;
-    }
-    // Flatten the inner area, recording each kept char's (col, row); whitespace
-    // runs (incl. row breaks) collapse to a single space.
-    let mut flat = String::new();
-    let mut pos: Vec<(u16, u16)> = Vec::new();
-    let mut prev_space = true; // collapse + trim leading
-    for row in inner_area.y..inner_area.bottom() {
-        for col in inner_area.x..inner_area.right() {
-            let ch = f
-                .buffer_mut()
-                .cell((col, row))
-                .and_then(|c| c.symbol().chars().next())
-                .unwrap_or(' ');
-            if ch == ' ' {
-                if !prev_space {
-                    flat.push(' ');
-                    pos.push((u16::MAX, u16::MAX)); // sentinel: collapsed space
-                    prev_space = true;
+fn linkify_span(span: Span<'static>, links: &[SummaryLink], out: &mut Vec<NxSpan>) {
+    let style = span.style;
+    let content = span.content.into_owned();
+    let mut rest = content.as_str();
+    loop {
+        // Earliest occurrence of any link phrase in the remaining text.
+        let next = links
+            .iter()
+            .filter(|l| !l.text.is_empty())
+            .filter_map(|l| rest.find(l.text.as_str()).map(|idx| (idx, l)))
+            .min_by_key(|(idx, _)| *idx);
+        match next {
+            Some((idx, link)) => {
+                if idx > 0 {
+                    out.push(NxSpan::Text(Span::styled(rest[..idx].to_string(), style)));
                 }
-            } else {
-                flat.push(ch);
-                pos.push((col, row));
-                prev_space = false;
+                out.push(NxSpan::Link(Link::new(
+                    link.text.clone(),
+                    link.href.clone(),
+                )));
+                rest = &rest[idx + link.text.len()..];
+                if rest.is_empty() {
+                    return;
+                }
             }
-        }
-        if !prev_space {
-            flat.push(' '); // a row break wraps like a space
-            pos.push((u16::MAX, u16::MAX));
-            prev_space = true;
-        }
-    }
-    let target: String = visible.split_whitespace().collect::<Vec<_>>().join(" ");
-    // Injects at the FIRST match. Invariant: each linked phrase must be unique
-    // within the popup's rendered text, else the link lands on the wrong run.
-    let Some(byte_idx) = flat.find(&target) else {
-        return;
-    };
-    let char_start = flat[..byte_idx].chars().count();
-    let target_len = target.chars().count();
-
-    // Group the matched chars into per-row [first_col, last_col] segments.
-    let mut segments: Vec<(u16, u16, u16)> = Vec::new();
-    for (col, row) in pos.iter().skip(char_start).take(target_len).copied() {
-        if col == u16::MAX {
-            continue; // collapsed space between rows/words
-        }
-        match segments.last_mut() {
-            Some((r, _first, last)) if *r == row => *last = col,
-            _ => segments.push((row, col, col)),
-        }
-    }
-
-    for (row, first_col, last_col) in segments {
-        let mut segment_text = String::new();
-        for col in first_col..=last_col {
-            if let Some(cell) = f.buffer_mut().cell((col, row)) {
-                segment_text.push_str(cell.symbol());
-            }
-        }
-        let seq = format!("\x1b]8;;{href}\x07{segment_text}\x1b]8;;\x07");
-        if let Some(cell) = f.buffer_mut().cell_mut((first_col, row)) {
-            cell.set_symbol(&seq);
-            cell.set_style(Style::default().fg(THEME.info));
-            if let Some(width) = NonZeroU16::new(last_col - first_col + 1) {
-                cell.set_diff_option(CellDiffOption::ForcedWidth(width));
-            }
-        }
-        // The ForcedWidth cell owns the run's columns; blank the rest.
-        for col in (first_col + 1)..=last_col {
-            if let Some(cell) = f.buffer_mut().cell_mut((col, row)) {
-                cell.set_symbol(" ");
+            None => {
+                if !rest.is_empty() {
+                    out.push(NxSpan::Text(Span::styled(rest.to_string(), style)));
+                }
+                return;
             }
         }
     }
@@ -150,11 +101,20 @@ pub struct CountdownPopup {
     scrollbar_state: ScrollbarState,
     content_height: usize,
     viewport_height: usize,
+    /// Screen rect of the bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing.
+    last_area: Option<Rect>,
+    /// Screen rect of the inner text area (inside the border, clear of the
+    /// scrollbar) from the last render, used to bound text selection/links.
+    content_area: Option<Rect>,
     /// The run report shown above the hint text (None until set).
     summary: Option<PerformanceSummaryPayload>,
     /// When pinned, the auto-exit countdown is stopped and the popup stays open
     /// until the user explicitly quits.
     pinned: bool,
+    /// Clickable report links recorded during render; the app hit-tests these
+    /// (via the modal mouse path) to open them.
+    link_registry: LinkRegistry,
 }
 
 impl CountdownPopup {
@@ -167,8 +127,11 @@ impl CountdownPopup {
             scrollbar_state: ScrollbarState::default(),
             content_height: 0,
             viewport_height: 0,
+            last_area: None,
+            content_area: None,
             summary: None,
             pinned: false,
+            link_registry: LinkRegistry::new(),
         }
     }
 
@@ -265,6 +228,16 @@ impl CountdownPopup {
         self.content_height > self.viewport_height
     }
 
+    /// The bordered popup box drawn last frame, if visible.
+    pub fn last_area(&self) -> Option<Rect> {
+        self.last_area
+    }
+
+    /// The inner text area drawn last frame, if visible.
+    pub fn content_area(&self) -> Option<Rect> {
+        self.content_area
+    }
+
     pub fn start_countdown(&mut self, duration_secs: u64) {
         self.visible = true;
         self.start_time = Some(Instant::now());
@@ -349,17 +322,12 @@ impl CountdownPopup {
         }
     }
 
-    /// Report-mode content: the report body, then the "longest tasks" rec so its list
-    /// ends the popup.
-    fn report_mode_content(
-        &self,
-        mut content: Vec<Line<'static>>,
-    ) -> (Vec<Line<'static>>, Option<usize>) {
-        let url_line_index = content.len();
+    /// Report-mode content: the report body, then the "longest tasks" rec so its
+    /// list ends the popup. The recommendation phrases in `links` become clickable
+    /// via `linkify_line` at render.
+    fn report_mode_content(&self, mut content: Vec<Line<'static>>) -> Vec<Line<'static>> {
         content.extend(self.longest_tasks_lines());
-        // Some(..) marks report mode so the OSC 8 pass runs for the recommendation
-        // links; the index value itself is unused.
-        (content, Some(url_line_index))
+        content
     }
 
     /// Exit-dialog content shown when there's no report (e.g. q pressed mid-run) — just
@@ -448,11 +416,25 @@ impl CountdownPopup {
         let has_report = !report.is_empty();
         // Two modes: a finished run shows the Performance Report; otherwise (e.g. q
         // pressed mid-run) the original exit dialog with just the interactive hints.
-        let (content, url_line_index) = if has_report {
+        let content = if has_report {
             self.report_mode_content(report)
         } else {
-            (Self::exit_dialog_content(), None)
+            Self::exit_dialog_content()
         };
+
+        // Turn the recommendation phrases into clickable links, then lay the report
+        // out through NxParagraph so each link's rect is recorded.
+        self.link_registry.clear();
+        let all_links: Vec<SummaryLink> = self
+            .summary
+            .as_ref()
+            .map(|s| s.links.clone())
+            .unwrap_or_default();
+        let nx_content: NxText = content
+            .into_iter()
+            .map(|line| linkify_line(line, &all_links))
+            .collect::<Vec<NxLine>>()
+            .into();
 
         let seconds_remaining = if let Some(start_time) = self.start_time {
             let elapsed = start_time.elapsed();
@@ -511,7 +493,7 @@ impl CountdownPopup {
         // Size the popup to its content so a short cached-run report doesn't float in a
         // fixed-width box, while staying wide enough for the title row and the bottom
         // keybindings; cap at 70 so long recommendations still wrap.
-        let content_width = content.iter().map(|l| l.width() as u16).max().unwrap_or(0);
+        let content_width = nx_content.max_width();
         let title_row_width: u16 = title_spans.iter().map(|s| s.width() as u16).sum::<u16>()
             + close_hint.iter().map(|s| s.width() as u16).sum::<u16>();
         let bottom_width: u16 = bottom_hints
@@ -534,7 +516,7 @@ impl CountdownPopup {
             .inner(Rect::new(0, 0, popup_width, 1))
             .width
             .max(1);
-        let estimated_rows = wrapped_rows(&content, inner_width);
+        let estimated_rows = nx_content.wrapped_rows(inner_width, false);
         let popup_height = ((estimated_rows as u16).saturating_add(4))
             .min(safe_area.height.saturating_sub(4))
             .max(5);
@@ -543,6 +525,9 @@ impl CountdownPopup {
         let popup_y = safe_area.y + (safe_area.height.saturating_sub(popup_height)) / 2;
 
         let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
+
+        // Record the popup box so the app can hit-test mouse events against it.
+        self.last_area = Some(popup_area);
 
         let mut block = Block::default()
             .title(Line::from(title_spans))
@@ -557,11 +542,16 @@ impl CountdownPopup {
         }
 
         let inner_area = block.inner(popup_area);
+        // Record the inner text area so the app can bound selection/link hit-tests.
+        self.content_area = Some(inner_area);
         self.viewport_height = inner_area.height as usize;
+        // The text area sits inside the border + padding, so it never includes
+        // the scrollbar (drawn on the far-right border column).
+        self.content_area = Some(inner_area);
 
         // Content height in wrapped rows, driving the scrollbar and the scroll
         // bound in scroll_down.
-        self.content_height = wrapped_rows(&content, inner_area.width);
+        self.content_height = nx_content.wrapped_rows(inner_area.width, false);
 
         let scrollable_rows = self.content_height.saturating_sub(self.viewport_height);
         let needs_scrollbar = scrollable_rows > 0;
@@ -579,7 +569,7 @@ impl CountdownPopup {
         // rows by scroll_down's max_scroll, matching Paragraph::scroll's row-based
         // offset — slicing the unwrapped `content` with a wrapped-row offset
         // panicked the process.
-        let popup = Paragraph::new(content.clone())
+        let popup = NxParagraph::new(nx_content)
             .block(block.clone())
             // trim: false preserves leading whitespace so the report's
             // indentation renders.
@@ -587,18 +577,9 @@ impl CountdownPopup {
             .scroll((self.scroll_offset as u16, 0));
 
         f.render_widget(Clear, popup_area);
-        f.render_widget(popup, popup_area);
-
-        // Turn the report's links into real OSC 8 hyperlinks (see inject_osc8).
-        if url_line_index.is_some() {
-            if let Some(s) = self.summary.as_ref() {
-                // Hyperlink the recommendation phrases (labels and hrefs from the
-                // payload); a phrase that isn't shown isn't found.
-                for link in &s.links {
-                    inject_osc8(f, inner_area, &link.text, &link.href);
-                }
-            }
-        }
+        // NxParagraph records each rendered link's rect into the registry, which
+        // the app's modal mouse handler hit-tests to open it.
+        f.render_stateful_widget(popup, popup_area, &mut self.link_registry);
 
         if needs_scrollbar {
             // Blank out the corners so the scrollbar arrows don't collide with
@@ -623,14 +604,14 @@ impl CountdownPopup {
             };
 
             f.render_widget(
-                Paragraph::new(top_text)
+                NxParagraph::new(top_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
-                Paragraph::new(bottom_text)
+                NxParagraph::new(bottom_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
@@ -651,8 +632,20 @@ impl Component for CountdownPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
+        } else {
+            self.last_area = None;
+            self.content_area = None;
+            self.link_registry.clear();
         }
         Ok(())
+    }
+
+    fn link_registry(&self) -> Option<&LinkRegistry> {
+        Some(&self.link_registry)
+    }
+
+    fn link_registry_mut(&mut self) -> Option<&mut LinkRegistry> {
+        Some(&mut self.link_registry)
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -840,41 +833,31 @@ mod tests {
             .unwrap();
         let buffer = terminal.backend().buffer().clone();
 
-        // Every OSC 8 cell targets a known page; at least one the remote cache.
-        let mut cache_links = 0;
-        for y in 0..buffer.area.height {
-            for x in 0..buffer.area.width {
-                let sym = buffer.cell((x, y)).unwrap().symbol();
-                if sym.contains("\x1b]8;;") {
-                    assert!(sym.contains(CACHE_HREF), "unexpected OSC 8 target");
-                    if sym.contains(CACHE_HREF) {
-                        cache_links += 1;
-                    }
-                }
-            }
-        }
-        assert!(cache_links >= 1, "the cache phrase should be linked");
+        let registry = popup
+            .link_registry()
+            .expect("countdown exposes a link registry");
+        // The cache phrase wraps to multiple rows; it must be clickable on every
+        // one of them (a rect was recorded per wrapped row).
+        let mut hit_rows: Vec<u16> = (0..buffer.area.height)
+            .flat_map(|y| (0..buffer.area.width).map(move |x| (x, y)))
+            .filter(|&(x, y)| registry.hit_test(x, y) == Some(CACHE_HREF))
+            .map(|(_, y)| y)
+            .collect();
+        hit_rows.sort_unstable();
+        hit_rows.dedup();
+        assert!(
+            hit_rows.len() >= 2,
+            "the wrapped cache phrase should be clickable on each of its rows"
+        );
 
-        // The raw URL is never visible, and the phrase (start AND end, i.e. every
-        // wrapped row) is consumed by the links rather than left plain.
-        for y in 0..buffer.area.height {
-            let mut text = String::new();
-            for x in 0..buffer.area.width {
-                let s = buffer.cell((x, y)).unwrap().symbol();
-                text.push_str(if s.contains('\x1b') { "\u{0}" } else { s });
-            }
-            assert!(
-                !text.contains("https://nx.dev/ci/features/remote-cache"),
-                "raw remote-cache URL visible on row {y}"
-            );
-            assert!(
-                !text.contains("Drastically reduce"),
-                "phrase start left unlinked on row {y}"
-            );
-            assert!(
-                !text.contains("team and CI"),
-                "phrase end (wrapped row) left unlinked on row {y}"
-            );
-        }
+        // The raw URL is never visible (the phrase is the display text).
+        let visible: String = (0..buffer.area.height)
+            .flat_map(|y| (0..buffer.area.width).map(move |x| (x, y)))
+            .map(|(x, y)| buffer.cell((x, y)).unwrap().symbol().to_string())
+            .collect();
+        assert!(
+            !visible.contains("https://nx.dev/ci/features/remote-cache"),
+            "raw remote-cache URL must not be visible"
+        );
     }
 }

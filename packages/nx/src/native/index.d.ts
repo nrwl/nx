@@ -47,6 +47,12 @@ export declare class AppLifeCycle {
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void
   setBatchStatus(batchId: string, status: BatchStatus): void
+  /**
+   * Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+   * `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+   * Cloud client can call it via the lifecycle it already receives.
+   */
+  setCloudLink(label: string, url: string): void
 }
 
 export declare class ChildProcess {

@@ -1,14 +1,14 @@
 use super::{Component, Frame};
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::tui::action::Action;
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use color_eyre::eyre::Result;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Clear, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState,
+        Block, BorderType, Borders, Clear, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
     },
 };
 use std::any::Any;
@@ -25,6 +25,12 @@ pub struct HelpPopup {
     visible: bool,
     action_tx: Option<UnboundedSender<Action>>,
     console_available: bool,
+    /// Screen rect of the bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing.
+    last_area: Option<Rect>,
+    /// Screen rect of the inner text area (inside the border, clear of the
+    /// scrollbar) from the last render, used to bound text selection/links.
+    content_area: Option<Rect>,
 }
 
 impl HelpPopup {
@@ -37,11 +43,23 @@ impl HelpPopup {
             visible: false,
             action_tx: None,
             console_available: false,
+            last_area: None,
+            content_area: None,
         }
     }
 
     pub fn set_visible(&mut self, visible: bool) {
         self.visible = visible;
+    }
+
+    /// The bordered popup box drawn last frame, if visible.
+    pub fn last_area(&self) -> Option<Rect> {
+        self.last_area
+    }
+
+    /// The inner text area drawn last frame, if visible.
+    pub fn content_area(&self) -> Option<Rect> {
+        self.content_area
     }
 
     pub fn set_console_available(&mut self, available: bool) {
@@ -139,6 +157,9 @@ impl HelpPopup {
             ])
             .split(popup_layout[1])[1];
 
+        // Record the popup box so the app can hit-test mouse events against it.
+        self.last_area = Some(popup_area);
+
         let mut keybindings = vec![
             // Misc
             ("?", "Toggle this popup"),
@@ -171,7 +192,11 @@ impl HelpPopup {
                 "<tab>",
                 "Move focus between task list and output panes 1 and 2",
             ),
-            ("c", "Copy focused output to clipboard"),
+            ("c", "Copy selection (or full output) to clipboard"),
+            (
+                "F10",
+                "Toggle mouse capture (off lets your terminal select cells natively)",
+            ),
             ("", ""),
             // Interactive Mode
             ("i", "Interact with a continuous task when it is in focus"),
@@ -321,6 +346,9 @@ impl HelpPopup {
 
         let inner_area = block.inner(popup_area);
         self.viewport_height = inner_area.height as usize;
+        // The text area sits inside the border + padding, so it never includes
+        // the scrollbar (drawn on the far-right border column).
+        self.content_area = Some(inner_area);
 
         // Calculate wrapped height by measuring each line
         let wrapped_height = content
@@ -358,7 +386,7 @@ impl HelpPopup {
         let scroll_end = (self.scroll_offset + self.viewport_height).min(content.len());
         let visible_content = content[scroll_start..scroll_end].to_vec();
 
-        let popup = Paragraph::new(visible_content)
+        let popup = NxParagraph::new(visible_content)
             .block(block)
             .alignment(Alignment::Left)
             .wrap(ratatui::widgets::Wrap { trim: true });
@@ -392,14 +420,14 @@ impl HelpPopup {
 
             // Render padding text
             f.render_widget(
-                Paragraph::new(top_text)
+                NxParagraph::new(top_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 top_right_area,
             );
 
             f.render_widget(
-                Paragraph::new(bottom_text)
+                NxParagraph::new(bottom_text)
                     .alignment(Alignment::Right)
                     .style(Style::default().fg(THEME.info)),
                 bottom_right_area,
@@ -425,6 +453,9 @@ impl Component for HelpPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
+        } else {
+            self.last_area = None;
+            self.content_area = None;
         }
         Ok(())
     }

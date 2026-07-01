@@ -83,6 +83,9 @@ pub struct TuiState {
 
     // === Cloud Message ===
     cloud_message: Option<String>,
+    /// Structured Nx Cloud link (display label, href URL), shown as a clickable
+    /// label in place of the raw cloud message when set.
+    cloud_link: Option<(String, String)>,
 
     // === Performance Report ===
     /// Stored here (not on the per-instance popup) so it survives mode switches;
@@ -154,6 +157,7 @@ impl TuiState {
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
+            cloud_link: None,
             exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
@@ -497,6 +501,16 @@ impl TuiState {
     /// Get the cloud message (if any)
     pub fn get_cloud_message(&self) -> Option<&str> {
         self.cloud_message.as_deref()
+    }
+
+    /// Set the structured cloud link (display label, href URL).
+    pub fn set_cloud_link(&mut self, link: Option<(String, String)>) {
+        self.cloud_link = link;
+    }
+
+    /// Get the structured cloud link (if any).
+    pub fn get_cloud_link(&self) -> Option<&(String, String)> {
+        self.cloud_link.as_ref()
     }
 
     // === UI State Methods (for mode switching persistence) ===

@@ -93,6 +93,13 @@ export interface LifeCycle {
   appendBatchOutput?(batchId: string, output: string): void;
 
   setBatchStatus?(batchId: string, status: BatchStatus): void;
+
+  /**
+   * Set a clickable Nx Cloud link in the terminal UI: `label` is the text
+   * shown, `url` is opened when it's clicked. Implemented by the TUI lifecycle;
+   * callers (e.g. the Nx Cloud client) should feature-detect it.
+   */
+  setCloudLink?(label: string, url: string): void | Promise<void>;
 }
 
 export class CompositeLifeCycle implements LifeCycle {
@@ -252,6 +259,14 @@ export class CompositeLifeCycle implements LifeCycle {
     for (let l of this.lifeCycles) {
       if (l.setBatchStatus) {
         l.setBatchStatus(batchId, status);
+      }
+    }
+  }
+
+  async setCloudLink(label: string, url: string): Promise<void> {
+    for (let l of this.lifeCycles) {
+      if (l.setCloudLink) {
+        await l.setCloudLink(label, url);
       }
     }
   }

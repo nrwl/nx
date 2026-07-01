@@ -3,9 +3,9 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::Paragraph,
 };
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
 pub struct HelpText {
@@ -70,7 +70,7 @@ impl HelpText {
                 Span::styled("?", key_style),
             ];
             f.render_widget(
-                Paragraph::new(Line::from(hint)).alignment(if self.align_left {
+                NxParagraph::new(Line::from(hint)).alignment(if self.align_left {
                     Alignment::Left
                 } else {
                     Alignment::Right
@@ -110,7 +110,7 @@ impl HelpText {
             }
 
             f.render_widget(
-                Paragraph::new(Line::from(shortcuts)).alignment(Alignment::Right),
+                NxParagraph::new(Line::from(shortcuts)).alignment(Alignment::Right),
                 safe_area,
             );
         }

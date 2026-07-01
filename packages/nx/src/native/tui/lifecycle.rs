@@ -760,12 +760,25 @@ impl AppLifeCycle {
         self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
+
+    /// Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+    /// `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+    /// Cloud client can call it via the lifecycle it already receives.
+    #[napi]
+    pub fn set_cloud_link(&self, label: String, url: String) -> napi::Result<()> {
+        self.with_app(|app| app.set_cloud_link(label, url));
+        Ok(())
+    }
 }
 
 #[napi]
 pub fn restore_terminal() -> napi::Result<()> {
     // Clear terminal progress indicator
     App::clear_terminal_progress();
+
+    // Disable mouse capture (safe even if it was never enabled) so the terminal
+    // stops emitting mouse escape sequences once the TUI tears down.
+    let _ = super::tui::disable_mouse_capture();
 
     // Drain pending terminal responses (e.g., OSC color query responses)
     // to prevent escape sequences from leaking to the terminal on exit

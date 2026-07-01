@@ -1,5 +1,4 @@
 import { prompt } from 'enquirer';
-import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import type { Observable } from 'rxjs';
@@ -28,6 +27,7 @@ import { NxArgs } from '../utils/command-line-utils';
 import { handleErrors } from '../utils/handle-errors';
 import { isCI } from '../utils/is-ci';
 import { isNxCloudDisabled, isNxCloudUsed } from '../utils/nx-cloud-utils';
+import { getBundleInstallDefaultLocation } from '../nx-cloud/update-manager';
 import { logger } from '../utils/logger';
 import {
   createNxKeyLicenseeInformation,
@@ -133,15 +133,22 @@ async function getTerminalOutputLifeCycle(
   if (isTuiEnabled()) {
     const interceptedNxCloudLogs: (string | Uint8Array<ArrayBufferLike>)[] = [];
 
+    // Resolve where the Nx Cloud client bundle actually loads from so the
+    // stack-trace check below matches its frames. It is NOT always
+    // `{workspaceRoot}/.nx/cache/cloud`: in a git worktree the cache dir is
+    // shared with the main repo, and it can also be relocated via
+    // NX_CACHE_DIRECTORY, a custom `cacheDirectory` in nx.json, or the lerna
+    // `node_modules/.cache` location. Using the client's own resolver keeps the
+    // interception working in all of those cases.
+    const nxCloudClientDir = getBundleInstallDefaultLocation();
+
     const createPatchedConsoleMethod = (
       originalMethod: typeof console.log | typeof console.error
     ): typeof console.log | typeof console.error => {
       return (...args: any[]) => {
         // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
         const stackTrace = new Error().stack;
-        const isNxCloudLog = stackTrace.includes(
-          join(workspaceRoot, '.nx', 'cache', 'cloud')
-        );
+        const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
         if (!isNxCloudLog) {
           return originalMethod(...args);
         }
@@ -276,9 +283,7 @@ async function getTerminalOutputLifeCycle(
 
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(
-            join(workspaceRoot, '.nx', 'cache', 'cloud')
-          );
+          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (isNxCloudLog) {
             interceptedNxCloudLogs.push(chunk);
             // Do not bother to store logs with only whitespace characters, they aren't relevant for the TUI
@@ -305,9 +310,7 @@ async function getTerminalOutputLifeCycle(
         return (...args: any[]) => {
           // Check if the log came from the Nx Cloud client, otherwise invoke the original write method
           const stackTrace = new Error().stack;
-          const isNxCloudLog = stackTrace.includes(
-            join(workspaceRoot, '.nx', 'cache', 'cloud')
-          );
+          const isNxCloudLog = stackTrace.includes(nxCloudClientDir);
           if (!isNxCloudLog) {
             return originalMethod(...args);
           }
