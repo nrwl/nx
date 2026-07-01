@@ -970,7 +970,7 @@ describe('app', () => {
         `);
     });
 
-    it('should generate project.json if useProjectJson is true', async () => {
+    it('should generate project.json if useProjectJson is true including sourceRoot with src/ by default', async () => {
       await applicationGenerator(tree, {
         directory: 'myapp',
         appDir: true,
@@ -990,7 +990,7 @@ describe('app', () => {
           "name": "@proj/myapp",
           "projectType": "application",
           "root": "myapp",
-          "sourceRoot": "myapp",
+          "sourceRoot": "myapp/src",
           "tags": [],
           "targets": {},
         }
@@ -1013,6 +1013,44 @@ describe('app', () => {
         }
       `);
       expect(readJson(tree, 'myapp-e2e/package.json').nx).toBeUndefined();
+    });
+
+    it('should set sourceRoot to src/ and place app files under src/ when --src=true', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: true,
+        src: true,
+        skipFormat: true,
+      });
+
+      const projectConfig = readProjectConfiguration(tree, '@proj/myapp');
+      expect(projectConfig.sourceRoot).toBe('myapp/src');
+      expect(tree.exists('myapp/src/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/src/app/layout.tsx')).toBeTruthy();
+    });
+
+    it('should set sourceRoot to project root and place app files at root when --src=false', async () => {
+      await applicationGenerator(tree, {
+        directory: 'myapp',
+        appDir: true,
+        unitTestRunner: 'jest',
+        style: 'css',
+        e2eTestRunner: 'none',
+        addPlugin: true,
+        useProjectJson: true,
+        src: false,
+        skipFormat: true,
+      });
+
+      const projectConfig = readProjectConfiguration(tree, '@proj/myapp');
+      expect(projectConfig.sourceRoot).toBe('myapp');
+      expect(tree.exists('myapp/app/page.tsx')).toBeTruthy();
+      expect(tree.exists('myapp/src')).toBeFalsy();
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
