@@ -19,6 +19,7 @@ import {
 import { findMatchingProjects } from '../../utils/find-matching-projects';
 import { output } from '../../utils/output';
 import { splitTarget } from '../../utils/split-target';
+import { findClosestMatches } from '../../utils/string-similarity';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { generateGraph } from '../graph/graph';
 import { connectToNxCloudIfExplicitlyAsked } from '../nx-cloud/connect/connect-to-nx-cloud';
@@ -57,7 +58,22 @@ export async function runOne(
     nxJson
   );
 
-  const { projects, projectName } = getProjects(projectGraph, opts.project);
+  const { projects, projectName } = getProjects(
+    projectGraph,
+    opts.project,
+    opts.target,
+    opts.configuration
+  );
+
+  const targetError = getRunOneTargetError(
+    projects[0],
+    opts.target,
+    opts.configuration
+  );
+  if (targetError) {
+    output.error(targetError);
+    process.exit(1);
+  }
 
   if (nxArgs.help) {
     await (
@@ -106,7 +122,9 @@ export async function runOne(
 
 function getProjects(
   projectGraph: ProjectGraph,
-  projectName: string
+  projectName: string,
+  target: string,
+  configuration?: string
 ): {
   projectName: string;
   projects: ProjectGraphProjectNode[];
@@ -142,10 +160,142 @@ function getProjects(
     }
   }
 
-  output.error({
-    title: `Cannot find project '${projectName}'`,
-  });
+  output.error(
+    getCannotFindProjectError(projectGraph, projectName, target, configuration)
+  );
   process.exit(1);
+}
+
+// Keep error output scannable: only show a handful of targets/suggestions.
+const MAX_LISTED_TARGETS = 5;
+const MAX_SUGGESTIONS = 3;
+
+/**
+ * Builds the list of all runnable `project:target` task ids in the workspace,
+ * used to suggest the right invocation when a project or target can't be found.
+ */
+function getProjectTargetIds(projectGraph: ProjectGraph): string[] {
+  const ids: string[] = [];
+  for (const projectName of Object.keys(projectGraph.nodes)) {
+    const targets = projectGraph.nodes[projectName].data.targets ?? {};
+    for (const targetName of Object.keys(targets)) {
+      ids.push(`${projectName}:${targetName}`);
+    }
+  }
+  return ids;
+}
+
+/**
+ * A target (and even a configuration) name can legally contain ':'. When the
+ * user typos such a name, `splitTarget` splits on every ':' and parses the
+ * trailing segment(s) as separate parts (e.g. `nx:zzcustom:variantt` becomes
+ * project `nx`, target `zzcustom`, configuration `variantt`).
+ *
+ * To match the real name we therefore try the fully-rejoined specifier first,
+ * then progressively shorter forms. Rejoining wins for colon-containing names,
+ * while the shorter forms keep matching genuine `target` + `configuration`
+ * typos (where the real target name does not carry the configuration suffix).
+ */
+function findClosestSpecifier(
+  parts: (string | undefined)[],
+  candidates: readonly string[],
+  limit = 1
+): string[] {
+  const present = parts.filter((part): part is string => !!part);
+  for (let end = present.length; end >= 1; end--) {
+    const matches = findClosestMatches(
+      present.slice(0, end).join(':'),
+      candidates,
+      limit
+    );
+    if (matches.length) {
+      return matches;
+    }
+  }
+  return [];
+}
+
+/**
+ * Lists up to `MAX_LISTED_TARGETS` targets, appending a "...and N more" line
+ * when the project has more targets than we show.
+ */
+function formatAvailableTargets(availableTargets: string[]): string[] {
+  const sorted = [...availableTargets].sort();
+  const shown = sorted.slice(0, MAX_LISTED_TARGETS);
+  const lines = ['Available targets:', ...shown.map((t) => `  - ${t}`)];
+  if (sorted.length > shown.length) {
+    lines.push(`  ...and ${sorted.length - shown.length} more`);
+  }
+  return lines;
+}
+
+/**
+ * Builds the error shown when the project itself can't be found. Matches the
+ * attempted `project:target[:configuration]` against every runnable task id so
+ * a project typo (e.g. `webpai:build`) still surfaces the intended task
+ * (`webapi:build`).
+ */
+export function getCannotFindProjectError(
+  projectGraph: ProjectGraph,
+  projectName: string,
+  target: string,
+  configuration?: string
+): { title: string; bodyLines: string[] } {
+  const bodyLines: string[] = [];
+  const suggestions = findClosestSpecifier(
+    [projectName, target, configuration],
+    getProjectTargetIds(projectGraph),
+    MAX_SUGGESTIONS
+  );
+  if (suggestions.length) {
+    bodyLines.push(
+      'Did you mean one of these?',
+      ...suggestions.map((id) => `  - ${id}`)
+    );
+  }
+
+  return {
+    title: `Cannot find project '${projectName}'`,
+    bodyLines,
+  };
+}
+
+/**
+ * Validates that `target` exists on the resolved project. When it does not,
+ * returns an error describing the available targets (and the closest match, if
+ * any) so the user can recover from a typo or discover what they can run.
+ */
+export function getRunOneTargetError(
+  project: ProjectGraphProjectNode,
+  target: string,
+  configuration?: string
+): { title: string; bodyLines: string[] } | null {
+  const availableTargets = Object.keys(project.data.targets ?? {});
+  if (availableTargets.includes(target)) {
+    return null;
+  }
+
+  const bodyLines: string[] = [];
+  const [closestMatch] = findClosestSpecifier(
+    [target, configuration],
+    availableTargets
+  );
+  if (closestMatch) {
+    bodyLines.push(`Did you mean "${closestMatch}"?`, '');
+  }
+
+  if (availableTargets.length) {
+    bodyLines.push(...formatAvailableTargets(availableTargets));
+  } else {
+    bodyLines.push(
+      `The project "${project.name}" does not have any targets configured.`
+    );
+  }
+
+  return {
+    title: `Cannot find target "${target}" for project "${project.name}"`,
+    bodyLines,
+  };
 }
 
 const targetAliases = {
