@@ -529,7 +529,8 @@ fun getMetadata(
     description: String?,
     projectBuildPath: String,
     helpTaskName: String,
-    nonAtomizedTarget: String? = null
+    nonAtomizedTarget: String? = null,
+    parsingMethod: String? = null
 ): Map<String, Any?> {
   val gradlewCommand = getGradlewCommand()
   return mapOf(
@@ -537,7 +538,8 @@ fun getMetadata(
       "technologies" to arrayOf("gradle"),
       "help" to
           mapOf("command" to "$gradlewCommand help --task ${projectBuildPath}:${helpTaskName}"),
-      "nonAtomizedTarget" to nonAtomizedTarget)
+      "nonAtomizedTarget" to nonAtomizedTarget,
+      "parsingMethod" to parsingMethod)
 }
 
 /**

@@ -4,6 +4,7 @@ import dev.nx.gradle.data.DependsOnEntry
 import dev.nx.gradle.data.DependsOnParams
 import dev.nx.gradle.data.NxTargets
 import dev.nx.gradle.data.TargetGroups
+import dev.nx.gradle.utils.parsing.ParsingMethod
 import dev.nx.gradle.utils.parsing.containsEssentialTestAnnotations
 import dev.nx.gradle.utils.parsing.getAllVisibleClassesWithNestedAnnotation
 import java.io.File
@@ -110,9 +111,9 @@ private fun processTestFiles(
   testFiles
       .filter { isTestFile(it, workspaceRoot) }
       .forEach { testFile ->
-        val classNames = getAllVisibleClassesWithNestedAnnotation(testFile, testTask)
+        val parseResult = getAllVisibleClassesWithNestedAnnotation(testFile, testTask)
 
-        classNames?.forEach { (className, testClassPackagePath) ->
+        parseResult?.classes?.forEach { (className, testClassPackagePath) ->
           val targetName = "$ciTestTargetName--$className"
           targets[targetName] =
               buildTestCiTarget(
@@ -121,7 +122,8 @@ private fun processTestFiles(
                   testTask,
                   testTaskInputs,
                   testTaskOutputs,
-                  testTaskDependsOn)
+                  testTaskDependsOn,
+                  parseResult.method)
           targetGroups[testCiTargetGroup]?.add(targetName)
 
           ciDependsOn.add(DependsOnEntry(target = targetName, params = DependsOnParams.FORWARD))
@@ -150,7 +152,8 @@ private fun buildTestCiTarget(
     testTask: Task,
     testTaskInputs: List<Any>?,
     testTaskOutputs: List<String>?,
-    testTaskDependsOn: List<DependsOnEntry>?
+    testTaskDependsOn: List<DependsOnEntry>?,
+    parsingMethod: ParsingMethod
 ): MutableMap<String, Any?> {
   val target =
       mutableMapOf<String, Any?>(
@@ -161,7 +164,10 @@ private fun buildTestCiTarget(
                   "testClassName" to testClassPackagePath),
           "metadata" to
               getMetadata(
-                  "Runs Gradle test $testClassPackagePath in CI.", projectBuildPath, "test"),
+                  "Runs Gradle test $testClassPackagePath in CI.",
+                  projectBuildPath,
+                  "test",
+                  parsingMethod = parsingMethod.name.lowercase()),
           "cache" to true,
           "inputs" to testTaskInputs)
 

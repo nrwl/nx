@@ -36,9 +36,9 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("ActualTestClass"))
+    assertTrue(result.classes.containsKey("ActualTestClass"))
     assertFalse(
-        result.containsKey("CustomTestAnnotation"),
+        result.classes.containsKey("CustomTestAnnotation"),
         "Annotation classes should not be included as test targets")
   }
 
@@ -98,9 +98,9 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("AnnotatedTest"))
-    assertFalse(result.containsKey("FirstAnnotation"))
-    assertFalse(result.containsKey("SecondAnnotation"))
+    assertTrue(result.classes.containsKey("AnnotatedTest"))
+    assertFalse(result.classes.containsKey("FirstAnnotation"))
+    assertFalse(result.classes.containsKey("SecondAnnotation"))
   }
 
   @Test
@@ -127,9 +127,10 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("ActualTestClass"))
+    assertTrue(result.classes.containsKey("ActualTestClass"))
     assertFalse(
-        result.containsKey("TestStatus"), "Enum classes should not be included as test targets")
+        result.classes.containsKey("TestStatus"),
+        "Enum classes should not be included as test targets")
   }
 
   @Test
@@ -189,9 +190,9 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("EnumUserTest"))
-    assertFalse(result.containsKey("TestStatus"))
-    assertFalse(result.containsKey("Priority"))
+    assertTrue(result.classes.containsKey("EnumUserTest"))
+    assertFalse(result.classes.containsKey("TestStatus"))
+    assertFalse(result.classes.containsKey("Priority"))
   }
 
   @Test
@@ -226,13 +227,14 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("ExtendWithTestClass"))
-    assertTrue(result.containsKey("CustomAnnotatedTestClass"))
+    assertTrue(result.classes.containsKey("ExtendWithTestClass"))
+    assertTrue(result.classes.containsKey("CustomAnnotatedTestClass"))
     assertFalse(
-        result.containsKey("AssertFileChannelDataBlocksClosed"),
+        result.classes.containsKey("AssertFileChannelDataBlocksClosed"),
         "Annotation class should not be a test target")
     assertFalse(
-        result.containsKey("TestAnnotation"), "Annotation class should not be a test target")
+        result.classes.containsKey("TestAnnotation"),
+        "Annotation class should not be a test target")
   }
 
   @Test
@@ -261,11 +263,12 @@ class TestClassParserTest {
     val result = getAllVisibleClassesWithNestedAnnotation(file)
 
     assertNotNull(result)
-    assertTrue(result.containsKey("MixedTest"))
+    assertTrue(result.classes.containsKey("MixedTest"))
     assertFalse(
-        result.containsKey("TestStatus"), "Enum classes should not be included as test targets")
+        result.classes.containsKey("TestStatus"),
+        "Enum classes should not be included as test targets")
     assertFalse(
-        result.containsKey("CustomAnnotation"),
+        result.classes.containsKey("CustomAnnotation"),
         "Annotation classes should not be included as test targets")
   }
 
