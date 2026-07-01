@@ -363,7 +363,9 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
     });
   });
 
-  it('bridges yarn-only bare _auth, username, and _password keys when always-auth is set', () => {
+  it('re-keys yarn-only bare _auth, username, and _password onto the default registry dart when always-auth is set', () => {
+    // npm honors auth only in the nerf-darted form; with no registry configured
+    // the spawned npm queries its own default, so the bare creds target it.
     files['/repo/.npmrc'] = [
       '_auth=ZmFrZS1iYXNlNjQ=',
       'username=alice',
@@ -371,9 +373,78 @@ describe('getYarnClassicSpawnRegistryEnv', () => {
       'always-auth=true',
     ].join('\n');
     expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
-      npm_config__auth: 'ZmFrZS1iYXNlNjQ=',
-      npm_config_username: 'alice',
-      npm_config__password: 'ZmFrZS1wYXNz',
+      'npm_config_//registry.npmjs.org/:_auth': 'ZmFrZS1iYXNlNjQ=',
+      'npm_config_//registry.npmjs.org/:username': 'alice',
+      'npm_config_//registry.npmjs.org/:_password': 'ZmFrZS1wYXNz',
     });
+  });
+
+  it('re-keys a yarn-only bare _authToken onto the resolved custom registry dart', () => {
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('re-keys a yarn-only bare _authToken onto the scoped registry dart for a scoped fetch', () => {
+    // yarn attaches a bare global token to the registry it resolves for the
+    // package, which for a scoped fetch is the scoped registry, not the default.
+    files['/repo/.npmrc'] = [
+      '@sc:registry=https://reg-d.example.com/',
+      '_authToken=ancestor-token',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('@sc/pkg', ROOT)).toEqual({
+      'npm_config_@sc:registry': 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'ancestor-token',
+    });
+  });
+
+  it('prefers a yarn-only nerf-darted token over a bare one for the same registry', () => {
+    // yarn's getRegistryOrGlobalOption takes the registry-scoped key first, so
+    // the bare token must not overwrite it.
+    files['/repo/.npmrc'] = [
+      'registry=https://reg-d.example.com/',
+      '//reg-d.example.com/:_authToken=scoped-token',
+      '_authToken=bare-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      npm_config_registry: 'https://reg-d.example.com/',
+      'npm_config_//reg-d.example.com/:_authToken': 'scoped-token',
+    });
+  });
+
+  it('re-keys a bare _authToken from the workspace .npmrc onto the resolved registry dart', () => {
+    // npm honors bare auth from no source, so even a native bare token (which
+    // yarn sends via getOption) must be darted for the spawned npm. The registry
+    // itself is npm-native, so only the token is bridged.
+    files[`${ROOT}/.npmrc`] = [
+      'registry=https://reg-b.example.com/',
+      '_authToken=project-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({
+      'npm_config_//reg-b.example.com/:_authToken': 'project-token',
+    });
+  });
+
+  it('keeps a native nerf-darted token over a yarn-only bare one for the same registry', () => {
+    // npm reads the project nerf-darted key itself; the ancestor bare token must
+    // not shadow it via the env tier, matching yarn's registry-scoped-over-global
+    // order.
+    files[`${ROOT}/.npmrc`] = [
+      'registry=https://reg-b.example.com/',
+      '//reg-b.example.com/:_authToken=project-token',
+    ].join('\n');
+    files['/repo/.npmrc'] = [
+      '_authToken=ancestor-token',
+      'always-auth=true',
+    ].join('\n');
+    expect(getYarnClassicSpawnRegistryEnv('is-even', ROOT)).toEqual({});
   });
 });

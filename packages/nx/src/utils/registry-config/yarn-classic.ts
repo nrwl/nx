@@ -6,6 +6,7 @@ import {
   ancestorDirectories,
   expandEnvVars,
   getPackageScope,
+  nerfDart,
   readEnvVar,
   setCafile,
   setProxies,
@@ -114,26 +115,34 @@ export function getYarnClassicSpawnRegistryEnv(
     })),
   ];
 
-  resolveRegistry(env, npmrcChain, yarnrcChain, cliRegistryChain, scope);
+  const authRegistry = resolveRegistry(
+    env,
+    npmrcChain,
+    yarnrcChain,
+    cliRegistryChain,
+    scope
+  );
   // yarn tilde-expands paths against userHomeDir.default (the primary home).
   resolveOptions(env, npmrcChain, yarnrcChain, root, primary.dir);
-  resolveAuth(env, npmrcChain, yarnrcChain, scope);
+  resolveAuth(env, npmrcChain, yarnrcChain, scope, authRegistry);
   return env;
 }
 
-// yarn reads registry auth only from the .npmrc chain (never .yarnrc), keyed by
-// the registry-URL nerf-dart, with the same project > home > etc > ancestors
-// precedence. It attaches that auth only on a scoped fetch, or on an unscoped
-// one when always-auth is set for the registry (registry-scoped key, else
-// global). npm reads the native files itself, so a yarn-only winner is bridged,
-// but only when yarn would send it; bridging unconditionally would make npm
-// authenticate where yarn stays anonymous and 401 on a registry that serves the
-// package without credentials.
+// yarn reads registry auth only from the .npmrc chain (never .yarnrc), with the
+// same project > home > etc > ancestors precedence. Its getRegistryOrGlobalOption
+// takes a registry-scoped (nerf-darted) key first, else the bare global key. It
+// attaches that auth only on a scoped fetch, or on an unscoped one when
+// always-auth is set for the registry (registry-scoped key, else global). npm
+// reads the native files itself, so a yarn-only winner is bridged, but only when
+// yarn would send it; bridging unconditionally would make npm authenticate where
+// yarn stays anonymous and 401 on a registry that serves the package without
+// credentials.
 function resolveAuth(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
   yarnrcChain: RcFile[],
-  scope: string | null
+  scope: string | null,
+  authRegistry: string
 ): void {
   const authKeys = new Set<string>();
   for (const file of npmrcChain) {
@@ -146,9 +155,16 @@ function resolveAuth(
       }
     }
   }
+  // npm honors auth only in the nerf-darted form, so a bare global key
+  // (_authToken/_auth/username/_password) is re-keyed onto the registry yarn
+  // would send it to, from any source: npm ignores a bare key even in its own
+  // .npmrc, while yarn's getOption reads it from the whole chain. Values carry
+  // over as-is: npm consumes the _auth/_password base64 the way yarn reads it.
+  const dart = nerfDart(authRegistry);
+  const bareBridges: { key: string; value: string }[] = [];
   for (const key of authKeys) {
     const winner = firstString(npmrcChain, key);
-    if (!winner || winner.npmNative) {
+    if (!winner) {
       continue;
     }
     // yarn authenticates a scoped fetch unconditionally; an unscoped one only
@@ -156,9 +172,23 @@ function resolveAuth(
     if (!scope && !alwaysAuthFor(key, npmrcChain, yarnrcChain)) {
       continue;
     }
-    // _password/_authToken/_auth values are stored (and consumed by npm) in the
-    // same encoding yarn reads them, so they bridge verbatim.
-    env[`npm_config_${key}`] = winner.value;
+    if (key.startsWith('//')) {
+      // Already nerf-darted: npm reads the native ones itself.
+      if (!winner.npmNative) {
+        env[`npm_config_${key}`] = winner.value;
+      }
+    } else if (dart) {
+      bareBridges.push({ key, value: winner.value });
+    }
+  }
+  for (const { key, value } of bareBridges) {
+    // yarn's getRegistryOrGlobalOption takes a registry-scoped key over the bare
+    // global one, and npm reads a native scoped key itself, so a matching
+    // nerf-darted key (from any tier) must not be shadowed by the bare value.
+    if (firstString(npmrcChain, `${dart}:${key}`)) {
+      continue;
+    }
+    env[`npm_config_${dart}:${key}`] = value;
   }
 }
 
@@ -211,17 +241,37 @@ function isAuthKey(key: string): boolean {
   return BARE_AUTH_KEYS.has(key);
 }
 
+// Bridges the registry surfaces yarn resolves that npm cannot see, and returns
+// the registry the spawned npm will query for the package (yarn's getRegistry
+// order: a scoped registry first, else the unscoped one, else npm's own
+// default). That registry's nerf-dart is where bare global auth is re-keyed.
 function resolveRegistry(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
   yarnrcChain: RcFile[],
   cliYarnrcChain: RcFile[],
   scope: string | null
-): void {
-  if (scope) {
-    resolveScopedRegistry(env, npmrcChain, yarnrcChain, scope);
-  }
+): string {
+  const scopedRegistry = scope
+    ? resolveScopedRegistry(env, npmrcChain, yarnrcChain, scope)
+    : undefined;
+  const unscopedRegistry = resolveUnscopedRegistry(
+    env,
+    npmrcChain,
+    yarnrcChain,
+    cliYarnrcChain
+  );
+  // npm's own default when nothing is configured (yarn's default is npmjs' CNAME
+  // and npm stays on registry.npmjs.org), so the dart lands where npm queries.
+  return scopedRegistry ?? unscopedRegistry ?? 'https://registry.npmjs.org/';
+}
 
+function resolveUnscopedRegistry(
+  env: NpmConfigEnv,
+  npmrcChain: RcFile[],
+  yarnrcChain: RcFile[],
+  cliYarnrcChain: RcFile[]
+): string | undefined {
   // 1. A `--registry`/`--install.registry` line in a CLI-rc .yarnrc lands at
   // yarn's CLI tier, above npm_config_registry env, so it always needs bridging.
   const cliRegistry =
@@ -229,17 +279,18 @@ function resolveRegistry(
     firstString(cliYarnrcChain, '--registry');
   if (cliRegistry) {
     setRegistry(env, cliRegistry.value);
-    return;
+    return cliRegistry.value;
   }
   // 2. npm_config_registry env: npm resolves it natively.
-  if (readEnvVar(process.env, 'npm_config_registry') !== undefined) {
-    return;
+  const npmConfigRegistry = readEnvVar(process.env, 'npm_config_registry');
+  if (npmConfigRegistry !== undefined) {
+    return npmConfigRegistry;
   }
   // 3. YARN_REGISTRY env (yarn-only).
   const yarnRegistryEnv = readEnvVar(process.env, 'YARN_REGISTRY');
   if (yarnRegistryEnv !== undefined) {
     setRegistry(env, yarnRegistryEnv);
-    return;
+    return yarnRegistryEnv;
   }
   // 4. The .npmrc chain is exhausted before .yarnrc is consulted.
   const npmrcRegistry = firstString(npmrcChain, 'registry');
@@ -247,7 +298,7 @@ function resolveRegistry(
     if (!npmrcRegistry.npmNative) {
       setRegistry(env, npmrcRegistry.value);
     }
-    return;
+    return npmrcRegistry.value;
   }
   // 5. .yarnrc registry (every entry yarn-only). The yarn default is npmjs'
   // CNAME; leaving npm on registry.npmjs.org keeps nerf-darted auth working.
@@ -257,31 +308,38 @@ function resolveRegistry(
     yarnrcRegistry.value.replace(/\/$/, '') !== YARN_CLASSIC_DEFAULT_REGISTRY
   ) {
     setRegistry(env, yarnrcRegistry.value);
+    return yarnrcRegistry.value;
   }
+  return undefined;
 }
 
+// Bridges the scoped registry when a yarn-only surface wins, and returns the
+// scoped registry yarn resolves (native or not) so auth can dart onto it.
 function resolveScopedRegistry(
   env: NpmConfigEnv,
   npmrcChain: RcFile[],
   yarnrcChain: RcFile[],
   scope: string
-): void {
+): string | undefined {
   const scopedKey = `${scope}:registry`;
   // npm config (env + .npmrc) wins over .yarnrc for scoped keys.
-  if (process.env[`npm_config_${scopedKey}`] !== undefined) {
-    return;
+  const envRegistry = process.env[`npm_config_${scopedKey}`];
+  if (envRegistry !== undefined) {
+    return envRegistry;
   }
   const npmScoped = firstString(npmrcChain, scopedKey);
   if (npmScoped) {
     if (!npmScoped.npmNative) {
       setScopedRegistry(env, scope, npmScoped.value);
     }
-    return;
+    return npmScoped.value;
   }
   const yarnScoped = firstString(yarnrcChain, scopedKey);
   if (yarnScoped) {
     setScopedRegistry(env, scope, yarnScoped.value);
+    return yarnScoped.value;
   }
+  return undefined;
 }
 
 function resolveOptions(
