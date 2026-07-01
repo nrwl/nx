@@ -94,7 +94,19 @@ export class DbCache {
       nxCloudRemoteCache: RemoteCache;
       skipRemoteCache?: boolean;
     }
-  ) {}
+  ) {
+    if (
+      !options.skipRemoteCache &&
+      process.env.NX_REMOTE_CACHE_NON_FATAL === 'true'
+    ) {
+      output.note({
+        title: 'Remote Cache Non-Fatal',
+        bodyLines: [
+          'Nx will continue running, but any errors encountered while accessing the remote cache will be ignored.',
+        ],
+      });
+    }
+  }
 
   async init() {
     // This should be cheap because we've already loaded
@@ -117,10 +129,22 @@ export class DbCache {
     if (this.remoteCache) {
       // didn't find it locally but we have a remote cache
       // attempt remote cache
-      const res = await this.remoteCache.retrieve(
-        task.hash,
-        this.cache.cacheDirectory
-      );
+      const res = await this.remoteCache
+        .retrieve(task.hash, this.cache.cacheDirectory)
+        .catch((error) => {
+          if (process.env.NX_REMOTE_CACHE_NON_FATAL === 'true') {
+            output.warn({
+              title: 'Remote Cache Non-Fatal Retrieval Failure',
+              bodyLines: [
+                `Warning: Remote cache error occurred but was ignored due to NX_REMOTE_CACHE_NON_FATAL=true. Nx will continue running, but nothing will be read from the remote cache. Error details:`,
+                error instanceof Error ? error.message : String(error),
+              ],
+            });
+            return null;
+          } else {
+            throw error;
+          }
+        });
 
       if (res) {
         this.applyRemoteCacheResults(task.hash, res, task.outputs);
@@ -177,10 +201,22 @@ export class DbCache {
     if (remoteMisses.length > 0) {
       await Promise.all(
         remoteMisses.map(async (task) => {
-          const res = await this.remoteCache.retrieve(
-            task.hash,
-            this.cache.cacheDirectory
-          );
+          const res = await this.remoteCache
+            .retrieve(task.hash, this.cache.cacheDirectory)
+            .catch((error) => {
+              if (process.env.NX_REMOTE_CACHE_NON_FATAL === 'true') {
+                output.warn({
+                  title: 'Remote Cache Non-Fatal Batch Retrieval Failure',
+                  bodyLines: [
+                    `Warning: Remote cache error occurred but was ignored due to NX_REMOTE_CACHE_NON_FATAL=true. Nx will continue running, but nothing will be read from the remote cache. Error details:`,
+                    error instanceof Error ? error.message : String(error),
+                  ],
+                });
+                return null;
+              } else {
+                throw error;
+              }
+            });
           if (res) {
             this.applyRemoteCacheResults(task.hash, res, task.outputs);
             results.set(task.hash, {
@@ -226,12 +262,21 @@ export class DbCache {
       getTaskIOService().notifyTaskOutputs(task.id, expandedOutputs);
 
       if (this.remoteCache) {
-        await this.remoteCache.store(
-          task.hash,
-          this.cache.cacheDirectory,
-          terminalOutput,
-          code
-        );
+        await this.remoteCache
+          .store(task.hash, this.cache.cacheDirectory, terminalOutput, code)
+          .catch((error) => {
+            if (process.env.NX_REMOTE_CACHE_NON_FATAL === 'true') {
+              output.warn({
+                title: 'Remote Cache Non-Fatal Store Failure',
+                bodyLines: [
+                  `Warning: Remote cache error occurred but was ignored due to NX_REMOTE_CACHE_NON_FATAL=true. Nx will continue running, but nothing will be written to the remote cache. Error details:`,
+                  error instanceof Error ? error.message : String(error),
+                ],
+              });
+            } else {
+              throw error;
+            }
+          });
       }
     });
   }
