@@ -452,6 +452,50 @@ describe('Cypress Component Testing Configuration', () => {
     ).toMatchSnapshot('component.ts');
   });
 
+  it('should disable justInTimeCompile on Cypress 14+', async () => {
+    mockedInstalledCypressVersion.mockReturnValue(14);
+    await generateTestLibrary(tree, { directory: 'my-lib', skipFormat: true });
+    await setup(tree, {
+      project: 'my-lib',
+      name: 'something',
+      standalone: false,
+    });
+    projectGraph = {
+      nodes: {
+        something: {
+          name: 'something',
+          type: 'app',
+          data: { ...readProjectConfiguration(tree, 'something') } as any,
+        },
+        'my-lib': {
+          name: 'my-lib',
+          type: 'lib',
+          data: { ...readProjectConfiguration(tree, 'my-lib') } as any,
+        },
+      },
+      dependencies: {
+        'my-lib': [
+          {
+            type: DependencyType.static,
+            source: 'my-lib',
+            target: 'something',
+          },
+        ],
+      },
+    };
+
+    await cypressComponentConfiguration(tree, {
+      project: 'my-lib',
+      buildTarget: 'something:build',
+      generateTests: false,
+      skipFormat: true,
+    });
+
+    const config = tree.read('my-lib/cypress.config.ts', 'utf-8');
+    expect(config).toContain('...nxComponentTestingPreset(__filename)');
+    expect(config).toContain('justInTimeCompile: false');
+  });
+
   it('should work with simple components', async () => {
     updateJson(tree, 'package.json', (json) => {
       json.dependencies = {

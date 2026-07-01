@@ -106,11 +106,17 @@ ${updatedConfigContents}`;
  * doing so unconditionally produces mixed-syntax files in CJS workspaces
  * (an ESM `import` followed by a CJS `module.exports`), so prefer passing
  * `presetImportPath`.
+ *
+ * Pass `cypressMajorVersion` to opt webpack setups out of `justInTimeCompile`
+ * on Cypress 14+, where it defaults to `true` and can intermittently run 0
+ * tests in CI. The opt-out is emitted as an explicit `justInTimeCompile: false`
+ * so it is visible and reversible.
  **/
 export async function addDefaultCTConfig(
   cyConfigContents: string,
   options: NxComponentTestingOptions = {},
-  presetImportPath?: string
+  presetImportPath?: string,
+  cypressMajorVersion?: number | null
 ) {
   if (!cyConfigContents) {
     throw new Error('The passed in cypress config file is empty!');
@@ -131,6 +137,12 @@ export async function addDefaultCTConfig(
     // See addDefaultE2EConfig for the rationale on __filename vs
     // import.meta.url.
     const pathToConfig = isCommonJS ? '__filename' : 'import.meta.url';
+    // justInTimeCompile only applies to the webpack dev server and only exists
+    // on Cypress 14+, where it defaults to true.
+    const disableJustInTimeCompile =
+      options.bundler !== 'vite' &&
+      cypressMajorVersion != null &&
+      cypressMajorVersion >= 14;
     let configValue = `nxComponentTestingPreset(${pathToConfig})`;
     if (options) {
       if (options.bundler !== 'vite') {
@@ -145,6 +157,15 @@ export async function addDefaultCTConfig(
       }
     }
 
+    const componentValue = disableJustInTimeCompile
+      ? `{
+    ...${configValue},
+    // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
+    // intermittently run 0 tests in CI. Remove this line to opt back in.
+    justInTimeCompile: false,
+  }`
+      : configValue;
+
     updatedConfigContents = tsquery.replace(
       cyConfigContents,
       `${TS_QUERY_EXPORT_CONFIG_PREFIX} ObjectLiteralExpression:first-child`,
@@ -152,11 +173,11 @@ export async function addDefaultCTConfig(
         if (node.properties.length > 0) {
           return `{
   ${node.properties.map((p) => p.getText()).join(',\n')},
-  component: ${configValue}
+  component: ${componentValue}
 }`;
         }
         return `{
-  component: ${configValue}
+  component: ${componentValue}
 }`;
       }
     );
