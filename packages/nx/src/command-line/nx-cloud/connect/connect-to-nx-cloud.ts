@@ -229,24 +229,32 @@ function sleep(ms: number) {
 
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
-  key: MessageKey = 'setupNxCloud'
+  key: MessageKey = 'setupNxCloud',
+  recordCompletion = true
 ): Promise<MessageOptionKey> {
   const res = await nxCloudPrompt(key, utmMediumForCommand(command));
-  await recordStat({
-    command,
-    nxVersion,
-    useCloud: res === 'yes',
-    meta: {
-      type: 'complete',
-      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
-      nxCloudArg: res,
-      nodeVersion: process.versions.node,
-      os: process.platform,
-      packageManager: detectPackageManager(),
-      aiAgent: isAiAgent(),
-      isCI: isCI(),
-    },
-  });
+  // TODO: once legacy init-v1 (the NX_ADD_PLUGINS=false / useInferencePlugins:false path) is
+  // removed, drop this recordStat and the recordCompletion flag entirely - init-v2 records its
+  // own complete, and view-logs should record its own stat, so this shared helper won't record.
+  // init-v2 records its own init "complete" stat, so it opts out here to avoid double-counting.
+  // Other callers (e.g. view-logs, legacy init-v1) rely on this as their only completion event.
+  if (recordCompletion) {
+    await recordStat({
+      command,
+      nxVersion,
+      useCloud: res === 'yes',
+      meta: {
+        type: 'complete',
+        setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+        nxCloudArg: res,
+        nodeVersion: process.versions.node,
+        os: process.platform,
+        packageManager: detectPackageManager(),
+        aiAgent: isAiAgent(),
+        isCI: isCI(),
+      },
+    });
+  }
   return res;
 }
 
