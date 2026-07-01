@@ -121,7 +121,8 @@ async function addFiles(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cyFile, 'utf-8'),
     undefined,
-    '@nx/next/plugins/component-testing'
+    '@nx/next/plugins/component-testing',
+    installedCypressMajorVersion
   );
   tree.write(cyFile, updatedCyConfig);
 
