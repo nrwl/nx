@@ -13,8 +13,10 @@ import {
   typeScriptOverride,
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
+  detectTypedLintingShape,
   findEslintFile,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   replaceOverridesInLintConfig,
   useFlatConfig,
 } from '@nx/eslint/internal';
@@ -36,7 +38,7 @@ export async function addLintingGenerator(
       joinPathFragments(options.projectRoot, 'tsconfig.app.json'),
     ],
     unitTestRunner: options.unitTestRunner,
-    setParserOptionsProject: options.setParserOptionsProject,
+    enableTypedLinting: isTypedLintingEnabled(options),
     skipFormat: true,
     rootProject: rootProject,
     addPlugin: options.addPlugin ?? false,
@@ -46,12 +48,6 @@ export async function addLintingGenerator(
   tasks.push(lintTask);
 
   if (isEslintConfigSupported(tree)) {
-    const eslintFile = findEslintFile(tree, options.projectRoot);
-    // keep parser options if they exist
-    const hasParserOptions = tree
-      .read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
-      .includes(`${options.projectRoot}/tsconfig.*?.json`);
-
     if (useFlatConfig(tree)) {
       addPredefinedConfigToFlatLintConfig(
         tree,
@@ -91,11 +87,24 @@ export async function addLintingGenerator(
         rules: {},
       });
     } else {
+      // Legacy `.eslintrc` overrides are fully replaced below, which would drop
+      // an existing `parserOptions.project`. Detect it first so we can carry it
+      // over. (Flat configs keep typed linting via `lintProjectGenerator`, so
+      // this is only needed on the legacy stack.)
+      const eslintFile = findEslintFile(tree, options.projectRoot);
+      const eslintFileContent = eslintFile
+        ? tree.read(joinPathFragments(options.projectRoot, eslintFile), 'utf8')
+        : null;
+      const hasTypedLinting =
+        !!eslintFileContent &&
+        detectTypedLintingShape(eslintFileContent) !== null;
       replaceOverridesInLintConfig(tree, options.projectRoot, [
         ...(rootProject ? [typeScriptOverride, javaScriptOverride] : []),
         {
           files: ['*.ts'],
-          ...(hasParserOptions
+          // Legacy `.eslintrc` is on typescript-eslint v7, which only supports
+          // `parserOptions.project` (no `projectService`).
+          ...(hasTypedLinting
             ? {
                 parserOptions: {
                   project: [`${options.projectRoot}/tsconfig.*?.json`],

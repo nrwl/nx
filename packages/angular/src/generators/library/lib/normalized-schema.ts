@@ -19,6 +19,10 @@ export interface NormalizedSchema {
     tags?: string;
     strict?: boolean;
     compilationMode?: 'full' | 'partial';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+     */
     setParserOptionsProject?: boolean;
     skipModule?: boolean;
     skipPackageJson?: boolean;

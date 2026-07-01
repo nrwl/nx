@@ -15,6 +15,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   useFlatConfig,
 } from '@nx/eslint/internal';
 
@@ -30,7 +31,7 @@ export async function addLinting(host: Tree, options: NormalizedSchema) {
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
       skipPackageJson: options.skipPackageJson,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);

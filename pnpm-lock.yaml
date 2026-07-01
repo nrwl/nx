@@ -2337,6 +2337,9 @@ importers:
       '@angular/build':
         specifier: catalog:angular-supported-versions
         version: 22.0.1(c06a0d8089a6508a7b147cd4ba81ec48)
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -2349,6 +2352,9 @@ importers:
       '@nx/module-federation':
         specifier: workspace:*
         version: link:../module-federation
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/rspack':
         specifier: workspace:*
         version: link:../rspack
@@ -2395,9 +2401,6 @@ importers:
         specifier: ^5.8.0
         version: 5.10.0
     devDependencies:
-      '@nx/cypress':
-        specifier: workspace:*
-        version: link:../cypress
       '@nx/vitest':
         specifier: workspace:*
         version: link:../vitest
@@ -2858,6 +2861,9 @@ importers:
       '@expo/metro':
         specifier: '>= 55.0.0'
         version: 56.0.0
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -2867,6 +2873,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/react':
         specifier: workspace:*
         version: link:../react
@@ -3326,6 +3335,9 @@ importers:
       '@nuxt/schema':
         specifier: ^3.0.0 || ^4.0.0
         version: 3.21.2
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
@@ -3335,6 +3347,9 @@ importers:
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/vite':
         specifier: workspace:*
         version: link:../vite
@@ -3711,12 +3726,18 @@ importers:
 
   packages/remix:
     dependencies:
+      '@nx/cypress':
+        specifier: workspace:*
+        version: link:../cypress
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
       '@nx/js':
         specifier: workspace:*
         version: link:../js
+      '@nx/playwright':
+        specifier: workspace:*
+        version: link:../playwright
       '@nx/react':
         specifier: workspace:*
         version: link:../react
@@ -27243,7 +27264,7 @@ snapshots:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
-      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
+      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
       '@angular-devkit/core': 22.0.1(chokidar@5.0.0)
       '@angular/build': 22.0.1(d4799a1cc2eb4e7950d697bb9fc8d9a1)
       '@angular/compiler-cli': 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
@@ -27344,7 +27365,7 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
+  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
     dependencies:
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
       rxjs: 7.8.2

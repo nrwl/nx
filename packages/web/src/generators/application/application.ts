@@ -323,11 +323,19 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
 
   createApplicationFiles(host, options);
 
+  let enableTypedLinting = false;
   if (options.linter === 'eslint') {
     const { lintProjectGenerator } = ensurePackage<typeof import('@nx/eslint')>(
       '@nx/eslint',
       nxVersion
     );
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
+    // exposes the temp install via `Module._initPaths`, which ESM ignores.
+    const {
+      isTypedLintingEnabled,
+      addIgnoresToLintConfig,
+    }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
+    enableTypedLinting = isTypedLintingEnabled(options);
     const lintTask = await lintProjectGenerator(host, {
       linter: options.linter,
       project: options.projectName,
@@ -336,18 +344,13 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting,
       addPlugin: options.addPlugin,
     });
     tasks.push(lintTask);
 
     // Add out-tsc ignore pattern when using TS solution setup
     if (options.isUsingTsSolutionConfig) {
-      // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
-      // exposes the temp install via `Module._initPaths`, which ESM ignores.
-      const {
-        addIgnoresToLintConfig,
-      }: typeof import('@nx/eslint/internal') = require('@nx/eslint/internal');
       addIgnoresToLintConfig(host, options.appProjectRoot, ['**/out-tsc']);
     }
   }
@@ -394,7 +397,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       nxVersion
     );
     ensurePackage('@nx/vitest', nxVersion);
-    // CommonJS `require` instead of dynamic ESM `import` — `ensurePackage`
+    // CommonJS `require` instead of dynamic ESM `import`: `ensurePackage`
     // exposes the temp install via `Module._initPaths`, which ESM ignores.
     const {
       configurationGenerator,
@@ -530,6 +533,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       baseUrl: e2eWebServerInfo.e2eWebServerAddress,
       directory: 'src',
       skipFormat: true,
+      enableTypedLinting,
       webServerCommands: {
         default: e2eWebServerInfo.e2eWebServerCommand,
         production: e2eWebServerInfo.e2eCiWebServerCommand,
@@ -580,7 +584,7 @@ export async function applicationGeneratorInternal(host: Tree, schema: Schema) {
       directory: 'src',
       js: false,
       linter: options.linter,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting,
       webServerCommand: e2eWebServerInfo.e2eCiWebServerCommand,
       webServerAddress: e2eWebServerInfo.e2eCiBaseUrl,
       addPlugin: options.addPlugin,

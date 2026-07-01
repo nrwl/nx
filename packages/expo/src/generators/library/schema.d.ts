@@ -16,6 +16,10 @@ export interface Schema {
   importPath?: string;
   js: boolean; // default is false
   strict: boolean; // default is true
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   skipPackageJson?: boolean; // default is false
   addPlugin?: boolean;

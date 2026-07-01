@@ -10,6 +10,10 @@ export interface ApplicationGeneratorOptions {
   tags?: string;
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'jest' | 'none';
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   rootProject?: boolean;
   strict?: boolean;

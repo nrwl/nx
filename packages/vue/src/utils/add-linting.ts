@@ -9,6 +9,7 @@ import {
   addOverrideToLintConfig,
   addPredefinedConfigToFlatLintConfig,
   isEslintConfigSupported,
+  isTypedLintingEnabled,
   lintConfigHasOverride,
   replaceOverridesInLintConfig,
   updateOverrideInLintConfig,
@@ -31,6 +32,10 @@ export async function addLinting(
     name: string;
     projectRoot: string;
     unitTestRunner?: 'vitest' | 'none';
+    enableTypedLinting?: boolean;
+    /**
+     * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+     */
     setParserOptionsProject?: boolean;
     skipPackageJson?: boolean;
     rootProject?: boolean;
@@ -49,7 +54,7 @@ export async function addLinting(
       ],
       unitTestRunner: options.unitTestRunner,
       skipFormat: true,
-      setParserOptionsProject: options.setParserOptionsProject,
+      enableTypedLinting: isTypedLintingEnabled(options),
       rootProject: options.rootProject,
       addPlugin: options.addPlugin,
     });

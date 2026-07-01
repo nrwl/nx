@@ -12,6 +12,10 @@ export interface Schema {
   js?: boolean;
   skipPackageJson?: boolean;
   rootProject?: boolean;
+  enableTypedLinting?: boolean;
+  /**
+   * @deprecated Use `enableTypedLinting` instead. This option will be removed in Nx v24.
+   */
   setParserOptionsProject?: boolean;
   style?: 'css' | 'scss' | 'none';
   nxCloudToken?: string;
