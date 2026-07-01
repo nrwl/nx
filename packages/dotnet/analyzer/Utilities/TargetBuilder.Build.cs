@@ -50,7 +50,7 @@ public static partial class TargetBuilder
                     Args = [.. defaultFlags, "--configuration", "Release"]
                 }
             },
-            DependsOn = [$"^{targetName}"],
+            DependsOn = [new TargetDependency { Target = targetName, Dependencies = true, Params = "forward", Options = "forward" }],
             Cache = true,
             Inputs =
             [
