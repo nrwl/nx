@@ -2370,6 +2370,9 @@ importers:
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       magic-string:
         specifier: ~0.30.2
         version: 0.30.17
