@@ -44,9 +44,16 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
+    "./src/generators/*/schema.json": "./dist/src/generators/*/schema.json",
+    "./src/generators/*/schema": "./dist/src/generators/*/schema.d.ts",
     "./src/*": {
       "@nx/nx-source": "./src/*.ts",
       "types": "./dist/src/*.d.ts",
