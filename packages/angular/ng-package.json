@@ -11,6 +11,7 @@
     "@phenomnomnominal/tsquery",
     "@typescript-eslint/",
     "enquirer",
+    "jsonc-parser",
     "magic-string",
     "picocolors",
     "picomatch",
