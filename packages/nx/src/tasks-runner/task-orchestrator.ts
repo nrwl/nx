@@ -49,6 +49,7 @@ import { SharedRunningTask } from './running-tasks/shared-running-task';
 import {
   getEnvVariablesForBatchProcess,
   getEnvVariablesForTask,
+  getForceColorForChild,
   getTaskSpecificEnv,
 } from './task-env';
 import { TaskStatus } from './tasks-runner';
@@ -1047,9 +1048,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
@@ -1358,9 +1357,7 @@ export class TaskOrchestrator {
       ? getEnvVariablesForTask(
           task,
           taskSpecificEnv,
-          process.env.FORCE_COLOR === undefined
-            ? 'true'
-            : process.env.FORCE_COLOR,
+          getForceColorForChild(),
           this.options.skipNxCache,
           this.options.captureStderr,
           null,
