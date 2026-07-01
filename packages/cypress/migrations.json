@@ -59,7 +59,8 @@
         "cypress": ">=14.0.0"
       },
       "description": "Set `justInTimeCompile: false` in webpack component testing Cypress configs on Cypress 14+, where it defaults to true and can intermittently run 0 tests in CI.",
-      "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile"
+      "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile",
+      "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
     }
   },
   "packageJsonUpdates": {

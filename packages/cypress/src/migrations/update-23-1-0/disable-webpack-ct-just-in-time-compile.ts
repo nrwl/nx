@@ -2,22 +2,15 @@ import { formatFiles, type Tree } from '@nx/devkit';
 import { ensureTypescript } from '@nx/js/internal';
 import { query } from '@phenomnomnominal/tsquery';
 import type { CallExpression, PropertyAssignment } from 'typescript';
-import { resolveCypressConfigObject } from '../../utils/config';
+import {
+  JIT_COMPILE_DISABLE_COMMENT,
+  resolveCypressConfigObject,
+} from '../../utils/config';
 import {
   cypressProjectConfigs,
   getObjectProperty,
 } from '../../utils/migrations';
 
-const JIT_COMMENT = [
-  '// Cypress 14+ defaults justInTimeCompile to true (webpack only), which can',
-  '// intermittently run 0 tests in CI. Remove this line to opt back in.',
-];
-
-const NX_WEBPACK_CT_PRESETS = [
-  '@nx/angular/plugins/component-testing',
-  '@nx/react/plugins/component-testing',
-  '@nx/next/plugins/component-testing',
-];
 // @nx/remix component testing uses the vite dev server, so justInTimeCompile
 // (webpack only) does not apply even though the preset takes no bundler option.
 const NX_VITE_CT_PRESET = '@nx/remix/plugins/component-testing';
@@ -40,7 +33,7 @@ export default async function disableWebpackCtJustInTimeCompile(tree: Tree) {
     const component = getObjectProperty(config, 'component');
     if (
       !component ||
-      !isWebpackComponentTesting(contents, component) ||
+      !isWebpackComponentTesting(component) ||
       setsJustInTimeCompile(component)
     ) {
       continue;
@@ -55,10 +48,7 @@ export default async function disableWebpackCtJustInTimeCompile(tree: Tree) {
   }
 }
 
-function isWebpackComponentTesting(
-  contents: string,
-  component: PropertyAssignment
-): boolean {
+function isWebpackComponentTesting(component: PropertyAssignment): boolean {
   ts ??= ensureTypescript();
 
   // A vite bundler (inline devServer or preset options) opts out.
@@ -75,8 +65,9 @@ function isWebpackComponentTesting(
   // Preset-based config: trust it only when `component` actually calls
   // nxComponentTestingPreset, so a stale/unused preset import doesn't count.
   if (usesNxComponentTestingPreset(component)) {
-    // @nx/remix is the only vite-based Nx CT preset.
-    return getNxCtPreset(contents) !== NX_VITE_CT_PRESET;
+    // @nx/remix is the only vite-based Nx CT preset; resolve the import bound
+    // to the call so an unrelated remix reference elsewhere can't misclassify.
+    return getComponentTestingPresetImport(component) !== NX_VITE_CT_PRESET;
   }
 
   // Hand-written config: migrate only when it has an inline devServer framework.
@@ -118,13 +109,58 @@ function getComponentProperty(
   );
 }
 
-function getNxCtPreset(contents: string): string | null {
-  if (contents.includes(NX_VITE_CT_PRESET)) {
-    return NX_VITE_CT_PRESET;
+// Resolves the module specifier that binds the `nxComponentTestingPreset`
+// identifier used inside `component`, covering both ESM `import` and CJS
+// `require` cypress configs. Returns null when no such binding is found.
+function getComponentTestingPresetImport(
+  component: PropertyAssignment
+): string | null {
+  ts ??= ensureTypescript();
+
+  for (const statement of component.getSourceFile().statements) {
+    if (ts.isImportDeclaration(statement) && statement.importClause) {
+      const namedBindings = statement.importClause.namedBindings;
+      if (
+        namedBindings &&
+        ts.isNamedImports(namedBindings) &&
+        ts.isStringLiteral(statement.moduleSpecifier) &&
+        namedBindings.elements.some(
+          (element) => element.name.text === 'nxComponentTestingPreset'
+        )
+      ) {
+        return statement.moduleSpecifier.text;
+      }
+    }
+
+    if (ts.isVariableStatement(statement)) {
+      for (const declaration of statement.declarationList.declarations) {
+        const initializer = declaration.initializer;
+        if (
+          !initializer ||
+          !ts.isCallExpression(initializer) ||
+          !ts.isIdentifier(initializer.expression) ||
+          initializer.expression.text !== 'require' ||
+          !ts.isObjectBindingPattern(declaration.name)
+        ) {
+          continue;
+        }
+        const moduleSpecifier = initializer.arguments[0];
+        if (
+          moduleSpecifier &&
+          ts.isStringLiteral(moduleSpecifier) &&
+          declaration.name.elements.some(
+            (element) =>
+              ts.isIdentifier(element.name) &&
+              element.name.text === 'nxComponentTestingPreset'
+          )
+        ) {
+          return moduleSpecifier.text;
+        }
+      }
+    }
   }
-  return (
-    NX_WEBPACK_CT_PRESETS.find((preset) => contents.includes(preset)) ?? null
-  );
+
+  return null;
 }
 
 function setsJustInTimeCompile(component: PropertyAssignment): boolean {
@@ -138,29 +174,35 @@ function addJustInTimeCompile(
   ts ??= ensureTypescript();
 
   const indent = '    ';
-  const comment = JIT_COMMENT.map((line) => `${indent}${line}`).join('\n');
+  const comment = JIT_COMPILE_DISABLE_COMMENT.map(
+    (line) => `${indent}${line}`
+  ).join('\n');
   const newProperty = `${comment}\n${indent}justInTimeCompile: false,`;
   const initializer = component.initializer;
 
-  let componentValue: string;
+  // Object literal: insert the property after the last existing one, leaving
+  // the surrounding source (comments, formatting) untouched. `component` is
+  // gated to be non-empty before we reach here.
   if (ts.isObjectLiteralExpression(initializer)) {
-    if (initializer.properties.length === 0) {
-      componentValue = `{\n${newProperty}\n  }`;
-    } else {
-      // Preserve the existing object text (including comments) and insert the
-      // new property before the closing brace.
-      const objectText = contents.slice(
-        initializer.getStart(),
-        initializer.getEnd()
-      );
-      const beforeClose = objectText.replace(/\s*}$/, '');
-      const separator = /,\s*$/.test(beforeClose) ? '' : ',';
-      componentValue = `${beforeClose}${separator}\n${newProperty}\n  }`;
+    const properties = initializer.properties;
+    const lastProperty = properties[properties.length - 1];
+    let insertAt = lastProperty.getEnd();
+    if (properties.hasTrailingComma) {
+      // Insert after the existing trailing comma, not before it.
+      const commaIndex = contents.indexOf(',', insertAt);
+      if (commaIndex !== -1) {
+        insertAt = commaIndex + 1;
+      }
     }
-  } else {
-    componentValue = `{\n${indent}...${initializer.getText()},\n${newProperty}\n  }`;
+    const separator = properties.hasTrailingComma ? '' : ',';
+    return `${contents.slice(
+      0,
+      insertAt
+    )}${separator}\n${newProperty}${contents.slice(insertAt)}`;
   }
 
+  // Preset call (or any other expression): wrap it in an object and spread.
+  const componentValue = `{\n${indent}...${initializer.getText()},\n${newProperty}\n  }`;
   return `${contents.slice(
     0,
     component.getStart()

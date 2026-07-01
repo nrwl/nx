@@ -24,6 +24,15 @@ function addCypressProject(tree: Tree, name: string, config: string): string {
   return cypressConfigPath;
 }
 
+function expectValidTypeScript(content: string): void {
+  const ts = require('typescript');
+  const { diagnostics } = ts.transpileModule(content, {
+    reportDiagnostics: true,
+    compilerOptions: {},
+  });
+  expect(diagnostics ?? []).toEqual([]);
+}
+
 describe('disable-webpack-ct-just-in-time-compile', () => {
   let tree: Tree;
 
@@ -224,5 +233,71 @@ export default defineConfig({
     await migration(tree);
 
     expect(tree.read(configPath, 'utf-8')).toBe(original);
+  });
+
+  it('should keep valid syntax when the last property has no trailing comma before a comment', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'trailing-comment',
+      `import { defineConfig } from 'cypress';
+
+export default defineConfig({
+  component: {
+    devServer: {
+      framework: 'react',
+      bundler: 'webpack'
+    }
+    // keep the webpack devServer settings above
+  },
+});
+`
+    );
+
+    await migration(tree);
+
+    const updated = tree.read(configPath, 'utf-8');
+    expect(updated).toContain('justInTimeCompile: false');
+    expect(updated).toContain('// keep the webpack devServer settings above');
+    expectValidTypeScript(updated);
+  });
+
+  it('should migrate a webpack preset config even when a stale remix preset path appears elsewhere', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'stale-remix',
+      `import { defineConfig } from 'cypress';
+import { nxComponentTestingPreset } from '@nx/react/plugins/component-testing';
+// migrated from '@nx/remix/plugins/component-testing'
+
+export default defineConfig({
+  component: nxComponentTestingPreset(__filename),
+});
+`
+    );
+
+    await migration(tree);
+
+    const updated = tree.read(configPath, 'utf-8');
+    expect(updated).toContain('...nxComponentTestingPreset(__filename)');
+    expect(updated).toContain('justInTimeCompile: false');
+  });
+
+  it('should set justInTimeCompile:false for a CommonJS require-based preset config', async () => {
+    const configPath = addCypressProject(
+      tree,
+      'cjs-app',
+      `const { nxComponentTestingPreset } = require('@nx/react/plugins/component-testing');
+const { defineConfig } = require('cypress');
+module.exports = defineConfig({
+  component: nxComponentTestingPreset(__filename),
+});
+`
+    );
+
+    await migration(tree);
+
+    const updated = tree.read(configPath, 'utf-8');
+    expect(updated).toContain('...nxComponentTestingPreset(__filename)');
+    expect(updated).toContain('justInTimeCompile: false');
   });
 });

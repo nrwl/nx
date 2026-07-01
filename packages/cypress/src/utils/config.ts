@@ -24,6 +24,13 @@ const TS_QUERY_COMMON_JS_EXPORT_SELECTOR =
   'BinaryExpression:has(Identifier[name="module"]):has(Identifier[name="exports"])';
 const TS_QUERY_EXPORT_CONFIG_PREFIX = `:matches(ExportAssignment, ${TS_QUERY_COMMON_JS_EXPORT_SELECTOR}) `;
 
+// Shared so the CT generator (addDefaultCTConfig) and the
+// disable-webpack-ct-just-in-time-compile migration emit the identical note.
+export const JIT_COMPILE_DISABLE_COMMENT = [
+  '// Cypress 14+ defaults justInTimeCompile to true (webpack only), which can',
+  '// intermittently run 0 tests in CI. Remove this line to opt back in.',
+];
+
 export async function addDefaultE2EConfig(
   cyConfigContents: string,
   options: NxCypressE2EPresetOptions,
@@ -157,11 +164,13 @@ export async function addDefaultCTConfig(
       }
     }
 
+    const jitComment = JIT_COMPILE_DISABLE_COMMENT.map(
+      (line) => `    ${line}`
+    ).join('\n');
     const componentValue = disableJustInTimeCompile
       ? `{
     ...${configValue},
-    // Cypress 14+ defaults justInTimeCompile to true (webpack only), which can
-    // intermittently run 0 tests in CI. Remove this line to opt back in.
+${jitComment}
     justInTimeCompile: false,
   }`
       : configValue;
