@@ -37,6 +37,7 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     'BERRY_TEST_TOKEN',
     'BERRY_TEST_PRIMARY',
     'BERRY_TEST_FALLBACK',
+    '_BERRY_TEST_REGISTRY',
   ];
   const savedEnv: Record<string, string | undefined> = {};
 
@@ -591,6 +592,58 @@ describe('getYarnBerrySpawnRegistryEnv', () => {
     expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.16.0')).toEqual({
       npm_config_registry: 'https://reg-a.example.com/',
       'npm_config_//reg-a.example.com/:_authToken': '${NOT_A_VAR}',
+    });
+  });
+
+  it('expands an underscore-leading ${_VAR} for berry < 4.13 (legacy parser)', () => {
+    // Berry <= 4.12 accepts [\d\w_]+ env names, so ${_VAR} resolves the way yarn
+    // would; the registry auth then darts to the expanded host.
+    process.env._BERRY_TEST_REGISTRY = 'https://reg-legacy.example.com/';
+    projectRc(
+      [
+        'npmRegistryServer: "${_BERRY_TEST_REGISTRY}"',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: legacy-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.12.0')).toEqual({
+      npm_config_registry: 'https://reg-legacy.example.com/',
+      'npm_config_//reg-legacy.example.com/:_authToken': 'legacy-token',
+    });
+  });
+
+  it('leaves an underscore-leading ${_VAR} literal for berry >= 4.13 (regex tightened)', () => {
+    // 4.13 rewrote the parser to [a-zA-Z]\w*, so ${_VAR} is malformed (berry
+    // itself throws). The reference is left literal, which fails to parse as a
+    // registry URL, so no auth is darted.
+    process.env._BERRY_TEST_REGISTRY = 'https://reg-legacy.example.com/';
+    projectRc(
+      [
+        'npmRegistryServer: "${_BERRY_TEST_REGISTRY}"',
+        'npmAlwaysAuth: true',
+        'npmAuthToken: legacy-token',
+      ].join('\n')
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.13.0')).toEqual({
+      npm_config_registry: '${_BERRY_TEST_REGISTRY}',
+    });
+  });
+
+  it('expands a standard ${VAR} through the legacy parser for berry 3.x', () => {
+    process.env.BERRY_TEST_REGISTRY = 'https://reg-3x.example.com/';
+    projectRc('npmRegistryServer: "${BERRY_TEST_REGISTRY}"\n');
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '3.8.7')).toEqual({
+      npm_config_registry: 'https://reg-3x.example.com/',
+    });
+  });
+
+  it('honors a ${_VAR:-default} operator in the legacy parser', () => {
+    delete process.env._BERRY_TEST_REGISTRY;
+    projectRc(
+      'npmRegistryServer: "${_BERRY_TEST_REGISTRY:-https://reg-def.example.com/}"\n'
+    );
+    expect(getYarnBerrySpawnRegistryEnv('is-even', ROOT, '4.12.0')).toEqual({
+      npm_config_registry: 'https://reg-def.example.com/',
     });
   });
 

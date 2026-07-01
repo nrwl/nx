@@ -2,7 +2,7 @@ import { existsSync } from 'fs';
 import { minimatch } from 'minimatch';
 import { homedir } from 'os';
 import { dirname, join, resolve } from 'path';
-import { gte, major } from 'semver';
+import { gte, lt, major } from 'semver';
 import { readYamlFile } from '../fileutils';
 import {
   ancestorDirectories,
@@ -41,6 +41,11 @@ import {
  */
 
 const BERRY_DEFAULT_REGISTRY = 'https://registry.yarnpkg.com';
+
+// Berry rewrote its env-var expander in 4.13.0, tightening the variable-name
+// class from [\d\w_]+ (a leading _ or digit is valid) to [a-zA-Z]\w*. Below this
+// version the legacy parser applies.
+const BERRY_ENV_PARSER_REWRITE = '4.13.0';
 
 interface BerryRcFile {
   path: string;
@@ -130,11 +135,14 @@ export function getYarnBerrySpawnRegistryEnv(
   // Berry env-expands ${VAR}/${VAR-default}/${VAR:-default} in every string
   // setting at parse time, so expand before any URL parse / nerf-dart / base64
   // (e.g. `npmRegistryServer: "${MY_REGISTRY}"` must resolve to the real host or
-  // its auth/TLS keys are never emitted).
+  // its auth/TLS keys are never emitted). The 4.13 parser rewrite changed which
+  // names are valid, so pick the parser that matches the running version.
+  const legacy = lt(yarnVersion, BERRY_ENV_PARSER_REWRITE);
   const defaultRegistry = expandBerryEnvVars(
     process.env['YARN_NPM_REGISTRY_SERVER'] ??
       firstDefinedIn(rcFiles, (c) => c.npmRegistryServer) ??
-      BERRY_DEFAULT_REGISTRY
+      BERRY_DEFAULT_REGISTRY,
+    legacy
   );
   // npmScopes keys are scope names without the leading @.
   const scopeName = scope?.slice(1);
@@ -156,7 +164,8 @@ export function getYarnBerrySpawnRegistryEnv(
     scopeName === 'jsr' && !scopeConfigured && gte(yarnVersion, '4.9.0');
   const effectiveRegistry = scopeConfigured
     ? expandBerryEnvVars(
-        scopeEntry?.npmRegistryServer ?? BERRY_DEFAULT_REGISTRY
+        scopeEntry?.npmRegistryServer ?? BERRY_DEFAULT_REGISTRY,
+        legacy
       )
     : jsrDefault
       ? JSR_REGISTRY
@@ -210,8 +219,8 @@ export function getYarnBerrySpawnRegistryEnv(
   // Expand ${VAR} before use so the npmAuthIdent base64 decision (made on the
   // presence of a `:`) and the bridged value are computed on the real
   // credentials, matching berry. Env-sourced values are literal (no-op).
-  authToken = expandBerryValue(authToken);
-  authIdent = expandBerryValue(authIdent);
+  authToken = expandBerryValue(authToken, legacy);
+  authIdent = expandBerryValue(authIdent, legacy);
 
   // A scoped fetch authenticates (berry forces BEST_EFFORT); an unscoped fetch
   // only when npmAlwaysAuth is set on the selected config (npm view/pack leaves
@@ -292,6 +301,7 @@ function applyTls(
   effectiveRegistry: string,
   yarnVersion: string
 ): void {
+  const legacy = lt(yarnVersion, BERRY_ENV_PARSER_REWRITE);
   // v2/v3 use caFilePath; v4 renamed it to httpsCaFilePath (the wrong key for
   // the major makes berry itself abort, so a working workspace only has the
   // right one). Read both to stay version-tolerant.
@@ -335,20 +345,25 @@ function applyTls(
   }
 
   const httpProxy = expandBerryValue(
-    network.httpProxy ?? firstDefinedIn(rcFiles, (c) => c.httpProxy)
+    network.httpProxy ?? firstDefinedIn(rcFiles, (c) => c.httpProxy),
+    legacy
   );
   const httpsProxy = expandBerryValue(
-    network.httpsProxy ?? firstDefinedIn(rcFiles, (c) => c.httpsProxy)
+    network.httpsProxy ?? firstDefinedIn(rcFiles, (c) => c.httpsProxy),
+    legacy
   );
 
   const envCaFile =
     process.env['YARN_HTTPS_CA_FILE_PATH'] ?? process.env['YARN_CA_FILE_PATH'];
   if (envCaFile) {
-    setCafile(env, resolve(expandBerryEnvVars(envCaFile)));
+    setCafile(env, resolve(expandBerryEnvVars(envCaFile, legacy)));
   } else if (cafile) {
     // Berry expands env vars in path settings, then resolves relative to the rc
     // file's directory.
-    setCafile(env, resolve(cafile.baseDir, expandBerryEnvVars(cafile.value)));
+    setCafile(
+      env,
+      resolve(cafile.baseDir, expandBerryEnvVars(cafile.value, legacy))
+    );
   }
 
   const strictSsl =
@@ -432,17 +447,51 @@ function resolveNetworkSettings(
 
 // Berry's miscUtils.replaceEnvVariables, applied to every string setting:
 // ${VAR}, ${VAR-default} (default when unset), and ${VAR:-default} (default
-// when unset or empty). Defaults are themselves expanded, so nested forms like
-// ${A:-${B}} resolve and no stray brace leaks; `\$`, `\}`, and `\\` are
-// escapes. Berry throws on an undefined bare ${VAR} (which aborts berry itself,
-// so a working workspace never has one); we leave such a reference literal
-// rather than failing the migrate.
+// when unset or empty), then bridged. Berry throws on an undefined bare ${VAR}
+// (which aborts berry itself, so a working workspace never has one); we leave
+// such a reference literal rather than failing the migrate. 4.13.0 rewrote the
+// parser, so dispatch to the matching one: the scanner below (4.13+) expands
+// nested defaults like ${A:-${B}} and treats `\$`/`\}`/`\\` as escapes;
+// expandBerryEnvVarsLegacy is the older single-regex form.
 // see https://github.com/yarnpkg/berry/blob/c5857bdee5737425b879492db5e2732a5e6e14f2/packages/yarnpkg-core/sources/miscUtils.ts#L473
 function expandBerryEnvVars(
   value: string,
+  legacy: boolean,
   env: NodeJS.ProcessEnv = process.env
 ): string {
-  return scanBerryEnv(value, 0, env, false).text;
+  return legacy
+    ? expandBerryEnvVarsLegacy(value, env)
+    : scanBerryEnv(value, 0, env, false).text;
+}
+
+// Berry < 4.13 expanded env vars with a single regex: the name class is
+// [\d\w_]+ (a leading _ or digit is valid, unlike the 4.13+ [a-zA-Z]\w* above),
+// one leading backslash escapes the reference, ${VAR-default} substitutes the
+// default only when the var is unset while ${VAR:-default} also does so when it
+// is empty, and an undefined bare ${VAR} throws (left literal here to fail open).
+// See https://github.com/yarnpkg/berry/blob/%40yarnpkg/cli/4.12.0/packages/yarnpkg-core/sources/miscUtils.ts
+function expandBerryEnvVarsLegacy(
+  value: string,
+  env: NodeJS.ProcessEnv
+): string {
+  return value.replace(
+    /\\?\$\{(?<variableName>[\d\w_]+)(?<colon>:)?(?:-(?<fallback>[^}]*))?\}/g,
+    (match, ...args) => {
+      if (match.startsWith('\\')) {
+        return match.slice(1);
+      }
+      const { variableName, colon, fallback } = args[args.length - 1] as {
+        variableName: string;
+        colon?: string;
+        fallback?: string;
+      };
+      const resolved = env[variableName];
+      if (resolved || (Object.hasOwn(env, variableName) && !colon)) {
+        return resolved as string;
+      }
+      return fallback ?? match;
+    }
+  );
 }
 
 // Scans from `start`, expanding env-var references. When `nested` is set the
@@ -531,8 +580,11 @@ function isBerryFalseBoolean(value: unknown): boolean {
 }
 
 /** Expands ${VAR} in an optional berry string value, passing undefined through. */
-function expandBerryValue(value: string | undefined): string | undefined {
-  return value === undefined ? undefined : expandBerryEnvVars(value);
+function expandBerryValue(
+  value: string | undefined,
+  legacy: boolean
+): string | undefined {
+  return value === undefined ? undefined : expandBerryEnvVars(value, legacy);
 }
 
 function firstDefinedIn<T>(
