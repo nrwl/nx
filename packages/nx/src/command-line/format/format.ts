@@ -118,27 +118,30 @@ async function getPatterns(
 
     const p = parseFiles(args);
 
-    const supportedExtensions = new Set(
-      (await prettier.getSupportInfo()).languages
-        .flatMap((language) => language.extensions)
-        .filter((extension) => !!extension)
-        // Prettier supports ".swcrc" as a file instead of an extension
-        // So we add ".swcrc" as a supported extension manually
-        // which allows it to be considered for calculating "patterns"
-        .concat('.swcrc')
-    );
-
     const patterns = p.files
       .map((f) => path.relative(workspaceRoot, f))
-      .filter((f) => fileExists(f) && supportedExtensions.has(path.extname(f)));
+      .filter((f) => fileExists(f));
 
     // exclude patterns in .nxignore or .gitignore
     const nonIgnoredPatterns = getIgnoreObject().filter(patterns);
 
-    if (args.libsAndApps) {
-      return getPatternsFromApps(nonIgnoredPatterns);
+    const prettierPatterns: string[] = [];
+    for (const pattern of nonIgnoredPatterns) {
+      const fileInfo = await prettier.getFileInfo(
+        path.join(workspaceRoot, pattern),
+        {
+          resolveConfig: true,
+        }
+      );
+      if (!fileInfo.ignored && fileInfo.inferredParser) {
+        prettierPatterns.push(pattern);
+      }
     }
-    return nonIgnoredPatterns;
+
+    if (args.libsAndApps) {
+      return getPatternsFromApps(prettierPatterns);
+    }
+    return prettierPatterns;
   } catch (err) {
     output.error({
       title:
