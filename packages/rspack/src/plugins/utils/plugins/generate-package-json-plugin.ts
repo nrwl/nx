@@ -86,6 +86,9 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
               isProduction: true,
               helperDependencies: helperDependencies.map((dep) => dep.target),
               skipPackageManager: this.options.skipPackageManager,
+              // A pruned lockfile is always emitted alongside (except for bun,
+              // which ignores pnpm config), so drop baked pnpm config here.
+              prunedLockfile: true,
             }
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;

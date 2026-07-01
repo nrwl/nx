@@ -14,6 +14,7 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 import {
   type PackageJson,
   type PackageJsonDependencySection,
+  stripPrunedLockfilePnpmConfig,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
@@ -46,10 +47,14 @@ export default async function pruneLockfileExecutor(
   } else {
     const { lockfileName, lockFile } = createPrunedLockfile(
       packageJson,
-      context.projectGraph
+      context.projectGraph,
+      packageManager
     );
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
+    // The pruned lockfile bakes pnpm config into its snapshots, so strip the
+    // manifest's pnpm config to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    stripPrunedLockfilePnpmConfig(packageJson);
     writeFileSync(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
@@ -62,23 +67,32 @@ export default async function pruneLockfileExecutor(
   };
 }
 
-function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
-  const packageManager = detectPackageManager(workspaceRoot);
+function createPrunedLockfile(
+  packageJson: PackageJson,
+  graph: ProjectGraph,
+  packageManager: ReturnType<typeof detectPackageManager>
+) {
   const lockfileName = getLockFileName(packageManager);
   const lockFile = createLockFile(packageJson, graph, packageManager);
 
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  // Point every workspace-module dependency at its copied directory so the
+  // standalone output installs them as pnpm `file:` directory dependencies.
+  // Cover both prod-installed sections so an app that lists a workspace module
+  // under optionalDependencies stays in sync with the copied modules and the
+  // pruned lockfile. Gate strictly on graph membership: a `file:`/`link:` spec to
+  // a non-workspace local path (e.g. a vendored tarball) is left alone, since
+  // copy-workspace-modules only ever copies actual workspace projects.
+  for (const section of ['dependencies', 'optionalDependencies'] as const) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const pkgName of Object.keys(deps)) {
+      if (workspacePackages.has(pkgName)) {
+        deps[pkgName] = `file:./workspace_modules/${pkgName}`;
+      }
     }
   }
 

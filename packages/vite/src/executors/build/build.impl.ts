@@ -164,6 +164,9 @@ export async function* viteBuildExecutor(
           isProduction: !options.includeDevDependenciesInPackageJson, // By default we remove devDependencies since this is a production build.
           skipOverrides: options.skipOverrides,
           skipPackageManager: options.skipPackageManager,
+          // A pruned lockfile is always emitted alongside (except for bun,
+          // which ignores pnpm config), so drop baked pnpm config here.
+          prunedLockfile: true,
         }
       );
 

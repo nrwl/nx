@@ -24,7 +24,10 @@ import { DependentBuildableProjectNode } from '../buildable-libs-utils';
 import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import {
+  type PackageJson,
+  stripPrunedLockfilePnpmConfig,
+} from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
@@ -73,6 +76,9 @@ export function updatePackageJson(
         root: context.root,
         // By default we remove devDependencies since this is a production build.
         isProduction: true,
+        // Only drop baked pnpm config from the manifest when a pruned lockfile
+        // accompanies it; otherwise a fresh install needs it to resolve.
+        prunedLockfile: !!options.generateLockfile,
       },
       fileMap
     );
@@ -96,6 +102,12 @@ export function updatePackageJson(
     packageJson = fileExists(pathToPackageJson)
       ? readJsonFile(pathToPackageJson)
       : { name: context.projectName, version: '0.0.1' };
+    // The buildable-deps branch above strips pnpm config via createPackageJson's
+    // prunedLockfile flag; mirror it here so a verbatim manifest paired with a
+    // pruned lockfile does not trip ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    if (options.generateLockfile) {
+      stripPrunedLockfilePnpmConfig(packageJson);
+    }
   }
 
   if (packageJson.type === 'module') {

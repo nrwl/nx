@@ -140,17 +140,18 @@ export function getPruneTargets(
   'prune-lockfile': TargetConfiguration;
   'copy-workspace-modules': TargetConfiguration;
 } {
-  const lockFileName =
-    getLockFileName(detectPackageManager() ?? 'npm') ?? 'package-lock.json';
+  const packageManager = detectPackageManager() ?? 'npm';
+  const lockFileName = getLockFileName(packageManager) ?? 'package-lock.json';
+  const pruneLockfileOutputs = [
+    `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
+    `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
+  ];
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
       cache: true,
       executor: '@nx/js:prune-lockfile',
-      outputs: [
-        `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
-        `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
-      ],
+      outputs: pruneLockfileOutputs,
       options: {
         buildTarget,
       },

@@ -28,15 +28,16 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join, relative, sep } from 'path';
+import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
-const WORKSPACE_DEP_TYPES = [
-  'dependencies',
-  'optionalDependencies',
-  'peerDependencies',
-] as const;
+// The importer dep types whose workspace-module references get bundled as copied
+// directory packages: both ship in a production install. Must match the sections
+// copy-workspace-modules copies/rewrites and the snapshot emission below.
+// `devDependencies` are excluded (not installed in production); pnpm importers
+// carry no `peerDependencies` section.
+const WORKSPACE_DEP_TYPES = ['dependencies', 'optionalDependencies'] as const;
 
 let currentLockFileHash: string;
 
@@ -581,12 +582,14 @@ export function stringifyPnpmLockfile(
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
   const { lockfileVersion, packages, importers } = data;
 
+  const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const { snapshot: rootSnapshot, importers: requiredImporters } =
     mapRootSnapshot(
       packageJson,
       importers,
       packages,
       graph,
+      workspaceModules,
       +lockfileVersion,
       workspaceRoot
     );
@@ -596,11 +599,9 @@ export function stringifyPnpmLockfile(
     +lockfileVersion
   );
 
-  const workspaceModules = getWorkspacePackagesFromGraph(graph);
-
-  // Walk transitive workspace deps so every package copy-workspace-modules
-  // writes to disk has a matching importer block. Without this, pnpm errors
-  // with ERR_PNPM_OUTDATED_LOCKFILE on transitive workspace chains.
+  // Walk transitive workspace deps so every module copy-workspace-modules
+  // writes to disk gets a matching directory-package entry. Without this, pnpm
+  // errors with ERR_PNPM_OUTDATED_LOCKFILE on transitive workspace chains.
   const allRequiredImporters: Record<string, string> = { ...requiredImporters };
   const queue = Object.keys(requiredImporters);
   while (queue.length > 0) {
@@ -611,7 +612,10 @@ export function stringifyPnpmLockfile(
       const deps = importer[depType];
       if (!deps) continue;
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName) && !allRequiredImporters[depName]) {
+        if (
+          workspaceModules.has(depName) &&
+          !(depName in allRequiredImporters)
+        ) {
           allRequiredImporters[depName] =
             workspaceModules.get(depName)!.data.root;
           queue.push(depName);
@@ -620,31 +624,42 @@ export function stringifyPnpmLockfile(
     }
   }
 
-  const workspaceDependencyImporters: Record<string, ProjectSnapshot> = {};
+  // Emit each copied workspace module as a pnpm `file:` directory dependency,
+  // the shape `pnpm install` produces natively for a file: dependency. A module
+  // becomes a package keyed `<name>@file:workspace_modules/<name>` with a
+  // directory resolution and its resolved production closure; inter-module edges
+  // become `file:` refs. This is what a standalone production install expects:
+  // no `pnpm-workspace.yaml` and no importer blocks for the modules.
+  const workspaceModulePackages: PackageSnapshots = {};
   for (const [packageName, importerPath] of Object.entries(
     allRequiredImporters
   )) {
     const baseImporter = importers[importerPath];
     if (!baseImporter) continue;
-    const importer: ProjectSnapshot = structuredClone(baseImporter);
 
-    for (const depType of WORKSPACE_DEP_TYPES) {
-      const deps = importer[depType] as Record<string, string> | undefined;
+    const snapshot: PackageSnapshot = {
+      resolution: {
+        directory: `workspace_modules/${packageName}`,
+        type: 'directory',
+      },
+    } as PackageSnapshot;
+    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+      const deps = baseImporter[depType];
       if (!deps) continue;
-      for (const depName of Object.keys(deps)) {
-        if (!workspaceModules.has(depName)) continue;
-        // All workspace modules are siblings under workspace_modules/, so the
-        // relative path between them is relative(packageName, depName).
-        // Specifier must match the file: ref copy-workspace-modules writes
-        // to the package's package.json — pnpm errors on a mismatch.
-        const rel = relative(packageName, depName).split(sep).join('/');
-        if (!importer.specifiers) importer.specifiers = {};
-        importer.specifiers[depName] = `file:${rel}`;
-        deps[depName] = `link:${rel}`;
+      const resolved: Record<string, string> = {};
+      for (const [depName, ref] of Object.entries(deps)) {
+        // Sibling workspace modules resolve to their own directory package; npm
+        // deps (resolved peers included) keep the ref from the source importer.
+        resolved[depName] = workspaceModules.has(depName)
+          ? `file:workspace_modules/${depName}`
+          : ref;
       }
+      snapshot[depType] = resolved;
     }
 
-    workspaceDependencyImporters[`workspace_modules/${packageName}`] = importer;
+    workspaceModulePackages[
+      `${packageName}@file:workspace_modules/${packageName}`
+    ] = snapshot;
   }
 
   const output: Lockfile = {
@@ -652,12 +667,43 @@ export function stringifyPnpmLockfile(
     lockfileVersion,
     importers: {
       '.': rootSnapshot,
-      ...workspaceDependencyImporters,
     },
-    packages: sortObjectByKeys(snapshots),
+    packages: sortObjectByKeys({ ...snapshots, ...workspaceModulePackages }),
   };
 
+  stripStandaloneLockfileConfig(output);
+
   return stringifyToPnpmYaml(output);
+}
+
+/**
+ * Removes settings a standalone, pruned lockfile cannot satisfy on its own.
+ *
+ * A pruned build output ships only `package.json`, the lockfile, and the copied
+ * `workspace_modules/` directories, with no `pnpm-workspace.yaml`. pnpm 11 also no
+ * longer reads the `pnpm` field from `package.json`, so the lockfile's stored
+ * config (`overrides`, `settings`, `catalogs`, ...) has no backing source in the
+ * output. pnpm validates these against that (now absent) config and aborts
+ * `pnpm install --frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their
+ * effect is already baked into the resolved snapshots, so removing them keeps the
+ * install identical.
+ *
+ * The manifest-side counterpart is `stripPrunedLockfilePnpmConfig` in
+ * `utils/package-json`, which removes the matching `pnpm.*` fields from the
+ * emitted `package.json`; keep the two in sync when pnpm adds config fields.
+ *
+ * `patchedDependencies` is deliberately kept: snapshot keys reference its
+ * `patch_hash`, so dropping the declaration would leave dangling references. The
+ * patch files themselves are not part of the pruned output, so a workspace that
+ * relies on `pnpm patch` is not fully supported by pruning.
+ */
+function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
+  delete lockfile.overrides;
+  delete lockfile.packageExtensionsChecksum;
+  delete lockfile.ignoredOptionalDependencies;
+  delete lockfile.pnpmfileChecksum;
+  delete lockfile.settings;
+  delete (lockfile as { catalogs?: unknown }).catalogs;
 }
 
 function mapSnapshots(
@@ -801,10 +847,11 @@ function mapRootSnapshot(
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
   graph: ProjectGraph,
+  workspaceModules: ReturnType<typeof getWorkspacePackagesFromGraph>,
   lockfileVersion: number,
   workspaceRoot: string
 ) {
-  const workspaceModules = getWorkspacePackagesFromGraph(graph);
+  const catalogManager = getCatalogManager(workspaceRoot);
   const snapshot: ProjectSnapshot = { specifiers: {} };
   const importers: Record<string, string> = {};
   [
@@ -816,27 +863,36 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         let version = packageJson[depType][packageName];
-        const manager = getCatalogManager(workspaceRoot);
-        if (manager?.isCatalogReference(version)) {
-          version = manager.resolveCatalogReference(
+        if (catalogManager?.isCatalogReference(version)) {
+          const resolved = catalogManager.resolveCatalogReference(
             workspaceRoot,
             packageName,
             version
           );
-          if (!version) {
+          if (!resolved) {
             throw new Error(
               `Could not resolve catalog reference for package ${packageName}@${version}.`
             );
           }
+          version = resolved;
         }
 
         if (workspaceModules.has(packageName)) {
+          // The app may declare the module under dependencies or
+          // optionalDependencies; route the lockfile entry into the matching
+          // section so the importer snapshot stays in sync with the manifest.
+          const targetSection =
+            depType === 'optionalDependencies'
+              ? 'optionalDependencies'
+              : 'dependencies';
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
             const workspaceDep =
-              importerSnapshot.dependencies &&
-              importerSnapshot.dependencies[packageName];
+              (importerSnapshot.dependencies &&
+                importerSnapshot.dependencies[packageName]) ||
+              (importerSnapshot.optionalDependencies &&
+                importerSnapshot.optionalDependencies[packageName]);
             if (workspaceDep) {
               const workspaceDepImporterPath = workspaceDep.replace(
                 'link:',
@@ -847,11 +903,13 @@ function mapRootSnapshot(
                 workspaceDepImporterPath
               );
               importers[packageName] = importerKeyForPackage;
+              // Specifier matches the app manifest's file: ref; the version is
+              // the directory package key's ref (no leading `./`).
               snapshot.specifiers[packageName] =
                 `file:./workspace_modules/${packageName}`;
-              snapshot.dependencies = snapshot.dependencies || {};
-              snapshot.dependencies[packageName] =
-                `link:./workspace_modules/${packageName}`;
+              snapshot[targetSection] = snapshot[targetSection] || {};
+              snapshot[targetSection][packageName] =
+                `file:workspace_modules/${packageName}`;
               break;
             }
           }
