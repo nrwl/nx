@@ -298,6 +298,30 @@ Nx supports the following lock files: `pnpm-lock.yaml`, `pnpm-lock.yml`, `packag
 For binary Bun lockfiles (`bun.lockb`), Nx asks Bun to render the lockfile before diffing it, so Bun needs to be available in the environment that runs `nx affected`.
 {% /aside %}
 
+## Reduce affected fan-out for JavaScript and TypeScript projects
+
+If your workspace uses `@nx/js` source analysis, you can also enable dependency narrowing to reduce affected fan-out from source-level imports.
+
+```json
+// nx.json
+{
+  "pluginsConfig": {
+    "@nx/js": {
+      "dependencyNarrowing": {
+        "affectedNarrowing": true
+      }
+    }
+  }
+}
+```
+
+This is different from `projectsAffectedByDependencyUpdates`.
+
+- `projectsAffectedByDependencyUpdates` controls what happens when the lock file changes.
+- `dependencyNarrowing.affectedNarrowing` makes `nx affected` more precise for JavaScript and TypeScript source changes.
+
+See [Narrow project graph dependencies](/docs/technologies/typescript/guides/dependency-narrowing) for the full workflow.
+
 ## Not using git
 
 If you aren't using Git, you can pass `--files` to any affected command to indicate what files have been changed.

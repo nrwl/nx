@@ -20,3 +20,5 @@ If you want to disable detecting dependencies from source code and want to only 
 ## Default
 
 The default setting for Nx repos is `"analyzeSourceFiles": true`. The assumption is that if there is a real link in the code between projects, you want to know about it. For Lerna repos, the default value is `false` in order to maintain backward compatibility with the way Lerna has always calculated dependencies.
+
+If you still want Nx to analyze source files but you want the project graph to keep fewer edges, enable [`@nx/js` dependency narrowing](/docs/technologies/typescript/guides/dependency-narrowing) instead of turning source analysis off entirely.
