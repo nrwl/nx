@@ -834,9 +834,11 @@ function mapRootSnapshot(
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
+            // Search all dep sections in the importer, not just dependencies
             const workspaceDep =
-              importerSnapshot.dependencies &&
-              importerSnapshot.dependencies[packageName];
+              importerSnapshot.dependencies?.[packageName] ||
+              importerSnapshot.devDependencies?.[packageName] ||
+              importerSnapshot.optionalDependencies?.[packageName];
             if (workspaceDep) {
               const workspaceDepImporterPath = workspaceDep.replace(
                 'link:',
@@ -849,8 +851,11 @@ function mapRootSnapshot(
               importers[packageName] = importerKeyForPackage;
               snapshot.specifiers[packageName] =
                 `file:./workspace_modules/${packageName}`;
-              snapshot.dependencies = snapshot.dependencies || {};
-              snapshot.dependencies[packageName] =
+              // Write to the same section as in the original package.json
+              const section =
+                depType === 'peerDependencies' ? 'dependencies' : depType;
+              snapshot[section] = snapshot[section] || {};
+              snapshot[section][packageName] =
                 `link:./workspace_modules/${packageName}`;
               break;
             }

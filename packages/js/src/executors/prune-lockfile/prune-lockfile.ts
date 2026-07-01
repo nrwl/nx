@@ -69,16 +69,24 @@ function createPrunedLockfile(packageJson: PackageJson, graph: ProjectGraph) {
 
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  for (const [pkgName, pkgVersion] of Object.entries(
-    packageJson.dependencies ?? {}
-  )) {
-    if (
-      pkgVersion.startsWith('workspace:') ||
-      pkgVersion.startsWith('file:') ||
-      pkgVersion.startsWith('link:') ||
-      workspacePackages.has(pkgName)
-    ) {
-      packageJson.dependencies[pkgName] = `file:./workspace_modules/${pkgName}`;
+  for (const depType of [
+    'dependencies',
+    'devDependencies',
+    'optionalDependencies',
+    'peerDependencies',
+  ] as const) {
+    for (const [pkgName, pkgVersion] of Object.entries(
+      packageJson[depType] ?? {}
+    )) {
+      if (
+        pkgVersion.startsWith('workspace:') ||
+        pkgVersion.startsWith('file:') ||
+        pkgVersion.startsWith('link:') ||
+        workspacePackages.has(pkgName)
+      ) {
+        packageJson[depType][pkgName] =
+          `file:./workspace_modules/${pkgName}`;
+      }
     }
   }
 
