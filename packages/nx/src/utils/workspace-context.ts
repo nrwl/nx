@@ -6,8 +6,14 @@ import { daemonClient } from '../daemon/client/client';
 import { handleImport } from './handle-import';
 
 let workspaceContext: WorkspaceContext | undefined;
+const virtualWorkspaceRoot = '/virtual';
 
 export function setupWorkspaceContext(workspaceRoot: string) {
+  if (workspaceRoot === virtualWorkspaceRoot) {
+    workspaceContext = createVirtualWorkspaceContext();
+    return;
+  }
+
   const { WorkspaceContext } =
     require('../native') as typeof import('../native');
   performance.mark('workspace-context');
@@ -56,7 +62,11 @@ export async function globWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
+  if (
+    workspaceRoot === virtualWorkspaceRoot ||
+    isOnDaemon() ||
+    !daemonClient.enabled()
+  ) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.glob(globs, exclude);
   } else {
@@ -69,7 +79,11 @@ export async function multiGlobWithWorkspaceContext(
   globs: string[],
   exclude?: string[]
 ) {
-  if (workspaceRoot === '/virtual' || isOnDaemon() || !daemonClient.enabled()) {
+  if (
+    workspaceRoot === virtualWorkspaceRoot ||
+    isOnDaemon() ||
+    !daemonClient.enabled()
+  ) {
     ensureContextAvailable(workspaceRoot);
     return workspaceContext.multiGlob(globs, exclude);
   }
@@ -176,6 +190,32 @@ function ensureContextAvailable(workspaceRoot: string) {
   if (!workspaceContext || workspaceContext?.workspaceRoot !== workspaceRoot) {
     setupWorkspaceContext(workspaceRoot);
   }
+}
+
+function createVirtualWorkspaceContext(): WorkspaceContext {
+  // Devkit testing trees use an in-memory /virtual root. The native context only
+  // reads disk and warns when that path does not exist, so keep it in JS.
+  return {
+    workspaceRoot: virtualWorkspaceRoot,
+    getWorkspaceFiles: () => ({
+      projectFileMap: {},
+      globalFiles: [],
+    }),
+    glob: () => [],
+    multiGlob: (globs: string[]) => globs.map(() => []),
+    hashFilesMatchingGlob: () => '',
+    hashFilesMatchingGlobs: (globGroups: string[][]) =>
+      globGroups.map(() => ''),
+    incrementalUpdate: () => ({}),
+    updateProjectFiles: () => ({
+      fileMap: {
+        projectFileMap: {},
+        nonProjectFiles: [],
+      },
+    }),
+    allFileData: () => [],
+    getFilesInDirectory: () => [],
+  } as unknown as WorkspaceContext;
 }
 
 export function resetWorkspaceContext() {
