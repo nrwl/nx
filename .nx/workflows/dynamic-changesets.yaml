@@ -6,6 +6,37 @@ distribute-on:
   extra-large-changeset: 8 linux-large, 8 linux-extra-large
 assignment-rules:
   - projects:
+      - e2e-gradle
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
+      - :gradle-project-graph
+    targets:
+      - gradle:test-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
+      - e2e-next
+      - e2e-plugin
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 2
+  - projects:
+      - e2e-angular
+      - e2e-node
+      - e2e-react
+    targets:
+      - e2e-ci**
+    run-on:
+      - agent: linux-extra-large
+        parallelism: 1
+  - projects:
       - nx
       - workspace
       - remix
