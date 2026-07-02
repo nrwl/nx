@@ -1301,8 +1301,8 @@ importers:
         specifier: catalog:jest
         version: 29.4.11(@babel/core@7.29.0)(@jest/transform@30.3.0)(@jest/types@30.0.1)(babel-jest@30.3.0(@babel/core@7.29.0))(esbuild@0.25.0)(jest-util@30.3.0)(jest@30.3.0(@types/node@24.12.2)(babel-plugin-macros@3.1.0)(esbuild-register@3.6.0(esbuild@0.25.0))(ts-node@10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3)))(typescript@6.0.3)
       ts-loader:
-        specifier: ^9.3.1
-        version: 9.5.2(typescript@6.0.3)(webpack@5.105.2)
+        specifier: ^9.5.7
+        version: 9.6.2(loader-utils@2.0.3)(typescript@6.0.3)(webpack@5.105.2)
       ts-node:
         specifier: catalog:typescript
         version: 10.9.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(@types/node@24.12.2)(typescript@6.0.3)
@@ -4240,8 +4240,8 @@ importers:
         specifier: ^5.3.3
         version: 5.3.14(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(webpack@5.105.2)
       ts-loader:
-        specifier: ^9.3.1
-        version: 9.5.2(typescript@6.0.3)(webpack@5.105.2)
+        specifier: ^9.5.7
+        version: 9.6.2(loader-utils@2.0.3)(typescript@6.0.3)(webpack@5.105.2)
       tsconfig-paths-webpack-plugin:
         specifier: 4.2.0
         version: 4.2.0
@@ -25033,6 +25033,17 @@ packages:
     peerDependencies:
       typescript: '*'
       webpack: ^5.0.0
+
+  ts-loader@9.6.2:
+    resolution: {integrity: sha512-R4iuczmtgxvtuI556s+hTZ6/7Ee03VCAk/l/M8LY1OAsUgB7YydsCxkgq9D9pKRaD7GJqUi2u8fp9zZP/ufjKA==}
+    engines: {node: '>=12.0.0'}
+    peerDependencies:
+      loader-utils: '*'
+      typescript: '*'
+      webpack: ^4.0.0 || ^5.0.0
+    peerDependenciesMeta:
+      loader-utils:
+        optional: true
 
   ts-morph@28.0.0:
     resolution: {integrity: sha512-Wp3tnZ2bzwxyTZMtgWVzXDfm7lB1Drz+y9DmmYH/L702PQhPyVrp3pkou3yIz4qjS14GY9kcpmLiOOMvl8oG1g==}
@@ -54457,6 +54468,16 @@ snapshots:
       source-map: 0.7.6
       typescript: 6.0.3
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+
+  ts-loader@9.6.2(loader-utils@2.0.3)(typescript@6.0.3)(webpack@5.105.2):
+    dependencies:
+      chalk: 4.1.2
+      picomatch: 4.0.4
+      source-map: 0.7.6
+      typescript: 6.0.3
+      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
+    optionalDependencies:
+      loader-utils: 2.0.3
 
   ts-morph@28.0.0:
     dependencies:
