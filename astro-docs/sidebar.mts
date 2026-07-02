@@ -522,6 +522,10 @@ const technologiesGroups: SidebarItems = [
             label: 'Rsbuild',
             link: 'technologies/build-tools/rsbuild/introduction',
           },
+          {
+            label: 'Docker',
+            link: 'technologies/build-tools/docker/introduction',
+          },
         ],
       },
       {
