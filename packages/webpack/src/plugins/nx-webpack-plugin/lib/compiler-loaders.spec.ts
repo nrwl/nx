@@ -5,8 +5,6 @@ describe('createLoaderFromCompiler tsc', () => {
   function tscOptions(): NormalizedNxAppWebpackPluginOptions {
     return {
       root: '/test',
-      projectRoot: 'apps/test',
-      sourceRoot: 'apps/test/src',
       tsConfig: 'apps/test/tsconfig.app.json',
       compiler: 'tsc',
       transformers: [],
