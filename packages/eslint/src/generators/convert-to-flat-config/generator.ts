@@ -32,11 +32,14 @@ import {
   ESLINT_FLAT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { ESLint } from 'eslint';
-import { coerce } from 'semver';
 import {
   convertEslintJsonToFlatConfig,
   renameLegacyEslintrcFile,
 } from './converters/json-converter';
+import {
+  migrateAngularEslintV22FlatConfig,
+  resolveAngularEslintVersion,
+} from './angular-eslint';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -97,7 +100,11 @@ export async function convertToFlatConfigGenerator(
   // replace references in nx.json and project.json files
   updateNxJsonConfig(tree, options.eslintConfigFormat);
   updateProjectConfigsInputs(tree, options.eslintConfigFormat);
-  // install missing packages
+
+  // The converter carries angular-eslint's removed eslintrc configs over as
+  // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
+  // flat-native config before formatting (no-op below v22).
+  await migrateAngularEslintV22FlatConfig(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -500,25 +507,4 @@ function processConvertedConfig(
     'package.json',
     keepExistingVersions
   );
-}
-
-// The umbrella `angular-eslint` and the scoped `@angular-eslint/*` packages
-// release in lockstep, so pin the umbrella to the major already installed,
-// falling back to the latest major nx generates when none is present. @nx/eslint
-// can't read the canonical pin from @nx/angular without inverting the package
-// dependency (@nx/angular depends on @nx/eslint), so the fallback is hardcoded;
-// keep it in sync with `angularEslintVersion` in packages/angular/src/utils/versions.ts.
-function resolveAngularEslintVersion(tree: Tree): string {
-  const installed =
-    getDependencyVersionFromPackageJson(
-      tree,
-      '@angular-eslint/eslint-plugin'
-    ) ??
-    getDependencyVersionFromPackageJson(
-      tree,
-      '@angular-eslint/template-parser'
-    );
-  const installedMajor = installed ? coerce(installed)?.major : undefined;
-
-  return installedMajor != null ? `^${installedMajor}.0.0` : '^22.0.0';
 }
