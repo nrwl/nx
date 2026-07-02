@@ -32,11 +32,10 @@ import { join } from 'path';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
-// The importer dep types whose workspace-module references get bundled as copied
-// directory packages: both ship in a production install. Must match the sections
-// copy-workspace-modules copies/rewrites and the snapshot emission below.
-// `devDependencies` are excluded (not installed in production); pnpm importers
-// carry no `peerDependencies` section.
+// The dep types walked when pulling a copied module's own workspace deps into
+// the pruned lockfile: production sections only, since a dependency's
+// devDependencies are never installed. The root importer is different - it
+// mirrors every manifest section, devDependencies included (see mapRootSnapshot).
 const WORKSPACE_DEP_TYPES = ['dependencies', 'optionalDependencies'] as const;
 
 let currentLockFileHash: string;
@@ -933,13 +932,17 @@ function mapRootSnapshot(
         }
 
         if (workspaceModules.has(packageName)) {
-          // The app may declare the module under dependencies or
-          // optionalDependencies; route the lockfile entry into the matching
-          // section so the importer snapshot stays in sync with the manifest.
+          // The app may declare the module under dependencies,
+          // optionalDependencies, or devDependencies; route the lockfile entry
+          // into the matching section so the importer snapshot stays in sync
+          // with the manifest. peerDependencies collapse to dependencies,
+          // mirroring the non-workspace branch below.
           const targetSection =
             depType === 'optionalDependencies'
               ? 'optionalDependencies'
-              : 'dependencies';
+              : depType === 'devDependencies'
+                ? 'devDependencies'
+                : 'dependencies';
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
@@ -947,7 +950,9 @@ function mapRootSnapshot(
               (importerSnapshot.dependencies &&
                 importerSnapshot.dependencies[packageName]) ||
               (importerSnapshot.optionalDependencies &&
-                importerSnapshot.optionalDependencies[packageName]);
+                importerSnapshot.optionalDependencies[packageName]) ||
+              (importerSnapshot.devDependencies &&
+                importerSnapshot.devDependencies[packageName]);
             if (workspaceDep) {
               const workspaceDepImporterPath = workspaceDep.replace(
                 'link:',

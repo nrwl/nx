@@ -79,12 +79,17 @@ function createPrunedLockfile(
 
   // Point every workspace-module dependency at its copied directory so the
   // standalone output installs them as pnpm `file:` directory dependencies.
-  // Cover both prod-installed sections so an app that lists a workspace module
-  // under optionalDependencies stays in sync with the copied modules and the
-  // pruned lockfile. Gate strictly on graph membership: a `file:`/`link:` spec to
-  // a non-workspace local path (e.g. a vendored tarball) is left alone, since
-  // copy-workspace-modules only ever copies actual workspace projects.
-  for (const section of ['dependencies', 'optionalDependencies'] as const) {
+  // Cover devDependencies too: pnpm validates the whole manifest against the
+  // lockfile even under `--prod`, so a workspace module left as `workspace:*` in
+  // any section fails `pnpm install --frozen-lockfile` (#35425). Gate strictly on
+  // graph membership: a `file:`/`link:` spec to a non-workspace local path (e.g.
+  // a vendored tarball) is left alone, since copy-workspace-modules only ever
+  // copies actual workspace projects.
+  for (const section of [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+  ] as const) {
     const deps = packageJson[section];
     if (!deps) {
       continue;

@@ -284,6 +284,54 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     // a registry dep in dependencies is left untouched
     expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
   });
+
+  it('rewrites workspace packages declared under devDependencies', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        devDependencies: { '@myorg/dev-lib': 'workspace:*' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValueOnce(
+      new Map([['@myorg/dev-lib', { data: { root: 'libs/dev-lib' } } as any]])
+    );
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    // a workspace project under devDependencies -> rewritten to its copy so
+    // pnpm install --frozen-lockfile does not fail on the workspace:* spec (#35425)
+    expect(generated.devDependencies).toEqual({
+      '@myorg/dev-lib': 'file:./workspace_modules/@myorg/dev-lib',
+    });
+    // a registry dep in dependencies is left untouched
+    expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
+  });
 });
 
 describe('resolveCatalogReferences', () => {

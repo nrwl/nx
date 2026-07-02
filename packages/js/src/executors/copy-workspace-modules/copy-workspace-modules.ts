@@ -91,10 +91,15 @@ function handleWorkspaceModules(
   packageJson: {
     dependencies?: Record<string, string>;
     optionalDependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
   },
   projectGraph: ProjectGraph
 ) {
-  if (!packageJson.dependencies && !packageJson.optionalDependencies) {
+  if (
+    !packageJson.dependencies &&
+    !packageJson.optionalDependencies &&
+    !packageJson.devDependencies
+  ) {
     return;
   }
 
@@ -189,9 +194,17 @@ function handleWorkspaceModules(
     }
   }
 
-  // Seed from both prod-installed sections; processModule dedups via
-  // processedModules, so a module listed in both is copied once.
-  for (const section of ['dependencies', 'optionalDependencies'] as const) {
+  // Seed from every section the app declares a workspace module in,
+  // devDependencies included: a full `pnpm install` installs them and the
+  // rewritten manifest points them at workspace_modules/ (#35425). Copied
+  // modules recurse over production sections only (see processModule).
+  // processModule dedups via processedModules, so a module listed in several
+  // sections is copied once.
+  for (const section of [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+  ] as const) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
