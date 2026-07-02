@@ -1,9 +1,16 @@
-import { getProjects, readJson, readNxJson, type Tree } from '@nx/devkit';
+import {
+  formatFiles,
+  getProjects,
+  readJson,
+  readNxJson,
+  type Tree,
+} from '@nx/devkit';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   ESLINT_FLAT_CONFIG_FILENAMES,
 } from '../../utils/config-file';
 import { convertToFlatConfigGenerator } from '../../generators/convert-to-flat-config/generator';
+import { migrateAngularEslintV22FlatConfig } from '../../generators/convert-to-flat-config/angular-eslint';
 
 // Output formatters ESLint removed in v9. Built-in names only; community
 // formatter packages (referenced by their package name) keep working.
@@ -62,16 +69,27 @@ export default async function update(tree: Tree): Promise<{
   const unsupportedOptionTargets = findUnsupportedFlatConfigOptionTargets(tree);
 
   const rootState = detectRootConfigState(tree);
-  if (rootState === 'none') {
-    // No ESLint configuration to migrate.
-    return;
-  }
 
   if (rootState === 'convertible') {
+    // The generator reconciles angular-eslint v22's removed configs as part of
+    // conversion, so the converted flat configs load without agent repair.
     await convertToFlatConfigGenerator(tree, {
       keepExistingVersions: true,
-      skipFormat: false,
+      skipFormat: true,
     });
+  }
+
+  // Reconcile angular-eslint v22's removed eslintrc configs in any flat config.
+  // Runs for every root state: project-level flat configs can exist even when the
+  // root is JavaScript-based (so the generator never ran), already flat, or
+  // absent. No-op for the converted root above (idempotent).
+  await migrateAngularEslintV22FlatConfig(tree);
+
+  await formatFiles(tree);
+
+  if (rootState === 'none') {
+    // Nothing to migrate beyond the angular-eslint reconciliation above.
+    return;
   }
 
   const agentContext: string[] = [

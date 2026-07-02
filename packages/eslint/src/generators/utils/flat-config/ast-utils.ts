@@ -827,19 +827,27 @@ function removeImportFromFlatConfigCJS(
 ): string {
   const changes: StringChange[] = [];
   ts.forEachChild(source, (node) => {
-    // we can only combine object binding patterns
     if (
-      ts.isVariableStatement(node) &&
-      ts.isVariableDeclaration(node.declarationList.declarations[0]) &&
-      ts.isIdentifier(node.declarationList.declarations[0].name) &&
-      node.declarationList.declarations[0].name.getText() === variable &&
-      ts.isCallExpression(node.declarationList.declarations[0].initializer) &&
-      node.declarationList.declarations[0].initializer.expression.getText() ===
-        'require' &&
-      ts.isStringLiteral(
-        node.declarationList.declarations[0].initializer.arguments[0]
-      ) &&
-      node.declarationList.declarations[0].initializer.arguments[0].text === imp
+      !ts.isVariableStatement(node) ||
+      !ts.isVariableDeclaration(node.declarationList.declarations[0])
+    ) {
+      return;
+    }
+    const declaration = node.declarationList.declarations[0];
+    // Match both `const x = require(imp)` and a sole-binding
+    // `const { x } = require(imp)`, so an object-binding import is removed too.
+    const name = declaration.name;
+    const bindsVariable =
+      (ts.isIdentifier(name) && name.getText() === variable) ||
+      (ts.isObjectBindingPattern(name) &&
+        name.elements.length === 1 &&
+        name.elements[0].name.getText() === variable);
+    if (
+      bindsVariable &&
+      ts.isCallExpression(declaration.initializer) &&
+      declaration.initializer.expression.getText() === 'require' &&
+      ts.isStringLiteral(declaration.initializer.arguments[0]) &&
+      declaration.initializer.arguments[0].text === imp
     ) {
       changes.push({
         type: ChangeType.Delete,

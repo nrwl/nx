@@ -322,6 +322,124 @@ describe('convert-to-flat-config generator', () => {
       ).toEqual('^22.0.0');
     });
 
+    it('remaps angular-eslint v22 removed configs the converter carried over as FlatCompat shims', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...(json.devDependencies ?? {}),
+          '@angular-eslint/eslint-plugin': '^22.0.0',
+        };
+        return json;
+      });
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.extends = ['plugin:@angular-eslint/recommended'];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      const content = tree.read('eslint.config.cjs', 'utf-8');
+      expect(content).toContain('angular.configs.tsRecommended');
+      expect(content).toContain("require('angular-eslint')");
+      expect(content).not.toContain(
+        "compat.extends('plugin:@angular-eslint/recommended')"
+      );
+      expect(
+        readJson(tree, 'package.json').devDependencies['angular-eslint']
+      ).toEqual('^22.0.0');
+    });
+
+    it('leaves the converter output untouched below angular-eslint v22', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...(json.devDependencies ?? {}),
+          '@angular-eslint/eslint-plugin': '^21.0.0',
+        };
+        return json;
+      });
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.extends = ['plugin:@angular-eslint/recommended'];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      const content = tree.read('eslint.config.cjs', 'utf-8');
+      expect(content).toContain(
+        "compat.extends('plugin:@angular-eslint/recommended')"
+      );
+      expect(content).not.toContain('angular.configs.tsRecommended');
+    });
+
+    it('reconciles the process-inline-templates shim the converter emits for a standard Angular override', async () => {
+      await lintProjectGenerator(tree, {
+        skipFormat: false,
+        linter: 'eslint',
+        project: 'test-lib',
+        setParserOptionsProject: false,
+        eslintConfigFormat: 'cjs',
+      });
+      updateJson(tree, 'package.json', (json) => {
+        json.devDependencies = {
+          ...(json.devDependencies ?? {}),
+          '@angular-eslint/eslint-plugin': '^22.0.0',
+        };
+        return json;
+      });
+      // The standard nx Angular `*.ts` override: the converter lifts
+      // plugin:@nx/angular to flat/angular and wraps process-inline-templates in
+      // a `compat.config({extends}).map(...)` shim, which fails to load on v22.
+      updateJson(tree, '.eslintrc.json', (json) => {
+        json.overrides = [
+          {
+            files: ['*.ts'],
+            extends: [
+              'plugin:@nx/angular',
+              'plugin:@angular-eslint/template/process-inline-templates',
+            ],
+            rules: {
+              '@angular-eslint/directive-selector': [
+                'error',
+                { type: 'attribute' },
+              ],
+              '@angular-eslint/no-conflicting-lifecycle': 'error',
+            },
+          },
+        ];
+        return json;
+      });
+
+      await convertToFlatConfigGenerator(tree, options);
+
+      const content = tree.read('eslint.config.cjs', 'utf-8');
+      // The shim and the removed rule are gone; the override's own rule survives.
+      expect(content).not.toContain('process-inline-templates');
+      expect(content).not.toContain('no-conflicting-lifecycle');
+      expect(content).not.toContain('compat.config');
+      expect(content).not.toContain('FlatCompat');
+      expect(content).toContain('flat/angular');
+      expect(content).toContain('@angular-eslint/directive-selector');
+      // flat/angular already applies the processor, so no processor block is
+      // re-emitted and no angular-eslint import is introduced.
+      expect(content).not.toContain(
+        'processor: angular.processInlineTemplates'
+      );
+      expect(content).not.toContain("from 'angular-eslint'");
+    });
+
     it('should add global eslintignores', async () => {
       await lintProjectGenerator(tree, {
         skipFormat: false,
