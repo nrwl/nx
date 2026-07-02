@@ -21,10 +21,12 @@ import {
   readNxCloudToken,
   setNeverConnectToCloud,
 } from './utils/nx/nx-cloud';
+import { nxVersion } from './utils/nx/nx-version';
 import { output } from './utils/output';
 import { getPackageNameFromThirdPartyPreset } from './utils/preset/get-third-party-preset';
 import { Preset } from './utils/preset/preset';
 import { cloneTemplate } from './utils/template/clone-template';
+import { updateNxVersions } from './utils/template/update-nx-versions';
 import {
   addConnectUrlToReadme,
   amendOrCommitReadme,
@@ -107,6 +109,11 @@ export async function createWorkspace<T extends CreateWorkspaceOptions>(
       if (existsSync(npmLockPath)) {
         unlinkSync(npmLockPath);
       }
+
+      // Templates track the latest Nx release; pin the Nx packages to the
+      // version of create-nx-workspace being run so that e.g.
+      // `create-nx-workspace@22.7.6` does not produce an Nx 23 workspace.
+      updateNxVersions(directory, nxVersion);
 
       // Generate package manager specific files (e.g., .yarnrc.yml for Yarn Berry)
       generatePackageManagerFiles(directory, packageManager);
