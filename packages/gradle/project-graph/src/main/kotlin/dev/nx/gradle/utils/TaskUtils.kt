@@ -191,21 +191,25 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
  * invalidate consumers should declare file outputs (or wire `from(task)` delegation) so their
  * extensions are visible here.
  */
-fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
+fun inferExtensionsFromInputProperties(
+    task: Task,
+    dependentTasks: Set<Task>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<String> {
   val extensions = mutableSetOf<String>()
 
   // Extensions implied by this task's own type (what it consumes from upstream) and, for a
   // pass-through Copy/Sync task, its declared concrete-file sources (what it forwards downstream
   // even when the producer that generated them declares no outputs).
   extensions.addAll(extensionsForTaskType(task))
-  extensions.addAll(declaredCopySourceExtensions(task))
+  extensions.addAll(declaredCopySourceExtensions(task, gitIgnoreClassifier))
 
   // Extensions implied by each dependent task's declared model (what it produces).
   dependentTasks.forEach { depTask ->
     extensions.addAll(extensionsForTaskType(depTask))
     extensions.addAll(declaredArchiveExtensions(depTask))
     extensions.addAll(declaredFileOutputExtensions(depTask))
-    extensions.addAll(declaredCopySourceExtensions(depTask))
+    extensions.addAll(declaredCopySourceExtensions(depTask, gitIgnoreClassifier))
   }
 
   return extensions.toSet()
@@ -284,12 +288,20 @@ private fun declaredFileOutputExtensions(task: Task): Set<String> {
  * providers and task outputs are skipped, since turning them into extensions would require
  * enumerating the working tree. This is existence-independent: the raw `from(...)` arguments are
  * read, never resolved.
+ *
+ * Only sources that are NOT checked in (i.e. gitignored/generated build outputs) contribute an
+ * extension. `dependentTasksOutputFiles` globs are matched against dependency OUTPUTS, so a
+ * checked-in source is already captured as a direct source input by the `task.inputs.files` branch
+ * and emitting a glob for it would be redundant and imprecise.
  */
-private fun declaredCopySourceExtensions(task: Task): Set<String> {
+private fun declaredCopySourceExtensions(
+    task: Task,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<String> {
   if (task !is AbstractCopyTask) return emptySet()
   val extensions = mutableSetOf<String>()
   try {
-    collectCopySourceExtensions(task.rootSpec, extensions)
+    collectCopySourceExtensions(task.rootSpec, extensions, gitIgnoreClassifier)
   } catch (e: Exception) {
     task.logger.debug("Could not read copy source paths for ${task.path}: ${e.message}")
   }
@@ -297,36 +309,44 @@ private fun declaredCopySourceExtensions(task: Task): Set<String> {
 }
 
 /**
- * Recursively collect declared concrete-file source extensions from a copy spec and its children.
+ * Recursively collect declared concrete-file source extensions from a copy spec and its children,
+ * limited to non-checked-in (gitignored/generated) sources.
  */
-private fun collectCopySourceExtensions(spec: CopySpecInternal, into: MutableSet<String>) {
+private fun collectCopySourceExtensions(
+    spec: CopySpecInternal,
+    into: MutableSet<String>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+) {
   if (spec is DefaultCopySpec) {
     spec.sourcePaths.forEach { source ->
       try {
-        extensionFromDeclaredPath(source)?.let { into.add(it) }
+        val file = fileFromDeclaredSource(source) ?: return@forEach
+        // Only generated (gitignored) sources need a dependentTasksOutputFiles glob; checked-in
+        // sources are already emitted as direct inputs. isIgnored is a pattern match and does not
+        // require the file to exist.
+        if (gitIgnoreClassifier.isIgnored(file)) {
+          file.extension.takeIf { it.isNotEmpty() }?.let { into.add(it) }
+        }
       } catch (e: Exception) {
         // Skip any source we cannot classify without touching disk.
       }
     }
   }
-  spec.children.forEach { child -> collectCopySourceExtensions(child, into) }
+  spec.children.forEach { child -> collectCopySourceExtensions(child, into, gitIgnoreClassifier) }
 }
 
 /**
- * Extract a file extension from a declared `from(...)` argument, but only when the argument is a
- * concrete file path we can read without touching disk. Returns null for directories/extension-less
- * paths and for non-path argument types (FileTree, FileCollection, provider, task output, ...).
+ * Convert a declared `from(...)` argument into a concrete [File] when it is a path we can read
+ * without touching disk. Returns null for non-path argument types (FileTree, FileCollection,
+ * provider, task output, ...).
  */
-private fun extensionFromDeclaredPath(source: Any?): String? {
-  val file: File =
-      when (source) {
-        is File -> source
-        is java.nio.file.Path -> source.toFile()
-        is CharSequence -> File(source.toString())
-        else -> return null
-      }
-  return file.extension.ifEmpty { null }
-}
+private fun fileFromDeclaredSource(source: Any?): File? =
+    when (source) {
+      is File -> source
+      is java.nio.file.Path -> source.toFile()
+      is CharSequence -> File(source.toString())
+      else -> null
+    }
 
 /**
  * Parse task and get inputs for this task
@@ -402,7 +422,8 @@ private fun getInputsForTaskImpl(
 
     // Derive dependent-task output extensions purely from the Gradle task model (task types and
     // declared archive/file outputs), independent of whether build artifacts exist on disk.
-    val dependentTaskOutputExtensions = inferExtensionsFromInputProperties(task, tasksToProcess)
+    val dependentTaskOutputExtensions =
+        inferExtensionsFromInputProperties(task, tasksToProcess, gitIgnoreClassifier)
 
     // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
     dependentTaskOutputExtensions

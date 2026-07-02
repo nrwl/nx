@@ -271,15 +271,19 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask derives Copy concrete-file sources but not FileTree sources`() {
+    fun `test getInputsForTask derives generated Copy sources but not checked-in or FileTree ones`() {
       // A Copy/Sync task is pass-through: its declared concrete-file sources (from(File ...)) equal
-      // its effective outputs and ARE derived, deterministically, even when the files do not exist
-      // on disk. FileTree / directory sources must NOT be enumerated.
+      // its effective outputs. Only GENERATED (gitignored) sources need a dependentTasksOutputFiles
+      // glob; checked-in sources are already captured as direct inputs, and FileTree/directory
+      // sources must never be enumerated. Extensions are derived without the files existing on
+      // disk.
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
-      // Concrete declared file sources (intentionally NOT created on disk yet).
+      // Generated (the fixture gitignores "dist") concrete file sources, intentionally NOT created.
       syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
       syncTask.from(java.io.File("$workspaceRoot/dist/runner.json"))
+      // Checked-in concrete file source (NOT gitignored) - must not yield a glob.
+      syncTask.from(java.io.File("$workspaceRoot/src/main/resources/config.conf"))
       // A FileTree source whose contents must never be enumerated.
       val leakDir = java.io.File("$workspaceRoot/dist/leak").apply { mkdirs() }
       java.io.File(leakDir, "secret.leak").writeText("x")
@@ -303,16 +307,19 @@ class ProcessTaskUtilsTest {
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
 
-      // Clean tree (bundle/runner files absent): concrete-file source extensions still derived.
+      // Clean tree (generated files absent): generated concrete-file source extensions still
+      // derived.
       val clean = outputFileGlobs()
-      // Built tree: create the concrete source files on disk.
+      // Built tree: create the generated source files on disk.
       java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
       java.io.File("$workspaceRoot/dist/runner.json").writeText("{}")
       val built = outputFileGlobs()
 
       assertEquals(clean, built, "Copy source derivation must not depend on on-disk state")
-      assertTrue(clean.contains("**/*.gz"), "Expected gz from from(File .tar.gz), got $clean")
-      assertTrue(clean.contains("**/*.json"), "Expected json from from(File .json), got $clean")
+      assertTrue(clean.contains("**/*.gz"), "Expected gz from generated from(File), got $clean")
+      assertTrue(clean.contains("**/*.json"), "Expected json from generated from(File), got $clean")
+      assertFalse(
+          clean.contains("**/*.conf"), "Checked-in Copy source must not produce a glob, got $clean")
       assertFalse(
           clean.contains("**/*.leak"),
           "FileTree source contents must not be enumerated, got $clean")
@@ -766,7 +773,9 @@ class ProcessTaskUtilsTest {
       val compileTestKotlin = kotlinProject.tasks.getByName("compileTestKotlin")
       val dependsOnTasks = getDependsOnTask(compileTestKotlin)
 
-      val extensions = inferExtensionsFromInputProperties(compileTestKotlin, dependsOnTasks)
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileTestKotlin, dependsOnTasks, GitIgnoreClassifier(kotlinProject.rootDir))
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
       assertTrue(
@@ -781,7 +790,9 @@ class ProcessTaskUtilsTest {
 
       val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
 
-      val extensions = inferExtensionsFromInputProperties(compileKotlin, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileKotlin, emptySet(), GitIgnoreClassifier(kotlinProject.rootDir))
 
       assertTrue(
           extensions.contains("class"),
@@ -799,7 +810,9 @@ class ProcessTaskUtilsTest {
       val compileKotlin = kotlinProject.tasks.getByName("compileKotlin")
       val plain = kotlinProject.tasks.register("plain").get()
 
-      val extensions = inferExtensionsFromInputProperties(plain, setOf(compileKotlin))
+      val extensions =
+          inferExtensionsFromInputProperties(
+              plain, setOf(compileKotlin), GitIgnoreClassifier(kotlinProject.rootDir))
 
       assertTrue(
           extensions.contains("class"),
@@ -813,7 +826,9 @@ class ProcessTaskUtilsTest {
 
       val compileJava = project.tasks.getByName("compileJava")
 
-      val extensions = inferExtensionsFromInputProperties(compileJava, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              compileJava, emptySet(), GitIgnoreClassifier(project.rootDir))
 
       assertTrue(extensions.contains("class"), "Expected 'class' extension, got $extensions")
       assertFalse(
@@ -829,7 +844,10 @@ class ProcessTaskUtilsTest {
       val dependentTasks = setOf(jarTask)
 
       val extensions =
-          inferExtensionsFromInputProperties(kotlinProject.tasks.getByName("build"), dependentTasks)
+          inferExtensionsFromInputProperties(
+              kotlinProject.tasks.getByName("build"),
+              dependentTasks,
+              GitIgnoreClassifier(kotlinProject.rootDir))
 
       assertTrue(
           extensions.contains("jar"),
@@ -842,7 +860,9 @@ class ProcessTaskUtilsTest {
       kotlinProject.plugins.apply("org.jetbrains.kotlin.jvm")
 
       val testTask = kotlinProject.tasks.getByName("test")
-      val extensions = inferExtensionsFromInputProperties(testTask, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(
+              testTask, emptySet(), GitIgnoreClassifier(kotlinProject.rootDir))
 
       assertTrue(
           extensions.contains("class"), "Expected 'class' extension for Test task, got $extensions")
@@ -855,7 +875,8 @@ class ProcessTaskUtilsTest {
       val project = ProjectBuilder.builder().build()
       val task = project.tasks.register("plainTask").get()
 
-      val extensions = inferExtensionsFromInputProperties(task, emptySet())
+      val extensions =
+          inferExtensionsFromInputProperties(task, emptySet(), GitIgnoreClassifier(project.rootDir))
 
       assertTrue(extensions.isEmpty(), "Expected empty extensions for plain task, got $extensions")
     }
