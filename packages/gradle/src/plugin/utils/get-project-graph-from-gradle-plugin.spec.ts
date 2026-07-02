@@ -33,6 +33,22 @@ describe('normalizeReportPath', () => {
     const outside = join(sep, 'other', 'app');
     expect(normalizeReportPath(outside, workspaceRoot)).toBe(outside);
   });
+
+  it('should tolerate trailing separators on either side', () => {
+    expect(
+      normalizeReportPath(
+        join(workspaceRoot, 'apps', 'app'),
+        workspaceRoot + sep
+      )
+    ).toBe('apps/app');
+    expect(
+      normalizeReportPath(
+        join(workspaceRoot, 'apps', 'app') + sep,
+        workspaceRoot
+      )
+    ).toBe('apps/app');
+    expect(normalizeReportPath(workspaceRoot + sep, workspaceRoot)).toBe('.');
+  });
 });
 
 describe('normalizeProjectGraphReport', () => {

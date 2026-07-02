@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { isAbsolute, join, relative, sep } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import {
   AggregateCreateNodesError,
@@ -49,11 +49,15 @@ export function normalizeReportPath(
   if (!isAbsolute(path)) {
     return normalizePath(path);
   }
-  if (path === workspaceRoot) {
+  // Compare in normalized form so separator style or a trailing separator on
+  // either side does not defeat the match.
+  const normalized = normalizePath(path).replace(/\/+$/, '');
+  const root = normalizePath(workspaceRoot).replace(/\/+$/, '');
+  if (normalized === root) {
     return '.';
   }
-  if (path.startsWith(workspaceRoot + sep)) {
-    return normalizePath(relative(workspaceRoot, path));
+  if (normalized.startsWith(root + '/')) {
+    return normalized.slice(root.length + 1);
   }
   return path;
 }
