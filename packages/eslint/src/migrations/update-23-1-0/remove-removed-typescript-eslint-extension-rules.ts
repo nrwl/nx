@@ -1,4 +1,6 @@
 import { formatFiles, type Tree, visitNotIgnoredFiles } from '@nx/devkit';
+import { getDeclaredPackageVersion } from '@nx/devkit/internal';
+import { major } from 'semver';
 import * as ts from 'typescript';
 
 // Inlined rather than imported from the @nx/eslint utils so this migration stays
@@ -69,7 +71,25 @@ const RENAMED_TS_ESLINT_RULES = new Map([
   ],
 ]);
 
+// The stripped rules only disappear in typescript-eslint v8. On v7 (or with
+// typescript-eslint absent) they are still valid, so editing a config would
+// wrongly drop a live rule. Gate on the umbrella `typescript-eslint` or the
+// scoped `@typescript-eslint/eslint-plugin` (a workspace declares one or the
+// other); the migration's JSON `requires` cannot express that OR.
+function hasTypescriptEslintV8(tree: Tree): boolean {
+  return ['typescript-eslint', '@typescript-eslint/eslint-plugin'].some(
+    (pkg) => {
+      const version = getDeclaredPackageVersion(tree, pkg);
+      return version !== null && major(version) >= 8;
+    }
+  );
+}
+
 export default async function update(tree: Tree): Promise<void> {
+  if (!hasTypescriptEslintV8(tree)) {
+    return;
+  }
+
   let changed = false;
 
   visitNotIgnoredFiles(tree, '.', (path) => {
