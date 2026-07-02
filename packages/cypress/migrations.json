@@ -52,6 +52,15 @@
       "description": "Rename imports of `createNodesV2` from `@nx/cypress/plugin` to the canonical `createNodes` export.",
       "implementation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes",
       "documentation": "./dist/src/migrations/update-23-0-0/migrate-create-nodes-v2-to-create-nodes.md"
+    },
+    "disable-webpack-ct-just-in-time-compile": {
+      "version": "23.1.0-beta.6",
+      "requires": {
+        "cypress": ">=14.0.0"
+      },
+      "description": "Set `justInTimeCompile: false` in webpack component testing Cypress configs on Cypress 14+, where it defaults to true and can intermittently run 0 tests in CI.",
+      "implementation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile",
+      "documentation": "./dist/src/migrations/update-23-1-0/disable-webpack-ct-just-in-time-compile.md"
     }
   },
   "packageJsonUpdates": {
