@@ -1,10 +1,11 @@
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, relative, sep } from 'node:path';
 
 import {
   AggregateCreateNodesError,
   hashArray,
   logger,
+  normalizePath,
   ProjectConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
@@ -33,9 +34,75 @@ export interface ProjectGraphReportCache extends ProjectGraphReport {
   hash: string;
 }
 
+/**
+ * Make a report path workspace-relative. Reports from
+ * dev.nx.gradle.project-graph < 0.1.24 use absolute machine paths; same-machine
+ * absolute paths are relativized, paths outside the workspace are kept as-is.
+ */
+export function normalizeReportPath(
+  path: string,
+  workspaceRoot: string
+): string {
+  if (!isAbsolute(path)) {
+    return normalizePath(path);
+  }
+  if (path === workspaceRoot) {
+    return '.';
+  }
+  if (path.startsWith(workspaceRoot + sep)) {
+    return normalizePath(relative(workspaceRoot, path));
+  }
+  return path;
+}
+
+export function normalizeProjectGraphReport(
+  report: ProjectGraphReport,
+  workspaceRoot: string
+): ProjectGraphReport {
+  return {
+    ...report,
+    nodes: Object.fromEntries(
+      Object.entries(report.nodes ?? {}).map(([projectRoot, node]) => [
+        normalizeReportPath(projectRoot, workspaceRoot),
+        node,
+      ])
+    ),
+    dependencies: (report.dependencies ?? []).map((dependency) => ({
+      ...dependency,
+      source: normalizeReportPath(dependency.source, workspaceRoot),
+      target: normalizeReportPath(dependency.target, workspaceRoot),
+      sourceFile: dependency.sourceFile
+        ? normalizeReportPath(dependency.sourceFile, workspaceRoot)
+        : dependency.sourceFile,
+    })),
+  };
+}
+
+/**
+ * A report whose node keys are all absolute paths under some other root was
+ * generated in a different workspace (e.g. a cache restored from another
+ * machine) — its keys can never match this workspace's projects.
+ */
+export function isReportFromDifferentWorkspace(
+  report: ProjectGraphReport,
+  workspaceRoot: string
+): boolean {
+  const projectRoots = Object.keys(report.nodes ?? {});
+  return (
+    projectRoots.length > 0 &&
+    projectRoots.every(
+      (projectRoot) =>
+        isAbsolute(projectRoot) &&
+        projectRoot !== workspaceRoot &&
+        !projectRoot.startsWith(workspaceRoot + sep)
+    )
+  );
+}
+
 function readProjectGraphReportCache(
   cachePath: string,
-  hash: string
+  hash: string,
+  workspaceRoot: string
 ): ProjectGraphReport | undefined {
   const projectGraphReportCache: Partial<ProjectGraphReportCache> = existsSync(
     cachePath
@@ -45,7 +112,21 @@ function readProjectGraphReportCache(
   if (!projectGraphReportCache || projectGraphReportCache.hash !== hash) {
     return;
   }
-  return projectGraphReportCache as ProjectGraphReport;
+  if (
+    isReportFromDifferentWorkspace(
+      projectGraphReportCache as ProjectGraphReport,
+      workspaceRoot
+    )
+  ) {
+    logger.warn(
+      `The cached Gradle project graph report at ${cachePath} was generated in a different workspace root. Discarding it and regenerating the report.`
+    );
+    return;
+  }
+  return normalizeProjectGraphReport(
+    projectGraphReportCache as ProjectGraphReport,
+    workspaceRoot
+  );
 }
 
 export function writeProjectGraphReportToCache(
@@ -119,7 +200,8 @@ export async function populateProjectGraph(
   ]);
   const cached = readProjectGraphReportCache(
     projectGraphReportCachePath,
-    gradleConfigHash
+    gradleConfigHash,
+    workspaceRoot
   );
   if (cached) {
     projectGraphReportCache = cached;
@@ -177,7 +259,21 @@ export async function populateProjectGraph(
     gradleProjectGraphReportStart.name,
     gradleProjectGraphReportEnd.name
   );
-  projectGraphReportCache = processNxProjectGraph(projectGraphLines);
+  projectGraphReportCache = normalizeProjectGraphReport(
+    processNxProjectGraph(projectGraphLines),
+    workspaceRoot
+  );
+  // An empty report can be legitimate (e.g. every project's node computation
+  // failed and was skipped), but caching it would silently pin the workspace
+  // to a graph without gradle projects — warn and recompute next time instead.
+  if (Object.keys(projectGraphReportCache.nodes).length === 0) {
+    logger.warn(
+      `The 'nxProjectGraph' Gradle task ran but no Gradle projects could be parsed from its output. ` +
+        `This usually means Gradle's console output was suppressed (e.g. a quiet log level in GRADLE_OPTS or gradle.properties) ` +
+        `or the dev.nx.gradle.project-graph plugin is not applied. Re-run with NX_VERBOSE_LOGGING=true to see the raw Gradle output.`
+    );
+    return;
+  }
   writeProjectGraphReportToCache(
     projectGraphReportCachePath,
     projectGraphReportCache,
@@ -200,13 +296,19 @@ export function processNxProjectGraph(
     const line = projectGraphLines[index].trim();
     if (line.startsWith('> Task ') && line.endsWith(':nxProjectGraph')) {
       index++; // Skip the task line before searching for the JSON file path
+      // The task prints its report file path; stop searching at the next task
+      // header (e.g. the path was never printed) or the end of the output.
       while (
         index < projectGraphLines.length &&
-        !projectGraphLines[index].trim().endsWith('.json')
+        !projectGraphLines[index].trim().endsWith('.json') &&
+        !projectGraphLines[index].trim().startsWith('> Task ')
       ) {
         index++;
       }
-      const file = projectGraphLines[index];
+      const file = projectGraphLines[index]?.trim();
+      if (!file?.endsWith('.json')) {
+        continue;
+      }
       const projectGraphReportJson: ProjectGraphReport =
         readJsonFile<ProjectGraphReport>(file);
       projectGraphReportForAllProjects.nodes = {

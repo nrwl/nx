@@ -8,7 +8,7 @@ import {
   validateDependency,
   workspaceRoot,
 } from '@nx/devkit';
-import { join, relative } from 'node:path';
+import { isAbsolute, join, relative } from 'node:path';
 
 import {
   getCurrentProjectGraphReport,
@@ -38,25 +38,30 @@ export const createDependencies: CreateDependencies<
   const { dependencies: dependenciesFromReport } =
     getCurrentProjectGraphReport();
 
+  // Report paths are workspace-relative since dev.nx.gradle.project-graph
+  // 0.1.24; older versions emit absolute paths.
+  const toWorkspaceRelative = (path: string) =>
+    normalizePath(isAbsolute(path) ? relative(workspaceRoot, path) : path) ||
+    '.';
+
   const dependencies: Array<StaticDependency> = [];
   dependenciesFromReport.forEach((dependencyFromPlugin: StaticDependency) => {
     try {
-      const source =
-        relative(workspaceRoot, dependencyFromPlugin.source) || '.';
+      const source = toWorkspaceRelative(dependencyFromPlugin.source);
       const sourceProjectName =
         Object.values(context.projects).find(
           (project) => source === project.root
         )?.name ?? dependencyFromPlugin.source;
-      const target =
-        relative(workspaceRoot, dependencyFromPlugin.target) || '.';
+      const target = toWorkspaceRelative(dependencyFromPlugin.target);
       const targetProjectName =
         Object.values(context.projects).find(
           (project) => target === project.root
         )?.name ?? dependencyFromPlugin.target;
+      const sourceFile = toWorkspaceRelative(dependencyFromPlugin.sourceFile);
       if (
         !sourceProjectName ||
         !targetProjectName ||
-        !existsSync(dependencyFromPlugin.sourceFile)
+        !existsSync(join(workspaceRoot, sourceFile))
       ) {
         return;
       }
@@ -64,9 +69,7 @@ export const createDependencies: CreateDependencies<
         source: sourceProjectName,
         target: targetProjectName,
         type: DependencyType.static,
-        sourceFile: normalizePath(
-          relative(workspaceRoot, dependencyFromPlugin.sourceFile)
-        ),
+        sourceFile,
       };
       validateDependency(dependency, context);
       dependencies.push(dependency);
