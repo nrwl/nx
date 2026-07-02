@@ -5,7 +5,6 @@ import { join, sep } from 'node:path';
 import { writeJsonFile } from '@nx/devkit';
 
 import {
-  isReportFromDifferentWorkspace,
   normalizeProjectGraphReport,
   normalizeReportPath,
   processNxProjectGraph,
@@ -65,70 +64,6 @@ describe('normalizeProjectGraphReport', () => {
         sourceFile: 'apps/app/build.gradle',
       },
     ]);
-  });
-});
-
-describe('isReportFromDifferentWorkspace', () => {
-  const workspaceRoot = join(sep, 'ws');
-
-  it('should be false for relative keys', () => {
-    expect(
-      isReportFromDifferentWorkspace(
-        { nodes: { 'apps/app': {} }, dependencies: [] },
-        workspaceRoot
-      )
-    ).toBe(false);
-  });
-
-  it('should be false for absolute keys under the workspace root', () => {
-    expect(
-      isReportFromDifferentWorkspace(
-        {
-          nodes: { [join(workspaceRoot, 'apps', 'app')]: {} },
-          dependencies: [],
-        },
-        workspaceRoot
-      )
-    ).toBe(false);
-  });
-
-  it('should be false for an empty report', () => {
-    expect(
-      isReportFromDifferentWorkspace(
-        { nodes: {}, dependencies: [] },
-        workspaceRoot
-      )
-    ).toBe(false);
-  });
-
-  it('should be true when every key is absolute under a foreign root', () => {
-    expect(
-      isReportFromDifferentWorkspace(
-        {
-          nodes: {
-            [join(sep, 'other-machine', 'apps', 'app')]: {},
-            [join(sep, 'other-machine', 'libs', 'lib')]: {},
-          },
-          dependencies: [],
-        },
-        workspaceRoot
-      )
-    ).toBe(true);
-  });
-
-  it('should be false when at least one key is local', () => {
-    expect(
-      isReportFromDifferentWorkspace(
-        {
-          nodes: {
-            [join(sep, 'other-machine', 'apps', 'app')]: {},
-            'apps/app': {},
-          },
-          dependencies: [],
-        },
-        workspaceRoot
-      )
-    ).toBe(false);
   });
 });
 

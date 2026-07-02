@@ -15,6 +15,7 @@ import {
 
 import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { gradleConfigAndTestGlob } from '../../utils/split-config-files';
+import { nxVersion } from '../../utils/versions';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { getNxProjectGraphLines } from './get-project-graph-lines';
 import { GradlePluginOptions, normalizeOptions } from './gradle-plugin-options';
@@ -32,6 +33,8 @@ export interface ProjectGraphReport {
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
   hash: string;
+  /** The @nx/gradle version that wrote the cache. */
+  pluginVersion?: string;
 }
 
 /**
@@ -78,55 +81,26 @@ export function normalizeProjectGraphReport(
   };
 }
 
-/**
- * A report whose node keys are all absolute paths under some other root was
- * generated in a different workspace (e.g. a cache restored from another
- * machine) — its keys can never match this workspace's projects.
- */
-export function isReportFromDifferentWorkspace(
-  report: ProjectGraphReport,
-  workspaceRoot: string
-): boolean {
-  const projectRoots = Object.keys(report.nodes ?? {});
-  return (
-    projectRoots.length > 0 &&
-    projectRoots.every(
-      (projectRoot) =>
-        isAbsolute(projectRoot) &&
-        projectRoot !== workspaceRoot &&
-        !projectRoot.startsWith(workspaceRoot + sep)
-    )
-  );
-}
-
 function readProjectGraphReportCache(
   cachePath: string,
-  hash: string,
-  workspaceRoot: string
+  hash: string
 ): ProjectGraphReport | undefined {
   const projectGraphReportCache: Partial<ProjectGraphReportCache> = existsSync(
     cachePath
   )
     ? readJsonFile(cachePath)
     : undefined;
-  if (!projectGraphReportCache || projectGraphReportCache.hash !== hash) {
-    return;
-  }
   if (
-    isReportFromDifferentWorkspace(
-      projectGraphReportCache as ProjectGraphReport,
-      workspaceRoot
-    )
+    !projectGraphReportCache ||
+    projectGraphReportCache.hash !== hash ||
+    // Reports written by other @nx/gradle versions may use a different format
+    // (e.g. absolute machine paths before 0.1.24) — regenerate instead of
+    // trusting them, including when restored from another machine's cache.
+    projectGraphReportCache.pluginVersion !== nxVersion
   ) {
-    logger.warn(
-      `The cached Gradle project graph report at ${cachePath} was generated in a different workspace root. Discarding it and regenerating the report.`
-    );
     return;
   }
-  return normalizeProjectGraphReport(
-    projectGraphReportCache as ProjectGraphReport,
-    workspaceRoot
-  );
+  return projectGraphReportCache as ProjectGraphReport;
 }
 
 export function writeProjectGraphReportToCache(
@@ -136,6 +110,7 @@ export function writeProjectGraphReportToCache(
 ) {
   let projectGraphReportJson: ProjectGraphReportCache = {
     hash,
+    pluginVersion: nxVersion,
     ...results,
   };
 
@@ -200,8 +175,7 @@ export async function populateProjectGraph(
   ]);
   const cached = readProjectGraphReportCache(
     projectGraphReportCachePath,
-    gradleConfigHash,
-    workspaceRoot
+    gradleConfigHash
   );
   if (cached) {
     projectGraphReportCache = cached;
