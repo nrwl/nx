@@ -14,12 +14,14 @@ import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
-import org.gradle.api.tasks.Copy
-import org.gradle.api.tasks.Sync
+import org.gradle.api.internal.tasks.DefaultTaskOutputs
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
+import org.gradle.api.tasks.bundling.Compression
+import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
+import org.gradle.internal.file.TreeType
 
 private val kotlinCompileToolClass: Class<*>? by lazy {
   try {
@@ -31,27 +33,6 @@ private val kotlinCompileToolClass: Class<*>? by lazy {
 
 private fun isKotlinCompileTask(task: Task): Boolean =
     kotlinCompileToolClass?.isInstance(task) == true
-
-// AGP task classes aren't on our classpath; resolve by name (like isKotlinCompileTask).
-// Maintained allow-list of AGP producers whose outputs feed downstream tasks.
-// FQCNs (esp. internal.tasks.*) can move between AGP majors; verify per version.
-private val agpCopyLikeClasses: List<Class<*>> by lazy {
-  listOf(
-          "com.android.build.gradle.tasks.MergeResources",
-          "com.android.build.gradle.tasks.MergeSourceSetFolders",
-          "com.android.build.gradle.tasks.ProcessApplicationManifest",
-          "com.android.build.gradle.internal.tasks.MergeJavaResourceTask",
-      )
-      .mapNotNull { name ->
-        try {
-          Class.forName(name)
-        } catch (e: Throwable) {
-          null
-        }
-      }
-}
-
-private fun isAgpCopyLikeTask(task: Task): Boolean = agpCopyLikeClasses.any { it.isInstance(task) }
 
 /**
  * Process a task and convert it into target Going to populate:
@@ -186,49 +167,97 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
 }
 
 /**
- * Infer file extensions consumed by a task from its dependents' outputs using task type checks.
+ * Derive the file extensions that a task consumes from its dependents' outputs, using ONLY the
+ * Gradle task model (task types and declared outputs). This is a pure function of the configured
+ * build: it never inspects the working tree, so it yields the same result on a clean checkout and
+ * on a fully built one.
  *
  * Test tasks consume .class + .jar (compiled code and library jars on the test classpath). Compile
- * tasks consume .class from upstream compile tasks (e.g. compileTestKotlin → compileKotlin).
- * Archive dependents declare their own extension (jar, war, etc).
+ * tasks consume .class (Kotlin also emits .kotlin_module) from upstream compile tasks. Archive
+ * dependents contribute their declared archive extension (jar, war, tar, and gz/bz2 for compressed
+ * tars). Any dependent that declares concrete FILE outputs contributes those files' extensions.
  *
- * Works at configuration time without requiring files to exist on disk.
+ * Directory outputs are intentionally NOT expanded: the task model does not declare which file
+ * extensions land inside a directory, and scanning it would reintroduce a dependency on transient
+ * on-disk state. Producers whose artifacts must invalidate consumers should declare file outputs
+ * (or wire `from(task)` delegation) so their extensions are visible here.
  */
 fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
   val extensions = mutableSetOf<String>()
 
-  when {
-    task is GradleTest -> {
-      extensions.add("class")
-      extensions.add("jar")
-    }
-    task is AbstractCompile || isKotlinCompileTask(task) -> extensions.add("class")
-  }
+  // Extensions implied by this task's own type (what it consumes from upstream).
+  extensions.addAll(extensionsForTaskType(task))
 
+  // Extensions implied by each dependent task's declared model (what it produces).
   dependentTasks.forEach { depTask ->
-    if (depTask is AbstractArchiveTask) {
-      try {
-        depTask.archiveExtension.get().takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
-      } catch (e: Exception) {
-        task.logger.debug("Could not read archiveExtension for ${depTask.path}: ${e.message}")
-      }
-    }
-    if (depTask is AbstractCompile || isKotlinCompileTask(depTask)) {
-      extensions.add("class")
-    }
-    if (depTask is Copy || depTask is Sync || isAgpCopyLikeTask(depTask)) {
-      try {
-        depTask.inputs.files.forEach { f ->
-          if (f.isFile && f.extension.isNotEmpty()) extensions.add(f.extension)
-        }
-      } catch (e: Exception) {
-        task.logger.debug(
-            "Could not read copy/merge source inputs for ${depTask.path}: ${e.message}")
-      }
-    }
+    extensions.addAll(extensionsForTaskType(depTask))
+    extensions.addAll(declaredArchiveExtensions(depTask))
+    extensions.addAll(declaredFileOutputExtensions(depTask))
   }
 
   return extensions.toSet()
+}
+
+/**
+ * Extensions a task's type is known to consume from (or produce for) upstream tasks, derived purely
+ * from the task class. Reuses [isKotlinCompileTask] for Kotlin-compile detection.
+ */
+private fun extensionsForTaskType(task: Task): Set<String> =
+    when {
+      task is GradleTest -> setOf("class", "jar")
+      isKotlinCompileTask(task) -> setOf("class", "kotlin_module")
+      task is AbstractCompile -> setOf("class")
+      else -> emptySet()
+    }
+
+/**
+ * Declared archive extension(s) for an [AbstractArchiveTask] (Jar/Zip/Tar/War/shadowJar), read from
+ * the task model without requiring the archive to exist. Compressed tars additionally contribute
+ * the compression suffix (gz/bz2), since the produced file ends in that extension even though
+ * `archiveExtension` remains "tar".
+ */
+private fun declaredArchiveExtensions(task: Task): Set<String> {
+  if (task !is AbstractArchiveTask) return emptySet()
+  val extensions = mutableSetOf<String>()
+  try {
+    task.archiveExtension.orNull?.takeIf { it.isNotEmpty() }?.let { extensions.add(it) }
+  } catch (e: Exception) {
+    task.logger.debug("Could not read archiveExtension for ${task.path}: ${e.message}")
+  }
+  if (task is Tar) {
+    when (task.compression) {
+      Compression.GZIP -> extensions.add("gz")
+      Compression.BZIP2 -> extensions.add("bz2")
+      else -> {}
+    }
+  }
+  return extensions
+}
+
+/**
+ * Extensions of a task's declared FILE outputs, read from the task model. Only FILE-type outputs
+ * are considered: the model declares their concrete paths (available even before the files exist),
+ * whereas DIRECTORY outputs declare no inner extensions and are skipped on purpose to avoid
+ * depending on transient on-disk state.
+ */
+private fun declaredFileOutputExtensions(task: Task): Set<String> {
+  val extensions = mutableSetOf<String>()
+  try {
+    val outputs = task.outputs as? DefaultTaskOutputs ?: return emptySet()
+    outputs.fileProperties.forEach { spec ->
+      if (spec.outputType == TreeType.FILE) {
+        spec.propertyFiles.forEach { file ->
+          val extension = file.extension
+          if (extension.isNotEmpty()) {
+            extensions.add(extension)
+          }
+        }
+      }
+    }
+  } catch (e: Exception) {
+    task.logger.debug("Could not read declared file outputs for ${task.path}: ${e.message}")
+  }
+  return extensions
 }
 
 /**
@@ -266,24 +295,16 @@ private fun getInputsForTaskImpl(
   return try {
     val inputs = mutableListOf<Any>()
     val externalDependencies = mutableListOf<String>()
-    val dependentTaskOutputExtensions = mutableSetOf<String>()
 
     inputs.addAll(getGradleFilesInputs(workspaceRoot))
 
-    // Collect outputs from dependent tasks - group by extension for glob patterns
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
-    tasksToProcess.forEach { dependentTask ->
-      dependentTask.outputs.files.files.forEach { outputFile ->
-        if (isFileInWorkspace(outputFile, workspaceRoot)) {
-          val extension = outputFile.extension
-          if (extension.isNotEmpty()) {
-            dependentTaskOutputExtensions.add(extension)
-          }
-        }
-      }
-    }
 
-    // Process each tasks's input files from the tooling API
+    // Classify this task's declared input files into direct source inputs vs external
+    // dependencies. Build-artifact extensions are intentionally NOT harvested from the working
+    // tree here; they are derived deterministically from the Gradle task model below (see
+    // inferExtensionsFromInputProperties). Keeping this independent of on-disk build state ensures
+    // two checkouts of the same commit produce the same graph.
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
@@ -299,14 +320,10 @@ private fun getInputsForTaskImpl(
           }
         }
 
-        // File matches gitignore pattern - treat as dependentTasksOutputFiles (build artifact)
-        // Group by extension for glob patterns
-        gitIgnoreClassifier.isIgnored(inputFile) -> {
-          val extension = inputFile.extension
-          if (extension.isNotEmpty()) {
-            dependentTaskOutputExtensions.add(extension)
-          }
-        }
+        // File matches gitignore pattern - it is a build artifact, not a source input. Skip it so
+        // it is not added as a direct input; its extension is recovered from the task model, not
+        // from the working tree.
+        gitIgnoreClassifier.isIgnored(inputFile) -> {}
 
         // Regular source file - add as direct input
         else -> {
@@ -315,9 +332,9 @@ private fun getInputsForTaskImpl(
       }
     }
 
-    // Supplement with extensions inferred from Gradle metadata (handles clean builds where
-    // output directories exist but are empty, so file-based extension discovery misses them)
-    dependentTaskOutputExtensions.addAll(inferExtensionsFromInputProperties(task, tasksToProcess))
+    // Derive dependent-task output extensions purely from the Gradle task model (task types and
+    // declared archive/file outputs), independent of whether build artifacts exist on disk.
+    val dependentTaskOutputExtensions = inferExtensionsFromInputProperties(task, tasksToProcess)
 
     // Consolidate dependent-task outputs into per-extension globs (skip non-deterministic IC state)
     dependentTaskOutputExtensions
@@ -336,11 +353,6 @@ private fun getInputsForTaskImpl(
     task.logger.debug("Stack trace:", e)
     null
   }
-}
-
-/** Checks if a file is within the workspace. */
-private fun isFileInWorkspace(file: File, workspaceRoot: String): Boolean {
-  return file.path.startsWith(workspaceRoot + File.separator)
 }
 
 /**

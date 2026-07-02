@@ -221,62 +221,69 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask discovers Copy task source extensions in clean build`() {
-      // Create source files with specific extensions in a source directory
-      val sourceDir = java.io.File("$workspaceRoot/src/resources").apply { mkdirs() }
-      java.io.File(sourceDir, "config.conf").writeText("test config")
-      java.io.File(sourceDir, "data.json").writeText("{}")
+    fun `test getInputsForTask dependent output extensions are deterministic across trees`() {
+      // A dependent whose extension IS derivable from the task model (declared archive extension).
+      val jarProducer =
+          project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
+      jarProducer.archiveExtension.set("jar")
 
-      // Create a Copy task that copies from source to destination (but don't populate destination)
-      val copyTask =
-          project.tasks.register("processResources", org.gradle.api.tasks.Copy::class.java).get()
-      copyTask.from(sourceDir)
-      copyTask.into(java.io.File("$workspaceRoot/build/resources"))
-      // Note: we do NOT create/populate the destination directory to simulate a clean build
+      // A Copy dependent whose SOURCE extensions must NOT leak into the derivation: their presence
+      // on disk depends on transient build state.
+      val sourceDir = java.io.File("$workspaceRoot/src/bundled")
+      val copyDep =
+          project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
+      copyDep.from(sourceDir)
+      copyDep.into(java.io.File("$workspaceRoot/build/bundled"))
 
-      // Create a consumer task that depends on the Copy task
-      val consumerTask = project.tasks.register("classes").get()
-      consumerTask.dependsOn(copyTask)
+      val consumer = project.tasks.register("consumerDeterministic").get()
+      consumer.dependsOn(jarProducer, copyDep)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result =
+
+      fun outputFileGlobs(): Set<String> =
           getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
 
-      assertNotNull(result, "Result should not be null")
+      // Clean tree: no source or artifact files on disk.
+      val clean = outputFileGlobs()
 
-      // Should contain globs for both .conf and .json extensions inferred from Copy task inputs
-      assertTrue(
-          result!!.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.conf" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.conf glob in result: $result")
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.json" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.json glob in result: $result")
+      // Built tree: create Copy sources and the jar output on disk (transient build state).
+      sourceDir.mkdirs()
+      java.io.File(sourceDir, "bundle.tar.gz").writeText("x")
+      java.io.File(sourceDir, "data.json").writeText("{}")
+      java.io.File("$workspaceRoot/build/libs").mkdirs()
+      java.io.File("$workspaceRoot/build/libs/app.jar").writeText("x")
+      val built = outputFileGlobs()
+
+      // The derivation must be a pure function of the task model, not of on-disk build state.
+      assertEquals(
+          clean,
+          built,
+          "dependentTasksOutputFiles must not change between a clean and a built tree")
+
+      // The model-derivable extension is present; the Copy SOURCE extensions never leak in.
+      assertTrue(clean.contains("**/*.jar"), "Expected jar from archiveExtension, got $clean")
+      assertFalse(clean.contains("**/*.gz"), "Copy source .gz must not leak, got $clean")
+      assertFalse(clean.contains("**/*.json"), "Copy source .json must not leak, got $clean")
     }
 
     @Test
-    fun `test getInputsForTask discovers Sync task source extensions in clean build`() {
-      // Create source files with specific extensions in a source directory
+    fun `test getInputsForTask does not derive extensions from Copy or Sync source files`() {
+      // Regression guard: Copy/Sync SOURCE file extensions must not drive dependentTasksOutputFiles
+      // globs. Their presence on disk depends on transient build state, and a Sync/Copy task
+      // declares only a destination DIRECTORY output (no per-extension info) in the task model.
       val sourceDir = java.io.File("$workspaceRoot/src/sync-input").apply { mkdirs() }
       java.io.File(sourceDir, "config.conf").writeText("test config")
       java.io.File(sourceDir, "data.json").writeText("{}")
 
-      // Create a Sync task that syncs from source to destination (but don't populate destination)
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
       syncTask.from(sourceDir)
       syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
-      // Note: we do NOT create/populate the destination directory to simulate a clean build
 
-      // Create a consumer task that depends on the Sync task
       val consumerTask = project.tasks.register("consumerSync").get()
       consumerTask.dependsOn(syncTask)
 
@@ -285,23 +292,14 @@ class ProcessTaskUtilsTest {
           getInputsForTask(
               null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
-      assertNotNull(result, "Result should not be null")
+      val globs =
+          result
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
 
-      // Should contain globs for both .conf and .json extensions inferred from Sync task inputs
-      assertTrue(
-          result!!.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.conf" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.conf glob in result for Sync: $result")
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.json" &&
-                it["transitive"] == true
-          },
-          "Expected **/*.json glob in result for Sync: $result")
+      assertFalse(globs.contains("**/*.conf"), "Sync source .conf must not leak, got $globs")
+      assertFalse(globs.contains("**/*.json"), "Sync source .json must not leak, got $globs")
     }
 
     @Test
@@ -342,10 +340,9 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test AGP task detection gracefully handles missing classes in classpath`() {
-      // When AGP classes are not on the classpath, isAgpCopyLikeTask returns false.
-      // This test verifies the detection doesn't crash and gracefully degrades.
-      // Create a plain task (not Copy, Sync, or AGP) as a dependency.
+    fun `test getInputsForTask with a plain dependent yields no output-file globs`() {
+      // A dependent task with no recognized type and no declared outputs contributes no
+      // dependentTasksOutputFiles globs, and the derivation must not crash.
       val plainTask = project.tasks.register("plainTask").get()
 
       // Create a consumer task that depends on it
@@ -354,13 +351,17 @@ class ProcessTaskUtilsTest {
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
 
-      // This should not crash even though AGP is not on the classpath
       val result =
           getInputsForTask(
               null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
-      // Verify it completes without error (graceful degradation)
-      // Result can be null if there are no inputs - thats fine
+      // No recognized type or declared outputs -> no output-file globs (result may be null if the
+      // task has no inputs at all).
+      val globs =
+          result?.filterIsInstance<Map<*, *>>()?.count {
+            it.containsKey("dependentTasksOutputFiles")
+          } ?: 0
+      assertEquals(0, globs, "Plain dependent should yield no dependentTasksOutputFiles: $result")
     }
 
     @Test
@@ -588,10 +589,9 @@ class ProcessTaskUtilsTest {
 
       // Add inputs with mixed types
       val sourceFile = java.io.File("$workspaceRoot/src/main.kt") // Not ignored - should be input
-      val buildFile = java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - should be
-      // dependentTasksOutputFiles
-      val logFile =
-          java.io.File("$workspaceRoot/app.log") // Ignored - should be dependentTasksOutputFiles
+      val buildFile =
+          java.io.File("$workspaceRoot/build/classes/Main.class") // Ignored - build artifact
+      val logFile = java.io.File("$workspaceRoot/app.log") // Ignored - build artifact
       val configFile =
           java.io.File("$workspaceRoot/config/app.properties") // Not ignored - should be input
 
@@ -610,21 +610,22 @@ class ProcessTaskUtilsTest {
       // Config file should be regular input
       assertTrue(result.any { it == Path("{projectRoot}", "config", "app.properties").toString() })
 
-      // Build file (class extension) should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.class" &&
-                it["transitive"] == true
-          })
+      // Gitignored build artifacts must NOT be added as direct source inputs.
+      assertFalse(
+          result.any { it == Path("{projectRoot}", "build", "classes", "Main.class").toString() },
+          "Gitignored build artifact should not be a direct input: $result")
+      assertFalse(
+          result.any { it == Path("{projectRoot}", "app.log").toString() },
+          "Gitignored log file should not be a direct input: $result")
 
-      // Log file should be consolidated into dependentTasksOutputFiles glob
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.log" &&
-                it["transitive"] == true
-          })
+      // Extensions are NOT harvested from gitignored inputs on disk; they are derived from the task
+      // model (dependent task outputs). This task has no dependents, so no output-file globs exist.
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" },
+          "Extensions must not be harvested from gitignored inputs on disk: $result")
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.log" },
+          "Extensions must not be harvested from gitignored inputs on disk: $result")
     }
 
     @Test
@@ -661,20 +662,21 @@ class ProcessTaskUtilsTest {
 
       assertTrue(result!!.any { it == Path("{projectRoot}", "src", "Main.java").toString() })
 
-      // Both ignored files should be consolidated into glob patterns by extension
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.class" &&
-                it["transitive"] == true
-          })
+      // Gitignored build artifacts must NOT be added as direct source inputs.
+      assertFalse(
+          result.any { it == Path("{projectRoot}", "dist", "production", "Main.class").toString() },
+          "Gitignored build artifact should not be a direct input: $result")
+      assertFalse(
+          result.any { it == Path("{projectRoot}", "dist", "app.jar").toString() },
+          "Gitignored build artifact should not be a direct input: $result")
 
-      assertTrue(
-          result.any {
-            it is Map<*, *> &&
-                it["dependentTasksOutputFiles"] == "**/*.jar" &&
-                it["transitive"] == true
-          })
+      // Extensions are NOT harvested from gitignored inputs on disk (this task has no dependents).
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.class" },
+          "Extensions must not be harvested from gitignored inputs on disk: $result")
+      assertFalse(
+          result.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == "**/*.jar" },
+          "Extensions must not be harvested from gitignored inputs on disk: $result")
     }
   }
 
