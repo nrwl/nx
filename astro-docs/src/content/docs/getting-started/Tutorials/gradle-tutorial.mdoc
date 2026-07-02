@@ -118,6 +118,15 @@ nx init
 This command will download the latest version of Nx and help set up your repository to take advantage of it. Nx will
 also detect Gradle is used in the repo so it will propose adding the `@nx/gradle` plugin to integrate Gradle with Nx.
 
+{% aside type="note" title="Run the Gradle setup through nx init" %}
+The `nx init` workflow installs Nx packages, registers `@nx/gradle`, and configures the Gradle companion plugin
+`dev.nx.gradle.project-graph` in your Gradle build files. Running `npm install` only installs packages; it is not a
+substitute for `nx init` and will not wire the Gradle project graph plugin into your build.
+
+If you already have an Nx workspace and add Gradle files later, run `nx init` from the workspace root after `gradle init`
+or after adding `@nx/gradle` so Nx can refresh the Gradle project graph setup before you run `nx graph`.
+{% /aside %}
+
 1. You'll also be prompted to add Nx Cloud, select "yes"
 2. Select the plugin and continue with the setup.
 
