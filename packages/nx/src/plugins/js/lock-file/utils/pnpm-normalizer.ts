@@ -71,6 +71,12 @@ const YAML_DOCUMENT_SEPARATOR = '\n---\n';
 // always read the workspace document.
 // https://github.com/pnpm/pnpm/blob/main/lockfile/fs/src/yamlDocuments.ts
 function extractMainLockfileDocument(content: string): string {
+  // Normalize line endings to LF to handle Windows CRLF
+  // Lockfile content read on Windows may have 
+ line endings
+  content = content.replace(/
+/g, '
+');
   if (!content.startsWith(YAML_DOCUMENT_START)) {
     return content;
   }
