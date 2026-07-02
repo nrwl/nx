@@ -145,6 +145,13 @@ to = "/docs/features/ci-features/resource-usage"
 from = "/docs/knowledge-base/installation"
 to = "/docs/knowledge-base/installation-and-updates"
 
+# @nx/vite:convert-to-inferred linked to this. The link need to be fixed in code, and
+# this redirect added to handle holder plugin versions using the old link.
+# https://github.com/nrwl/nx/issues/36053
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/configure-vite"
+to = "/docs/technologies/build-tools/vite/guides/configure-vite"
+
 # DOC-522: Polygraph is a standalone product, no longer part of Nx Cloud.
 # Reroute the Polygraph-specific docs pages to the standalone landing page.
 # force = true so these win over the catch-all rewrite below.
