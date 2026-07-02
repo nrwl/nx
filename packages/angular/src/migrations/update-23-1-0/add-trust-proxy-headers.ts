@@ -20,6 +20,9 @@ export default async function (tree: Tree) {
       }
 
       const content = tree.read(path, 'utf-8');
+      if (!content) {
+        return;
+      }
       // Skip already-migrated files and files not instantiating an SSR engine.
       if (
         content.includes(TODO_COMMENT) ||
