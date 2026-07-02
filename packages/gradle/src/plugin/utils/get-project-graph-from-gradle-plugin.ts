@@ -241,15 +241,10 @@ export async function populateProjectGraph(
     processNxProjectGraph(projectGraphLines),
     workspaceRoot
   );
-  // An empty report can be legitimate (e.g. every project's node computation
-  // failed and was skipped), but caching it would silently pin the workspace
-  // to a graph without gradle projects — warn and recompute next time instead.
+  // An empty report can be legitimate (e.g. no project produced nodes), but
+  // don't cache it so a transiently-degraded run cannot pin the workspace to
+  // a graph without gradle projects.
   if (Object.keys(projectGraphReportCache.nodes).length === 0) {
-    logger.warn(
-      `The 'nxProjectGraph' Gradle task ran but no Gradle projects could be parsed from its output. ` +
-        `This usually means Gradle's console output was suppressed (e.g. a quiet log level in GRADLE_OPTS or gradle.properties) ` +
-        `or the dev.nx.gradle.project-graph plugin is not applied. Re-run with NX_VERBOSE_LOGGING=true to see the raw Gradle output.`
-    );
     return;
   }
   writeProjectGraphReportToCache(
