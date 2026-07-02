@@ -1,6 +1,5 @@
 import { calculateHashesForCreateNodes } from '@nx/devkit/internal';
 import {
-  AggregateCreateNodesError,
   CreateNodes,
   CreateNodesContext,
   ProjectConfiguration,
@@ -193,28 +192,6 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
             },
           ]);
         }
-      }
-
-      // The report has projects but none matched a build file in this
-      // workspace — a silent zero-node graph here diverges from other
-      // machines (e.g. DTE coordinator vs agents), so fail loudly.
-      if (
-        results.length === 0 &&
-        allBuildFiles.length > 0 &&
-        Object.keys(nodes).length > 0
-      ) {
-        throw new AggregateCreateNodesError(
-          gradlewFiles.map((gradlewFile) => [
-            gradlewFile,
-            new Error(
-              `The Gradle project graph report contains ${
-                Object.keys(nodes).length
-              } project(s), but none matched the Gradle build files in this workspace. ` +
-                `The report may have been generated for a different workspace or by an incompatible dev.nx.gradle.project-graph plugin version.`
-            ),
-          ]),
-          []
-        );
       }
 
       return results;
