@@ -1,15 +1,16 @@
 use color_eyre::eyre::Result;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+
+use super::scroll_momentum::ScrollDirection;
 #[cfg(not(test))]
 use napi::threadsafe_function::ThreadsafeFunction;
 #[cfg(not(test))]
 use napi::{Status, bindgen_prelude::Unknown};
 use parking_lot::Mutex;
-use ratatui::layout::{Alignment, Rect, Size};
+use ratatui::layout::{Alignment, Position, Rect, Size};
 use ratatui::style::Modifier;
 use ratatui::style::Style;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::io;
 use std::io::Write;
@@ -26,6 +27,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::clipboard::copy_to_clipboard;
 use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
@@ -34,10 +36,11 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::nx_paragraph::NxParagraph;
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
-use super::components::tasks_list::{TaskStatus, TasksList};
+use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
@@ -119,6 +122,29 @@ pub struct App {
     // Batch tracking
     batch_states: HashMap<String, BatchState>, // batch_id → BatchState
     completed_pinned_batches: HashMap<String, CompletedBatchInfo>, // Completed batches still pinned to panes
+    /// Hit-test regions captured during the last render, used to route mouse
+    /// clicks/scrolls to whatever is under the cursor. Rebuilt every frame.
+    mouse_regions: Vec<MouseRegion>,
+    /// Timestamp + cell of the last left-button press, for double-click detection.
+    last_click: Option<(std::time::Instant, u16, u16)>,
+    /// Index of the pane an in-progress text-selection drag belongs to.
+    selecting_pane: Option<usize>,
+    /// Whether the TUI is currently capturing the mouse. Toggled with F10 so the
+    /// user can fall back to their terminal's native cell selection.
+    mouse_capture_enabled: bool,
+    /// An in-progress (or completed-but-still-highlighted) text selection over a
+    /// rendered region (popup text area or task list), in screen coordinates.
+    region_selection: Option<RegionSelection>,
+    /// Snapshot of the selectable region's on-screen cells from the last render,
+    /// used to extract selected text and resolve link clicks. Rebuilt every
+    /// frame while a popup is open or a region selection is active.
+    region_snapshot: Option<RegionSnapshot>,
+    /// A left-press over the task list whose action (select row / inline / cloud
+    /// link) is deferred to release, so a drag becomes a text selection instead.
+    pending_list_click: Option<(u16, u16, bool)>,
+    /// A left-press on a dependency-view row whose navigation `(pane_idx, task)`
+    /// is deferred to release, so a drag becomes a text selection instead.
+    pending_dep_nav: Option<(usize, String)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -128,6 +154,201 @@ pub enum Focus {
     HelpPopup,
     CountdownPopup,
     HintPopup,
+}
+
+/// A rectangular region captured during the last render that mouse events can
+/// target. Rebuilt every frame so hit-testing always reflects what's on screen.
+#[derive(Debug, Clone, Copy)]
+struct MouseRegion {
+    rect: Rect,
+    kind: MouseRegionKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum MouseRegionKind {
+    /// The task list panel. Row vs. cloud-link resolution is delegated to the
+    /// `TasksList` component, which knows its own internal geometry.
+    TaskList,
+    /// An output pane, identified by its index into `terminal_pane_data`.
+    Pane(usize),
+}
+
+/// A text selection over a rendered region (a popup's text area or the task
+/// list), tracked in screen coordinates. Unlike the PTY selection (which uses
+/// content coordinates and survives scrolling), this reads straight off the
+/// rendered buffer, so it intentionally does not re-anchor when the region
+/// scrolls mid-drag.
+#[derive(Debug, Clone, Copy)]
+struct RegionSelection {
+    /// Where the drag started, `(col, row)`.
+    anchor: (u16, u16),
+    /// Current drag position, `(col, row)`.
+    cursor: (u16, u16),
+    /// The region the selection is confined to.
+    area: Rect,
+    /// Whether the left button is still held.
+    dragging: bool,
+}
+
+impl RegionSelection {
+    /// `(start, end)` ordered in reading order (top-to-bottom, left-to-right).
+    fn ordered(&self) -> ((u16, u16), (u16, u16)) {
+        // Compare by (row, col) so earlier rows always sort first.
+        let a = (self.anchor.1, self.anchor.0);
+        let c = (self.cursor.1, self.cursor.0);
+        if a <= c {
+            (self.anchor, self.cursor)
+        } else {
+            (self.cursor, self.anchor)
+        }
+    }
+
+    /// Whether the selection covers any cells (a click with no drag does not).
+    fn is_nonempty(&self) -> bool {
+        self.anchor != self.cursor
+    }
+
+    /// Whether `(col, row)` is inside the selection, using reading-order
+    /// semantics so partial first/last rows highlight correctly.
+    fn contains(&self, col: u16, row: u16) -> bool {
+        let ((sx, sy), (ex, ey)) = self.ordered();
+        if row < sy || row > ey {
+            return false;
+        }
+        if sy == ey {
+            col >= sx && col <= ex
+        } else if row == sy {
+            col >= sx
+        } else if row == ey {
+            col <= ex
+        } else {
+            true
+        }
+    }
+}
+
+/// Per-cell glyphs of a selectable region (popup text area or task list),
+/// captured each frame so mouse-up can extract the selected text and clicks can
+/// resolve links without re-deriving the rendered layout.
+#[derive(Debug, Clone)]
+struct RegionSnapshot {
+    /// The region the cells were captured from.
+    area: Rect,
+    /// `cells[row][col]` is the symbol at `(area.x + col, area.y + row)`.
+    cells: Vec<Vec<String>>,
+}
+
+impl RegionSnapshot {
+    /// Resolve a URL at a clicked cell by scanning for a whitespace-delimited
+    /// token that looks like a link.
+    fn url_at(&self, col: u16, row: u16) -> Option<String> {
+        if !self.area.contains(Position::new(col, row)) {
+            return None;
+        }
+        let cells = self.cells.get((row - self.area.y) as usize)?;
+        let c = (col - self.area.x) as usize;
+        let is_ws = |s: &str| s.trim().is_empty();
+        if cells.get(c).is_none_or(|s| is_ws(s)) {
+            return None;
+        }
+        // Expand left and right over the contiguous non-whitespace run.
+        let mut start = c;
+        while start > 0 && !is_ws(&cells[start - 1]) {
+            start -= 1;
+        }
+        let mut end = c;
+        while end + 1 < cells.len() && !is_ws(&cells[end + 1]) {
+            end += 1;
+        }
+        let token: String = cells[start..=end].concat();
+        let trimmed = token
+            .trim_start_matches(['(', '[', '<'])
+            .trim_end_matches([')', '.', ',', ']', '>']);
+        if trimmed.starts_with("http://") || trimmed.starts_with("https://") {
+            Some(trimmed.to_string())
+        } else {
+            None
+        }
+    }
+
+    /// Extract the selected text in reading order, trimming trailing blanks.
+    fn selected_text(&self, sel: &RegionSelection) -> String {
+        let ((sx, sy), (ex, ey)) = sel.ordered();
+        let mut out = String::new();
+        for screen_row in sy..=ey {
+            if screen_row < self.area.y || screen_row >= self.area.y + self.area.height {
+                continue;
+            }
+            let Some(cells) = self.cells.get((screen_row - self.area.y) as usize) else {
+                continue;
+            };
+            if cells.is_empty() {
+                if screen_row != ey {
+                    out.push('\n');
+                }
+                continue;
+            }
+            let last = cells.len() - 1;
+            let to_idx = |screen_col: u16| (screen_col.saturating_sub(self.area.x)) as usize;
+            let (from, to) = if sy == ey {
+                (to_idx(sx), to_idx(ex))
+            } else if screen_row == sy {
+                (to_idx(sx), last)
+            } else if screen_row == ey {
+                (0, to_idx(ex))
+            } else {
+                (0, last)
+            };
+            let from = from.min(last);
+            let to = to.min(last);
+            let line: String = cells[from..=to].concat();
+            out.push_str(line.trim_end());
+            if screen_row != ey {
+                out.push('\n');
+            }
+        }
+        out
+    }
+}
+
+/// Maximum delay between two left-clicks (on the same cell) to count as a
+/// double-click. crossterm reports individual button presses, so we detect
+/// double-clicks ourselves.
+const DOUBLE_CLICK_MS: u128 = 400;
+
+/// Open a URL in the user's default browser (NXC-3940). Best-effort: a missing
+/// opener can never crash the TUI. Returns `true` if the opener process was
+/// spawned, `false` if it couldn't be (e.g. no `xdg-open` on a headless box) so
+/// the caller can tell the user instead of failing silently. The child's stdio
+/// is detached to null so it can't corrupt the terminal we're drawing to.
+fn open_url(url: &str) -> bool {
+    use std::process::{Command, Stdio};
+
+    #[cfg(target_os = "macos")]
+    let mut cmd = {
+        let mut c = Command::new("open");
+        c.arg(url);
+        c
+    };
+    #[cfg(target_os = "windows")]
+    let mut cmd = {
+        let mut c = Command::new("cmd");
+        // The empty "" is the window title argument that `start` expects first.
+        c.args(["/C", "start", "", url]);
+        c
+    };
+    #[cfg(all(not(target_os = "macos"), not(target_os = "windows")))]
+    let mut cmd = {
+        let mut c = Command::new("xdg-open");
+        c.arg(url);
+        c
+    };
+
+    cmd.stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+        .is_ok()
 }
 
 impl App {
@@ -314,6 +535,14 @@ impl App {
             debug_mode: false,
             debug_state: TuiWidgetState::default().set_default_display_level(LevelFilter::Debug),
             restored_from_mode_switch: has_restored_state,
+            mouse_regions: Vec::new(),
+            last_click: None,
+            selecting_pane: None,
+            mouse_capture_enabled: true,
+            region_selection: None,
+            region_snapshot: None,
+            pending_list_click: None,
+            pending_dep_nav: None,
             // Restore batch states from TuiState (mode switching persistence)
             batch_states: batch_metadata
                 .iter()
@@ -656,6 +885,9 @@ impl App {
             }
             tui::Event::Render => action_tx.send(Action::Render)?,
             tui::Event::Resize(x, y) => action_tx.send(Action::Resize(x, y))?,
+            tui::Event::Mouse(mouse) => {
+                self.handle_mouse_event(mouse, action_tx);
+            }
             tui::Event::Key(key) => {
                 trace!("Handling Key Event: {:?}", key);
 
@@ -702,6 +934,13 @@ impl App {
 
                 if matches!(key.code, KeyCode::F(12)) {
                     self.dispatch_action(Action::ToggleDebugMode);
+                    return Ok(false);
+                }
+
+                // F10 toggles mouse capture so the user can fall back to their
+                // terminal's native cell selection (and back).
+                if matches!(key.code, KeyCode::F(10)) {
+                    self.dispatch_action(Action::ToggleMouseCapture);
                     return Ok(false);
                 }
 
@@ -1241,9 +1480,49 @@ impl App {
                 self.debug_mode = !self.debug_mode;
                 debug!("Debug mode: {}", self.debug_mode);
             }
+            Action::ToggleMouseCapture => {
+                self.mouse_capture_enabled = !self.mouse_capture_enabled;
+                if self.mouse_capture_enabled {
+                    let _ = crate::native::tui::tui::enable_mouse_capture();
+                    // Returning to in-app behavior; drop the explanatory hint.
+                    let was_hint_focused = matches!(self.focus, Focus::HintPopup);
+                    if let Some(hint_popup) = self
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                        && hint_popup.is_visible()
+                    {
+                        hint_popup.hide();
+                        if was_hint_focused {
+                            self.update_focus(self.previous_focus);
+                        }
+                    }
+                } else {
+                    let _ = crate::native::tui::tui::disable_mouse_capture();
+                    // In-app selections can no longer be updated by the mouse.
+                    self.clear_all_pane_selections();
+                    self.region_selection = None;
+                    self.dispatch_action(Action::ShowHint(
+                        "Mouse capture off — drag to select text with your terminal. Press F10 to re-enable."
+                            .to_string(),
+                    ));
+                }
+            }
             Action::Render => {
+                // Hit-test regions are rebuilt every frame inside the draw closure,
+                // then stored on self so mouse events can resolve what's under the cursor.
+                let mut captured_regions: Vec<MouseRegion> = Vec::new();
                 tui.draw(|f| {
                     let area = f.area();
+
+                    // Clear every component's link registry before drawing. Each
+                    // repopulates its links as it renders, so a component that
+                    // isn't drawn this frame leaves no stale clickable regions.
+                    for component in self.components.iter_mut() {
+                        if let Some(registry) = component.link_registry_mut() {
+                            registry.clear();
+                        }
+                    }
 
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
@@ -1288,7 +1567,7 @@ impl App {
                         // without any vertical padding to prevent index out of bounds errors
                         if frame_area.height < 3 {
                             let paragraph =
-                                Paragraph::new(vec![message]).alignment(Alignment::Center);
+                                NxParagraph::new(vec![message]).alignment(Alignment::Center);
 
                             // Create a safe area that's guaranteed to be within bounds
                             let safe_area = Rect {
@@ -1321,7 +1600,7 @@ impl App {
                         // Add the message
                         lines.push(message);
 
-                        let paragraph = Paragraph::new(lines).alignment(Alignment::Center);
+                        let paragraph = NxParagraph::new(lines).alignment(Alignment::Center);
 
                         // Create a safe area that's guaranteed to be within bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
                         let safe_area = Rect {
@@ -1347,6 +1626,10 @@ impl App {
                             .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                     {
                         let _ = tasks_list.draw(f, task_list_area);
+                        captured_regions.push(MouseRegion {
+                            rect: task_list_area,
+                            kind: MouseRegionKind::TaskList,
+                        });
                     }
 
                     // Clone terminal pane areas upfront to avoid borrow conflicts with self
@@ -1431,6 +1714,10 @@ impl App {
                             }
                         }
 
+                        captured_regions.push(MouseRegion {
+                            rect: pane_area,
+                            kind: MouseRegionKind::Pane(pane_idx),
+                        });
                         physical_idx += 1;
                     }
 
@@ -1457,8 +1744,19 @@ impl App {
                     {
                         let _ = hint_popup.draw(f, frame_area);
                     }
+
+                    // Snapshot the selectable region's cells (for mouse selection
+                    // / link clicks) and paint any in-progress selection on top.
+                    self.capture_region_snapshot_and_highlight(f);
+
+                    // Persistent indicator while mouse capture is disabled (F10),
+                    // drawn last so it sits above everything else.
+                    if !self.mouse_capture_enabled {
+                        Self::draw_mouse_capture_badge(f, frame_area);
+                    }
                 })
                 .ok();
+                self.mouse_regions = captured_regions;
             }
             Action::SendConsoleMessage(msg) => {
                 let state = self.core.state().lock();
@@ -1532,6 +1830,16 @@ impl App {
         if let Some(message) = message {
             self.dispatch_action(Action::UpdateCloudMessage(message));
         }
+    }
+
+    pub fn set_cloud_link(&mut self, label: String, url: String) {
+        // Store in state (for mode switching persistence)
+        self.core
+            .state()
+            .lock()
+            .set_cloud_link(Some((label.clone(), url.clone())));
+        // Dispatch to TasksList component for UI rendering
+        self.dispatch_action(Action::UpdateCloudLink(label, url));
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1804,6 +2112,70 @@ impl App {
     /// Pin the selected task to a pane. If the task is already pinned to the other
     /// pane, it moves it. Never unpins, never focuses. Used by init and as a
     /// building block for display_and_focus.
+    /// The dependency-view state for `pane_idx`, but only when the pane is
+    /// actually rendering a dependency view (a pending/skipped task). A pane only
+    /// shows the dependency view under that condition, so mirror it before
+    /// trusting the captured render data.
+    fn active_dependency_view(&self, pane_idx: usize) -> Option<&DependencyViewState> {
+        let pane_sel = if self.spacebar_mode {
+            self.selection_manager.lock().get_selection().cloned()
+        } else {
+            self.pane_tasks[pane_idx].clone()
+        };
+        let SelectionEntry::Task(task_name) = pane_sel? else {
+            return None;
+        };
+        let status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        if !matches!(status, TaskStatus::NotStarted | TaskStatus::Skipped) {
+            return None;
+        }
+        self.dependency_view_states[pane_idx].as_ref()
+    }
+
+    /// Mutable counterpart to [`Self::active_dependency_view`], for scrolling the
+    /// dependency view in response to the mouse wheel.
+    fn active_dependency_view_mut(&mut self, pane_idx: usize) -> Option<&mut DependencyViewState> {
+        let pane_sel = if self.spacebar_mode {
+            self.selection_manager.lock().get_selection().cloned()
+        } else {
+            self.pane_tasks[pane_idx].clone()
+        };
+        let SelectionEntry::Task(task_name) = pane_sel? else {
+            return None;
+        };
+        let status = self
+            .get_task_status(&task_name)
+            .unwrap_or(TaskStatus::NotStarted);
+        if !matches!(status, TaskStatus::NotStarted | TaskStatus::Skipped) {
+            return None;
+        }
+        self.dependency_view_states[pane_idx].as_mut()
+    }
+
+    /// If `pane_idx` is currently rendering a dependency view, resolve a click at
+    /// `(col, row)` to the dependency task under the cursor. Returns `None` when
+    /// the pane isn't showing a dependency view or the click missed every row.
+    fn dependency_view_click_target(&self, pane_idx: usize, col: u16, row: u16) -> Option<String> {
+        self.active_dependency_view(pane_idx)?
+            .handle_click(col, row)
+    }
+
+    /// The selectable text region of `pane_idx`'s dependency view, used to bound a
+    /// drag-based text selection. `None` when the pane isn't showing one.
+    fn dependency_view_selection_area(&self, pane_idx: usize) -> Option<Rect> {
+        self.active_dependency_view(pane_idx)?.selection_area
+    }
+
+    /// Select `task_name`, pin it to `pane_idx`, and focus that pane — used to
+    /// navigate from a dependency view to one of the dependencies it lists.
+    fn navigate_to_task_in_pane(&mut self, task_name: &str, pane_idx: usize) {
+        self.selection_manager.lock().select_task(task_name);
+        self.assign_current_task_to_pane(pane_idx);
+        self.update_focus(Focus::MultipleOutput(pane_idx));
+    }
+
     fn assign_current_task_to_pane(&mut self, pane_idx: usize) -> Option<()> {
         let selection = self.selection_manager.lock().get_selection().cloned()?;
 
@@ -1925,6 +2297,688 @@ impl App {
         } else {
             Ok(())
         }
+    }
+
+    /// Handle a mouse event from the terminal.
+    ///
+    /// The mouse is only captured in fullscreen mode (see `Tui::enter` and
+    /// `Tui::switch_mode`), so this is only reached there. Wheel events scroll
+    /// whatever is under the cursor; left-clicks select/focus and double-clicks
+    /// drop into the inline view.
+    fn handle_mouse_event(&mut self, mouse: MouseEvent, action_tx: &mpsc::UnboundedSender<Action>) {
+        // When the user has disabled capture (F10), the terminal owns the mouse;
+        // ignore any stray events that still arrive.
+        if !self.mouse_capture_enabled {
+            return;
+        }
+
+        // Mouse activity means the user is present, exactly like a key press:
+        // mark interaction so auto-exit won't fire (and an active countdown can
+        // be clicked away below).
+        if !self.is_interactive_mode() {
+            self.core.mark_user_interacted();
+        }
+
+        // A focused popup is a modal layer: it absorbs all mouse events so they
+        // never fall through to the task list or panes underneath it.
+        if self.active_modal_kind().is_some() {
+            self.handle_modal_mouse(mouse);
+            return;
+        }
+
+        let (col, row) = (mouse.column, mouse.row);
+        match mouse.kind {
+            MouseEventKind::ScrollUp => self.scroll_at(col, row, ScrollDirection::Up, action_tx),
+            MouseEventKind::ScrollDown => {
+                self.scroll_at(col, row, ScrollDirection::Down, action_tx)
+            }
+            MouseEventKind::Down(MouseButton::Left) => self.handle_left_press(col, row),
+            MouseEventKind::Drag(MouseButton::Left) => self.handle_left_drag(col, row),
+            MouseEventKind::Up(MouseButton::Left) => self.handle_left_release(col, row),
+            _ => {}
+        }
+    }
+
+    /// Find the topmost hit-test region under a cell, if any. Iterates in
+    /// reverse so regions drawn later (on top) win ties.
+    fn region_at(&self, col: u16, row: u16) -> Option<MouseRegionKind> {
+        let point = Position::new(col, row);
+        self.mouse_regions
+            .iter()
+            .rev()
+            .find(|r| r.rect.contains(point))
+            .map(|r| r.kind)
+    }
+
+    /// Scroll whatever is under the cursor: an output pane scrolls its buffer,
+    /// the task list moves its selection, and empty space falls back to the
+    /// focused element.
+    fn scroll_at(
+        &mut self,
+        col: u16,
+        row: u16,
+        direction: ScrollDirection,
+        action_tx: &mpsc::UnboundedSender<Action>,
+    ) {
+        match self.region_at(col, row) {
+            Some(MouseRegionKind::Pane(pane_idx)) => {
+                // Mirror the keyboard path: a pane showing a dependency view (a
+                // pending/skipped task) scrolls that list; otherwise scroll the
+                // terminal buffer. Without this fork the wheel scrolled the
+                // hidden PTY behind the dependency view.
+                if let Some(dep_state) = self.active_dependency_view_mut(pane_idx) {
+                    dep_state.scroll(direction);
+                } else {
+                    self.terminal_pane_data[pane_idx].handle_mouse_scroll(direction);
+                }
+            }
+            Some(MouseRegionKind::TaskList) => {
+                // Scrolling the list moves rows under a screen-coordinate
+                // selection, so drop the now-stale highlight.
+                self.region_selection = None;
+                self.send_list_scroll(direction, action_tx);
+            }
+            None => self.scroll_focused(direction, action_tx),
+        }
+    }
+
+    /// Move the task-list selection in `direction` (wheel over the list).
+    fn send_list_scroll(
+        &self,
+        direction: ScrollDirection,
+        action_tx: &mpsc::UnboundedSender<Action>,
+    ) {
+        let action = match direction {
+            ScrollDirection::Up => Action::PreviousTask,
+            ScrollDirection::Down => Action::NextTask,
+        };
+        let _ = action_tx.send(action);
+    }
+
+    /// Scroll the currently focused element when the cursor isn't over a known
+    /// region (e.g. the gap between panes).
+    fn scroll_focused(
+        &mut self,
+        direction: ScrollDirection,
+        action_tx: &mpsc::UnboundedSender<Action>,
+    ) {
+        if let Focus::MultipleOutput(pane_idx) = self.focus {
+            self.terminal_pane_data[pane_idx].handle_mouse_scroll(direction);
+        } else {
+            self.send_list_scroll(direction, action_tx);
+        }
+    }
+
+    /// Handle a left mouse button press: focus/select what was clicked, begin a
+    /// text selection in a pane, and on a double-click drop into the inline view.
+    fn handle_left_press(&mut self, col: u16, row: u16) {
+        // Detect a double-click: a second press on the same cell within the
+        // window. Matching the column too keeps a click that lands on the same
+        // row but a different region (e.g. task list then a pane) from being
+        // misread as a double-click.
+        let now = std::time::Instant::now();
+        let is_double = self
+            .last_click
+            .map(|(t, c, r)| {
+                c == col && r == row && now.duration_since(t).as_millis() <= DOUBLE_CLICK_MS
+            })
+            .unwrap_or(false);
+        self.last_click = Some((now, col, row));
+
+        // Any fresh press starts a clean slate for region selection / deferred
+        // clicks; the matched region re-arms whichever it needs.
+        self.region_selection = None;
+        self.pending_list_click = None;
+        self.pending_dep_nav = None;
+
+        match self.region_at(col, row) {
+            Some(MouseRegionKind::Pane(pane_idx)) => {
+                // Focus the clicked pane; double-click drops to inline (NXC-3942).
+                self.update_focus(Focus::MultipleOutput(pane_idx));
+                self.terminal_pane_data[pane_idx].clear_selection();
+                // A dependency-view pane behaves like the task list: a plain click
+                // navigates to the dependency, a click+drag selects text. Defer the
+                // navigation to release and arm a region selection over its text
+                // area so a drag highlights instead of navigating.
+                if let Some(area) = self.dependency_view_selection_area(pane_idx) {
+                    self.pending_dep_nav = self
+                        .dependency_view_click_target(pane_idx, col, row)
+                        .map(|task| (pane_idx, task));
+                    if area.contains(Position::new(col, row)) {
+                        self.region_selection = Some(RegionSelection {
+                            anchor: (col, row),
+                            cursor: (col, row),
+                            area,
+                            dragging: true,
+                        });
+                    }
+                    return;
+                }
+                if is_double {
+                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    return;
+                }
+                // Begin a text selection drag at the clicked cell (NXC-3946).
+                if let Some((r, c)) = self.terminal_pane_data[pane_idx].content_coords_at(col, row)
+                {
+                    self.terminal_pane_data[pane_idx].begin_selection(r, c);
+                    self.selecting_pane = Some(pane_idx);
+                }
+            }
+            Some(MouseRegionKind::TaskList) => {
+                // Interacting with the list clears any pending pane selection.
+                self.clear_all_pane_selections();
+                // Defer the click action to release so a drag becomes a text
+                // selection instead of selecting the row / entering inline.
+                self.pending_list_click = Some((col, row, is_double));
+                // Arm a potential text selection if the press is on the table's
+                // text region (not the filter bar, cloud message, etc.).
+                if let Some(area) = self.task_list_selection_area()
+                    && area.contains(Position::new(col, row))
+                {
+                    self.region_selection = Some(RegionSelection {
+                        anchor: (col, row),
+                        cursor: (col, row),
+                        area,
+                        dragging: true,
+                    });
+                }
+            }
+            None => {}
+        }
+    }
+
+    /// Extend the in-progress text selection as the mouse drags. Pane drags
+    /// auto-scroll at the edges (NXC-3946); task-list drags extend a screen
+    /// selection clamped to the table.
+    fn handle_left_drag(&mut self, col: u16, row: u16) {
+        if let Some(pane_idx) = self.selecting_pane {
+            match self.terminal_pane_data[pane_idx].content_edge(row) {
+                -1 => self.terminal_pane_data[pane_idx].handle_mouse_scroll(ScrollDirection::Up),
+                1 => self.terminal_pane_data[pane_idx].handle_mouse_scroll(ScrollDirection::Down),
+                _ => {}
+            }
+            if let Some((r, c)) = self.terminal_pane_data[pane_idx].content_coords_clamped(col, row)
+            {
+                self.terminal_pane_data[pane_idx].update_selection(r, c);
+            }
+            return;
+        }
+
+        // Task-list text selection: moving past the anchor makes this a drag, so
+        // the deferred click won't fire on release.
+        if let Some(sel) = &mut self.region_selection
+            && sel.dragging
+        {
+            let a = sel.area;
+            sel.cursor = (
+                col.clamp(a.x, a.x + a.width.saturating_sub(1)),
+                row.clamp(a.y, a.y + a.height.saturating_sub(1)),
+            );
+        }
+    }
+
+    /// Finish a left-drag. A pane or task-list drag copies the selected text; a
+    /// task-list press that never moved performs the deferred click instead.
+    fn handle_left_release(&mut self, col: u16, row: u16) {
+        if let Some(pane_idx) = self.selecting_pane.take() {
+            if self.terminal_pane_data[pane_idx].finish_selection() {
+                self.terminal_pane_data[pane_idx].copy_selection();
+            }
+            self.pending_dep_nav = None;
+            return;
+        }
+
+        let dragged = self
+            .region_selection
+            .map(|s| s.is_nonempty())
+            .unwrap_or(false);
+        if dragged {
+            // A real drag (task list or dependency view): copy, suppress any
+            // deferred click, and leave the highlight up.
+            self.finish_region_selection();
+            self.pending_list_click = None;
+            self.pending_dep_nav = None;
+            return;
+        }
+
+        // A plain click: drop the empty (armed) selection.
+        self.region_selection = None;
+
+        // An external link takes priority over row navigation/selection. This is
+        // only reached on the non-modal path (a modal short-circuits in
+        // `handle_mouse_event`), so links under a modal can't be clicked.
+        if let Some(href) = self.link_at(col, row) {
+            self.pending_list_click = None;
+            self.pending_dep_nav = None;
+            self.open_url_or_hint(&href);
+            return;
+        }
+
+        // Run the deferred action for whichever region was pressed.
+        if let Some((pane_idx, task)) = self.pending_dep_nav.take() {
+            self.pending_list_click = None;
+            self.navigate_to_task_in_pane(&task, pane_idx);
+        } else if let Some((col, row, is_double)) = self.pending_list_click.take() {
+            self.perform_task_list_click(col, row, is_double);
+        }
+    }
+
+    /// Run the deferred task-list click: select the row, or open it in the main
+    /// terminal pane on a double-click. (A clicked link is handled earlier in
+    /// `handle_left_release`, before this runs.)
+    fn perform_task_list_click(&mut self, col: u16, row: u16, is_double: bool) {
+        let result = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
+            .map(|tl| tl.handle_click(col, row, is_double));
+        match result.flatten() {
+            // Selecting a task focuses the list (NXC-3941); double-click opens and
+            // focuses the task in the main terminal pane (same as pressing Enter).
+            // Inline mode is reserved for double-clicking a pane (NXC-3943).
+            Some(TaskListClick::Select) => self.update_focus(Focus::TaskList),
+            Some(TaskListClick::OpenInPane) => {
+                self.display_and_focus_current_task_in_terminal_pane(false)
+            }
+            None => {}
+        }
+    }
+
+    /// Open `href` in the browser, or show a hint with the URL if no opener is
+    /// available (e.g. a headless/SSH session with no `xdg-open`) so the click
+    /// doesn't fail silently and the user can copy the link by hand.
+    fn open_url_or_hint(&self, href: &str) {
+        if !open_url(href) {
+            self.dispatch_action(Action::ShowHint(format!(
+                "Couldn't open a browser. Copy this link: {href}"
+            )));
+        }
+    }
+
+    /// The external link at `(col, row)`, across every non-modal component that
+    /// rendered one this frame. Registries are cleared at the start of each draw
+    /// pass, so a component that isn't drawn holds no stale links.
+    fn link_at(&self, col: u16, row: u16) -> Option<String> {
+        self.components
+            .iter()
+            .filter_map(|c| c.link_registry())
+            .find_map(|registry| registry.hit_test(col, row))
+            .map(str::to_string)
+    }
+
+    /// The task list's text region (excluding the scrollbar), recorded last
+    /// render. Bounds a drag-based selection over the list.
+    fn task_list_selection_area(&self) -> Option<Rect> {
+        self.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+            .and_then(|tl| tl.selection_area())
+    }
+
+    /// Clear text selections in every pane.
+    fn clear_all_pane_selections(&mut self) {
+        for pane in &mut self.terminal_pane_data {
+            pane.clear_selection();
+        }
+    }
+
+    /// The focused popup acting as a modal layer, if any.
+    fn active_modal_kind(&self) -> Option<Focus> {
+        match self.focus {
+            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup => Some(self.focus),
+            _ => None,
+        }
+    }
+
+    /// The bordered box of the currently focused popup, as recorded during the
+    /// last render.
+    fn active_modal_area(&self) -> Option<Rect> {
+        match self.focus {
+            Focus::HelpPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
+                .and_then(|p| p.last_area()),
+            Focus::CountdownPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+                .and_then(|p| p.last_area()),
+            Focus::HintPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
+                .and_then(|p| p.last_area()),
+            _ => None,
+        }
+    }
+
+    /// The inner text area of the focused popup (inside the border, clear of the
+    /// scrollbar). Selections and link hit-tests are confined to this.
+    fn active_modal_content_area(&self) -> Option<Rect> {
+        match self.focus {
+            Focus::HelpPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
+                .and_then(|p| p.content_area()),
+            Focus::CountdownPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+                .and_then(|p| p.content_area()),
+            Focus::HintPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
+                .and_then(|p| p.content_area()),
+            _ => None,
+        }
+    }
+
+    /// The external link at `(col, row)` belonging to the active modal, if any.
+    /// Scoped to the modal so a click can't fall through to a link on the layer
+    /// underneath (and so the modal's own links still work).
+    fn active_modal_link_at(&self, col: u16, row: u16) -> Option<String> {
+        let registry = match self.focus {
+            Focus::HelpPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
+                .and_then(|p| p.link_registry()),
+            Focus::CountdownPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+                .and_then(|p| p.link_registry()),
+            Focus::HintPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
+                .and_then(|p| p.link_registry()),
+            _ => None,
+        }?;
+        registry.hit_test(col, row).map(str::to_string)
+    }
+
+    /// Keep the focused modal open on interaction. For the auto-exit report this
+    /// pins it (so its countdown stops) and cancels the pending quit, mirroring
+    /// the keyboard scroll/pin path. Other popups have no countdown, so it's a
+    /// no-op for them.
+    fn pin_active_modal_open(&mut self) {
+        if !matches!(self.focus, Focus::CountdownPopup) {
+            return;
+        }
+        if let Some(p) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            p.pin_open();
+        }
+        self.core.state().lock().cancel_quit();
+    }
+
+    /// Route a mouse event to the focused popup: open a clicked link, dismiss it
+    /// on a click *outside*, or scroll/select inside — any interaction pins the
+    /// auto-exit report open rather than closing it.
+    fn handle_modal_mouse(&mut self, mouse: MouseEvent) {
+        // Without a recorded area we can't hit-test; swallow the event anyway so
+        // it can't leak to the layers underneath.
+        let Some(area) = self.active_modal_area() else {
+            return;
+        };
+        let (col, row) = (mouse.column, mouse.row);
+        let inside = area.contains(Position::new(col, row));
+
+        match mouse.kind {
+            // Scrolling the report pins it open (stopping the auto-exit), exactly
+            // like the keyboard up/down path, so it can't close out mid-scroll.
+            MouseEventKind::ScrollUp if inside => {
+                self.pin_active_modal_open();
+                self.scroll_active_modal(ScrollDirection::Up);
+            }
+            MouseEventKind::ScrollDown if inside => {
+                self.pin_active_modal_open();
+                self.scroll_active_modal(ScrollDirection::Down);
+            }
+            MouseEventKind::Down(MouseButton::Left) => {
+                // A clicked link always wins, in every modal (including the
+                // auto-exit report), so links stay clickable. Opening one pins the
+                // report open so its countdown can't close it under the click.
+                // Curated `Link`s take priority over the raw URL buffer-scan.
+                if let Some(href) = self
+                    .active_modal_link_at(col, row)
+                    .or_else(|| self.region_url_at(col, row))
+                {
+                    self.pin_active_modal_open();
+                    self.open_url_or_hint(&href);
+                    return;
+                }
+                // Only a click *outside* the modal dismisses it.
+                if !inside {
+                    self.dismiss_active_modal();
+                    return;
+                }
+                // A click inside keeps the modal open; for the report that means
+                // pinning it so the countdown stops instead of exiting while read.
+                self.pin_active_modal_open();
+                // Begin a selection only within the text area, so dragging over the
+                // border or scrollbar doesn't highlight them. A click on the
+                // border/padding is swallowed (it's still inside the modal).
+                if let Some(content) = self.active_modal_content_area()
+                    && content.contains(Position::new(col, row))
+                {
+                    self.region_selection = Some(RegionSelection {
+                        anchor: (col, row),
+                        cursor: (col, row),
+                        area: content,
+                        dragging: true,
+                    });
+                }
+            }
+            MouseEventKind::Drag(MouseButton::Left) => {
+                if let Some(sel) = &mut self.region_selection
+                    && sel.dragging
+                {
+                    let a = sel.area;
+                    sel.cursor = (
+                        col.clamp(a.x, a.x + a.width.saturating_sub(1)),
+                        row.clamp(a.y, a.y + a.height.saturating_sub(1)),
+                    );
+                }
+            }
+            MouseEventKind::Up(MouseButton::Left) => {
+                self.finish_region_selection();
+            }
+            _ => {}
+        }
+    }
+
+    /// Scroll the focused popup, if it supports scrolling. Any scroll
+    /// invalidates the screen-coordinate selection, so it is cleared.
+    fn scroll_active_modal(&mut self, direction: ScrollDirection) {
+        match self.focus {
+            Focus::HelpPopup => {
+                if let Some(p) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                {
+                    match direction {
+                        ScrollDirection::Up => p.scroll_up(),
+                        ScrollDirection::Down => p.scroll_down(),
+                    }
+                }
+            }
+            Focus::CountdownPopup => {
+                if let Some(p) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                    && p.is_scrollable()
+                {
+                    match direction {
+                        ScrollDirection::Up => p.scroll_up(),
+                        ScrollDirection::Down => p.scroll_down(),
+                    }
+                }
+            }
+            _ => {}
+        }
+        self.region_selection = None;
+    }
+
+    /// Dismiss the focused popup, mirroring its keyboard-dismiss behavior.
+    fn dismiss_active_modal(&mut self) {
+        match self.focus {
+            Focus::HelpPopup => {
+                if let Some(p) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+                {
+                    p.set_visible(false);
+                }
+                self.update_focus(self.previous_focus);
+            }
+            Focus::CountdownPopup => {
+                // Clicking away keeps the TUI running, like pressing any key.
+                if let Some(p) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                {
+                    p.cancel_countdown();
+                }
+                self.core.state().lock().cancel_quit();
+                self.update_focus(self.previous_focus);
+            }
+            Focus::HintPopup => {
+                if let Some(p) = self
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                {
+                    p.hide();
+                }
+                self.update_focus(self.previous_focus);
+            }
+            _ => {}
+        }
+        self.region_selection = None;
+    }
+
+    /// Finish a region text selection: stop dragging and copy it to the
+    /// clipboard, or drop an empty (click-only) selection.
+    fn finish_region_selection(&mut self) {
+        let Some(sel) = self.region_selection.as_mut() else {
+            return;
+        };
+        sel.dragging = false;
+        let sel = *sel;
+        if !sel.is_nonempty() {
+            self.region_selection = None;
+            return;
+        }
+        let text = self.region_selected_text(&sel);
+        if text.trim().is_empty() {
+            return;
+        }
+        // Surface a failure the same way the pane copy path does, instead of
+        // dropping the text on the floor when the clipboard is unavailable.
+        if !copy_to_clipboard(&text) {
+            self.dispatch_action(Action::ShowHint("Copy failed".to_string()));
+        }
+    }
+
+    /// Resolve a URL at a clicked cell from the last region snapshot.
+    fn region_url_at(&self, col: u16, row: u16) -> Option<String> {
+        self.region_snapshot.as_ref()?.url_at(col, row)
+    }
+
+    /// Extract the selected text from the last region snapshot in reading order.
+    fn region_selected_text(&self, sel: &RegionSelection) -> String {
+        self.region_snapshot
+            .as_ref()
+            .map(|snap| snap.selected_text(sel))
+            .unwrap_or_default()
+    }
+
+    /// Capture the cells of the region currently being selected (or, while a
+    /// popup is focused, its text area so links can be resolved) and
+    /// reverse-video any in-progress selection on top.
+    fn capture_region_snapshot_and_highlight(&mut self, f: &mut ratatui::Frame) {
+        // Prefer the active selection's own bounds (task list or popup); fall
+        // back to the focused popup's text area so its links stay clickable even
+        // before a drag starts. Either way the border/scrollbar are excluded.
+        let Some(area) = self
+            .region_selection
+            .map(|s| s.area)
+            .or_else(|| self.active_modal_content_area())
+        else {
+            self.region_snapshot = None;
+            return;
+        };
+        // Clamp to the actual buffer to stay in bounds.
+        let buf_area = f.area();
+        let x0 = area.x.max(buf_area.x);
+        let y0 = area.y.max(buf_area.y);
+        let x1 = (area.x + area.width).min(buf_area.x + buf_area.width);
+        let y1 = (area.y + area.height).min(buf_area.y + buf_area.height);
+        if x1 <= x0 || y1 <= y0 {
+            self.region_snapshot = None;
+            return;
+        }
+        let area = Rect::new(x0, y0, x1 - x0, y1 - y0);
+
+        let selection = self.region_selection;
+        let buf = f.buffer_mut();
+        let mut cells = Vec::with_capacity(area.height as usize);
+        for y in area.y..area.y + area.height {
+            let mut row_cells = Vec::with_capacity(area.width as usize);
+            for x in area.x..area.x + area.width {
+                let symbol = buf
+                    .cell((x, y))
+                    .map(|cell| cell.symbol().to_string())
+                    .unwrap_or_else(|| " ".to_string());
+                row_cells.push(symbol);
+                // Reverse-video the selected cells (tui has no selection concept).
+                if let Some(sel) = selection
+                    && sel.contains(x, y)
+                    && let Some(cell) = buf.cell_mut((x, y))
+                {
+                    cell.modifier |= Modifier::REVERSED;
+                }
+            }
+            cells.push(row_cells);
+        }
+        self.region_snapshot = Some(RegionSnapshot { area, cells });
+    }
+
+    /// Draw the persistent "mouse capture off" badge in the top-right corner.
+    fn draw_mouse_capture_badge(f: &mut ratatui::Frame, frame_area: Rect) {
+        let label = " MOUSE OFF · F10 ";
+        let width = label.chars().count() as u16;
+        if frame_area.width < width || frame_area.height == 0 {
+            return;
+        }
+        let badge_area = Rect {
+            x: frame_area.x + frame_area.width - width,
+            y: frame_area.y,
+            width,
+            height: 1,
+        };
+        let badge = NxParagraph::new(Line::from(Span::styled(
+            label,
+            Style::reset()
+                .add_modifier(Modifier::BOLD)
+                .bg(THEME.warning)
+                .fg(THEME.primary_fg),
+        )));
+        f.render_widget(ratatui::widgets::Clear, badge_area);
+        f.render_widget(badge, badge_area);
     }
 
     /// Returns true if the currently focused pane is in interactive mode.
@@ -2051,6 +3105,11 @@ impl App {
     }
 
     fn update_focus(&mut self, focus: Focus) {
+        // A region text selection belongs to the focused layer; drop it whenever
+        // focus moves elsewhere so it can't bleed onto another layer.
+        if self.focus != focus {
+            self.region_selection = None;
+        }
         self.previous_focus = self.focus;
         self.focus = focus;
         self.dispatch_action(Action::UpdateFocus(focus));
@@ -2801,6 +3860,17 @@ impl TuiApp for App {
     fn set_batch_status(&mut self, batch_id: String, status: BatchStatus) {
         App::set_batch_status(self, batch_id, status);
     }
+
+    /// Override the trait default (which only stores in state) so the napi
+    /// `&mut dyn TuiApp` call reaches the inherent method that also dispatches
+    /// `Action::UpdateCloudMessage` to the rendered TasksList.
+    fn set_cloud_message(&mut self, message: Option<String>) {
+        App::set_cloud_message(self, message);
+    }
+
+    fn set_cloud_link(&mut self, label: String, url: String) {
+        App::set_cloud_link(self, label, url);
+    }
 }
 
 #[cfg(test)]
@@ -2915,6 +3985,325 @@ mod tests {
         );
     }
 
+    // === Mouse capture toggle + region mouse handling ===
+
+    /// Build a snapshot from text rows whose top-left is at `(x, y)`.
+    fn snapshot_from(x: u16, y: u16, rows: &[&str]) -> RegionSnapshot {
+        let width = rows.iter().map(|r| r.chars().count()).max().unwrap_or(0) as u16;
+        let cells: Vec<Vec<String>> = rows
+            .iter()
+            .map(|row| {
+                let mut cs: Vec<String> = row.chars().map(|c| c.to_string()).collect();
+                while cs.len() < width as usize {
+                    cs.push(" ".to_string());
+                }
+                cs
+            })
+            .collect();
+        RegionSnapshot {
+            area: Rect::new(x, y, width, rows.len() as u16),
+            cells,
+        }
+    }
+
+    fn selection(anchor: (u16, u16), cursor: (u16, u16), area: Rect) -> RegionSelection {
+        RegionSelection {
+            anchor,
+            cursor,
+            area,
+            dragging: false,
+        }
+    }
+
+    #[test]
+    fn region_selection_orders_regardless_of_drag_direction() {
+        let area = Rect::new(0, 0, 20, 5);
+        // Dragged up-and-left: cursor is before the anchor in reading order.
+        let sel = selection((10, 3), (2, 1), area);
+        assert_eq!(sel.ordered(), ((2, 1), (10, 3)));
+        assert!(sel.is_nonempty());
+        assert!(!selection((4, 2), (4, 2), area).is_nonempty());
+    }
+
+    #[test]
+    fn region_selection_contains_uses_reading_order() {
+        let area = Rect::new(0, 0, 20, 5);
+        let sel = selection((3, 1), (5, 3), area);
+        // First row: only from the start column rightward.
+        assert!(!sel.contains(2, 1));
+        assert!(sel.contains(3, 1));
+        assert!(sel.contains(19, 1));
+        // Middle row: entire width.
+        assert!(sel.contains(0, 2));
+        // Last row: only up to the end column.
+        assert!(sel.contains(5, 3));
+        assert!(!sel.contains(6, 3));
+        // Outside the row range.
+        assert!(!sel.contains(4, 0));
+        assert!(!sel.contains(4, 4));
+    }
+
+    #[test]
+    fn snapshot_detects_url_under_cursor() {
+        let snap = snapshot_from(2, 1, &["see https://nx.dev/terminal-ui for docs"]);
+        // "https://..." starts at column index 4 -> screen col 6.
+        assert_eq!(
+            snap.url_at(10, 1).as_deref(),
+            Some("https://nx.dev/terminal-ui")
+        );
+        // Clicking the plain word "see" yields nothing.
+        assert_eq!(snap.url_at(2, 1), None);
+        // Clicking whitespace yields nothing.
+        assert_eq!(snap.url_at(5, 1), None);
+        // Clicking outside the snapshot area yields nothing.
+        assert_eq!(snap.url_at(0, 0), None);
+    }
+
+    #[test]
+    fn snapshot_trims_trailing_punctuation_from_url() {
+        let snap = snapshot_from(0, 0, &["docs (https://nx.dev/terminal-ui)."]);
+        assert_eq!(
+            snap.url_at(10, 0).as_deref(),
+            Some("https://nx.dev/terminal-ui")
+        );
+    }
+
+    #[test]
+    fn snapshot_extracts_single_row_selection() {
+        let snap = snapshot_from(0, 0, &["hello world"]);
+        // Select "world": screen cols 6..=10.
+        let sel = selection((6, 0), (10, 0), snap.area);
+        assert_eq!(snap.selected_text(&sel), "world");
+    }
+
+    #[test]
+    fn snapshot_extracts_multi_row_selection() {
+        let snap = snapshot_from(0, 0, &["first line", "second line", "third line"]);
+        // From col 6 of row 0 through col 5 of row 2.
+        let sel = selection((6, 0), (5, 2), snap.area);
+        // Trailing whitespace on each row is trimmed when copying.
+        assert_eq!(snap.selected_text(&sel), "line\nsecond line\nthird");
+    }
+
+    #[test]
+    fn active_modal_kind_only_for_popups() {
+        let mut app = create_test_app();
+        for (focus, expected) in [
+            (Focus::TaskList, false),
+            (Focus::MultipleOutput(0), false),
+            (Focus::HelpPopup, true),
+            (Focus::CountdownPopup, true),
+            (Focus::HintPopup, true),
+        ] {
+            app.focus = focus;
+            assert_eq!(app.active_modal_kind().is_some(), expected, "{focus:?}");
+        }
+    }
+
+    #[test]
+    fn interacting_with_report_pins_it_open_and_cancels_quit() {
+        let mut app = create_test_app();
+        // An auto-exit is due and the report popup is focused.
+        app.core
+            .state()
+            .lock()
+            .schedule_quit(std::time::Duration::from_secs(0));
+        app.focus = Focus::CountdownPopup;
+        assert!(
+            app.core.state().lock().should_quit(),
+            "auto-exit is due before any interaction"
+        );
+
+        // A click/scroll inside the report pins it instead of letting it exit.
+        app.pin_active_modal_open();
+
+        assert!(
+            !app.core.state().lock().should_quit(),
+            "interacting with the report cancels the pending auto-exit"
+        );
+        let pinned = app
+            .components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+            .map(|p| p.is_pinned());
+        assert_eq!(
+            pinned,
+            Some(true),
+            "the report is pinned open, not dismissed"
+        );
+    }
+
+    #[test]
+    fn disabled_capture_ignores_mouse_events() {
+        let mut app = create_test_app();
+        app.mouse_capture_enabled = false;
+        let (tx, _rx) = mpsc::unbounded_channel();
+        // Should early-return without panicking or touching state.
+        app.handle_mouse_event(
+            MouseEvent {
+                kind: MouseEventKind::Down(MouseButton::Left),
+                column: 1,
+                row: 1,
+                modifiers: KeyModifiers::NONE,
+            },
+            &tx,
+        );
+        assert!(app.region_selection.is_none());
+    }
+
+    #[test]
+    fn mouse_event_marks_user_interacted() {
+        let mut app = create_test_app();
+        assert!(
+            !app.core.state().lock().has_user_interacted(),
+            "no interaction yet"
+        );
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.handle_mouse_event(
+            MouseEvent {
+                kind: MouseEventKind::Down(MouseButton::Left),
+                column: 1,
+                row: 1,
+                modifiers: KeyModifiers::NONE,
+            },
+            &tx,
+        );
+        assert!(
+            app.core.state().lock().has_user_interacted(),
+            "a mouse click marks the user as present so auto-exit won't fire"
+        );
+    }
+
+    #[test]
+    fn double_click_requires_same_column() {
+        let mut app = create_test_app();
+        // A pane fills the right half; a double-click inside it drops to inline.
+        app.mouse_regions = vec![MouseRegion {
+            rect: Rect::new(20, 0, 40, 10),
+            kind: MouseRegionKind::Pane(0),
+        }];
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        // Two quick clicks on the same row but different columns must NOT be read
+        // as a double-click: a same-row click from the task list into a pane used
+        // to drop into inline.
+        app.handle_left_press(25, 3);
+        app.handle_left_press(40, 3);
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(
+            !switched,
+            "two clicks on the same row but different columns are not a double-click"
+        );
+
+        // Two quick clicks on the exact same cell are a real double-click.
+        app.last_click = None;
+        app.handle_left_press(30, 5);
+        app.handle_left_press(30, 5);
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(switched, "two clicks on the same cell are a double-click");
+    }
+
+    #[test]
+    fn wheel_over_dependency_view_scrolls_list_not_pty() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        // A pending task pinned to pane 0 renders a (scrollable) dependency view.
+        app.pane_tasks[0] = Some(SelectionEntry::Task("pending-task".to_string()));
+        app.dependency_view_states[0] = Some(DependencyViewState {
+            current_task: "pending-task".to_string(),
+            task_status: TaskStatus::NotStarted,
+            dependencies: (0..30).map(|i| format!("dep{i}")).collect(),
+            dependency_levels: HashMap::new(),
+            is_focused: true,
+            throbber_counter: 0,
+            scroll_offset: 0,
+            scrollbar_state: ratatui::widgets::ScrollbarState::default(),
+            pane_area: Rect::new(20, 0, 40, 8),
+            dep_row_hits: Vec::new(),
+            dep_row_x_range: (0, 0),
+            selection_area: None,
+        });
+        app.mouse_regions = vec![MouseRegion {
+            rect: Rect::new(20, 0, 40, 8),
+            kind: MouseRegionKind::Pane(0),
+        }];
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.scroll_at(30, 4, ScrollDirection::Down, &tx);
+
+        assert_eq!(
+            app.dependency_view_states[0]
+                .as_ref()
+                .unwrap()
+                .scroll_offset,
+            1,
+            "the wheel scrolls the dependency view, not the hidden terminal buffer"
+        );
+    }
+
+    #[test]
+    fn update_focus_clears_region_selection() {
+        let mut app = create_test_app();
+        app.focus = Focus::HelpPopup;
+        app.region_selection = Some(selection((1, 1), (3, 1), Rect::new(0, 0, 10, 5)));
+        app.update_focus(Focus::TaskList);
+        assert!(
+            app.region_selection.is_none(),
+            "moving focus must drop the region selection"
+        );
+    }
+
+    #[test]
+    fn task_list_drag_release_copies_and_consumes_click() {
+        let mut app = create_test_app();
+        let area = Rect::new(0, 0, 20, 5);
+        // A non-empty selection means the user dragged.
+        app.region_selection = Some(RegionSelection {
+            anchor: (0, 0),
+            cursor: (9, 0),
+            area,
+            dragging: true,
+        });
+        app.pending_list_click = Some((0, 0, false));
+        // No snapshot set, so finish copies nothing (and won't touch the real
+        // clipboard) but still exercises the drag branch.
+        app.handle_left_release(9, 0);
+        assert!(
+            app.pending_list_click.is_none(),
+            "a drag must consume the deferred click so the row action doesn't fire"
+        );
+        assert!(
+            app.region_selection.is_some(),
+            "the selection stays highlighted after copying"
+        );
+    }
+
+    #[test]
+    fn task_list_plain_click_release_runs_deferred_click() {
+        let mut app = create_test_app();
+        let area = Rect::new(0, 0, 20, 5);
+        // Anchor == cursor: the press never moved, so it's a click, not a drag.
+        app.region_selection = Some(RegionSelection {
+            anchor: (2, 2),
+            cursor: (2, 2),
+            area,
+            dragging: true,
+        });
+        app.pending_list_click = Some((2, 2, false));
+        app.handle_left_release(2, 2);
+        assert!(
+            app.region_selection.is_none(),
+            "an empty selection is dropped so it doesn't linger as a highlight"
+        );
+        assert!(
+            app.pending_list_click.is_none(),
+            "the deferred click is consumed"
+        );
+    }
+
     /// Show the performance report popup (focused) with an already-due auto-exit.
     fn show_focused_report(app: &mut App) {
         {
@@ -2944,6 +4333,67 @@ mod tests {
             .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
             .expect("countdown popup exists")
             .is_visible()
+    }
+
+    /// Render the focused report once so it records its on-screen box, returning
+    /// that box for inside/outside hit-testing.
+    fn render_report(app: &mut App) -> Rect {
+        let mut terminal =
+            ratatui::Terminal::new(ratatui::backend::TestBackend::new(120, 40)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                if let Some(popup) = app
+                    .components
+                    .iter_mut()
+                    .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                {
+                    let _ = popup.draw(f, area);
+                }
+            })
+            .unwrap();
+        app.active_modal_area().expect("popup recorded its box")
+    }
+
+    #[test]
+    fn clicking_outside_report_dismisses_inside_keeps_open() {
+        let down = |column, row| MouseEvent {
+            kind: MouseEventKind::Down(MouseButton::Left),
+            column,
+            row,
+            modifiers: KeyModifiers::NONE,
+        };
+
+        // Outside the box dismisses it.
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+        let modal = render_report(&mut app);
+        assert!(
+            modal.x > 0 && modal.width < 120,
+            "report is a centered box with margins, got {modal:?}"
+        );
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_mouse_event(down(0, 0), &tx);
+        assert!(
+            !report_visible(&app),
+            "a click outside the report box dismisses it"
+        );
+
+        // Inside the box keeps it open.
+        let mut app = create_test_app();
+        show_focused_report(&mut app);
+        let modal = render_report(&mut app);
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_mouse_event(
+            down(modal.x + modal.width / 2, modal.y + modal.height / 2),
+            &tx,
+        );
+        assert!(
+            report_visible(&app),
+            "a click inside the report box leaves it open"
+        );
     }
 
     /// `p` toggles the report: while it is focused, the press dismisses it and

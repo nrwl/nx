@@ -4,11 +4,12 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph},
+    widgets::{Block, BorderType, Borders, Clear, Padding},
 };
 use std::any::Any;
 use std::time::{Duration, Instant};
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
 use super::Component;
@@ -27,6 +28,12 @@ pub struct HintPopup {
     message: String,
     shown_at: Option<Instant>,
     auto_dismiss_duration: Duration,
+    /// Screen rect of the bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing.
+    last_area: Option<Rect>,
+    /// Screen rect of the inner text area (inside the border) from the last
+    /// render, used to bound text selection.
+    content_area: Option<Rect>,
 }
 
 impl HintPopup {
@@ -36,7 +43,19 @@ impl HintPopup {
             message: String::new(),
             shown_at: None,
             auto_dismiss_duration: AUTO_DISMISS_DURATION,
+            last_area: None,
+            content_area: None,
         }
+    }
+
+    /// The bordered popup box drawn last frame, if visible.
+    pub fn last_area(&self) -> Option<Rect> {
+        self.last_area
+    }
+
+    /// The inner text area drawn last frame, if visible.
+    pub fn content_area(&self) -> Option<Rect> {
+        self.content_area
     }
 
     /// Shows the popup with the given message
@@ -92,8 +111,11 @@ impl HintPopup {
         // Create popup area with fixed dimensions
         let popup_area = Rect::new(popup_x, popup_y, popup_width, popup_height);
 
+        // Record the popup box so the app can hit-test mouse events against it.
+        self.last_area = Some(popup_area);
+
         let content = vec![Line::from(vec![Span::styled(
-            &self.message,
+            self.message.clone(),
             Style::default().fg(THEME.primary_fg),
         )])];
 
@@ -123,7 +145,10 @@ impl HintPopup {
             .border_style(Style::default().fg(THEME.info))
             .padding(Padding::proportional(1));
 
-        let popup = Paragraph::new(content)
+        // The text area sits inside the border + padding.
+        self.content_area = Some(block.inner(popup_area));
+
+        let popup = NxParagraph::new(content)
             .block(block)
             .wrap(ratatui::widgets::Wrap { trim: true });
 
@@ -143,6 +168,9 @@ impl Component for HintPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
             self.render(f, rect);
+        } else {
+            self.last_area = None;
+            self.content_area = None;
         }
         Ok(())
     }
