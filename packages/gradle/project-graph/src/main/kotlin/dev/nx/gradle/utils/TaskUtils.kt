@@ -10,6 +10,7 @@ import kotlin.io.path.Path
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
 import org.gradle.api.internal.file.copy.CopySpecInternal
 import org.gradle.api.internal.file.copy.DefaultCopySpec
@@ -17,6 +18,7 @@ import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.internal.tasks.DefaultTaskOutputs
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
@@ -336,15 +338,23 @@ private fun collectCopySourceExtensions(
 }
 
 /**
- * Convert a declared `from(...)` argument into a concrete [File] when it is a path we can read
- * without touching disk. Returns null for non-path argument types (FileTree, FileCollection,
- * provider, task output, ...).
+ * Convert a declared `from(...)` argument into a concrete [File] when it resolves to a single path
+ * we can read without touching disk. Handles the idiomatic lazy forms:
+ * - [FileSystemLocation] (RegularFile / Directory), e.g. from a `layout` file
+ * - [Provider] (RegularFileProperty / DirectoryProperty / `layout.buildDirectory.file(...)` /
+ *   `provider { ... }`), unwrapped ONCE via [Provider.getOrNull] (not `get()`) and recursed
+ *
+ * Resolution stays config-time: `orNull` on a layout/property provider computes the declared path
+ * without the file existing. Returns null for argument types that would require enumerating the
+ * working tree (FileTree, FileCollection, task output) or for a provider with no value.
  */
 private fun fileFromDeclaredSource(source: Any?): File? =
     when (source) {
       is File -> source
       is java.nio.file.Path -> source.toFile()
       is CharSequence -> File(source.toString())
+      is FileSystemLocation -> source.asFile
+      is Provider<*> -> fileFromDeclaredSource(source.orNull)
       else -> null
     }
 

@@ -326,6 +326,61 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask unwraps provider and FileSystemLocation Copy sources on clean tree`() {
+      // Lazy provider / FileSystemLocation sources must be unwrapped so their extensions are
+      // derived
+      // without the file existing on disk. Gitignore "build" and "dist" so the generated paths
+      // count
+      // as not-checked-in.
+      java.io.File(workspaceRoot, ".gitignore").writeText("dist\nbuild")
+
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      // Provider<RegularFile>: layout.buildDirectory.file(...) -> build/... (gitignored), NOT
+      // created.
+      syncTask.from(project.layout.buildDirectory.file("generated/foo.json"))
+      // Bare FileSystemLocation (RegularFile) under dist/ (gitignored).
+      syncTask.from(project.layout.projectDirectory.file("dist/bar.xml"))
+      // Checked-in provider source (NOT gitignored) - the gate must still skip it.
+      syncTask.from(project.provider { java.io.File("$workspaceRoot/src/main/resources/app.conf") })
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+
+      val consumerTask = project.tasks.register("consumerSync").get()
+      consumerTask.dependsOn(syncTask)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null,
+                  consumerTask,
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      // Clean tree: none of the provider targets exist on disk yet.
+      val clean = outputFileGlobs()
+      // Built tree: materialize the generated provider target.
+      java.io.File("$workspaceRoot/build/generated").mkdirs()
+      java.io.File("$workspaceRoot/build/generated/foo.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "Provider source derivation must not depend on on-disk state")
+      assertTrue(
+          clean.contains("**/*.json"),
+          "Expected json from from(layout.buildDirectory.file(...)) on a clean tree, got $clean")
+      assertTrue(
+          clean.contains("**/*.xml"), "Expected xml from a FileSystemLocation source, got $clean")
+      assertFalse(
+          clean.contains("**/*.conf"),
+          "Checked-in provider source must not produce a glob, got $clean")
+    }
+
+    @Test
     fun `test getInputsForTask uses archiveExtension for Jar, not source extensions`() {
       // Create a Jar task with source files
       val sourceDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
