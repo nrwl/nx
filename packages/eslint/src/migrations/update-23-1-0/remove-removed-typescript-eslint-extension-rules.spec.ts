@@ -143,4 +143,20 @@ describe('remove-removed-typescript-eslint-extension-rules migration', () => {
 
     expect(tree.read('eslint.config.mjs', 'utf-8')).toEqual(config);
   });
+
+  it('cleans the shared eslint.base.config.* files too', async () => {
+    tree.write(
+      'eslint.base.config.mjs',
+      `export default [
+  { rules: { '@typescript-eslint/indent': ['error', 2] } },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('eslint.base.config.mjs', 'utf-8')).not.toContain(
+      '@typescript-eslint/indent'
+    );
+  });
 });

@@ -5,7 +5,8 @@ import * as ts from 'typescript';
 
 // Inlined rather than imported from the @nx/eslint utils so this migration stays
 // self-contained - a migration should not depend on a shared list that can change
-// in a later version.
+// in a later version. Includes the shared `eslint.base.config.*` files: they are
+// flat configs too and can carry the removed rules a project config inherits.
 const ESLINT_FLAT_CONFIG_FILENAMES = [
   'eslint.config.cjs',
   'eslint.config.js',
@@ -13,6 +14,14 @@ const ESLINT_FLAT_CONFIG_FILENAMES = [
   'eslint.config.cts',
   'eslint.config.ts',
   'eslint.config.mts',
+  'eslint.base.js',
+  'eslint.base.ts',
+  'eslint.base.config.cjs',
+  'eslint.base.config.js',
+  'eslint.base.config.mjs',
+  'eslint.base.config.cts',
+  'eslint.base.config.ts',
+  'eslint.base.config.mts',
 ];
 
 // Formatting/extension rules typescript-eslint removed in v8 (moved to
