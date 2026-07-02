@@ -258,6 +258,7 @@ export type {
 export {
   readNxMigrateConfig,
   stripPrunedLockfilePnpmConfig,
+  writePrunedPnpmInstallSettings,
 } from './utils/package-json';
 export type { PackageManagerCommands } from './utils/package-manager';
 // Sourced from the leaf module rather than ./utils/plugins: the barrel index
