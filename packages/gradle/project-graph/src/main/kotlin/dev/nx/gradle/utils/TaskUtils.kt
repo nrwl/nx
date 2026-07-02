@@ -11,10 +11,13 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.internal.TaskInternal
+import org.gradle.api.internal.file.copy.CopySpecInternal
+import org.gradle.api.internal.file.copy.DefaultCopySpec
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
 import org.gradle.api.internal.tasks.DefaultTaskOutputs
+import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.AbstractArchiveTask
 import org.gradle.api.tasks.bundling.Compression
@@ -177,22 +180,32 @@ fun getGradleFilesInputs(workspaceRoot: String): List<String> {
  * dependents contribute their declared archive extension (jar, war, tar, and gz/bz2 for compressed
  * tars). Any dependent that declares concrete FILE outputs contributes those files' extensions.
  *
- * Directory outputs are intentionally NOT expanded: the task model does not declare which file
- * extensions land inside a directory, and scanning it would reintroduce a dependency on transient
- * on-disk state. Producers whose artifacts must invalidate consumers should declare file outputs
- * (or wire `from(task)` delegation) so their extensions are visible here.
+ * A Copy/Sync/ProcessResources task declares its outputs as a directory (no inner extensions), but
+ * it also declares its sources via `from(...)` and is pass-through, so its declared concrete-file
+ * source extensions equal its effective output extensions. Those declared source paths are read
+ * without touching disk (see [declaredCopySourceExtensions]).
+ *
+ * Directory outputs and non-file sources (FileTrees, providers, task outputs) are intentionally NOT
+ * expanded: the task model does not declare which file extensions land inside them, and scanning
+ * would reintroduce a dependency on transient on-disk state. Producers whose artifacts must
+ * invalidate consumers should declare file outputs (or wire `from(task)` delegation) so their
+ * extensions are visible here.
  */
 fun inferExtensionsFromInputProperties(task: Task, dependentTasks: Set<Task>): Set<String> {
   val extensions = mutableSetOf<String>()
 
-  // Extensions implied by this task's own type (what it consumes from upstream).
+  // Extensions implied by this task's own type (what it consumes from upstream) and, for a
+  // pass-through Copy/Sync task, its declared concrete-file sources (what it forwards downstream
+  // even when the producer that generated them declares no outputs).
   extensions.addAll(extensionsForTaskType(task))
+  extensions.addAll(declaredCopySourceExtensions(task))
 
   // Extensions implied by each dependent task's declared model (what it produces).
   dependentTasks.forEach { depTask ->
     extensions.addAll(extensionsForTaskType(depTask))
     extensions.addAll(declaredArchiveExtensions(depTask))
     extensions.addAll(declaredFileOutputExtensions(depTask))
+    extensions.addAll(declaredCopySourceExtensions(depTask))
   }
 
   return extensions.toSet()
@@ -258,6 +271,61 @@ private fun declaredFileOutputExtensions(task: Task): Set<String> {
     task.logger.debug("Could not read declared file outputs for ${task.path}: ${e.message}")
   }
   return extensions
+}
+
+/**
+ * Extensions declared as concrete-file sources of an [AbstractCopyTask]
+ * (Copy/Sync/ProcessResources).
+ *
+ * A copy task is pass-through, so its declared source extensions equal its effective output
+ * extensions. Its outputs are a directory (no inner extensions), so we read the DECLARED source
+ * objects from the copy spec tree instead. Only concrete file paths (`File`,
+ * `String`/`CharSequence` or `java.nio.file.Path`) are considered; FileTrees, FileCollections,
+ * providers and task outputs are skipped, since turning them into extensions would require
+ * enumerating the working tree. This is existence-independent: the raw `from(...)` arguments are
+ * read, never resolved.
+ */
+private fun declaredCopySourceExtensions(task: Task): Set<String> {
+  if (task !is AbstractCopyTask) return emptySet()
+  val extensions = mutableSetOf<String>()
+  try {
+    collectCopySourceExtensions(task.rootSpec, extensions)
+  } catch (e: Exception) {
+    task.logger.debug("Could not read copy source paths for ${task.path}: ${e.message}")
+  }
+  return extensions
+}
+
+/**
+ * Recursively collect declared concrete-file source extensions from a copy spec and its children.
+ */
+private fun collectCopySourceExtensions(spec: CopySpecInternal, into: MutableSet<String>) {
+  if (spec is DefaultCopySpec) {
+    spec.sourcePaths.forEach { source ->
+      try {
+        extensionFromDeclaredPath(source)?.let { into.add(it) }
+      } catch (e: Exception) {
+        // Skip any source we cannot classify without touching disk.
+      }
+    }
+  }
+  spec.children.forEach { child -> collectCopySourceExtensions(child, into) }
+}
+
+/**
+ * Extract a file extension from a declared `from(...)` argument, but only when the argument is a
+ * concrete file path we can read without touching disk. Returns null for directories/extension-less
+ * paths and for non-path argument types (FileTree, FileCollection, provider, task output, ...).
+ */
+private fun extensionFromDeclaredPath(source: Any?): String? {
+  val file: File =
+      when (source) {
+        is File -> source
+        is java.nio.file.Path -> source.toFile()
+        is CharSequence -> File(source.toString())
+        else -> return null
+      }
+  return file.extension.ifEmpty { null }
 }
 
 /**

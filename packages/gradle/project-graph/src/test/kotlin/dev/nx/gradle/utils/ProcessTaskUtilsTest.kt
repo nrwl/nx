@@ -227,8 +227,8 @@ class ProcessTaskUtilsTest {
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
 
-      // A Copy dependent whose SOURCE extensions must NOT leak into the derivation: their presence
-      // on disk depends on transient build state.
+      // A Copy dependent with a DIRECTORY source: its contents must NOT be enumerated (only
+      // declared concrete-file sources are read), so nothing on disk under it can leak in.
       val sourceDir = java.io.File("$workspaceRoot/src/bundled")
       val copyDep =
           project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
@@ -271,35 +271,51 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask does not derive extensions from Copy or Sync source files`() {
-      // Regression guard: Copy/Sync SOURCE file extensions must not drive dependentTasksOutputFiles
-      // globs. Their presence on disk depends on transient build state, and a Sync/Copy task
-      // declares only a destination DIRECTORY output (no per-extension info) in the task model.
-      val sourceDir = java.io.File("$workspaceRoot/src/sync-input").apply { mkdirs() }
-      java.io.File(sourceDir, "config.conf").writeText("test config")
-      java.io.File(sourceDir, "data.json").writeText("{}")
-
+    fun `test getInputsForTask derives Copy concrete-file sources but not FileTree sources`() {
+      // A Copy/Sync task is pass-through: its declared concrete-file sources (from(File ...)) equal
+      // its effective outputs and ARE derived, deterministically, even when the files do not exist
+      // on disk. FileTree / directory sources must NOT be enumerated.
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
-      syncTask.from(sourceDir)
+      // Concrete declared file sources (intentionally NOT created on disk yet).
+      syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
+      syncTask.from(java.io.File("$workspaceRoot/dist/runner.json"))
+      // A FileTree source whose contents must never be enumerated.
+      val leakDir = java.io.File("$workspaceRoot/dist/leak").apply { mkdirs() }
+      java.io.File(leakDir, "secret.leak").writeText("x")
+      syncTask.from(project.fileTree(leakDir))
       syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
 
       val consumerTask = project.tasks.register("consumerSync").get()
       consumerTask.dependsOn(syncTask)
 
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
-      val result =
-          getInputsForTask(
-              null, consumerTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
 
-      val globs =
-          result
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null,
+                  consumerTask,
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  gitIgnoreClassifier)
               ?.filterIsInstance<Map<*, *>>()
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
 
-      assertFalse(globs.contains("**/*.conf"), "Sync source .conf must not leak, got $globs")
-      assertFalse(globs.contains("**/*.json"), "Sync source .json must not leak, got $globs")
+      // Clean tree (bundle/runner files absent): concrete-file source extensions still derived.
+      val clean = outputFileGlobs()
+      // Built tree: create the concrete source files on disk.
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
+      java.io.File("$workspaceRoot/dist/runner.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "Copy source derivation must not depend on on-disk state")
+      assertTrue(clean.contains("**/*.gz"), "Expected gz from from(File .tar.gz), got $clean")
+      assertTrue(clean.contains("**/*.json"), "Expected json from from(File .json), got $clean")
+      assertFalse(
+          clean.contains("**/*.leak"),
+          "FileTree source contents must not be enumerated, got $clean")
     }
 
     @Test
