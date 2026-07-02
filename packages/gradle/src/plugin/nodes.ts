@@ -149,10 +149,10 @@ export const createNodes: CreateNodes<GradlePluginOptions> = [
         const projectRoot = buildFileProjectRoots[i];
         const hash = buildFileHashes[i];
 
-        // Get project from cache or nodes
+        // Get project from cache or nodes (report keys are workspace-relative
+        // with `/` separators)
         if (!pluginCache.has(hash)) {
-          const nodeProject =
-            nodes[projectRoot] ?? nodes[join(workspaceRoot, projectRoot)];
+          const nodeProject = nodes[normalizePath(projectRoot)];
           if (nodeProject) {
             pluginCache.set(hash, nodeProject);
           }

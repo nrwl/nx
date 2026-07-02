@@ -1,11 +1,10 @@
 import { existsSync } from 'node:fs';
-import { isAbsolute, join } from 'node:path';
+import { join } from 'node:path';
 
 import {
   AggregateCreateNodesError,
   hashArray,
   logger,
-  normalizePath,
   ProjectConfiguration,
   ProjectGraphExternalNode,
   readJsonFile,
@@ -29,60 +28,17 @@ export interface ProjectGraphReport {
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   buildFiles?: string[];
+  /**
+   * Written by dev.nx.gradle.project-graph >= 0.1.24, whose reports use
+   * workspace-relative `/`-separated paths. Reports without it are rejected.
+   */
+  formatVersion?: number;
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
   hash: string;
   /** The @nx/gradle version that wrote the cache. */
   pluginVersion?: string;
-}
-
-/**
- * Make a report path workspace-relative. Reports from
- * dev.nx.gradle.project-graph < 0.1.24 use absolute machine paths; same-machine
- * absolute paths are relativized, paths outside the workspace are kept as-is.
- */
-export function normalizeReportPath(
-  path: string,
-  workspaceRoot: string
-): string {
-  if (!isAbsolute(path)) {
-    return normalizePath(path);
-  }
-  // Compare in normalized form so separator style or a trailing separator on
-  // either side does not defeat the match.
-  const normalized = normalizePath(path).replace(/\/+$/, '');
-  const root = normalizePath(workspaceRoot).replace(/\/+$/, '');
-  if (normalized === root) {
-    return '.';
-  }
-  if (normalized.startsWith(root + '/')) {
-    return normalized.slice(root.length + 1);
-  }
-  return path;
-}
-
-export function normalizeProjectGraphReport(
-  report: ProjectGraphReport,
-  workspaceRoot: string
-): ProjectGraphReport {
-  return {
-    ...report,
-    nodes: Object.fromEntries(
-      Object.entries(report.nodes ?? {}).map(([projectRoot, node]) => [
-        normalizeReportPath(projectRoot, workspaceRoot),
-        node,
-      ])
-    ),
-    dependencies: (report.dependencies ?? []).map((dependency) => ({
-      ...dependency,
-      source: normalizeReportPath(dependency.source, workspaceRoot),
-      target: normalizeReportPath(dependency.target, workspaceRoot),
-      sourceFile: dependency.sourceFile
-        ? normalizeReportPath(dependency.sourceFile, workspaceRoot)
-        : dependency.sourceFile,
-    })),
-  };
 }
 
 function readProjectGraphReportCache(
@@ -237,10 +193,7 @@ export async function populateProjectGraph(
     gradleProjectGraphReportStart.name,
     gradleProjectGraphReportEnd.name
   );
-  projectGraphReportCache = normalizeProjectGraphReport(
-    processNxProjectGraph(projectGraphLines),
-    workspaceRoot
-  );
+  projectGraphReportCache = processNxProjectGraph(projectGraphLines);
   // An empty report can be legitimate (e.g. no project produced nodes), but
   // don't cache it so a transiently-degraded run cannot pin the workspace to
   // a graph without gradle projects.
@@ -284,6 +237,20 @@ export function processNxProjectGraph(
       }
       const projectGraphReportJson: ProjectGraphReport =
         readJsonFile<ProjectGraphReport>(file);
+      if (!projectGraphReportJson.formatVersion) {
+        throw new AggregateCreateNodesError(
+          [
+            [
+              null,
+              new Error(
+                `The Gradle project graph report at ${file} was produced by an outdated dev.nx.gradle.project-graph plugin. ` +
+                  `@nx/gradle requires dev.nx.gradle.project-graph 0.1.24 or newer — run "nx migrate" or update the plugin version in your Gradle build.`
+              ),
+            ],
+          ],
+          []
+        );
+      }
       projectGraphReportForAllProjects.nodes = {
         ...projectGraphReportForAllProjects.nodes,
         ...projectGraphReportJson.nodes,

@@ -51,6 +51,8 @@ class CreateNodeForProjectTest {
     // Dependencies and external nodes should default to empty
     assertTrue(result.dependencies.isEmpty(), "Expected no dependencies")
     assertTrue(result.externalNodes.isEmpty(), "Expected no external nodes")
+
+    assertEquals(1, result.formatVersion, "Expected the report to carry the format version")
   }
 
   @Test
@@ -76,7 +78,7 @@ class CreateNodeForProjectTest {
             workspaceRoot = workspaceRoot,
             atomized = false)
 
-    val projectNode = result.nodes[File("root", "app").path]
+    val projectNode = result.nodes["root/app"]
     assertNotNull(projectNode)
     assertEquals(":app", projectNode.name, "Expected project name to be ':app' (buildTreePath)")
   }
@@ -101,11 +103,10 @@ class CreateNodeForProjectTest {
   fun `relativizeToWorkspaceRoot handles root, nested and outside paths`() {
     val root = File("/tmp/ws").path
     assertEquals(".", relativizeToWorkspaceRoot(root, root))
+    // Output always uses `/` separators, regardless of platform
+    assertEquals("apps/app", relativizeToWorkspaceRoot(File(root, "apps/app").path, root))
     assertEquals(
-        File("apps", "app").path,
-        relativizeToWorkspaceRoot(File(root, "apps/app").path, root))
-    assertEquals(
-        File("/tmp/other/project").path,
+        File("/tmp/other/project").invariantSeparatorsPath,
         relativizeToWorkspaceRoot(File("/tmp/other/project").path, root))
   }
 }

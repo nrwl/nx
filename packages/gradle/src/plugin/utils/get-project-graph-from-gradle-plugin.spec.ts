@@ -1,87 +1,13 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, sep } from 'node:path';
+import { join } from 'node:path';
 
 import { writeJsonFile } from '@nx/devkit';
 
 import {
-  normalizeProjectGraphReport,
-  normalizeReportPath,
   processNxProjectGraph,
   ProjectGraphReport,
 } from './get-project-graph-from-gradle-plugin';
-
-describe('normalizeReportPath', () => {
-  const workspaceRoot = join(sep, 'ws');
-
-  it('should keep relative paths and normalize separators', () => {
-    expect(normalizeReportPath('apps/app', workspaceRoot)).toBe('apps/app');
-    expect(normalizeReportPath('apps\\app', workspaceRoot)).toBe('apps/app');
-  });
-
-  it('should map the workspace root itself to .', () => {
-    expect(normalizeReportPath(workspaceRoot, workspaceRoot)).toBe('.');
-  });
-
-  it('should relativize absolute paths under the workspace root', () => {
-    expect(
-      normalizeReportPath(join(workspaceRoot, 'apps', 'app'), workspaceRoot)
-    ).toBe('apps/app');
-  });
-
-  it('should keep absolute paths outside the workspace root', () => {
-    const outside = join(sep, 'other', 'app');
-    expect(normalizeReportPath(outside, workspaceRoot)).toBe(outside);
-  });
-
-  it('should tolerate trailing separators on either side', () => {
-    expect(
-      normalizeReportPath(
-        join(workspaceRoot, 'apps', 'app'),
-        workspaceRoot + sep
-      )
-    ).toBe('apps/app');
-    expect(
-      normalizeReportPath(
-        join(workspaceRoot, 'apps', 'app') + sep,
-        workspaceRoot
-      )
-    ).toBe('apps/app');
-    expect(normalizeReportPath(workspaceRoot + sep, workspaceRoot)).toBe('.');
-  });
-});
-
-describe('normalizeProjectGraphReport', () => {
-  const workspaceRoot = join(sep, 'ws');
-
-  it('should relativize node keys and dependency paths', () => {
-    const report: ProjectGraphReport = {
-      nodes: {
-        [join(workspaceRoot, 'apps', 'app')]: { name: ':app' },
-        'libs/lib': { name: ':lib' },
-      },
-      dependencies: [
-        {
-          source: join(workspaceRoot, 'apps', 'app'),
-          target: join(workspaceRoot, 'libs', 'lib'),
-          sourceFile: join(workspaceRoot, 'apps', 'app', 'build.gradle'),
-        } as any,
-      ],
-      externalNodes: {},
-    };
-
-    const normalized = normalizeProjectGraphReport(report, workspaceRoot);
-
-    expect(Object.keys(normalized.nodes)).toEqual(['apps/app', 'libs/lib']);
-    expect(normalized.dependencies).toEqual([
-      {
-        source: 'apps/app',
-        target: 'libs/lib',
-        sourceFile: 'apps/app/build.gradle',
-      },
-    ]);
-  });
-});
 
 describe('processNxProjectGraph', () => {
   let reportDir: string;
@@ -96,7 +22,7 @@ describe('processNxProjectGraph', () => {
 
   function writeReport(name: string, report: Partial<ProjectGraphReport>) {
     const file = join(reportDir, `${name}.json`);
-    writeJsonFile(file, report);
+    writeJsonFile(file, { formatVersion: 1, ...report });
     return file;
   }
 
@@ -141,5 +67,24 @@ describe('processNxProjectGraph', () => {
     ]);
 
     expect(report.nodes).toEqual({});
+  });
+
+  it('should reject reports from plugin versions before 0.1.24', () => {
+    const file = join(reportDir, 'old-format.json');
+    writeJsonFile(file, {
+      nodes: { '/some/machine/apps/app': { name: ':app' } },
+      dependencies: [],
+    });
+
+    let error: any;
+    try {
+      processNxProjectGraph(['> Task :app:nxProjectGraph', file]);
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeDefined();
+    expect(error.errors[0][1].message).toContain(
+      'requires dev.nx.gradle.project-graph 0.1.24 or newer'
+    );
   });
 });

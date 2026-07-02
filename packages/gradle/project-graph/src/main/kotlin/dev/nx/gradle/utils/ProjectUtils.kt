@@ -17,16 +17,18 @@ fun getNxProjectName(project: Project): String =
     else project.buildTreePath
 
 /**
- * Make [path] relative to [workspaceRoot] so reports stay machine-portable. The workspace root
- * itself becomes `.`; paths outside the workspace are kept as-is.
+ * Make [path] relative to [workspaceRoot] with `/` separators so reports are machine-portable and
+ * canonical. The workspace root itself becomes `.`; paths outside the workspace are kept absolute.
  */
 fun relativizeToWorkspaceRoot(path: String, workspaceRoot: String): String {
   val root = workspaceRoot.trimEnd(File.separatorChar)
-  return when {
-    path == root -> "."
-    path.startsWith(root + File.separator) -> path.substring(root.length + 1)
-    else -> path
-  }
+  val result =
+      when {
+        path == root -> "."
+        path.startsWith(root + File.separator) -> path.substring(root.length + 1)
+        else -> path
+      }
+  return result.replace(File.separatorChar, '/')
 }
 
 /** Loops through a project and populate dependencies and nodes for each target */
@@ -99,7 +101,7 @@ private fun createNodeForProjectImpl(
   }
   val buildFileRelativePath =
       if (project.buildFile.exists()) {
-        project.buildFile.relativeTo(File(workspaceRoot)).path
+        project.buildFile.relativeTo(File(workspaceRoot)).invariantSeparatorsPath
       } else {
         null
       }
