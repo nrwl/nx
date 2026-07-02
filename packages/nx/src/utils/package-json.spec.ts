@@ -19,6 +19,7 @@ import {
 } from './package-json';
 import * as pacakgeManager from './package-manager';
 import { getPackageManagerCommand } from './package-manager';
+import { nxVersion } from './versions';
 import { workspaceRoot } from './workspace-root';
 
 describe('buildTargetFromScript', () => {
@@ -100,6 +101,40 @@ describe('installPackageToTmp', () => {
     expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
       'pnpm add -Dw nx@latest --ignore-scripts'
+    );
+
+    cleanup();
+  });
+
+  // Regression test for https://github.com/nrwl/nx/issues/36144
+  // Installing a package without pinning `nx` lets the package manager float
+  // `nx` to a newer major (via `@nx/devkit`'s +/- 1 major peer range), so the
+  // package loaded from the temp dir runs against a mismatched nx.
+  it('should pin `nx` to the running version when installing another package', () => {
+    const tempDir = mkdtempSync(join(tmpdir(), 'nx-install-test-'));
+    const cleanup = jest.fn(() =>
+      rmSync(tempDir, { recursive: true, force: true })
+    );
+    jest.spyOn(pacakgeManager, 'createTempNpmDirectory').mockReturnValue({
+      dir: tempDir,
+      cleanup,
+    });
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('10.0.0');
+    jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
+      addDev: 'npm install -D',
+      ignoreScriptsFlag: '--ignore-scripts',
+    } as any);
+    const execSyncSpy = jest
+      .spyOn(childProcess, 'execSync')
+      .mockReturnValue('' as any);
+
+    installPackageToTmp('@nx/webpack', '22.7.6', 'npm');
+
+    expect(execSyncSpy).toHaveBeenCalledTimes(1);
+    expect(execSyncSpy.mock.calls[0][0]).toBe(
+      `npm install -D @nx/webpack@22.7.6 nx@${nxVersion} --ignore-scripts`
     );
 
     cleanup();
