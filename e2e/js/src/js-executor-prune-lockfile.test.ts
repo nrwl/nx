@@ -529,4 +529,70 @@ describe('js:prune-lockfile executor', () => {
       ]);
     });
   });
+
+  // An app may list a workspace library under its OWN devDependencies. pnpm
+  // validates the whole manifest against the lockfile even under --prod, so the
+  // root importer must emit it as a file: directory package under
+  // devDependencies and copy-workspace-modules must ship it, or
+  // pnpm install --frozen-lockfile fails on the manifest/lockfile mismatch.
+  // Regression for #35425.
+  describe('package manager pnpm (app-level dev workspace dep)', () => {
+    let scope: string;
+
+    beforeAll(() => {
+      scope = newProject({
+        packages: ['@nx/node', '@nx/js', '@nx/eslint', '@nx/jest'],
+        preset: 'ts',
+        packageManager: 'pnpm',
+      });
+    });
+    afterAll(() => {
+      cleanupProject();
+    });
+
+    it('should produce installable pruned output with an app-level dev workspace dep', () => {
+      const nodeapp = uniq('nodeapp');
+      const liba = uniq('liba');
+
+      runCLI(
+        `generate @nx/node:app ${nodeapp} --linter=eslint --unitTestRunner=jest`
+      );
+      runCLI(
+        `generate @nx/js:lib ${liba} --bundler=tsc --linter=eslint --unitTestRunner=jest`
+      );
+
+      updateJson(`${liba}/package.json`, (json) => {
+        json.dependencies = { ...json.dependencies, lodash: '^4.17.21' };
+        return json;
+      });
+      // The app reaches liba through its own devDependencies.
+      updateJson(`${nodeapp}/package.json`, (json) => {
+        json.devDependencies = {
+          ...json.devDependencies,
+          [`@${scope}/${liba}`]: 'workspace:*',
+        };
+        json.nx.targets['prune-lockfile'] = {
+          executor: '@nx/js:prune-lockfile',
+          options: { buildTarget: 'build' },
+        };
+        json.nx.targets['copy-workspace-modules'] = {
+          executor: '@nx/js:copy-workspace-modules',
+          options: { buildTarget: 'build' },
+        };
+        return json;
+      });
+      runCommand(`pnpm install`);
+
+      runCLI(`build ${nodeapp}`);
+      runCLI(`prune-lockfile ${nodeapp}`);
+      runCLI(`copy-workspace-modules ${nodeapp}`);
+
+      installPrunedDist('pnpm', tmpProjPath(`${nodeapp}/dist`), [
+        {
+          chain: [`@${scope}/${liba}`],
+          deps: ['lodash'],
+        },
+      ]);
+    });
+  });
 });
