@@ -15,11 +15,23 @@ export interface ExistingPrettierConfig {
   config: Options;
 }
 
-export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierConfig | null> {
-  let prettier: typeof import('prettier');
+// Prettier v3 (ESM) exposes its API as named exports; v2 (CJS) exposes it under
+// `.default` when loaded via `import()`. Return whichever carries the API, or
+// null if prettier isn't installed.
+async function importPrettier(): Promise<typeof import('prettier') | null> {
   try {
-    prettier = await import('prettier');
+    const imported = await import('prettier');
+    return (
+      (imported as any).resolveConfig ? imported : (imported as any).default
+    ) as typeof import('prettier');
   } catch {
+    return null;
+  }
+}
+
+export async function resolveUserExistingPrettierConfig(): Promise<ExistingPrettierConfig | null> {
+  const prettier = await importPrettier();
+  if (!prettier) {
     return null;
   }
 
@@ -101,18 +113,14 @@ export function generatePrettierSetup(
 export async function resolvePrettierConfigPath(
   tree: Tree
 ): Promise<string | null> {
-  let prettier: typeof import('prettier');
-  try {
-    prettier = await import('prettier');
-  } catch {
+  const prettier = await importPrettier();
+  if (!prettier) {
     return null;
   }
 
-  if (prettier) {
-    const filePath = await prettier.resolveConfigFile();
-    if (filePath) {
-      return filePath;
-    }
+  const configFilePath = await prettier.resolveConfigFile();
+  if (configFilePath) {
+    return configFilePath;
   }
 
   if (!tree) {
