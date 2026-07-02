@@ -458,8 +458,7 @@ export function getTargetConfigurationForTask(
   if (!node) {
     throw new Error(
       `Task "${task.id}" references project "${task.target.project}", which does not exist in the project graph. ` +
-        `This can happen when the project graph in this environment diverges from the one the task was created from ` +
-        `(e.g. a plugin contributed no projects on this machine).`
+        `This can happen when the project graph in this environment diverges from the one the task was created from.`
     );
   }
   return node.data.targets[task.target.target];
