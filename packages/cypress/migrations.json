@@ -127,6 +127,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.1.0-eslint-plugin-cypress": {
+      "version": "23.1.0-beta.6",
+      "requires": {
+        "eslint-plugin-cypress": ">=2.0.0 <3.5.0"
+      },
+      "packages": {
+        "eslint-plugin-cypress": {
+          "version": "^3.5.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
