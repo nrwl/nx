@@ -75,18 +75,17 @@ export default async function update(tree: Tree): Promise<{
     // conversion, so the converted flat configs load without agent repair.
     await convertToFlatConfigGenerator(tree, {
       keepExistingVersions: true,
-      skipFormat: false,
+      skipFormat: true,
     });
   }
 
-  // Reconcile angular-eslint v22's removed eslintrc configs in any flat config
-  // present. Runs for every root state: project-level flat configs can exist
-  // even when the root is JavaScript-based (so the generator never ran), already
-  // flat, or absent entirely. No-op for the converted root above (idempotent).
-  // Gated on v22.
-  if (await migrateAngularEslintV22FlatConfig(tree)) {
-    await formatFiles(tree);
-  }
+  // Reconcile angular-eslint v22's removed eslintrc configs in any flat config.
+  // Runs for every root state: project-level flat configs can exist even when the
+  // root is JavaScript-based (so the generator never ran), already flat, or
+  // absent. No-op for the converted root above (idempotent).
+  await migrateAngularEslintV22FlatConfig(tree);
+
+  await formatFiles(tree);
 
   if (rootState === 'none') {
     // Nothing to migrate beyond the angular-eslint reconciliation above.

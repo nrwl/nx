@@ -31,9 +31,8 @@ describe('migrateAngularEslintV22FlatConfig', () => {
 `;
     tree.write('apps/app/eslint.config.mjs', original);
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
-    expect(changed).toBe(false);
     expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).toBe(original);
   });
 
@@ -61,10 +60,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('compat.extends');
     expect(content).not.toContain('FlatCompat');
     expect(content).toMatch(/import angular from ['"]angular-eslint['"]/);
@@ -99,10 +97,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('process-inline-templates');
     expect(content).not.toContain('compat.extends');
     expect(content).not.toContain('FlatCompat');
@@ -135,10 +132,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('no-conflicting-lifecycle');
     expect(content).toContain('@angular-eslint/directive-selector');
     expect(content).toContain('@angular-eslint/use-lifecycle-interface');
@@ -295,9 +291,8 @@ export default [
 `;
     tree.write('apps/app/eslint.config.mjs', original);
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
-    expect(changed).toBe(false);
     expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).toBe(original);
   });
 
@@ -389,10 +384,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('process-inline-templates');
     expect(content).not.toContain('no-conflicting-lifecycle');
     expect(content).not.toContain('compat.config');
@@ -427,10 +421,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('compat.config');
     expect(content).not.toContain('FlatCompat');
     expect(content).toMatch(/import angular from ['"]angular-eslint['"]/);
@@ -462,10 +455,9 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     const content = tree.read('apps/app/eslint.config.mjs', 'utf-8');
-    expect(changed).toBe(true);
     expect(content).not.toContain('compat.config');
     // The collapse strips the arrow's own spreads by the actual parameter name,
     // so none is left dangling (a `...cfg` with no binding would throw on load).
@@ -496,11 +488,10 @@ export default [
 `;
     tree.write('apps/app/eslint.config.mjs', original);
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
     // The block carries env alongside extends, so it is left byte-for-byte intact
     // rather than partially rewritten into a broken config.
-    expect(changed).toBe(false);
     expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).toBe(original);
   });
 
@@ -593,9 +584,8 @@ export default [
 `
     );
 
-    const changed = await migrateAngularEslintV22FlatConfig(tree);
+    await migrateAngularEslintV22FlatConfig(tree);
 
-    expect(changed).toBe(true);
     expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
       'no-conflicting-lifecycle'
     );

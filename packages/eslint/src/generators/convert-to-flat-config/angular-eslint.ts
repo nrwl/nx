@@ -60,16 +60,15 @@ const FLAT_CONFIG_FILENAMES = new Set([
  *
  * Gated on angular-eslint v22+: the shims resolve on v18-v21, so rewriting them
  * there would be churn, and only the v22 flat exports are known here. Does not
- * format; the caller owns formatting. Returns whether any file changed.
+ * format; the caller owns formatting.
  */
 export async function migrateAngularEslintV22FlatConfig(
   tree: Tree
-): Promise<boolean> {
+): Promise<void> {
   if (!isAngularEslintV22OrLater(tree)) {
-    return false;
+    return;
   }
 
-  let changed = false;
   let needsAngularDependency = false;
 
   visitNotIgnoredFiles(tree, '.', (path) => {
@@ -85,7 +84,6 @@ export async function migrateAngularEslintV22FlatConfig(
     const { updated, introducedAngularRef } = rewriteContent(content);
     if (updated !== content) {
       tree.write(path, updated);
-      changed = true;
       needsAngularDependency ||= introducedAngularRef;
     }
   });
@@ -99,8 +97,6 @@ export async function migrateAngularEslintV22FlatConfig(
       true
     );
   }
-
-  return changed;
 }
 
 // The umbrella `angular-eslint` and the scoped `@angular-eslint/*` packages
