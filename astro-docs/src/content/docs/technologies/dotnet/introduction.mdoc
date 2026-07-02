@@ -172,6 +172,41 @@ Not all targets are available for every project type. The plugin intelligently d
 - **Class Libraries**: build, clean, restore, pack, watch
 - **Test Projects**: build, clean, restore, test, watch
 
+### Add custom targets
+
+The `@nx/dotnet` plugin only infers the target types listed above. Targets that are specific to your workspace,
+such as `format`, should be added to the project configuration next to the `.csproj` file.
+
+For example, create a `project.json` file next to a project file to add a `format` target that runs
+`dotnet format` from that project's directory:
+
+```json
+// project.json
+{
+  "targets": {
+    "format": {
+      "command": "dotnet format",
+      "options": {
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}
+```
+
+Then run it with:
+
+```shell
+nx run my-project:format
+```
+
+Use `targetDefaults` in `nx.json` for shared caching or orchestration settings after the target exists,
+but `targetDefaults` does not create new targets by itself.
+
+If you need the same custom target to be inferred automatically for every .NET project, create a custom Nx plugin
+that adds that target during project graph creation. See [Project Graph Plugins](/docs/extending-nx/project-graph-plugins)
+for the plugin API.
+
 ### Continuous tasks
 
 The `@nx/dotnet` plugin automatically marks the `watch` target as [continuous](/docs/reference/project-configuration#continuous), ensuring Nx handles it correctly during development. Unlike watch, `run` is not automatically marked as continuous as it may exit depending on the type of application. To mark `run` as continuous, you can configure it manually in `project.json` or `nx.json`.
