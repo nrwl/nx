@@ -2595,6 +2595,9 @@ importers:
       ora:
         specifier: 'catalog:'
         version: 5.4.1
+      tar-stream:
+        specifier: ~2.2.0
+        version: 2.2.0
       tmp:
         specifier: ~0.2.7
         version: 0.2.7

@@ -43,6 +43,7 @@
     "flat": "^5.0.2",
     "open": "^8.4.0",
     "ora": "catalog:",
+    "tar-stream": "~2.2.0",
     "tmp": "catalog:",
     "tslib": "catalog:typescript",
     "yargs": "catalog:"
