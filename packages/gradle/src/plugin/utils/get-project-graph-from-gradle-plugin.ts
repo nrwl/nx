@@ -28,11 +28,6 @@ export interface ProjectGraphReport {
   dependencies: Array<StaticDependency>;
   externalNodes?: Record<string, ProjectGraphExternalNode>;
   buildFiles?: string[];
-  /**
-   * Written by dev.nx.gradle.project-graph >= 0.1.24, whose reports use
-   * workspace-relative `/`-separated paths. Reports without it are rejected.
-   */
-  formatVersion?: number;
 }
 
 export interface ProjectGraphReportCache extends ProjectGraphReport {
@@ -237,20 +232,6 @@ export function processNxProjectGraph(
       }
       const projectGraphReportJson: ProjectGraphReport =
         readJsonFile<ProjectGraphReport>(file);
-      if (!projectGraphReportJson.formatVersion) {
-        throw new AggregateCreateNodesError(
-          [
-            [
-              null,
-              new Error(
-                `The Gradle project graph report at ${file} was produced by an outdated dev.nx.gradle.project-graph plugin. ` +
-                  `@nx/gradle requires dev.nx.gradle.project-graph 0.1.24 or newer — run "nx migrate" or update the plugin version in your Gradle build.`
-              ),
-            ],
-          ],
-          []
-        );
-      }
       projectGraphReportForAllProjects.nodes = {
         ...projectGraphReportForAllProjects.nodes,
         ...projectGraphReportJson.nodes,

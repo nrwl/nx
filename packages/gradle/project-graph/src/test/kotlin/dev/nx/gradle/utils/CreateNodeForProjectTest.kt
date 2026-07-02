@@ -51,8 +51,6 @@ class CreateNodeForProjectTest {
     // Dependencies and external nodes should default to empty
     assertTrue(result.dependencies.isEmpty(), "Expected no dependencies")
     assertTrue(result.externalNodes.isEmpty(), "Expected no external nodes")
-
-    assertEquals(1, result.formatVersion, "Expected the report to carry the format version")
   }
 
   @Test
