@@ -221,18 +221,17 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask dependent output extensions are deterministic across trees`() {
+    fun `test getInputsForTask characterizable dependencies yield specific globs deterministically`() {
       // A dependent whose extension IS derivable from the task model (declared archive extension).
       val jarProducer =
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
 
-      // A Copy dependent with a DIRECTORY source: its contents must NOT be enumerated (only
-      // declared concrete-file sources are read), so nothing on disk under it can leak in.
-      val sourceDir = java.io.File("$workspaceRoot/src/bundled")
+      // A Copy dependent with a CONCRETE gitignored source: characterizable (yields gz), so it
+      // contributes a specific glob and never a catch-all.
       val copyDep =
           project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
-      copyDep.from(sourceDir)
+      copyDep.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
       copyDep.into(java.io.File("$workspaceRoot/build/bundled"))
 
       val consumer = project.tasks.register("consumerDeterministic").get()
@@ -247,13 +246,12 @@ class ProcessTaskUtilsTest {
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
 
-      // Clean tree: no source or artifact files on disk.
+      // Clean tree: no artifact files on disk.
       val clean = outputFileGlobs()
 
-      // Built tree: create Copy sources and the jar output on disk (transient build state).
-      sourceDir.mkdirs()
-      java.io.File(sourceDir, "bundle.tar.gz").writeText("x")
-      java.io.File(sourceDir, "data.json").writeText("{}")
+      // Built tree: create the generated source and jar output on disk (transient build state).
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
       java.io.File("$workspaceRoot/build/libs").mkdirs()
       java.io.File("$workspaceRoot/build/libs/app.jar").writeText("x")
       val built = outputFileGlobs()
@@ -264,10 +262,102 @@ class ProcessTaskUtilsTest {
           built,
           "dependentTasksOutputFiles must not change between a clean and a built tree")
 
-      // The model-derivable extension is present; the Copy SOURCE extensions never leak in.
+      // Characterizable dependencies yield specific globs, never the catch-all.
       assertTrue(clean.contains("**/*.jar"), "Expected jar from archiveExtension, got $clean")
-      assertFalse(clean.contains("**/*.gz"), "Copy source .gz must not leak, got $clean")
-      assertFalse(clean.contains("**/*.json"), "Copy source .json must not leak, got $clean")
+      assertTrue(clean.contains("**/*.gz"), "Expected gz from concrete Copy source, got $clean")
+      assertFalse(
+          clean.contains("**/*"), "Characterizable deps must not trigger the catch-all, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask falls back to catch-all for uncharacterizable directory output`() {
+      // An opaque dependency that declares only an @OutputDirectory (no type/archive/file-output we
+      // can reduce to extensions) triggers a conservative "**/*" so its directory is still hashed.
+      val opaqueDep = project.tasks.register("opaqueDep").get()
+      opaqueDep.outputs.dir(java.io.File("$workspaceRoot/build/opaque"))
+
+      val consumer = project.tasks.register("consumerOpaque").get()
+      consumer.dependsOn(opaqueDep)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      val clean = outputFileGlobs()
+      java.io.File("$workspaceRoot/build/opaque").mkdirs()
+      java.io.File("$workspaceRoot/build/opaque/thing.dat").writeText("x")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "catch-all must be deterministic across clean and built trees")
+      assertTrue(
+          clean.contains("**/*"), "Expected catch-all for an opaque directory output, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask falls back to catch-all for a fileTree-only Copy dependency`() {
+      // A Copy whose only source is a FileTree yields no characterizable extensions, but its
+      // destination @OutputDirectory triggers the catch-all. FileTree contents are never
+      // enumerated.
+      val treeDir = java.io.File("$workspaceRoot/dist/tree").apply { mkdirs() }
+      java.io.File(treeDir, "a.dat").writeText("x")
+      val copyDep = project.tasks.register("copyTree", org.gradle.api.tasks.Copy::class.java).get()
+      copyDep.from(project.fileTree(treeDir))
+      copyDep.into(java.io.File("$workspaceRoot/build/tree-out"))
+
+      val consumer = project.tasks.register("consumerTree").get()
+      consumer.dependsOn(copyDep)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      val clean = outputFileGlobs()
+      java.io.File(treeDir, "b.json").writeText("{}")
+      val built = outputFileGlobs()
+
+      assertEquals(clean, built, "catch-all must be deterministic across clean and built trees")
+      assertTrue(
+          clean.contains("**/*"),
+          "fileTree-only Copy dependency should yield the catch-all, got $clean")
+      assertFalse(
+          clean.contains("**/*.dat"), "FileTree contents must not be enumerated, got $clean")
+      assertFalse(
+          clean.contains("**/*.json"), "FileTree contents must not be enumerated, got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask does not use catch-all for a typed compile dependency`() {
+      project.plugins.apply("java")
+      val compileJava = project.tasks.getByName("compileJava")
+
+      val consumer = project.tasks.register("consumerCompile").get()
+      consumer.dependsOn(compileJava)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, consumer, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+      val globs =
+          result
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      // Typed compile task (directory output, but typed) yields a specific class glob, not "**/*".
+      assertTrue(globs.contains("**/*.class"), "Expected class from JavaCompile, got $globs")
+      assertFalse(
+          globs.contains("**/*"),
+          "Typed compile dependency must not trigger the catch-all, got $globs")
     }
 
     @Test
