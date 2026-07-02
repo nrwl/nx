@@ -82,8 +82,7 @@ export async function getNxProjectGraphLines(
               `Gradle project graph generation timed out after ${timeoutSeconds} ${timeoutSeconds === 1 ? 'second' : 'seconds'}.\n` +
                 `  1. Run "gradlew --stop" to stop the Gradle daemon, then run "gradlew clean" to clear the build cache.\n` +
                 `  2. If the issue persists, set the environment variable NX_GRADLE_PROJECT_GRAPH_TIMEOUT to a higher value (in seconds) to increase the timeout.\n` +
-                `  3. If the issue still persists, set NX_GRADLE_DISABLE=true to disable the Gradle plugin entirely.\n` +
-                `     Warning: in CI setups that distribute tasks across machines (e.g. Nx Agents), NX_GRADLE_DISABLE must be set on every machine — including the one creating the task graph — or the project graphs will diverge and Gradle tasks will fail.`
+                `  3. If the issue still persists, set NX_GRADLE_DISABLE=true to disable the Gradle plugin entirely.`
             ),
           ],
         ],
