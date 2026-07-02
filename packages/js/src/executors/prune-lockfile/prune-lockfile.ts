@@ -17,6 +17,7 @@ import {
 } from '@nx/devkit/internal';
 import { getLockFileName, createLockFile } from '@nx/devkit/internal';
 import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
+import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
@@ -54,6 +55,11 @@ export default async function pruneLockfileExecutor(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
+    // pnpm 11 reads build-script approvals and supportedArchitectures only from
+    // pnpm-workspace.yaml, so re-emit them there for the standalone output.
+    if (packageManager === 'pnpm') {
+      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot);
+    }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
 
