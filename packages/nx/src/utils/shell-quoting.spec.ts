@@ -76,6 +76,7 @@ describe('quoteShellArg', () => {
       ['backtick', 'pre`fix', `'pre\`fix'`],
       ['embedded single quote', "it's", `'it'\\''s'`],
       ['embedded double quote', 'say "hi"', `'say "hi"'`],
+      ['empty string', '', `''`],
     ])('quotes %s: %j', (_, value, expected) => {
       expect(quoteShellArg(value)).toBe(expected);
     });
@@ -93,6 +94,7 @@ describe('quoteShellArg', () => {
       ['embedded double quote', 'say "hi"', `"say \\"hi\\""`],
       ['backslashes before a double quote', 'a\\"b', `"a\\\\\\"b"`],
       ['trailing backslash', 'C:\\dir\\', `"C:\\dir\\\\"`],
+      ['empty string', '', `""`],
     ])('quotes %s: %j', (_, value, expected) => {
       expect(quoteShellArg(value)).toBe(expected);
     });

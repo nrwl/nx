@@ -1008,9 +1008,9 @@ describe('migrate', () => {
         }
       );
 
-      // runs migrations with createCommits enabled and custom commit-prefix (NOTE: the extra quotes are needed here to avoid shell escaping issues)
+      // the prefix contains spaces and parens, which the re-spawn must quote to survive the shell
       runCLI(
-        `migrate --run-migrations=migrations.json --create-commits --commit-prefix="'chore(core): AUTOMATED - '"`,
+        `migrate --run-migrations=migrations.json --create-commits --commit-prefix="chore(core): AUTOMATED - "`,
         {
           env: {
             NX_MIGRATE_SKIP_INSTALL: 'true',

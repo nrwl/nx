@@ -3404,7 +3404,7 @@ async function runMigrations(
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
     const exitCode = runOrReturnExitCode(() =>
-      runNxSync(`migrate ${args.join(' ')}`, {
+      runNxSync(`migrate ${args.map(quoteShellArg).join(' ')}`, {
         stdio: ['inherit', 'inherit', 'inherit'],
         env: {
           ...process.env,
