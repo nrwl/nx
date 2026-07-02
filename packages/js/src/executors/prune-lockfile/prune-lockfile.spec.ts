@@ -1,7 +1,7 @@
 import { type ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { getCatalogManager } from '@nx/devkit/internal';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { type PackageJson } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -460,5 +460,121 @@ describe('resolveCatalogReferences', () => {
     expect(result.devDependencies).toBeUndefined();
     expect(result.peerDependencies).toBeUndefined();
     expect(result.optionalDependencies).toBeUndefined();
+  });
+});
+
+describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
+  const mockGetWorkspacePackages =
+    getWorkspacePackagesFromGraph as jest.MockedFunction<
+      typeof getWorkspacePackagesFromGraph
+    >;
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('prune-lockfile');
+    mockWorkspaceRoot = tempFs.tempDir;
+    mockGetWorkspacePackages.mockReturnValue(new Map());
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+    jest.clearAllMocks();
+  });
+
+  // A pnpm-lock.yaml plus a pnpm packageManager field makes the executor detect
+  // pnpm and pins the major getPackageManagerVersion reports, so the settings
+  // gate is exercised deterministically without a real pnpm on PATH.
+  function setupPnpmWorkspace(pnpmVersion: string, workspaceYaml?: string) {
+    const files: Record<string, string> = {
+      'package.json': JSON.stringify({
+        name: 'root',
+        version: '0.0.0',
+        packageManager: `pnpm@${pnpmVersion}`,
+      }),
+      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+      }),
+    };
+    if (workspaceYaml !== undefined) {
+      files['pnpm-workspace.yaml'] = workspaceYaml;
+    }
+    tempFs.createFilesSync(files);
+    tempFs.createDirSync('dist/app');
+  }
+
+  async function runExecutor() {
+    return pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+  }
+
+  const outputWorkspaceYaml = () =>
+    join(tempFs.tempDir, 'dist', 'app', 'pnpm-workspace.yaml');
+
+  it('re-emits allowBuilds and supportedArchitectures on pnpm 11', async () => {
+    setupPnpmWorkspace(
+      '11.2.2',
+      [
+        'packages:',
+        "  - 'packages/*'",
+        'overrides:',
+        '  lodash: 4.17.21',
+        'allowBuilds:',
+        '  esbuild: true',
+        'supportedArchitectures:',
+        '  os:',
+        '    - linux',
+        '  cpu:',
+        '    - x64',
+        '',
+      ].join('\n')
+    );
+
+    await runExecutor();
+
+    expect(existsSync(outputWorkspaceYaml())).toBe(true);
+    const content = readFileSync(outputWorkspaceYaml(), 'utf-8');
+    // build-script approvals and supported architectures are carried...
+    expect(content).toContain('allowBuilds:');
+    expect(content).toContain('esbuild: true');
+    expect(content).toContain('supportedArchitectures:');
+    expect(content).toContain('linux');
+    // ...but resolution-time config and the workspace `packages:` glob are not,
+    // so the standalone output never enters pnpm workspace mode.
+    expect(content).not.toContain('packages:');
+    expect(content).not.toContain('overrides:');
+  });
+
+  it('does not emit a pnpm-workspace.yaml on pnpm 10', async () => {
+    setupPnpmWorkspace('10.18.0', 'allowBuilds:\n  esbuild: true\n');
+
+    await runExecutor();
+
+    expect(existsSync(outputWorkspaceYaml())).toBe(false);
+  });
+
+  it('does not emit a pnpm-workspace.yaml when the workspace declares no install-time settings', async () => {
+    setupPnpmWorkspace('11.2.2', 'overrides:\n  lodash: 4.17.21\n');
+
+    await runExecutor();
+
+    expect(existsSync(outputWorkspaceYaml())).toBe(false);
   });
 });

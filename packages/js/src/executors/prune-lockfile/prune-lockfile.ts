@@ -15,6 +15,7 @@ import {
   type PackageJson,
   type PackageJsonDependencySection,
   stripPrunedLockfilePnpmConfig,
+  writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
@@ -59,6 +60,11 @@ export default async function pruneLockfileExecutor(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
+    // pnpm 11 reads build-script approvals and supportedArchitectures only from
+    // pnpm-workspace.yaml, so re-emit them there for the standalone output.
+    if (packageManager === 'pnpm') {
+      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot);
+    }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
 

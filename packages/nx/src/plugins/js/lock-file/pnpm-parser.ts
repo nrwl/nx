@@ -640,7 +640,8 @@ export function stringifyPnpmLockfile(
   // becomes a package keyed `<name>@file:workspace_modules/<name>` with a
   // directory resolution and its resolved production closure; inter-module edges
   // become `file:` refs. This is what a standalone production install expects:
-  // no `pnpm-workspace.yaml` and no importer blocks for the modules.
+  // the modules resolve as file: directory packages, not workspace packages, so
+  // no `packages:` workspace file and no importer blocks for them.
   const workspaceModulePackages: PackageSnapshots = {};
   for (const [packageName, importerPath] of Object.entries(
     allRequiredImporters
@@ -690,14 +691,16 @@ export function stringifyPnpmLockfile(
 /**
  * Removes settings a standalone, pruned lockfile cannot satisfy on its own.
  *
- * A pruned build output ships only `package.json`, the lockfile, and the copied
- * `workspace_modules/` directories, with no `pnpm-workspace.yaml`. pnpm 11 also no
- * longer reads the `pnpm` field from `package.json`, so the lockfile's stored
- * config (`overrides`, `settings`, `catalogs`, ...) has no backing source in the
- * output. pnpm validates these against that (now absent) config and aborts
- * `pnpm install --frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their
- * effect is already baked into the resolved snapshots, so removing them keeps the
- * install identical.
+ * A pruned build output ships `package.json`, the lockfile, and the copied
+ * `workspace_modules/` directories. It carries no resolution-time pnpm config:
+ * any `pnpm-workspace.yaml` it emits holds only install-time settings
+ * (build-script approvals, `supportedArchitectures`), never `overrides`,
+ * `packageExtensions`, or catalogs. pnpm 11 also no longer reads the `pnpm` field
+ * from `package.json`, so the lockfile's stored config (`overrides`, `settings`,
+ * `catalogs`, ...) has no backing source in the output. pnpm validates these
+ * against that (now absent) config and aborts `pnpm install --frozen-lockfile`
+ * with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH. Their effect is already baked into the
+ * resolved snapshots, so removing them keeps the install identical.
  *
  * The manifest-side counterpart is `stripPrunedLockfilePnpmConfig` in
  * `utils/package-json`, which removes the matching `pnpm.*` fields from the

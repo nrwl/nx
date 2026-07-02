@@ -16,7 +16,7 @@ import { readJson } from '../generators/utils/json';
 import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
-import { readJsonFile } from './fileutils';
+import { readJsonFile, readYamlFile } from './fileutils';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
 import {
@@ -755,4 +755,62 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
   if (Object.keys(packageJson.pnpm).length === 0) {
     delete packageJson.pnpm;
   }
+}
+
+/**
+ * Re-emits the install-time pnpm settings a standalone pruned output would lose
+ * on pnpm 11.
+ *
+ * pnpm 11 reads settings only from pnpm-workspace.yaml, never the package.json
+ * `pnpm` field, and the rest of the pruned output ships no workspace file. So on
+ * pnpm 11 the build-script approvals (`allowBuilds`) and `supportedArchitectures`
+ * the workspace declares would be dropped, and native production deps would never
+ * run their build scripts. Write a settings-only pnpm-workspace.yaml carrying
+ * those from the workspace root - no `packages:`, which would flip pnpm into
+ * workspace mode and which pnpm 9 rejects outright.
+ *
+ * pnpm <=10 reads the same settings from the emitted package.json, so this runs
+ * for pnpm 11 only and no-ops when the workspace declares none. Resolution-time
+ * config stays out: it is already baked into the pruned lockfile (see
+ * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried yet; a
+ * workspace relying on `pnpm patch` is not fully supported by pruning.
+ */
+export function writePrunedPnpmInstallSettings(
+  outputDirectory: string,
+  workspaceRootPath: string = workspaceRoot
+): void {
+  let pnpmMajor: number;
+  try {
+    pnpmMajor = Number.parseInt(
+      getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
+      10
+    );
+  } catch {
+    // Can't determine the pnpm version - skip rather than guess. Worst case
+    // matches the prior behavior of carrying no install-time settings.
+    return;
+  }
+  if (pnpmMajor !== 11) {
+    return;
+  }
+  const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
+  if (!existsSync(rootWorkspaceYaml)) {
+    return;
+  }
+  const rootSettings = readYamlFile<{
+    allowBuilds?: Record<string, boolean>;
+    supportedArchitectures?: unknown;
+  }>(rootWorkspaceYaml);
+  const settings: Record<string, unknown> = {};
+  if (rootSettings.allowBuilds) {
+    settings.allowBuilds = rootSettings.allowBuilds;
+  }
+  if (rootSettings.supportedArchitectures) {
+    settings.supportedArchitectures = rootSettings.supportedArchitectures;
+  }
+  if (Object.keys(settings).length === 0) {
+    return;
+  }
+  const { dump } = require('@zkochan/js-yaml');
+  writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), dump(settings));
 }
