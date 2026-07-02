@@ -36,8 +36,9 @@ function isPackageJsonAtProjectRoot(
   if (!fileName.endsWith('package.json')) {
     return false;
   }
-  const filePath = fileName.slice(0, -13);
-  return !!roots[filePath];
+  const filePath = fileName.slice(0, -'package.json'.length);
+  const projectRoot = filePath.replace(/\/$/, '') || '.';
+  return !!roots[projectRoot];
 }
 
 function processPackageJson(

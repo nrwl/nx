@@ -243,6 +243,55 @@ describe('explicit package json dependencies', () => {
     tempFs.cleanup();
   });
 
+  it('should add dependencies from package.json for a project at the workspace root', async () => {
+    await tempFs.createFiles({
+      './package.json': JSON.stringify({
+        name: 'root-project',
+        dependencies: {
+          lodash: '4.0.0',
+        },
+      }),
+    });
+    const npmResolutionCache = new Map();
+    const targetProjectLocator = new TargetProjectLocator(
+      projects,
+      ctx.externalNodes,
+      npmResolutionCache
+    );
+    const rootCtx: CreateDependenciesContext = {
+      ...ctx,
+      projects: {
+        root: {
+          root: '.',
+          name: 'root',
+        },
+      },
+      filesToProcess: {
+        ...ctx.filesToProcess,
+        projectFileMap: {
+          root: [
+            {
+              file: 'package.json',
+              hash: 'hash',
+            },
+          ],
+        },
+      },
+    };
+
+    const res = buildExplicitPackageJsonDependencies(
+      rootCtx,
+      targetProjectLocator
+    );
+
+    expect(res).toContainEqual({
+      source: 'root',
+      sourceFile: 'package.json',
+      target: 'npm:lodash',
+      type: 'static',
+    });
+  });
+
   it(`should add dependencies with mixed versions for projects based on deps in package.json and populate the cache`, async () => {
     const npmResolutionCache = new Map();
     const targetProjectLocator = new TargetProjectLocator(
