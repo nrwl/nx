@@ -36,8 +36,8 @@ class CreateNodeForProjectTest {
             workspaceRoot = workspaceRoot,
             atomized = true)
 
-    // Assert
-    val projectRoot = project.projectDir.absolutePath
+    // Assert: node keys are relative to the workspace root for machine portability
+    val projectRoot = "project-a"
     assertTrue(result.nodes.containsKey(projectRoot), "Expected node for project root")
 
     val projectNode = result.nodes[projectRoot]
@@ -76,8 +76,36 @@ class CreateNodeForProjectTest {
             workspaceRoot = workspaceRoot,
             atomized = false)
 
-    val projectNode = result.nodes[appProject.projectDir.absolutePath]
+    val projectNode = result.nodes[File("root", "app").path]
     assertNotNull(projectNode)
     assertEquals(":app", projectNode.name, "Expected project name to be ':app' (buildTreePath)")
+  }
+
+  @Test
+  fun `should key the root project node as dot`(@TempDir workspaceDir: File) {
+    val workspaceRoot = workspaceDir.absolutePath
+    val project = ProjectBuilder.builder().withProjectDir(workspaceDir).build()
+    project.tasks.register("compileJava").get()
+
+    val result =
+        createNodeForProject(
+            project = project,
+            targetNameOverrides = emptyMap(),
+            workspaceRoot = workspaceRoot,
+            atomized = false)
+
+    assertTrue(result.nodes.containsKey("."), "Expected root project node to be keyed as '.'")
+  }
+
+  @Test
+  fun `relativizeToWorkspaceRoot handles root, nested and outside paths`() {
+    val root = File("/tmp/ws").path
+    assertEquals(".", relativizeToWorkspaceRoot(root, root))
+    assertEquals(
+        File("apps", "app").path,
+        relativizeToWorkspaceRoot(File(root, "apps/app").path, root))
+    assertEquals(
+        File("/tmp/other/project").path,
+        relativizeToWorkspaceRoot(File("/tmp/other/project").path, root))
   }
 }

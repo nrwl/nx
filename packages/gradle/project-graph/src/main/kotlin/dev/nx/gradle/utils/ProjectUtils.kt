@@ -16,6 +16,19 @@ fun getNxProjectName(project: Project): String =
     if (project.buildTreePath.isEmpty() || project.buildTreePath == ":") project.name
     else project.buildTreePath
 
+/**
+ * Make [path] relative to [workspaceRoot] so reports stay machine-portable. The workspace root
+ * itself becomes `.`; paths outside the workspace are kept as-is.
+ */
+fun relativizeToWorkspaceRoot(path: String, workspaceRoot: String): String {
+  val root = workspaceRoot.trimEnd(File.separatorChar)
+  return when {
+    path == root -> "."
+    path.startsWith(root + File.separator) -> path.substring(root.length + 1)
+    else -> path
+  }
+}
+
 /** Loops through a project and populate dependencies and nodes for each target */
 fun createNodeForProject(
     project: Project,
@@ -58,7 +71,7 @@ private fun createNodeForProjectImpl(
       logger.info(
           "${Date()} ${project.name} createNodeForProject: get dependencies error: ${e.message}")
     }
-    val projectRoot = project.projectDir.path
+    val projectRoot = relativizeToWorkspaceRoot(project.projectDir.path, workspaceRoot)
 
     // Read project-level nx config if it exists
     val nxProjectExtension = project.extensions.findByType(NxProjectExtension::class.java)
@@ -90,8 +103,22 @@ private fun createNodeForProjectImpl(
       } else {
         null
       }
+  // Dependency paths are collected as absolute paths; relativize so the report
+  // stays valid when reused from another machine (e.g. CI cache distribution).
+  val portableDependencies =
+      dependencies
+          .map {
+            Dependency(
+                relativizeToWorkspaceRoot(it.source, workspaceRoot),
+                relativizeToWorkspaceRoot(it.target, workspaceRoot),
+                relativizeToWorkspaceRoot(it.sourceFile, workspaceRoot))
+          }
+          .toSet()
   return GradleNodeReport(
-      nodes, dependencies, externalNodes, buildFileRelativePath?.let { listOf(it) } ?: emptyList())
+      nodes,
+      portableDependencies,
+      externalNodes,
+      buildFileRelativePath?.let { listOf(it) } ?: emptyList())
 }
 
 /**
