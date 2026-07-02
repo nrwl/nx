@@ -471,6 +471,40 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask Copy task itself derives its own from() source extensions`() {
+      // A Copy/Sync task characterized as the CONSUMING task (not as a dependency) must contribute
+      // its own declared concrete-file source extensions to its OWN inputs - the nx-api
+      // processResources case, where a task bundles a generated dist/*.tar.gz via from(File). The
+      // generated (gitignored) source is intentionally NOT created on disk.
+      val syncTask =
+          project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
+      syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
+      syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      fun outputFileGlobs(): Set<String> =
+          getInputsForTask(
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      // Clean tree: the bundle does not exist on disk.
+      val clean = outputFileGlobs()
+      // Built tree: create the generated source.
+      java.io.File("$workspaceRoot/dist").mkdirs()
+      java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
+      val built = outputFileGlobs()
+
+      assertEquals(
+          clean, built, "The task's own source derivation must not depend on on-disk state")
+      assertTrue(
+          clean.contains("**/*.gz"),
+          "Expected gz from the Copy task's own from(File) source, got $clean")
+    }
+
+    @Test
     fun `test getInputsForTask uses archiveExtension for Jar, not source extensions`() {
       // Create a Jar task with source files
       val sourceDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
