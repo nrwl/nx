@@ -457,7 +457,7 @@ async function runInit(
     nxCloudChoice = 'skip';
   } else {
     nxCloudChoice = options.interactive
-      ? await connectExistingRepoToNxCloudPrompt()
+      ? await connectExistingRepoToNxCloudPrompt('init', 'setupNxCloud', false)
       : 'skip';
   }
   if (nxCloudChoice === 'yes') {
