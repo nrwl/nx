@@ -41,6 +41,7 @@ import {
 } from '../../utils/fileutils';
 import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
+import { quoteShellArg } from '../../utils/shell-quoting';
 import { logger } from '../../utils/logger';
 import {
   getUncommittedChangesSnapshot,
@@ -3758,9 +3759,12 @@ export async function migrate(
 
 export async function runMigration() {
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
+    // the forwarded argv is re-joined into a shell command, so each argument
+    // must be quoted to survive it (e.g. a --commit-prefix with spaces or parens)
+    const forwardedArgs = process.argv.slice(3).map(quoteShellArg).join(' ');
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
-        runNxSync(`_migrate ${process.argv.slice(3).join(' ')}`, {
+        runNxSync(`_migrate ${forwardedArgs}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
         })
       );
@@ -3785,7 +3789,7 @@ export async function runMigration() {
         delete process.env.npm_config_registry;
       }
       return runOrReturnExitCode(() =>
-        execSync(`${p} _migrate ${process.argv.slice(3).join(' ')}`, {
+        execSync(`${p} _migrate ${forwardedArgs}`, {
           stdio: ['inherit', 'inherit', 'inherit'],
           windowsHide: true,
         })

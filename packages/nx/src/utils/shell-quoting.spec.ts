@@ -1,4 +1,4 @@
-import { needsShellQuoting } from './shell-quoting';
+import { needsShellQuoting, quoteShellArg } from './shell-quoting';
 
 describe('needsShellQuoting', () => {
   it.each([
@@ -39,5 +39,62 @@ describe('needsShellQuoting', () => {
     ['empty string', ''],
   ])('returns false for %s: %j', (_, value) => {
     expect(needsShellQuoting(value)).toBe(false);
+  });
+});
+
+describe('quoteShellArg', () => {
+  const originalPlatform = process.platform;
+
+  const setPlatform = (platform: NodeJS.Platform) =>
+    Object.defineProperty(process, 'platform', { value: platform });
+
+  afterEach(() => {
+    setPlatform(originalPlatform);
+  });
+
+  it.each([
+    ['version', '23.1.0-beta.6'],
+    ['flag', '--create-commits'],
+    ['flag with plain value', '--run-migrations=migrations.json'],
+  ])('leaves %s unquoted: %j', (_, value) => {
+    setPlatform('linux');
+    expect(quoteShellArg(value)).toBe(value);
+    setPlatform('win32');
+    expect(quoteShellArg(value)).toBe(value);
+  });
+
+  describe('on POSIX', () => {
+    beforeEach(() => setPlatform('linux'));
+
+    it.each([
+      [
+        'spaces and parentheses',
+        '--commit-prefix=chore(repo): [nx migration] ',
+        `'--commit-prefix=chore(repo): [nx migration] '`,
+      ],
+      ['dollar sign', 'pre$fix', `'pre$fix'`],
+      ['backtick', 'pre`fix', `'pre\`fix'`],
+      ['embedded single quote', "it's", `'it'\\''s'`],
+      ['embedded double quote', 'say "hi"', `'say "hi"'`],
+    ])('quotes %s: %j', (_, value, expected) => {
+      expect(quoteShellArg(value)).toBe(expected);
+    });
+  });
+
+  describe('on Windows', () => {
+    beforeEach(() => setPlatform('win32'));
+
+    it.each([
+      [
+        'spaces and parentheses',
+        '--commit-prefix=chore(repo): [nx migration] ',
+        `"--commit-prefix=chore(repo): [nx migration] "`,
+      ],
+      ['embedded double quote', 'say "hi"', `"say \\"hi\\""`],
+      ['backslashes before a double quote', 'a\\"b', `"a\\\\\\"b"`],
+      ['trailing backslash', 'C:\\dir\\', `"C:\\dir\\\\"`],
+    ])('quotes %s: %j', (_, value, expected) => {
+      expect(quoteShellArg(value)).toBe(expected);
+    });
   });
 });
