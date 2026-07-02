@@ -96,36 +96,34 @@ Which will generate a changelog that looks similar to the following:
 
 ## Custom changelog renderer {% badge  text="Nx 22+" /%}
 
-For complete control over changelog formatting, you can provide a custom changelog renderer implementation. The renderer can be specified as a path to a module that exports a class extending the base `ChangelogRenderer`.
+For complete control over changelog formatting, you can provide a custom changelog renderer implementation. The renderer can be specified as a path to a module that exports a class extending the default changelog renderer.
 
 ```jsonc
 {
   "release": {
     "changelog": {
       "projectChangelogs": {
-        "renderer": "./tools/custom-changelog-renderer.ts",
+        "renderer": "{workspaceRoot}/tools/custom-changelog-renderer.ts",
       },
     },
   },
 }
 ```
 
-Your custom renderer must extend the `ChangelogRenderer` class and implement the required methods:
+Your custom renderer can extend Nx's default renderer and override the methods you need:
 
 ```typescript
 // tools/custom-changelog-renderer.ts
-import { ChangelogRenderer, ChangelogRenderOptions } from '@nx/js/release';
+import DefaultChangelogRenderer from 'nx/release/changelog-renderer';
 
-export default class CustomChangelogRenderer extends ChangelogRenderer {
-  async renderMarkdown(
-    changes: any[],
-    options: ChangelogRenderOptions
-  ): Promise<string> {
-    // Your custom changelog generation logic
-    return '# My Custom Changelog\n\n...';
+export default class CustomChangelogRenderer extends DefaultChangelogRenderer {
+  protected override renderVersionTitle(): string {
+    return `## Release ${this.changelogEntryVersion}`;
   }
 }
 ```
+
+Use the `{workspaceRoot}` token when pointing to a renderer from the workspace root. If you write the renderer in TypeScript, make sure the workspace root contains a `tsconfig.base.json` or `tsconfig.json` so Nx can load it when TypeScript fallback registration is needed.
 
 {% aside type="note" title="Programmatic API" %}
 When using the programmatic `ReleaseClient` API (Nx 22+), you can also pass the renderer implementation class directly instead of a file path, allowing for dynamic renderer selection without file system access.
