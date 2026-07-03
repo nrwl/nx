@@ -16,6 +16,17 @@ public static partial class TargetBuilder
             {
                 Cwd = "{projectRoot}"
             },
+            Configurations = new Dictionary<string, TargetConfiguration>
+            {
+                ["debug"] = new TargetConfiguration
+                {
+                    Args = [ "--configuration", "Debug"]
+                },
+                ["release"] = new TargetConfiguration
+                {
+                    Args = [ "--configuration", "Release"]
+                }
+            },
             Cache = false,
             Metadata = new TargetMetadata
             {
