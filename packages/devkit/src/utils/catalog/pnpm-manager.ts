@@ -21,6 +21,11 @@ const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 export class PnpmCatalogManager implements CatalogManager {
   readonly name = 'pnpm';
   readonly catalogProtocol = 'catalog:';
+  // Parsed definitions cached per root. A manager is created per operation
+  // (getCatalogManager news one up), so defs are read once per pass instead of
+  // once per catalog reference. Only the fs (string-root) branch is cached; the
+  // Tree branch stays live since the tree is mutable within a generator.
+  private definitionsByRoot = new Map<string, CatalogDefinitions | null>();
 
   isCatalogReference(version: string): boolean {
     return version.startsWith(this.catalogProtocol);
@@ -47,11 +52,15 @@ export class PnpmCatalogManager implements CatalogManager {
 
   getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
     if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
-      if (!existsSync(configPath)) {
-        return null;
+      if (this.definitionsByRoot.has(treeOrRoot)) {
+        return this.definitionsByRoot.get(treeOrRoot);
       }
-      return readCatalogConfigFromFs(PNPM_WORKSPACE_FILENAME, configPath);
+      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
+      const defs = existsSync(configPath)
+        ? readCatalogConfigFromFs(PNPM_WORKSPACE_FILENAME, configPath)
+        : null;
+      this.definitionsByRoot.set(treeOrRoot, defs);
+      return defs;
     } else {
       if (!treeOrRoot.exists(PNPM_WORKSPACE_FILENAME)) {
         return null;
