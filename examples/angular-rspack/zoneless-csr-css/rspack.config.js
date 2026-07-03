@@ -8,7 +8,7 @@ module.exports = () => {
           index: './src/index.html',
           assets: [
             {
-              input: '../shared/assets/src/assets',
+              input: './shared/assets/src/assets',
               glob: '**/*',
               output: 'assets',
             },
@@ -16,7 +16,7 @@ module.exports = () => {
           ],
           styles: [
             {
-              input: '../shared/styles/src/index.scss',
+              input: './shared/styles/src/index.scss',
               bundleName: 'shared-styles',
             },
             './src/styles.css',
@@ -29,7 +29,7 @@ module.exports = () => {
               bundleName: 'shared-scripts',
             },
             {
-              input: '../shared/scripts/shared-script.js',
+              input: './shared/scripts/shared-script.js',
               bundleName: 'shared-scripts',
             },
             {

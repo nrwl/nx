@@ -17,7 +17,7 @@ module.exports = () => {
           statsJson: true,
           styles: ['./src/styles.scss'],
           stylePreprocessorOptions: {
-            includePaths: ['../shared/styles/src'],
+            includePaths: ['./shared/styles/src'],
           },
         },
       },

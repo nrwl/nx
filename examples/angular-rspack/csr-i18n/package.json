@@ -2,23 +2,35 @@
   "name": "examples-angular-rspack-csr-i18n",
   "version": "0.0.1",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p angular-rspack rspack",
+    "validate": "nx run-many -t build"
+  },
   "dependencies": {
-    "@nx/angular-rspack": "workspace:*"
+    "@angular/common": "~22.0.0",
+    "@angular/core": "~22.0.0",
+    "@angular/platform-browser": "~22.0.0",
+    "@angular/router": "~22.0.0",
+    "@angular/localize": "~22.0.0",
+    "rxjs": "^7.8.0",
+    "zone.js": "~0.16.2"
   },
   "devDependencies": {
-    "@rspack/core": "catalog:rspack",
-    "@rspack/cli": "catalog:rspack"
+    "@nx/angular-rspack": "link:../../../packages/angular-rspack",
+    "@nx/rspack": "link:../../../packages/rspack",
+    "@rspack/core": "^2.0.4",
+    "@rspack/cli": "^2.0.4",
+    "typescript": "~6.0.3"
   },
   "nx": {
     "i18n": {
       "sourceLocale": "en-GB",
       "locales": {
         "fr": {
-          "translation": "examples/angular-rspack/csr-i18n/src/locale/messages.fr.xlf"
+          "translation": "src/locale/messages.fr.xlf"
         },
         "es": {
-          "translation": "examples/angular-rspack/csr-i18n/src/locale/messages.es.xlf",
+          "translation": "src/locale/messages.es.xlf",
           "subPath": "es-ES"
         }
       }
@@ -27,22 +39,13 @@
       "build": {
         "inputs": [
           "production",
-          "^production",
-          {
-            "dependentTasksOutputFiles": "**/*.js",
-            "transitive": true
-          },
-          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
-          "{workspaceRoot}/LICENSE",
-          "{workspaceRoot}/tsconfig.json"
+          "{workspaceRoot}/tsconfig.base.json"
         ],
         "outputs": [
           "{projectRoot}/dist"
-        ],
-        "dependsOn": [
-          "^build"
         ]
       }
-    }
+    },
+    "includedScripts": []
   }
 }
