@@ -22,6 +22,7 @@ import {
   createLockFile,
   createPackageJson,
   getLockFileName,
+  writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
 import { relative, resolve } from 'path';
@@ -195,6 +196,14 @@ export async function* viteBuildExecutor(
             encoding: 'utf-8',
           }
         );
+        // pnpm 11 reads build-script approvals and supportedArchitectures only
+        // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
+        if (packageManager === 'pnpm') {
+          writePrunedPnpmInstallSettings(
+            outDirRelativeToWorkspaceRoot,
+            context.root
+          );
+        }
       }
     }
     // For buildable libs, copy package.json if it exists.
