@@ -463,6 +463,9 @@ describe('resolveCatalogReferences', () => {
   });
 });
 
+// The pnpm 11 gate has no e2e coverage: generated e2e workspaces run corepack's
+// default pnpm (~9.x), so the `pnpmMajor === 11` branch never fires there. These
+// unit tests are the only guard on the emitted settings-only pnpm-workspace.yaml.
 describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
   const mockGetWorkspacePackages =
     getWorkspacePackagesFromGraph as jest.MockedFunction<
