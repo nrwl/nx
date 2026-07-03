@@ -221,14 +221,17 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask characterizable dependencies yield specific globs deterministically`() {
-      // A dependent whose extension IS derivable from the task model (declared archive extension).
+    fun `test getInputsForTask characterizes deps by declared output deterministically`() {
+      // An archive dependent has a FILE output, so its extension is derivable (a precise glob).
       val jarProducer =
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
 
-      // A Copy dependent with a CONCRETE gitignored source: characterizable (yields gz), so it
-      // contributes a specific glob and never a catch-all.
+      // A Copy dependent has a DIRECTORY output. A consumer reads that whole output directory,
+      // whose
+      // contents the model cannot enumerate, so the dependency is characterized by the "**/*"
+      // catch-all rather than by its sources. Characterizing by sources would miss committed files
+      // that enter through a directory source (the nx-api application.conf case).
       val copyDep =
           project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
       copyDep.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
@@ -262,11 +265,14 @@ class ProcessTaskUtilsTest {
           built,
           "dependentTasksOutputFiles must not change between a clean and a built tree")
 
-      // Characterizable dependencies yield specific globs, never the catch-all.
+      // Archive (file output) -> precise extension. Copy (directory output) -> catch-all.
       assertTrue(clean.contains("**/*.jar"), "Expected jar from archiveExtension, got $clean")
-      assertTrue(clean.contains("**/*.gz"), "Expected gz from concrete Copy source, got $clean")
+      assertTrue(
+          clean.contains("**/*"),
+          "Expected the catch-all for a Copy dependency's directory output, got $clean")
       assertFalse(
-          clean.contains("**/*"), "Characterizable deps must not trigger the catch-all, got $clean")
+          clean.contains("**/*.gz"),
+          "A Copy dependency is characterized by its output, not its sources, got $clean")
     }
 
     @Test
@@ -361,12 +367,15 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask derives generated Copy sources but not checked-in or FileTree ones`() {
-      // A Copy/Sync task is pass-through: its declared concrete-file sources (from(File ...)) equal
-      // its effective outputs. Only GENERATED (gitignored) sources need a dependentTasksOutputFiles
-      // glob; checked-in sources are already captured as direct inputs, and FileTree/directory
-      // sources must never be enumerated. Extensions are derived without the files existing on
-      // disk.
+    fun `test getInputsForTask Copy task itself derives generated sources but not checked-in or FileTree`() {
+      // A Copy/Sync task, characterized as the CONSUMING task ITSELF, contributes the extensions of
+      // its declared concrete-file sources to its OWN inputs (taskOwnPatterns). Only GENERATED
+      // (gitignored) sources need a dependentTasksOutputFiles glob; checked-in sources are already
+      // captured as direct inputs, and FileTree/directory sources must never be enumerated.
+      // Extensions are derived without the files existing on disk. (As a DEPENDENCY the same Copy
+      // is
+      // characterized by its output directory via the "**/*" catch-all - see the deterministic and
+      // see-through tests.)
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
       // Generated (the fixture gitignores "dist") concrete file sources, intentionally NOT created.
@@ -380,19 +389,11 @@ class ProcessTaskUtilsTest {
       syncTask.from(project.fileTree(leakDir))
       syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
 
-      val consumerTask = project.tasks.register("consumerSync").get()
-      consumerTask.dependsOn(syncTask)
-
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
 
       fun outputFileGlobs(): Set<String> =
           getInputsForTask(
-                  null,
-                  consumerTask,
-                  projectRoot,
-                  workspaceRoot,
-                  mutableMapOf(),
-                  gitIgnoreClassifier)
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
               ?.filterIsInstance<Map<*, *>>()
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
@@ -416,12 +417,12 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask unwraps provider and FileSystemLocation Copy sources on clean tree`() {
-      // Lazy provider / FileSystemLocation sources must be unwrapped so their extensions are
-      // derived
-      // without the file existing on disk. Gitignore "build" and "dist" so the generated paths
-      // count
-      // as not-checked-in.
+    fun `test getInputsForTask Copy task itself unwraps provider and FileSystemLocation sources`() {
+      // Lazy provider / FileSystemLocation sources of the Copy task ITSELF must be unwrapped so
+      // their
+      // extensions are derived without the file existing on disk. Gitignore "build" and "dist" so
+      // the
+      // generated paths count as not-checked-in.
       java.io.File(workspaceRoot, ".gitignore").writeText("dist\nbuild")
 
       val syncTask =
@@ -435,19 +436,11 @@ class ProcessTaskUtilsTest {
       syncTask.from(project.provider { java.io.File("$workspaceRoot/src/main/resources/app.conf") })
       syncTask.into(java.io.File("$workspaceRoot/build/sync-output"))
 
-      val consumerTask = project.tasks.register("consumerSync").get()
-      consumerTask.dependsOn(syncTask)
-
       val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
 
       fun outputFileGlobs(): Set<String> =
           getInputsForTask(
-                  null,
-                  consumerTask,
-                  projectRoot,
-                  workspaceRoot,
-                  mutableMapOf(),
-                  gitIgnoreClassifier)
+                  null, syncTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
               ?.filterIsInstance<Map<*, *>>()
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
@@ -505,12 +498,19 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask jar sees processResources sources through the classes lifecycle task`() {
+    fun `test getInputsForTask jar sees processResources output through the classes lifecycle task`() {
       // Ocean nx-api scenario: the Java plugin wires jar -> classes -> {compileJava,
-      // processResources}.
-      // processResources is a Copy that bundles generated dist/ archives. jar reaches it only
-      // transitively through the opaque `classes` lifecycle task, so the dependency traversal must
-      // see through `classes` to surface processResources' **/*.gz and **/*.json patterns on jar.
+      // processResources}. processResources is a Copy that bundles generated dist/ archives AND
+      // copies committed resources from src/main/resources. jar reaches it only transitively
+      // through
+      // the opaque `classes` lifecycle task, so the traversal must see through `classes`.
+      //
+      // Regression: jar must watch processResources' OUTPUT directory via "**/*", which covers
+      // every
+      // file the copy emits - the generated bundles AND the committed application.conf. Deriving
+      // from
+      // the copy's sources gave jar only {**/*.gz, **/*.json} and silently missed the committed
+      // resource, so editing application.conf would not invalidate the cached jar.
       project.plugins.apply("java")
 
       val processResources =
@@ -519,6 +519,12 @@ class ProcessTaskUtilsTest {
           java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-bundle.tar.gz"))
       processResources.from(
           java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-runner.json"))
+      // A committed resource copied through a directory source (checked in, so it never surfaces as
+      // a
+      // derived source extension - only the "**/*" catch-all covers it).
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+      processResources.from(resourcesDir)
       // The generated bundles are intentionally NOT created on disk (clean tree).
 
       val jar = project.tasks.getByName("jar")
@@ -536,8 +542,12 @@ class ProcessTaskUtilsTest {
       val hasPattern = { p: String ->
         result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == p }
       }
-      assertTrue(hasPattern("**/*.gz"), "jar must see processResources' **/*.gz, got $result")
-      assertTrue(hasPattern("**/*.json"), "jar must see processResources' **/*.json, got $result")
+      // The catch-all covers processResources' whole output directory: the generated bundles AND
+      // the
+      // committed application.conf. This is the fix for the missed-committed-resource regression.
+      assertTrue(
+          hasPattern("**/*"),
+          "jar must watch processResources' output directory via the catch-all, got $result")
       assertTrue(hasPattern("**/*.class"), "jar must see compileJava's **/*.class, got $result")
     }
 

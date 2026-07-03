@@ -199,31 +199,23 @@ fun inferExtensionsFromInputProperties(
   extensions.addAll(declaredCopySourceExtensions(task, gitIgnoreClassifier))
 
   // Each dependency's declared output model (dispatched by task kind).
-  dependentTasks.forEach { depTask ->
-    extensions.addAll(dependencyOutputExtensions(depTask, gitIgnoreClassifier))
-  }
+  dependentTasks.forEach { depTask -> extensions.addAll(dependencyOutputExtensions(depTask)) }
 
   return extensions.toSet()
 }
 
 /**
- * Output extensions a DEPENDENCY task produces, dispatched by task kind.
- *
- * Archive and copy are first-class branches because their extensions are READ from declared
- * instance data (archiveExtension plus Tar compression; the from(...) sources) rather than being
- * constant per class. Compile and test tasks are constant per class, so they delegate to
- * [extensionsForTaskType] via the else branch — no duplication, and that constant map stays
- * reusable for the task-itself heuristic. [declaredFileOutputExtensions] is the universal floor:
- * any task may declare a concrete OutputFile on top of its kind.
- *
- * Ordered so that an archive task (which is also an AbstractCopyTask) is characterized by its
- * archive output, not its sources. Nothing here inspects the working tree.
+ * Output extensions a DEPENDENCY task produces, dispatched by task kind. A consumer hashes the
+ * dependency's OUTPUT, so read declared outputs, not sources. Archives read archiveExtension (plus
+ * Tar compression); compile/test are constant per class via [extensionsForTaskType];
+ * [declaredFileOutputExtensions] adds any declared OutputFile. A Copy names nothing here; its
+ * directory output is covered by [dependentOutputPatterns]'s catch-all (reading sources would miss
+ * committed files that enter via a directory source, e.g. a resource copied onto a jar).
  */
-private fun dependencyOutputExtensions(task: Task, gitIgnore: GitIgnoreClassifier): Set<String> {
+private fun dependencyOutputExtensions(task: Task): Set<String> {
   val byKind =
       when {
         task is AbstractArchiveTask -> declaredArchiveExtensions(task)
-        task is AbstractCopyTask -> declaredCopySourceExtensions(task, gitIgnore)
         else -> extensionsForTaskType(task) // Kotlin/Java compile, Test, else {}
       }
   // Universal baseline: any task may declare concrete FILE outputs beyond its kind.
@@ -231,21 +223,14 @@ private fun dependencyOutputExtensions(task: Task, gitIgnore: GitIgnoreClassifie
 }
 
 /**
- * Derive the dependentTasksOutputFiles patterns for a single dependency task from the Gradle task
- * model. Returns patterns already formatted as per-extension globs or the wildcard catch-all, with
- * the non-input IC extensions (such as bin) filtered out — ready to wrap in a
- * dependentTasksOutputFiles input. Never inspects the working tree, so the result is identical on a
- * clean checkout and a fully built one.
- *
- * The extensions come from [dependencyOutputExtensions]; if none are nameable but the task declares
- * a DIRECTORY output, a conservative wildcard catch-all is emitted so the dependency's outputs are
- * still hashed (a Copy whose only source is a FileTree, or an opaque custom task).
- *
- * Known limitation: a MIXED Copy (concrete source plus FileTree source) is characterized by its
- * concrete part and will NOT get the catch-all, so the FileTree part is under-covered. Rare.
+ * dependentTasksOutputFiles patterns for one dependency, from the task model only (so a clean and a
+ * built tree agree). Named extensions from [dependencyOutputExtensions] become per-extension globs
+ * (non-input IC extensions filtered out); if none are nameable but the task declares a DIRECTORY
+ * output, emit the wildcard catch-all so its outputs are still hashed. A Copy is the common
+ * catch-all case.
  */
-private fun dependentOutputPatterns(task: Task, gitIgnore: GitIgnoreClassifier): Set<String> {
-  val extensions = dependencyOutputExtensions(task, gitIgnore)
+private fun dependentOutputPatterns(task: Task): Set<String> {
+  val extensions = dependencyOutputExtensions(task)
   return when {
     extensions.isNotEmpty() ->
         extensions
@@ -268,17 +253,14 @@ private fun dependentOutputPatterns(task: Task, gitIgnore: GitIgnoreClassifier):
  *
  * BFS with a visited guard so cycles and diamonds are handled and each task is characterized once.
  */
-private fun effectiveDependencyPatterns(
-    directDeps: Set<Task>,
-    gitIgnore: GitIgnoreClassifier
-): Set<String> {
+private fun effectiveDependencyPatterns(directDeps: Set<Task>): Set<String> {
   val patterns = mutableSetOf<String>()
   val visited = mutableSetOf<Task>()
   val queue = ArrayDeque(directDeps.toList())
   while (queue.isNotEmpty()) {
     val dep = queue.removeFirst()
     if (!visited.add(dep)) continue // cycle / dedup guard
-    val depPatterns = dependentOutputPatterns(dep, gitIgnore)
+    val depPatterns = dependentOutputPatterns(dep)
     if (depPatterns.isNotEmpty()) {
       patterns.addAll(depPatterns) // real producer -> take its patterns, stop
     } else {
@@ -584,11 +566,9 @@ private fun getInputsForTaskImpl(
     // dependency's declared output dirs. Opaque lifecycle tasks (e.g. `classes`, which produces no
     // patterns) are seen through to their real producers (e.g. `processResources`). Union with the
     // task-itself patterns, dedupe and emit.
-    (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess, gitIgnoreClassifier))
-        .toSet()
-        .forEach { pattern ->
-          inputs.add(mapOf("dependentTasksOutputFiles" to pattern, "transitive" to true))
-        }
+    (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet().forEach { pattern ->
+      inputs.add(mapOf("dependentTasksOutputFiles" to pattern, "transitive" to true))
+    }
 
     if (externalDependencies.isNotEmpty()) {
       inputs.add(mapOf("externalDependencies" to externalDependencies))
