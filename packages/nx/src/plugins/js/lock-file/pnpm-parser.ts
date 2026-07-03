@@ -34,7 +34,7 @@ import { satisfies, validRange } from 'semver';
 
 // The dep types walked when pulling a copied module's own workspace deps into
 // the pruned lockfile: production sections only, since a dependency's
-// devDependencies are never installed. The root importer is different - it
+// devDependencies are never installed. The root importer is different: it
 // mirrors every manifest section, devDependencies included (see mapRootSnapshot).
 const WORKSPACE_DEP_TYPES = ['dependencies', 'optionalDependencies'] as const;
 
