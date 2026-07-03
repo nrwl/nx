@@ -35,14 +35,14 @@ builds rather than a published release.
 
 Targets are inferred by the plugins registered in this directory's `nx.json`:
 
-| Target  | Inferred by             | What it does                  |
-| ------- | ----------------------- | ----------------------------- |
-| `build` | `@nx/vite/plugin`       | `vite build` → `dist/`        |
-| `serve` | `@nx/vite/plugin`       | Vite dev server on port 4200  |
-| `preview` | `@nx/vite/plugin`     | Serves the production build   |
-| `test`  | `@nx/vitest`            | Runs the Vitest unit tests    |
-| `e2e`   | `@nx/playwright/plugin` | Runs the Playwright e2e tests |
-| `lint`  | `@nx/eslint/plugin`     | Lints the project with ESLint |
+| Target    | Inferred by             | What it does                  |
+| --------- | ----------------------- | ----------------------------- |
+| `build`   | `@nx/vite/plugin`       | `vite build` → `dist/`        |
+| `serve`   | `@nx/vite/plugin`       | Vite dev server on port 4200  |
+| `preview` | `@nx/vite/plugin`       | Serves the production build   |
+| `test`    | `@nx/vitest`            | Runs the Vitest unit tests    |
+| `e2e`     | `@nx/playwright/plugin` | Runs the Playwright e2e tests |
+| `lint`    | `@nx/eslint/plugin`     | Lints the project with ESLint |
 
 ```bash
 # From this directory
