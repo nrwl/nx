@@ -17,7 +17,9 @@
         }
       },
       "serve": {
-        "dependsOn": ["serve-api"]
+        "dependsOn": [
+          "serve-api"
+        ]
       },
       "build": {
         "inputs": [
@@ -25,7 +27,9 @@
           "{workspaceRoot}/tsconfig.base.json",
           "{workspaceRoot}/shared/**/*"
         ],
-        "outputs": ["{projectRoot}/dist"]
+        "outputs": [
+          "{projectRoot}/dist"
+        ]
       }
     }
   },
