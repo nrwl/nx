@@ -262,6 +262,8 @@ private fun effectiveDependencyPatterns(directDeps: Set<Task>): Set<String> {
     if (!visited.add(dep)) continue // cycle / dedup guard
     val depPatterns = dependentOutputPatterns(dep)
     if (depPatterns.isNotEmpty()) {
+      // A catch-all subsumes every other pattern, so stop the walk as soon as one appears.
+      if ("**/*" in depPatterns) return setOf("**/*")
       patterns.addAll(depPatterns) // real producer -> take its patterns, stop
     } else {
       queue.addAll(getDependsOnTask(dep)) // opaque/lifecycle -> see through, recurse
@@ -565,8 +567,12 @@ private fun getInputsForTaskImpl(
     // state). A "**/*" pattern (for an uncharacterizable directory output) is matched within a
     // dependency's declared output dirs. Opaque lifecycle tasks (e.g. `classes`, which produces no
     // patterns) are seen through to their real producers (e.g. `processResources`). Union with the
-    // task-itself patterns, dedupe and emit.
-    (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet().forEach { pattern ->
+    // task-itself patterns and dedupe.
+    val dependentPatterns = (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess)).toSet()
+    // The catch-all subsumes every specific glob (it matches the same outputs), so when present
+    // emit only it.
+    val emittedPatterns = if ("**/*" in dependentPatterns) setOf("**/*") else dependentPatterns
+    emittedPatterns.forEach { pattern ->
       inputs.add(mapOf("dependentTasksOutputFiles" to pattern, "transitive" to true))
     }
 

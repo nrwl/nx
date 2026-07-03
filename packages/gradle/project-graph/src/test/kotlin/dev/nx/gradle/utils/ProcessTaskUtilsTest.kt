@@ -221,17 +221,13 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
-    fun `test getInputsForTask characterizes deps by declared output deterministically`() {
-      // An archive dependent has a FILE output, so its extension is derivable (a precise glob).
+    fun `test getInputsForTask collapses to the catch-all when a dependency declares a directory output`() {
+      // Archive dep -> precise "**/*.jar"; Copy dep -> "**/*" catch-all. When both are present the
+      // catch-all subsumes the archive glob, so the set collapses to "**/*".
       val jarProducer =
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
 
-      // A Copy dependent has a DIRECTORY output. A consumer reads that whole output directory,
-      // whose
-      // contents the model cannot enumerate, so the dependency is characterized by the "**/*"
-      // catch-all rather than by its sources. Characterizing by sources would miss committed files
-      // that enter through a directory source (the nx-api application.conf case).
       val copyDep =
           project.tasks.register("copyBundled", org.gradle.api.tasks.Copy::class.java).get()
       copyDep.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
@@ -265,14 +261,40 @@ class ProcessTaskUtilsTest {
           built,
           "dependentTasksOutputFiles must not change between a clean and a built tree")
 
-      // Archive (file output) -> precise extension. Copy (directory output) -> catch-all.
-      assertTrue(clean.contains("**/*.jar"), "Expected jar from archiveExtension, got $clean")
+      // The catch-all is the only emitted pattern; the archive's precise glob and the copy's source
+      // extension are both subsumed.
+      assertEquals(
+          setOf("**/*"),
+          clean,
+          "The catch-all must subsume the specific globs (jar, gz), got $clean")
+    }
+
+    @Test
+    fun `test getInputsForTask archive dependency yields its precise extension without the catch-all`() {
+      // An archive dependency alone (no directory-output dependency) is characterized by its
+      // declared
+      // archive extension: a precise glob, never the catch-all.
+      val jarProducer =
+          project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
+      jarProducer.archiveExtension.set("jar")
+
+      val consumer = project.tasks.register("consumerArchiveOnly").get()
+      consumer.dependsOn(jarProducer)
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val globs =
+          getInputsForTask(
+                  null, consumer, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
       assertTrue(
-          clean.contains("**/*"),
-          "Expected the catch-all for a Copy dependency's directory output, got $clean")
+          globs.contains("**/*.jar"),
+          "Expected the precise jar glob from archiveExtension, got $globs")
       assertFalse(
-          clean.contains("**/*.gz"),
-          "A Copy dependency is characterized by its output, not its sources, got $clean")
+          globs.contains("**/*"),
+          "An archive-only dependency must not trigger the catch-all, got $globs")
     }
 
     @Test
@@ -529,18 +551,12 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask jar sees processResources output through the classes lifecycle task`() {
-      // Ocean nx-api scenario: the Java plugin wires jar -> classes -> {compileJava,
-      // processResources}. processResources is a Copy that bundles generated dist/ archives AND
-      // copies committed resources from src/main/resources. jar reaches it only transitively
-      // through
-      // the opaque `classes` lifecycle task, so the traversal must see through `classes`.
-      //
-      // Regression: jar must watch processResources' OUTPUT directory via "**/*", which covers
-      // every
-      // file the copy emits - the generated bundles AND the committed application.conf. Deriving
-      // from
-      // the copy's sources gave jar only {**/*.gz, **/*.json} and silently missed the committed
-      // resource, so editing application.conf would not invalidate the cached jar.
+      // Ocean nx-api: jar -> classes -> {compileJava, processResources}, where processResources is
+      // a
+      // Copy bundling generated dist/ archives AND copying committed src/main/resources.
+      // Regression:
+      // jar must watch processResources' OUTPUT via "**/*" (covering committed application.conf);
+      // deriving from the copy's sources gave only {gz, json} and silently staled the jar.
       project.plugins.apply("java")
 
       val processResources =
@@ -549,9 +565,8 @@ class ProcessTaskUtilsTest {
           java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-bundle.tar.gz"))
       processResources.from(
           java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-runner.json"))
-      // A committed resource copied through a directory source (checked in, so it never surfaces as
-      // a
-      // derived source extension - only the "**/*" catch-all covers it).
+      // A committed resource copied through a directory source (only the "**/*" catch-all covers
+      // it).
       val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
       java.io.File(resourcesDir, "application.conf").writeText("key = value")
       processResources.from(resourcesDir)
@@ -578,7 +593,9 @@ class ProcessTaskUtilsTest {
       assertTrue(
           hasPattern("**/*"),
           "jar must watch processResources' output directory via the catch-all, got $result")
-      assertTrue(hasPattern("**/*.class"), "jar must see compileJava's **/*.class, got $result")
+      assertFalse(
+          hasPattern("**/*.class"),
+          "the catch-all subsumes compileJava's **/*.class on jar, got $result")
     }
 
     @Test
