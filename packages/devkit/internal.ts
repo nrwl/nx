@@ -212,6 +212,7 @@ export {
   getNxRequirePaths,
   getOutputs,
   getPrintableCommandArgsForTask,
+  getPrunedPnpmInstallSettingsYaml,
   getRelativeProjectJsonSchemaPath,
   getSerializedArgsForTask,
   getSourceDirOfDependentProjects,

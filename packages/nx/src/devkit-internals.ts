@@ -273,6 +273,7 @@ export type {
   PackageJsonDependencySection,
 } from './utils/package-json';
 export {
+  getPrunedPnpmInstallSettingsYaml,
   readNxMigrateConfig,
   stripPrunedLockfilePnpmConfig,
   writePrunedPnpmInstallSettings,

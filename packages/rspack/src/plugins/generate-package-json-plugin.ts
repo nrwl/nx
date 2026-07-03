@@ -10,6 +10,7 @@ import {
   createPackageJson,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
+  getPrunedPnpmInstallSettingsYaml,
   readTsConfig,
 } from '@nx/js';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
@@ -91,6 +92,19 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                 createLockFile(packageJson, this.projectGraph, packageManager)
               )
             );
+            // pnpm 11 reads build-script approvals and supportedArchitectures
+            // only from pnpm-workspace.yaml, so emit them beside the lockfile.
+            if (packageManager === 'pnpm') {
+              const pnpmWorkspaceYaml = getPrunedPnpmInstallSettingsYaml(
+                this.context.root
+              );
+              if (pnpmWorkspaceYaml) {
+                compilation.emitAsset(
+                  'pnpm-workspace.yaml',
+                  new sources.RawSource(pnpmWorkspaceYaml)
+                );
+              }
+            }
           }
         }
       );
