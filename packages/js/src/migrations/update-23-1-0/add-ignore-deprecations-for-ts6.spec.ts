@@ -44,10 +44,16 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
   );
 
   it('skips files with no deprecated options', async () => {
+    // An "extends" file is not a chain root, so the default-preserving pass
+    // leaves it alone (it would otherwise pin the deprecated
+    // "esModuleInterop": false), isolating the deprecation-detection logic.
     tree.write(
-      'tsconfig.json',
+      'tsconfig.app.json',
       JSON.stringify(
-        { compilerOptions: { module: 'esnext', moduleResolution: 'bundler' } },
+        {
+          extends: './tsconfig.json',
+          compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+        },
         null,
         2
       )
@@ -55,7 +61,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
     await update(tree);
 
-    const json = readJson(tree, 'tsconfig.json');
+    const json = readJson(tree, 'tsconfig.app.json');
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
   });
 
@@ -127,10 +133,13 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
   });
 
   it('adds ignoreDeprecations to a ts-node.compilerOptions block', async () => {
+    // "extends" keeps the default-preserving pass off the top-level block, so
+    // only the ts-node block's own deprecated value drives ignoreDeprecations.
     tree.write(
-      'tsconfig.json',
+      'tsconfig.app.json',
       JSON.stringify(
         {
+          extends: './tsconfig.json',
           compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
           'ts-node': { compilerOptions: { moduleResolution: 'node10' } },
         },
@@ -141,7 +150,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
     await update(tree);
 
-    const json = readJson(tree, 'tsconfig.json');
+    const json = readJson(tree, 'tsconfig.app.json');
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
     expect(json['ts-node'].compilerOptions.ignoreDeprecations).toBe('6.0');
   });
@@ -212,22 +221,15 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
   });
 
   it('does not add ignoreDeprecations for alwaysStrict true', async () => {
+    // "extends" file so the default-preserving pass doesn't pin the deprecated
+    // "esModuleInterop": false; only alwaysStrict (true, not deprecated) is here.
     tree.write(
-      'tsconfig.json',
-      JSON.stringify({ compilerOptions: { alwaysStrict: true } }, null, 2)
-    );
-
-    await update(tree);
-
-    const json = readJson(tree, 'tsconfig.json');
-    expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
-  });
-
-  it('does not add ignoreDeprecations when downlevelIteration is absent', async () => {
-    tree.write(
-      'tsconfig.json',
+      'tsconfig.app.json',
       JSON.stringify(
-        { compilerOptions: { module: 'esnext', moduleResolution: 'bundler' } },
+        {
+          extends: './tsconfig.json',
+          compilerOptions: { alwaysStrict: true },
+        },
         null,
         2
       )
@@ -235,7 +237,28 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
     await update(tree);
 
-    const json = readJson(tree, 'tsconfig.json');
+    const json = readJson(tree, 'tsconfig.app.json');
+    expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
+  });
+
+  it('does not add ignoreDeprecations when downlevelIteration is absent', async () => {
+    // "extends" file so the default-preserving pass doesn't add its own
+    // deprecated "esModuleInterop": false and confound the assertion.
+    tree.write(
+      'tsconfig.app.json',
+      JSON.stringify(
+        {
+          extends: './tsconfig.json',
+          compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+        },
+        null,
+        2
+      )
+    );
+
+    await update(tree);
+
+    const json = readJson(tree, 'tsconfig.app.json');
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
   });
 
@@ -252,6 +275,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     expect(json.compilerOptions.strict).toBe(false);
     expect(json.compilerOptions.noUncheckedSideEffectImports).toBe(false);
     expect(json.compilerOptions.types).toEqual(['*']);
+    expect(json.compilerOptions.esModuleInterop).toBe(false);
   });
 
   describe('strict-pin pass', () => {
@@ -549,6 +573,64 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
       const json = readJson(tree, 'tsconfig.json');
       expect(json.compilerOptions).toBeUndefined();
+    });
+  });
+
+  describe('esModuleInterop-pin pass', () => {
+    it('pins esModuleInterop false and silences it on a bare chain root', async () => {
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          {
+            compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.base.json');
+      // TS6's default is true; false preserves the pre-TS6 `import * as <cjs>`
+      // call behavior, and the deprecation pass silences the now-deprecated
+      // false value in the same run.
+      expect(json.compilerOptions.esModuleInterop).toBe(false);
+      expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
+    });
+
+    it('does not overwrite an explicit esModuleInterop true', async () => {
+      tree.write(
+        'tsconfig.json',
+        JSON.stringify(
+          { compilerOptions: { esModuleInterop: true, module: 'esnext' } },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.json');
+      expect(json.compilerOptions.esModuleInterop).toBe(true);
+      // true is not deprecated, so nothing forces ignoreDeprecations here.
+      expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
+    });
+
+    it('does not touch esModuleInterop on a file that has "extends"', async () => {
+      tree.write(
+        'tsconfig.app.json',
+        JSON.stringify(
+          { extends: './tsconfig.json', compilerOptions: { module: 'esnext' } },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'tsconfig.app.json');
+      expect(json.compilerOptions.esModuleInterop).toBeUndefined();
     });
   });
 });

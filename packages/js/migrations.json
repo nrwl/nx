@@ -31,7 +31,7 @@
     },
     "23-1-0-add-ignore-deprecations-for-ts6": {
       "version": "23.1.0-beta.0",
-      "description": "Adds `\"ignoreDeprecations\": \"6.0\"` to tsconfig files whose compilerOptions (or ts-node.compilerOptions) directly carry a TypeScript 6 deprecated option value (e.g. moduleResolution node/node10/classic, baseUrl, target es5, esModuleInterop false, outFile, module amd/umd/system/none, alwaysStrict false, allowSyntheticDefaultImports false, downlevelIteration set). Also pins `\"strict\": false`, `\"noUncheckedSideEffectImports\": false`, and `\"types\": [\"*\"]` in chain-root tsconfigs (no \"extends\") that lack each key, preserving pre-TS6 behavior where these defaults were stricter or, for `types`, stopped auto-loading all @types packages.",
+      "description": "Adds `\"ignoreDeprecations\": \"6.0\"` to tsconfig files whose compilerOptions (or ts-node.compilerOptions) directly carry a TypeScript 6 deprecated option value (e.g. moduleResolution node/node10/classic, baseUrl, target es5, esModuleInterop false, outFile, module amd/umd/system/none, alwaysStrict false, allowSyntheticDefaultImports false, downlevelIteration set). Also pins `\"strict\": false`, `\"noUncheckedSideEffectImports\": false`, `\"types\": [\"*\"]`, and `\"esModuleInterop\": false` in chain-root tsconfigs (no \"extends\") that lack each key, preserving pre-TS6 behavior where these defaults changed; `esModuleInterop` false is itself deprecated (removed in TS7) so it also receives `ignoreDeprecations`, deferring the interop change to the TS7 migration.",
       "requires": {
         "typescript": ">=6.0.0"
       },
