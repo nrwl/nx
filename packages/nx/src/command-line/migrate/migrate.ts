@@ -89,7 +89,7 @@ import {
   getInstalledVersion,
 } from '../../utils/installed-nx-version';
 import { readNxJson } from '../../config/configuration';
-import { runNxSync } from '../../utils/child-process';
+import { runNxArgvSync } from '../../utils/child-process';
 import { daemonClient } from '../../daemon/client/client';
 import { isNxCloudUsed, isNxCloudDisabled } from '../../utils/nx-cloud-utils';
 import {
@@ -3404,7 +3404,7 @@ async function runMigrations(
     // we are running from a temp installation with nx latest, switch to running
     // from local installation
     const exitCode = runOrReturnExitCode(() =>
-      runNxSync(`migrate ${args.map(quoteShellArg).join(' ')}`, {
+      runNxArgvSync(['migrate', ...args], {
         stdio: ['inherit', 'inherit', 'inherit'],
         env: {
           ...process.env,
@@ -3759,12 +3759,10 @@ export async function migrate(
 
 export async function runMigration() {
   return handleErrors(process.env.NX_VERBOSE_LOGGING === 'true', async () => {
-    // the forwarded argv is re-joined into a shell command, so each argument
-    // must be quoted to survive it (e.g. a --commit-prefix with spaces or parens)
-    const forwardedArgs = process.argv.slice(3).map(quoteShellArg).join(' ');
+    const forwardedArgv = process.argv.slice(3);
     const runLocalMigrate = () =>
       runOrReturnExitCode(() =>
-        runNxSync(`_migrate ${forwardedArgs}`, {
+        runNxArgvSync(['_migrate', ...forwardedArgv], {
           stdio: ['inherit', 'inherit', 'inherit'],
         })
       );
@@ -3788,11 +3786,22 @@ export async function runMigration() {
       ) {
         delete process.env.npm_config_registry;
       }
+      // p is the temp install's bin shim; spawn its JS entry directly so the
+      // forwarded argv is not re-parsed by a shell
+      const tempNxEntry = join(dirname(dirname(p)), 'nx', 'bin', 'nx.js');
       return runOrReturnExitCode(() =>
-        execSync(`${p} _migrate ${forwardedArgs}`, {
-          stdio: ['inherit', 'inherit', 'inherit'],
-          windowsHide: true,
-        })
+        existsSync(tempNxEntry)
+          ? runNxArgvSync(['_migrate', ...forwardedArgv], {
+              stdio: ['inherit', 'inherit', 'inherit'],
+              nxBin: tempNxEntry,
+            })
+          : execSync(
+              `${p} _migrate ${forwardedArgv.map(quoteShellArg).join(' ')}`,
+              {
+                stdio: ['inherit', 'inherit', 'inherit'],
+                windowsHide: true,
+              }
+            )
       );
     }
 

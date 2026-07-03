@@ -1,8 +1,10 @@
 import {
   exec,
   execSync,
+  spawnSync,
   type ExecOptions,
   type ExecSyncOptions,
+  type SpawnSyncOptions,
 } from 'child_process';
 import { existsSync } from 'fs';
 import { join, relative } from 'path';
@@ -14,6 +16,8 @@ import {
 import { workspaceRoot, workspaceRootInner } from './workspace-root';
 import { ChildProcess } from '../native';
 import { messageToCode } from './exit-codes';
+import { getNxRequirePaths } from './installation-directory';
+import { quoteShellArg } from './shell-quoting';
 
 export function getRunNxBaseCommand(
   packageManagerCommand?: PackageManagerCommands,
@@ -32,6 +36,62 @@ export function getRunNxBaseCommand(
     } else {
       return './' + join(`${offsetFromRoot}`, 'nx');
     }
+  }
+}
+
+/**
+ * Resolve the local nx CLI entry point, including `.nx/installation` wrapper
+ * layouts. Returns null when nx cannot be resolved from disk (e.g. Yarn PnP).
+ */
+export function getNxBin(root: string = workspaceRoot): string | null {
+  try {
+    return require.resolve('nx/bin/nx.js', { paths: getNxRequirePaths(root) });
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Run a nx command, passing the arguments through as an argv array.
+ *
+ * When the nx entry point can be resolved, the child is spawned directly with
+ * no shell in between, so every argument reaches the child exactly as
+ * provided — shell metacharacters (`(`, `%`, `^`, spaces, quotes) are data,
+ * not syntax. When nx cannot be resolved from disk (e.g. Yarn PnP), falls
+ * back to the package-manager + shell path with each argument quoted.
+ */
+export function runNxArgvSync(
+  argv: string[],
+  options?: SpawnSyncOptions & {
+    cwd?: string;
+    nxBin?: string;
+  }
+) {
+  let { nxBin, ...spawnOptions } = options ?? {};
+  spawnOptions.cwd ??= process.cwd();
+  spawnOptions.windowsHide ??= true;
+
+  nxBin ??= getNxBin(
+    workspaceRootInner(spawnOptions.cwd as string, null) ?? workspaceRoot
+  );
+  if (!nxBin) {
+    runNxSync(
+      argv.map(quoteShellArg).join(' '),
+      spawnOptions as ExecSyncOptions & { cwd?: string }
+    );
+    return;
+  }
+
+  const result = spawnSync(process.execPath, [nxBin, ...argv], spawnOptions);
+  if (result.error) {
+    throw result.error;
+  }
+  if (result.status !== 0) {
+    const error = new Error(
+      `Command failed: nx ${argv.join(' ')} (exit code ${result.status})`
+    );
+    (error as any).status = result.status ?? 1;
+    throw error;
   }
 }
 

@@ -996,34 +996,32 @@ describe('migrate', () => {
   });
 
   it('should run migrations and create individual git commits using a provided custom commit prefix', () => {
-    // Windows has shell escaping issues so this test would always fail
-    if (isNotWindows()) {
-      runCLI(
-        'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
-        {
-          env: {
-            NX_MIGRATE_SKIP_INSTALL: 'true',
-            NX_MIGRATE_USE_LOCAL: 'true',
-          },
-        }
-      );
+    runCLI(
+      'migrate migrate-parent-package@2.0.0 --from="migrate-parent-package@1.0.0"',
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
 
-      // the prefix contains spaces and parens, which the re-spawn must quote to survive the shell
-      runCLI(
-        `migrate --run-migrations=migrations.json --create-commits --commit-prefix="chore(core): AUTOMATED - "`,
-        {
-          env: {
-            NX_MIGRATE_SKIP_INSTALL: 'true',
-            NX_MIGRATE_USE_LOCAL: 'true',
-          },
-        }
-      );
+    // the prefix contains spaces and parens, which the re-spawn must pass
+    // through as a single argument on every platform
+    runCLI(
+      `migrate --run-migrations=migrations.json --create-commits --commit-prefix="chore(core): AUTOMATED - "`,
+      {
+        env: {
+          NX_MIGRATE_SKIP_INSTALL: 'true',
+          NX_MIGRATE_USE_LOCAL: 'true',
+        },
+      }
+    );
 
-      const recentCommits = runCommand('git --no-pager log --oneline -n 10');
+    const recentCommits = runCommand('git --no-pager log --oneline -n 10');
 
-      expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
-      expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
-    }
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run11');
+    expect(recentCommits).toContain('chore(core): AUTOMATED - run20');
   });
 
   it('should fail if a custom commit prefix is provided when --create-commits is not enabled', () => {
