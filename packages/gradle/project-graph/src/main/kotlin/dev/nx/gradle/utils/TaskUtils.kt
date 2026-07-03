@@ -12,12 +12,9 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileSystemLocation
 import org.gradle.api.internal.TaskInternal
-import org.gradle.api.internal.file.copy.CopySpecInternal
-import org.gradle.api.internal.file.copy.DefaultCopySpec
 import org.gradle.api.internal.provider.ProviderInternal
 import org.gradle.api.internal.provider.TransformBackedProvider
 import org.gradle.api.internal.tasks.DefaultTaskDependency
-import org.gradle.api.internal.tasks.DefaultTaskOutputs
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.AbstractCopyTask
 import org.gradle.api.tasks.TaskProvider
@@ -26,7 +23,6 @@ import org.gradle.api.tasks.bundling.Compression
 import org.gradle.api.tasks.bundling.Tar
 import org.gradle.api.tasks.compile.AbstractCompile
 import org.gradle.api.tasks.testing.Test as GradleTest
-import org.gradle.internal.file.TreeType
 
 private val kotlinCompileToolClass: Class<*>? by lazy {
   try {
@@ -329,18 +325,49 @@ private fun declaredArchiveExtensions(task: Task): Set<String> {
 }
 
 /**
- * Extensions of a task's declared FILE outputs, read from the task model. Only FILE-type outputs
- * are considered: the model declares their concrete paths (available even before the files exist),
- * whereas DIRECTORY outputs declare no inner extensions and are skipped on purpose to avoid
- * depending on transient on-disk state.
+ * Reflectively read a task's declared output file-property specs. The concrete `TaskOutputs`
+ * implementation and the return type of `getFileProperties()` relocated/changed between Gradle 8
+ * and 9, so we resolve by method name+params (which ignores return type) to work on both. Returns
+ * an empty list on any reflection failure.
+ */
+private fun outputFileProperties(task: Task): List<Any> =
+    try {
+      (task.outputs.javaClass.getMethod("getFileProperties").invoke(task.outputs) as? Iterable<*>)
+          ?.filterNotNull()
+          ?.toList() ?: emptyList()
+    } catch (t: Throwable) {
+      emptyList()
+    }
+
+/** Reflectively read an output-property spec's output type name ("FILE" / "DIRECTORY"). */
+private fun specOutputTypeName(spec: Any): String? =
+    try {
+      spec.javaClass.getMethod("getOutputType").invoke(spec)?.toString()
+    } catch (t: Throwable) {
+      null
+    }
+
+/** Reflectively read an output-property spec's declared files. */
+private fun specPropertyFiles(spec: Any): org.gradle.api.file.FileCollection? =
+    try {
+      spec.javaClass.getMethod("getPropertyFiles").invoke(spec)
+          as? org.gradle.api.file.FileCollection
+    } catch (t: Throwable) {
+      null
+    }
+
+/**
+ * Extensions of a task's declared FILE outputs, read from the task model via reflection (see
+ * [outputFileProperties]). Only FILE-type outputs are considered: the model declares their concrete
+ * paths (available even before the files exist), whereas DIRECTORY outputs declare no inner
+ * extensions and are skipped on purpose to avoid depending on transient on-disk state.
  */
 private fun declaredFileOutputExtensions(task: Task): Set<String> {
   val extensions = mutableSetOf<String>()
   try {
-    val outputs = task.outputs as? DefaultTaskOutputs ?: return emptySet()
-    outputs.fileProperties.forEach { spec ->
-      if (spec.outputType == TreeType.FILE) {
-        spec.propertyFiles.forEach { file ->
+    outputFileProperties(task).forEach { spec ->
+      if (specOutputTypeName(spec) == "FILE") {
+        specPropertyFiles(spec)?.files?.forEach { file ->
           val extension = file.extension
           if (extension.isNotEmpty()) {
             extensions.add(extension)
@@ -348,18 +375,19 @@ private fun declaredFileOutputExtensions(task: Task): Set<String> {
         }
       }
     }
-  } catch (e: Exception) {
-    task.logger.debug("Could not read declared file outputs for ${task.path}: ${e.message}")
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read declared file outputs for ${task.path}: ${t.message}")
   }
   return extensions
 }
 
-/** True if the task declares at least one DIRECTORY output in the task model. */
+/**
+ * True if the task declares at least one DIRECTORY output in the task model (read reflectively).
+ */
 private fun declaresDirectoryOutput(task: Task): Boolean {
   return try {
-    val outputs = task.outputs as? DefaultTaskOutputs ?: return false
-    outputs.fileProperties.any { it.outputType == TreeType.DIRECTORY }
-  } catch (e: Exception) {
+    outputFileProperties(task).any { specOutputTypeName(it) == "DIRECTORY" }
+  } catch (t: Throwable) {
     false
   }
 }
@@ -388,38 +416,61 @@ private fun declaredCopySourceExtensions(
   if (task !is AbstractCopyTask) return emptySet()
   val extensions = mutableSetOf<String>()
   try {
-    collectCopySourceExtensions(task.rootSpec, extensions, gitIgnoreClassifier)
-  } catch (e: Exception) {
-    task.logger.debug("Could not read copy source paths for ${task.path}: ${e.message}")
+    // AbstractCopyTask.getRootSpec() returns a CopySpecInternal (internal type); resolve it
+    // reflectively (by name+params) so we do not compile-bind to it — it relocated/changed between
+    // Gradle 8 and 9.
+    val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
+    if (rootSpec != null) {
+      collectCopySourceExtensions(rootSpec, extensions, gitIgnoreClassifier)
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read copy source paths for ${task.path}: ${t.message}")
   }
   return extensions
 }
 
 /**
  * Recursively collect declared concrete-file source extensions from a copy spec and its children,
- * limited to non-checked-in (gitignored/generated) sources.
+ * limited to non-checked-in (gitignored/generated) sources. The spec is passed as [Any] and its
+ * `getSourcePaths()` / `getChildren()` are read reflectively, so we never compile-bind to the
+ * internal CopySpecInternal/DefaultCopySpec types (which changed between Gradle 8 and 9).
  */
 private fun collectCopySourceExtensions(
-    spec: CopySpecInternal,
+    spec: Any,
     into: MutableSet<String>,
     gitIgnoreClassifier: GitIgnoreClassifier
 ) {
-  if (spec is DefaultCopySpec) {
-    spec.sourcePaths.forEach { source ->
+  // DefaultCopySpec.getSourcePaths() holds the raw from(...) arguments. Absent (null) on specs that
+  // do not expose it -> nothing to read at this level.
+  val sourcePaths =
       try {
-        val file = fileFromDeclaredSource(source) ?: return@forEach
-        // Only generated (gitignored) sources need a dependentTasksOutputFiles glob; checked-in
-        // sources are already emitted as direct inputs. isIgnored is a pattern match and does not
-        // require the file to exist.
-        if (gitIgnoreClassifier.isIgnored(file)) {
-          file.extension.takeIf { it.isNotEmpty() }?.let { into.add(it) }
-        }
-      } catch (e: Exception) {
-        // Skip any source we cannot classify without touching disk.
+        spec.javaClass.getMethod("getSourcePaths").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
       }
+  sourcePaths?.forEach { source ->
+    try {
+      val file = fileFromDeclaredSource(source) ?: return@forEach
+      // Only generated (gitignored) sources need a dependentTasksOutputFiles glob; checked-in
+      // sources are already emitted as direct inputs. isIgnored is a pattern match and does not
+      // require the file to exist.
+      if (gitIgnoreClassifier.isIgnored(file)) {
+        file.extension.takeIf { it.isNotEmpty() }?.let { into.add(it) }
+      }
+    } catch (t: Throwable) {
+      // Skip any source we cannot classify without touching disk.
     }
   }
-  spec.children.forEach { child -> collectCopySourceExtensions(child, into, gitIgnoreClassifier) }
+
+  val children =
+      try {
+        spec.javaClass.getMethod("getChildren").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  children?.filterNotNull()?.forEach { child ->
+    collectCopySourceExtensions(child, into, gitIgnoreClassifier)
+  }
 }
 
 /**
@@ -544,7 +595,7 @@ private fun getInputsForTaskImpl(
     }
 
     inputs.ifEmpty { null }
-  } catch (e: Exception) {
+  } catch (e: Throwable) {
     task.logger.info("Error getting inputs for ${task.path}: ${e.message}")
     task.logger.debug("Stack trace:", e)
     null
