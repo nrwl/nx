@@ -167,7 +167,7 @@ function handleWorkspaceModules(
     );
 
     // Rewrite sibling workspace-module deps to file: paths and recurse. Cover
-    // both prod-installed sections - the pruned lockfile emits directory
+    // both prod-installed sections: the pruned lockfile emits directory
     // packages for workspace modules in either, so leaving one un-rewritten
     // would leave the manifest specifier out of sync with the lockfile.
     for (const section of ['dependencies', 'optionalDependencies'] as const) {
