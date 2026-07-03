@@ -769,6 +769,9 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
  * scripts. Carry those from the workspace root, but without a `packages:` key:
  * that flips pnpm into workspace mode, which pnpm 9 rejects outright.
  *
+ * The major comes from the build machine's pnpm; the deploy `pnpm install` is
+ * assumed to run the same major, which is all that is knowable at build time.
+ *
  * pnpm 10 and below read the same settings from the emitted package.json, so
  * this returns null there, and when the workspace declares none. Resolution-time
  * config stays out: it is already baked into the pruned lockfile (see
