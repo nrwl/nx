@@ -48,8 +48,7 @@ export const createNodes: CreateNodes = [
               projectType: 'application' as const,
               targets: {
                 validate: {
-                  command:
-                    'pnpm install && pnpm nx run-many -t build,test,lint',
+                  command: 'pnpm install && pnpm validate',
                   options: {
                     cwd: exampleRoot,
                   },
