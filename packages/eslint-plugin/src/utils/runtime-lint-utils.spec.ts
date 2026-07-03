@@ -402,7 +402,7 @@ describe('is terminal run', () => {
     // Mac: $run npx nx lint my-nx-project
     mockProcessArgv([
       '/Users/user/.nvm/versions/node/v16.13.0/bin/node',
-      '/Users/user/my-repo/node_modules/nx/bin/run-executor.js',
+      '/Users/user/my-repo/node_modules/nx/dist/bin/run-executor.js',
       '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
     ]);
     expect(isTerminalRun()).toBe(true);
@@ -412,7 +412,7 @@ describe('is terminal run', () => {
     // Windows: $run npx nx lint my-nx-project
     mockProcessArgv([
       'C:\\Program Files\\nodejs\\node.exe',
-      'C:\\dev\\my-repo\\node_modules\\nx\\bin\\run-executor.js',
+      'C:\\dev\\my-repo\\node_modules\\nx\\dist\\bin\\run-executor.js',
       '{"targetDescription":{"project":"my-nx-project","target":"lint"}',
     ]);
     expect(isTerminalRun()).toBe(true);
