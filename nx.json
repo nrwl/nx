@@ -1,5 +1,6 @@
 {
   "$schema": "packages/nx/schemas/nx-schema.json",
+  "bust": "mem-bench-22.7.0-beta.0",
   "namedInputs": {
     "default": ["{projectRoot}/**/*", "sharedGlobals"],
     "production": [
