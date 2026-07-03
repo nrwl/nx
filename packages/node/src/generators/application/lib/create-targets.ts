@@ -146,6 +146,14 @@ export function getPruneTargets(
     `{workspaceRoot}/${joinPathFragments(outputPath, 'package.json')}`,
     `{workspaceRoot}/${joinPathFragments(outputPath, lockFileName)}`,
   ];
+  if (packageManager === 'pnpm') {
+    // On pnpm 11 the prune-lockfile executor also emits a settings-only
+    // pnpm-workspace.yaml; declare it so a cache replay restores it and native
+    // build-script approvals are not silently dropped.
+    pruneLockfileOutputs.push(
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`
+    );
+  }
   return {
     'prune-lockfile': {
       dependsOn: ['build'],
