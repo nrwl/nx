@@ -20,6 +20,10 @@ export async function validateTypes(opts: {
         ? opts.tsconfig
         : join(opts.workspaceRoot, opts.tsconfig),
       mode: 'noEmit',
+      // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+      // libs (outside the project) trip TS6059. rootDir is emit-only and this
+      // is noEmit, so widen it to the workspace root to clear the false error.
+      rootDir: opts.workspaceRoot,
     });
 
     await printDiagnostics(result.errors, result.warnings);

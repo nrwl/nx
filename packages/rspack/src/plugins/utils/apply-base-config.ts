@@ -341,6 +341,13 @@ function applyNxDependentConfig(
     if (isUsingTsSolution) {
       pluginConfig.typescript.build = true;
       pluginConfig.typescript.mode = 'readonly';
+    } else {
+      // TS 6 defaults rootDir to the tsconfig dir, so from-source workspace
+      // libs (outside a narrow rootDir) trip TS6059. The checker runs read-only
+      // here, so widen rootDir to the workspace root to clear the false error.
+      pluginConfig.typescript.configOverwrite = {
+        compilerOptions: { rootDir: options.root },
+      };
     }
 
     plugins.push(new TsCheckerRspackPlugin(pluginConfig));
