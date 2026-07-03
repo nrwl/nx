@@ -22,6 +22,7 @@ import {
 import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
 type CopiedManifest = {
   dependencies?: Record<string, string>;
@@ -198,17 +199,11 @@ function handleWorkspaceModules(
     }
   }
 
-  // Seed from every section the app declares a workspace module in,
-  // devDependencies included: a full `pnpm install` installs them and the
-  // rewritten manifest points them at workspace_modules/ (#35425). Copied
+  // Seed from every section the app declares a workspace module in. Copied
   // modules recurse over production sections only (see processModule).
   // processModule dedups via processedModules, so a module listed in several
   // sections is copied once.
-  for (const section of [
-    'dependencies',
-    'optionalDependencies',
-    'devDependencies',
-  ] as const) {
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
