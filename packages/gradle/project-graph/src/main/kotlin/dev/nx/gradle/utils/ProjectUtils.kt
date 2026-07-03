@@ -94,7 +94,7 @@ private fun createNodeForProjectImpl(
     externalNodes = gradleTargets.externalNodes
     logger.info(
         "${Date()} ${project.name} createNodeForProject: get nodes and external nodes for $projectRoot")
-  } catch (e: Exception) {
+  } catch (e: Throwable) {
     logger.info("${project.name}: get nodes error: ${e.message}")
     nodes = emptyMap()
     externalNodes = emptyMap()
@@ -309,7 +309,7 @@ private fun processTargetsForProjectImpl(
       }
 
       logger.info("$now ${project.name}: Processed task ${task.path}")
-    } catch (e: Exception) {
+    } catch (e: Throwable) {
       logger.error("Error processing task ${task.path}: ${e.message}", e)
     }
   }
