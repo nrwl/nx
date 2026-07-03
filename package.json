@@ -298,7 +298,7 @@
     "tree-kill": "catalog:",
     "ts-checker-rspack-plugin": "catalog:rspack",
     "ts-jest": "catalog:jest",
-    "ts-loader": "^9.3.1",
+    "ts-loader": "^9.5.7",
     "ts-node": "catalog:typescript",
     "tsconfig-paths": "catalog:typescript",
     "tsconfig-paths-webpack-plugin": "4.2.0",
