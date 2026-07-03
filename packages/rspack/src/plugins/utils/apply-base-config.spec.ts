@@ -154,3 +154,68 @@ describe('apply-base-config libraryTarget handling', () => {
     expect(config.output.libraryTarget).toBe('umd');
   });
 });
+
+describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
+  const capturedPluginConfigs: any[] = [];
+
+  beforeEach(() => {
+    capturedPluginConfigs.length = 0;
+    jest.resetModules();
+    global.NX_GRAPH_CREATION = false;
+    jest.doMock('ts-checker-rspack-plugin', () => ({
+      TsCheckerRspackPlugin: class {
+        constructor(pluginConfig: any) {
+          capturedPluginConfigs.push(pluginConfig);
+        }
+        apply() {}
+      },
+    }));
+  });
+
+  afterEach(() => {
+    delete global.NX_GRAPH_CREATION;
+    jest.resetModules();
+  });
+
+  const baseOptions = {
+    root: '/test',
+    projectRoot: 'apps/test',
+    target: 'web',
+    tsConfig: 'apps/test/tsconfig.app.json',
+  } as NormalizedNxAppRspackPluginOptions;
+
+  it('widens the ts-checker rootDir to the workspace root in a classic setup', async () => {
+    jest.doMock('@nx/js/internal', () => ({
+      ...jest.requireActual('@nx/js/internal'),
+      isUsingTsSolutionSetup: () => false,
+    }));
+
+    const { applyBaseConfig } = await import('./apply-base-config');
+    applyBaseConfig({ ...baseOptions }, {});
+
+    expect(capturedPluginConfigs).toHaveLength(1);
+    expect(
+      capturedPluginConfigs[0].typescript.configOverwrite.compilerOptions
+        .rootDir
+    ).toBe('/test');
+  });
+
+  it('does not override rootDir when using the TS solution setup', async () => {
+    jest.doMock('@nx/js/internal', () => ({
+      ...jest.requireActual('@nx/js/internal'),
+      isUsingTsSolutionSetup: () => true,
+    }));
+    // The TS solution setup only type-checks during serve, so force serve mode
+    // to make the plugin be installed at all.
+    jest.doMock('../../utils/is-serve-mode', () => ({
+      isServeMode: () => true,
+    }));
+
+    const { applyBaseConfig } = await import('./apply-base-config');
+    applyBaseConfig({ ...baseOptions }, {});
+
+    expect(capturedPluginConfigs).toHaveLength(1);
+    expect(capturedPluginConfigs[0].typescript.configOverwrite).toBeUndefined();
+    expect(capturedPluginConfigs[0].typescript.build).toBe(true);
+  });
+});
