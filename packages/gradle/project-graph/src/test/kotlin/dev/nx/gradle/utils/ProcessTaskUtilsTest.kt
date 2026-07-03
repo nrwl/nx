@@ -305,6 +305,36 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask over-declares catch-all when a dependency output read fails`() {
+      // A TaskOutputs implementing only the public interface makes the reflective
+      // getFileProperties() read throw; the dependency must over-declare "**/*".
+      val realDep = project.tasks.register("failingDep").get()
+      val fakeDep =
+          object : org.gradle.api.Task by realDep {
+            override fun getOutputs(): org.gradle.api.tasks.TaskOutputs =
+                object : org.gradle.api.tasks.TaskOutputs by realDep.outputs {}
+          }
+      val consumer = project.tasks.register("consumerFailingDep").get()
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      val globs =
+          getInputsForTask(
+                  setOf(fakeDep),
+                  consumer,
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  gitIgnoreClassifier)
+              ?.filterIsInstance<Map<*, *>>()
+              ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
+              ?.toSet() ?: emptySet()
+
+      assertTrue(
+          globs.contains("**/*"),
+          "A dependency whose output model can't be read must over-declare **/*, got $globs")
+    }
+
+    @Test
     fun `test getInputsForTask falls back to catch-all for a fileTree-only Copy dependency`() {
       // A Copy whose only source is a FileTree yields no characterizable extensions, but its
       // destination @OutputDirectory triggers the catch-all. FileTree contents are never

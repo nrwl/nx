@@ -306,19 +306,20 @@ private fun declaredArchiveExtensions(task: Task): Set<String> {
   return extensions
 }
 
+private const val OUTPUT_TYPE_FILE = "FILE"
+
 /**
- * Reflectively read a task's declared output file-property specs. The concrete `TaskOutputs`
- * implementation and the return type of `getFileProperties()` relocated/changed between Gradle 8
- * and 9, so we resolve by method name+params (which ignores return type) to work on both. Returns
- * an empty list on any reflection failure.
+ * Reflectively read a task's declared output file-property specs, resolving `getFileProperties()`
+ * by name+params (its return type relocated between Gradle 8 and 9). Null means the read threw; an
+ * empty list means the task declares no outputs.
  */
-private fun outputFileProperties(task: Task): List<Any> =
+private fun outputFileProperties(task: Task): List<Any>? =
     try {
       (task.outputs.javaClass.getMethod("getFileProperties").invoke(task.outputs) as? Iterable<*>)
           ?.filterNotNull()
           ?.toList() ?: emptyList()
     } catch (t: Throwable) {
-      emptyList()
+      null
     }
 
 /** Reflectively read an output-property spec's output type name ("FILE" / "DIRECTORY"). */
@@ -345,33 +346,32 @@ private fun specPropertyFiles(spec: Any): org.gradle.api.file.FileCollection? =
  * extensions and are skipped on purpose to avoid depending on transient on-disk state.
  */
 private fun declaredFileOutputExtensions(task: Task): Set<String> {
+  val specs = outputFileProperties(task) ?: return emptySet()
   val extensions = mutableSetOf<String>()
-  try {
-    outputFileProperties(task).forEach { spec ->
-      if (specOutputTypeName(spec) == "FILE") {
-        specPropertyFiles(spec)?.files?.forEach { file ->
-          val extension = file.extension
-          if (extension.isNotEmpty()) {
-            extensions.add(extension)
-          }
-        }
+  specs.forEach { spec ->
+    if (specOutputTypeName(spec) == OUTPUT_TYPE_FILE) {
+      specPropertyFiles(spec)?.files?.forEach { file ->
+        if (file.extension.isNotEmpty()) extensions.add(file.extension)
       }
     }
-  } catch (t: Throwable) {
-    task.logger.debug("Could not read declared file outputs for ${task.path}: ${t.message}")
   }
   return extensions
 }
 
 /**
- * True if the task declares at least one DIRECTORY output in the task model (read reflectively).
+ * True if the task declares a non-file output, or its output model couldn't be read (fail open:
+ * over-declare the catch-all rather than silently under-declare into a stale cache).
  */
 private fun declaresDirectoryOutput(task: Task): Boolean {
-  return try {
-    outputFileProperties(task).any { specOutputTypeName(it) == "DIRECTORY" }
-  } catch (t: Throwable) {
-    false
+  val specs = outputFileProperties(task)
+  if (specs == null) {
+    task.logger.warn(
+        "nx(gradle): could not read declared output properties for ${task.path} " +
+            "(Gradle ${task.project.gradle.gradleVersion}); over-declaring its inputs as **/* to " +
+            "avoid a stale cache.")
+    return true
   }
+  return specs.any { specOutputTypeName(it) != OUTPUT_TYPE_FILE }
 }
 
 /**
