@@ -7,11 +7,12 @@ const NX_AGENTS_URL = 'https://nx.dev/ci/features/distribute-task-execution';
 const NX_REMOTE_CACHE_URL = 'https://nx.dev/ci/features/remote-cache';
 const NX_PERFORMANCE_URL =
   'https://nx.dev/docs/concepts/ci-concepts/parallelization-distribution';
-/** utm tag attributing report clicks back to it. */
-const UTM = '?utm=performance-report';
-const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${UTM}`;
-const NX_AGENTS_LINK = `${NX_AGENTS_URL}${UTM}`;
-const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${UTM}`;
+/** utm tag attributing report clicks back to it; the content names the CTA clicked. */
+const utm = (content: string) =>
+  `?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=${content}`;
+const NX_PERFORMANCE_LINK = `${NX_PERFORMANCE_URL}${utm('parallelization')}`;
+const NX_AGENTS_LINK = `${NX_AGENTS_URL}${utm('nx-agents')}`;
+const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${utm('remote-cache')}`;
 /**
  * Whole-phrase CTA: the whole sentence is the link. The Rust TUI popup keeps no
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
