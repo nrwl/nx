@@ -5,6 +5,7 @@ import {
   createPackageJson,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
+  getPrunedPnpmInstallSettingsYaml,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
@@ -121,6 +122,19 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                 )
               )
             );
+            // pnpm 11 reads build-script approvals and supportedArchitectures
+            // only from pnpm-workspace.yaml, so emit them beside the lockfile.
+            if (packageManager === 'pnpm') {
+              const pnpmWorkspaceYaml = getPrunedPnpmInstallSettingsYaml(
+                this.options.root
+              );
+              if (pnpmWorkspaceYaml) {
+                compilation.emitAsset(
+                  'pnpm-workspace.yaml',
+                  new sources.RawSource(pnpmWorkspaceYaml)
+                );
+              }
+            }
           }
         }
       );

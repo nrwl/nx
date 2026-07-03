@@ -27,6 +27,7 @@ import { fileExists } from 'nx/src/utils/fileutils';
 import {
   type PackageJson,
   stripPrunedLockfilePnpmConfig,
+  writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
 
@@ -151,6 +152,11 @@ export function updatePackageJson(
           encoding: 'utf-8',
         }
       );
+      // pnpm 11 reads build-script approvals and supportedArchitectures only
+      // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(options.outputPath, context.root);
+      }
     }
   }
 }

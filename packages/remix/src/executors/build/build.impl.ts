@@ -5,7 +5,12 @@ import {
   writeJsonFile,
   type ExecutorContext,
 } from '@nx/devkit';
-import { createLockFile, createPackageJson, getLockFileName } from '@nx/js';
+import {
+  createLockFile,
+  createPackageJson,
+  getLockFileName,
+  writePrunedPnpmInstallSettings,
+} from '@nx/js';
 import { fork } from 'child_process';
 import { copySync, mkdir, statSync, writeFileSync } from 'fs-extra';
 import { type PackageJson } from 'nx/src/utils/package-json';
@@ -113,6 +118,11 @@ export default async function buildExecutor(
           encoding: 'utf-8',
         }
       );
+      // pnpm 11 reads build-script approvals and supportedArchitectures only
+      // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(options.outputPath, context.root);
+      }
     }
   }
 

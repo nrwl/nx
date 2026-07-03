@@ -2,7 +2,14 @@ jest.mock('child_process');
 
 import { join } from 'path';
 import * as childProcess from 'child_process';
-import { mkdtempSync, rmSync } from 'fs';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
 import { tmpdir } from 'os';
 import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create-tree-with-empty-workspace';
 import type { Tree } from '../generators/tree';
@@ -11,11 +18,13 @@ import { readJsonFile } from './fileutils';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
+  getPrunedPnpmInstallSettingsYaml,
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
   readTargetsFromPackageJson,
+  writePrunedPnpmInstallSettings,
 } from './package-json';
 import * as pacakgeManager from './package-manager';
 import { getPackageManagerCommand } from './package-manager';
@@ -970,6 +979,115 @@ catalogs:
 
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
+    });
+  });
+});
+
+describe('getPrunedPnpmInstallSettingsYaml', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-settings-'));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  function mockPnpmVersion(version: string) {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue(version);
+  }
+
+  function writeRootWorkspaceYaml(content: string) {
+    writeFileSync(join(tempDir, 'pnpm-workspace.yaml'), content);
+  }
+
+  it('carries allowBuilds and supportedArchitectures on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'packages:',
+        '  - packages/*',
+        'allowBuilds:',
+        '  esbuild: true',
+        'supportedArchitectures:',
+        '  os:',
+        '    - linux',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    expect(yaml).not.toBeNull();
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      allowBuilds: { esbuild: true },
+      supportedArchitectures: { os: ['linux'] },
+    });
+    // Never carry the packages glob: it flips pnpm into workspace mode and pnpm
+    // 9 rejects it outright.
+    expect(yaml).not.toContain('packages:');
+  });
+
+  it('returns null on pnpm 10 (those settings are read from package.json)', () => {
+    mockPnpmVersion('10.5.0');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('returns null when the workspace has no root pnpm-workspace.yaml', () => {
+    mockPnpmVersion('11.2.2');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('returns null when pnpm 11 declares no install-time settings', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('packages:\n  - packages/*\n');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('fails open (null) when the pnpm version cannot be determined', () => {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockImplementation(() => {
+        throw new Error('no pnpm on PATH');
+      });
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('fails open (null) when the root pnpm-workspace.yaml is malformed', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds: { esbuild: true');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('writes the settings file on pnpm 11 and skips it on pnpm 10', () => {
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    const outputFile = join(outputDir, 'pnpm-workspace.yaml');
+
+    mockPnpmVersion('10.5.0');
+    writePrunedPnpmInstallSettings(outputDir, tempDir);
+    expect(existsSync(outputFile)).toBe(false);
+
+    jest.restoreAllMocks();
+    mockPnpmVersion('11.2.2');
+    writePrunedPnpmInstallSettings(outputDir, tempDir);
+    expect(existsSync(outputFile)).toBe(true);
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(readFileSync(outputFile, 'utf-8'))).toEqual({
+      allowBuilds: { esbuild: true },
     });
   });
 });

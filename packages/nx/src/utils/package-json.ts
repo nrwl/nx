@@ -758,49 +758,53 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
 }
 
 /**
- * Re-emits the install-time pnpm settings a standalone pruned output would lose
- * on pnpm 11.
+ * Builds the settings-only pnpm-workspace.yaml a standalone pruned output needs
+ * on pnpm 11, or null when there is nothing to carry.
  *
  * pnpm 11 reads settings only from pnpm-workspace.yaml, never the package.json
  * `pnpm` field, and the rest of the pruned output ships no workspace file. So on
  * pnpm 11 the build-script approvals (`allowBuilds`) and `supportedArchitectures`
  * the workspace declares would be dropped, and native production deps would never
- * run their build scripts. Write a settings-only pnpm-workspace.yaml carrying
- * those from the workspace root - no `packages:`, which would flip pnpm into
- * workspace mode and which pnpm 9 rejects outright.
+ * run their build scripts. Carry those from the workspace root - without a
+ * `packages:` key, which would flip pnpm into workspace mode and which pnpm 9
+ * rejects outright.
  *
- * pnpm <=10 reads the same settings from the emitted package.json, so this runs
- * for pnpm 11 only and no-ops when the workspace declares none. Resolution-time
- * config stays out: it is already baked into the pruned lockfile (see
- * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried yet; a
- * workspace relying on `pnpm patch` is not fully supported by pruning.
+ * pnpm <=10 reads the same settings from the emitted package.json, so this
+ * returns null for anything but pnpm 11, and when the workspace declares none.
+ * Resolution-time config stays out: it is already baked into the pruned lockfile
+ * (see `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried
+ * yet; a workspace relying on `pnpm patch` is not fully supported by pruning.
+ *
+ * Returns the YAML string so both the file-writing prune paths and the webpack
+ * asset pipeline (which emits assets rather than writing to disk) can carry it.
  */
-export function writePrunedPnpmInstallSettings(
-  outputDirectory: string,
+export function getPrunedPnpmInstallSettingsYaml(
   workspaceRootPath: string = workspaceRoot
-): void {
-  let pnpmMajor: number;
+): string | null {
+  let rootSettings: {
+    allowBuilds?: Record<string, boolean>;
+    supportedArchitectures?: unknown;
+  };
   try {
-    pnpmMajor = Number.parseInt(
+    const pnpmMajor = Number.parseInt(
       getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
       10
     );
+    if (pnpmMajor !== 11) {
+      return null;
+    }
+    const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
+    if (!existsSync(rootWorkspaceYaml)) {
+      return null;
+    }
+    rootSettings = readYamlFile(rootWorkspaceYaml);
   } catch {
-    // Can't determine the pnpm version - skip rather than guess. Worst case
-    // matches the prior behavior of carrying no install-time settings.
-    return;
+    // Can't determine the pnpm version or read the root settings (unknown
+    // version, unreadable or malformed pnpm-workspace.yaml) - skip rather than
+    // guess. Worst case matches the prior behavior of carrying no install-time
+    // settings.
+    return null;
   }
-  if (pnpmMajor !== 11) {
-    return;
-  }
-  const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
-  if (!existsSync(rootWorkspaceYaml)) {
-    return;
-  }
-  const rootSettings = readYamlFile<{
-    allowBuilds?: Record<string, boolean>;
-    supportedArchitectures?: unknown;
-  }>(rootWorkspaceYaml);
   const settings: Record<string, unknown> = {};
   if (rootSettings.allowBuilds) {
     settings.allowBuilds = rootSettings.allowBuilds;
@@ -809,8 +813,24 @@ export function writePrunedPnpmInstallSettings(
     settings.supportedArchitectures = rootSettings.supportedArchitectures;
   }
   if (Object.keys(settings).length === 0) {
-    return;
+    return null;
   }
   const { dump } = require('@zkochan/js-yaml');
-  writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), dump(settings));
+  return dump(settings);
+}
+
+/**
+ * Writes the pnpm 11 install-time settings (see
+ * `getPrunedPnpmInstallSettingsYaml`) into a standalone pruned output directory,
+ * or does nothing when there is nothing to carry.
+ */
+export function writePrunedPnpmInstallSettings(
+  outputDirectory: string,
+  workspaceRootPath: string = workspaceRoot
+): void {
+  const yaml = getPrunedPnpmInstallSettingsYaml(workspaceRootPath);
+  if (yaml === null) {
+    return;
+  }
+  writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), yaml);
 }
