@@ -3064,7 +3064,7 @@ snapshots: {}`;
           /resolution: \{directory: workspace_modules\/@myorg\/shared,/g
         ) ?? [];
       expect(sharedResolutions).toHaveLength(1);
-      // BOTH consumers' snapshots reference the shared directory package - a
+      // BOTH consumers' snapshots reference the shared directory package; a
       // bare toContain would pass if only one edge survived a regression.
       expect(result).toMatch(
         /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+'@myorg\/shared': file:workspace_modules\/@myorg\/shared/
