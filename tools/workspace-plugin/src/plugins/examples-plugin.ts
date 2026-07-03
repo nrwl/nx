@@ -17,7 +17,7 @@ import { dirname, join, posix } from 'node:path';
  * that the local @nx/* packages they link: drive their target inference.
  * That also means this repo's graph cannot see them through the regular
  * plugins; this plugin adds a thin handle for each: a project node with a
- * `validate` wrapper target, plus implicit dependencies derived from the
+ * `validate-example` wrapper target, plus implicit dependencies derived from the
  * example's link: dependencies so `nx affected` runs the example when the
  * packages it consumes change.
  *
@@ -47,7 +47,7 @@ export const createNodes: CreateNodes = [
               name: packageJson.name,
               projectType: 'application' as const,
               targets: {
-                validate: {
+                'validate-example': {
                   command: 'pnpm install && pnpm validate',
                   options: {
                     cwd: exampleRoot,
