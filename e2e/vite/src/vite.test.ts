@@ -192,12 +192,22 @@ describe('@nx/vite/plugin', () => {
         `generate @nx/react:library ${myBuildableLib} --directory=libs/${myBuildableLib} --bundler=vite --unitTestRunner=vitest --buildable`
       );
 
+      // Note: target names must not collide with the inferred targets or the
+      // atomized targets from ciTargetName (e.g. `test-ci`).
       updateJson(`apps/${myApp}/project.json`, (json) => {
-        json.targets['test-ci'] = { ...json.targets.test };
+        json.targets ??= {};
+        json.targets['custom-test'] = {
+          command: 'vitest run',
+          options: { cwd: `apps/${myApp}` },
+        };
         return json;
       });
       updateJson(`libs/${myBuildableLib}/project.json`, (json) => {
-        json.targets['build-ci'] = { ...json.targets.build };
+        json.targets ??= {};
+        json.targets['custom-build'] = {
+          command: 'vite build',
+          options: { cwd: `libs/${myBuildableLib}` },
+        };
         return json;
       });
 
@@ -223,8 +233,8 @@ export default defineConfig({
     react(),
     nxViteTsPaths({
       buildLibsFromSource: false,
-      buildTarget: 'build-ci',
-      testTarget: 'test-ci',
+      buildTarget: 'custom-build',
+      testTarget: 'custom-test',
     }),
   ],
   build: {
@@ -257,12 +267,16 @@ export default defineConfig({
         import { render } from '@testing-library/react';
         import { App } from './app';
         import { ${exportedLibraryComponent} } from 'multi-path-lib';
+        // Extensionless .tsx subpath is only resolvable through the plugin's
+        // own file matching, which must try every mapped path value.
+        import { ${exportedLibraryComponent} as FromSubpath } from 'multi-path-lib/lib/${myBuildableLib}';
 
         describe('App', () => {
           it('should render successfully', () => {
             const { baseElement } = render(<App />);
             expect(baseElement).toBeTruthy();
             expect(${exportedLibraryComponent}).toBeDefined();
+            expect(FromSubpath).toBeDefined();
           });
         });
         `
@@ -273,11 +287,25 @@ export default defineConfig({
           `libs/does-not-exist/src/index.ts`,
           `libs/${myBuildableLib}/src/index.ts`,
         ];
+        json.compilerOptions.paths['multi-path-lib/*'] = [
+          `libs/does-not-exist/src/*`,
+          `libs/${myBuildableLib}/src/*`,
+        ];
         return json;
       });
 
-      expect(() => runCLI(`run ${myApp}:test-ci --watch=false`)).not.toThrow();
-    });
+      try {
+        expect(() => runCLI(`run ${myApp}:custom-test`)).not.toThrow();
+      } finally {
+        // Clean up the shared tsconfig so the path alias does not leak into
+        // subsequent tests.
+        updateJson('tsconfig.base.json', (json) => {
+          delete json.compilerOptions.paths['multi-path-lib'];
+          delete json.compilerOptions.paths['multi-path-lib/*'];
+          return json;
+        });
+      }
+    }, 300_000);
 
     it('should support importing files with "." in the name in tsconfig path', () => {
       const mylib = uniq('mylib');
