@@ -332,6 +332,47 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     // a registry dep in dependencies is left untouched
     expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
   });
+
+  it('strips the pruned manifest pnpm config so a standalone install matches the lockfile', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        pnpm: { overrides: { lodash: '4.17.21' } },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    // The pruned lockfile bakes resolution-time config into its snapshots, so the
+    // manifest must drop it or pnpm aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
+    expect(generated.pnpm).toBeUndefined();
+    expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
+  });
 });
 
 describe('resolveCatalogReferences', () => {

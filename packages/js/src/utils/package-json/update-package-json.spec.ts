@@ -13,6 +13,7 @@ import {
   readProjectsConfigurationFromProjectGraph,
 } from '@nx/devkit';
 import { DependentBuildableProjectNode } from '../buildable-libs-utils';
+import { writePrunedPnpmInstallSettings } from 'nx/src/utils/package-json';
 
 jest.mock('nx/src/utils/workspace-root', () => ({
   workspaceRoot: '/root',
@@ -21,6 +22,11 @@ jest.mock('nx/src/utils/workspace-root', () => ({
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
   createLockFile: jest.fn(() => 'lock-file-content'),
+}));
+
+jest.mock('nx/src/utils/package-json', () => ({
+  ...jest.requireActual('nx/src/utils/package-json'),
+  writePrunedPnpmInstallSettings: jest.fn(),
 }));
 
 describe('getUpdatedPackageJsonContent', () => {
@@ -746,5 +752,60 @@ describe('updatePackageJson', () => {
     );
     // The accompanying pruned lockfile drops `overrides`, so the manifest must too.
     expect(distPackageJson.pnpm).toBeUndefined();
+  });
+
+  const mockWritePrunedPnpmInstallSettings =
+    writePrunedPnpmInstallSettings as jest.MockedFunction<
+      typeof writePrunedPnpmInstallSettings
+    >;
+
+  it('carries pnpm install settings beside the generated lockfile on pnpm', () => {
+    mockWritePrunedPnpmInstallSettings.mockClear();
+    // Reset so a lockfile written by another test does not skew detection.
+    vol.reset();
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      // A pnpm-lock.yaml makes detectPackageManager report pnpm deterministically.
+      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    // pnpm 11 reads build-script approvals only from pnpm-workspace.yaml, so the
+    // executor must re-emit them into the output dir (context.root is the source).
+    expect(mockWritePrunedPnpmInstallSettings).toHaveBeenCalledWith(
+      'dist/libs/lib1',
+      '/root'
+    );
+  });
+
+  it('does not carry pnpm install settings for a non-pnpm package manager', () => {
+    mockWritePrunedPnpmInstallSettings.mockClear();
+    // Reset so a pnpm-lock.yaml written by another test does not skew detection.
+    vol.reset();
+    const fsJson = {
+      'package.json': JSON.stringify(rootPackageJson, null, 2),
+      'package-lock.json': JSON.stringify({ lockfileVersion: 3 }),
+      'libs/lib1/package.json': JSON.stringify(originalPackageJson, null, 2),
+    };
+    vol.fromJSON(fsJson, '/root');
+    const options: UpdatePackageJsonOption = {
+      outputPath: 'dist/libs/lib1',
+      projectRoot: 'libs/lib1',
+      main: 'libs/lib1/main.ts',
+      updateBuildableProjectDepsInPackageJson: true,
+      generateLockfile: true,
+    };
+    updatePackageJson(options, context, undefined, [], fileMap);
+
+    expect(mockWritePrunedPnpmInstallSettings).not.toHaveBeenCalled();
   });
 });

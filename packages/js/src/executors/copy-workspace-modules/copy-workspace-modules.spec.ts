@@ -237,4 +237,81 @@ describe('copyWorkspaceModules', () => {
       )
     ).toBe(true);
   });
+
+  it('copies a workspace module the app declares only under optionalDependencies', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        optionalDependencies: { '@scope/optlib': 'workspace:*' },
+      }),
+      'libs/optlib/package.json': JSON.stringify({
+        name: '@scope/optlib',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([
+        ['@scope/optlib', { data: { root: moduleRoot('libs/optlib') } } as any],
+      ])
+    );
+
+    await runExecutor();
+
+    // A workspace module reachable only through optionalDependencies is still
+    // installed by a full `pnpm install`, so it must be copied (#35425).
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/optlib/package.json'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('rewrites an optionalDependencies sibling to file: and copies it recursively', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        optionalDependencies: { '@scope/libb': 'workspace:*' },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // A sibling declared under optionalDependencies is rewritten too...
+    expect(readCopiedManifest('@scope/liba').optionalDependencies).toEqual({
+      '@scope/libb': 'file:../libb',
+    });
+    // ...and copied by the recursion.
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/libb/package.json'
+        )
+      )
+    ).toBe(true);
+  });
 });
