@@ -70,8 +70,7 @@ exports[`task planner should hash executors 1`] = `
     "proj:libs/proj/**/*",
     "proj:ProjectConfiguration",
     "proj:TsConfig",
-    "npm:@nx/devkit",
-    "npm:@nx/eslint",
+    "external-deps:[npm:@nx/devkit,npm:@nx/eslint]",
   ],
 }
 `;
@@ -84,8 +83,8 @@ exports[`task planner should include npm projects 1`] = `
     "app:apps/app/**/*",
     "app:ProjectConfiguration",
     "app:TsConfig",
-    "npm:react",
     "AllExternalDependencies",
+    "external-deps:[npm:react]",
   ],
 }
 `;

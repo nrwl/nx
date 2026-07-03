@@ -1339,6 +1339,16 @@ function expandInputs(
       workspaceRootInputs.push(...inputs);
       return;
     }
+    // a task's external dependency closure is collapsed into
+    // external-deps:[npm:pkg,npm:other]
+    if (input.startsWith('external-deps:[')) {
+      const externals = input
+        .substring('external-deps:['.length, input.length - 1)
+        .split(',')
+        .filter(Boolean);
+      externalInputs.push(...externals);
+      return;
+    }
     const maybeProjectName = input.split(':')[0];
     if (projectNames.includes(maybeProjectName)) {
       projectRootInputs.push(input);
