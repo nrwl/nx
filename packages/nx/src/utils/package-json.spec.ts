@@ -1115,6 +1115,76 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
       allowBuilds: { esbuild: true },
     });
   });
+
+  const prunedLockfileWith = (...packageKeys: string[]) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      ...packageKeys.flatMap((key) => [
+        // pnpm quotes keys that start with `@` (a reserved YAML indicator)
+        `  ${key.startsWith('@') ? `'${key}'` : key}:`,
+        '    resolution: {integrity: sha512-abc}',
+        '',
+      ]),
+    ].join('\n');
+
+  it('scopes allowBuilds to the packages present in the pruned lockfile', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'allowBuilds:',
+        '  esbuild: true',
+        "  '@parcel/watcher': true",
+        '  some-absent-native-dep: true',
+        '',
+      ].join('\n')
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWith('esbuild@0.21.5', '@parcel/watcher@2.4.1')
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    // the entry for the package the prune dropped is left out
+    expect(load(yaml)).toEqual({
+      allowBuilds: { esbuild: true, '@parcel/watcher': true },
+    });
+  });
+
+  it('drops allowBuilds when no approved package is in the pruned lockfile', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  some-absent-native-dep: true\n');
+
+    expect(
+      getPrunedPnpmInstallSettingsYaml(
+        tempDir,
+        prunedLockfileWith('lodash@4.17.21')
+      )
+    ).toBeNull();
+  });
+
+  it('scopes allowBuilds using the pruned lockfile written to the output dir', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'allowBuilds:\n  esbuild: true\n  some-absent-native-dep: true\n'
+    );
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'pnpm-lock.yaml'),
+      prunedLockfileWith('esbuild@0.21.5')
+    );
+
+    writePrunedPnpmInstallSettings(outputDir, tempDir);
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(
+      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
+    ).toEqual({ allowBuilds: { esbuild: true } });
+  });
 });
 
 describe('readNxMigrateConfig', () => {

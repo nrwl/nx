@@ -1,6 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import { existsSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
@@ -780,9 +780,15 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
  *
  * Returns the YAML string so both the file-writing prune paths and the webpack
  * asset pipeline (which emits assets rather than writing to disk) can carry it.
+ *
+ * Pass `prunedLockfileContent` to narrow `allowBuilds` to the packages the pruned
+ * output actually installs; entries for packages the prune dropped are left out.
+ * Omit it to carry the root allowlist verbatim (pnpm ignores approvals for absent
+ * packages either way, so this only keeps the emitted file accurate).
  */
 export function getPrunedPnpmInstallSettingsYaml(
-  workspaceRootPath: string = workspaceRoot
+  workspaceRootPath: string = workspaceRoot,
+  prunedLockfileContent?: string
 ): string | null {
   let rootSettings: {
     allowBuilds?: Record<string, boolean>;
@@ -815,7 +821,15 @@ export function getPrunedPnpmInstallSettingsYaml(
   }
   const settings: Record<string, unknown> = {};
   if (rootSettings.allowBuilds) {
-    settings.allowBuilds = rootSettings.allowBuilds;
+    const allowBuilds = prunedLockfileContent
+      ? filterAllowBuildsToLockfile(
+          rootSettings.allowBuilds,
+          prunedLockfileContent
+        )
+      : rootSettings.allowBuilds;
+    if (Object.keys(allowBuilds).length > 0) {
+      settings.allowBuilds = allowBuilds;
+    }
   }
   if (rootSettings.supportedArchitectures) {
     settings.supportedArchitectures = rootSettings.supportedArchitectures;
@@ -828,15 +842,65 @@ export function getPrunedPnpmInstallSettingsYaml(
 }
 
 /**
+ * Keeps only the `allowBuilds` entries whose package is present in the pruned
+ * lockfile. Build-script approvals for packages the prune dropped are inert, so
+ * dropping them keeps the emitted pnpm-workspace.yaml scoped to the deployment.
+ */
+function filterAllowBuildsToLockfile(
+  allowBuilds: Record<string, boolean>,
+  prunedLockfileContent: string
+): Record<string, boolean> {
+  const present = getPnpmLockfilePackageNames(prunedLockfileContent);
+  const filtered: Record<string, boolean> = {};
+  for (const [name, allowed] of Object.entries(allowBuilds)) {
+    if (present.has(name)) {
+      filtered[name] = allowed;
+    }
+  }
+  return filtered;
+}
+
+/**
+ * Extracts the package names from a pnpm v9 lockfile's `packages` keys
+ * (`name@version`, `@scope/name@version`, optionally with a `(peer@ver)` suffix).
+ */
+function getPnpmLockfilePackageNames(lockfileContent: string): Set<string> {
+  const names = new Set<string>();
+  let parsed: { packages?: Record<string, unknown> };
+  try {
+    const { load } = require('@zkochan/js-yaml');
+    parsed = load(lockfileContent) ?? {};
+  } catch {
+    return names;
+  }
+  for (const key of Object.keys(parsed.packages ?? {})) {
+    const versionSeparator = key.startsWith('@')
+      ? key.indexOf('@', 1)
+      : key.indexOf('@');
+    names.add(versionSeparator === -1 ? key : key.slice(0, versionSeparator));
+  }
+  return names;
+}
+
+/**
  * Writes the pnpm 11 install-time settings (see
  * `getPrunedPnpmInstallSettingsYaml`) into a standalone pruned output directory,
- * or does nothing when there is nothing to carry.
+ * or does nothing when there is nothing to carry. Reads the pruned lockfile the
+ * caller just wrote to that directory so `allowBuilds` is scoped to the packages
+ * the deployment installs.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
   workspaceRootPath: string = workspaceRoot
 ): void {
-  const yaml = getPrunedPnpmInstallSettingsYaml(workspaceRootPath);
+  const lockfilePath = join(outputDirectory, 'pnpm-lock.yaml');
+  const prunedLockfileContent = existsSync(lockfilePath)
+    ? readFileSync(lockfilePath, 'utf-8')
+    : undefined;
+  const yaml = getPrunedPnpmInstallSettingsYaml(
+    workspaceRootPath,
+    prunedLockfileContent
+  );
   if (yaml === null) {
     return;
   }

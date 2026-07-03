@@ -86,17 +86,21 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
+            const lockFileContent = createLockFile(
+              packageJson,
+              this.projectGraph,
+              packageManager
+            );
             compilation.emitAsset(
               getLockFileName(packageManager),
-              new sources.RawSource(
-                createLockFile(packageJson, this.projectGraph, packageManager)
-              )
+              new sources.RawSource(lockFileContent)
             );
             // pnpm 11 reads build-script approvals and supportedArchitectures
             // only from pnpm-workspace.yaml, so emit them beside the lockfile.
             if (packageManager === 'pnpm') {
               const pnpmWorkspaceYaml = getPrunedPnpmInstallSettingsYaml(
-                this.context.root
+                this.context.root,
+                lockFileContent
               );
               if (pnpmWorkspaceYaml) {
                 compilation.emitAsset(
