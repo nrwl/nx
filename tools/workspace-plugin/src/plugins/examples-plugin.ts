@@ -101,7 +101,7 @@ export const createDependencies: CreateDependencies = (_options, context) => {
       const dep = {
         source: name,
         target,
-        type: DependencyType.implicit,
+        type: DependencyType.implicit as const,
       };
       validateDependency(dep, context);
       deps.push(dep);
