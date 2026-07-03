@@ -145,15 +145,26 @@
       "options": {},
       "cache": true
     },
-    "test": {
-      "dependsOn": ["test-native", "build-native", "^build-native"],
-      "options": {
-        "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
-        "env": {
-          "NODE_OPTIONS": "--experimental-vm-modules"
+    "test": [
+      {
+        "dependsOn": ["test-native", "build-native", "^build-native"]
+      },
+      {
+        "filter": { "plugin": "@nx/jest/plugin" },
+        "options": {
+          "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
+          "env": {
+            "NODE_OPTIONS": "--experimental-vm-modules"
+          }
+        }
+      },
+      {
+        "filter": { "plugin": "@nx/vitest" },
+        "options": {
+          "args": ["--passWithNoTests"]
         }
       }
-    },
+    ],
     "lint": {
       "dependsOn": ["build-native", "^build-native", "build"],
       "inputs": [
@@ -379,13 +390,6 @@
         "packages/angular-rspack-compiler/**",
         "packages/angular-rspack/**"
       ]
-    },
-    {
-      "plugin": "@nx/vitest",
-      "options": {
-        "testTargetName": "vite:test"
-      },
-      "include": ["astro-docs/**"]
     }
   ],
   "nxCloudId": "62d013ea0852fe0a2df74438",

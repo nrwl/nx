@@ -73,16 +73,6 @@
         "outputs": [
           "{projectRoot}/README.md"
         ]
-      },
-      "test": {
-        "dependsOn": [
-          "^build-native"
-        ],
-        "options": {
-          "args": [
-            "--passWithNoTests"
-          ]
-        }
       }
     }
   }
