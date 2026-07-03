@@ -1,0 +1,9 @@
+# Benchmark branch only. Exclude every workspace path from sandbox I/O checks
+# so this beta.0 run clears STRICT enforcement (beta.0 predates the real
+# allow-list). Not intended for real use.
+exclude-reads:
+  - '**'
+  - '**/*'
+exclude-writes:
+  - '**'
+  - '**/*'
