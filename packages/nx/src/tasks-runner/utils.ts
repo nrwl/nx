@@ -454,8 +454,14 @@ export function getTargetConfigurationForTask(
   task: Task,
   projectGraph: ProjectGraph
 ): TargetConfiguration | undefined {
-  const project = projectGraph.nodes[task.target.project].data;
-  return project.targets[task.target.target];
+  const node = projectGraph.nodes[task.target.project];
+  if (!node) {
+    throw new Error(
+      `Task "${task.id}" references project "${task.target.project}", which does not exist in the project graph. ` +
+        `This can happen when the project graph in this environment diverges from the one the task was created from.`
+    );
+  }
+  return node.data.targets[task.target.target];
 }
 
 export function getExecutorNameForTask(task: Task, projectGraph: ProjectGraph) {
