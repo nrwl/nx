@@ -61,6 +61,14 @@ describe('Gradle cache invalidation', () => {
     output = runCLI('run list:jar', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
 
+    // NEW resource file, added after the graph was computed: still invalidates,
+    // because inputs are directory globs rather than a frozen file list.
+    createFile('list/src/main/resources/added-later.conf', 'setting = new\n');
+    output = runCLI('run list:jar', { verbose: true });
+    expect(output).not.toMatch(fromCache('list:jar'));
+    output = runCLI('run list:jar', { verbose: true });
+    expect(output).toMatch(fromCache('list:jar'));
+
     // Unrelated file: cache hit.
     createFile('list/notes.md', 'not an input\n');
     output = runCLI('run list:jar', { verbose: true });

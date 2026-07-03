@@ -479,6 +479,91 @@ private fun fileFromDeclaredSource(source: Any?): File? =
     }
 
 /**
+ * Declared `from(...)` sources of a copy task that are COMMITTED directories. These become
+ * directory globs so files added later are picked up without recomputing the graph. Gitignored
+ * (generated) dirs are excluded: their existence depends on build state, which would make the graph
+ * differ between a clean and a built tree.
+ */
+private fun declaredCopySourceDirs(
+    task: Task,
+    gitIgnoreClassifier: GitIgnoreClassifier
+): Set<File> {
+  if (task !is AbstractCopyTask) return emptySet()
+  val dirs = mutableSetOf<File>()
+  try {
+    val rootSpec = task.javaClass.getMethod("getRootSpec").invoke(task)
+    if (rootSpec != null) {
+      collectCopySourceDirs(rootSpec, task, dirs, gitIgnoreClassifier)
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read copy source dirs for ${task.path}: ${t.message}")
+  }
+  return dirs
+}
+
+private fun collectCopySourceDirs(
+    spec: Any,
+    task: Task,
+    into: MutableSet<File>,
+    gitIgnoreClassifier: GitIgnoreClassifier
+) {
+  fun addCommittedDir(dir: File) {
+    val resolved = if (dir.isAbsolute) dir else File(task.project.projectDir, dir.path)
+    // Committed state, not build state: a committed source dir exists identically on a clean and
+    // a built tree, so this stat keeps the derivation deterministic.
+    if (!gitIgnoreClassifier.isIgnored(resolved) && resolved.isDirectory) {
+      into.add(resolved)
+    }
+  }
+  val sourcePaths =
+      try {
+        spec.javaClass.getMethod("getSourcePaths").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  sourcePaths?.forEach { source ->
+    try {
+      when (source) {
+        // from(sourceSets.main.resources) - the idiomatic processResources wiring.
+        is org.gradle.api.file.SourceDirectorySet -> source.srcDirs.forEach { addCommittedDir(it) }
+        else -> fileFromDeclaredSource(source)?.let { addCommittedDir(it) }
+      }
+    } catch (t: Throwable) {}
+  }
+  val children =
+      try {
+        spec.javaClass.getMethod("getChildren").invoke(spec) as? Iterable<*>
+      } catch (t: Throwable) {
+        null
+      }
+  children?.filterNotNull()?.forEach { child ->
+    collectCopySourceDirs(child, task, into, gitIgnoreClassifier)
+  }
+}
+
+/**
+ * Source roots that may feed this task: every source set's srcDirs (java, resources, and the Kotlin
+ * extension's), read from the public API. Which of them the task actually uses is decided by
+ * matching its resolved input files against them.
+ */
+private fun candidateSourceRoots(task: Task): Set<File> {
+  val roots = mutableSetOf<File>()
+  try {
+    val sourceSets =
+        task.project.extensions.findByName("sourceSets") as? org.gradle.api.tasks.SourceSetContainer
+    sourceSets?.forEach { sourceSet ->
+      roots.addAll(sourceSet.allSource.srcDirs)
+      ((sourceSet as? org.gradle.api.plugins.ExtensionAware)?.extensions?.findByName("kotlin")
+              as? org.gradle.api.file.SourceDirectorySet)
+          ?.let { roots.addAll(it.srcDirs) }
+    }
+  } catch (t: Throwable) {
+    task.logger.debug("Could not read source sets for ${task.path}: ${t.message}")
+  }
+  return roots
+}
+
+/**
  * Parse task and get inputs for this task
  *
  * @param dependsOnTasks set of tasks this task depends on
@@ -518,11 +603,15 @@ private fun getInputsForTaskImpl(
 
     val tasksToProcess = dependsOnTasks ?: getDependsOnTask(task)
 
-    // Classify this task's declared input files into direct source inputs vs external
-    // dependencies. Build-artifact extensions are intentionally NOT harvested from the working
-    // tree here; they are derived deterministically from the Gradle task model below (see
-    // inferExtensionsFromInputProperties). Keeping this independent of on-disk build state ensures
-    // two checkouts of the same commit produce the same graph.
+    // Classify this task's declared input files into directory globs, direct source inputs, and
+    // external dependencies. Files under a known source root collapse into a `root/**/*` glob so
+    // files added later invalidate the cache without recomputing the graph (a per-file listing is
+    // frozen at graph-computation time). Build-artifact extensions are intentionally NOT harvested
+    // from the working tree; they are derived from the task model below.
+    val copySourceDirs = declaredCopySourceDirs(task, gitIgnoreClassifier)
+    val sourceRoots = candidateSourceRoots(task) + copySourceDirs
+    // A declared copy source dir globs even when it contributed no file yet.
+    val usedRoots = copySourceDirs.toMutableSet()
     task.inputs.files.forEach { inputFile ->
       val relativePath = replaceRootInPath(inputFile.path, projectRoot, workspaceRoot)
 
@@ -543,11 +632,19 @@ private fun getInputsForTaskImpl(
         // from the working tree.
         gitIgnoreClassifier.isIgnored(inputFile) -> {}
 
-        // Regular source file - add as direct input
+        // File inside a source root - covered by the root's glob
         else -> {
-          inputs.add(relativePath)
+          val root = sourceRoots.firstOrNull { inputFile.path.startsWith(it.path + File.separator) }
+          if (root != null) {
+            usedRoots.add(root)
+          } else {
+            inputs.add(relativePath)
+          }
         }
       }
+    }
+    usedRoots.forEach { root ->
+      replaceRootInPath(root.path, projectRoot, workspaceRoot)?.let { inputs.add("$it/**/*") }
     }
 
     // Patterns the TASK ITSELF (the consuming task being characterized) produces/consumes: its own

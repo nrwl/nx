@@ -419,6 +419,125 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask emits a directory glob for a committed Copy source dir`() {
+      // A glob keeps files added AFTER graph computation covered; a per-file listing would not.
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+      val copyTask =
+          project.tasks.register("copyResources", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(resourcesDir)
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)!!
+
+      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
+      assertTrue(result.contains(dirGlob), "Expected directory glob $dirGlob, got $result")
+      assertFalse(
+          result.contains(
+              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+          "Files under a globbed source dir must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask emits a directory glob for the processResources source dir`() {
+      // The idiomatic wiring: processResources copies from the main SourceDirectorySet.
+      project.plugins.apply("java")
+      val resourcesDir = java.io.File("$workspaceRoot/src/main/resources").apply { mkdirs() }
+      java.io.File(resourcesDir, "application.conf").writeText("key = value")
+
+      val processResources = project.tasks.getByName("processResources")
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null,
+              processResources,
+              projectRoot,
+              workspaceRoot,
+              mutableMapOf(),
+              gitIgnoreClassifier)!!
+
+      val dirGlob = Path("{projectRoot}", "src", "main", "resources").toString() + "/**/*"
+      assertTrue(result.contains(dirGlob), "Expected directory glob $dirGlob, got $result")
+      assertFalse(
+          result.contains(
+              Path("{projectRoot}", "src", "main", "resources", "application.conf").toString()),
+          "Resource files under a globbed source dir must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask does not emit directory globs for gitignored copy source dirs`() {
+      // A generated (gitignored) source dir exists only on a built tree; globbing it would make
+      // the graph differ between clean and built checkouts.
+      val generatedDir = java.io.File("$workspaceRoot/dist/generated").apply { mkdirs() }
+      java.io.File(generatedDir, "bundle.tar.gz").writeText("x")
+      val copyTask =
+          project.tasks.register("copyGenerated", org.gradle.api.tasks.Copy::class.java).get()
+      copyTask.from(generatedDir)
+      copyTask.into(java.io.File("$workspaceRoot/build/out"))
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, copyTask, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+              ?: emptyList()
+
+      assertFalse(
+          result.filterIsInstance<String>().any { it.contains("generated") },
+          "Gitignored copy source dirs must not become globs or direct inputs, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask collapses source-set files into a source root glob`() {
+      project.plugins.apply("java")
+      val srcDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
+      java.io.File(srcDir, "Foo.java").writeText("class Foo {}")
+      java.io.File(srcDir, "Bar.java").writeText("class Bar {}")
+
+      val compileJava = project.tasks.getByName("compileJava")
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      val result =
+          getInputsForTask(
+              null, compileJava, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)!!
+
+      val rootGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
+      assertTrue(result.contains(rootGlob), "Expected source root glob $rootGlob, got $result")
+      assertFalse(
+          result.contains(Path("{projectRoot}", "src", "main", "java", "Foo.java").toString()),
+          "Source files under a globbed root must not be enumerated, got $result")
+    }
+
+    @Test
+    fun `test getInputsForTask keeps main and test source root globs disjoint`() {
+      project.plugins.apply("java")
+      val mainDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }
+      java.io.File(mainDir, "Foo.java").writeText("class Foo {}")
+      val testDir = java.io.File("$workspaceRoot/src/test/java").apply { mkdirs() }
+      java.io.File(testDir, "FooTest.java").writeText("class FooTest {}")
+
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+      fun globsOf(taskName: String): List<String> =
+          getInputsForTask(
+                  null,
+                  project.tasks.getByName(taskName),
+                  projectRoot,
+                  workspaceRoot,
+                  mutableMapOf(),
+                  gitIgnoreClassifier)
+              ?.filterIsInstance<String>()
+              ?.filter { it.endsWith("/**/*") } ?: emptyList()
+
+      val mainGlob = Path("{projectRoot}", "src", "main", "java").toString() + "/**/*"
+      val testGlob = Path("{projectRoot}", "src", "test", "java").toString() + "/**/*"
+      assertTrue(globsOf("compileJava").contains(mainGlob))
+      assertFalse(globsOf("compileJava").contains(testGlob))
+      assertTrue(globsOf("compileTestJava").contains(testGlob))
+      assertFalse(globsOf("compileTestJava").contains(mainGlob))
+    }
+
+    @Test
     fun `test getInputsForTask Copy task itself derives generated sources but not checked-in or FileTree`() {
       // A Copy/Sync task, characterized as the CONSUMING task ITSELF, contributes the extensions of
       // its declared concrete-file sources to its OWN inputs (taskOwnPatterns). Only GENERATED
