@@ -21,6 +21,7 @@ import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from '@nx/devkit/internal';
 import type { PackageJson } from '@nx/devkit/internal';
 import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
+import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { readFileMapCache } from '@nx/devkit/internal';
 
 import { getRelativeDirectoryToProjectRoot } from '../get-main-file-dir';
@@ -144,6 +145,11 @@ export function updatePackageJson(
           encoding: 'utf-8',
         }
       );
+      // pnpm 11 reads build-script approvals and supportedArchitectures only
+      // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
+      if (packageManager === 'pnpm') {
+        writePrunedPnpmInstallSettings(options.outputPath, context.root);
+      }
     }
   }
 }
