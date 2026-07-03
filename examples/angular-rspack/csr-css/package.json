@@ -2,49 +2,46 @@
   "name": "examples-angular-rspack-csr-css",
   "version": "0.0.1",
   "private": true,
-  "scripts": {},
-  "dependencies": {
-    "@nx/angular-rspack": "workspace:*"
-  },
-  "devDependencies": {
-    "@rspack/core": "catalog:rspack",
-    "@rspack/cli": "catalog:rspack"
+  "scripts": {
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p angular-rspack rspack",
+    "validate": "nx run-many -t build"
   },
   "nx": {
+    "includedScripts": [],
     "targets": {
       "serve-api": {
         "continuous": true,
         "command": "node ./src/api.mjs",
         "options": {
-          "cwd": "examples/angular-rspack/csr-css"
+          "cwd": "."
         }
       },
       "serve": {
-        "dependsOn": [
-          "^build",
-          "serve-api"
-        ]
+        "dependsOn": ["serve-api"]
       },
       "build": {
         "inputs": [
           "production",
-          "^production",
-          {
-            "dependentTasksOutputFiles": "**/*.js",
-            "transitive": true
-          },
-          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
-          "{workspaceRoot}/LICENSE",
-          "{workspaceRoot}/tsconfig.json",
-          "{workspaceRoot}/examples/angular-rspack/shared/**/*"
+          "{workspaceRoot}/tsconfig.base.json",
+          "{workspaceRoot}/shared/**/*"
         ],
-        "outputs": [
-          "{projectRoot}/dist"
-        ],
-        "dependsOn": [
-          "^build"
-        ]
+        "outputs": ["{projectRoot}/dist"]
       }
     }
+  },
+  "dependencies": {
+    "@angular/common": "~22.0.0",
+    "@angular/core": "~22.0.0",
+    "@angular/platform-browser": "~22.0.0",
+    "@angular/router": "~22.0.0",
+    "rxjs": "^7.8.0",
+    "zone.js": "~0.16.2"
+  },
+  "devDependencies": {
+    "@nx/angular-rspack": "link:../../../packages/angular-rspack",
+    "@nx/rspack": "link:../../../packages/rspack",
+    "@rspack/core": "^2.0.4",
+    "@rspack/cli": "^2.0.4",
+    "typescript": "~6.0.3"
   }
 }
