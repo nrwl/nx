@@ -21,6 +21,7 @@ import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
+import { WORKSPACE_MODULE_INSTALL_SECTIONS } from '../../utils/workspace-module-sections';
 
 export default async function pruneLockfileExecutor(
   schema: PruneLockfileOptions,
@@ -80,19 +81,12 @@ function createPrunedLockfile(
 
   // Point every workspace-module dependency at its copied directory so the
   // standalone output installs them as pnpm `file:` directory dependencies.
-  // Cover devDependencies too: pnpm validates the whole manifest against the
-  // lockfile even under `--prod`, so a workspace module left as `workspace:*` in
-  // any of these sections fails `pnpm install --frozen-lockfile` (#35425).
   // peerDependencies are intentionally not rewritten: a workspace module
   // consumed only as a peer is out of scope for pruning. Gate strictly on graph
   // membership: a `file:`/`link:` spec to a non-workspace local path (e.g. a
   // vendored tarball) is left alone, since copy-workspace-modules only ever
   // copies actual workspace projects.
-  for (const section of [
-    'dependencies',
-    'optionalDependencies',
-    'devDependencies',
-  ] as const) {
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
