@@ -4,12 +4,19 @@
   "private": true,
   "scripts": {},
   "dependencies": {
-    "@nx/angular-rspack": "workspace:*"
+    "@angular/common": "~22.0.0",
+    "@angular/core": "~22.0.0",
+    "@angular/platform-browser": "~22.0.0",
+    "@angular/router": "~22.0.0",
+    "rxjs": "^7.8.0",
+    "zone.js": "~0.16.2"
   },
   "devDependencies": {
-    "@nx/module-federation": "workspace:*",
-    "@rspack/core": "catalog:rspack",
-    "@rspack/cli": "catalog:rspack"
+    "@nx/angular-rspack": "link:../../../../packages/angular-rspack",
+    "@nx/module-federation": "link:../../../../packages/module-federation",
+    "@rspack/core": "^2.0.4",
+    "@rspack/cli": "^2.0.4",
+    "typescript": "~6.0.3"
   },
   "main": "./src/app/remote-entry/entry.routes.ts",
   "types": "./src/app/remote-entry/entry.routes.ts",
@@ -35,8 +42,7 @@
             "dependentTasksOutputFiles": "**/*.js",
             "transitive": true
           },
-          "{workspaceRoot}/examples/angular-rspack/tsconfig.base.json",
-          "{workspaceRoot}/LICENSE",
+          "{workspaceRoot}/tsconfig.base.json",
           "{workspaceRoot}/tsconfig.json"
         ],
         "outputs": [
