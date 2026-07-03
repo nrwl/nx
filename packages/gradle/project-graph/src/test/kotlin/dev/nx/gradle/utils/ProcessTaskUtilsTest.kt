@@ -505,6 +505,43 @@ class ProcessTaskUtilsTest {
     }
 
     @Test
+    fun `test getInputsForTask jar sees processResources sources through the classes lifecycle task`() {
+      // Ocean nx-api scenario: the Java plugin wires jar -> classes -> {compileJava,
+      // processResources}.
+      // processResources is a Copy that bundles generated dist/ archives. jar reaches it only
+      // transitively through the opaque `classes` lifecycle task, so the dependency traversal must
+      // see through `classes` to surface processResources' **/*.gz and **/*.json patterns on jar.
+      project.plugins.apply("java")
+
+      val processResources =
+          project.tasks.getByName("processResources") as org.gradle.api.tasks.Copy
+      processResources.from(
+          java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-bundle.tar.gz"))
+      processResources.from(
+          java.io.File("$workspaceRoot/dist/libs/polygraph/cli/bundle/polygraph-runner.json"))
+      // The generated bundles are intentionally NOT created on disk (clean tree).
+
+      val jar = project.tasks.getByName("jar")
+      val gitIgnoreClassifier = GitIgnoreClassifier(java.io.File(workspaceRoot))
+
+      val result =
+          getInputsForTask(
+              null, jar, projectRoot, workspaceRoot, mutableMapOf(), gitIgnoreClassifier)
+
+      println("=== getInputsForTask(jar) inputs (verbatim) ===")
+      result?.forEach { println("  $it") }
+      println("=== end jar inputs ===")
+
+      assertNotNull(result, "jar inputs should not be null")
+      val hasPattern = { p: String ->
+        result!!.any { it is Map<*, *> && it["dependentTasksOutputFiles"] == p }
+      }
+      assertTrue(hasPattern("**/*.gz"), "jar must see processResources' **/*.gz, got $result")
+      assertTrue(hasPattern("**/*.json"), "jar must see processResources' **/*.json, got $result")
+      assertTrue(hasPattern("**/*.class"), "jar must see compileJava's **/*.class, got $result")
+    }
+
+    @Test
     fun `test getInputsForTask uses archiveExtension for Jar, not source extensions`() {
       // Create a Jar task with source files
       val sourceDir = java.io.File("$workspaceRoot/src/main/java").apply { mkdirs() }

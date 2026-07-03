@@ -262,6 +262,37 @@ private fun dependentOutputPatterns(task: Task, gitIgnore: GitIgnoreClassifier):
 }
 
 /**
+ * Collect dependentTasksOutputFiles patterns for a set of direct dependencies, seeing THROUGH
+ * opaque lifecycle tasks. A dependency that yields patterns (a real producer: extension globs or a
+ * wildcard catch-all for a declared directory output) contributes them and stops. A dependency that
+ * yields NO patterns (an opaque aggregator like `classes`, with no declared outputs and no
+ * characterizable type) is treated as transparent: we recurse into ITS dependencies. This surfaces
+ * producers such as `processResources` that a consumer (`jar`) only reaches transitively via
+ * `classes`.
+ *
+ * BFS with a visited guard so cycles and diamonds are handled and each task is characterized once.
+ */
+private fun effectiveDependencyPatterns(
+    directDeps: Set<Task>,
+    gitIgnore: GitIgnoreClassifier
+): Set<String> {
+  val patterns = mutableSetOf<String>()
+  val visited = mutableSetOf<Task>()
+  val queue = ArrayDeque(directDeps.toList())
+  while (queue.isNotEmpty()) {
+    val dep = queue.removeFirst()
+    if (!visited.add(dep)) continue // cycle / dedup guard
+    val depPatterns = dependentOutputPatterns(dep, gitIgnore)
+    if (depPatterns.isNotEmpty()) {
+      patterns.addAll(depPatterns) // real producer -> take its patterns, stop
+    } else {
+      queue.addAll(getDependsOnTask(dep)) // opaque/lifecycle -> see through, recurse
+    }
+  }
+  return patterns
+}
+
+/**
  * Extensions a task's type is known to consume from (or produce for) upstream tasks, derived purely
  * from the task class. Reuses [isKotlinCompileTask] for Kotlin-compile detection.
  */
@@ -497,13 +528,12 @@ private fun getInputsForTaskImpl(
             .filterNot { nonInputDependentOutputExtensions.contains(it) }
             .map { "**/*.$it" }
 
-    // Characterize each DEPENDENCY's outputs into patterns from the Gradle task model (independent
-    // of
-    // on-disk build state); a "**/*" pattern (for an uncharacterizable directory output) is matched
-    // within that dependency's declared output dirs. Union with the task-itself patterns, dedupe
-    // and
-    // emit.
-    (taskOwnPatterns + tasksToProcess.flatMap { dependentOutputPatterns(it, gitIgnoreClassifier) })
+    // Characterize the dependency outputs from the Gradle task model (independent of on-disk build
+    // state). A "**/*" pattern (for an uncharacterizable directory output) is matched within a
+    // dependency's declared output dirs. Opaque lifecycle tasks (e.g. `classes`, which produces no
+    // patterns) are seen through to their real producers (e.g. `processResources`). Union with the
+    // task-itself patterns, dedupe and emit.
+    (taskOwnPatterns + effectiveDependencyPatterns(tasksToProcess, gitIgnoreClassifier))
         .toSet()
         .forEach { pattern ->
           inputs.add(mapOf("dependentTasksOutputFiles" to pattern, "transitive" to true))
