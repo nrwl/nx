@@ -655,7 +655,7 @@ export function stringifyPnpmLockfile(
         type: 'directory',
       },
     } as PackageSnapshot;
-    for (const depType of ['dependencies', 'optionalDependencies'] as const) {
+    for (const depType of WORKSPACE_DEP_TYPES) {
       const deps = baseImporter[depType];
       if (!deps) continue;
       const resolved: Record<string, string> = {};
