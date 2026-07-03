@@ -31,9 +31,9 @@ describe('Gradle cache invalidation', () => {
 
   it('should rebuild on source and resource changes and hit cache otherwise', () => {
     // Fresh workspace: first build misses, rebuild hits.
-    let output = runCLI('run list:jar', { verbose: true });
+    let output = runCLI('build list', { verbose: true });
     expect(output).not.toMatch(fromCache('list:jar'));
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
 
     // Source change (a new function, so the bytecode changes): compilation
@@ -46,32 +46,32 @@ describe('Gradle cache invalidation', () => {
       relative(tmpProjPath(), sourceFile),
       (content) => `${content}\nfun cacheInvalidationProbe(): Int = 42\n`
     );
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).not.toMatch(fromCache('list:compileKotlin'));
     expect(output).not.toMatch(fromCache('list:jar'));
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
 
     // Resource change: jar repackages while compilation stays cached, then
     // caches again.
     updateFile('list/src/main/resources/config.conf', 'setting = changed\n');
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).not.toMatch(fromCache('list:jar'));
     expect(output).toMatch(fromCache('list:compileKotlin'));
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
 
     // NEW resource file, added after the graph was computed: still invalidates,
     // because inputs are directory globs rather than a frozen file list.
     createFile('list/src/main/resources/added-later.conf', 'setting = new\n');
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).not.toMatch(fromCache('list:jar'));
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
 
     // Unrelated file: cache hit.
     createFile('list/notes.md', 'not an input\n');
-    output = runCLI('run list:jar', { verbose: true });
+    output = runCLI('build list', { verbose: true });
     expect(output).toMatch(fromCache('list:jar'));
   });
 });

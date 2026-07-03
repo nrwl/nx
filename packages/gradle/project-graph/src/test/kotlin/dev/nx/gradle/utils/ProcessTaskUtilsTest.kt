@@ -222,8 +222,7 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask collapses to the catch-all when a dependency declares a directory output`() {
-      // Archive dep -> precise "**/*.jar"; Copy dep -> "**/*" catch-all. When both are present the
-      // catch-all subsumes the archive glob, so the set collapses to "**/*".
+      // Archive dep -> "**/*.jar"; Copy dep -> "**/*"; the catch-all subsumes, so it collapses.
       val jarProducer =
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
@@ -261,8 +260,6 @@ class ProcessTaskUtilsTest {
           built,
           "dependentTasksOutputFiles must not change between a clean and a built tree")
 
-      // The catch-all is the only emitted pattern; the archive's precise glob and the copy's source
-      // extension are both subsumed.
       assertEquals(
           setOf("**/*"),
           clean,
@@ -271,9 +268,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask archive dependency yields its precise extension without the catch-all`() {
-      // An archive dependency alone (no directory-output dependency) is characterized by its
-      // declared
-      // archive extension: a precise glob, never the catch-all.
       val jarProducer =
           project.tasks.register("jarProducer", org.gradle.api.tasks.bundling.Jar::class.java).get()
       jarProducer.archiveExtension.set("jar")
@@ -299,8 +293,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask falls back to catch-all for uncharacterizable directory output`() {
-      // An opaque dependency that declares only an @OutputDirectory (no type/archive/file-output we
-      // can reduce to extensions) triggers a conservative "**/*" so its directory is still hashed.
       val opaqueDep = project.tasks.register("opaqueDep").get()
       opaqueDep.outputs.dir(java.io.File("$workspaceRoot/build/opaque"))
 
@@ -358,9 +350,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask falls back to catch-all for a fileTree-only Copy dependency`() {
-      // A Copy whose only source is a FileTree yields no characterizable extensions, but its
-      // destination @OutputDirectory triggers the catch-all. FileTree contents are never
-      // enumerated.
       val treeDir = java.io.File("$workspaceRoot/dist/tree").apply { mkdirs() }
       java.io.File(treeDir, "a.dat").writeText("x")
       val copyDep = project.tasks.register("copyTree", org.gradle.api.tasks.Copy::class.java).get()
@@ -469,8 +458,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask does not emit directory globs for gitignored copy source dirs`() {
-      // A generated (gitignored) source dir exists only on a built tree; globbing it would make
-      // the graph differ between clean and built checkouts.
       val generatedDir = java.io.File("$workspaceRoot/dist/generated").apply { mkdirs() }
       java.io.File(generatedDir, "bundle.tar.gz").writeText("x")
       val copyTask =
@@ -539,14 +526,8 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask Copy task itself derives generated sources but not checked-in or FileTree`() {
-      // A Copy/Sync task, characterized as the CONSUMING task ITSELF, contributes the extensions of
-      // its declared concrete-file sources to its OWN inputs (taskOwnPatterns). Only GENERATED
-      // (gitignored) sources need a dependentTasksOutputFiles glob; checked-in sources are already
-      // captured as direct inputs, and FileTree/directory sources must never be enumerated.
-      // Extensions are derived without the files existing on disk. (As a DEPENDENCY the same Copy
-      // is
-      // characterized by its output directory via the "**/*" catch-all - see the deterministic and
-      // see-through tests.)
+      // Only generated (gitignored) sources glob; checked-in sources are direct inputs and
+      // FileTree contents are never enumerated.
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
       // Generated (the fixture gitignores "dist") concrete file sources, intentionally NOT created.
@@ -569,8 +550,6 @@ class ProcessTaskUtilsTest {
               ?.mapNotNull { it["dependentTasksOutputFiles"] as? String }
               ?.toSet() ?: emptySet()
 
-      // Clean tree (generated files absent): generated concrete-file source extensions still
-      // derived.
       val clean = outputFileGlobs()
       // Built tree: create the generated source files on disk.
       java.io.File("$workspaceRoot/dist/bundle.tar.gz").writeText("x")
@@ -589,11 +568,7 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask Copy task itself unwraps provider and FileSystemLocation sources`() {
-      // Lazy provider / FileSystemLocation sources of the Copy task ITSELF must be unwrapped so
-      // their
-      // extensions are derived without the file existing on disk. Gitignore "build" and "dist" so
-      // the
-      // generated paths count as not-checked-in.
+      // Provider / FileSystemLocation sources unwrap without the file existing on disk.
       java.io.File(workspaceRoot, ".gitignore").writeText("dist\nbuild")
 
       val syncTask =
@@ -636,10 +611,6 @@ class ProcessTaskUtilsTest {
 
     @Test
     fun `test getInputsForTask Copy task itself derives its own from() source extensions`() {
-      // A Copy/Sync task characterized as the CONSUMING task (not as a dependency) must contribute
-      // its own declared concrete-file source extensions to its OWN inputs - the nx-api
-      // processResources case, where a task bundles a generated dist/*.tar.gz via from(File). The
-      // generated (gitignored) source is intentionally NOT created on disk.
       val syncTask =
           project.tasks.register("syncResources", org.gradle.api.tasks.Sync::class.java).get()
       syncTask.from(java.io.File("$workspaceRoot/dist/bundle.tar.gz"))
