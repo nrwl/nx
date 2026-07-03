@@ -624,12 +624,14 @@ function mapSnapshots(
     }
   >();
   const remappedPackages: Map<string, MappedPackage> = new Map();
+  const packageIndex = buildV3Index(rootLockFile.packages);
 
   // add first level children
   Object.values(graph.externalNodes).forEach((node) => {
     if (node.name === `npm:${node.data.packageName}`) {
       const mappedPackage = mapPackage(
         rootLockFile,
+        packageIndex,
         node.data.packageName,
         node.data.version
       );
@@ -651,7 +653,8 @@ function mapSnapshots(
       remappedPackages,
       nestedNodes,
       visitedNodes,
-      rootLockFile
+      rootLockFile,
+      packageIndex
     );
     // initially we naively map package paths to topParent/../parent/child
     // but some of those should be nested higher up the tree
@@ -664,6 +667,7 @@ function mapSnapshots(
 
 function mapPackage(
   rootLockFile: NpmLockFile,
+  packageIndex: V3Index,
   packageName: string,
   version: string,
   parentPath = ''
@@ -679,11 +683,7 @@ function mapPackage(
     );
   }
   if (lockfileVersion > 1) {
-    valueV3 = findMatchingPackageV3(
-      rootLockFile.packages,
-      packageName,
-      version
-    );
+    valueV3 = findMatchingPackageV3(packageIndex, packageName, version);
   }
 
   return {
@@ -705,7 +705,8 @@ function nestMappedPackages(
       unresolvedParents: Set<string>;
     }
   >,
-  rootLockFile: NpmLockFile
+  rootLockFile: NpmLockFile,
+  packageIndex: V3Index
 ) {
   const initialSize = nestedNodes.size;
 
@@ -736,6 +737,7 @@ function nestMappedPackages(
         visitedNodes.get(targetNode).packagePaths.forEach((path) => {
           const mappedPackage = mapPackage(
             rootLockFile,
+            packageIndex,
             node.data.packageName,
             node.data.version,
             path + '/'
@@ -764,7 +766,8 @@ function nestMappedPackages(
       result,
       nestedNodes,
       visitedNodes,
-      rootLockFile
+      rootLockFile,
+      packageIndex
     );
   }
 }
@@ -834,22 +837,45 @@ function elevateNestedPaths(
   return Array.from(result.values());
 }
 
+type V3Index = Map<string, NpmDependencyV3[]>;
+
+// Bucket packages by their trailing "node_modules/<name>" segment so a lookup
+// scans only that name's copies instead of every package (was O(nodes *
+// allPackages)). Mirrors the old `key.endsWith(node_modules/<name>)` match:
+// the name is whatever follows the last "node_modules/" in the key.
+function buildV3Index(
+  packages: Record<string, NpmDependencyV3> | undefined
+): V3Index {
+  const index: V3Index = new Map();
+  if (!packages) return index;
+  const marker = 'node_modules/';
+  for (const key of Object.keys(packages)) {
+    const i = key.lastIndexOf(marker);
+    if (i === -1) continue; // root "" / workspace paths never matched endsWith
+    const name = key.slice(i + marker.length);
+    let bucket = index.get(name);
+    if (!bucket) index.set(name, (bucket = []));
+    bucket.push(packages[key]);
+  }
+  return index;
+}
+
 function findMatchingPackageV3(
-  packages: Record<string, NpmDependencyV3>,
+  packageIndex: V3Index,
   name: string,
   version: string
 ) {
-  for (const [key, { dev, peer, ...snapshot }] of Object.entries(packages)) {
-    if (key.endsWith(`node_modules/${name}`)) {
-      if (
-        [
-          snapshot.version,
-          snapshot.resolved,
-          `npm:${snapshot.name}@${snapshot.version}`,
-        ].includes(version)
-      ) {
-        return snapshot;
-      }
+  const bucket = packageIndex.get(name);
+  if (!bucket) return undefined;
+  for (const { dev, peer, ...snapshot } of bucket) {
+    if (
+      [
+        snapshot.version,
+        snapshot.resolved,
+        `npm:${snapshot.name}@${snapshot.version}`,
+      ].includes(version)
+    ) {
+      return snapshot;
     }
   }
 }
