@@ -150,7 +150,9 @@
         "dependsOn": ["test-native", "build-native", "^build-native"]
       },
       {
-        "filter": { "plugin": "@nx/jest/plugin" },
+        "filter": {
+          "plugin": "@nx/jest/plugin"
+        },
         "options": {
           "args": ["--passWithNoTests", "--detectOpenHandles", "--forceExit"],
           "env": {
@@ -159,7 +161,9 @@
         }
       },
       {
-        "filter": { "plugin": "@nx/vitest" },
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
         "options": {
           "args": ["--passWithNoTests"]
         }
@@ -368,17 +372,6 @@
         "buildStorybookTargetName": "build:storybook",
         "testStorybookTargetName": "test-storybook",
         "staticStorybookTargetName": "static:storybook"
-      }
-    },
-    {
-      "plugin": "@nx/rspack/plugin",
-      "include": ["examples/angular-rspack/**"],
-      "options": {
-        "buildTargetName": "build",
-        "serveTargetName": "serve",
-        "previewTargetName": "preview",
-        "buildDepsTargetName": "build-deps",
-        "watchDepsTargetName": "watch-deps"
       }
     },
     {

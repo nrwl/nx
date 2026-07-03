@@ -295,9 +295,6 @@ catalogs:
       specifier: 18.3.1
       version: 18.3.1
   rspack:
-    '@rspack/cli':
-      specifier: ^2.0.4
-      version: 2.0.8
     '@rspack/core':
       specifier: ^2.0.4
       version: 2.0.8
@@ -650,7 +647,7 @@ importers:
         version: 3.17.6
       '@nx/angular':
         specifier: 23.2.0-beta.0
-        version: 23.2.0-beta.0(c8aa883ebc638ad0dff17b79b9be7228)
+        version: 23.2.0-beta.0(078b751a0cddb98330c821b751d39472)
       '@nx/conformance':
         specifier: 5.0.4
         version: 5.0.4(@nx/js@23.2.0-beta.0(@babel/traverse@7.29.7)(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/cli@0.8.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.10(@swc/helpers@0.5.18))(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0)))(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
@@ -704,7 +701,7 @@ importers:
         version: 23.2.0-beta.0(@babel/traverse@7.29.7)(@rsbuild/core@2.0.15(@module-federation/runtime-tools@0.21.2)(core-js@3.36.1))(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/cli@0.8.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.10(@swc/helpers@0.5.18))(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(typescript@6.0.3)(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))
       '@nx/rspack':
         specifier: 23.2.0-beta.0
-        version: 23.2.0-beta.0(cca40f5908991a6cd1889548c277a992)
+        version: 23.2.0-beta.0(a4821ec1e9344a0061c1fd18827c6493)
       '@nx/storybook':
         specifier: 23.2.0-beta.0
         version: 23.2.0-beta.0(@babel/traverse@7.29.7)(@nx/jest@23.2.0-beta.0(876444d105bcd6ea3332a3fdd6c94b4d))(@nx/web@23.2.0-beta.0(7b359959f60892fb4e2c7d8dbcc4f28b))(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/cli@0.8.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.10(@swc/helpers@0.5.18))(@zkochan/js-yaml@0.0.7)(cypress@15.17.0)(eslint@9.39.4(jiti@2.6.1))(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(storybook@10.5.0(@types/react@18.3.1)(prettier@3.6.2)(react@18.3.1))(typescript@6.0.3)(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))
@@ -1728,197 +1725,6 @@ importers:
       '@nx/e2e-utils':
         specifier: workspace:*
         version: link:../utils
-
-  examples/angular-rspack/appshell-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/csr-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/csr-css-assets:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/csr-i18n:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/csr-scss:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/csr-tailwind:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-      '@tailwindcss/postcss':
-        specifier: catalog:tailwind
-        version: 4.1.11
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/module-federation/host:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../../packages/angular-rspack
-    devDependencies:
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../../../../packages/module-federation
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/module-federation/remote:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../../packages/angular-rspack
-    devDependencies:
-      '@nx/module-federation':
-        specifier: workspace:*
-        version: link:../../../../packages/module-federation
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/ssg-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/ssr-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/zoneless-csr-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/zoneless-csr-i18n:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/zoneless-ssg-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-
-  examples/angular-rspack/zoneless-ssr-css:
-    dependencies:
-      '@nx/angular-rspack':
-        specifier: workspace:*
-        version: link:../../../packages/angular-rspack
-    devDependencies:
-      '@rspack/cli':
-        specifier: catalog:rspack
-        version: 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))
-      '@rspack/core':
-        specifier: catalog:rspack
-        version: 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
 
   graph/client:
     dependencies:
@@ -13063,16 +12869,6 @@ packages:
     hasBin: true
     peerDependencies:
       '@rspack/core': ^1.0.0-alpha || ^1.x
-
-  '@rspack/cli@2.0.8':
-    resolution: {integrity: sha512-b7MrVE9kvCs8L7hhPdHR6AvQ5wyD3KeBYD+DZMynt+545rvJYnT11LVNjqQJqAYHrgBTmf+9CNPYmeJvEZesWw==}
-    hasBin: true
-    peerDependencies:
-      '@rspack/core': ^2.0.0-0
-      '@rspack/dev-server': ^2.0.0-0
-    peerDependenciesMeta:
-      '@rspack/dev-server':
-        optional: true
 
   '@rspack/core@1.1.8':
     resolution: {integrity: sha512-pcZtcj5iXLCuw9oElTYC47bp/RQADm/MMEb3djHdwJuSlFWfWPQi5QFgJ/lJAxIW9UNHnTFrYtytycfjpuoEcA==}
@@ -34919,7 +34715,7 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
-  '@nx/angular@23.2.0-beta.0(c8aa883ebc638ad0dff17b79b9be7228)':
+  '@nx/angular@23.2.0-beta.0(078b751a0cddb98330c821b751d39472)':
     dependencies:
       '@angular-devkit/core': 22.0.1(chokidar@3.6.0)
       '@angular-devkit/schematics': 22.0.1(chokidar@3.6.0)
@@ -34942,7 +34738,7 @@ snapshots:
       '@angular-devkit/build-angular': 22.0.1(0da8bb51b3b520d99659944d310cbd27)
       '@angular/build': 22.0.1(aee8614f796f41b03950beea15bdfbcc)
       '@nx/module-federation': 23.2.0-beta.0(898cf8409aae7fa18a66f74853fa2f9e)
-      '@nx/rspack': 23.2.0-beta.0(cca40f5908991a6cd1889548c277a992)
+      '@nx/rspack': 23.2.0-beta.0(a4821ec1e9344a0061c1fd18827c6493)
       '@nx/webpack': 23.2.0-beta.0(@babel/traverse@7.29.7)(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/cli@0.8.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(html-webpack-plugin@5.5.0(webpack@5.105.2))(lightningcss@1.32.0)(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(typescript@6.0.3)(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))(webpack-cli@7.0.3)(webpack-dev-server@5.2.4)(webpack@5.105.2)
       ng-packagr: 22.0.0(@angular/compiler-cli@22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@6.0.3)
       webpack-merge: 5.10.0
@@ -35743,7 +35539,7 @@ snapshots:
       - typescript
       - verdaccio
 
-  '@nx/rspack@23.2.0-beta.0(cca40f5908991a6cd1889548c277a992)':
+  '@nx/rspack@23.2.0-beta.0(a4821ec1e9344a0061c1fd18827c6493)':
     dependencies:
       '@nx/devkit': 23.2.0-beta.0(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))
       '@nx/js': 23.2.0-beta.0(@babel/traverse@7.29.7)(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/cli@0.8.1(@swc/core@1.15.10(@swc/helpers@0.5.18))(chokidar@3.6.0))(@swc/core@1.15.10(@swc/helpers@0.5.18))(nx@23.2.0-beta.0(@swc-node/register@1.11.1(@emnapi/core@1.11.2)(@emnapi/runtime@1.11.2)(@swc/core@1.15.10(@swc/helpers@0.5.18))(@swc/types@0.1.25)(typescript@6.0.3))(@swc/core@1.15.10(@swc/helpers@0.5.18)))(verdaccio@6.3.2(encoding@0.1.13)(typanion@3.14.0))
@@ -35775,7 +35571,7 @@ snapshots:
       webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3)
       webpack-node-externals: 3.0.0
     optionalDependencies:
-      '@rspack/cli': 2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(selfsigned@5.5.0))
+      '@rspack/cli': 1.6.8(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@types/express@4.17.23)(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.105.2)
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
       '@rspack/dev-server': 2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(selfsigned@5.5.0)
       '@rspack/plugin-react-refresh': 2.0.2(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(react-refresh@0.10.0)
@@ -37959,18 +37755,23 @@ snapshots:
       - webpack
       - webpack-cli
 
-  '@rspack/cli@2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(selfsigned@5.5.0))':
+  '@rspack/cli@1.6.8(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@types/express@4.17.23)(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.105.2)':
     dependencies:
+      '@discoveryjs/json-ext': 0.5.7
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
-    optionalDependencies:
-      '@rspack/dev-server': 2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(selfsigned@5.5.0)
+      '@rspack/dev-server': 1.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@types/express@4.17.23)(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.105.2)
+      exit-hook: 4.0.0
+      webpack-bundle-analyzer: 4.10.2
+    transitivePeerDependencies:
+      - '@types/express'
+      - bufferutil
+      - debug
+      - supports-color
+      - tslib
+      - utf-8-validate
+      - webpack
+      - webpack-cli
     optional: true
-
-  '@rspack/cli@2.0.8(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0))':
-    dependencies:
-      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-    optionalDependencies:
-      '@rspack/dev-server': 2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0)
 
   '@rspack/core@1.1.8(@swc/helpers@0.5.18)':
     dependencies:
@@ -38014,11 +37815,6 @@ snapshots:
     optionalDependencies:
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
 
-  '@rspack/dev-middleware@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))':
-    optionalDependencies:
-      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-    optional: true
-
   '@rspack/dev-server@1.1.4(@rspack/core@1.6.8(@swc/helpers@0.5.23))(@types/express@4.17.25)(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))':
     dependencies:
       '@rspack/core': 1.6.8(@swc/helpers@0.5.23)
@@ -38037,20 +37833,31 @@ snapshots:
       - webpack
       - webpack-cli
 
+  '@rspack/dev-server@1.1.4(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(@types/express@4.17.23)(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.105.2)':
+    dependencies:
+      '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
+      chokidar: 3.6.0
+      http-proxy-middleware: 2.0.9(@types/express@4.17.23)
+      p-retry: 6.2.1
+      webpack-dev-server: 5.2.2(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.25.0)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3))
+      ws: 8.19.0
+    transitivePeerDependencies:
+      - '@types/express'
+      - bufferutil
+      - debug
+      - supports-color
+      - tslib
+      - utf-8-validate
+      - webpack
+      - webpack-cli
+    optional: true
+
   '@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))(selfsigned@5.5.0)':
     dependencies:
       '@rspack/core': 2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18)
       '@rspack/dev-middleware': 2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@0.21.2)(@swc/helpers@0.5.18))
     optionalDependencies:
       selfsigned: 5.5.0
-
-  '@rspack/dev-server@2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))(selfsigned@5.5.0)':
-    dependencies:
-      '@rspack/core': 2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23)
-      '@rspack/dev-middleware': 2.0.3(@rspack/core@2.0.8(@module-federation/runtime-tools@2.3.3(node-fetch@3.3.2))(@swc/helpers@0.5.23))
-    optionalDependencies:
-      selfsigned: 5.5.0
-    optional: true
 
   '@rspack/lite-tapable@1.0.1': {}
 
@@ -46224,6 +46031,19 @@ snapshots:
       debug: 4.4.3(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
+
+  http-proxy-middleware@2.0.9(@types/express@4.17.23):
+    dependencies:
+      '@types/http-proxy': 1.17.16
+      http-proxy: 1.18.1
+      is-glob: 4.0.3
+      is-plain-obj: 3.0.0
+      micromatch: 4.0.8
+    optionalDependencies:
+      '@types/express': 4.17.23
+    transitivePeerDependencies:
+      - debug
+    optional: true
 
   http-proxy-middleware@2.0.9(@types/express@4.17.25):
     dependencies:
