@@ -759,21 +759,21 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
 
 /**
  * Builds the settings-only pnpm-workspace.yaml a standalone pruned output needs
- * on pnpm 11, or null when there is nothing to carry.
+ * on pnpm 11 and above, or null when there is nothing to carry.
  *
- * pnpm 11 reads settings only from pnpm-workspace.yaml, never the package.json
- * `pnpm` field, and the rest of the pruned output ships no workspace file. So on
- * pnpm 11 the build-script approvals (`allowBuilds`) and `supportedArchitectures`
- * the workspace declares would be dropped, and native production deps would never
- * run their build scripts. Carry those from the workspace root - without a
- * `packages:` key, which would flip pnpm into workspace mode and which pnpm 9
- * rejects outright.
+ * pnpm 11 was the first major to read these settings only from
+ * pnpm-workspace.yaml, never the package.json `pnpm` field, and the rest of the
+ * pruned output ships no workspace file. So on pnpm 11+ the build-script
+ * approvals (`allowBuilds`) and `supportedArchitectures` the workspace declares
+ * would be dropped, and native production deps would never run their build
+ * scripts. Carry those from the workspace root, but without a `packages:` key:
+ * that flips pnpm into workspace mode, which pnpm 9 rejects outright.
  *
- * pnpm <=10 reads the same settings from the emitted package.json, so this
- * returns null for anything but pnpm 11, and when the workspace declares none.
- * Resolution-time config stays out: it is already baked into the pruned lockfile
- * (see `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried
- * yet; a workspace relying on `pnpm patch` is not fully supported by pruning.
+ * pnpm 10 and below read the same settings from the emitted package.json, so
+ * this returns null there, and when the workspace declares none. Resolution-time
+ * config stays out: it is already baked into the pruned lockfile (see
+ * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried yet; a
+ * workspace relying on `pnpm patch` is not fully supported by pruning.
  *
  * Returns the YAML string so both the file-writing prune paths and the webpack
  * asset pipeline (which emits assets rather than writing to disk) can carry it.
@@ -790,17 +790,22 @@ export function getPrunedPnpmInstallSettingsYaml(
       getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
       10
     );
-    if (pnpmMajor !== 11) {
+    // pnpm 11 was the first major to read these settings only from
+    // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
+    // still read them from the emitted package.json, so nothing to carry.
+    if (Number.isNaN(pnpmMajor) || pnpmMajor < 11) {
       return null;
     }
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (!existsSync(rootWorkspaceYaml)) {
       return null;
     }
-    rootSettings = readYamlFile(rootWorkspaceYaml);
+    // An empty or comment-only file parses to null/undefined; treat it as no
+    // settings rather than dereferencing it below.
+    rootSettings = readYamlFile(rootWorkspaceYaml) ?? {};
   } catch {
     // Can't determine the pnpm version or read the root settings (unknown
-    // version, unreadable or malformed pnpm-workspace.yaml) - skip rather than
+    // version, unreadable or malformed pnpm-workspace.yaml). Skip rather than
     // guess. Worst case matches the prior behavior of carrying no install-time
     // settings.
     return null;

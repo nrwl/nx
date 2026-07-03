@@ -1040,6 +1040,17 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
   });
 
+  it('carries settings on pnpm 12 and above (same behavior as pnpm 11)', () => {
+    mockPnpmVersion('12.0.0');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(tempDir);
+
+    expect(yaml).not.toBeNull();
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({ allowBuilds: { esbuild: true } });
+  });
+
   it('returns null when the workspace has no root pnpm-workspace.yaml', () => {
     mockPnpmVersion('11.2.2');
 
@@ -1067,6 +1078,20 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
   it('fails open (null) when the root pnpm-workspace.yaml is malformed', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml('allowBuilds: { esbuild: true');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('returns null when the root pnpm-workspace.yaml is empty', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('');
+
+    expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
+  });
+
+  it('returns null when the root pnpm-workspace.yaml has only comments', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('# no install-time settings here\n');
 
     expect(getPrunedPnpmInstallSettingsYaml(tempDir)).toBeNull();
   });
