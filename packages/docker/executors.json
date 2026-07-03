@@ -6,6 +6,11 @@
       "schema": "./dist/src/executors/release-publish/schema.json",
       "description": "DO NOT INVOKE DIRECTLY WITH `nx run`. Use `nx release publish` instead.",
       "hidden": true
+    },
+    "build": {
+      "implementation": "./dist/src/executors/build/build.impl",
+      "schema": "./dist/src/executors/build/schema.json",
+      "description": "Build a container image using Docker or Podman, with optional buildx multi-platform, secrets, and metadata/tag generation support. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning."
     }
   }
 }

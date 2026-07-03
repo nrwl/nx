@@ -3,6 +3,9 @@ import {
   getVcsRemoteInfo,
   getUncommittedChangesSnapshot,
   tryCommitChanges,
+  getCurrentBranchName,
+  getCurrentTagName,
+  getDefaultBranchName,
 } from './git-utils';
 import { execSync } from 'child_process';
 import * as fs from 'fs';
@@ -208,6 +211,83 @@ describe('git utils tests', () => {
       });
 
       expect(getVcsRemoteInfo()).toBeNull();
+    });
+  });
+
+  describe('getCurrentBranchName', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return the current branch name', () => {
+      (execSync as jest.Mock).mockReturnValue('main\n');
+
+      expect(getCurrentBranchName()).toEqual('main');
+    });
+
+    it('should return null when detached HEAD', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('not a symbolic ref');
+      });
+
+      expect(getCurrentBranchName()).toBeNull();
+    });
+
+    it('should return null when output is empty', () => {
+      (execSync as jest.Mock).mockReturnValue('');
+
+      expect(getCurrentBranchName()).toBeNull();
+    });
+  });
+
+  describe('getCurrentTagName', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return the current tag name', () => {
+      (execSync as jest.Mock).mockReturnValue('v1.2.3\n');
+
+      expect(getCurrentTagName()).toEqual('v1.2.3');
+    });
+
+    it('should return null when HEAD is not tagged', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('no tag exactly matches');
+      });
+
+      expect(getCurrentTagName()).toBeNull();
+    });
+  });
+
+  describe('getDefaultBranchName', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return the default branch from origin/HEAD symbolic ref', () => {
+      (execSync as jest.Mock).mockReturnValue('refs/remotes/origin/main\n');
+
+      expect(getDefaultBranchName()).toEqual('main');
+    });
+
+    it('should fall back to `git remote show origin` when symbolic ref is missing', () => {
+      (execSync as jest.Mock).mockImplementation((cmd: string) => {
+        if (cmd.includes('symbolic-ref')) {
+          throw new Error('ref does not exist');
+        }
+        return '* remote origin\n  HEAD branch: develop\n';
+      });
+
+      expect(getDefaultBranchName()).toEqual('develop');
+    });
+
+    it('should return null when neither method succeeds', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('no such remote');
+      });
+
+      expect(getDefaultBranchName()).toBeNull();
     });
   });
 

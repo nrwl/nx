@@ -533,3 +533,57 @@ export function getLatestCommitSha(directory?: string): string | null {
     return null;
   }
 }
+
+export function getCurrentBranchName(directory?: string): string | null {
+  try {
+    const branch = execSync('git symbolic-ref -q --short HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    }).trim();
+    return branch.length ? branch : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getCurrentTagName(directory?: string): string | null {
+  try {
+    const tag = execSync('git describe --exact-match --tags HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    }).trim();
+    return tag.length ? tag : null;
+  } catch {
+    return null;
+  }
+}
+
+export function getDefaultBranchName(directory?: string): string | null {
+  try {
+    const ref = execSync('git symbolic-ref refs/remotes/origin/HEAD', {
+      encoding: 'utf8',
+      stdio: 'pipe',
+      windowsHide: true,
+      cwd: directory,
+    }).trim();
+    const branch = ref.replace(/^refs\/remotes\/origin\//, '');
+    return branch.length ? branch : null;
+  } catch {
+    try {
+      const remoteShow = execSync('git remote show origin', {
+        encoding: 'utf8',
+        stdio: 'pipe',
+        windowsHide: true,
+        cwd: directory,
+      });
+      const match = remoteShow.match(/HEAD branch:\s*(\S+)/);
+      return match ? match[1] : null;
+    } catch {
+      return null;
+    }
+  }
+}

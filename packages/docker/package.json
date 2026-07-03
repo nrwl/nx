@@ -86,7 +86,11 @@
   "generators": "./generators.json",
   "dependencies": {
     "@nx/devkit": "workspace:*",
+    "@renovatebot/pep440": "catalog:",
     "enquirer": "catalog:",
+    "handlebars": "catalog:",
+    "semver": "catalog:",
+    "tmp": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

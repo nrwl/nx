@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "outputCapture": "direct-nodejs",
+  "title": "Build a container image",
+  "description": "Builds a container image with Docker or Podman, with buildx-powered multi-platform builds, secrets, and metadata/tag generation. Experimental: breaking changes may occur and not adhere to semver versioning.",
+  "cli": "nx",
+  "type": "object",
+  "properties": {
+    "engine": {
+      "type": "string",
+      "enum": ["docker", "podman"],
+      "default": "docker",
+      "description": "The container engine to use to build the image.",
+      "x-priority": "important"
+    },
+    "quiet": {
+      "type": "boolean",
+      "default": false,
+      "description": "Suppress verbose output from the underlying engine (version/info banners)."
+    },
+    "context": {
+      "type": "string",
+      "default": ".",
+      "description": "Build context: the set of files located at the specified PATH.",
+      "x-completion-type": "directory"
+    },
+    "file": {
+      "type": "string",
+      "description": "Path to the Dockerfile/Containerfile. Defaults to `Dockerfile` in the project root.",
+      "x-completion-type": "file",
+      "x-completion-glob": "**/@(Dockerfile|Containerfile)*",
+      "x-priority": "important"
+    },
+    "add-hosts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Custom host-to-IP mappings (e.g. `docker:10.180.0.1`)."
+    },
+    "allow": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Extra privileged entitlements (e.g. `network.host`, `security.insecure`). Docker engine only."
+    },
+    "build-args": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Build-time variables, e.g. `KEY=value`.",
+      "x-priority": "important"
+    },
+    "build-contexts": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Additional named build contexts, e.g. `name=path`. Requires buildx >=0.8.0 (Docker) or podman >=4.2.0."
+    },
+    "builder": {
+      "type": "string",
+      "description": "Name of an existing buildx builder instance to use. Docker engine only."
+    },
+    "create-builder": {
+      "type": "boolean",
+      "default": false,
+      "description": "Create a temporary buildx builder instance for this build and remove it afterwards. Docker engine only."
+    },
+    "cache-from": {
+      "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+      "description": "External cache sources, e.g. `type=registry,ref=user/app:cache`."
+    },
+    "cache-to": {
+      "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }],
+      "description": "Cache export destinations, e.g. `type=local,dest=path`."
+    },
+    "cgroup-parent": {
+      "type": "string",
+      "description": "Optional parent cgroup for the build container."
+    },
+    "labels": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Static image labels/metadata, e.g. `key=value`."
+    },
+    "load": {
+      "type": "boolean",
+      "default": false,
+      "description": "Load the built image into the local engine after building (shorthand for `--output=type=docker`)."
+    },
+    "network": {
+      "type": "string",
+      "description": "Networking mode for RUN instructions during the build."
+    },
+    "no-cache": {
+      "type": "boolean",
+      "default": false,
+      "description": "Do not use cache when building the image."
+    },
+    "no-cache-filters": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Stages to exclude from the build cache. Docker engine only."
+    },
+    "outputs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Output destinations, e.g. `type=local,dest=path`."
+    },
+    "platforms": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Target platforms for the build, e.g. `linux/amd64`, `linux/arm64`.",
+      "x-priority": "important"
+    },
+    "provenance": {
+      "type": "string",
+      "description": "Provenance attestation mode, e.g. `true`, `false`, or `mode=max`. Docker engine only."
+    },
+    "pull": {
+      "type": "boolean",
+      "default": false,
+      "description": "Always attempt to pull a newer version of the base image."
+    },
+    "push": {
+      "type": "boolean",
+      "default": false,
+      "description": "Push the built image after building (shorthand for `--output=type=registry` on the Docker engine; a separate `podman push` per tag on the Podman engine)."
+    },
+    "sbom": {
+      "type": "boolean",
+      "default": false,
+      "description": "Generate an SBOM attestation for the build. Docker engine only."
+    },
+    "secrets": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Secrets to expose to the build as `key=value`, e.g. `NPM_TOKEN=${NPM_TOKEN}`. Supports `$VAR`/`${VAR}` environment variable expansion in the value."
+    },
+    "secret-files": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Secrets to expose to the build from files, e.g. `npmrc=./secret.txt`. Supports `$VAR`/`${VAR}` environment variable expansion in the path."
+    },
+    "shm-size": {
+      "type": "string",
+      "description": "Size of `/dev/shm`, e.g. `2g`."
+    },
+    "ssh": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "SSH agent sockets or keys to expose to the build."
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Explicit image tags to apply. Overridden by the tags computed from `metadata.images`, if set."
+    },
+    "target": {
+      "type": "string",
+      "description": "Target build stage to build."
+    },
+    "ulimit": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Ulimit options, e.g. `nofile=1024:1024`."
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Dynamically compute image tags, labels, and OCI annotations from git/version context, similar to `docker/metadata-action`.",
+      "x-priority": "important",
+      "properties": {
+        "images": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Base image names to generate tags for. Supports `name=...,enable=...` syntax."
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Tag rules, e.g. `type=schedule`, `type=semver,pattern={{version}}`, `type=ref,event=branch`, `type=sha`. Defaults to schedule + branch/tag/pr ref rules."
+        },
+        "flavor": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Flavor rules controlling `latest` and prefix/suffix behavior, e.g. `latest=auto`, `prefix=v,onlatest=true`."
+        },
+        "labels": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Custom OCI labels, merged with the auto-generated `org.opencontainers.image.*` labels."
+        },
+        "annotations": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Custom OCI annotations, merged the same way as labels."
+        },
+        "sep-tags": {
+          "type": "string",
+          "default": "\n",
+          "description": "Separator used when logging the generated tag list."
+        },
+        "sep-labels": {
+          "type": "string",
+          "default": "\n",
+          "description": "Separator used when logging the generated label list."
+        },
+        "bake-target": {
+          "type": "string",
+          "default": "docker-metadata-action",
+          "description": "Reserved for future bake-file generation parity; currently informational only."
+        }
+      },
+      "additionalProperties": false
+    },
+    "env": {
+      "type": "object",
+      "description": "Extra environment variables to set for the build engine's subprocess.",
+      "additionalProperties": { "type": "string" }
+    },
+    "envFile": {
+      "type": "string",
+      "description": "Path to a dotenv file whose variables are merged into the build engine's subprocess environment (overridden by `env`).",
+      "x-completion-type": "file"
+    }
+  },
+  "additionalProperties": false
+}

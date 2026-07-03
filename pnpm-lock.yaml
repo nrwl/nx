@@ -132,6 +132,9 @@ catalogs:
     '@playwright/test':
       specifier: ^1.36.0
       version: 1.60.0
+    '@renovatebot/pep440':
+      specifier: 4.2.4
+      version: 4.2.4
     '@svgr/webpack':
       specifier: ^8.0.1
       version: 8.1.0
@@ -2709,9 +2712,21 @@ importers:
       '@nx/devkit':
         specifier: workspace:*
         version: link:../devkit
+      '@renovatebot/pep440':
+        specifier: 'catalog:'
+        version: 4.2.4
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
+      handlebars:
+        specifier: 4.7.9
+        version: 4.7.9
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.4
+      tmp:
+        specifier: ~0.2.7
+        version: 0.2.7
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
@@ -11968,6 +11983,10 @@ packages:
 
   '@remix-run/web-stream@1.1.0':
     resolution: {integrity: sha512-KRJtwrjRV5Bb+pM7zxcTJkhIqWWSy+MYsIxHK+0m5atcznsf15YwUBWHWulZerV2+vvHH1Lp1DD7pw6qKW8SgA==}
+
+  '@renovatebot/pep440@4.2.4':
+    resolution: {integrity: sha512-r+Pwj9ud/5QOOHoSsD7mWzU0Qkj105UPOyPwihGAtbNCl9pqnWkEDNRM5an63QvsFsS9tt+X3o+npT3AKBiTVg==}
+    engines: {node: ^20.9.0 || ^22.11.0 || ^24, pnpm: '>=10.0.0'}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.9':
     resolution: {integrity: sha512-lcJL0bN5hpgJfSIz/8PIf02irmyL43P+j1pTCfbD1DbLkmGRuFIA4DD3B3ZOvGqG0XiVvRznbKtN0COQVaKUTg==}
@@ -36678,6 +36697,8 @@ snapshots:
   '@remix-run/web-stream@1.1.0':
     dependencies:
       web-streams-polyfill: 3.3.3
+
+  '@renovatebot/pep440@4.2.4': {}
 
   '@rolldown/binding-android-arm64@1.0.0-rc.9':
     optional: true
