@@ -668,7 +668,7 @@ mod tests {
     // render and hyperlink exactly these.
     const CACHE_PHRASE: &str =
         "Drastically reduce your run duration by sharing a cache across your team and CI";
-    const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
+    const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache";
 
     fn summary_with(recommendations: Vec<String>) -> PerformanceSummaryPayload {
         PerformanceSummaryPayload {
