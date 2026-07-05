@@ -18,7 +18,7 @@ import { join } from 'path';
 
 import { InspectType, NodeExecutorOptions } from './schema';
 import { calculateProjectBuildableDependencies } from '../../utils/buildable-libs-utils';
-import { killTree } from './lib/kill-tree';
+import { killProcessTreeGraceful } from 'nx/src/native';
 import { LineAwareWriter } from './lib/line-aware-writer';
 import { createCoalescingDebounce } from './lib/coalescing-debounce';
 import { fileExists } from 'nx/src/utils/fileutils';
@@ -243,7 +243,9 @@ export async function* nodeExecutor(
 
             task.childProcess.removeAllListeners();
 
-            await killTree(task.childProcess.pid, signal);
+            // Wait for the process tree to fully exit so the port is released
+            // before a watch-mode restart boots the next server (EADDRINUSE).
+            await killProcessTreeGraceful(task.childProcess.pid, signal);
           }
 
           if (task.id === globalLineAwareWriter.currentProcessId) {
