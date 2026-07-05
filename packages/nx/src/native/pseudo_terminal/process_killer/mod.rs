@@ -145,6 +145,36 @@ fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal, force_kill_fa
     }
 }
 
+/// How long to wait for processes to disappear after SIGKILL. SIGKILL cannot
+/// be handled, but teardown is asynchronous - resolving before the kernel
+/// reaps the processes lets callers rebind ports that are still held
+/// (EADDRINUSE).
+const FORCE_KILL_EXIT_WAIT: std::time::Duration = std::time::Duration::from_millis(1000);
+
+/// Poll until the given PIDs disappear from the process table, bounded by
+/// `FORCE_KILL_EXIT_WAIT` so an unreapable process (e.g. stuck in
+/// uninterruptible sleep, or a zombie whose parent never reaps it) cannot
+/// hang the caller.
+fn wait_for_pids_to_exit(sys: &mut System, mut remaining: Vec<Pid>) {
+    let deadline = std::time::Instant::now() + FORCE_KILL_EXIT_WAIT;
+    while !remaining.is_empty() && std::time::Instant::now() < deadline {
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        sys.refresh_processes_specifics(
+            ProcessesToUpdate::Some(&remaining),
+            true,
+            ProcessRefreshKind::nothing(),
+        );
+        remaining.retain(|pid| sys.process(*pid).is_some());
+    }
+    if !remaining.is_empty() {
+        debug!(
+            "{} processes still present {}ms after SIGKILL",
+            remaining.len(),
+            FORCE_KILL_EXIT_WAIT.as_millis()
+        );
+    }
+}
+
 /// Snapshot all processes and signal the tree. Returns targeted PIDs.
 fn snapshot_and_signal(root_pid: i32, signal: Signal) -> Vec<Pid> {
     let mut sys = System::new();
@@ -211,6 +241,7 @@ pub async fn kill_process_tree_graceful(
         // SIGKILL: no point in bottom-up, just kill everything
         if mapped == Signal::Kill {
             send_signal_to_pids(&sys, &tree, Signal::Kill, false);
+            wait_for_pids_to_exit(&mut sys, tree);
             return;
         }
 
@@ -291,6 +322,7 @@ pub async fn kill_process_tree_graceful(
                         proc.kill_with(Signal::Kill);
                     }
                 }
+                wait_for_pids_to_exit(&mut sys, remaining.into_iter().collect());
                 break;
             }
         }

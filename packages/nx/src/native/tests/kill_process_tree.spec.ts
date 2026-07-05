@@ -206,9 +206,50 @@ describeUnix('killProcessTreeGraceful', () => {
 
     await killProcessTreeGraceful(pid, 'SIGTERM', 1000);
 
-    // SIGKILL is sent but the OS may not reap immediately
-    await new Promise((r) => setTimeout(r, 500));
+    // The promise must not resolve until force-killed processes have
+    // actually left the process table.
     expect(isAlive(pid)).toBe(false);
+  }, 15000);
+
+  it('should release bound ports before resolving when force-killing', async () => {
+    // A server that traps SIGTERM and never exits, holding its port. When
+    // the grace period expires and the tree is SIGKILLed, the port must be
+    // rebindable as soon as the promise resolves (e.g. watch-mode restarts).
+    const { createServer } = require('net');
+    const port = await new Promise<number>((resolve) => {
+      const probe = createServer();
+      probe.listen(0, () => {
+        const p = probe.address().port;
+        probe.close(() => resolve(p));
+      });
+    });
+
+    const child = spawn(
+      'node',
+      [
+        '-e',
+        `
+        const server = require('net').createServer(() => {});
+        server.listen(${port}, () => console.log('ready'));
+        process.on('SIGTERM', () => { /* hang: never exit */ });
+        `,
+      ],
+      { detached: true, stdio: ['ignore', 'pipe', 'ignore'] }
+    );
+    child.unref();
+    const pid = child.pid!;
+    spawnedPids.push(pid);
+    await new Promise((r) => child.stdout!.once('data', r));
+
+    await killProcessTreeGraceful(pid, 'SIGTERM', 500);
+
+    // Rebind immediately - fails with EADDRINUSE if the old process can
+    // still hold the port after the promise resolves.
+    await new Promise<void>((resolve, reject) => {
+      const server = createServer();
+      server.once('error', reject);
+      server.listen(port, () => server.close(() => resolve()));
+    });
   }, 15000);
 
   it('should resolve quickly when process is already dead', async () => {
