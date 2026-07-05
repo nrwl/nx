@@ -13,13 +13,7 @@
       "path": "../packages/nx/tsconfig.lib.json"
     },
     {
-      "path": "../nx-dev/models-package/tsconfig.lib.json"
-    },
-    {
       "path": "../nx-dev/models-document/tsconfig.lib.json"
-    },
-    {
-      "path": "../nx-dev/data-access-documents/tsconfig.lib.json"
     }
   ]
 }

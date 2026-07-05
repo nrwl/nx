@@ -637,9 +637,6 @@ importers:
       '@nestjs/testing':
         specifier: ^9.0.0
         version: 9.4.3(@nestjs/common@9.4.3(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@9.4.3)(@nestjs/platform-express@9.4.3)
-      '@netlify/plugin-nextjs':
-        specifier: ^5.15.7
-        version: 5.15.7
       '@nuxt/kit':
         specifier: ^3.10.0
         version: 3.17.6(magicast@0.5.2)
@@ -1156,9 +1153,6 @@ importers:
       minimatch:
         specifier: ^10.2.5
         version: 10.2.5
-      next-sitemap:
-        specifier: ^3.1.10
-        version: 3.1.55(@next/env@16.2.7)(next@16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3))
       ng-packagr:
         specifier: catalog:angular
         version: 22.0.0(@angular/compiler-cli@22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3))(tailwindcss@4.1.11)(tslib@2.8.1)(typescript@6.0.3)
@@ -1255,6 +1249,9 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.8.4
+      serverless-http:
+        specifier: ^3.2.0
+        version: 3.2.0
       shiki:
         specifier: ^4.0.2
         version: 4.0.2
@@ -2038,54 +2035,6 @@ importers:
         specifier: 'workspace:'
         version: link:../shared
 
-  nx-dev/data-access-courses:
-    dependencies:
-      '@nx/nx-dev-data-access-documents':
-        specifier: workspace:*
-        version: link:../data-access-documents
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
-
-  nx-dev/data-access-documents:
-    dependencies:
-      '@nx/devkit':
-        specifier: workspace:*
-        version: link:../../packages/devkit
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-      '@nx/nx-dev-models-package':
-        specifier: workspace:*
-        version: link:../models-package
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
-
-  nx-dev/feature-ai:
-    dependencies:
-      '@heroicons/react':
-        specifier: 'catalog:'
-        version: 2.2.0(react@18.3.1)
-      '@markdoc/markdoc':
-        specifier: 0.2.2
-        version: 0.2.2(@types/react@18.3.1)(react@18.3.1)
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@nx/nx-dev-util-ai':
-        specifier: workspace:*
-        version: link:../util-ai
-      ai:
-        specifier: 3.0.19
-        version: 3.0.19(react@18.3.1)(solid-js@1.9.7)(svelte@5.35.5(@typescript-eslint/types@8.59.0))(vue@3.5.30(typescript@6.0.3))(zod@4.4.2)
-      react:
-        specifier: catalog:react
-        version: 18.3.1
-      react-textarea-autosize:
-        specifier: 'catalog:'
-        version: 8.5.9(@types/react@18.3.1)(react@18.3.1)
-
   nx-dev/feature-analytics: {}
 
   nx-dev/feature-search: {}
@@ -2094,107 +2043,10 @@ importers:
 
   nx-dev/models-menu: {}
 
-  nx-dev/models-package:
-    dependencies:
-      '@nx/nx-dev-models-document':
-        specifier: workspace:*
-        version: link:../models-document
-
-  nx-dev/nx-dev:
-    dependencies:
-      '@markdoc/markdoc':
-        specifier: 0.2.2
-        version: 0.2.2(@types/react@18.3.1)(react@18.3.1)
-      '@nx/nx-dev-data-access-courses':
-        specifier: workspace:*
-        version: link:../data-access-courses
-      '@nx/nx-dev-data-access-documents':
-        specifier: workspace:*
-        version: link:../data-access-documents
-      '@nx/nx-dev-feature-ai':
-        specifier: workspace:*
-        version: link:../feature-ai
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-courses':
-        specifier: workspace:*
-        version: link:../ui-courses
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-      '@nx/nx-dev-ui-video-courses':
-        specifier: workspace:*
-        version: link:../ui-video-courses
-      '@nx/nx-dev-util-ai':
-        specifier: workspace:*
-        version: link:../util-ai
-      '@supabase/supabase-js':
-        specifier: ^2.26.0
-        version: 2.50.4
-      '@tailwindcss/postcss':
-        specifier: catalog:tailwind
-        version: 4.1.11
-      '@tailwindcss/typography':
-        specifier: 0.5.16
-        version: 0.5.16(tailwindcss@4.1.11)
-      ai:
-        specifier: 3.0.19
-        version: 3.0.19(react@18.3.1)(solid-js@1.9.7)(svelte@5.35.5(@typescript-eslint/types@8.59.0))(vue@3.5.30(typescript@6.0.3))(zod@4.4.2)
-      gpt3-tokenizer:
-        specifier: 'catalog:'
-        version: 1.1.5
-      next:
-        specifier: 14.2.35
-        version: 14.2.35(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.99.0)
-      next-seo:
-        specifier: 'catalog:'
-        version: 5.15.0(next@14.2.35(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.99.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      openai:
-        specifier: ~4.3.1
-        version: 4.3.1(encoding@0.1.13)
-      react:
-        specifier: 18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: 18.3.1
-        version: 18.3.1(react@18.3.1)
-      tailwind-merge:
-        specifier: catalog:tailwind
-        version: 2.6.0
-      tailwindcss:
-        specifier: 4.1.11
-        version: 4.1.11
-      tslib:
-        specifier: catalog:typescript
-        version: 2.8.1
-      typescript:
-        specifier: catalog:typescript
-        version: 6.0.3
+  nx-dev/nx-dev: {}
 
   nx-dev/ui-animations:
     dependencies:
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
-  nx-dev/ui-blog:
-    dependencies:
-      '@nx/nx-dev-data-access-documents':
-        specifier: workspace:*
-        version: link:../data-access-documents
-      '@nx/nx-dev-feature-search':
-        specifier: workspace:*
-        version: link:../feature-search
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-markdoc':
-        specifier: workspace:*
-        version: link:../ui-markdoc
       '@nx/nx-dev-ui-primitives':
         specifier: workspace:*
         version: link:../ui-primitives
@@ -2228,30 +2080,6 @@ importers:
       '@nx/nx-dev-ui-theme':
         specifier: workspace:*
         version: link:../ui-theme
-
-  nx-dev/ui-courses:
-    dependencies:
-      '@nx/nx-dev-data-access-courses':
-        specifier: file:../data-access-courses
-        version: file:nx-dev/data-access-courses
-      '@nx/nx-dev-data-access-documents':
-        specifier: file:../data-access-documents
-        version: file:nx-dev/data-access-documents
-      '@nx/nx-dev-ui-blog':
-        specifier: file:../ui-blog
-        version: file:nx-dev/ui-blog
-      '@nx/nx-dev-ui-common':
-        specifier: file:../ui-common
-        version: file:nx-dev/ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: file:../ui-icons
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-markdoc':
-        specifier: file:../ui-markdoc
-        version: file:nx-dev/ui-markdoc
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
 
   nx-dev/ui-fence: {}
 
@@ -2295,33 +2123,6 @@ importers:
   nx-dev/ui-references: {}
 
   nx-dev/ui-theme: {}
-
-  nx-dev/ui-video-courses:
-    dependencies:
-      '@nx/nx-dev-data-access-courses':
-        specifier: workspace:*
-        version: link:../data-access-courses
-      '@nx/nx-dev-ui-common':
-        specifier: workspace:*
-        version: link:../ui-common
-      '@nx/nx-dev-ui-icons':
-        specifier: workspace:*
-        version: link:../ui-icons
-      '@nx/nx-dev-ui-primitives':
-        specifier: workspace:*
-        version: link:../ui-primitives
-
-  nx-dev/util-ai:
-    dependencies:
-      '@supabase/supabase-js':
-        specifier: ^2.26.0
-        version: 2.50.4
-      openai:
-        specifier: ~4.3.1
-        version: 4.3.1(encoding@0.1.13)
-      tslib:
-        specifier: catalog:typescript
-        version: 2.8.1
 
   packages/angular:
     dependencies:
@@ -5964,9 +5765,6 @@ packages:
   '@colors/colors@1.6.0':
     resolution: {integrity: sha512-Ir+AOibqzrIsL6ajt3Rz3LskB7OiMVHqltZmspbW/TJuTVuyOMirVqAkjfY6JISiLHgyNqicAC8AyHHGzNd/dA==}
     engines: {node: '>=0.1.90'}
-
-  '@corex/deepmerge@4.0.43':
-    resolution: {integrity: sha512-N8uEMrMPL0cu/bdboEWpQYb/0i2K5Qn8eCsxzOmxSggJbbQte7ljMRoXm917AbntqTGOzdTu+vP3KOOzoC70HQ==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -9915,10 +9713,6 @@ packages:
     resolution: {integrity: sha512-zXnRFkxgNsalSgU8/vwTWnav3R+8KG8SsqHxqaoJdjjJtnZR7wo3f+qqu4z+WtZ/4V7fly91HFUwZ6Uz2OdW7w==}
     engines: {node: '>=14.8.0'}
 
-  '@netlify/plugin-nextjs@5.15.7':
-    resolution: {integrity: sha512-tSlGTwOR/dFZMrjhCxynlwc/NkOwY+bc0gurOranLtwASH5wat2WqZaPkyIdfVdNd/zNpmGxgbkH0uppg1Lsxg==}
-    engines: {node: '>=18.0.0'}
-
   '@netlify/redirect-parser@15.0.2':
     resolution: {integrity: sha512-zS6qBHpmU7IpHGzrHNPqu+Tjvh1cAJuVEoFUvCp0lRUeNcTdIq9VZM7/34vtIN6MD/OMFg3uv80yefSqInV2nA==}
     engines: {node: '>=18.14.0'}
@@ -9961,20 +9755,11 @@ packages:
   '@next/env@14.2.28':
     resolution: {integrity: sha512-PAmWhJfJQlP+kxZwCjrVd9QnR5x0R3u0mTXTiZDgSd4h5LdXmjxCCWbN9kq6hkZBOax8Rm3xDW5HagWyJuT37g==}
 
-  '@next/env@14.2.35':
-    resolution: {integrity: sha512-DuhvCtj4t9Gwrx80dmz2F4t/zKQ4ktN8WrMwOuVzkJfBilwAwGr6v16M5eI8yCuZ63H9TTuEU09Iu2HqkzFPVQ==}
-
   '@next/env@16.2.7':
     resolution: {integrity: sha512-tMJizPlj6ZYpBMMdK8S0LJufrP4QTdR6pcv9KQ/bVETPAmg0j1mlHE9G2c38UyGHxoBapgwuj7XjbGJ2RcDFOg==}
 
   '@next/swc-darwin-arm64@14.2.28':
     resolution: {integrity: sha512-kzGChl9setxYWpk3H6fTZXXPFFjg7urptLq5o5ZgYezCrqlemKttwMT5iFyx/p1e/JeglTwDFRtb923gTJ3R1w==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [darwin]
-
-  '@next/swc-darwin-arm64@14.2.33':
-    resolution: {integrity: sha512-HqYnb6pxlsshoSTubdXKu15g3iivcbsMXg4bYpjL2iS/V6aQot+iyF4BUc2qA/J/n55YtvE4PHMKWBKGCF/+wA==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [darwin]
@@ -9991,12 +9776,6 @@ packages:
     cpu: [x64]
     os: [darwin]
 
-  '@next/swc-darwin-x64@14.2.33':
-    resolution: {integrity: sha512-8HGBeAE5rX3jzKvF593XTTFg3gxeU4f+UWnswa6JPhzaR6+zblO5+fjltJWIZc4aUalqTclvN2QtTC37LxvZAA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [darwin]
-
   '@next/swc-darwin-x64@16.2.7':
     resolution: {integrity: sha512-O3IRSv1ZBL1zs0WrIgefTEcTKFVn+ryxBNe54erJ6KsD+2f/Mmt7g2jOYh8PSBdUwPtKQJuCsTMlZ7tIu2AcsQ==}
     engines: {node: '>= 10'}
@@ -10005,13 +9784,6 @@ packages:
 
   '@next/swc-linux-arm64-gnu@14.2.28':
     resolution: {integrity: sha512-9ARHLEQXhAilNJ7rgQX8xs9aH3yJSj888ssSjJLeldiZKR4D7N08MfMqljk77fAwZsWwsrp8ohHsMvurvv9liQ==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [glibc]
-
-  '@next/swc-linux-arm64-gnu@14.2.33':
-    resolution: {integrity: sha512-JXMBka6lNNmqbkvcTtaX8Gu5by9547bukHQvPoLe9VRBx1gHwzf5tdt4AaezW85HAB3pikcvyqBToRTDA4DeLw==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [linux]
@@ -10031,13 +9803,6 @@ packages:
     os: [linux]
     libc: [musl]
 
-  '@next/swc-linux-arm64-musl@14.2.33':
-    resolution: {integrity: sha512-Bm+QulsAItD/x6Ih8wGIMfRJy4G73tu1HJsrccPW6AfqdZd0Sfm5Imhgkgq2+kly065rYMnCOxTBvmvFY1BKfg==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [linux]
-    libc: [musl]
-
   '@next/swc-linux-arm64-musl@16.2.7':
     resolution: {integrity: sha512-qyogG9QtBzWxgJfeGBvOEHI3851gTfCF3wLZ5RDLTBJGAmE9p1qDwKCOdrBrvBzRvYDT+gUDp72pzlSEfAXgNA==}
     engines: {node: '>= 10'}
@@ -10047,13 +9812,6 @@ packages:
 
   '@next/swc-linux-x64-gnu@14.2.28':
     resolution: {integrity: sha512-nsiSnz2wO6GwMAX2o0iucONlVL7dNgKUqt/mDTATGO2NY59EO/ZKnKEr80BJFhuA5UC1KZOMblJHWZoqIJddpA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [glibc]
-
-  '@next/swc-linux-x64-gnu@14.2.33':
-    resolution: {integrity: sha512-FnFn+ZBgsVMbGDsTqo8zsnRzydvsGV8vfiWwUo1LD8FTmPTdV+otGSWKc4LJec0oSexFnCYVO4hX8P8qQKaSlg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
@@ -10073,13 +9831,6 @@ packages:
     os: [linux]
     libc: [musl]
 
-  '@next/swc-linux-x64-musl@14.2.33':
-    resolution: {integrity: sha512-345tsIWMzoXaQndUTDv1qypDRiebFxGYx9pYkhwY4hBRaOLt8UGfiWKr9FSSHs25dFIf8ZqIFaPdy5MljdoawA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [linux]
-    libc: [musl]
-
   '@next/swc-linux-x64-musl@16.2.7':
     resolution: {integrity: sha512-srvian89JahFLw1YLBEuhvPJ0DO5lpUeJQMXy4xYo7g628ZlNgXdNkqoxSAv9OYrBfByh6vxISMwW/mRbzCY+g==}
     engines: {node: '>= 10'}
@@ -10089,12 +9840,6 @@ packages:
 
   '@next/swc-win32-arm64-msvc@14.2.28':
     resolution: {integrity: sha512-l61WZ3nevt4BAnGksUVFKy2uJP5DPz2E0Ma/Oklvo3sGj9sw3q7vBWONFRgz+ICiHpW5mV+mBrkB3XEubMrKaA==}
-    engines: {node: '>= 10'}
-    cpu: [arm64]
-    os: [win32]
-
-  '@next/swc-win32-arm64-msvc@14.2.33':
-    resolution: {integrity: sha512-nscpt0G6UCTkrT2ppnJnFsYbPDQwmum4GNXYTeoTIdsmMydSKFz9Iny2jpaRupTb+Wl298+Rh82WKzt9LCcqSQ==}
     engines: {node: '>= 10'}
     cpu: [arm64]
     os: [win32]
@@ -10111,20 +9856,8 @@ packages:
     cpu: [ia32]
     os: [win32]
 
-  '@next/swc-win32-ia32-msvc@14.2.33':
-    resolution: {integrity: sha512-pc9LpGNKhJ0dXQhZ5QMmYxtARwwmWLpeocFmVG5Z0DzWq5Uf0izcI8tLc+qOpqxO1PWqZ5A7J1blrUIKrIFc7Q==}
-    engines: {node: '>= 10'}
-    cpu: [ia32]
-    os: [win32]
-
   '@next/swc-win32-x64-msvc@14.2.28':
     resolution: {integrity: sha512-1gCmpvyhz7DkB1srRItJTnmR2UwQPAUXXIg9r0/56g3O8etGmwlX68skKXJOp9EejW3hhv7nSQUJ2raFiz4MoA==}
-    engines: {node: '>= 10'}
-    cpu: [x64]
-    os: [win32]
-
-  '@next/swc-win32-x64-msvc@14.2.33':
-    resolution: {integrity: sha512-nOjfZMy8B94MdisuzZo9/57xuFVLHJaDj5e/xrduJp9CV2/HrfxTRH2fbyLe+K9QT41WBLUd4iXX3R7jBp0EUg==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
@@ -10562,21 +10295,6 @@ packages:
     resolution: {integrity: sha512-/WXGBP4TktY2FdRG7xai9LHLzf9Dt/q1oJx+6yLxyFOIccwmz6vfOE0QiGsgSOPzloDkPw3NvpWuhpZ7oeU69Q==}
     cpu: [x64]
     os: [darwin]
-
-  '@nx/nx-dev-data-access-courses@file:nx-dev/data-access-courses':
-    resolution: {directory: nx-dev/data-access-courses, type: directory}
-
-  '@nx/nx-dev-data-access-documents@file:nx-dev/data-access-documents':
-    resolution: {directory: nx-dev/data-access-documents, type: directory}
-
-  '@nx/nx-dev-ui-blog@file:nx-dev/ui-blog':
-    resolution: {directory: nx-dev/ui-blog, type: directory}
-
-  '@nx/nx-dev-ui-common@file:nx-dev/ui-common':
-    resolution: {directory: nx-dev/ui-common, type: directory}
-
-  '@nx/nx-dev-ui-markdoc@file:nx-dev/ui-markdoc':
-    resolution: {directory: nx-dev/ui-markdoc, type: directory}
 
   '@nx/nx-freebsd-x64@21.6.2':
     resolution: {integrity: sha512-Hw6eOsdtD21j/B514eRJzgX03ew8ErFCfxWtjLwl7wB31Dw4nZbScj2FNDTc0xtg6oXCkw5Gt5uFKI5QFQUVfg==}
@@ -13158,11 +12876,6 @@ packages:
   '@supabase/supabase-js@2.50.4':
     resolution: {integrity: sha512-houC5IKEncIQ06qz0W+TZiTmXVA954ZargG0IJHYWMVUiJ6CmQqvFXJ59ChdHP/EhMIjGeCaol5qQ/QchAJKSQ==}
 
-  '@sveltejs/acorn-typescript@1.0.9':
-    resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
-    peerDependencies:
-      acorn: ^8.9.0
-
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0':
     resolution: {integrity: sha512-b9MIk7yhdS1pMCZM8VeNfUlSKVRhsHZNMl5O9SfaX0l0t5wjdgu4IDzGB8bpnGBBOjGST3rRFVsaaEtI4W6f7g==}
     engines: {node: '>=14'}
@@ -13611,9 +13324,6 @@ packages:
 
   '@types/deep-eql@4.0.2':
     resolution: {integrity: sha512-c9h9dVVMigMPc4bwTvC5dxqtqJZwQPePsWjPlpSOnojbor6pGqdk541lfA7AqFQr5pB1BRdq0juY9db81BwyFw==}
-
-  '@types/diff-match-patch@1.0.36':
-    resolution: {integrity: sha512-xFdR6tkm0MWvBfO8xXCSsinYxHcqkQUlcHeSpMC2ukzOb6lwQAfDmW+Qt0AvlGd8HpsS28qKsB+oPeJn9I39jg==}
 
   '@types/doctrine@0.0.9':
     resolution: {integrity: sha512-eOIHzCUSH7SMfonMG1LsC2f8vxBFtho6NGBznK41R84YzPuvSBzrhEps33IsQiOW9+VL6NQ9DbjQJznk/S4uRA==}
@@ -14820,27 +14530,6 @@ packages:
   aggregate-error@3.1.0:
     resolution: {integrity: sha512-4I7Td01quW/RpocfNayFdFVk1qSuoh0E7JrbRJ16nH01HhKFQ88INq9Sd+nd72zqRySlr9BmDA8xlEJ6vJMrYA==}
     engines: {node: '>=8'}
-
-  ai@3.0.19:
-    resolution: {integrity: sha512-HV0MixfqMrxq2N/gVsEXoNfO9e0mWkgv7zdUH6UvdtI53Qd0UjoxjH0bwe/TsxoCqnK4gnWaGYiGKZrpy/Ldtw==}
-    engines: {node: '>=14.6'}
-    peerDependencies:
-      react: ^18.2.0
-      solid-js: ^1.7.7
-      svelte: ^3.0.0 || ^4.0.0
-      vue: ^3.3.4
-      zod: ^3.0.0
-    peerDependenciesMeta:
-      react:
-        optional: true
-      solid-js:
-        optional: true
-      svelte:
-        optional: true
-      vue:
-        optional: true
-      zod:
-        optional: true
 
   ajv-errors@3.0.0:
     resolution: {integrity: sha512-V3wD15YHfHz6y0KdhYFjyy9vWtEVALT9UrxfN3zqlI6dMioHnJrqOYfyPKol3oqrnCM9uwkcdCwkJ0WUcbLMTQ==}
@@ -16897,9 +16586,6 @@ packages:
   dfa@1.2.0:
     resolution: {integrity: sha512-ED3jP8saaweFTjeGX8HQPjeC1YYyZs98jGNZx6IiBvxW7JG5v492kamAQB3m2wop07CvU/RQmzcKr6bgcC5D/Q==}
 
-  diff-match-patch@1.0.5:
-    resolution: {integrity: sha512-IayShXAgj/QMXgB0IWmKx+rOPuGMhqm5w6jvFxmVenXKIzRqTAAsbBPT3kWQeGANj3jGgvcvv4yK6SxqYmikgw==}
-
   diff@4.0.2:
     resolution: {integrity: sha512-58lmxKSA4BNyLz+HHMUzlOEpg09FV+ev6ZMe3vJihgdxzgcwZ8VoEEPmALCZG9LmqfVoNMMKpttIYTVG6uDY7A==}
     engines: {node: '>=0.3.1'}
@@ -17470,9 +17156,6 @@ packages:
       jiti:
         optional: true
 
-  esm-env@1.2.2:
-    resolution: {integrity: sha512-Epxrv+Nr/CaL4ZcFGPJIYLWFom+YeV1DqMLHJoEd9SYRxNbaFruBwfEX/kkHUJf55j2+TUbmDcmuilbP1TmXHA==}
-
   esniff@2.0.1:
     resolution: {integrity: sha512-kTUIGKQ/mDPFoJ0oVfcmyJn4iBDRptjNVIzwIFR7tqWXdVI9xfA2RMwY/gbSpJG3lkdWNEjLap/NqVHZiJsdfg==}
     engines: {node: '>=0.10'}
@@ -17497,14 +17180,6 @@ packages:
   esquery@1.7.0:
     resolution: {integrity: sha512-Ap6G0WQwcU/LHsvLwON1fAQX9Zp0A2Y6Y/cJBl9r/JbW90Zyg4/zbG6zzKa2OTALELarYHmKu0GhpM5EO+7T0g==}
     engines: {node: '>=0.10'}
-
-  esrap@2.2.6:
-    resolution: {integrity: sha512-WN0clHt0a4mzC780UBVVBpsj4vSSjOFNRd2WjYtduB9HeKxm1sjHMNUwLEHVjI3FdCQD/Hurgz9ftbKEzP79Ow==}
-    peerDependencies:
-      '@typescript-eslint/types': ^8.2.0
-    peerDependenciesMeta:
-      '@typescript-eslint/types':
-        optional: true
 
   esrecurse@4.3.0:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==}
@@ -17602,10 +17277,6 @@ packages:
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
-
-  eventsource-parser@1.1.2:
-    resolution: {integrity: sha512-v0eOBUbiaFojBu2s2NPBfYUoRR9GjcDNvCXVaqEf5vVfpIAh9f8RCo4vXTP8c63QRKCFwoLpMpTdPwwhEKVgzA==}
-    engines: {node: '>=14.18'}
 
   eventsource-parser@3.0.3:
     resolution: {integrity: sha512-nVpZkTMM9rF6AQ9gPJpFsNAMt48wIzB5TQgiTLdHiuO8XEDhUgZEhqKlZWXbIzo9VmJ/HvysHqEaVeD5v9TPvA==}
@@ -19795,11 +19466,6 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
-  jsondiffpatch@0.6.0:
-    resolution: {integrity: sha512-3QItJOXp2AP1uv7waBkao5nCvhEv+QmJAd38Ybq7wNI74Q+BBmnLn4EDKz6yI9xGAIQoUF87qHt+kc1IVxB4zQ==}
-    engines: {node: ^18.0.0 || >=20.0.0}
-    hasBin: true
-
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
@@ -20200,9 +19866,6 @@ packages:
   local-pkg@1.1.2:
     resolution: {integrity: sha512-arhlxbFRmoQHl33a0Zkle/YWlmNwoyt6QNZEIJcqNbdrsix5Lvc4HyyI3EnwxTYlZYc32EbYrQ8SzEZ7dqgg9A==}
     engines: {node: '>=14'}
-
-  locate-character@3.0.0:
-    resolution: {integrity: sha512-SW13ws7BjaeJ6p7Q6CO2nchbYEc3X3J6WrmTTDto7yMPqVSZTUyY5Tjbid+Ab8gLnATtygYtiDIJGQRRn2ZOiA==}
 
   locate-path@5.0.0:
     resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
@@ -21253,11 +20916,6 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
-  nanoid@3.3.6:
-    resolution: {integrity: sha512-BGcqMMJuToF7i1rt+2PWSNVnWIkGCU78jBG3RxO/bZlnZPK2Cmi2QaffxGO/2RvWi9sL+FAiRiXMgsyxQ1DIDA==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
   nanotar@0.3.0:
     resolution: {integrity: sha512-Kv2JYYiCzt16Kt5QwAc9BFG89xfPNBx+oQL4GQXD9nLqPkZBiNaqaCWtwnbk/q7UVsTYevvM1b0UF8zmEI4pCg==}
 
@@ -21307,14 +20965,6 @@ packages:
       react: '>=16.0.0'
       react-dom: '>=16.0.0'
 
-  next-sitemap@3.1.55:
-    resolution: {integrity: sha512-ZjkRfkqoSLbU+e8W9TWWe0zfOGNA47lpvm35kNcUCmj73gpLX2PIn51gwHT/B6bgGVAFYY0OXixJDrxIIwcEHw==}
-    engines: {node: '>=14.18'}
-    hasBin: true
-    peerDependencies:
-      '@next/env': '*'
-      next: '*'
-
   next-tick@1.1.0:
     resolution: {integrity: sha512-CXdUiJembsNjuToQvxayPZF9Vqht7hewsvy2sOWafLvi2awflj9mOC6bHIg50orX8IJvWKY9wYQ/zB2kogPslQ==}
 
@@ -21322,24 +20972,6 @@ packages:
     resolution: {integrity: sha512-QLEIP/kYXynIxtcKB6vNjtWLVs3Y4Sb+EClTC/CSVzdLD1gIuItccpu/n1lhmduffI32iPGEK2cLLxxt28qgYA==}
     engines: {node: '>=18.17.0'}
     deprecated: This version has a security vulnerability. Please upgrade to a patched version. See https://nextjs.org/blog/security-update-2025-12-11 for more details.
-    hasBin: true
-    peerDependencies:
-      '@opentelemetry/api': ^1.1.0
-      '@playwright/test': ^1.41.2
-      react: ^18.2.0
-      react-dom: ^18.2.0
-      sass: ^1.3.0
-    peerDependenciesMeta:
-      '@opentelemetry/api':
-        optional: true
-      '@playwright/test':
-        optional: true
-      sass:
-        optional: true
-
-  next@14.2.35:
-    resolution: {integrity: sha512-KhYd2Hjt/O1/1aZVX3dCwGXM1QmOV4eNM2UTacK5gipDdPN/oHHK/4oVGy7X8GMfPMsUTUEmGlsy0EY1YGAkig==}
-    engines: {node: '>=18.17.0'}
     hasBin: true
     peerDependencies:
       '@opentelemetry/api': ^1.1.0
@@ -23787,9 +23419,6 @@ packages:
   secure-compare@3.0.1:
     resolution: {integrity: sha512-AckIIV90rPDcBcglUwXPF3kg0P0qmPsPXAj6BBEENQE1p5yA1xfmDJzfi1Tappj37Pv2mVbKpL3Z1T+Nn7k1Qw==}
 
-  secure-json-parse@2.7.0:
-    resolution: {integrity: sha512-6aU+Rwsezw7VR8/nyvKTx8QpWH9FrcYiXXlqC4z5d5XQBDRqtbfsRjnwGyqbi3gddNtWHuEk9OANUotL26qKUw==}
-
   secure-json-parse@4.1.0:
     resolution: {integrity: sha512-l4KnYfEyqYJxDwlNVyRfO2E4NTHfMKAWdUuA8J0yve2Dz/E/PdBepY03RvyJpssIpRFwJoCD55wA+mEDs6ByWA==}
 
@@ -23881,16 +23510,6 @@ packages:
     resolution: {integrity: sha512-DuGdB+Po43Q5Jxwpzt1lhyFSYKryqoNjQSA9M92tyw0lyHIOur+XCalOUe0KTJpyqzT8+fQ5A0Jf7vCx/NKmIg==}
     engines: {node: '>=20.0.0'}
 
-  seroval-plugins@1.3.3:
-    resolution: {integrity: sha512-16OL3NnUBw8JG1jBLUoZJsLnQq0n5Ua6aHalhJK4fMQkz1lqR7Osz1sA30trBtd9VUDc2NgkuRCn8+/pBwqZ+w==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      seroval: ^1.0
-
-  seroval@1.3.2:
-    resolution: {integrity: sha512-RbcPH1n5cfwKrru7v7+zrZvjLurgHhGyso3HTyGtRivGWgYjbOmGuivCQaORNELjNONoK35nj28EoWul9sb1zQ==}
-    engines: {node: '>=10'}
-
   seroval@1.5.1:
     resolution: {integrity: sha512-OwrZRZAfhHww0WEnKHDY8OM0U/Qs8OTfIDWhUD4BLpNJUfXK4cGmjiagGze086m+mhI+V2nD0gfbHEnJjb9STA==}
     engines: {node: '>=10'}
@@ -23913,6 +23532,10 @@ packages:
   serve-static@2.2.1:
     resolution: {integrity: sha512-xRXBn0pPqQTVQiC8wyQrKs2MOlX24zQ0POGaj0kultvoOCstBQM5yvOhAVSUwOMjQtTvsPWoNCHfPGwaaQJhTw==}
     engines: {node: '>= 18'}
+
+  serverless-http@3.2.0:
+    resolution: {integrity: sha512-QvSyZXljRLIGqwcJ4xsKJXwkZnAVkse1OajepxfjkBXV0BMvRS5R546Z4kCBI8IygDzkQY0foNPC/rnipaE9pQ==}
+    engines: {node: '>=12.0'}
 
   set-cookie-parser@2.7.1:
     resolution: {integrity: sha512-IOc8uWeOZgnb3ptbCURJWNjWUPcO3ZnTTdzsurqERrP6nPyv+paC55vJM0LpOlT2ne+Ix+9+CRG1MNLlyZ4GjQ==}
@@ -24094,16 +23717,6 @@ packages:
     resolution: {integrity: sha512-iF+tNDQla22geJdTyJB1wM/qrX9DMRwWrciEPwWLPRWAUEM8sQiyxgckLxWT1f7+9VabJS0jTGGr4QgBuvi6Ww==}
     engines: {node: '>= 10.0.0', npm: '>= 3.0.0'}
 
-  solid-js@1.9.7:
-    resolution: {integrity: sha512-/saTKi8iWEM233n5OSi1YHCCuh66ZIQ7aK2hsToPe4tqGm7qAejU1SwNuTPivbWAYq7SjuHVVYxxuZQNRbICiw==}
-
-  solid-swr-store@0.10.7:
-    resolution: {integrity: sha512-A6d68aJmRP471aWqKKPE2tpgOiR5fH4qXQNfKIec+Vap+MGQm3tvXlT8n0I8UgJSlNAsSAUuw2VTviH2h3Vv5g==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      solid-js: ^1.2
-      swr-store: ^0.10
-
   sonic-boom@3.8.1:
     resolution: {integrity: sha512-y4Z8LCDBuum+PBP3lSV7RHrXscqksve/bi0as7mhwVnBW+/wUqKT/2Kb7um8yqcFy0duYbbPxzt89Zy2nOCaxg==}
 
@@ -24217,11 +23830,6 @@ packages:
   ssri@13.0.0:
     resolution: {integrity: sha512-yizwGBpbCn4YomB2lzhZqrHLJoqFGXihNbib3ozhqF/cIp5ue+xSmOQrjNasEE62hFxsCcg/V/z23t4n8jMEng==}
     engines: {node: ^20.17.0 || >=22.9.0}
-
-  sswr@2.0.0:
-    resolution: {integrity: sha512-mV0kkeBHcjcb0M5NqKtKVg/uTIYNlIIniyDfSGrSfxpEdM9C365jK0z55pl9K0xAkNTJi2OAOVFQpgMPUk+V0w==}
-    peerDependencies:
-      svelte: ^4.0.0
 
   stack-trace@0.0.10:
     resolution: {integrity: sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg==}
@@ -24539,10 +24147,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  svelte@5.35.5:
-    resolution: {integrity: sha512-KuRvI82rhh0RMz1EKsUJD96gZyHJ+h2+8zrwO8iqE/p/CmcNKvIItDUAeUePhuCDgtegDJmF8IKThbHIfmTgTA==}
-    engines: {node: '>=18'}
-
   svg-parser@2.0.4:
     resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
 
@@ -24558,23 +24162,6 @@ packages:
 
   swagger-ui-dist@4.18.2:
     resolution: {integrity: sha512-oVBoBl9Dg+VJw8uRWDxlyUyHoNEDC0c1ysT6+Boy6CTgr2rUcLcfPon4RvxgS2/taNW6O0+US+Z/dlAsWFjOAQ==}
-
-  swr-store@0.10.6:
-    resolution: {integrity: sha512-xPjB1hARSiRaNNlUQvWSVrG5SirCjk2TmaUyzzvk69SZQan9hCJqw/5rG9iL7xElHU784GxRPISClq4488/XVw==}
-    engines: {node: '>=10'}
-
-  swr@2.2.0:
-    resolution: {integrity: sha512-AjqHOv2lAhkuUdIiBu9xbuettzAzWXmCEcLONNKJRba87WAefz8Ca9d6ds/SzrPc235n1IxWYdhJ2zF3MNUaoQ==}
-    peerDependencies:
-      react: ^16.11.0 || ^17.0.0 || ^18.0.0
-
-  swrev@4.0.0:
-    resolution: {integrity: sha512-LqVcOHSB4cPGgitD1riJ1Hh4vdmITOp+BkmfmXRh4hSF/t7EnS4iD+SOTmq7w5pPm/SiPeto4ADbKS6dHUDWFA==}
-
-  swrv@1.0.4:
-    resolution: {integrity: sha512-zjEkcP8Ywmj+xOJW3lIT65ciY/4AL4e/Or7Gj0MzU3zBJNMdJiT8geVZhINavnlHRMMCcJLHhraLTAiDOTmQ9g==}
-    peerDependencies:
-      vue: '>=3.2.26 < 4'
 
   symbol-observable@4.0.0:
     resolution: {integrity: sha512-b19dMThMV4HVFynSAM1++gBHAbk2Tc/osgLIBZMKsyqh34jb2e8Os7T6ZW/Bt3pJFdBTd2JwAnAAEQV7rSNvcQ==}
@@ -26858,17 +26445,9 @@ packages:
   youch@4.1.0:
     resolution: {integrity: sha512-cYekNh2tUoU+voS11X0D0UQntVCSO6LQ1h10VriQGmfbpf0mnGTruwZICts23UUNiZCXm8H8hQBtRrdsbhuNNg==}
 
-  zimmerframe@1.1.4:
-    resolution: {integrity: sha512-B58NGBEoc8Y9MWWCQGl/gq9xBCe4IiKM0a2x7GZdQKOW5Exr8S1W24J6OgM1njK8xCRGvAJIL/MxXHf6SkmQKQ==}
-
   zip-stream@6.0.1:
     resolution: {integrity: sha512-zK7YHHz4ZXpW89AHXUPbQVGKI7uvkd3hzusTdotCg1UxyaVtg0zFJSTfW/Dq5f7OBBVnq6cZIaC8Ti4hb6dtCA==}
     engines: {node: '>= 14'}
-
-  zod-to-json-schema@3.22.5:
-    resolution: {integrity: sha512-+akaPo6a0zpVCCseDed504KBJUQpEW5QZw7RMneNmKw+fGaML1Z9tUNLnHHAC8x6dzVRO1eB2oEMyZRnuBZg7Q==}
-    peerDependencies:
-      zod: ^3.22.4
 
   zod-to-json-schema@3.24.6:
     resolution: {integrity: sha512-h/z3PKvcTcTetyjl1fkj79MHNEjm+HpD6NXheWjzOekY7kV+lwDYnHw+ivHkijnCSMz1yJaWBD9vu/Fcmk+vEg==}
@@ -27244,7 +26823,7 @@ snapshots:
     dependencies:
       '@ampproject/remapping': 2.3.0
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
-      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
+      '@angular-devkit/build-webpack': 0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))
       '@angular-devkit/core': 22.0.1(chokidar@5.0.0)
       '@angular/build': 22.0.1(d4799a1cc2eb4e7950d697bb9fc8d9a1)
       '@angular/compiler-cli': 22.0.1(@angular/compiler@22.0.1)(typescript@6.0.3)
@@ -27345,7 +26924,7 @@ snapshots:
     transitivePeerDependencies:
       - chokidar
 
-  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
+  '@angular-devkit/build-webpack@0.2200.1(chokidar@5.0.0)(webpack-dev-server@5.2.3(tslib@2.8.1)(webpack-cli@7.0.3)(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3)))(webpack@5.106.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.28.0)(lightningcss@1.32.0)(postcss@8.5.13)(webpack-cli@7.0.3))':
     dependencies:
       '@angular-devkit/architect': 0.2200.1(chokidar@5.0.0)
       rxjs: 7.8.2
@@ -29664,8 +29243,6 @@ snapshots:
     optional: true
 
   '@colors/colors@1.6.0': {}
-
-  '@corex/deepmerge@4.0.43': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -33579,8 +33156,6 @@ snapshots:
 
   '@netlify/open-api@2.37.0': {}
 
-  '@netlify/plugin-nextjs@5.15.7': {}
-
   '@netlify/redirect-parser@15.0.2':
     dependencies:
       '@iarna/toml': 2.2.5
@@ -33683,14 +33258,9 @@ snapshots:
 
   '@next/env@14.2.28': {}
 
-  '@next/env@14.2.35': {}
-
   '@next/env@16.2.7': {}
 
   '@next/swc-darwin-arm64@14.2.28':
-    optional: true
-
-  '@next/swc-darwin-arm64@14.2.33':
     optional: true
 
   '@next/swc-darwin-arm64@16.2.7':
@@ -33699,16 +33269,10 @@ snapshots:
   '@next/swc-darwin-x64@14.2.28':
     optional: true
 
-  '@next/swc-darwin-x64@14.2.33':
-    optional: true
-
   '@next/swc-darwin-x64@16.2.7':
     optional: true
 
   '@next/swc-linux-arm64-gnu@14.2.28':
-    optional: true
-
-  '@next/swc-linux-arm64-gnu@14.2.33':
     optional: true
 
   '@next/swc-linux-arm64-gnu@16.2.7':
@@ -33717,16 +33281,10 @@ snapshots:
   '@next/swc-linux-arm64-musl@14.2.28':
     optional: true
 
-  '@next/swc-linux-arm64-musl@14.2.33':
-    optional: true
-
   '@next/swc-linux-arm64-musl@16.2.7':
     optional: true
 
   '@next/swc-linux-x64-gnu@14.2.28':
-    optional: true
-
-  '@next/swc-linux-x64-gnu@14.2.33':
     optional: true
 
   '@next/swc-linux-x64-gnu@16.2.7':
@@ -33735,16 +33293,10 @@ snapshots:
   '@next/swc-linux-x64-musl@14.2.28':
     optional: true
 
-  '@next/swc-linux-x64-musl@14.2.33':
-    optional: true
-
   '@next/swc-linux-x64-musl@16.2.7':
     optional: true
 
   '@next/swc-win32-arm64-msvc@14.2.28':
-    optional: true
-
-  '@next/swc-win32-arm64-msvc@14.2.33':
     optional: true
 
   '@next/swc-win32-arm64-msvc@16.2.7':
@@ -33753,13 +33305,7 @@ snapshots:
   '@next/swc-win32-ia32-msvc@14.2.28':
     optional: true
 
-  '@next/swc-win32-ia32-msvc@14.2.33':
-    optional: true
-
   '@next/swc-win32-x64-msvc@14.2.28':
-    optional: true
-
-  '@next/swc-win32-x64-msvc@14.2.33':
     optional: true
 
   '@next/swc-win32-x64-msvc@16.2.7':
@@ -34959,52 +34505,6 @@ snapshots:
 
   '@nx/nx-darwin-x64@23.1.0-beta.6':
     optional: true
-
-  '@nx/nx-dev-data-access-courses@file:nx-dev/data-access-courses':
-    dependencies:
-      '@nx/nx-dev-data-access-documents': link:nx-dev/data-access-documents
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-
-  '@nx/nx-dev-data-access-documents@file:nx-dev/data-access-documents':
-    dependencies:
-      '@nx/devkit': link:packages/devkit
-      '@nx/nx-dev-models-document': link:nx-dev/models-document
-      '@nx/nx-dev-models-package': link:nx-dev/models-package
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-
-  '@nx/nx-dev-ui-blog@file:nx-dev/ui-blog':
-    dependencies:
-      '@nx/nx-dev-data-access-documents': link:nx-dev/data-access-documents
-      '@nx/nx-dev-feature-search': link:nx-dev/feature-search
-      '@nx/nx-dev-ui-common': link:nx-dev/ui-common
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-markdoc': link:nx-dev/ui-markdoc
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-
-  '@nx/nx-dev-ui-common@file:nx-dev/ui-common':
-    dependencies:
-      '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
-      '@nx/nx-dev-feature-search': link:nx-dev/feature-search
-      '@nx/nx-dev-models-document': link:nx-dev/models-document
-      '@nx/nx-dev-models-menu': link:nx-dev/models-menu
-      '@nx/nx-dev-ui-animations': link:nx-dev/ui-animations
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-      '@nx/nx-dev-ui-references': link:nx-dev/ui-references
-      '@nx/nx-dev-ui-theme': link:nx-dev/ui-theme
-
-  '@nx/nx-dev-ui-markdoc@file:nx-dev/ui-markdoc':
-    dependencies:
-      '@nx/devkit': link:packages/devkit
-      '@nx/graph-internal-ui-project-details': link:graph/ui-project-details
-      '@nx/graph-ui-common': link:graph/ui-common
-      '@nx/graph-ui-icons': link:graph/ui-icons
-      '@nx/nx-dev-feature-analytics': link:nx-dev/feature-analytics
-      '@nx/nx-dev-ui-common': link:nx-dev/ui-common
-      '@nx/nx-dev-ui-fence': link:nx-dev/ui-fence
-      '@nx/nx-dev-ui-icons': link:nx-dev/ui-icons
-      '@nx/nx-dev-ui-primitives': link:nx-dev/ui-primitives
-      '@nx/nx-dev-ui-theme': link:nx-dev/ui-theme
 
   '@nx/nx-freebsd-x64@21.6.2':
     optional: true
@@ -37865,10 +37365,6 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
-    dependencies:
-      acorn: 8.16.0
-
   '@svgr/babel-plugin-add-jsx-attribute@8.0.0(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
@@ -38400,8 +37896,6 @@ snapshots:
       '@types/ms': 2.1.0
 
   '@types/deep-eql@4.0.2': {}
-
-  '@types/diff-match-patch@1.0.36': {}
 
   '@types/doctrine@0.0.9': {}
 
@@ -40098,27 +39592,6 @@ snapshots:
     dependencies:
       clean-stack: 2.2.0
       indent-string: 4.0.0
-
-  ai@3.0.19(react@18.3.1)(solid-js@1.9.7)(svelte@5.35.5(@typescript-eslint/types@8.59.0))(vue@3.5.30(typescript@6.0.3))(zod@4.4.2):
-    dependencies:
-      '@types/json-schema': 7.0.15
-      eventsource-parser: 1.1.2
-      json-schema: 0.4.0
-      jsondiffpatch: 0.6.0
-      nanoid: 3.3.6
-      secure-json-parse: 2.7.0
-      solid-swr-store: 0.10.7(solid-js@1.9.7)(swr-store@0.10.6)
-      sswr: 2.0.0(svelte@5.35.5(@typescript-eslint/types@8.59.0))
-      swr: 2.2.0(react@18.3.1)
-      swr-store: 0.10.6
-      swrv: 1.0.4(vue@3.5.30(typescript@6.0.3))
-      zod-to-json-schema: 3.22.5(zod@4.4.2)
-    optionalDependencies:
-      react: 18.3.1
-      solid-js: 1.9.7
-      svelte: 5.35.5(@typescript-eslint/types@8.59.0)
-      vue: 3.5.30(typescript@6.0.3)
-      zod: 4.4.2
 
   ajv-errors@3.0.0(ajv@8.20.0):
     dependencies:
@@ -42709,8 +42182,6 @@ snapshots:
 
   dfa@1.2.0: {}
 
-  diff-match-patch@1.0.5: {}
-
   diff@4.0.2: {}
 
   diff@5.2.0: {}
@@ -43594,8 +43065,6 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  esm-env@1.2.2: {}
-
   esniff@2.0.1:
     dependencies:
       d: 1.0.2
@@ -43624,12 +43093,6 @@ snapshots:
   esquery@1.7.0:
     dependencies:
       estraverse: 5.3.0
-
-  esrap@2.2.6(@typescript-eslint/types@8.59.0):
-    dependencies:
-      '@jridgewell/sourcemap-codec': 1.5.5
-    optionalDependencies:
-      '@typescript-eslint/types': 8.59.0
 
   esrecurse@4.3.0:
     dependencies:
@@ -43730,8 +43193,6 @@ snapshots:
   eventemitter3@5.0.4: {}
 
   events@3.3.0: {}
-
-  eventsource-parser@1.1.2: {}
 
   eventsource-parser@3.0.3: {}
 
@@ -46775,12 +46236,6 @@ snapshots:
 
   jsonc-parser@3.3.1: {}
 
-  jsondiffpatch@0.6.0:
-    dependencies:
-      '@types/diff-match-patch': 1.0.36
-      chalk: 5.6.2
-      diff-match-patch: 1.0.5
-
   jsonfile@4.0.0:
     optionalDependencies:
       graceful-fs: 4.2.11
@@ -47273,8 +46728,6 @@ snapshots:
       mlly: 1.8.1
       pkg-types: 2.3.0
       quansync: 0.2.11
-
-  locate-character@3.0.0: {}
 
   locate-path@5.0.0:
     dependencies:
@@ -49152,8 +48605,6 @@ snapshots:
 
   nanoid@3.3.12: {}
 
-  nanoid@3.3.6: {}
-
   nanotar@0.3.0: {}
 
   napi-postinstall@0.3.0: {}
@@ -49181,24 +48632,11 @@ snapshots:
 
   netlify-redirector@0.5.0: {}
 
-  next-seo@5.15.0(next@14.2.35(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.99.0))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
-    dependencies:
-      next: 14.2.35(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.99.0)
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-
   next-seo@5.15.0(next@16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       next: 16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
-
-  next-sitemap@3.1.55(@next/env@16.2.7)(next@16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3)):
-    dependencies:
-      '@corex/deepmerge': 4.0.43
-      '@next/env': 16.2.7
-      minimist: 1.2.8
-      next: 16.2.7(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(babel-plugin-react-compiler@1.0.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.97.3)
 
   next-tick@1.1.0: {}
 
@@ -49223,33 +48661,6 @@ snapshots:
       '@next/swc-win32-arm64-msvc': 14.2.28
       '@next/swc-win32-ia32-msvc': 14.2.28
       '@next/swc-win32-x64-msvc': 14.2.28
-      '@playwright/test': 1.60.0
-      sass: 1.99.0
-    transitivePeerDependencies:
-      - '@babel/core'
-      - babel-plugin-macros
-
-  next@14.2.35(@babel/core@7.29.0)(@playwright/test@1.60.0)(babel-plugin-macros@3.1.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(sass@1.99.0):
-    dependencies:
-      '@next/env': 14.2.35
-      '@swc/helpers': 0.5.5
-      busboy: 1.6.0
-      caniuse-lite: 1.0.30001774
-      graceful-fs: 4.2.11
-      postcss: 8.4.31
-      react: 18.3.1
-      react-dom: 18.3.1(react@18.3.1)
-      styled-jsx: 5.1.1(@babel/core@7.29.0)(babel-plugin-macros@3.1.0)(react@18.3.1)
-    optionalDependencies:
-      '@next/swc-darwin-arm64': 14.2.33
-      '@next/swc-darwin-x64': 14.2.33
-      '@next/swc-linux-arm64-gnu': 14.2.33
-      '@next/swc-linux-arm64-musl': 14.2.33
-      '@next/swc-linux-x64-gnu': 14.2.33
-      '@next/swc-linux-x64-musl': 14.2.33
-      '@next/swc-win32-arm64-msvc': 14.2.33
-      '@next/swc-win32-ia32-msvc': 14.2.33
-      '@next/swc-win32-x64-msvc': 14.2.33
       '@playwright/test': 1.60.0
       sass: 1.99.0
     transitivePeerDependencies:
@@ -52994,8 +52405,6 @@ snapshots:
 
   secure-compare@3.0.1: {}
 
-  secure-json-parse@2.7.0: {}
-
   secure-json-parse@4.1.0: {}
 
   seek-bzip@2.0.0:
@@ -53102,12 +52511,6 @@ snapshots:
 
   serialize-javascript@7.0.4: {}
 
-  seroval-plugins@1.3.3(seroval@1.3.2):
-    dependencies:
-      seroval: 1.3.2
-
-  seroval@1.3.2: {}
-
   seroval@1.5.1: {}
 
   serve-index@1.9.1:
@@ -53152,6 +52555,8 @@ snapshots:
       send: 1.2.0
     transitivePeerDependencies:
       - supports-color
+
+  serverless-http@3.2.0: {}
 
   set-cookie-parser@2.7.1: {}
 
@@ -53459,17 +52864,6 @@ snapshots:
       ip-address: 9.0.5
       smart-buffer: 4.2.0
 
-  solid-js@1.9.7:
-    dependencies:
-      csstype: 3.2.3
-      seroval: 1.3.2
-      seroval-plugins: 1.3.3(seroval@1.3.2)
-
-  solid-swr-store@0.10.7(solid-js@1.9.7)(swr-store@0.10.6):
-    dependencies:
-      solid-js: 1.9.7
-      swr-store: 0.10.6
-
   sonic-boom@3.8.1:
     dependencies:
       atomic-sleep: 1.0.0
@@ -53611,11 +53005,6 @@ snapshots:
   ssri@13.0.0:
     dependencies:
       minipass: 7.1.3
-
-  sswr@2.0.0(svelte@5.35.5(@typescript-eslint/types@8.59.0)):
-    dependencies:
-      svelte: 5.35.5(@typescript-eslint/types@8.59.0)
-      swrev: 4.0.0
 
   stack-trace@0.0.10: {}
 
@@ -53976,25 +53365,6 @@ snapshots:
 
   supports-preserve-symlinks-flag@1.0.0: {}
 
-  svelte@5.35.5(@typescript-eslint/types@8.59.0):
-    dependencies:
-      '@ampproject/remapping': 2.3.0
-      '@jridgewell/sourcemap-codec': 1.5.5
-      '@sveltejs/acorn-typescript': 1.0.9(acorn@8.16.0)
-      '@types/estree': 1.0.8
-      acorn: 8.16.0
-      aria-query: 5.3.2
-      axobject-query: 4.1.0
-      clsx: 2.1.1
-      esm-env: 1.2.2
-      esrap: 2.2.6(@typescript-eslint/types@8.59.0)
-      is-reference: 3.0.3
-      locate-character: 3.0.0
-      magic-string: 0.30.21
-      zimmerframe: 1.1.4
-    transitivePeerDependencies:
-      - '@typescript-eslint/types'
-
   svg-parser@2.0.4: {}
 
   svgo@3.3.2:
@@ -54018,21 +53388,6 @@ snapshots:
       sax: 1.6.0
 
   swagger-ui-dist@4.18.2: {}
-
-  swr-store@0.10.6:
-    dependencies:
-      dequal: 2.0.3
-
-  swr@2.2.0(react@18.3.1):
-    dependencies:
-      react: 18.3.1
-      use-sync-external-store: 1.5.0(react@18.3.1)
-
-  swrev@4.0.0: {}
-
-  swrv@1.0.4(vue@3.5.30(typescript@6.0.3)):
-    dependencies:
-      vue: 3.5.30(typescript@6.0.3)
 
   symbol-observable@4.0.0: {}
 
@@ -57095,17 +56450,11 @@ snapshots:
       cookie-es: 2.0.0
       youch-core: 0.3.3
 
-  zimmerframe@1.1.4: {}
-
   zip-stream@6.0.1:
     dependencies:
       archiver-utils: 5.0.2
       compress-commons: 6.0.2
       readable-stream: 4.7.0
-
-  zod-to-json-schema@3.22.5(zod@4.4.2):
-    dependencies:
-      zod: 4.4.2
 
   zod-to-json-schema@3.24.6(zod@3.25.76):
     dependencies:

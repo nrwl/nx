@@ -118,27 +118,21 @@ const botProbeRegex =
   /(wp-(includes|admin|content)|xmlrpc\.php|wlwmanifest|\.env|\.git\/)/i;
 
 /**
- * Paths that should be served by the Next.js app instead of Framer.
- * Everything else is proxied to Framer (or the blog site if configured).
+ * Paths that should fall through to this Netlify site (static files,
+ * _redirects rules, functions) instead of being proxied to Framer.
  */
-const nextjsPaths = new Set([
-  // When BLOG_URL is set, blog/changelog are proxied to the
-  // standalone blog site instead of falling through to Next.js.
-  ...(blogUrl ? [] : ['/blog', '/changelog']),
-  '/courses',
-  '/podcast',
-  '/ai-chat',
-  '/resources-library',
-  '/whitepaper-fast-ci',
-  '/500',
+const passThroughPaths = new Set([
+  // When BLOG_URL is not set, blog/changelog/courses fall through to this
+  // site (404) instead of being proxied to the standalone blog site.
+  ...(blogUrl ? [] : ['/blog', '/changelog', '/courses']),
 ]);
 
 /**
  * Proxies requests to Framer and rewrites URLs in responses.
  *
  * This edge function proxies all requests to Framer by default.
- * Only paths explicitly listed in `nextjsPaths` (and those in
- * the `excludedPath` config) are passed through to Next.js.
+ * Only paths explicitly listed in `passThroughPaths` (and those in
+ * the `excludedPath` config) are passed through to this Netlify site.
  *
  * This ensures canonical URLs and other references point to nx.dev
  * instead of the Framer domain, avoiding duplicate indexing issues.
@@ -156,14 +150,17 @@ export default async function handler(
     return new Response(null, { status: 404 });
   }
 
-  if (nextjsPaths.has(pathname)) return context.next();
+  if (passThroughPaths.has(pathname)) return context.next();
 
-  // Blog/changelog routing: proxy to standalone blog site, or fall through to Next.js.
+  // Blog/changelog/courses routing: proxy to the standalone blog site, or
+  // fall through to this site.
   const isBlogPath =
     pathname === '/blog' ||
     pathname.startsWith('/blog/') ||
     pathname === '/changelog' ||
-    pathname.startsWith('/changelog/');
+    pathname.startsWith('/changelog/') ||
+    pathname === '/courses' ||
+    pathname.startsWith('/courses/');
 
   if (isBlogPath && !blogUrl) return context.next();
 
@@ -275,8 +272,9 @@ export const config = {
     '/docs',
     '/docs/*',
     '/api/*',
-    '/courses/*',
-    '/_next/*',
+    // /ai-chat was removed - the _redirects 301 to / must fire
+    '/ai-chat',
+    '/ai-chat/*',
     '/.netlify/*',
     // Legacy docs paths — must bypass Framer so _redirects 301 rules fire
     '/ci',
