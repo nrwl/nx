@@ -758,6 +758,34 @@ describe('Nx Commands', () => {
     }, 300000);
   });
 
+  // NXC-2793 / #30416: corrupted or stale lockfile caches in
+  // .nx/workspace-data must never fail project graph computation with
+  // "Source project does not exist: npm:<pkg>" - nx reprocesses instead.
+  describe('lockfile cache resilience', () => {
+    it('should compute the project graph when lockfile caches are corrupted or stale', () => {
+      runCLI('show projects'); // warm the caches
+      // Truncated file, as left behind by a killed process
+      updateFile(
+        '.nx/workspace-data/parsed-lock-file.nodes.json',
+        '{"lockFileHash":"stale","nod'
+      );
+      // Valid shape but referencing packages that are not in the graph
+      updateFile(
+        '.nx/workspace-data/parsed-lock-file.dependencies.json',
+        JSON.stringify({
+          lockFileHash: 'stale',
+          dependencies: [
+            { source: 'npm:ghost', target: 'npm:missing', type: 'static' },
+          ],
+        })
+      );
+      // Restart the daemon so the next command reads the poisoned caches
+      runCLI('reset --only-daemon');
+
+      expect(() => runCLI('show projects')).not.toThrow();
+    });
+  });
+
   it('should show help if no command provided', () => {
     const output = runCLI('', { silenceError: true });
     expect(output).toContain('Smart Monorepos · Fast Builds');

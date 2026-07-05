@@ -1,4 +1,10 @@
-import { existsSync, mkdirSync, unlinkSync, writeFileSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  renameSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname } from 'node:path';
 import { readJsonFile } from './fileutils';
 import { logger } from './logger';
@@ -143,11 +149,15 @@ export class PluginCache<T> {
       content = JSON.stringify({ entries: {}, accessOrder: [] });
     }
 
-    // Attempt to write the serialized content to disk
+    // Attempt to write the serialized content to disk (atomically, so
+    // concurrent readers never observe a partially-written file)
+    const tmpPath = `${this.cachePath}.${process.pid}.tmp`;
     try {
-      writeFileSync(this.cachePath, content);
+      writeFileSync(tmpPath, content);
+      renameSync(tmpPath, this.cachePath);
     } catch {
       // Filesystem error — wipe cache so a corrupted file doesn't persist
+      tryRemoveFile(tmpPath);
       tryRemoveFile(this.cachePath);
     }
   }
@@ -218,20 +228,27 @@ function loadFromDisk<T>(cachePath: string): {
 /**
  * Safely writes already-stringified content to a cache file on disk.
  *
+ * Writes to a temp file in the same directory and renames it into place so
+ * concurrent readers (daemon workers, parallel nx processes) never observe
+ * a partially-written file.
+ *
  * Strategy:
- * 1. Attempt mkdirSync + writeFileSync
- * 2. On failure: remove existing cache file, log warning, return without throwing
+ * 1. Attempt mkdirSync + writeFileSync to temp file + renameSync
+ * 2. On failure: remove temp and existing cache file, log warning, return without throwing
  */
 export function safeWriteFileCache(cachePath: string, content: string): void {
+  const tmpPath = `${cachePath}.${process.pid}.tmp`;
   try {
     mkdirSync(dirname(cachePath), { recursive: true });
-    writeFileSync(cachePath, content);
+    writeFileSync(tmpPath, content);
+    renameSync(tmpPath, cachePath);
   } catch (e) {
     logger.warn(
       `Failed to write cache at ${cachePath}: ${
         e instanceof Error ? e.message : 'unknown error'
       }. Removing existing cache file.`
     );
+    tryRemoveFile(tmpPath);
     tryRemoveFile(cachePath);
   }
 }
