@@ -1,5 +1,5 @@
-import { readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { TempFs } from '../../internal-testing-utils/temp-fs';
 
 // Regression tests for intermittent "Source project does not exist: npm:<pkg>"
@@ -109,12 +109,23 @@ describe('js plugin lockfile cache resilience', () => {
           workspaceDataDirectory,
           'parsed-lock-file.dependencies.json'
         ),
+        legacyHashPaths: [
+          join(workspaceDataDirectory, 'lockfile-nodes.hash'),
+          join(workspaceDataDirectory, 'lockfile-dependencies.hash'),
+        ],
       });
     });
   }
 
   it('computes dependencies and reuses caches on a second run', async () => {
     await runPlugin(async (h) => {
+      // Legacy hash files from an older Nx version - must be removed so a
+      // version switch back cannot pair them with the new cache format
+      for (const p of h.legacyHashPaths) {
+        mkdirSync(dirname(p), { recursive: true });
+        writeFileSync(p, 'some-hash');
+      }
+
       const externalNodes = await h.runCreateNodes();
       expect(externalNodes['npm:autoprefixer']).toBeDefined();
       const deps = await h.runCreateDependencies(externalNodes);
@@ -124,6 +135,7 @@ describe('js plugin lockfile cache resilience', () => {
           target: 'npm:picocolors',
         })
       );
+      for (const p of h.legacyHashPaths) expect(existsSync(p)).toBe(false);
     });
     // Second run in a fresh module registry - both phases served from cache
     await runPlugin(async (h) => {

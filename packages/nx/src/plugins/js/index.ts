@@ -277,6 +277,9 @@ function writeExternalNodesCache(
     return;
   }
   safeWriteFileCache(externalNodesCache, content);
+  // Older Nx versions trust this hash file and would misread the new
+  // embedded-hash cache format after a version switch
+  tryRemoveFile(legacyExternalNodesHashFile);
 }
 
 function readCachedExternalNodes(expectedHash: string): {
@@ -311,6 +314,9 @@ function writeDependenciesCache(
     return;
   }
   safeWriteFileCache(dependenciesCache, content);
+  // Older Nx versions trust this hash file and would misread the new
+  // embedded-hash cache format after a version switch
+  tryRemoveFile(legacyDependenciesHashFile);
 }
 
 function readCachedDependencies(
@@ -349,6 +355,16 @@ function tryRemoveFile(path: string): void {
 }
 
 // Cache file paths
+// Hash-file paths from the pre-embedded-hash cache format; removed on write
+// so older Nx versions never pair them with the new cache files
+const legacyExternalNodesHashFile = join(
+  workspaceDataDirectory,
+  'lockfile-nodes.hash'
+);
+const legacyDependenciesHashFile = join(
+  workspaceDataDirectory,
+  'lockfile-dependencies.hash'
+);
 const externalNodesCache = join(
   workspaceDataDirectory,
   'parsed-lock-file.nodes.json'
