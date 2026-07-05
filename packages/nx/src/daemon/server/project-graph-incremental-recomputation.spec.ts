@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { TempFs } from '../../internal-testing-utils/temp-fs';
@@ -218,6 +218,107 @@ describe('getCachedSerializedProjectGraphPromise — watcher race coverage', () 
       } finally {
         process.removeListener('unhandledRejection', onUnhandled);
       }
+    });
+  });
+
+  // Regression test for intermittent "Source project does not exist:
+  // npm:<pkg>" errors (NXC-2793 / #30416): knownExternalNodes was only
+  // refreshed when the project-config hash changed, so a lockfile-only
+  // change (install without config edits) kept feeding stale external
+  // nodes into graph construction until the daemon process died.
+  //
+  // A mock plugin mirrors the js lockfile plugin's shape: createNodes
+  // derives external nodes from the current lockfile bytes, and
+  // createDependencies emits an edge between them when present.
+  it('refreshes external nodes when only the lockfile changes', async () => {
+    fs.createFilesSync({
+      'nx.json': JSON.stringify({}),
+      'package.json': JSON.stringify({ name: 'root' }),
+      'package-lock.json': 'without-autoprefixer',
+    });
+
+    await jest.isolateModulesAsync(async () => {
+      const { setWorkspaceRoot } = require('../../utils/workspace-root');
+      setWorkspaceRoot(fs.tempDir);
+
+      const externalNodesFromLockfile = () => {
+        const contents = readFileSync(
+          join(fs.tempDir, 'package-lock.json'),
+          'utf-8'
+        );
+        if (!contents.includes('with-autoprefixer')) return {};
+        return {
+          'npm:autoprefixer': {
+            type: 'npm' as const,
+            name: 'npm:autoprefixer' as const,
+            data: { version: '10.4.0', packageName: 'autoprefixer' },
+          },
+          'npm:picocolors': {
+            type: 'npm' as const,
+            name: 'npm:picocolors' as const,
+            data: { version: '1.0.0', packageName: 'picocolors' },
+          },
+        };
+      };
+
+      const fakeLockfilePlugin = {
+        name: 'fake-lockfile-plugin',
+        createNodes: [
+          'package-lock.json',
+          async (files: string[]) => [
+            [
+              'fake-lockfile-plugin',
+              files[0],
+              { externalNodes: externalNodesFromLockfile() },
+            ],
+          ],
+        ],
+        createDependencies: async () =>
+          Object.keys(externalNodesFromLockfile()).length
+            ? [
+                {
+                  source: 'npm:autoprefixer',
+                  target: 'npm:picocolors',
+                  type: 'static',
+                },
+              ]
+            : [],
+      };
+
+      jest.doMock('../../project-graph/plugins/get-plugins', () => ({
+        __esModule: true,
+        getPlugins: jest.fn(async () => [fakeLockfilePlugin]),
+        getPluginsSeparated: jest.fn(async () => ({
+          specifiedPlugins: [],
+          defaultPlugins: [fakeLockfilePlugin],
+        })),
+      }));
+
+      const {
+        scheduleProjectGraphRecomputation,
+        getCachedSerializedProjectGraphPromise,
+      } = require('./project-graph-incremental-recomputation');
+
+      const first = await getCachedSerializedProjectGraphPromise();
+      expect(first.error).toBeFalsy();
+      expect(
+        first.projectGraph?.externalNodes?.['npm:autoprefixer']
+      ).toBeUndefined();
+
+      // Lockfile-only change: package.json and project configs untouched,
+      // so the config hash stays the same. Route the change directly
+      // (what the watcher callback does) to keep the test deterministic.
+      writeFileSync(join(fs.tempDir, 'package-lock.json'), 'with-autoprefixer');
+      scheduleProjectGraphRecomputation([], ['package-lock.json'], []);
+
+      // Without the fix: knownExternalNodes stays stale (empty), the
+      // dependency edge fails validation, and this errors with
+      // "Source project does not exist: npm:autoprefixer".
+      const second = await getCachedSerializedProjectGraphPromise();
+      expect(second.error).toBeFalsy();
+      expect(
+        second.projectGraph?.externalNodes?.['npm:autoprefixer']
+      ).toBeDefined();
     });
   });
 });

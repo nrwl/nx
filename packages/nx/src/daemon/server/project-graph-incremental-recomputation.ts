@@ -383,7 +383,11 @@ async function processCollectedUpdatedAndDeletedFiles(
       return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
     }
 
-    // Config unchanged → patch the existing file map in place.
+    // Config unchanged → patch the existing file map in place. External
+    // nodes still refresh from this cycle's createNodes results: a
+    // lockfile-only change (install without config changes) alters them
+    // without touching the config hash, and keeping the stale set makes
+    // createDependencies throw "Source project does not exist: npm:<pkg>".
     if (fileMapWithFiles) {
       return {
         fileMap: updateFileMap(
@@ -393,12 +397,13 @@ async function processCollectedUpdatedAndDeletedFiles(
           deletedFiles
         ),
         configHash,
+        knownExternalNodes: externalNodes,
       };
     }
 
     // No prior map (first compute on this daemon).
     const fresh = await retrieveWorkspaceFiles(workspaceRoot, projectRootMap);
-    return { fileMap: fresh, configHash };
+    return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
   } catch (e) {
     // this is expected
     // for instance, project.json can be incorrect or a file we are trying to has
@@ -679,6 +684,8 @@ async function resetInternalState() {
   currentProjectFileMapCache = undefined;
   currentProjectGraph = undefined;
   currentSourceMaps = undefined;
+  knownExternalNodes = {};
+  storedWorkspaceConfigHash = undefined;
   collectedUpdatedFiles.clear();
   collectedDeletedFiles.clear();
   cacheHasBeenPersisted = false;
