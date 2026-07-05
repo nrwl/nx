@@ -15,6 +15,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
@@ -241,7 +242,7 @@ describe('Node Applications + webpack', () => {
           reject(new Error(`Server did not restart. Output:\n${output}`));
         }, 120_000);
         const check = (chunk: Buffer) => {
-          output += chunk.toString();
+          output += stripVTControlCharacters(chunk.toString());
           if (output.includes('EADDRINUSE')) {
             clearTimeout(timeoutId);
             reject(new Error(`Restarted server hit EADDRINUSE:\n${output}`));

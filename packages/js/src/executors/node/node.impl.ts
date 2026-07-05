@@ -114,14 +114,8 @@ export async function* nodeExecutor(
       const task = tasks.shift();
 
       if (previousTask && !previousTask.killed) {
-        previousTask.killed = true;
-
-        if (previousTask.childProcess?.connected) {
-          previousTask.childProcess.disconnect();
-        }
-
-        previousTask.childProcess?.removeAllListeners();
-
+        // stop() marks the task killed, detaches listeners, and waits for the
+        // process tree to exit.
         await previousTask.stop('SIGTERM');
 
         await new Promise((resolve) => setImmediate(resolve));
@@ -143,7 +137,6 @@ export async function* nodeExecutor(
     ) => {
       for (const task of tasks) {
         if (!task.killed) {
-          task.killed = true;
           await task.stop('SIGTERM');
         }
       }
@@ -229,7 +222,7 @@ export async function* nodeExecutor(
         stop: async (signal = 'SIGTERM') => {
           task.killed = true;
 
-          if (task.childProcess) {
+          if (task.childProcess?.pid) {
             if (task.childProcess.stdout) {
               task.childProcess.stdout.pause();
             }
@@ -245,7 +238,14 @@ export async function* nodeExecutor(
 
             // Wait for the process tree to fully exit so the port is released
             // before a watch-mode restart boots the next server (EADDRINUSE).
-            await killProcessTreeGraceful(task.childProcess.pid, signal);
+            // Windows cannot deliver graceful signals through this API, so
+            // skip the grace period and force-kill immediately (matching the
+            // previous taskkill /F behavior).
+            await killProcessTreeGraceful(
+              task.childProcess.pid,
+              signal,
+              process.platform === 'win32' ? 0 : undefined
+            );
           }
 
           if (task.id === globalLineAwareWriter.currentProcessId) {
