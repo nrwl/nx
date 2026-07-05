@@ -119,8 +119,6 @@ export class PluginCache<T> {
    *    write an empty cache so the file is valid
    */
   writeToDisk(): void {
-    mkdirSync(dirname(this.cachePath), { recursive: true });
-
     let content: string | undefined;
 
     try {
@@ -149,17 +147,7 @@ export class PluginCache<T> {
       content = JSON.stringify({ entries: {}, accessOrder: [] });
     }
 
-    // Attempt to write the serialized content to disk (atomically, so
-    // concurrent readers never observe a partially-written file)
-    const tmpPath = `${this.cachePath}.${process.pid}.tmp`;
-    try {
-      writeFileSync(tmpPath, content);
-      renameSync(tmpPath, this.cachePath);
-    } catch {
-      // Filesystem error — wipe cache so a corrupted file doesn't persist
-      tryRemoveFile(tmpPath);
-      tryRemoveFile(this.cachePath);
-    }
+    safeWriteFileCache(this.cachePath, content);
   }
 
   /**
@@ -253,9 +241,10 @@ export function safeWriteFileCache(cachePath: string, content: string): void {
   }
 }
 
-// --- Internal helpers ---
-
-function tryRemoveFile(path: string): void {
+/**
+ * Best-effort file removal — missing files and fs errors are ignored.
+ */
+export function tryRemoveFile(path: string): void {
   try {
     unlinkSync(path);
   } catch {

@@ -363,7 +363,7 @@ function computeWorkspaceConfigHash(
 type FileMapUpdate = {
   fileMap: NonNullable<typeof fileMapWithFiles>;
   configHash: string;
-  knownExternalNodes?: Record<string, ProjectGraphExternalNode>;
+  knownExternalNodes: Record<string, ProjectGraphExternalNode>;
 };
 
 async function processCollectedUpdatedAndDeletedFiles(
@@ -511,9 +511,7 @@ async function processFilesAndCreateAndSerializeProjectGraph(
     // can't clobber a newer compute's write.
     fileMapWithFiles = fileMapUpdate.fileMap;
     storedWorkspaceConfigHash = fileMapUpdate.configHash;
-    if (fileMapUpdate.knownExternalNodes) {
-      knownExternalNodes = fileMapUpdate.knownExternalNodes;
-    }
+    knownExternalNodes = fileMapUpdate.knownExternalNodes;
 
     // Drain only after committing — a stale compute that returns at the
     // staleness check above must leave its snapshot in `collected*` so the

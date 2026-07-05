@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, rmSync } from 'fs';
+import { readFileSync } from 'fs';
 import { join } from 'path';
 import { performance } from 'perf_hooks';
 import {
@@ -21,7 +21,10 @@ import {
   detectPackageManager,
   PackageManager,
 } from '../../utils/package-manager';
-import { safeWriteFileCache } from '../../utils/plugin-cache-utils';
+import {
+  safeWriteFileCache,
+  tryRemoveFile,
+} from '../../utils/plugin-cache-utils';
 import { nxVersion } from '../../utils/versions';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { readBunLockFile } from './lock-file/bun-parser';
@@ -37,13 +40,17 @@ import { jsPluginConfig } from './utils/config';
 
 export const name = 'nx/js/dependencies-and-lockfile';
 
-// Separate in-memory caches
-let cachedExternalNodes: ProjectGraph['externalNodes'] | undefined;
-let cachedKeyMap: Map<string, any> | undefined;
-// Hash of the lockfile the in-memory nodes/keyMap were derived from. The
-// dependencies cache is only trusted when it matches this hash, so nodes and
-// dependencies always come from the same lockfile state.
-let cachedNodesLockFileHash: string | undefined;
+interface LockfileParseState {
+  lockFileHash: string;
+  nodes: ProjectGraph['externalNodes'];
+  keyMap: Map<string, any>;
+}
+
+// In-memory parse state shared between createNodes and createDependencies.
+// One object so nodes, keyMap, and the lockfile hash they were derived from
+// can never drift apart - the dependencies cache is only trusted when it
+// matches this hash.
+let inMemoryLockfileState: LockfileParseState | undefined;
 
 export const createNodes: CreateNodes = [
   combineGlobPatterns(LOCKFILES),
@@ -66,17 +73,12 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
   }
 
   const lockFilePath = join(workspaceRoot, lockFile);
-  const lockFileContents =
-    packageManager !== 'bun'
-      ? readFileSync(lockFilePath, 'utf-8')
-      : readBunLockFile(lockFilePath);
+  const lockFileContents = readLockFileContents(packageManager, lockFilePath);
   const lockFileHash = getLockFileHash(lockFileContents);
 
   const cached = readCachedExternalNodes(lockFileHash);
   if (cached) {
-    cachedExternalNodes = cached.nodes;
-    cachedKeyMap = cached.keyMap;
-    cachedNodesLockFileHash = lockFileHash;
+    inMemoryLockfileState = { lockFileHash, ...cached };
 
     return {
       externalNodes: cached.nodes,
@@ -89,9 +91,7 @@ function internalCreateNodes(lockFile: string, _, context: CreateNodesContext) {
     lockFileHash,
     context
   );
-  cachedExternalNodes = externalNodes;
-  cachedKeyMap = keyMap;
-  cachedNodesLockFileHash = lockFileHash;
+  inMemoryLockfileState = { lockFileHash, nodes: externalNodes, keyMap };
 
   writeExternalNodesCache(lockFileHash, externalNodes, keyMap);
 
@@ -113,9 +113,13 @@ export const createDependencies: CreateDependencies = (
   if (
     pluginConfig.analyzeLockfile &&
     lockFileExists(packageManager) &&
-    cachedExternalNodes
+    inMemoryLockfileState
   ) {
-    lockfileDependencies = getLockfileDependenciesSafely(packageManager, ctx);
+    lockfileDependencies = getLockfileDependenciesSafely(
+      packageManager,
+      inMemoryLockfileState,
+      ctx
+    );
   }
 
   performance.mark('build typescript dependencies - start');
@@ -135,54 +139,47 @@ export const createDependencies: CreateDependencies = (
 /**
  * Computes the workspace's external dependency edges from the lockfile,
  * reusing the on-disk cache when it is consistent with the external nodes
- * currently in memory. Never throws: any inconsistency falls back to
- * reparsing, and a failed parse degrades to "no lockfile dependencies for
- * this run" instead of failing the whole project graph.
+ * currently in memory. Never throws and never emits an edge referencing a
+ * node the graph does not have: bad cache state falls back to reparsing, and
+ * a failed parse degrades to "no lockfile dependencies for this run" instead
+ * of failing the whole project graph.
  */
 function getLockfileDependenciesSafely(
   packageManager: PackageManager,
+  state: LockfileParseState,
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const lockFilePath = join(workspaceRoot, getLockFileName(packageManager));
   try {
-    const lockFileContents =
-      packageManager !== 'bun'
-        ? readFileSync(lockFilePath, 'utf-8')
-        : readBunLockFile(lockFilePath);
+    const lockFileContents = readLockFileContents(packageManager, lockFilePath);
     const lockFileHash = getLockFileHash(lockFileContents);
+    // Inconsistent means the lockfile changed between createNodes and
+    // createDependencies (e.g. mid-install): ctx.externalNodes reflect the
+    // old state, so skip the caches - the next run sees a settled lockfile
+    // and reprocesses both phases consistently.
+    const consistent = lockFileHash === state.lockFileHash;
 
-    if (lockFileHash === cachedNodesLockFileHash) {
+    if (consistent) {
       const cachedDependencies = readCachedDependencies(lockFileHash);
       // A cached entry referencing nodes that no longer exist is poisoned
       // (e.g. written by an interrupted process) - reparse instead of
       // failing graph construction with "Source project does not exist".
-      if (cachedDependencies && dependenciesAreValid(cachedDependencies, ctx)) {
+      if (cachedDependencies?.every((d) => dependencyIsValid(d, ctx))) {
         return cachedDependencies;
       }
-
-      const lockfileDependencies = getLockFileDependencies(
-        packageManager,
-        lockFileContents,
-        lockFileHash,
-        ctx,
-        cachedKeyMap
-      );
-      writeDependenciesCache(lockFileHash, lockfileDependencies);
-      return lockfileDependencies;
     }
 
-    // The lockfile changed between createNodes and createDependencies (e.g.
-    // mid-install). ctx.externalNodes reflect the old state, so drop edges
-    // that no longer line up and skip the cache write - the next run sees a
-    // settled lockfile and reprocesses both phases consistently.
     const lockfileDependencies = getLockFileDependencies(
       packageManager,
       lockFileContents,
       lockFileHash,
       ctx,
-      cachedKeyMap
-    );
-    return lockfileDependencies.filter((d) => dependencyIsValid(d, ctx));
+      state.keyMap
+    ).filter((d) => dependencyIsValid(d, ctx));
+    if (consistent) {
+      writeDependenciesCache(lockFileHash, lockfileDependencies);
+    }
+    return lockfileDependencies;
   } catch (e) {
     logger.warn(
       `Could not resolve dependencies from ${lockFilePath}. External dependency information may be incomplete until the next run. ${
@@ -202,11 +199,13 @@ function dependencyIsValid(
   return exists(dep.source) && exists(dep.target);
 }
 
-function dependenciesAreValid(
-  deps: RawProjectGraphDependency[],
-  ctx: CreateDependenciesContext
-): boolean {
-  return deps.every((d) => dependencyIsValid(d, ctx));
+function readLockFileContents(
+  packageManager: PackageManager,
+  lockFilePath: string
+): string {
+  return packageManager !== 'bun'
+    ? readFileSync(lockFilePath, 'utf-8')
+    : readBunLockFile(lockFilePath);
 }
 
 function getLockFileHash(lockFileContents: string) {
@@ -256,84 +255,80 @@ function deserializeKeyMap(
   return keyMap;
 }
 
-// External nodes cache functions.
-// The lockfile hash is embedded in the cache file (single atomic write) so a
-// cache entry can never claim to be valid for a lockfile state it was not
-// computed from - the failure mode behind intermittent
-// "Source project does not exist: npm:<pkg>" errors.
+// On-disk caches. The lockfile hash is embedded in each cache file and
+// written in a single atomic write, so a cache entry can never claim to be
+// valid for a lockfile state it was not computed from - the failure mode
+// behind intermittent "Source project does not exist: npm:<pkg>" errors.
+function writeHashedCache(
+  cachePath: string,
+  legacyHashPath: string,
+  hash: string,
+  payload: Record<string, unknown>
+): void {
+  const content = safeStringify({ lockFileHash: hash, ...payload });
+  if (content === undefined) {
+    logger.warn(`Failed to serialize ${cachePath}. Skipping cache write.`);
+    tryRemoveFile(cachePath);
+    return;
+  }
+  safeWriteFileCache(cachePath, content);
+  // Older Nx versions trust the legacy hash file and would misread the
+  // embedded-hash cache format after a version switch
+  tryRemoveFile(legacyHashPath);
+}
+
+function readHashedCache(
+  cachePath: string,
+  expectedHash: string
+): Record<string, any> | null {
+  try {
+    const data = JSON.parse(readFileSync(cachePath, 'utf-8'));
+    return data?.lockFileHash === expectedHash ? data : null;
+  } catch {
+    // Missing, torn, or corrupted cache - reprocess from the lockfile
+    return null;
+  }
+}
+
 function writeExternalNodesCache(
   hash: string,
   nodes: ProjectGraph['externalNodes'],
   keyMap: Map<string, any>
 ) {
-  const serializedKeyMap = serializeKeyMap(keyMap);
-  const cacheData = { lockFileHash: hash, nodes, keyMap: serializedKeyMap };
-  const content = safeStringify(cacheData);
-  if (content === undefined) {
-    logger.warn(
-      `Failed to serialize external nodes cache. Skipping cache write.`
-    );
-    tryRemoveFile(externalNodesCache);
-    return;
-  }
-  safeWriteFileCache(externalNodesCache, content);
-  // Older Nx versions trust this hash file and would misread the new
-  // embedded-hash cache format after a version switch
-  tryRemoveFile(legacyExternalNodesHashFile);
+  writeHashedCache(externalNodesCache, legacyExternalNodesHashFile, hash, {
+    nodes,
+    keyMap: serializeKeyMap(keyMap),
+  });
 }
 
 function readCachedExternalNodes(expectedHash: string): {
   nodes: ProjectGraph['externalNodes'];
   keyMap: Map<string, any>;
 } | null {
-  try {
-    const { lockFileHash, nodes, keyMap } = JSON.parse(
-      readFileSync(externalNodesCache, 'utf-8')
-    );
-    if (lockFileHash !== expectedHash || !nodes || !keyMap) {
-      return null;
-    }
-    return { nodes, keyMap: deserializeKeyMap(keyMap, nodes) };
-  } catch {
-    // Missing, torn, or corrupted cache - reprocess from the lockfile
+  const data = readHashedCache(externalNodesCache, expectedHash);
+  if (!data?.nodes || !data.keyMap) {
     return null;
   }
+  return {
+    nodes: data.nodes,
+    keyMap: deserializeKeyMap(data.keyMap, data.nodes),
+  };
 }
 
-// Dependencies cache functions
 function writeDependenciesCache(
   hash: string,
   dependencies: RawProjectGraphDependency[]
 ) {
-  const content = safeStringify({ lockFileHash: hash, dependencies });
-  if (content === undefined) {
-    logger.warn(
-      `Failed to serialize dependencies cache. Skipping cache write.`
-    );
-    tryRemoveFile(dependenciesCache);
-    return;
-  }
-  safeWriteFileCache(dependenciesCache, content);
-  // Older Nx versions trust this hash file and would misread the new
-  // embedded-hash cache format after a version switch
-  tryRemoveFile(legacyDependenciesHashFile);
+  writeHashedCache(dependenciesCache, legacyDependenciesHashFile, hash, {
+    dependencies,
+  });
 }
 
 function readCachedDependencies(
   expectedHash: string
 ): RawProjectGraphDependency[] | null {
-  try {
-    const { lockFileHash, dependencies } = JSON.parse(
-      readFileSync(dependenciesCache, 'utf-8')
-    );
-    if (lockFileHash !== expectedHash || !Array.isArray(dependencies)) {
-      return null;
-    }
-    return dependencies;
-  } catch {
-    // Missing, torn, or corrupted cache - reprocess from the lockfile
-    return null;
-  }
+  const data = readHashedCache(dependenciesCache, expectedHash);
+  return Array.isArray(data?.dependencies) ? data.dependencies : null;
 }
 
 function safeStringify(data: unknown): string | undefined {
@@ -341,16 +336,6 @@ function safeStringify(data: unknown): string | undefined {
     return JSON.stringify(data, null, 2);
   } catch {
     return undefined;
-  }
-}
-
-function tryRemoveFile(path: string): void {
-  try {
-    if (existsSync(path)) {
-      rmSync(path);
-    }
-  } catch {
-    // Best effort
   }
 }
 

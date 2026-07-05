@@ -218,16 +218,11 @@ describe('js plugin lockfile cache resilience', () => {
       // Lockfile rewritten mid-flight (e.g. npm install still running)
       fs.createFileSync('package-lock.json', LOCKFILE);
 
+      // Must not throw, and must not emit edges referencing nodes the graph
+      // does not have. The graph has no external nodes here (they came from
+      // the empty lockfile), so every lockfile edge must be dropped.
       const deps = await h.runCreateDependencies(externalNodes);
-      // Must not throw, and must not emit edges referencing nodes the
-      // graph does not have
-      for (const dep of deps) {
-        expect(externalNodes[dep.source] ?? dep.source).toBeTruthy();
-        expect(
-          externalNodes[dep.source] !== undefined ||
-            !dep.source.startsWith('npm:')
-        ).toBe(true);
-      }
+      expect(deps).toEqual([]);
     });
   });
 });
