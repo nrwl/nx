@@ -148,7 +148,11 @@ export function updatePackageJson(
       // pnpm 11 reads build-script approvals and supportedArchitectures only
       // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
       if (packageManager === 'pnpm') {
-        writePrunedPnpmInstallSettings(options.outputPath, context.root);
+        writePrunedPnpmInstallSettings(
+          options.outputPath,
+          context.root,
+          lockFile
+        );
       }
     }
   }

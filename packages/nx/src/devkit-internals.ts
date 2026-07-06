@@ -244,6 +244,7 @@ export type {
 } from './utils/package-json';
 export {
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   readNxMigrateConfig,
   stripPrunedLockfilePnpmConfig,
   writePrunedPnpmInstallSettings,
