@@ -109,10 +109,7 @@ function handleWorkspaceModules(
   projectGraph: ProjectGraph
 ) {
   if (
-    !packageJson.dependencies &&
-    !packageJson.optionalDependencies &&
-    !packageJson.devDependencies &&
-    !packageJson.peerDependencies
+    !WORKSPACE_MODULE_INSTALL_SECTIONS.some((section) => packageJson[section])
   ) {
     return;
   }
