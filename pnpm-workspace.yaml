@@ -40,7 +40,6 @@ catalog:
   '@heroicons/react': '^2.1.4'
   '@module-federation/enhanced': '^2.3.3'
   '@playwright/test': '^1.36.0'
-  '@renovatebot/pep440': '4.2.4'
   '@svgr/webpack': '^8.0.1'
   '@zkochan/js-yaml': '0.0.7'
   ajv: '^8.0.0'

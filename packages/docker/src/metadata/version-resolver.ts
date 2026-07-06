@@ -1,4 +1,4 @@
-import * as pep440 from '@renovatebot/pep440';
+import * as pep440 from './pep440';
 import Handlebars from 'handlebars';
 import * as semver from 'semver';
 import {
