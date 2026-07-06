@@ -37,9 +37,11 @@ struct VisitedTracker<'a> {
 }
 
 impl<'a> VisitedTracker<'a> {
-    fn seeded_with(project: &'a str) -> Self {
+    /// The root project starts out visited, so a task never traverses
+    /// itself as its own dependency.
+    fn new(root_project: &'a str) -> Self {
         Self {
-            set: hashbrown::HashSet::from([project]),
+            set: hashbrown::HashSet::from([root_project]),
             log: Vec::new(),
         }
     }
@@ -122,7 +124,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     external_deps_mapped,
-                    &mut VisitedTracker::seeded_with(task.target.project.as_str()),
+                    &mut VisitedTracker::new(task.target.project.as_str()),
                 )?;
 
                 let mut inputs: Vec<HashInstruction> = target
@@ -621,7 +623,7 @@ mod tests {
 
     #[test]
     fn insert_reports_first_insertion_only() {
-        let mut visited = VisitedTracker::seeded_with("seed");
+        let mut visited = VisitedTracker::new("seed");
         assert!(!visited.insert("seed"));
         assert!(visited.insert("a"));
         assert!(!visited.insert("a"));
@@ -629,7 +631,7 @@ mod tests {
 
     #[test]
     fn rollback_unvisits_only_the_scope() {
-        let mut visited = VisitedTracker::seeded_with("seed");
+        let mut visited = VisitedTracker::new("seed");
         assert!(visited.insert("outer"));
 
         let scope = visited.scope_start();
