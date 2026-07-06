@@ -114,9 +114,9 @@ Netlify auto-discovers edge functions from `netlify/edge-functions/` relative to
 
 ### Netlify Configuration
 
-**Location:** `nx-dev/nx-dev/netlify.toml`
+**Location:** `netlify.toml` (repo root - Netlify only reads the config file from the site's base directory, which is the repo root)
 
-Defines the build command (`npx nx run nx-dev:build`), publish directory (`nx-dev/nx-dev/dist`), the functions directory (`netlify/functions` with esbuild bundling), security headers, and the versioned-domain redirects (`16.nx.dev` etc.).
+Defines the build command (`npx nx run nx-dev:build`), publish directory (`nx-dev/nx-dev/dist`), the functions directory (`netlify/functions` with esbuild bundling), `NETLIFY_NEXT_PLUGIN_SKIP` (the root package.json still depends on `next`, so Netlify would otherwise auto-inject the Next.js runtime), security headers, and the versioned-domain redirects (`16.nx.dev` etc.).
 
 ## Environment Variables
 

@@ -1,6 +1,16 @@
+# Netlify configuration for the nx-dev site (nx.dev router).
+# Must live at the repo root: the site's base directory is the repo root, and
+# Netlify only reads netlify.toml from the base directory.
+
 [build]
-  command = "npx nx run nx-dev:build"
+  command = "npx nx run nx-dev:build --skip-nx-cache"
   publish = "nx-dev/nx-dev/dist"
+
+[build.environment]
+  # The repo root package.json still depends on `next` (shared nx-dev UI libs
+  # import next/link), so Netlify auto-injects the Next.js runtime. This site
+  # is a static router - skip the plugin.
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
 
 [functions]
   directory = "netlify/functions"
