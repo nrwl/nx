@@ -805,6 +805,63 @@ mirror: *legacy
       expect(result.mirror.react).toBe('^17.0.2');
     });
 
+    it('should sever a default catalog aliased to a separate null anchor', () => {
+      // `catalog` aliases a separate anchor, so the update converts it into an
+      // owned map; the `!nextWasAlias` guard intentionally leaves the anchor on
+      // its definition (copying it here would duplicate the anchor).
+      tree.write(
+        'pnpm-workspace.yaml',
+        `_legacy: &legacy
+catalog: *legacy
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+      // the anchor definition is untouched and no longer shared
+      expect(result._legacy).toBeNull();
+    });
+
+    it('should create a default catalog in an empty file', () => {
+      tree.write('pnpm-workspace.yaml', '');
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "catalog:
+          react: ^18.3.0
+        "
+      `);
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+    });
+
+    it('should surface a YAML parse error with location detail on malformed input', () => {
+      // parseDocument records errors instead of throwing; the update must still
+      // fail loudly with the line/column detail the old load() surfaced.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalog:
+  react: ^18.0.0
+  react: ^19.0.0
+`
+      );
+
+      expect(() =>
+        manager.updateCatalogVersions(tree, [
+          { packageName: 'react', version: '^18.3.0' },
+        ])
+      ).toThrow('Map keys must be unique');
+    });
+
     it('should be a no-op when the aliased catalog already has the target version', () => {
       // Regression: the change-detection check must traverse aliases —
       // otherwise an identical write fires every time on aliased paths.

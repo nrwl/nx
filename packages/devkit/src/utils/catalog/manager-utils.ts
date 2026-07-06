@@ -51,8 +51,9 @@ function getValueAt(doc: Document, path: string[]): unknown {
 // inside the current parent and carries over the placeholder's comments
 // and anchor so they aren't dropped. A dropped anchor would leave any
 // alias referencing it unresolved and make `String(doc)` throw. Falls back
-// to `doc.setIn` only when the root isn't a map (e.g. an empty document),
-// letting it bootstrap.
+// to `doc.setIn` when the current parent isn't a map: an empty-document
+// root gets bootstrapped, while a non-map value where a catalog map was
+// expected makes `setIn` throw, surfacing the malformed config.
 function setThroughAliases(
   doc: Document,
   targetPath: string[],
@@ -169,6 +170,14 @@ export function updateCatalogVersionsInFile(
     // parseDocument keeps comments and anchors so a catalog bump doesn't
     // rewrite the user's config file.
     const doc = parseDocument(readYaml());
+
+    // parseDocument collects syntax errors instead of throwing; surface them
+    // now, with their line/column detail, rather than failing later in
+    // `String(doc)` with a generic message or skipping a no-op write on a
+    // malformed file (the previous js-yaml `load()` threw here).
+    if (doc.errors.length > 0) {
+      throw new Error(doc.errors.map((e) => e.message).join('\n'));
+    }
 
     let hasChanges = false;
     for (const update of updates) {
