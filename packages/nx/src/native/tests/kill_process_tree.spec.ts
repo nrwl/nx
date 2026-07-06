@@ -1,4 +1,4 @@
-import { spawn } from 'child_process';
+import { execSync, spawn } from 'child_process';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -13,6 +13,17 @@ function isAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+// `kill(pid, 0)` succeeds on zombies, but a zombie has already released its
+// fds/ports - killProcessTreeGraceful intentionally treats it as exited.
+function isAliveNonZombie(pid: number): boolean {
+  try {
+    const state = execSync(`ps -o state= -p ${pid}`).toString().trim();
+    return state !== '' && !state.startsWith('Z');
   } catch {
     return false;
   }
@@ -207,8 +218,32 @@ describeUnix('killProcessTreeGraceful', () => {
     await killProcessTreeGraceful(pid, 'SIGTERM', 1000);
 
     // The promise must not resolve until force-killed processes have
-    // actually left the process table.
-    expect(isAlive(pid)).toBe(false);
+    // actually exited (an unreaped zombie counts as exited - its ports
+    // are already released).
+    expect(isAliveNonZombie(pid)).toBe(false);
+  }, 15000);
+
+  it('should force-kill immediately when grace period is zero', async () => {
+    // Zero grace (used on Windows, where graceful signals cannot be
+    // delivered) must skip the graceful poll loop and SIGKILL right away.
+    const child = spawn('sh', ['-c', 'trap "" TERM; sleep 30'], {
+      detached: true,
+      stdio: 'ignore',
+    });
+    child.unref();
+    const pid = child.pid!;
+    spawnedPids.push(pid);
+
+    await new Promise((r) => setTimeout(r, 300));
+    expect(isAlive(pid)).toBe(true);
+
+    const start = Date.now();
+    await killProcessTreeGraceful(pid, 'SIGTERM', 0);
+    const elapsed = Date.now() - start;
+
+    expect(isAliveNonZombie(pid)).toBe(false);
+    // Well under the 5s default grace the process would otherwise ignore.
+    expect(elapsed).toBeLessThan(2000);
   }, 15000);
 
   it('should release bound ports before resolving when force-killing', async () => {

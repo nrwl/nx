@@ -155,24 +155,53 @@ const FORCE_KILL_EXIT_WAIT: Duration = Duration::from_secs(1);
 /// How often to re-check the process table during the post-SIGKILL wait.
 const FORCE_KILL_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
-/// Poll until the given PIDs disappear from the process table, bounded by
-/// `FORCE_KILL_EXIT_WAIT` so an unreapable process (e.g. stuck in
-/// uninterruptible sleep, or a zombie whose parent never reaps it) cannot
+/// Whether the kernel still considers the process to exist.
+///
+/// Right after SIGKILL, sysinfo can fail to read the dying process and drop
+/// it from its table while the process still holds its file descriptors
+/// (and ports) for a few more milliseconds - so on Unix ask the kernel
+/// directly. Signal 0 performs the existence check without sending
+/// anything, and also succeeds for zombies, which keeps the wait
+/// conservative: parents normally reap within milliseconds, and
+/// `FORCE_KILL_EXIT_WAIT` bounds the pathological non-reaping case.
+#[cfg(unix)]
+fn pid_exists(_sys: &System, pid: Pid) -> bool {
+    // `kill` with a `None` signal performs the existence check without
+    // sending anything. EPERM means the process exists but belongs to
+    // another user.
+    match nix::sys::signal::kill(nix::unistd::Pid::from_raw(pid.as_u32() as i32), None) {
+        Ok(()) => true,
+        Err(nix::errno::Errno::EPERM) => true,
+        Err(_) => false,
+    }
+}
+
+#[cfg(windows)]
+fn pid_exists(sys: &System, pid: Pid) -> bool {
+    sys.process(pid).is_some()
+}
+
+/// Poll until the given PIDs have exited, bounded by `FORCE_KILL_EXIT_WAIT`
+/// so an unreapable process (e.g. stuck in uninterruptible sleep) cannot
 /// hang the caller.
 fn wait_for_pids_to_exit(sys: &mut System, mut remaining: Vec<Pid>) {
     let deadline = Instant::now() + FORCE_KILL_EXIT_WAIT;
-    while !remaining.is_empty() && Instant::now() < deadline {
+    loop {
+        remaining.retain(|pid| pid_exists(sys, *pid));
+        if remaining.is_empty() || Instant::now() >= deadline {
+            break;
+        }
         std::thread::sleep(FORCE_KILL_POLL_INTERVAL);
+        // Only Windows consults the table in `pid_exists`; keep it fresh.
         sys.refresh_processes_specifics(
             ProcessesToUpdate::Some(&remaining),
             true,
             ProcessRefreshKind::nothing(),
         );
-        remaining.retain(|pid| sys.process(*pid).is_some());
     }
     if !remaining.is_empty() {
-        debug!(
-            "{} processes still present {}ms after SIGKILL",
+        tracing::warn!(
+            "{} processes still present {}ms after SIGKILL; ports they hold may still be bound",
             remaining.len(),
             FORCE_KILL_EXIT_WAIT.as_millis()
         );
@@ -242,8 +271,10 @@ pub async fn kill_process_tree_graceful(
             return;
         }
 
-        // SIGKILL: no point in bottom-up, just kill everything
-        if mapped == Signal::Kill {
+        // SIGKILL, or a zero grace period (e.g. Windows watch restarts, where
+        // graceful signals cannot be delivered through this API): skip the
+        // graceful loop and its poll interval entirely, just kill everything.
+        if mapped == Signal::Kill || grace_ms == 0 {
             send_signal_to_pids(&sys, &tree, Signal::Kill, false);
             wait_for_pids_to_exit(&mut sys, tree);
             return;
