@@ -201,7 +201,8 @@ export async function* viteBuildExecutor(
         if (packageManager === 'pnpm') {
           writePrunedPnpmInstallSettings(
             outDirRelativeToWorkspaceRoot,
-            context.root
+            context.root,
+            lockFile
           );
         }
       }
