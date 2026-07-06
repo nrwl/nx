@@ -28,7 +28,8 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { join } from 'path';
+import { basename, join } from 'path';
+import { existsSync, readFileSync } from 'node:fs';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -592,6 +593,37 @@ export function stringifyPnpmLockfile(
   const packageIndex = indexPackagesByName(packages, +lockfileVersion);
 
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
+
+  // A workspace module declared as a peer of another workspace module is not
+  // recorded under the depending importer when pnpm's `autoInstallPeers` is off,
+  // so the lockfile importer alone cannot surface it. copy-workspace-modules
+  // still moves such a peer into the copied module's `dependencies` as a `file:`
+  // spec (pnpm rejects a `file:` spec under peerDependencies), so read the
+  // module manifest to find those siblings and keep the pruned lockfile in sync;
+  // otherwise `pnpm install --frozen-lockfile` aborts with
+  // ERR_PNPM_OUTDATED_LOCKFILE. Cached per module root.
+  const peerSiblingsCache = new Map<string, string[]>();
+  const getWorkspacePeerSiblings = (importerPath: string): string[] => {
+    let siblings = peerSiblingsCache.get(importerPath);
+    if (siblings) {
+      return siblings;
+    }
+    siblings = [];
+    const manifestPath = join(workspaceRoot, importerPath, 'package.json');
+    if (existsSync(manifestPath)) {
+      try {
+        const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
+        siblings = Object.keys(manifest.peerDependencies ?? {}).filter((name) =>
+          workspaceModules.has(name)
+        );
+      } catch {
+        // Unreadable/malformed manifest: fall back to the lockfile importer only.
+      }
+    }
+    peerSiblingsCache.set(importerPath, siblings);
+    return siblings;
+  };
+
   const { snapshot: rootSnapshot, importers: requiredImporters } =
     mapRootSnapshot(
       packageJson,
@@ -615,23 +647,29 @@ export function stringifyPnpmLockfile(
   // errors with ERR_PNPM_OUTDATED_LOCKFILE on transitive workspace chains.
   const allRequiredImporters: Record<string, string> = { ...requiredImporters };
   const queue = Object.keys(requiredImporters);
+  const enqueueWorkspaceModule = (depName: string) => {
+    if (workspaceModules.has(depName) && !(depName in allRequiredImporters)) {
+      allRequiredImporters[depName] = workspaceModules.get(depName)!.data.root;
+      queue.push(depName);
+    }
+  };
   while (queue.length > 0) {
     const pkgName = queue.shift()!;
-    const importer = importers[allRequiredImporters[pkgName]];
-    if (!importer) continue;
-    for (const depType of WORKSPACE_DEP_TYPES) {
-      const deps = importer[depType];
-      if (!deps) continue;
-      for (const depName of Object.keys(deps)) {
-        if (
-          workspaceModules.has(depName) &&
-          !(depName in allRequiredImporters)
-        ) {
-          allRequiredImporters[depName] =
-            workspaceModules.get(depName)!.data.root;
-          queue.push(depName);
+    const importerPath = allRequiredImporters[pkgName];
+    const importer = importers[importerPath];
+    if (importer) {
+      for (const depType of WORKSPACE_DEP_TYPES) {
+        const deps = importer[depType];
+        if (!deps) continue;
+        for (const depName of Object.keys(deps)) {
+          enqueueWorkspaceModule(depName);
         }
       }
+    }
+    // Peers pnpm did not auto-install are absent from the importer above; pull
+    // them from the manifest so their directory package is emitted too.
+    for (const depName of getWorkspacePeerSiblings(importerPath)) {
+      enqueueWorkspaceModule(depName);
     }
   }
 
@@ -667,6 +705,17 @@ export function stringifyPnpmLockfile(
           : ref;
       }
       snapshot[depType] = resolved;
+    }
+
+    // Workspace-module peers pnpm left out of the importer (autoInstallPeers
+    // off) still ship as file: dependencies, matching the copied manifest that
+    // moves a peer-declared workspace module into dependencies.
+    const peerSiblings = getWorkspacePeerSiblings(importerPath);
+    if (peerSiblings.length > 0) {
+      snapshot.dependencies ??= {};
+      for (const depName of peerSiblings) {
+        snapshot.dependencies[depName] ??= `file:workspace_modules/${depName}`;
+      }
     }
 
     workspaceModulePackages[
@@ -742,6 +791,17 @@ function filterPatchedDependenciesToPrunedPackages(lockfile: Lockfile): void {
   for (const patchKey of Object.keys(lockfile.patchedDependencies)) {
     if (!patchKeyMatchesPrunedPackage(patchKey, packageKeys)) {
       delete lockfile.patchedDependencies[patchKey];
+      continue;
+    }
+    // pnpm 9-10 record the patch path in the lockfile (object form), and pnpm
+    // --frozen-lockfile aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when it
+    // disagrees with the emitted config. Flatten it to the same `patches/<file>`
+    // the pruned output ships (mirrors `normalizePrunedPatchPath` in
+    // utils/package-json). pnpm 11 records a bare hash, so there is no path.
+    const entry = lockfile.patchedDependencies[patchKey] as unknown;
+    if (entry && typeof entry === 'object' && 'path' in entry) {
+      const patch = entry as { path: string };
+      patch.path = `patches/${basename(patch.path)}`;
     }
   }
   if (Object.keys(lockfile.patchedDependencies).length === 0) {
@@ -765,11 +825,17 @@ function patchKeyMatchesPrunedPackage(
     if (extractNameFromKey(key, false) !== patchName) {
       return false;
     }
+    // Strip any `(peer@ver)`/`(patch_hash=...)` suffix to get the resolved version.
+    const version = getVersion(key, patchName).split('(')[0];
+    // A `file:` directory package is a copied workspace module, never the target
+    // of a patchedDependencies entry (which patches a versioned npm package); a
+    // name-only patch key must not latch onto a same-named workspace module.
+    if (version.startsWith('file:')) {
+      return false;
+    }
     if (versionSpec === null) {
       return true;
     }
-    // Strip any `(peer@ver)`/`(patch_hash=...)` suffix to get the resolved version.
-    const version = getVersion(key, patchName).split('(')[0];
     if (version === versionSpec) {
       return true;
     }
@@ -1010,6 +1076,7 @@ function mapRootSnapshot(
               : depType === 'devDependencies'
                 ? 'devDependencies'
                 : 'dependencies';
+          let importerKeyForPackage: string | undefined;
           for (const [importerPath, importerSnapshot] of Object.entries(
             rootImporters
           )) {
@@ -1021,24 +1088,28 @@ function mapRootSnapshot(
               (importerSnapshot.devDependencies &&
                 importerSnapshot.devDependencies[packageName]);
             if (workspaceDep) {
-              const workspaceDepImporterPath = workspaceDep.replace(
-                'link:',
-                ''
-              );
-              const importerKeyForPackage = join(
+              importerKeyForPackage = join(
                 importerPath,
-                workspaceDepImporterPath
+                workspaceDep.replace('link:', '')
               );
-              importers[packageName] = importerKeyForPackage;
-              // Specifier matches the app manifest's file: ref; the version is
-              // the directory package key's ref (no leading `./`).
-              snapshot.specifiers[packageName] =
-                `file:./workspace_modules/${packageName}`;
-              snapshot[targetSection] = snapshot[targetSection] || {};
-              snapshot[targetSection][packageName] =
-                `file:workspace_modules/${packageName}`;
               break;
             }
+          }
+          // pnpm records no importer entry for a workspace peer when
+          // autoInstallPeers is off, so fall back to the module's own root. The
+          // pruned manifest still moves the peer into dependencies, so the root
+          // importer must reference its directory package either way.
+          importerKeyForPackage ??=
+            workspaceModules.get(packageName)?.data.root;
+          if (importerKeyForPackage) {
+            importers[packageName] = importerKeyForPackage;
+            // Specifier matches the app manifest's file: ref; the version is
+            // the directory package key's ref (no leading `./`).
+            snapshot.specifiers[packageName] =
+              `file:./workspace_modules/${packageName}`;
+            snapshot[targetSection] = snapshot[targetSection] || {};
+            snapshot[targetSection][packageName] =
+              `file:workspace_modules/${packageName}`;
           }
         } else {
           const node =
