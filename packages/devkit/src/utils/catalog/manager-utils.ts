@@ -48,9 +48,11 @@ function getValueAt(doc: Document, path: string[]): unknown {
 // Walks `targetPath` resolving aliases at every step and mutates the
 // resolved map directly so anchors are preserved. When a step is missing
 // or holds a null placeholder (`key:` with no value), creates a fresh map
-// inside the current parent and transfers any attached comments from the
-// placeholder so they aren't dropped. Falls back to `doc.setIn` only when
-// the root isn't a map (e.g. an empty document), letting it bootstrap.
+// inside the current parent and carries over the placeholder's comments
+// and anchor so they aren't dropped. A dropped anchor would leave any
+// alias referencing it unresolved and make `String(doc)` throw. Falls back
+// to `doc.setIn` only when the root isn't a map (e.g. an empty document),
+// letting it bootstrap.
 function setThroughAliases(
   doc: Document,
   targetPath: string[],
@@ -64,6 +66,7 @@ function setThroughAliases(
       return;
     }
     let next = parent.get(targetPath[i], true) as Node | null | undefined;
+    const nextWasAlias = isAlias(next);
     if (isAlias(next)) next = next.resolve(doc);
     const placeholder =
       isScalar(next) && next.value === null ? next : undefined;
@@ -75,6 +78,11 @@ function setThroughAliases(
           if (placeholder.comment) fresh.comment = placeholder.comment;
           if (placeholder.commentBefore)
             fresh.commentBefore = placeholder.commentBefore;
+          // Copy the anchor only for a directly-held placeholder. When it
+          // was reached through an alias, the anchor still lives on the
+          // definition node, so re-emitting it here would duplicate it.
+          if (!nextWasAlias && placeholder.anchor)
+            fresh.anchor = placeholder.anchor;
         }
         cur.set(targetPath[j], fresh);
         cur = fresh;

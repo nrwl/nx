@@ -750,6 +750,61 @@ catalogs: *cats
       expect(result.catalogs.legacy.react).toBe('^17.0.2');
     });
 
+    it('should update an anchored null default catalog placeholder', () => {
+      // Regression: replacing an anchored `catalog:` placeholder with a map
+      // must keep the anchor, otherwise an alias referencing it (`*cat`)
+      // becomes unresolved and String(doc) throws.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalog: &cat
+mirror: *cat
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^18.3.0' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "catalog: &cat
+          react: ^18.3.0
+        mirror: *cat
+        "
+      `);
+      const result = load(content);
+      expect(result.catalog.react).toBe('^18.3.0');
+      // the alias now resolves to the populated catalog map
+      expect(result.mirror.react).toBe('^18.3.0');
+    });
+
+    it('should update an anchored null named catalog placeholder', () => {
+      // Regression: same anchor preservation for a named-catalog placeholder.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalogs:
+  legacy: &legacy
+mirror: *legacy
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^17.0.2', catalogName: 'legacy' },
+      ]);
+
+      const content = tree.read('pnpm-workspace.yaml', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "catalogs:
+          legacy: &legacy
+            react: ^17.0.2
+        mirror: *legacy
+        "
+      `);
+      const result = load(content);
+      expect(result.catalogs.legacy.react).toBe('^17.0.2');
+      expect(result.mirror.react).toBe('^17.0.2');
+    });
+
     it('should be a no-op when the aliased catalog already has the target version', () => {
       // Regression: the change-detection check must traverse aliases —
       // otherwise an identical write fires every time on aliased paths.
