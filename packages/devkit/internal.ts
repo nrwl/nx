@@ -167,6 +167,7 @@ export {
   defaultFileRead,
   deriveGroupNameFromTarget,
   directoryExists,
+  emitPrunedPnpmInstallAssets,
   expandDependencyConfigSyntaxSugar,
   expandInitiatingTasksThroughNoop,
   expandWildcardTargetConfiguration,

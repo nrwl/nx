@@ -256,6 +256,7 @@ export type {
   PackageJsonDependencySection,
 } from './utils/package-json';
 export {
+  emitPrunedPnpmInstallAssets,
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmPatchArtifacts,
   readNxMigrateConfig,
