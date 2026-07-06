@@ -11,6 +11,7 @@ import {
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   readTsConfig,
 } from '@nx/js';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
@@ -73,10 +74,6 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
           );
           packageJson.main = packageJson.main ?? this.options.outputFileName;
 
-          compilation.emitAsset(
-            'package.json',
-            new sources.RawSource(serializeJson(packageJson))
-          );
           const packageManager = detectPackageManager(this.context.root);
 
           if (packageManager === 'bun') {
@@ -95,8 +92,10 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
               getLockFileName(packageManager),
               new sources.RawSource(lockFileContent)
             );
-            // pnpm 11 reads build-script approvals and supportedArchitectures
-            // only from pnpm-workspace.yaml, so emit them beside the lockfile.
+            // pnpm 11 reads build-script approvals, supportedArchitectures, and
+            // patchedDependencies only from pnpm-workspace.yaml, so emit them
+            // beside the lockfile; pnpm <=10 takes patchedDependencies from the
+            // package.json emitted below. Ship the referenced patch files too.
             if (packageManager === 'pnpm') {
               const pnpmWorkspaceYaml = getPrunedPnpmInstallSettingsYaml(
                 this.context.root,
@@ -108,8 +107,27 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                   new sources.RawSource(pnpmWorkspaceYaml)
                 );
               }
+              const { patchFiles, packageJsonPatchedDependencies } =
+                getPrunedPnpmPatchArtifacts(this.context.root, lockFileContent);
+              for (const patchFile of patchFiles) {
+                compilation.emitAsset(
+                  patchFile.path,
+                  new sources.RawSource(patchFile.content)
+                );
+              }
+              if (packageJsonPatchedDependencies) {
+                packageJson.pnpm = {
+                  ...packageJson.pnpm,
+                  patchedDependencies: packageJsonPatchedDependencies,
+                };
+              }
             }
           }
+
+          compilation.emitAsset(
+            'package.json',
+            new sources.RawSource(serializeJson(packageJson))
+          );
         }
       );
     });
