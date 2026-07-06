@@ -1062,6 +1062,43 @@ export function getPrunedPnpmPatchArtifacts(
 }
 
 /**
+ * Emits the pnpm install-time artifacts a standalone pruned output needs through
+ * a caller-provided `emit` sink: the pnpm 11 settings-only pnpm-workspace.yaml
+ * (see `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus, for
+ * pnpm <=10, the `patchedDependencies` declaration folded into `packageJson` in
+ * place. The bundler plugins (webpack, rspack) hold the manifest in memory and
+ * emit it as a compilation asset after this returns, so the pnpm <=10
+ * declaration is mutated onto `packageJson` rather than written; the
+ * file-writing executors use `writePrunedPnpmInstallSettings` instead.
+ */
+export function emitPrunedPnpmInstallAssets(
+  workspaceRootPath: string,
+  prunedLockfileContent: string,
+  packageJson: PackageJson,
+  emit: (assetPath: string, content: string) => void
+): void {
+  const yaml = getPrunedPnpmInstallSettingsYaml(
+    workspaceRootPath,
+    prunedLockfileContent
+  );
+  if (yaml !== null) {
+    emit('pnpm-workspace.yaml', yaml);
+  }
+
+  const { patchFiles, packageJsonPatchedDependencies } =
+    getPrunedPnpmPatchArtifacts(workspaceRootPath, prunedLockfileContent);
+  for (const { path, content } of patchFiles) {
+    emit(path, content);
+  }
+  if (packageJsonPatchedDependencies) {
+    packageJson.pnpm = {
+      ...packageJson.pnpm,
+      patchedDependencies: packageJsonPatchedDependencies,
+    };
+  }
+}
+
+/**
  * Writes the pnpm install-time artifacts a standalone pruned output needs into
  * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
  * `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus the

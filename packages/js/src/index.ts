@@ -25,6 +25,7 @@ export {
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
 export {
+  emitPrunedPnpmInstallAssets,
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmPatchArtifacts,
   writePrunedPnpmInstallSettings,
