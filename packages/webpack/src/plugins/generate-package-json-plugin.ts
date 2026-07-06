@@ -3,10 +3,9 @@ import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   createLockFile,
   createPackageJson,
+  emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
-  getPrunedPnpmInstallSettingsYaml,
-  getPrunedPnpmPatchArtifacts,
   HelperDependency,
   readTsConfig,
 } from '@nx/js';
@@ -121,32 +120,18 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
             // pnpm 11 reads build-script approvals, supportedArchitectures, and
             // patchedDependencies only from pnpm-workspace.yaml, so emit them
             // beside the lockfile; pnpm <=10 takes patchedDependencies from the
-            // package.json emitted below. Ship the referenced patch files too.
+            // package.json emitted below.
             if (packageManager === 'pnpm') {
-              const pnpmWorkspaceYaml = getPrunedPnpmInstallSettingsYaml(
+              emitPrunedPnpmInstallAssets(
                 this.options.root,
-                lockFileContent
+                lockFileContent,
+                packageJson,
+                (assetPath, content) =>
+                  compilation.emitAsset(
+                    assetPath,
+                    new sources.RawSource(content)
+                  )
               );
-              if (pnpmWorkspaceYaml) {
-                compilation.emitAsset(
-                  'pnpm-workspace.yaml',
-                  new sources.RawSource(pnpmWorkspaceYaml)
-                );
-              }
-              const { patchFiles, packageJsonPatchedDependencies } =
-                getPrunedPnpmPatchArtifacts(this.options.root, lockFileContent);
-              for (const patchFile of patchFiles) {
-                compilation.emitAsset(
-                  patchFile.path,
-                  new sources.RawSource(patchFile.content)
-                );
-              }
-              if (packageJsonPatchedDependencies) {
-                packageJson.pnpm = {
-                  ...packageJson.pnpm,
-                  patchedDependencies: packageJsonPatchedDependencies,
-                };
-              }
             }
           }
 
