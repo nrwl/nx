@@ -160,17 +160,13 @@ impl HashPlanInspector {
                     ..Default::default()
                 })
             }
-            HashInstruction::JsonFileSet {
-                project_name,
-                json_path,
-                ..
-            } => {
+            HashInstruction::JsonFileSet(json) => {
                 // Resolve the file paths the JsonFileSet would hash, without
                 // reading or parsing any JSON. Field/excludeField filters are
                 // irrelevant here — the reported inputs are still the files.
                 let matched = collect_json_input_files(
-                    json_path,
-                    project_name.as_deref(),
+                    &json.json_path,
+                    json.project_name.as_deref(),
                     &self.project_file_map,
                     &self.all_workspace_files,
                 )?;

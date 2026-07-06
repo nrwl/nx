@@ -567,12 +567,7 @@ impl TaskHasher {
                 };
                 (hashed_all_externals, inputs)
             }
-            HashInstruction::JsonFileSet {
-                project_name,
-                json_path,
-                fields,
-                exclude_fields,
-            } => {
+            HashInstruction::JsonFileSet(json) => {
                 // Cache is keyed on the full instruction string so
                 // different fields/excludeFields against the same file
                 // remain distinct. `instruction.to_string()` already
@@ -586,10 +581,10 @@ impl TaskHasher {
                 } else {
                     let result = hash_json_files(
                         &self.workspace_root,
-                        json_path,
-                        project_name.as_deref(),
-                        fields.as_deref(),
-                        exclude_fields.as_deref(),
+                        &json.json_path,
+                        json.project_name.as_deref(),
+                        json.fields.as_deref(),
+                        json.exclude_fields.as_deref(),
                         &self.project_file_map,
                         &self.all_workspace_files,
                     )?;
