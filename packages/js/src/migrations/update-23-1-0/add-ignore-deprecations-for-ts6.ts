@@ -46,6 +46,11 @@ type CompilerOptions = Record<string, unknown>;
  *        Unlike the others, false is itself deprecated in TS6 (removed in TS7),
  *        which is why this pass must precede the ignoreDeprecations pass; it
  *        defers the interop change to the eventual TS7 migration.
+ *      - "ignoreDeprecations": "6.0" - added to every chain root, even one that
+ *        carries no deprecated value. Config loaders (jest/ts-node) compile
+ *        config files with a forced `module: commonjs` that pairs with the
+ *        deprecated `node10` resolution on TS6; descendants inherit this flag,
+ *        keeping that config-load path silent. Inert when nothing is deprecated.
  *    Files with "extends" inherit from their chain root and are left untouched.
  *    Pure solution-style containers (root has `"files": []` and no "include")
  *    select no source files, so pinning there is noise and they are skipped.
@@ -86,7 +91,7 @@ export default async function (tree: Tree) {
   }
   if (defaultsPinCount > 0) {
     logger.info(
-      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports", "types", "esModuleInterop") on ${defaultsPinCount} tsconfig chain root(s) to preserve existing behavior.`
+      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports", "types", "esModuleInterop") and ensured "ignoreDeprecations" for config loading on ${defaultsPinCount} tsconfig chain root(s).`
     );
   }
 
@@ -262,6 +267,23 @@ function pinPreTs6Defaults(tree: Tree, tsconfigPath: string): boolean {
       contents,
       ['compilerOptions', key],
       value,
+      FORMATTING_OPTIONS
+    );
+    contents = applyEdits(contents, edits);
+    changed = true;
+  }
+
+  // Config loaders (jest/ts-node) compile config files (e.g. jest.config.ts)
+  // with a forced `module: commonjs`, which on TS6 pairs with the deprecated
+  // `node10` resolution. Descendants inherit this chain root's
+  // `ignoreDeprecations`, so setting it here keeps that config-load path silent
+  // wherever a loader resolves a descendant tsconfig. Inert when no deprecated
+  // value is ever effective.
+  if (compilerOptions.ignoreDeprecations !== '6.0') {
+    const edits = modify(
+      contents,
+      ['compilerOptions', 'ignoreDeprecations'],
+      '6.0',
       FORMATTING_OPTIONS
     );
     contents = applyEdits(contents, edits);

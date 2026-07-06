@@ -599,7 +599,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
 
-    it('does not overwrite an explicit esModuleInterop true', async () => {
+    it('keeps an explicit esModuleInterop true but still ensures ignoreDeprecations', async () => {
       tree.write(
         'tsconfig.json',
         JSON.stringify(
@@ -613,8 +613,9 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
       const json = readJson(tree, 'tsconfig.json');
       expect(json.compilerOptions.esModuleInterop).toBe(true);
-      // true is not deprecated, so nothing forces ignoreDeprecations here.
-      expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
+      // A chain root always carries ignoreDeprecations so descendants inherit it
+      // for config loading, even when it has no deprecated value of its own.
+      expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
 
     it('does not touch esModuleInterop on a file that has "extends"', async () => {
@@ -631,6 +632,51 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
       const json = readJson(tree, 'tsconfig.app.json');
       expect(json.compilerOptions.esModuleInterop).toBeUndefined();
+    });
+  });
+
+  describe('config-loading chain-root pass', () => {
+    it('sets ignoreDeprecations on a clean base so config-loading descendants inherit it', async () => {
+      // nx-console-shape base: NodeNext + esModuleInterop true carries no
+      // deprecated value, so before this pass it never got ignoreDeprecations
+      // and a config-loading tsconfig extending it could not inherit one.
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              module: 'nodenext',
+              moduleResolution: 'nodenext',
+              esModuleInterop: true,
+            },
+          },
+          null,
+          2
+        )
+      );
+      // config-loading tsconfig.json (jest/ts-node resolves this name) extending
+      // the base; solution-style, no compilerOptions of its own.
+      tree.write(
+        'apps/e2e/tsconfig.json',
+        JSON.stringify(
+          { extends: '../../tsconfig.base.json', files: [], include: [] },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      // The base carries the flag...
+      expect(
+        readJson(tree, 'tsconfig.base.json').compilerOptions.ignoreDeprecations
+      ).toBe('6.0');
+      // ...and the extending config-loading tsconfig is left untouched: it
+      // inherits the flag, so it is never set twice.
+      expect(
+        readJson(tree, 'apps/e2e/tsconfig.json').compilerOptions
+          ?.ignoreDeprecations
+      ).toBeUndefined();
     });
   });
 });
