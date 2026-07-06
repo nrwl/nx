@@ -1,11 +1,10 @@
 import {
   formatFiles,
-  joinPathFragments,
   logger,
   type Tree,
   visitNotIgnoredFiles,
 } from '@nx/devkit';
-import { basename } from 'node:path';
+import { basename, dirname } from 'node:path';
 import {
   applyEdits,
   modify,
@@ -13,10 +12,14 @@ import {
   findNodeAtLocation,
   getNodeValue,
 } from 'jsonc-parser';
+import type * as ts from 'typescript';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 
 const FORMATTING_OPTIONS = {
   formattingOptions: { keepLines: true, insertSpaces: true, tabSize: 2 },
 };
+
+let tsModule: typeof import('typescript');
 
 type CompilerOptions = Record<string, unknown>;
 
@@ -41,23 +44,38 @@ type CompilerOptions = Record<string, unknown>;
  *        B silences it, deferring the interop change to the eventual TS7
  *        migration.
  *  - Config-load flag - set "ignoreDeprecations": "6.0" on every file named
- *    exactly "tsconfig.json". That is the name jest/ts-node auto-resolve (walking
- *    up from the config file) and load with a forced `module: commonjs`, which on
- *    TS6 pairs with the deprecated `node10` resolution; the flag keeps that load
- *    silent. Set unconditionally (even on a clean or solution-style container),
- *    since any tsconfig.json is a potential loader target, and inert when nothing
- *    is deprecated.
+ *    exactly "tsconfig.json", the name jest/ts-node auto-resolve (walking up from
+ *    the config file) when they compile a config file such as jest.config.ts.
+ *    ts-node injects a default `target: es5` when the config leaves it unset, and
+ *    es5 is a TS6-deprecated value (TS5107); any deprecated option the config
+ *    already carries fires too. The flag (which ts-node does not override) keeps
+ *    that load silent. Set unconditionally (even on a clean or solution-style
+ *    container), since any tsconfig.json is a potential loader target, and inert
+ *    when nothing is deprecated. It cannot silence a module/moduleResolution
+ *    mismatch (TS5110) when ts-node's forced `module: commonjs` meets an
+ *    inherited `nodenext` resolution.
  *
  * Loop B - direct-deprecation pass - adds "ignoreDeprecations": "6.0" to any
  * compilerOptions (or ts-node.compilerOptions) block that directly carries a TS6
  * hard-deprecated value (moduleResolution node/node10/classic, baseUrl, target
  * es5, esModuleInterop false, outFile, module amd/umd/system/none, alwaysStrict
  * false, allowSyntheticDefaultImports false, downlevelIteration set), including
- * the "esModuleInterop": false Loop A just pinned. Skipped when an ancestor via
- * "extends" already provides the flag, so an inheriting file is not flagged
- * twice.
+ * the "esModuleInterop": false Loop A just pinned. A block that inherits an
+ * effective "6.0" and sets no local flag is left alone; a stale local value
+ * ("5.0") is upgraded, since it would override the inherited flag and still error.
  */
 export default async function (tree: Tree) {
+  tsModule ??= ensureTypescript();
+  const ts = tsModule;
+  // Tree-backed host so TypeScript resolves `extends` against Loop A's pending
+  // writes; the `readDirectory` no-op skips the source-file scan, since only the
+  // merged compilerOptions matter here, not the file list.
+  const parseHost: ts.ParseConfigHost = {
+    ...ts.sys,
+    readFile: (filePath) => tree.read(filePath, 'utf-8') ?? undefined,
+    readDirectory: () => [],
+  };
+
   const tsconfigPaths: string[] = [];
   let defaultsPinCount = 0;
   let configLoadCount = 0;
@@ -82,11 +100,12 @@ export default async function (tree: Tree) {
     }
   });
 
-  // Loop B - silence a directly-set deprecated value, unless the flag is already
-  // inherited. Runs after Loop A so ancestor flags are already in place.
+  // Loop B - silence a deprecated value (directly set or inherited) unless an
+  // inherited "6.0" already covers a block with no local override, upgrading a
+  // stale local flag that would. Runs after Loop A so ancestor flags are in place.
   let deprecationCount = 0;
   for (const filePath of tsconfigPaths) {
-    if (addIgnoreDeprecations(tree, filePath)) {
+    if (addIgnoreDeprecations(tree, ts, parseHost, filePath)) {
       deprecationCount += 1;
     }
   }
@@ -111,10 +130,11 @@ export default async function (tree: Tree) {
 }
 
 // Every file named exactly "tsconfig.json" is a config-loader auto-resolve
-// target: ts-node/jest walk up for that name and compile it with a forced
-// `module: commonjs`, which defaults to the deprecated `node10` resolution on
-// TS6. Set `ignoreDeprecations` directly so the load stays silent regardless of
-// `extends` or solution-container shape. Inert when nothing is deprecated.
+// target: ts-node/jest walk up for that name and compile it (e.g. jest.config.ts).
+// ts-node injects a deprecated default `target: es5` when the config leaves it
+// unset, so the load hits a TS6 deprecation error even on an otherwise clean
+// config. Set `ignoreDeprecations` directly so the load stays silent regardless
+// of `extends` or solution-container shape. Inert when nothing is deprecated.
 function ensureConfigLoadIgnoreDeprecations(
   tree: Tree,
   tsconfigPath: string
@@ -153,46 +173,88 @@ function ensureConfigLoadIgnoreDeprecations(
   return true;
 }
 
-function addIgnoreDeprecations(tree: Tree, tsconfigPath: string): boolean {
+function addIgnoreDeprecations(
+  tree: Tree,
+  ts: typeof import('typescript'),
+  parseHost: ts.ParseConfigHost,
+  tsconfigPath: string
+): boolean {
   const original = tree.read(tsconfigPath, 'utf-8');
   if (!original) {
     return false;
   }
 
-  // A flag on an ancestor (via "extends") already silences a deprecated value
-  // this file sets directly, so don't set it again here.
-  if (inheritsIgnoreDeprecations(tree, tsconfigPath)) {
-    return false;
-  }
+  // Effective inheritance through "extends": whether an ancestor provides a "6.0"
+  // flag (which silences a block that sets no local value) and whether one
+  // carries a deprecated value (which reaches this file through the merged
+  // config).
+  const { providesFlag6, providesDeprecated } = inheritedDeprecationState(
+    tree,
+    ts,
+    parseHost,
+    tsconfigPath
+  );
 
-  // Each entry targets a distinct compilerOptions block within the same file.
-  const blocks: string[][] = [
-    ['compilerOptions'],
-    ['ts-node', 'compilerOptions'],
+  // The main block's own flag and deprecated state drive how the ts-node block
+  // inherits. ts-node overlays the file's resolved main options (main, then
+  // ts-node.compilerOptions), so the ts-node block inherits the main block's
+  // effective flag, not the ancestor's directly: a local main value (e.g. "5.0")
+  // overrides the inherited "6.0" the ts-node block would otherwise receive, and
+  // a deprecated value in main reaches the ts-node block too.
+  const mainOptions = readBlock(original, ['compilerOptions']);
+  const mainFlag = mainOptions?.ignoreDeprecations;
+  const mainOwnDeprecated = mainOptions
+    ? hasDeprecatedValue(mainOptions)
+    : false;
+
+  const blocks: Array<{
+    path: string[];
+    inherited6: boolean;
+    inheritedDeprecated: boolean;
+  }> = [
+    {
+      path: ['compilerOptions'],
+      inherited6: providesFlag6,
+      inheritedDeprecated: providesDeprecated,
+    },
+    {
+      path: ['ts-node', 'compilerOptions'],
+      inherited6: mainFlag == null && providesFlag6,
+      inheritedDeprecated: providesDeprecated || mainOwnDeprecated,
+    },
   ];
 
   let contents = original;
   let changed = false;
-  for (const blockPath of blocks) {
+  for (const { path, inherited6, inheritedDeprecated } of blocks) {
     // Re-parse each iteration: a prior edit shifts offsets in `contents`.
     const root = parseTree(contents);
-    const blockNode = root && findNodeAtLocation(root, blockPath);
+    const blockNode = root && findNodeAtLocation(root, path);
     if (!blockNode || blockNode.type !== 'object') {
       continue;
     }
     const compilerOptions = getNodeValue(blockNode) as CompilerOptions;
-    if (!hasDeprecatedValue(compilerOptions)) {
+
+    const localFlag = compilerOptions.ignoreDeprecations;
+    // Only "6.0" already silences everything; any other local value does not.
+    if (localFlag === '6.0') {
       continue;
     }
-    // An existing non-"6.0" value (e.g. "5.0") does NOT silence 6.0-class
-    // deprecations, so upgrade it; only "6.0" is already correct.
-    if (compilerOptions.ignoreDeprecations === '6.0') {
+    // Nothing deprecated is in effect here, directly or inherited: nothing to
+    // silence.
+    if (!hasDeprecatedValue(compilerOptions) && !inheritedDeprecated) {
+      continue;
+    }
+    // An unset local value inherits the "6.0". A local non-"6.0" value (e.g.
+    // "5.0") overrides it and must be upgraded, so only skip when there is no
+    // local value to override.
+    if (localFlag == null && inherited6) {
       continue;
     }
 
     const edits = modify(
       contents,
-      [...blockPath, 'ignoreDeprecations'],
+      [...path, 'ignoreDeprecations'],
       '6.0',
       FORMATTING_OPTIONS
     );
@@ -207,92 +269,117 @@ function addIgnoreDeprecations(tree: Tree, tsconfigPath: string): boolean {
   return changed;
 }
 
-// Walks the "extends" chain (best-effort: only relative-path parents are
-// resolvable within the tree) and reports whether an ancestor already provides
-// an effective `ignoreDeprecations: "6.0"`. An ancestor provides it when its
-// compilerOptions already carries the flag, or carries a deprecated value this
-// migration flags in the same run - both propagate to descendants through the
-// merged config. Only the main compilerOptions is inherited via "extends" (a
-// ts-node block is not), so only that block is inspected. An unresolvable parent
-// counts as "not inherited", so the worst case is a harmless redundant flag,
-// never an unsilenced deprecation.
-function inheritsIgnoreDeprecations(
-  tree: Tree,
-  tsconfigPath: string,
-  seen = new Set<string>()
-): boolean {
-  const contents = tree.read(tsconfigPath, 'utf-8');
-  if (!contents) {
-    return false;
-  }
+// Reads a compilerOptions block's value, or undefined when absent or non-object.
+function readBlock(
+  contents: string,
+  blockPath: string[]
+): CompilerOptions | undefined {
   const root = parseTree(contents);
-  if (!root || root.type !== 'object') {
-    return false;
+  const node = root && findNodeAtLocation(root, blockPath);
+  if (!node || node.type !== 'object') {
+    return undefined;
+  }
+  return getNodeValue(node) as CompilerOptions;
+}
+
+// Reports two things about the ancestors reached through "extends", letting
+// TypeScript resolve and merge the chain (array, package, and case forms
+// included) instead of walking it by hand:
+//  - providesFlag6: an ancestor yields an effective `ignoreDeprecations: "6.0"`
+//    - it carries the flag directly, or carries a deprecated value this migration
+//    flags with "6.0" in the same run. Either silences a descendant block that
+//    sets no local flag.
+//  - providesDeprecated: an ancestor carries a deprecated value, which reaches
+//    this file through the merged config. A descendant that pins a stale local
+//    "5.0" still errors on it, so that local value must be upgraded.
+// Only the main compilerOptions is inherited via "extends". A missing or
+// unresolvable parent yields empty options, i.e. neither, so the worst case is a
+// harmless redundant flag, never an unsilenced deprecation.
+function inheritedDeprecationState(
+  tree: Tree,
+  ts: typeof import('typescript'),
+  parseHost: ts.ParseConfigHost,
+  tsconfigPath: string
+): { providesFlag6: boolean; providesDeprecated: boolean } {
+  const contents = tree.read(tsconfigPath, 'utf-8');
+  const root = contents ? parseTree(contents) : undefined;
+  const extendsValue =
+    root && root.type === 'object'
+      ? (getNodeValue(root) as Record<string, unknown>).extends
+      : undefined;
+  if (extendsValue == null) {
+    return { providesFlag6: false, providesDeprecated: false };
   }
 
-  const extendsValue = (getNodeValue(root) as Record<string, unknown>).extends;
-  const parents = Array.isArray(extendsValue)
-    ? extendsValue
-    : extendsValue != null
-      ? [extendsValue]
-      : [];
+  // Parsing an "extends"-only config yields exactly the inherited compilerOptions,
+  // merged across the whole chain by TypeScript.
+  const inherited = ts.parseJsonConfigFileContent(
+    { extends: extendsValue },
+    parseHost,
+    dirname(tsconfigPath)
+  ).options;
 
-  for (const parent of parents) {
-    // Non-relative (package) parents can't be resolved within the tree.
-    if (typeof parent !== 'string' || !parent.startsWith('.')) {
-      continue;
-    }
-    const parentPath = resolveExtendsPath(tree, tsconfigPath, parent);
-    if (!parentPath || seen.has(parentPath)) {
-      continue;
-    }
-    seen.add(parentPath);
+  const providesDeprecated = hasDeprecatedOption(ts, inherited);
+  const providesFlag6 =
+    inherited.ignoreDeprecations === '6.0' || providesDeprecated;
+  return { providesFlag6, providesDeprecated };
+}
 
-    const parentContents = tree.read(parentPath, 'utf-8');
-    if (!parentContents) {
-      continue;
-    }
-    const parentRoot = parseTree(parentContents);
-    const parentOptionsNode =
-      parentRoot && findNodeAtLocation(parentRoot, ['compilerOptions']);
-    if (parentOptionsNode?.type === 'object') {
-      const parentOptions = getNodeValue(parentOptionsNode) as CompilerOptions;
-      if (
-        parentOptions.ignoreDeprecations === '6.0' ||
-        hasDeprecatedValue(parentOptions)
-      ) {
-        return true;
-      }
-    }
-    if (inheritsIgnoreDeprecations(tree, parentPath, seen)) {
-      return true;
-    }
+// `hasDeprecatedValue` for parsed (extends-merged) compilerOptions, where
+// TypeScript has normalized enum-valued options: `moduleResolution` "node"/
+// "node10" to Node10, `target` "es5" to ES5, and so on. Unset options stay
+// undefined (TypeScript does not fill in the module-derived `moduleResolution`
+// default here), so an implied resolution is not misread as deprecated. Keep in
+// sync with `hasDeprecatedValue`.
+function hasDeprecatedOption(
+  ts: typeof import('typescript'),
+  options: ts.CompilerOptions
+): boolean {
+  const moduleResolution = options.moduleResolution;
+  if (
+    moduleResolution === ts.ModuleResolutionKind.Node10 ||
+    moduleResolution === ts.ModuleResolutionKind.Classic
+  ) {
+    return true;
   }
-
+  if (options.baseUrl != null) {
+    return true;
+  }
+  if (options.target === ts.ScriptTarget.ES5) {
+    return true;
+  }
+  if (options.esModuleInterop === false) {
+    return true;
+  }
+  if (options.outFile != null) {
+    return true;
+  }
+  const module = options.module;
+  if (
+    module === ts.ModuleKind.AMD ||
+    module === ts.ModuleKind.UMD ||
+    module === ts.ModuleKind.System ||
+    module === ts.ModuleKind.None
+  ) {
+    return true;
+  }
+  if (options.alwaysStrict === false) {
+    return true;
+  }
+  if (options.allowSyntheticDefaultImports === false) {
+    return true;
+  }
+  if (options.downlevelIteration != null) {
+    return true;
+  }
   return false;
 }
 
-// Resolves a relative "extends" target to a tree path. TS allows omitting the
-// ".json" extension and pointing at a directory (implying its "tsconfig.json").
-function resolveExtendsPath(
-  tree: Tree,
-  fromPath: string,
-  extendsValue: string
-): string | undefined {
-  const fromDir = fromPath.includes('/')
-    ? fromPath.slice(0, fromPath.lastIndexOf('/'))
-    : '.';
-  const base = joinPathFragments(fromDir, extendsValue);
-  const candidates = [
-    base,
-    `${base}.json`,
-    joinPathFragments(base, 'tsconfig.json'),
-  ];
-  return candidates.find((candidate) => tree.exists(candidate));
-}
-
-// Values that compile silently on TS 5.8 but are hard deprecation errors
+// Whether a file's own compilerOptions block (raw JSON, as authored) carries a
+// value that compiles silently on TS 5.8 but is a hard deprecation error
 // (TS5101/TS5107) on TS 6.0 - derived by differential 5.8-vs-6.0 probing.
+// `hasDeprecatedOption` is the counterpart for TypeScript-parsed, extends-merged
+// options; keep the two in sync.
 function hasDeprecatedValue(compilerOptions: CompilerOptions): boolean {
   const moduleResolution = asLowerString(compilerOptions.moduleResolution);
   if (

@@ -19,20 +19,19 @@ let tsModule: typeof import('typescript');
 type Analysis =
   // Needs a new `rootDir` pinned to `dirAbs` (the pre-6.0 inferred directory).
   | { kind: 'write'; dirAbs: string }
-  // No output/containment option or no input files: an inherited `rootDir` is
-  // harmless, so this config never blocks a collapse.
+  // No output/containment option or no input files: TypeScript 6 runs neither
+  // emit nor the source-containment check, so it needs no `rootDir`.
   | { kind: 'inert' }
-  // Self-contained: its correct `rootDir` is its own directory, so it must not
-  // inherit a higher one from a base (that would change its emit layout).
+  // Self-contained: its correct `rootDir` is its own directory. It has no
+  // inherited `rootDir` today (or it would be `has-rootDir`), so it only needs a
+  // write to shield it from a `rootDir` this migration pins on an `extends` base.
   | { kind: 'own-dir' }
   // Already sets `rootDir` (explicitly or via `extends`): unaffected.
   | { kind: 'has-rootDir' };
 
 interface Candidate {
   relPath: string;
-  absPath: string;
   dirAbs: string;
-  extendsAbs: string | null;
   analysis: Analysis;
 }
 
@@ -53,10 +52,12 @@ interface Candidate {
  * 6.0 default are left untouched: their inferred directory equals the tsconfig
  * directory, or they are composite (which defaulted there before 6.0 too).
  *
- * To keep the diff minimal, when several configs that extend the same
- * project-local base all need the identical new `rootDir`, it is written once to
- * that base and inherited, but only when every config extending the base agrees
- * (or is unaffected). Runs only on TypeScript 6 workspaces (gated by `requires`).
+ * Each config is written on its own; nothing is written to a shared `extends`
+ * base, so a config never inherits a `rootDir` computed for a sibling. The one
+ * case that needs care is a config that both needs a `rootDir` and is itself an
+ * `extends` base: its own-directory children would inherit the new value and
+ * shift their emit layout, so each such child is pinned to its own directory to
+ * block it. Runs only on TypeScript 6 workspaces (gated by `requires`).
  */
 export default async function (tree: Tree): Promise<void> {
   tsModule ??= ensureTypescript();
@@ -66,43 +67,59 @@ export default async function (tree: Tree): Promise<void> {
     ...ts.sys,
     onUnRecoverableConfigFileDiagnostic: () => {},
   };
-  // One host + module-resolution cache shared across every candidate program, so
-  // sources pulled in by multiple tsconfigs (shared libs, referenced projects)
-  // parse once instead of once per config.
-  const host = createSharedHost(ts);
 
   const relPaths = collectProjectTsconfigs(tree);
-  const enumeratedAbs = new Set(
-    relPaths.map((relPath) => toPosix(join(tree.root, relPath)))
-  );
 
-  // Phase 1: analyze every candidate.
-  const candidates: Candidate[] = [];
-  for (const relPath of relPaths) {
+  // Phase 1: analyze every candidate against the on-disk configs.
+  const candidates: Candidate[] = relPaths.map((relPath) => {
     const absPath = toPosix(join(tree.root, relPath));
-    candidates.push({
+    return {
       relPath,
-      absPath,
       dirAbs: toPosix(dirname(absPath)),
-      extendsAbs: resolveExtends(ts, absPath, enumeratedAbs),
-      analysis: analyze(ts, absPath, parseConfigHost, host),
-    });
+      analysis: analyze(ts, absPath, parseConfigHost),
+    };
+  });
+
+  // Phase 2: pin each config that needs a `rootDir` on its own.
+  let changed = 0;
+  for (const c of candidates) {
+    if (c.analysis.kind === 'write') {
+      const rootDir = toRelativeRootDir(c.dirAbs, c.analysis.dirAbs);
+      if (setRootDir(tree, c.relPath, rootDir)) {
+        changed++;
+      }
+    }
   }
 
-  // Phase 2: decide writes, collapsing agreeing siblings onto their shared base.
-  const writes = planWrites(ts, candidates);
-
-  // Phase 3: apply.
-  const byAbs = new Map(candidates.map((c) => [c.absPath, c]));
-  let changed = 0;
-  for (const [absPath, dirAbs] of writes) {
-    const candidate = byAbs.get(absPath);
-    if (!candidate) {
-      continue;
-    }
-    const rootDir = toRelativeRootDir(candidate.dirAbs, dirAbs);
-    if (setRootDir(tree, candidate.relPath, rootDir)) {
-      changed++;
+  // Phase 3: shield own-dir configs that now inherit a pinned `rootDir` from a
+  // base. Re-parse each from the tree (so Phase 2's writes are visible); when
+  // TypeScript reports an inherited `rootDir` where there was none, pin the
+  // config to its own directory so its emit layout does not shift. Repeat until
+  // stable, since shielding one config can turn it into a base for another. The
+  // tree-backed host lets TypeScript resolve `extends`; the `readDirectory`
+  // no-op skips the unused file scan.
+  const readFile = (filePath: string) =>
+    tree.read(filePath, 'utf-8') ?? undefined;
+  const treeParseHost: ts.ParseConfigHost = {
+    ...ts.sys,
+    readFile,
+    readDirectory: () => [],
+  };
+  const shielded = new Set<string>();
+  let added = true;
+  while (added) {
+    added = false;
+    for (const c of candidates) {
+      if (c.analysis.kind !== 'own-dir' || shielded.has(c.relPath)) {
+        continue;
+      }
+      if (inheritsRootDir(ts, treeParseHost, readFile, c.relPath)) {
+        if (setRootDir(tree, c.relPath, '.')) {
+          changed++;
+        }
+        shielded.add(c.relPath);
+        added = true;
+      }
     }
   }
 
@@ -114,8 +131,7 @@ export default async function (tree: Tree): Promise<void> {
 function analyze(
   ts: typeof import('typescript'),
   absPath: string,
-  parseConfigHost: ts.ParseConfigFileHost,
-  host: ts.CompilerHost
+  parseConfigHost: ts.ParseConfigFileHost
 ): Analysis {
   const parsed = ts.getParsedCommandLineOfConfigFile(
     absPath,
@@ -135,8 +151,8 @@ function analyze(
   }
   // Composite already defaults `rootDir` to the tsconfig's own directory in both
   // 5.x and 6.0, so the 6.0 change leaves it alone. Treat it as own-dir: never
-  // pin a file-derived value, and block a base collapse that would otherwise
-  // make it inherit one.
+  // pin a file-derived value, and shield it from a `rootDir` this migration pins
+  // on an `extends` base.
   if (options.composite) {
     return { kind: 'own-dir' };
   }
@@ -145,8 +161,7 @@ function analyze(
     ts,
     fileNames,
     options,
-    projectReferences,
-    host
+    projectReferences
   );
   if (!commonDir) {
     return { kind: 'inert' };
@@ -157,79 +172,26 @@ function analyze(
   return { kind: 'write', dirAbs: toPosix(commonDir).replace(/\/+$/, '') };
 }
 
-// Returns a map of tsconfig-abs-path -> rootDir-target-abs-dir to write.
-function planWrites(
+// True when TypeScript resolves an inherited `rootDir` for the config. An own-dir
+// config sets none of its own, so any `rootDir` reported here comes from a base
+// this migration just pinned, and inheriting it would shift the config's emit
+// layout.
+function inheritsRootDir(
   ts: typeof import('typescript'),
-  candidates: Candidate[]
-): Map<string, string> {
-  const writes = new Map<string, string>();
-  for (const c of candidates) {
-    if (c.analysis.kind === 'write') {
-      writes.set(c.absPath, c.analysis.dirAbs);
-    }
+  parseHost: ts.ParseConfigHost,
+  readFile: (filePath: string) => string | undefined,
+  relPath: string
+): boolean {
+  const config = ts.readConfigFile(relPath, readFile).config;
+  if (!config) {
+    return false;
   }
-
-  const byAbs = new Map(candidates.map((c) => [c.absPath, c]));
-  const childrenOf = new Map<string, Candidate[]>();
-  for (const c of candidates) {
-    if (!c.extendsAbs) {
-      continue;
-    }
-    const siblings = childrenOf.get(c.extendsAbs) ?? [];
-    siblings.push(c);
-    childrenOf.set(c.extendsAbs, siblings);
-  }
-
-  for (const [baseAbs, children] of childrenOf) {
-    const base = byAbs.get(baseAbs);
-    if (!base) {
-      continue;
-    }
-    const writers = children.filter((c) => c.analysis.kind === 'write');
-    // Only worth collapsing when it removes at least one write.
-    if (writers.length < 2) {
-      continue;
-    }
-    const targets = new Set(
-      writers.map((c) => (c.analysis as { dirAbs: string }).dirAbs)
-    );
-    if (targets.size !== 1) {
-      continue;
-    }
-    const target = [...targets][0];
-
-    // Safe only if every config extending the base either needs the same target,
-    // is unaffected by inheriting it, or sets its own rootDir - and no child is
-    // itself a base (keep inheritance depth to one, so the check stays complete).
-    const safe = children.every((c) => {
-      if (childrenOf.has(c.absPath)) {
-        return false;
-      }
-      switch (c.analysis.kind) {
-        case 'write':
-          return c.analysis.dirAbs === target;
-        case 'inert':
-        case 'has-rootDir':
-          return true;
-        case 'own-dir':
-          return false;
-      }
-    });
-    // The base itself must want the same target or be unaffected by hosting it.
-    const baseOk =
-      base.analysis.kind === 'inert' ||
-      (base.analysis.kind === 'write' && base.analysis.dirAbs === target);
-    if (!safe || !baseOk) {
-      continue;
-    }
-
-    writes.set(baseAbs, target);
-    for (const w of writers) {
-      writes.delete(w.absPath);
-    }
-  }
-
-  return writes;
+  const { options } = ts.parseJsonConfigFileContent(
+    config,
+    parseHost,
+    dirname(relPath)
+  );
+  return options.rootDir != null;
 }
 
 // Any of these makes TypeScript run the source-file containment / common-source
@@ -248,8 +210,7 @@ function computeCommonSourceDirectory(
   ts: typeof import('typescript'),
   rootNames: readonly string[],
   parsedOptions: ts.CompilerOptions,
-  projectReferences: readonly ts.ProjectReference[] | undefined,
-  host: ts.CompilerHost
+  projectReferences: readonly ts.ProjectReference[] | undefined
 ): string | undefined {
   // Clearing `configFilePath` makes `getCommonSourceDirectory` take the
   // file-derived branch (the pre-6.0 inference) instead of returning the
@@ -261,6 +222,11 @@ function computeCommonSourceDirectory(
     noLib: true,
     configFilePath: undefined,
   };
+  // A fresh host per program so each config resolves on its own, with no parse or
+  // module-resolution state shared across configs. Letting the program resolve
+  // modules itself (no custom `resolveModuleNameLiterals`) keeps resolution
+  // mode-aware under node16/nodenext/bundler, matching tsc.
+  const host = ts.createCompilerHost(options, /* setParentNodes */ false);
   const program = ts.createProgram({
     rootNames,
     options,
@@ -273,48 +239,6 @@ function computeCommonSourceDirectory(
     program as ts.Program & { getCommonSourceDirectory(): string }
   ).getCommonSourceDirectory();
   return commonSourceDirectory || undefined;
-}
-
-function createSharedHost(ts: typeof import('typescript')): ts.CompilerHost {
-  const host = ts.createCompilerHost({}, /* setParentNodes */ false);
-
-  const sourceFileCache = new Map<string, ts.SourceFile | undefined>();
-  const getSourceFile = host.getSourceFile.bind(host);
-  host.getSourceFile = ((fileName: string, ...rest: unknown[]) => {
-    const key = host.getCanonicalFileName(fileName);
-    if (sourceFileCache.has(key)) {
-      return sourceFileCache.get(key);
-    }
-    const sourceFile = (getSourceFile as (...a: unknown[]) => ts.SourceFile)(
-      fileName,
-      ...rest
-    );
-    sourceFileCache.set(key, sourceFile);
-    return sourceFile;
-  }) as ts.CompilerHost['getSourceFile'];
-
-  const moduleResolutionCache = ts.createModuleResolutionCache(
-    ts.sys.getCurrentDirectory(),
-    host.getCanonicalFileName
-  );
-  host.resolveModuleNameLiterals = (
-    moduleLiterals,
-    containingFile,
-    redirectedReference,
-    options
-  ) =>
-    moduleLiterals.map((literal) =>
-      ts.resolveModuleName(
-        literal.text,
-        containingFile,
-        options,
-        host,
-        moduleResolutionCache,
-        redirectedReference
-      )
-    );
-
-  return host;
 }
 
 function collectProjectTsconfigs(tree: Tree): string[] {
@@ -342,31 +266,6 @@ function collectProjectTsconfigs(tree: Tree): string[] {
     }
   });
   return tsconfigs;
-}
-
-// Resolves a tsconfig's single relative `extends` to an enumerated project
-// config, or null (array extends, package specifiers, and out-of-project bases
-// are not collapse targets).
-function resolveExtends(
-  ts: typeof import('typescript'),
-  absPath: string,
-  enumeratedAbs: Set<string>
-): string | null {
-  const ext = ts.readConfigFile(absPath, ts.sys.readFile).config?.extends;
-  if (typeof ext !== 'string' || !ext.startsWith('.')) {
-    return null;
-  }
-  const resolved = toPosix(join(dirname(absPath), ext));
-  for (const candidate of [
-    resolved,
-    `${resolved}.json`,
-    posix.join(resolved, 'tsconfig.json'),
-  ]) {
-    if (enumeratedAbs.has(candidate)) {
-      return candidate;
-    }
-  }
-  return null;
 }
 
 function setRootDir(

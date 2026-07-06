@@ -116,7 +116,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/e/tsconfig.json')).toBe('src');
   });
 
-  it('writes rootDir once on a shared base when agreeing siblings collapse', async () => {
+  it('writes rootDir on each sibling instead of a shared base', async () => {
     write('libs/col/project.json', { name: 'col', root: 'libs/col' });
     write(
       'libs/col/src/index.ts',
@@ -147,10 +147,10 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
 
     await run();
 
-    // collapsed to the base, children inherit
-    expect(rootDirOf('libs/col/tsconfig.json')).toBe('..');
-    expect(rootDirOf('libs/col/tsconfig.lib.json')).toBeUndefined();
-    expect(rootDirOf('libs/col/tsconfig.spec.json')).toBeUndefined();
+    // The solution-style base is never written; each sibling pins its own value.
+    expect(rootDirOf('libs/col/tsconfig.json')).toBeUndefined();
+    expect(rootDirOf('libs/col/tsconfig.lib.json')).toBe('..');
+    expect(rootDirOf('libs/col/tsconfig.spec.json')).toBe('..');
   });
 
   it('leaves a composite project untouched (its rootDir already defaults to its own directory)', async () => {
@@ -173,7 +173,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/comp/tsconfig.lib.json')).toBeUndefined();
   });
 
-  it('blocks a base collapse a composite sibling would be dragged into', async () => {
+  it('pins each non-composite writer and leaves the composite sibling and base untouched', async () => {
     write('libs/mix/project.json', { name: 'mix', root: 'libs/mix' });
     write('libs/mix/src/index.ts', `export const m = 6;\n`);
     write('libs/mix/src/index.spec.ts', `export const s = 7;\n`);
@@ -186,7 +186,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
         { path: './tsconfig.e2e.json' },
       ],
     });
-    // composite -> own-dir, must not inherit a rootDir collapsed onto the base
+    // composite -> own-dir, must keep its own-directory default
     write('libs/mix/tsconfig.lib.json', {
       extends: './tsconfig.json',
       compilerOptions: {
@@ -197,7 +197,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
       },
       include: ['src/**/*.ts'],
     });
-    // two non-composite writers that agree on the same target
+    // two non-composite writers
     write('libs/mix/tsconfig.spec.json', {
       extends: './tsconfig.json',
       compilerOptions: {
@@ -221,10 +221,38 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
 
     // composite keeps its own-directory default...
     expect(rootDirOf('libs/mix/tsconfig.lib.json')).toBeUndefined();
-    // ...and by blocking the collapse, the base stays untouched and each
-    // non-composite writer pins its own rootDir instead of inheriting one.
+    // ...the solution-style base is never written, and each non-composite writer
+    // pins its own rootDir.
     expect(rootDirOf('libs/mix/tsconfig.json')).toBeUndefined();
     expect(rootDirOf('libs/mix/tsconfig.spec.json')).toBe('src');
     expect(rootDirOf('libs/mix/tsconfig.e2e.json')).toBe('src');
+  });
+
+  it('shields an own-dir child from a rootDir pinned on its extends base', async () => {
+    // libs/base/tsconfig.json both needs a rootDir (its src imports another
+    // project, so its files span up to libs/) and is an extends base. Its child
+    // selects only a local file, so its own rootDir is its own directory; without
+    // a shield it would inherit the base's "..", shifting its emit layout.
+    write('libs/base/project.json', { name: 'base', root: 'libs/base' });
+    write(
+      'libs/base/src/index.ts',
+      `import { b } from '@proj/b';\nexport const x = b;\n`
+    );
+    write('libs/base/main.ts', `export const m = 1;\n`);
+    write('libs/base/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      compilerOptions: { outDir: '../../dist/out-tsc' },
+      include: ['src/**/*.ts'],
+    });
+    write('libs/base/tsconfig.child.json', {
+      extends: './tsconfig.json',
+      include: ['main.ts'],
+    });
+
+    await run();
+
+    expect(rootDirOf('libs/base/tsconfig.json')).toBe('..');
+    // Pinned to its own directory so it does not inherit the base's "..".
+    expect(rootDirOf('libs/base/tsconfig.child.json')).toBe('.');
   });
 });

@@ -796,4 +796,145 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       ).toBe('6.0');
     });
   });
+
+  describe('stale local flags under inheritance', () => {
+    it('upgrades a stale local flag that overrides an inherited "6.0"', async () => {
+      // The base is the auto-loaded tsconfig.json, so it gets "6.0". The spec
+      // extends it but pins a local "5.0" that overrides the inherited flag;
+      // paired with its own node10 it still errors on TS6, so it is upgraded.
+      tree.write(
+        'apps/app/tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+          },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'apps/app/tsconfig.spec.json',
+        JSON.stringify(
+          {
+            extends: './tsconfig.json',
+            compilerOptions: {
+              moduleResolution: 'node10',
+              ignoreDeprecations: '5.0',
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'apps/app/tsconfig.spec.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
+
+    it('upgrades a stale local flag when the deprecated value is inherited', async () => {
+      // The base carries node10 (and is flagged "6.0"). The spec has no
+      // deprecated value of its own but pins a stale local "5.0"; node10 reaches
+      // it through the merged config, so the "5.0" still errors and is upgraded.
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'apps/app/tsconfig.spec.json',
+        JSON.stringify(
+          {
+            extends: '../../tsconfig.base.json',
+            compilerOptions: { ignoreDeprecations: '5.0' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'apps/app/tsconfig.spec.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
+
+    it('leaves a descendant that only inherits the flag untouched', async () => {
+      // No local flag and no deprecated value of its own: the inherited "6.0"
+      // already silences it, so it is not flagged again.
+      tree.write(
+        'apps/app/tsconfig.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'apps/app/tsconfig.spec.json',
+        JSON.stringify(
+          {
+            extends: './tsconfig.json',
+            compilerOptions: { moduleResolution: 'node10' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'apps/app/tsconfig.spec.json').compilerOptions
+          .ignoreDeprecations
+      ).toBeUndefined();
+    });
+
+    it('upgrades the ts-node block when a local main flag lowers the inherited "6.0"', async () => {
+      // The clean base is the auto-loaded tsconfig.json, so it gets "6.0". The
+      // app pins a local main "5.0" that overrides the inherited "6.0"; ts-node
+      // overlays that resolved main, so its own node10 is not silenced and the
+      // ts-node block must be flagged even though the ancestor provides "6.0".
+      tree.write(
+        'apps/app/tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              module: 'nodenext',
+              moduleResolution: 'nodenext',
+              esModuleInterop: true,
+            },
+          },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'apps/app/tsconfig.app.json',
+        JSON.stringify(
+          {
+            extends: './tsconfig.json',
+            compilerOptions: { ignoreDeprecations: '5.0' },
+            'ts-node': { compilerOptions: { moduleResolution: 'node10' } },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      const json = readJson(tree, 'apps/app/tsconfig.app.json');
+      expect(json.compilerOptions.ignoreDeprecations).toBe('5.0');
+      expect(json['ts-node'].compilerOptions.ignoreDeprecations).toBe('6.0');
+    });
+  });
 });
