@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use dashmap::DashMap;
-use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 
 use crate::native::glob::build_glob_set;
@@ -17,8 +16,7 @@ pub struct WorkspaceFilesHashResult {
     pub files: Vec<String>,
 }
 
-pub(crate) type WorkspaceFileSetCache =
-    DashMap<String, Arc<OnceCell<Arc<WorkspaceFilesHashResult>>>>;
+pub(crate) type WorkspaceFileSetCache = DashMap<String, Arc<WorkspaceFilesHashResult>>;
 
 fn workspace_file_set_cache_key(workspace_file_sets: &[String]) -> String {
     let mut sorted_file_sets: Vec<&str> = workspace_file_sets.iter().map(String::as_str).collect();
@@ -111,16 +109,17 @@ pub(crate) fn hash_workspace_files_with_inputs_cached(
     cache: &WorkspaceFileSetCache,
 ) -> Result<Arc<WorkspaceFilesHashResult>> {
     let cache_key = workspace_file_set_cache_key(workspace_file_sets);
-    let cache_cell = cache
-        .entry(cache_key)
-        .or_insert_with(|| Arc::new(OnceCell::new()))
-        .clone();
+    if let Some(entry) = cache.get(&cache_key) {
+        return Ok(Arc::clone(entry.value()));
+    }
 
-    cache_cell
-        .get_or_try_init(|| {
-            hash_workspace_files_with_inputs(workspace_file_sets, all_workspace_files).map(Arc::new)
-        })
-        .cloned()
+    // Misses hold the shard write lock while computing, which also blocks other
+    // keys on the same shard. Acceptable here: this map only ever holds a
+    // handful of workspace fileset combos, each computed once.
+    let entry = cache.entry(cache_key).or_try_insert_with(|| {
+        hash_workspace_files_with_inputs(workspace_file_sets, all_workspace_files).map(Arc::new)
+    })?;
+    Ok(Arc::clone(entry.value()))
 }
 
 #[cfg(test)]
