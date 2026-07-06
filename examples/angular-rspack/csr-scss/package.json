@@ -22,21 +22,6 @@
     "typescript": "~6.0.3"
   },
   "nx": {
-    "targets": {
-      "build": {
-        "inputs": [
-          "production",
-          {
-            "env": "NGRS_CONFIG"
-          },
-          "{workspaceRoot}/tsconfig.base.json",
-          "{workspaceRoot}/shared/**/*"
-        ],
-        "outputs": [
-          "{projectRoot}/dist"
-        ]
-      }
-    },
     "includedScripts": []
   }
 }

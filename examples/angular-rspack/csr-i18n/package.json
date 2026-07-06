@@ -35,17 +35,6 @@
         }
       }
     },
-    "targets": {
-      "build": {
-        "inputs": [
-          "production",
-          "{workspaceRoot}/tsconfig.base.json"
-        ],
-        "outputs": [
-          "{projectRoot}/dist"
-        ]
-      }
-    },
     "includedScripts": []
   }
 }

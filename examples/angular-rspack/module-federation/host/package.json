@@ -24,24 +24,6 @@
         "dependsOn": [
           "^build"
         ]
-      },
-      "build": {
-        "inputs": [
-          "production",
-          "^production",
-          {
-            "dependentTasksOutputFiles": "**/*.js",
-            "transitive": true
-          },
-          "{workspaceRoot}/tsconfig.base.json",
-          "{workspaceRoot}/tsconfig.json"
-        ],
-        "outputs": [
-          "{projectRoot}/dist"
-        ],
-        "dependsOn": [
-          "^build"
-        ]
       }
     }
   }
