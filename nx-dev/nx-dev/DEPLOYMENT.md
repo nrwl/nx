@@ -37,13 +37,14 @@ Edge functions run first. Located at `/netlify/edge-functions/` in the repositor
 
 After edge functions, Netlify processes `_redirects`. The checked-in file contains **301 permanent redirects** (legacy URL migrations, shortened URLs, external redirects) plus the `/api/query-ai-embeddings` function rewrite. At build time, `scripts/build-site.mjs` appends environment-dependent **200 proxies**:
 
-| Pattern          | Destination                       | Description              |
-| ---------------- | --------------------------------- | ------------------------ |
-| `/docs/*`        | `${ASTRO_URL}/docs/:splat`        | All documentation pages  |
-| `/robots.txt`    | `${ASTRO_URL}/docs/robots.txt`    | Robots file              |
-| `/llms.txt`      | `${ASTRO_URL}/docs/llms.txt`      | LLM-friendly docs index  |
-| `/llms-full.txt` | `${ASTRO_URL}/docs/llms-full.txt` | Full LLM documentation   |
-| `/.netlify/*`    | `${ASTRO_URL}/.netlify/:splat`    | Netlify functions/assets |
+| Pattern          | Destination                       | Description             |
+| ---------------- | --------------------------------- | ----------------------- |
+| `/docs/*`        | `${ASTRO_URL}/docs/:splat`        | All documentation pages |
+| `/robots.txt`    | `${ASTRO_URL}/docs/robots.txt`    | Robots file             |
+| `/llms.txt`      | `${ASTRO_URL}/docs/llms.txt`      | LLM-friendly docs index |
+| `/llms-full.txt` | `${ASTRO_URL}/docs/llms-full.txt` | Full LLM documentation  |
+
+`/.netlify/*` cannot be a redirect source (reserved). The platform Image CDN serves `/.netlify/images` directly, resolving `url=` paths through this site's routing (including the `/docs/*` proxy), so astro-docs image URLs keep working.
 
 Rules are processed **top-to-bottom, first match wins**. Specific rules must come before wildcard rules.
 
