@@ -20,7 +20,7 @@ Please report security vulnerabilities related to our commercial Nx-Cloud produc
 
 ### What Should Be Reported
 
-The security email is for **demonstrable, verified vulnerabilities within the Nx-Cloud product/platform itself**. 
+The security email is for **demonstrable, verified vulnerabilities within the Nx-Cloud product/platform itself**.
 
 Please note that low level nuisance findings (email aliases, sending invite emails, etc) are known and reports that are not
 actually security related will be ignored. Reports sent to this address regarding oss libraries **may not** be replied to
@@ -29,9 +29,10 @@ or forwarded to the correct oss-security@nrwl.io address by the cloud security t
 ## Submission Notes
 
 ### Bounty
+
 Bounty program awards are **only** distributed for **critical** vulnerabilities reported on the commercial product (Nx Cloud)
 and only in cases where the data of our users or the core integrity of the platform may be compromised. All other findings
-that do not result in anything critical will not be awarded any bounty. 
+that do not result in anything critical will not be awarded any bounty.
 
 Bounties are not paid out for OSS findings.
 
@@ -50,7 +51,7 @@ In general we will not:
 - inform reporters if something has already been submitted by another party with work in progress
 - provide granular details of in-progress mitigation efforts
 - respond to repeated messages for updates on in-progress efforts
-- spend time responding to 1-line messages such as: "I want to report a very serve vulnerability, do you have a bounty program?" 
+- spend time responding to 1-line messages such as: "I want to report a very serve vulnerability, do you have a bounty program?"
 
 ### Important
 
