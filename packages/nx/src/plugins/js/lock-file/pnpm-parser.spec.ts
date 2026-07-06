@@ -1308,7 +1308,7 @@ describe('pnpm LockFile utility', () => {
         expect(result).toContain('patches/typescript.patch');
       });
 
-      it('flattens a custom object-form patch path to patches/<file> so the lockfile matches the config (pnpm 9-10)', () => {
+      it('relocates a custom object-form patch path under patches/ preserving its subpath so the lockfile matches the config (pnpm 9-10)', () => {
         const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
@@ -1317,8 +1317,8 @@ describe('pnpm LockFile utility', () => {
         );
         // pnpm 9-10 record the patch path in the lockfile, and a frozen install
         // aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when it disagrees with
-        // the emitted config. A patch kept outside patches/ ships flattened to
-        // patches/<file>, so the lockfile path must be flattened the same way.
+        // the emitted config. A patch kept outside patches/ ships under patches/
+        // with its subpath preserved, so the lockfile path must match.
         const lockFileWithCustomPatch = lockFile.replace(
           'lockfileVersion:',
           [
@@ -1340,8 +1340,9 @@ describe('pnpm LockFile utility', () => {
         );
 
         expect(result).toMatch(/^patchedDependencies:/m);
-        expect(result).toContain('path: patches/typescript.patch');
-        expect(result).not.toContain('tools/patches');
+        expect(result).toContain(
+          'path: patches/tools/patches/typescript.patch'
+        );
       });
 
       it('should keep a patch declared with a semver-range key when a matching version survives the prune', () => {
