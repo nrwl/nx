@@ -40,6 +40,7 @@ export default [
             // runtime (see src/utils/versions.ts).
             '@nx/cypress',
             'typescript',
+            '@typescript/typescript6',
             'eslint',
             'rollup',
             'vite',
