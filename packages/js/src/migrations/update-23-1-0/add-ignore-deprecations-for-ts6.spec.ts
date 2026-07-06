@@ -65,13 +65,15 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     expect(json.compilerOptions.ignoreDeprecations).toBeUndefined();
   });
 
-  it('skips files with no compilerOptions', async () => {
+  it('adds only the config-load flag to a solution-container tsconfig.json', async () => {
+    // No compilerOptions and no source files, so the pins are skipped - but the
+    // file is still a jest/ts-node auto-load target, so it gets the flag.
     tree.write('tsconfig.json', JSON.stringify({ files: [] }, null, 2));
 
     await update(tree);
 
     const json = readJson(tree, 'tsconfig.json');
-    expect(json.compilerOptions).toBeUndefined();
+    expect(json.compilerOptions).toEqual({ ignoreDeprecations: '6.0' });
   });
 
   it('leaves a non-object compilerOptions untouched without crashing', async () => {
@@ -364,7 +366,9 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       await update(tree);
 
       const json = readJson(tree, 'tsconfig.json');
-      expect(json.compilerOptions).toBeUndefined();
+      // Pin skipped (solution container); the config-load flag is still set.
+      expect(json.compilerOptions.strict).toBeUndefined();
+      expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
 
     it('adds compilerOptions.strict false when the block is missing', async () => {
@@ -475,7 +479,9 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       await update(tree);
 
       const json = readJson(tree, 'tsconfig.json');
-      expect(json.compilerOptions).toBeUndefined();
+      // Pin skipped (solution container); the config-load flag is still set.
+      expect(json.compilerOptions.noUncheckedSideEffectImports).toBeUndefined();
+      expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
 
     it('pins both strict and noUncheckedSideEffectImports on a bare chain root', async () => {
@@ -572,7 +578,9 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       await update(tree);
 
       const json = readJson(tree, 'tsconfig.json');
-      expect(json.compilerOptions).toBeUndefined();
+      // Pin skipped (solution container); the config-load flag is still set.
+      expect(json.compilerOptions.types).toBeUndefined();
+      expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
   });
 
@@ -613,8 +621,8 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
       const json = readJson(tree, 'tsconfig.json');
       expect(json.compilerOptions.esModuleInterop).toBe(true);
-      // A chain root always carries ignoreDeprecations so descendants inherit it
-      // for config loading, even when it has no deprecated value of its own.
+      // tsconfig.json is a config-load target, so it always carries the flag
+      // even with no deprecated value of its own.
       expect(json.compilerOptions.ignoreDeprecations).toBe('6.0');
     });
 
@@ -635,11 +643,48 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     });
   });
 
-  describe('config-loading chain-root pass', () => {
-    it('sets ignoreDeprecations on a clean base so config-loading descendants inherit it', async () => {
+  describe('config-load flag on tsconfig.json', () => {
+    it('always flags a clean chain-root tsconfig.json but not a clean tsconfig.base.json', async () => {
+      tree.write(
+        'tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+          },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              module: 'esnext',
+              moduleResolution: 'bundler',
+              esModuleInterop: true,
+            },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      // tsconfig.json is an auto-load target -> flagged even with no deprecation.
+      expect(
+        readJson(tree, 'tsconfig.json').compilerOptions.ignoreDeprecations
+      ).toBe('6.0');
+      // tsconfig.base.json is not auto-loaded and carries no deprecated value.
+      expect(
+        readJson(tree, 'tsconfig.base.json').compilerOptions.ignoreDeprecations
+      ).toBeUndefined();
+    });
+
+    it('flags a config-loading tsconfig.json directly without touching its clean base', async () => {
       // nx-console-shape base: NodeNext + esModuleInterop true carries no
-      // deprecated value, so before this pass it never got ignoreDeprecations
-      // and a config-loading tsconfig extending it could not inherit one.
+      // deprecated value, so it is left clean (it is not an auto-load target).
       tree.write(
         'tsconfig.base.json',
         JSON.stringify(
@@ -654,8 +699,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
           2
         )
       );
-      // config-loading tsconfig.json (jest/ts-node resolves this name) extending
-      // the base; solution-style, no compilerOptions of its own.
+      // The auto-loaded name (jest/ts-node resolve this) gets the flag directly.
       tree.write(
         'apps/e2e/tsconfig.json',
         JSON.stringify(
@@ -667,16 +711,89 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
 
       await update(tree);
 
-      // The base carries the flag...
+      // The base has no deprecated value and isn't auto-loaded, so no flag...
       expect(
         readJson(tree, 'tsconfig.base.json').compilerOptions.ignoreDeprecations
-      ).toBe('6.0');
-      // ...and the extending config-loading tsconfig is left untouched: it
-      // inherits the flag, so it is never set twice.
+      ).toBeUndefined();
+      // ...while the auto-loaded tsconfig.json carries it directly.
       expect(
         readJson(tree, 'apps/e2e/tsconfig.json').compilerOptions
-          ?.ignoreDeprecations
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
+
+    it('does not re-flag a descendant that inherits the flag from tsconfig.json', async () => {
+      tree.write(
+        'apps/app/tsconfig.json',
+        JSON.stringify(
+          {
+            compilerOptions: { module: 'esnext', moduleResolution: 'bundler' },
+          },
+          null,
+          2
+        )
+      );
+      // Sets a deprecated value directly but extends the flagged tsconfig.json,
+      // so the inherited flag already silences it.
+      tree.write(
+        'apps/app/tsconfig.spec.json',
+        JSON.stringify(
+          {
+            extends: './tsconfig.json',
+            compilerOptions: { moduleResolution: 'node10' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'apps/app/tsconfig.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+      expect(
+        readJson(tree, 'apps/app/tsconfig.spec.json').compilerOptions
+          .ignoreDeprecations
       ).toBeUndefined();
+    });
+
+    it('flags a descendant whose deprecated value is not covered by an inherited flag', async () => {
+      // Extends a clean base (no flag, no deprecated value), so the direct
+      // node10 is not silenced by inheritance and must be flagged here.
+      tree.write(
+        'tsconfig.base.json',
+        JSON.stringify(
+          {
+            compilerOptions: {
+              module: 'nodenext',
+              moduleResolution: 'nodenext',
+              esModuleInterop: true,
+            },
+          },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'apps/app/tsconfig.spec.json',
+        JSON.stringify(
+          {
+            extends: '../../tsconfig.base.json',
+            compilerOptions: { moduleResolution: 'node10' },
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'apps/app/tsconfig.spec.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
     });
   });
 });
