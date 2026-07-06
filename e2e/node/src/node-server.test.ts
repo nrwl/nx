@@ -4,8 +4,8 @@ import {
   cleanupProject,
   getSelectedPackageManager,
   killPort,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
   reservePort,
   runCLI,
@@ -262,8 +262,7 @@ describe('Node Applications + webpack', () => {
 
       await restarted;
     } finally {
-      await promisifiedTreeKill(p.pid, 'SIGKILL');
-      await killPort(port);
+      await killProcessAndPorts(p.pid, port);
     }
   }, 300_000);
 });

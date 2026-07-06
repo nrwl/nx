@@ -124,6 +124,14 @@ export async function* nodeExecutor(
       currentTask = task;
       globalLineAwareWriter.setActiveProcess(task.id);
       await task.start();
+
+      // A file change may have queued another task while we waited for the
+      // previous process to stop. Its debounce trigger piggybacked on this
+      // in-flight run, so drain the queue now or it would sit unprocessed
+      // until the next change.
+      if (tasks.length > 0) {
+        await processQueue();
+      }
     };
 
     const debouncedProcessQueue = createCoalescingDebounce(
