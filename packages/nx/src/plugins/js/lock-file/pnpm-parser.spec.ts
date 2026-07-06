@@ -1308,6 +1308,42 @@ describe('pnpm LockFile utility', () => {
         expect(result).toContain('patches/typescript.patch');
       });
 
+      it('flattens a custom object-form patch path to patches/<file> so the lockfile matches the config (pnpm 9-10)', () => {
+        const typescriptPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json.fixture'
+          )
+        );
+        // pnpm 9-10 record the patch path in the lockfile, and a frozen install
+        // aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when it disagrees with
+        // the emitted config. A patch kept outside patches/ ships flattened to
+        // patches/<file>, so the lockfile path must be flattened the same way.
+        const lockFileWithCustomPatch = lockFile.replace(
+          'lockfileVersion:',
+          [
+            'patchedDependencies:',
+            '  typescript@4.8.4:',
+            '    hash: sha256-tspatch',
+            '    path: tools/patches/typescript.patch',
+            '',
+            'lockfileVersion:',
+          ].join('\n')
+        );
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithCustomPatch,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        expect(result).toMatch(/^patchedDependencies:/m);
+        expect(result).toContain('path: patches/typescript.patch');
+        expect(result).not.toContain('tools/patches');
+      });
+
       it('should keep a patch declared with a semver-range key when a matching version survives the prune', () => {
         const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
@@ -3549,6 +3585,242 @@ snapshots:
       );
       // ...and never emitted under peerDependencies (pnpm rejects file: there).
       expect(result).not.toMatch(/peerDependencies:/);
+    });
+
+    it('emits a workspace module the app peer-depends on when pnpm did not auto-install it (autoInstallPeers off)', () => {
+      // With autoInstallPeers off, pnpm records no importer entry for a
+      // workspace peer, so the root importer is empty. The pruned manifest
+      // still moves the peer into dependencies as a file: directory package, so
+      // the root importer must reference it or pnpm install --frozen-lockfile
+      // fails with ERR_PNPM_OUTDATED_LOCKFILE.
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .: {}
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        peerDependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // lib-a is still emitted as a directory package...
+      expect(result).toContain(
+        `'@myorg/lib-a@file:workspace_modules/@myorg/lib-a':`
+      );
+      // ...and referenced from the root importer under dependencies via file:.
+      expect(result).toMatch(
+        /'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: file:workspace_modules\/@myorg\/lib-a/
+      );
+    });
+
+    it('emits a transitive workspace peer when pnpm did not auto-install it (autoInstallPeers off)', () => {
+      // app -> @myorg/lib-a (dependency); @myorg/lib-a peer-depends on the
+      // workspace @myorg/lib-b. With autoInstallPeers off, lib-a's importer is
+      // empty, so the peer is only visible in lib-a's manifest. The copied
+      // manifest moves it into dependencies, so the pruned lockfile must carry
+      // the same file: edge and directory package.
+      vol.fromJSON({
+        '/virtual/libs/lib-a/package.json': JSON.stringify({
+          name: '@myorg/lib-a',
+          version: '1.0.0',
+          peerDependencies: { '@myorg/lib-b': 'workspace:*' },
+        }),
+      });
+
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a: {}
+
+  libs/lib-b:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+          {
+            projectName: '@myorg/lib-b',
+            packageName: '@myorg/lib-b',
+            root: 'libs/lib-b',
+          },
+        ],
+        {
+          '@myorg/lib-a': ['@myorg/lib-b'],
+        },
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-b': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // The transitive peer is emitted as a directory package...
+      expect(result).toContain(
+        `'@myorg/lib-b@file:workspace_modules/@myorg/lib-b':`
+      );
+      // ...and lib-a's directory package references it under dependencies.
+      expect(result).toMatch(
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':[\s\S]*?dependencies:[\s\S]*?'@myorg\/lib-b': file:workspace_modules\/@myorg\/lib-b/
+      );
+    });
+
+    it('drops a name-only patch whose only surviving match is a workspace directory package', () => {
+      // A name-only patchedDependencies entry targets a versioned npm package.
+      // If that package is pruned out but a workspace module shares its name,
+      // the entry must not latch onto the module's file: directory package (pnpm
+      // cannot apply the patch there, and the .patch file is not shipped).
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  is-number: 698c042b4fff0bfd4ed715c62cbe28d6e9b60a65ab09b985f933cddc464775fe
+
+importers:
+
+  .:
+    dependencies:
+      is-number:
+        specifier: workspace:*
+        version: link:libs/is-number
+
+  libs/is-number: {}
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { 'is-number': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: 'is-number',
+            packageName: 'is-number',
+            root: 'libs/is-number',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // The workspace module is emitted, but the npm patch is dropped.
+      expect(result).toContain(`is-number@file:workspace_modules/is-number:`);
+      expect(result).not.toMatch(/patchedDependencies:/);
     });
 
     it('should emit a directory package for a workspace module in the app devDependencies', () => {
