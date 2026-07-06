@@ -760,6 +760,16 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
 }
 
 /**
+ * pnpm config resolved once per prune and threaded into the settings-yaml and
+ * patch-artifact builders, so neither re-detects the pnpm version nor re-reads
+ * the root config and lockfile.
+ */
+type PrunedPnpmConfig = {
+  pnpmMajor: number | null;
+  patchedDependencies: Record<string, string>;
+};
+
+/**
  * Builds the settings-only pnpm-workspace.yaml a standalone pruned output needs
  * on pnpm 11 and above, or null when there is nothing to carry.
  *
@@ -787,15 +797,18 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
  * output actually installs; entries for packages the prune dropped are left out.
  * Omit it to carry the root allowlist verbatim (pnpm ignores approvals for absent
  * packages either way, so this only keeps the emitted file accurate).
+ * `precomputed` lets a caller pass the pnpm major and pruned patchedDependencies
+ * it already resolved instead of recomputing them here.
  */
 export function getPrunedPnpmInstallSettingsYaml(
   workspaceRootPath: string = workspaceRoot,
-  prunedLockfileContent?: string
+  prunedLockfileContent?: string,
+  precomputed?: PrunedPnpmConfig
 ): string | null {
   // pnpm 11 was the first major to read these settings only from
   // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
   // still read them from the emitted package.json, so nothing to carry.
-  const pnpmMajor = getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
   if (pnpmMajor === null || pnpmMajor < 11) {
     return null;
   }
@@ -832,15 +845,14 @@ export function getPrunedPnpmInstallSettingsYaml(
   if (rootSettings.supportedArchitectures) {
     settings.supportedArchitectures = rootSettings.supportedArchitectures;
   }
-  if (prunedLockfileContent) {
-    const patchedDependencies = getPrunedPatchedDependencies(
-      workspaceRootPath,
-      prunedLockfileContent
-    );
-    if (Object.keys(patchedDependencies).length > 0) {
-      settings.patchedDependencies =
-        normalizePrunedPatchedDependencies(patchedDependencies);
-    }
+  const patchedDependencies =
+    precomputed?.patchedDependencies ??
+    (prunedLockfileContent
+      ? getPrunedPatchedDependencies(workspaceRootPath, prunedLockfileContent)
+      : {});
+  if (Object.keys(patchedDependencies).length > 0) {
+    settings.patchedDependencies =
+      normalizePrunedPatchedDependencies(patchedDependencies);
   }
   if (Object.keys(settings).length === 0) {
     return null;
@@ -975,17 +987,22 @@ function readRootPatchedDependencies(
 ): Record<string, string> {
   const merged: Record<string, string> = {};
   try {
+    // pnpm <=10 reads patchedDependencies from the package.json `pnpm` field,
+    // pnpm 11 only from pnpm-workspace.yaml. When both declare the same key the
+    // pnpm-workspace.yaml value is the authoritative one on pnpm 11 (pnpm
+    // migrates the config there), so read package.json first and let the
+    // pnpm-workspace.yaml value win on conflict.
+    const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
+    if (existsSync(rootPackageJsonPath)) {
+      const rootPackageJson = readJsonFile<PackageJson>(rootPackageJsonPath);
+      Object.assign(merged, rootPackageJson.pnpm?.patchedDependencies ?? {});
+    }
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (existsSync(rootWorkspaceYaml)) {
       const yaml = readYamlFile<{
         patchedDependencies?: Record<string, string>;
       }>(rootWorkspaceYaml);
       Object.assign(merged, yaml?.patchedDependencies ?? {});
-    }
-    const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
-    if (existsSync(rootPackageJsonPath)) {
-      const rootPackageJson = readJsonFile<PackageJson>(rootPackageJsonPath);
-      Object.assign(merged, rootPackageJson.pnpm?.patchedDependencies ?? {});
     }
   } catch {
     // Unreadable or malformed root config: carry no patches rather than guess.
@@ -1019,19 +1036,24 @@ function getPrunedLockfilePatchedKeys(
  */
 export function getPrunedPnpmPatchArtifacts(
   workspaceRootPath: string = workspaceRoot,
-  prunedLockfileContent?: string
+  prunedLockfileContent?: string,
+  precomputed?: PrunedPnpmConfig
 ): {
   patchFiles: Array<{ path: string; content: string }>;
   packageJsonPatchedDependencies: Record<string, string> | null;
 } {
-  const patchedDependencies = getPrunedPatchedDependencies(
-    workspaceRootPath,
-    prunedLockfileContent
-  );
+  const patchedDependencies =
+    precomputed?.patchedDependencies ??
+    getPrunedPatchedDependencies(workspaceRootPath, prunedLockfileContent);
   if (Object.keys(patchedDependencies).length === 0) {
     return { patchFiles: [], packageJsonPatchedDependencies: null };
   }
   const patchFiles: Array<{ path: string; content: string }> = [];
+  // normalizePrunedPatchPath can map two different sources to one shipped path
+  // (it drops `.`/`..` and a leading `patches/`), which would ship a single file
+  // for both entries and apply the wrong patch. Detect the clash and fail loudly
+  // rather than silently corrupt the output.
+  const shippedFrom = new Map<string, string>();
   for (const patchPath of new Set(Object.values(patchedDependencies))) {
     // The config/lockfile side normalizes an absolute patch path under patches/,
     // so read its source from that absolute location to keep the shipped file in
@@ -1039,11 +1061,19 @@ export function getPrunedPnpmPatchArtifacts(
     const source = isAbsolute(patchPath)
       ? patchPath
       : join(workspaceRootPath, patchPath);
+    const destination = normalizePrunedPatchPath(patchPath);
+    const existingSource = shippedFrom.get(destination);
+    if (existingSource !== undefined && existingSource !== source) {
+      throw new Error(
+        `Cannot prune pnpm patches: "${existingSource}" and "${source}" both ship to "${destination}" in the standalone output. Rename one so the patches do not collide.`
+      );
+    }
+    shippedFrom.set(destination, source);
     if (existsSync(source)) {
       // Ship the patch under the `patches/<subpath>` path the pruned output
       // declares, reading it from wherever the workspace kept it.
       patchFiles.push({
-        path: normalizePrunedPatchPath(patchPath),
+        path: destination,
         content: readFileSync(source, 'utf-8'),
       });
     } else {
@@ -1056,7 +1086,7 @@ export function getPrunedPnpmPatchArtifacts(
       );
     }
   }
-  const pnpmMajor = getPnpmMajor(workspaceRootPath);
+  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
   return {
     patchFiles,
     packageJsonPatchedDependencies:
@@ -1082,16 +1112,29 @@ export function emitPrunedPnpmInstallAssets(
   packageJson: PackageJson,
   emit: (assetPath: string, content: string) => void
 ): void {
+  const config: PrunedPnpmConfig = {
+    pnpmMajor: getPnpmMajor(workspaceRootPath),
+    patchedDependencies: getPrunedPatchedDependencies(
+      workspaceRootPath,
+      prunedLockfileContent
+    ),
+  };
+  // Resolve the patch files first so a colliding patch path aborts before any
+  // asset is emitted.
+  const { patchFiles, packageJsonPatchedDependencies } =
+    getPrunedPnpmPatchArtifacts(
+      workspaceRootPath,
+      prunedLockfileContent,
+      config
+    );
   const yaml = getPrunedPnpmInstallSettingsYaml(
     workspaceRootPath,
-    prunedLockfileContent
+    prunedLockfileContent,
+    config
   );
   if (yaml !== null) {
     emit('pnpm-workspace.yaml', yaml);
   }
-
-  const { patchFiles, packageJsonPatchedDependencies } =
-    getPrunedPnpmPatchArtifacts(workspaceRootPath, prunedLockfileContent);
   for (const { path, content } of patchFiles) {
     emit(path, content);
   }
@@ -1121,9 +1164,25 @@ export function writePrunedPnpmInstallSettings(
 ): void {
   const prunedLockfileContent =
     lockfileContent ?? readPrunedLockfile(outputDirectory);
+  const config: PrunedPnpmConfig = {
+    pnpmMajor: getPnpmMajor(workspaceRootPath),
+    patchedDependencies: getPrunedPatchedDependencies(
+      workspaceRootPath,
+      prunedLockfileContent
+    ),
+  };
+  // Resolve the patch files first so a colliding patch path aborts before any
+  // file is written.
+  const { patchFiles, packageJsonPatchedDependencies } =
+    getPrunedPnpmPatchArtifacts(
+      workspaceRootPath,
+      prunedLockfileContent,
+      config
+    );
   const yaml = getPrunedPnpmInstallSettingsYaml(
     workspaceRootPath,
-    prunedLockfileContent
+    prunedLockfileContent,
+    config
   );
   const settingsPath = join(outputDirectory, 'pnpm-workspace.yaml');
   if (yaml !== null) {
@@ -1134,9 +1193,6 @@ export function writePrunedPnpmInstallSettings(
     // pnpm 11 would read its patchedDependencies as a lockfile mismatch. Drop it.
     rmSync(settingsPath);
   }
-
-  const { patchFiles, packageJsonPatchedDependencies } =
-    getPrunedPnpmPatchArtifacts(workspaceRootPath, prunedLockfileContent);
   for (const { path, content } of patchFiles) {
     const destination = join(outputDirectory, path);
     mkdirSync(dirname(destination), { recursive: true });

@@ -1781,6 +1781,114 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(emitted).toEqual([]);
     expect(packageJson.pnpm).toBeUndefined();
   });
+
+  it('throws when two patch sources would ship to the same path', () => {
+    mockPnpmVersion('11.2.2');
+    // `patches/dupe.patch` and `dupe.patch` are different files but both
+    // normalize to `patches/dupe.patch`; shipping one for both would apply the
+    // wrong patch, so fail loudly instead.
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/dupe.patch',
+        '  is-odd@3.0.1: dupe.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('patches/dupe.patch', 'A\n');
+    writeRootPatch('dupe.patch', 'B\n');
+
+    expect(() =>
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(
+          ['is-number@7.0.0', 'is-odd@3.0.1'],
+          ['is-number@7.0.0', 'is-odd@3.0.1']
+        )
+      )
+    ).toThrow(/both ship to "patches\/dupe\.patch"/);
+  });
+
+  it('ships a single file when two keys reference the same patch', () => {
+    mockPnpmVersion('11.2.2');
+    // Two keys sharing one patch file is not a collision: the same source ships
+    // once.
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/shared.patch',
+        '  is-number@7.0.1: patches/shared.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('patches/shared.patch', 'SHARED\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(
+        ['is-number@7.0.0', 'is-number@7.0.1'],
+        ['is-number@7.0.0', 'is-number@7.0.1']
+      )
+    );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/shared.patch', content: 'SHARED\n' },
+    ]);
+  });
+
+  it('prefers the pnpm-workspace.yaml patch path over a stale package.json one', () => {
+    mockPnpmVersion('11.2.2');
+    // The same key in both root sources with different paths. pnpm-workspace.yaml
+    // is authoritative on pnpm 11, so its path (and file) must win.
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/current.patch',
+        '',
+      ].join('\n')
+    );
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        pnpm: {
+          patchedDependencies: { 'is-number@7.0.0': 'patches/stale.patch' },
+        },
+      })
+    );
+    writeRootPatch('patches/current.patch', 'CURRENT\n');
+    writeRootPatch('patches/stale.patch', 'STALE\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/current.patch', content: 'CURRENT\n' },
+    ]);
+  });
+
+  it('resolves the pnpm version once per write even when shipping patches', () => {
+    const versionSpy = jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number.patch\n'
+    );
+    writeRootPatch('patches/is-number.patch');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    // The pnpm major is resolved once at the entry point and threaded into both
+    // builders, not re-detected inside each.
+    expect(versionSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('readNxMigrateConfig', () => {
