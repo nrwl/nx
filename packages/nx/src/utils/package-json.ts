@@ -838,7 +838,8 @@ export function getPrunedPnpmInstallSettingsYaml(
       prunedLockfileContent
     );
     if (Object.keys(patchedDependencies).length > 0) {
-      settings.patchedDependencies = patchedDependencies;
+      settings.patchedDependencies =
+        normalizePrunedPatchedDependencies(patchedDependencies);
     }
   }
   if (Object.keys(settings).length === 0) {
@@ -933,6 +934,37 @@ function getPrunedPatchedDependencies(
   return scoped;
 }
 
+/**
+ * The path a `.patch` file takes inside the pruned output. Patches must ship
+ * under the output's declared `patches/` directory: a source path outside it (a
+ * custom directory, or a parent-relative `../` path) would fall outside the
+ * prune target's cached `patches` output and be dropped on a cache replay, and a
+ * `..` asset name is not one a bundler can emit. The source sub-structure is
+ * kept under `patches/`, so two patches that share a file name in different
+ * directories do not collide; a leading `patches/` is dropped so the common
+ * layout is not nested under a second `patches/`.
+ * `filterPatchedDependenciesToPrunedPackages` in the pnpm lock-file parser calls
+ * this same helper for the lockfile's object-form path (pnpm 9-10), which pnpm
+ * --frozen-lockfile cross-checks against this config path, so the two agree.
+ */
+export function normalizePrunedPatchPath(patchPath: string): string {
+  const relative = patchPath
+    .replace(/\\/g, '/')
+    .replace(/^(?:\.\.?\/)+/, '')
+    .replace(/^patches\//, '');
+  return `patches/${relative}`;
+}
+
+function normalizePrunedPatchedDependencies(
+  patchedDependencies: Record<string, string>
+): Record<string, string> {
+  const normalized: Record<string, string> = {};
+  for (const [key, patchPath] of Object.entries(patchedDependencies)) {
+    normalized[key] = normalizePrunedPatchPath(patchPath);
+  }
+  return normalized;
+}
+
 function readRootPatchedDependencies(
   workspaceRootPath: string
 ): Record<string, string> {
@@ -998,13 +1030,15 @@ export function getPrunedPnpmPatchArtifacts(
   for (const patchPath of new Set(Object.values(patchedDependencies))) {
     const source = join(workspaceRootPath, patchPath);
     if (existsSync(source)) {
+      // Ship the patch under the flattened `patches/<file>` path the pruned
+      // output declares, reading it from wherever the workspace kept it.
       patchFiles.push({
-        path: patchPath,
+        path: normalizePrunedPatchPath(patchPath),
         content: readFileSync(source, 'utf-8'),
       });
     } else {
       // The root config declares this patch but the file is missing (already a
-      // broken workspace - the root install would fail too). Warn rather than
+      // broken workspace, the root install would fail too). Warn rather than
       // drop the declaration: the pruned lockfile still lists the patch, so
       // dropping only the config would trade this for a lockfile config mismatch.
       logger.warn(
@@ -1016,7 +1050,9 @@ export function getPrunedPnpmPatchArtifacts(
   return {
     patchFiles,
     packageJsonPatchedDependencies:
-      pnpmMajor !== null && pnpmMajor < 11 ? patchedDependencies : null,
+      pnpmMajor !== null && pnpmMajor < 11
+        ? normalizePrunedPatchedDependencies(patchedDependencies)
+        : null,
   };
 }
 

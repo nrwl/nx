@@ -1355,6 +1355,108 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
+  it('relocates a custom patch path under patches/ preserving its subpath in the pnpm 11 yaml and files', () => {
+    mockPnpmVersion('11.2.2');
+    // A workspace can keep patches outside patches/ (custom or shared dir). The
+    // pruned output relocates them under patches/ with their subpath preserved,
+    // so the prune target's declared `patches` output covers them; otherwise a
+    // cache replay drops the file and the standalone install fails on the
+    // missing patch.
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: tools/patches/is-number.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('tools/patches/is-number.patch', 'THE PATCH\n');
+
+    const lockfile = prunedLockfileWithPatches(
+      ['is-number@7.0.0'],
+      ['is-number@7.0.0']
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(getPrunedPnpmInstallSettingsYaml(tempDir, lockfile))).toEqual({
+      patchedDependencies: {
+        'is-number@7.0.0': 'patches/tools/patches/is-number.patch',
+      },
+    });
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(tempDir, lockfile);
+    // Read from the custom source, shipped under patches/ with its subpath kept.
+    expect(patchFiles).toEqual([
+      {
+        path: 'patches/tools/patches/is-number.patch',
+        content: 'THE PATCH\n',
+      },
+    ]);
+  });
+
+  it('relocates a custom patch path under patches/ preserving its subpath in the package.json declaration on pnpm 10', () => {
+    mockPnpmVersion('10.13.1');
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        pnpm: {
+          patchedDependencies: {
+            'is-number@7.0.0': 'custom/is-number.patch',
+          },
+        },
+      })
+    );
+    writeRootPatch('custom/is-number.patch');
+
+    const { patchFiles, packageJsonPatchedDependencies } =
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/custom/is-number.patch', content: 'PATCH\n' },
+    ]);
+    expect(packageJsonPatchedDependencies).toEqual({
+      'is-number@7.0.0': 'patches/custom/is-number.patch',
+    });
+  });
+
+  it('keeps same-named patches in different directories from colliding under patches/', () => {
+    mockPnpmVersion('11.2.2');
+    // Two patches sharing a file name in different source directories must land
+    // at distinct paths under patches/, or one would overwrite the other and the
+    // install would apply the wrong patch (or fail the hash check).
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: a/fix.patch',
+        '  is-odd@3.0.1: b/fix.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('a/fix.patch', 'PATCH A\n');
+    writeRootPatch('b/fix.patch', 'PATCH B\n');
+
+    const lockfile = prunedLockfileWithPatches(
+      ['is-number@7.0.0', 'is-odd@3.0.1'],
+      ['is-number@7.0.0', 'is-odd@3.0.1']
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(getPrunedPnpmInstallSettingsYaml(tempDir, lockfile))).toEqual({
+      patchedDependencies: {
+        'is-number@7.0.0': 'patches/a/fix.patch',
+        'is-odd@3.0.1': 'patches/b/fix.patch',
+      },
+    });
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(tempDir, lockfile);
+    expect(patchFiles).toEqual([
+      { path: 'patches/a/fix.patch', content: 'PATCH A\n' },
+      { path: 'patches/b/fix.patch', content: 'PATCH B\n' },
+    ]);
+  });
+
   it('scopes patch artifacts to the packages in the pruned lockfile', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(

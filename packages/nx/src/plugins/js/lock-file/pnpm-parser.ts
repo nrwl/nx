@@ -27,8 +27,9 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
+import { normalizePrunedPatchPath } from '../../../utils/package-json';
 import { findNodeMatchingVersion } from './project-graph-pruning';
-import { basename, join } from 'path';
+import { join } from 'path';
 import { existsSync, readFileSync } from 'node:fs';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
@@ -795,13 +796,14 @@ function filterPatchedDependenciesToPrunedPackages(lockfile: Lockfile): void {
     }
     // pnpm 9-10 record the patch path in the lockfile (object form), and pnpm
     // --frozen-lockfile aborts with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH when it
-    // disagrees with the emitted config. Flatten it to the same `patches/<file>`
-    // the pruned output ships (mirrors `normalizePrunedPatchPath` in
-    // utils/package-json). pnpm 11 records a bare hash, so there is no path.
+    // disagrees with the emitted config. Rewrite it to the same `patches/<...>`
+    // path the pruned output ships via the shared `normalizePrunedPatchPath`, so
+    // the lockfile and the config stay identical. pnpm 11 records a bare hash, so
+    // there is no path.
     const entry = lockfile.patchedDependencies[patchKey] as unknown;
     if (entry && typeof entry === 'object' && 'path' in entry) {
       const patch = entry as { path: string };
-      patch.path = `patches/${basename(patch.path)}`;
+      patch.path = normalizePrunedPatchPath(patch.path);
     }
   }
   if (Object.keys(lockfile.patchedDependencies).length === 0) {
