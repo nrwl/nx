@@ -1,6 +1,7 @@
 use napi::Either;
 use napi_derive::napi;
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::time::{Duration, Instant};
 use sysinfo::{Pid, ProcessRefreshKind, ProcessesToUpdate, Signal, System};
 use tracing::debug;
 
@@ -149,16 +150,19 @@ fn send_signal_to_pids(sys: &System, pids: &[Pid], signal: Signal, force_kill_fa
 /// be handled, but teardown is asynchronous - resolving before the kernel
 /// reaps the processes lets callers rebind ports that are still held
 /// (EADDRINUSE).
-const FORCE_KILL_EXIT_WAIT: std::time::Duration = std::time::Duration::from_millis(1000);
+const FORCE_KILL_EXIT_WAIT: Duration = Duration::from_secs(1);
+
+/// How often to re-check the process table during the post-SIGKILL wait.
+const FORCE_KILL_POLL_INTERVAL: Duration = Duration::from_millis(20);
 
 /// Poll until the given PIDs disappear from the process table, bounded by
 /// `FORCE_KILL_EXIT_WAIT` so an unreapable process (e.g. stuck in
 /// uninterruptible sleep, or a zombie whose parent never reaps it) cannot
 /// hang the caller.
 fn wait_for_pids_to_exit(sys: &mut System, mut remaining: Vec<Pid>) {
-    let deadline = std::time::Instant::now() + FORCE_KILL_EXIT_WAIT;
-    while !remaining.is_empty() && std::time::Instant::now() < deadline {
-        std::thread::sleep(std::time::Duration::from_millis(20));
+    let deadline = Instant::now() + FORCE_KILL_EXIT_WAIT;
+    while !remaining.is_empty() && Instant::now() < deadline {
+        std::thread::sleep(FORCE_KILL_POLL_INTERVAL);
         sys.refresh_processes_specifics(
             ProcessesToUpdate::Some(&remaining),
             true,
