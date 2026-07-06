@@ -142,7 +142,11 @@ Add the following targets to your project's `package.json` or `project.json`:
 
 {% /tabs %}
 
-Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match your package manager. On pnpm 11 and above, the executor also emits a settings-only `pnpm-workspace.yaml` carrying build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`. If the workspace uses `pnpm patch`, the executor also copies the referenced `.patch` files, preserving the path recorded in your pnpm config (`patches/` by default). On pnpm 10 and below, it declares `patchedDependencies` in the emitted `package.json` instead. Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml` and the patch directory (`{workspaceRoot}/apps/my-app/dist/patches` by default) to the `outputs` so a cached run restores them instead of dropping those approvals or patches.
+Replace `package-lock.json` in the `outputs` array with `yarn.lock` or `pnpm-lock.yaml` to match your package manager.
+On pnpm 11 and above, the executor also emits a settings-only `pnpm-workspace.yaml` carrying build-script approvals (`allowBuilds`), `supportedArchitectures`, and any `patchedDependencies`.
+If the workspace uses `pnpm patch`, the executor also copies the referenced `.patch` files, preserving the path recorded in your pnpm config (`patches/` by default).
+On pnpm 10 and below, it declares `patchedDependencies` in the emitted `package.json` instead.
+Add `{workspaceRoot}/apps/my-app/dist/pnpm-workspace.yaml` and the patch directory (`{workspaceRoot}/apps/my-app/dist/patches` by default) to the `outputs` so a cached run restores them instead of dropping those approvals or patches.
 
 Then run:
 
