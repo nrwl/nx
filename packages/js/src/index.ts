@@ -27,5 +27,6 @@ export { createLockFile, getLockFileName } from '@nx/devkit/internal';
 export { createPackageJson } from '@nx/devkit/internal';
 export {
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';

@@ -213,6 +213,7 @@ export {
   getOutputs,
   getPrintableCommandArgsForTask,
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   getRelativeProjectJsonSchemaPath,
   getSerializedArgsForTask,
   getSourceDirOfDependentProjects,
