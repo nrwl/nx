@@ -46,7 +46,11 @@ const TRANSITIVE_INSTALL_SECTIONS = [
 ] as const;
 
 // Resolve `catalog:` references in a copied module manifest to the version the
-// workspace pinned. Returns whether anything changed.
+// workspace pinned. Only the sections pnpm installs for a `file:` directory
+// dependency are resolved: a copied module's devDependencies are never
+// installed, so a `catalog:` there is inert (pnpm leaves it untouched), and
+// resolving it would abort the whole deploy build if that catalog entry does
+// not exist. Returns whether anything changed.
 function resolveCatalogReferences(
   packageJson: CopiedManifest,
   manager: ReturnType<typeof getCatalogManager>
@@ -55,7 +59,7 @@ function resolveCatalogReferences(
     return false;
   }
   let modified = false;
-  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
+  for (const section of TRANSITIVE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;

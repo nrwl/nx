@@ -161,6 +161,39 @@ describe('copyWorkspaceModules', () => {
     );
   });
 
+  it('leaves an unresolvable catalog reference in a copied module devDependencies alone', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { lodash: 'catalog:' },
+        devDependencies: { unknown: 'catalog:' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } } as any],
+      ])
+    );
+    mockGetCatalogManager.mockReturnValue(makeManager({ lodash: '^4.17.21' }));
+
+    // pnpm never installs a file: dependency's devDependencies, so a catalog:
+    // reference there is inert and must not abort the build even when it cannot
+    // resolve. Only the installed sections are resolved.
+    await runExecutor();
+
+    const manifest = readCopiedManifest('@scope/liba');
+    expect(manifest.dependencies).toEqual({ lodash: '^4.17.21' });
+    expect(manifest.devDependencies).toEqual({ unknown: 'catalog:' });
+  });
+
   it('copies a workspace module the app declares only under devDependencies', async () => {
     tempFs.createFilesSync({
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
