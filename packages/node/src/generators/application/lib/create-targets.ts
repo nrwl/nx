@@ -148,12 +148,14 @@ export function getPruneTargets(
   ];
   if (packageManager === 'pnpm') {
     // On pnpm 11+ the prune-lockfile executor also emits a settings-only
-    // pnpm-workspace.yaml; declare it so a cache replay restores it and native
-    // build-script approvals are not silently dropped. Declared for any pnpm
-    // since the generator can't know the pnpm major or whether the root declares
-    // such settings; Nx tolerates the output being absent otherwise.
+    // pnpm-workspace.yaml, and a `pnpm patch` workspace also emits the referenced
+    // `.patch` files under `patches/`; declare both so a cache replay restores
+    // them and native build-script approvals or patches are not silently dropped.
+    // Declared for any pnpm since the generator can't know the pnpm major or
+    // whether the root declares such settings; Nx tolerates absent outputs.
     pruneLockfileOutputs.push(
-      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`
     );
   }
   return {
