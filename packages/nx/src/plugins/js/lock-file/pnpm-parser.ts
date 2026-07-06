@@ -706,10 +706,11 @@ export function stringifyPnpmLockfile(
  * `utils/package-json`, which removes the matching `pnpm.*` fields from the
  * emitted `package.json`; keep the two in sync when pnpm adds config fields.
  *
- * `patchedDependencies` is deliberately kept: snapshot keys reference its
- * `patch_hash`, so dropping the declaration would leave dangling references. The
- * patch files themselves are not part of the pruned output, so a workspace that
- * relies on `pnpm patch` is not fully supported by pruning.
+ * `patchedDependencies` is kept, but scoped to the patches whose package
+ * survives the prune: an entry for a dropped package has no snapshot to attach
+ * to and aborts the install with a config mismatch. The `.patch` files and the
+ * matching config are carried into the pruned output separately (see
+ * `getPrunedPnpmPatchArtifacts` in utils/package-json).
  */
 function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
   delete lockfile.overrides;
@@ -718,6 +719,68 @@ function stripStandaloneLockfileConfig(lockfile: Lockfile): void {
   delete lockfile.pnpmfileChecksum;
   delete lockfile.settings;
   delete (lockfile as { catalogs?: unknown }).catalogs;
+  filterPatchedDependenciesToPrunedPackages(lockfile);
+}
+
+/**
+ * Drops `patchedDependencies` entries whose package is no longer in the pruned
+ * lockfile. pnpm matches each entry against an installed package, so a dangling
+ * entry aborts `pnpm install --frozen-lockfile` with a config mismatch.
+ *
+ * A patch key is `name`, `name@version`, or `name@range` (pnpm records the key
+ * verbatim, so a range key stays a range). Package keys are always versioned
+ * (`name@version`, with an optional `(peer@ver)`/`(patch_hash=...)` suffix), so
+ * matching mirrors `findPatchHash`: a name-only key matches any surviving
+ * version, otherwise the resolved version must equal the key's version or
+ * satisfy its range.
+ */
+function filterPatchedDependenciesToPrunedPackages(lockfile: Lockfile): void {
+  if (!lockfile.patchedDependencies) {
+    return;
+  }
+  const packageKeys = Object.keys(lockfile.packages ?? {});
+  for (const patchKey of Object.keys(lockfile.patchedDependencies)) {
+    if (!patchKeyMatchesPrunedPackage(patchKey, packageKeys)) {
+      delete lockfile.patchedDependencies[patchKey];
+    }
+  }
+  if (Object.keys(lockfile.patchedDependencies).length === 0) {
+    delete lockfile.patchedDependencies;
+  }
+}
+
+/**
+ * Whether a `patchedDependencies` key still targets a package that survived the
+ * prune. Decomposes both the key and each package key into name + version and
+ * applies the same exact/range/name-only rules as `findPatchHash`.
+ */
+function patchKeyMatchesPrunedPackage(
+  patchKey: string,
+  packageKeys: string[]
+): boolean {
+  const patchName = extractNameFromKey(patchKey, false);
+  const versionSpec =
+    patchName === patchKey ? null : getVersion(patchKey, patchName);
+  return packageKeys.some((key) => {
+    if (extractNameFromKey(key, false) !== patchName) {
+      return false;
+    }
+    if (versionSpec === null) {
+      return true;
+    }
+    // Strip any `(peer@ver)`/`(patch_hash=...)` suffix to get the resolved version.
+    const version = getVersion(key, patchName).split('(')[0];
+    if (version === versionSpec) {
+      return true;
+    }
+    try {
+      return (
+        validRange(versionSpec) !== null && satisfies(version, versionSpec)
+      );
+    } catch {
+      return false;
+    }
+  });
 }
 
 function mapSnapshots(
@@ -936,10 +999,11 @@ function mapRootSnapshot(
 
         if (workspaceModules.has(packageName)) {
           // The app may declare the module under dependencies,
-          // optionalDependencies, or devDependencies; route the lockfile entry
-          // into the matching section so the importer snapshot stays in sync
-          // with the manifest. peerDependencies collapse to dependencies,
-          // mirroring the non-workspace branch below.
+          // optionalDependencies, devDependencies, or peerDependencies. Route
+          // the lockfile entry into the matching section; peerDependencies
+          // collapse to dependencies to match the pruned manifest, which moves a
+          // peer-declared workspace module into dependencies (pnpm rejects a
+          // file: spec under peerDependencies).
           const targetSection =
             depType === 'optionalDependencies'
               ? 'optionalDependencies'

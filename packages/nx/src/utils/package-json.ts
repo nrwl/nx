@@ -1,6 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
@@ -17,6 +17,7 @@ import { readTargetDefaultsForTarget } from '../project-graph/utils/project-conf
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile, readYamlFile } from './fileutils';
+import { logger } from './logger';
 import { hasNxJsPlugin } from './has-nx-js-plugin';
 import { getNxRequirePaths } from './installation-directory';
 import {
@@ -99,6 +100,7 @@ export interface PackageJson {
     };
     ignoredOptionalDependencies?: string[];
     packageExtensions?: Record<string, unknown>;
+    patchedDependencies?: Record<string, string>;
   };
   overrides?: PackageOverride;
   // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
@@ -775,8 +777,8 @@ export function stripPrunedLockfilePnpmConfig(packageJson: PackageJson): void {
  * pnpm 10 and below read the same settings from the emitted package.json, so
  * this returns null there, and when the workspace declares none. Resolution-time
  * config stays out: it is already baked into the pruned lockfile (see
- * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` is not carried yet; a
- * workspace relying on `pnpm patch` is not fully supported by pruning.
+ * `stripPrunedLockfilePnpmConfig`). `patchedDependencies` are carried too, scoped
+ * to the patches the pruned lockfile keeps (see `getPrunedPnpmPatchArtifacts`).
  *
  * Returns the YAML string so both the file-writing prune paths and the webpack
  * asset pipeline (which emits assets rather than writing to disk) can carry it.
@@ -790,21 +792,18 @@ export function getPrunedPnpmInstallSettingsYaml(
   workspaceRootPath: string = workspaceRoot,
   prunedLockfileContent?: string
 ): string | null {
+  // pnpm 11 was the first major to read these settings only from
+  // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
+  // still read them from the emitted package.json, so nothing to carry.
+  const pnpmMajor = getPnpmMajor(workspaceRootPath);
+  if (pnpmMajor === null || pnpmMajor < 11) {
+    return null;
+  }
   let rootSettings: {
     allowBuilds?: Record<string, boolean>;
     supportedArchitectures?: unknown;
   };
   try {
-    const pnpmMajor = Number.parseInt(
-      getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
-      10
-    );
-    // pnpm 11 was the first major to read these settings only from
-    // pnpm-workspace.yaml; later majors keep that behavior. pnpm 10 and below
-    // still read them from the emitted package.json, so nothing to carry.
-    if (Number.isNaN(pnpmMajor) || pnpmMajor < 11) {
-      return null;
-    }
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (!existsSync(rootWorkspaceYaml)) {
       return null;
@@ -813,10 +812,9 @@ export function getPrunedPnpmInstallSettingsYaml(
     // settings rather than dereferencing it below.
     rootSettings = readYamlFile(rootWorkspaceYaml) ?? {};
   } catch {
-    // Can't determine the pnpm version or read the root settings (unknown
-    // version, unreadable or malformed pnpm-workspace.yaml). Skip rather than
-    // guess. Worst case matches the prior behavior of carrying no install-time
-    // settings.
+    // Can't read the root settings (unreadable or malformed
+    // pnpm-workspace.yaml). Skip rather than guess. Worst case matches the prior
+    // behavior of carrying no install-time settings.
     return null;
   }
   const settings: Record<string, unknown> = {};
@@ -834,11 +832,36 @@ export function getPrunedPnpmInstallSettingsYaml(
   if (rootSettings.supportedArchitectures) {
     settings.supportedArchitectures = rootSettings.supportedArchitectures;
   }
+  if (prunedLockfileContent) {
+    const patchedDependencies = getPrunedPatchedDependencies(
+      workspaceRootPath,
+      prunedLockfileContent
+    );
+    if (Object.keys(patchedDependencies).length > 0) {
+      settings.patchedDependencies = patchedDependencies;
+    }
+  }
   if (Object.keys(settings).length === 0) {
     return null;
   }
   const { dump } = require('@zkochan/js-yaml');
   return dump(settings);
+}
+
+/**
+ * The pnpm major of the workspace's package manager, or null when it cannot be
+ * determined (unknown or unparseable version).
+ */
+function getPnpmMajor(workspaceRootPath: string): number | null {
+  try {
+    const major = Number.parseInt(
+      getPackageManagerVersion('pnpm', workspaceRootPath).split('.')[0],
+      10
+    );
+    return Number.isNaN(major) ? null : major;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -874,35 +897,174 @@ function getPnpmLockfilePackageNames(lockfileContent: string): Set<string> {
     return names;
   }
   for (const key of Object.keys(parsed.packages ?? {})) {
-    const versionSeparator = key.startsWith('@')
-      ? key.indexOf('@', 1)
-      : key.indexOf('@');
+    // Skip index 0 so a scoped key's leading `@` is not read as the separator.
+    const versionSeparator = key.indexOf('@', 1);
     names.add(versionSeparator === -1 ? key : key.slice(0, versionSeparator));
   }
   return names;
 }
 
 /**
- * Writes the pnpm 11 install-time settings (see
- * `getPrunedPnpmInstallSettingsYaml`) into a standalone pruned output directory,
- * or does nothing when there is nothing to carry. Reads the pruned lockfile the
- * caller just wrote to that directory so `allowBuilds` is scoped to the packages
- * the deployment installs.
+ * The workspace root's `patchedDependencies` (package key -> patch file path),
+ * scoped to the patches the pruned lockfile keeps. pnpm 11 declares them in
+ * pnpm-workspace.yaml; pnpm 10 and below in the package.json `pnpm` field, so
+ * read both root sources. A patch entry for a package the prune dropped would
+ * fail `pnpm install --frozen-lockfile` with ERR_PNPM_LOCKFILE_CONFIG_MISMATCH,
+ * so the pruned lockfile's kept `patchedDependencies` keys are the scope.
+ */
+function getPrunedPatchedDependencies(
+  workspaceRootPath: string,
+  prunedLockfileContent: string | undefined
+): Record<string, string> {
+  if (!prunedLockfileContent) {
+    return {};
+  }
+  const survivingKeys = getPrunedLockfilePatchedKeys(prunedLockfileContent);
+  if (survivingKeys.size === 0) {
+    return {};
+  }
+  const rootPatches = readRootPatchedDependencies(workspaceRootPath);
+  const scoped: Record<string, string> = {};
+  for (const key of survivingKeys) {
+    if (rootPatches[key]) {
+      scoped[key] = rootPatches[key];
+    }
+  }
+  return scoped;
+}
+
+function readRootPatchedDependencies(
+  workspaceRootPath: string
+): Record<string, string> {
+  const merged: Record<string, string> = {};
+  try {
+    const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
+    if (existsSync(rootWorkspaceYaml)) {
+      const yaml = readYamlFile<{
+        patchedDependencies?: Record<string, string>;
+      }>(rootWorkspaceYaml);
+      Object.assign(merged, yaml?.patchedDependencies ?? {});
+    }
+    const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
+    if (existsSync(rootPackageJsonPath)) {
+      const rootPackageJson = readJsonFile<PackageJson>(rootPackageJsonPath);
+      Object.assign(merged, rootPackageJson.pnpm?.patchedDependencies ?? {});
+    }
+  } catch {
+    // Unreadable or malformed root config: carry no patches rather than guess.
+    return {};
+  }
+  return merged;
+}
+
+function getPrunedLockfilePatchedKeys(
+  prunedLockfileContent: string
+): Set<string> {
+  try {
+    const { load } = require('@zkochan/js-yaml');
+    const parsed: { patchedDependencies?: Record<string, unknown> } =
+      load(prunedLockfileContent) ?? {};
+    return new Set(Object.keys(parsed.patchedDependencies ?? {}));
+  } catch {
+    return new Set();
+  }
+}
+
+/**
+ * Patch artifacts a standalone pruned output must ship to keep a `pnpm patch`
+ * workspace installable: the `.patch` files (path relative to the output root,
+ * plus content) and, on pnpm 10 and below, the `patchedDependencies` map to
+ * declare in the emitted package.json. On pnpm 11+ that map is carried in
+ * pnpm-workspace.yaml (see `getPrunedPnpmInstallSettingsYaml`), so
+ * `packageJsonPatchedDependencies` is null there. Both are scoped to the patches
+ * the pruned lockfile keeps. Returns the file contents so the file-writing prune
+ * paths and the bundler asset pipelines can each ship them their own way.
+ */
+export function getPrunedPnpmPatchArtifacts(
+  workspaceRootPath: string = workspaceRoot,
+  prunedLockfileContent?: string
+): {
+  patchFiles: Array<{ path: string; content: string }>;
+  packageJsonPatchedDependencies: Record<string, string> | null;
+} {
+  const patchedDependencies = getPrunedPatchedDependencies(
+    workspaceRootPath,
+    prunedLockfileContent
+  );
+  if (Object.keys(patchedDependencies).length === 0) {
+    return { patchFiles: [], packageJsonPatchedDependencies: null };
+  }
+  const patchFiles: Array<{ path: string; content: string }> = [];
+  for (const patchPath of new Set(Object.values(patchedDependencies))) {
+    const source = join(workspaceRootPath, patchPath);
+    if (existsSync(source)) {
+      patchFiles.push({
+        path: patchPath,
+        content: readFileSync(source, 'utf-8'),
+      });
+    } else {
+      // The root config declares this patch but the file is missing (already a
+      // broken workspace - the root install would fail too). Warn rather than
+      // drop the declaration: the pruned lockfile still lists the patch, so
+      // dropping only the config would trade this for a lockfile config mismatch.
+      logger.warn(
+        `Patch file "${patchPath}" referenced by patchedDependencies was not found; the pruned output declares the patch but cannot ship the file.`
+      );
+    }
+  }
+  const pnpmMajor = getPnpmMajor(workspaceRootPath);
+  return {
+    patchFiles,
+    packageJsonPatchedDependencies:
+      pnpmMajor !== null && pnpmMajor < 11 ? patchedDependencies : null,
+  };
+}
+
+/**
+ * Writes the pnpm install-time artifacts a standalone pruned output needs into
+ * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
+ * `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus the
+ * pnpm <=10 `patchedDependencies` declaration in the emitted package.json. Does
+ * nothing for whatever the workspace does not use. `allowBuilds` and the patch
+ * scope come from `lockfileContent` when the caller already has it in hand,
+ * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
-  workspaceRootPath: string = workspaceRoot
+  workspaceRootPath: string = workspaceRoot,
+  lockfileContent?: string
 ): void {
-  const lockfilePath = join(outputDirectory, 'pnpm-lock.yaml');
-  const prunedLockfileContent = existsSync(lockfilePath)
-    ? readFileSync(lockfilePath, 'utf-8')
-    : undefined;
+  const prunedLockfileContent =
+    lockfileContent ?? readPrunedLockfile(outputDirectory);
   const yaml = getPrunedPnpmInstallSettingsYaml(
     workspaceRootPath,
     prunedLockfileContent
   );
-  if (yaml === null) {
-    return;
+  if (yaml !== null) {
+    writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), yaml);
   }
-  writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), yaml);
+
+  const { patchFiles, packageJsonPatchedDependencies } =
+    getPrunedPnpmPatchArtifacts(workspaceRootPath, prunedLockfileContent);
+  for (const { path, content } of patchFiles) {
+    const destination = join(outputDirectory, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    writeFileSync(destination, content);
+  }
+  if (packageJsonPatchedDependencies) {
+    const packageJsonPath = join(outputDirectory, 'package.json');
+    if (existsSync(packageJsonPath)) {
+      const packageJson: PackageJson = readJsonFile(packageJsonPath);
+      packageJson.pnpm ??= {};
+      packageJson.pnpm.patchedDependencies = packageJsonPatchedDependencies;
+      writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
+    }
+  }
+}
+
+function readPrunedLockfile(outputDirectory: string): string | undefined {
+  const lockfilePath = join(outputDirectory, 'pnpm-lock.yaml');
+  return existsSync(lockfilePath)
+    ? readFileSync(lockfilePath, 'utf-8')
+    : undefined;
 }

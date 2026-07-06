@@ -1,6 +1,6 @@
 jest.mock('child_process');
 
-import { join } from 'path';
+import { dirname, join } from 'path';
 import * as childProcess from 'child_process';
 import {
   existsSync,
@@ -15,10 +15,12 @@ import { createTreeWithEmptyWorkspace } from '../generators/testing-utils/create
 import type { Tree } from '../generators/tree';
 import { writeJson } from '../generators/utils/json';
 import { readJsonFile } from './fileutils';
+import { logger } from './logger';
 import {
   buildTargetFromScript,
   getDependencyVersionFromPackageJson,
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   installPackageToTmp,
   PackageJson,
   readModulePackageJson,
@@ -1184,6 +1186,324 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     expect(
       load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
     ).toEqual({ allowBuilds: { esbuild: true } });
+  });
+
+  it('prefers passed lockfile content over re-reading it from disk', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      ['allowBuilds:', '  esbuild: true', "  '@parcel/watcher': true", ''].join(
+        '\n'
+      )
+    );
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    // A stale on-disk lockfile the caller's in-memory content supersedes.
+    writeFileSync(
+      join(outputDir, 'pnpm-lock.yaml'),
+      prunedLockfileWith('esbuild@0.21.5')
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWith('@parcel/watcher@2.4.1')
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    // Scoped to the passed content (@parcel/watcher), not the on-disk esbuild.
+    expect(
+      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
+    ).toEqual({ allowBuilds: { '@parcel/watcher': true } });
+  });
+
+  // A pruned lockfile carrying a patchedDependencies section (values are the
+  // patch hashes; only the keys drive scoping).
+  const prunedLockfileWithPatches = (
+    packageKeys: string[],
+    patchKeys: string[]
+  ) =>
+    [
+      prunedLockfileWith(...packageKeys),
+      'patchedDependencies:',
+      ...patchKeys.map(
+        (key) => `  ${key.startsWith('@') ? `'${key}'` : key}: hash-${key}`
+      ),
+      '',
+    ].join('\n');
+
+  function writeRootPatch(patchPath: string, content = 'PATCH\n') {
+    const full = join(tempDir, patchPath);
+    mkdirSync(dirname(full), { recursive: true });
+    writeFileSync(full, content);
+  }
+
+  it('carries patchedDependencies in the pnpm 11 yaml, scoped to surviving packages', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/is-number@7.0.0.patch',
+        '  left-pad@1.0.0: patches/left-pad@1.0.0.patch',
+        '',
+      ].join('\n')
+    );
+
+    // only is-number survives the prune
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      patchedDependencies: {
+        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      },
+    });
+  });
+
+  it('carries a name-only (unversioned) patch key scoped to the surviving package', () => {
+    mockPnpmVersion('11.2.2');
+    // A name-only key patches every version; the lockfile records it under the
+    // bare name while the package key stays versioned. The scope must still
+    // match the two against the shared root config key.
+    writeRootWorkspaceYaml(
+      ['patchedDependencies:', '  is-number: patches/is-number.patch', ''].join(
+        '\n'
+      )
+    );
+    writeRootPatch('patches/is-number.patch', 'THE PATCH\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number'])
+    );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/is-number.patch', content: 'THE PATCH\n' },
+    ]);
+  });
+
+  it('carries a semver-range patch key scoped to the surviving package', () => {
+    mockPnpmVersion('11.2.2');
+    // A range key patches every matching version; the pruned lockfile keeps the
+    // range key verbatim, so the scope matches it against the shared root config
+    // key.
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@^7.0.0: patches/is-number@7.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('patches/is-number@7.patch', 'THE PATCH\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@^7.0.0'])
+    );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/is-number@7.patch', content: 'THE PATCH\n' },
+    ]);
+  });
+
+  it('ships patch files and keeps patchedDependencies out of package.json on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
+
+    const { patchFiles, packageJsonPatchedDependencies } =
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      );
+
+    expect(patchFiles).toEqual([
+      { path: 'patches/is-number@7.0.0.patch', content: 'THE PATCH\n' },
+    ]);
+    // pnpm 11 carries the declaration in pnpm-workspace.yaml, not package.json
+    expect(packageJsonPatchedDependencies).toBeNull();
+  });
+
+  it('declares patchedDependencies in package.json on pnpm 10', () => {
+    mockPnpmVersion('10.13.1');
+    // pnpm <=10 reads the config from the package.json pnpm field
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        pnpm: {
+          patchedDependencies: {
+            'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+          },
+        },
+      })
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch');
+
+    const { patchFiles, packageJsonPatchedDependencies } =
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      );
+
+    expect(patchFiles).toHaveLength(1);
+    expect(packageJsonPatchedDependencies).toEqual({
+      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+    });
+  });
+
+  it('scopes patch artifacts to the packages in the pruned lockfile', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        '  is-number@7.0.0: patches/is-number@7.0.0.patch',
+        '  left-pad@1.0.0: patches/left-pad@1.0.0.patch',
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch');
+    writeRootPatch('patches/left-pad@1.0.0.patch');
+
+    // left-pad is not present in the pruned lockfile
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    expect(patchFiles.map((file) => file.path)).toEqual([
+      'patches/is-number@7.0.0.patch',
+    ]);
+  });
+
+  it('warns but keeps the declaration when a patch source file is missing', () => {
+    mockPnpmVersion('10.13.1');
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        pnpm: {
+          patchedDependencies: {
+            'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+          },
+        },
+      })
+    );
+    // The patch file is intentionally NOT written to disk.
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    const { patchFiles, packageJsonPatchedDependencies } =
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+      );
+
+    expect(patchFiles).toEqual([]);
+    // The declaration is kept: dropping only it would mismatch the pruned
+    // lockfile, which still lists the patch.
+    expect(packageJsonPatchedDependencies).toEqual({
+      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+    });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('patches/is-number@7.0.0.patch')
+    );
+    warn.mockRestore();
+  });
+
+  it('returns no patch artifacts when the pruned lockfile has no patches', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+
+    const { patchFiles, packageJsonPatchedDependencies } =
+      getPrunedPnpmPatchArtifacts(
+        tempDir,
+        prunedLockfileWith('is-number@7.0.0')
+      );
+
+    expect(patchFiles).toEqual([]);
+    expect(packageJsonPatchedDependencies).toBeNull();
+  });
+
+  it('copies patch files and declares them in package.json on pnpm 10', () => {
+    mockPnpmVersion('10.13.1');
+    writeFileSync(
+      join(tempDir, 'package.json'),
+      JSON.stringify({
+        pnpm: {
+          patchedDependencies: {
+            'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+          },
+        },
+      })
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch', 'PATCH BODY\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'package.json'),
+      JSON.stringify({ name: 'app', version: '0.0.1' })
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    // pnpm 10 reads no pnpm-workspace.yaml
+    expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+    // the patch file is copied preserving its relative path
+    expect(
+      readFileSync(join(outputDir, 'patches/is-number@7.0.0.patch'), 'utf-8')
+    ).toBe('PATCH BODY\n');
+    // and the declaration lands in the emitted package.json
+    const manifest = JSON.parse(
+      readFileSync(join(outputDir, 'package.json'), 'utf-8')
+    );
+    expect(manifest.pnpm.patchedDependencies).toEqual({
+      'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+    });
+  });
+
+  it('carries patches in the yaml and leaves package.json untouched on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'package.json'),
+      JSON.stringify({ name: 'app', version: '0.0.1' })
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(
+      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
+    ).toEqual({
+      patchedDependencies: {
+        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      },
+    });
+    expect(existsSync(join(outputDir, 'patches/is-number@7.0.0.patch'))).toBe(
+      true
+    );
+    // pnpm 11 ignores the package.json pnpm field, so it stays as emitted
+    const manifest = JSON.parse(
+      readFileSync(join(outputDir, 'package.json'), 'utf-8')
+    );
+    expect(manifest.pnpm).toBeUndefined();
   });
 });
 
