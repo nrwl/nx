@@ -1,3 +1,7 @@
+use std::sync::Arc;
+
+use dashmap::DashMap;
+use once_cell::sync::OnceCell;
 use rayon::prelude::*;
 
 use crate::native::glob::build_glob_set;
@@ -11,6 +15,20 @@ use tracing::{debug, debug_span, trace, warn};
 pub struct WorkspaceFilesHashResult {
     pub hash: String,
     pub files: Vec<String>,
+}
+
+pub(crate) type WorkspaceFileSetCache =
+    DashMap<String, Arc<OnceCell<Arc<WorkspaceFilesHashResult>>>>;
+
+fn workspace_file_set_cache_key(workspace_file_sets: &[String]) -> String {
+    let mut sorted_file_sets: Vec<&str> = workspace_file_sets.iter().map(String::as_str).collect();
+    sorted_file_sets.sort();
+
+    format!(
+        "{}\0{}",
+        sorted_file_sets.len(),
+        sorted_file_sets.join("\0")
+    )
 }
 
 /// Expands workspace file set patterns by stripping `{workspaceRoot}/` prefix.
@@ -85,6 +103,24 @@ pub fn hash_workspace_files_with_inputs(
             files,
         })
     })
+}
+
+pub(crate) fn hash_workspace_files_with_inputs_cached(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: &WorkspaceFileSetCache,
+) -> Result<Arc<WorkspaceFilesHashResult>> {
+    let cache_key = workspace_file_set_cache_key(workspace_file_sets);
+    let cache_cell = cache
+        .entry(cache_key)
+        .or_insert_with(|| Arc::new(OnceCell::new()))
+        .clone();
+
+    cache_cell
+        .get_or_try_init(|| {
+            hash_workspace_files_with_inputs(workspace_file_sets, all_workspace_files).map(Arc::new)
+        })
+        .cloned()
 }
 
 #[cfg(test)]
@@ -162,5 +198,38 @@ mod test {
             .unwrap();
             assert_eq!(result.hash, "13759877301064854697");
         }
+    }
+
+    #[test]
+    fn should_cache_by_fileset_combo_regardless_of_order() {
+        let first_file_sets = &[
+            "{workspaceRoot}/**/*".to_string(),
+            "!{workspaceRoot}/**/*.spec.ts".to_string(),
+        ];
+        let second_file_sets = &[
+            "!{workspaceRoot}/**/*.spec.ts".to_string(),
+            "{workspaceRoot}/**/*".to_string(),
+        ];
+        let all_workspace_files = vec![
+            FileData {
+                file: "test1.ts".into(),
+                hash: "file_data1".into(),
+            },
+            FileData {
+                file: "test.spec.ts".into(),
+                hash: "file_data2".into(),
+            },
+        ];
+
+        let cache = WorkspaceFileSetCache::new();
+        let first =
+            hash_workspace_files_with_inputs_cached(first_file_sets, &all_workspace_files, &cache)
+                .unwrap();
+        let second =
+            hash_workspace_files_with_inputs_cached(second_file_sets, &all_workspace_files, &cache)
+                .unwrap();
+
+        assert_eq!(cache.len(), 1);
+        assert!(Arc::ptr_eq(&first, &second));
     }
 }
