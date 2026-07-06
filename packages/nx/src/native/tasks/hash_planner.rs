@@ -44,8 +44,9 @@ impl<'a> VisitedTracker<'a> {
         }
     }
 
-    /// Marks the project visited. Returns false if it was already visited.
-    fn visit(&mut self, project: &'a str) -> bool {
+    /// Same contract as `HashSet::insert`: returns whether the project was
+    /// newly inserted. New insertions are logged so `rollback_to` can undo them.
+    fn insert(&mut self, project: &'a str) -> bool {
         let inserted = self.set.insert(project);
         if inserted {
             self.log.push(project);
@@ -403,7 +404,7 @@ impl HashPlanner {
         let mut deps_inputs: Vec<HashInstruction> = Vec::with_capacity(project_deps.len());
 
         for dep in project_deps {
-            if !visited.visit(dep.as_str()) {
+            if !visited.insert(dep.as_str()) {
                 continue;
             }
 
@@ -619,26 +620,26 @@ mod tests {
     use super::VisitedTracker;
 
     #[test]
-    fn visit_reports_first_visit_only() {
+    fn insert_reports_first_insertion_only() {
         let mut visited = VisitedTracker::seeded_with("seed");
-        assert!(!visited.visit("seed"));
-        assert!(visited.visit("a"));
-        assert!(!visited.visit("a"));
+        assert!(!visited.insert("seed"));
+        assert!(visited.insert("a"));
+        assert!(!visited.insert("a"));
     }
 
     #[test]
     fn rollback_unvisits_only_the_scope() {
         let mut visited = VisitedTracker::seeded_with("seed");
-        assert!(visited.visit("outer"));
+        assert!(visited.insert("outer"));
 
         let scope = visited.scope_start();
-        assert!(visited.visit("inner1"));
-        assert!(visited.visit("inner2"));
+        assert!(visited.insert("inner1"));
+        assert!(visited.insert("inner2"));
         visited.rollback_to(scope);
 
         // Scoped visits are undone; earlier ones are not.
-        assert!(visited.visit("inner1"));
-        assert!(!visited.visit("outer"));
-        assert!(!visited.visit("seed"));
+        assert!(visited.insert("inner1"));
+        assert!(!visited.insert("outer"));
+        assert!(!visited.insert("seed"));
     }
 }
