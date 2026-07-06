@@ -51,6 +51,12 @@ export const createNodes: CreateNodes = [
                   command: 'pnpm install && pnpm validate',
                   options: {
                     cwd: exampleRoot,
+                    env: {
+                      // The examples are standalone workspaces with no Nx
+                      // Cloud workspace; without this they inherit the repo's
+                      // CI access token and abort with a 401.
+                      NX_NO_CLOUD: 'true',
+                    },
                   },
                   dependsOn: ['^build'],
                   inputs: [

@@ -16,5 +16,6 @@
     "@nx/playwright/plugin",
     "@nx/eslint/plugin"
   ],
-  "analytics": false
+  "analytics": false,
+  "neverConnectToCloud": true
 }

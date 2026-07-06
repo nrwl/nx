@@ -22,5 +22,6 @@
     "@nx/js": {
       "analyzeSourceFiles": true
     }
-  }
+  },
+  "neverConnectToCloud": true
 }
