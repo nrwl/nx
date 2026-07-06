@@ -1182,7 +1182,7 @@ describe('pnpm LockFile utility', () => {
         expect(result).not.toContain('catalogs');
       });
 
-      it('should strip standalone-incompatible config from the pruned lockfile but keep patches', () => {
+      it('should strip standalone-incompatible config from the pruned lockfile and scope patches to surviving packages', () => {
         const typescriptPackageJson = loadJsonFixture(
           joinPathFragments(
             __dirname,
@@ -1190,7 +1190,9 @@ describe('pnpm LockFile utility', () => {
           )
         );
         // The v9 fixture already carries a `settings:` block; add the remaining
-        // config pnpm validates on a frozen install, plus a patch (kept).
+        // config pnpm validates on a frozen install, plus two patches: one on
+        // typescript (survives the prune, kept) and one on fsevents (dropped by
+        // the prune, so its dangling entry must be scoped out).
         const lockFileWithConfig = lockFile.replace(
           'lockfileVersion:',
           [
@@ -1201,6 +1203,9 @@ describe('pnpm LockFile utility', () => {
             'ignoredOptionalDependencies:',
             '  - fsevents',
             'patchedDependencies:',
+            '  typescript@4.8.4:',
+            '    hash: sha256-tspatch',
+            '    path: patches/typescript@4.8.4.patch',
             '  fsevents:',
             '    hash: sha256-patch',
             '    path: patches/fsevents.patch',
@@ -1227,8 +1232,116 @@ describe('pnpm LockFile utility', () => {
         expect(result).not.toMatch(/^pnpmfileChecksum:/m);
         expect(result).not.toMatch(/^ignoredOptionalDependencies:/m);
         expect(result).not.toMatch(/^settings:/m);
-        // Snapshot keys reference the patch hash -> must be kept.
+        // The surviving package keeps its patch; the dropped one is scoped out
+        // (a dangling entry fails the frozen install with a config mismatch).
         expect(result).toMatch(/^patchedDependencies:/m);
+        expect(result).toContain('patches/typescript@4.8.4.patch');
+        expect(result).not.toContain('fsevents');
+      });
+
+      it('should keep an overridden dependency version after stripping the overrides config', () => {
+        const typescriptPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json.fixture'
+          )
+        );
+        // pnpm applies `overrides` at resolution time and bakes the resolved
+        // version into each snapshot, so the pruned output can drop the config
+        // and still install the overridden version. typescript resolves to
+        // 4.8.4 here; pinning it via an override must survive the prune as a
+        // baked-in snapshot with no `overrides:` block left to mismatch against
+        // on a frozen install.
+        const lockFileWithOverride = lockFile.replace(
+          'lockfileVersion:',
+          ['overrides:', '  typescript: 4.8.4', '', 'lockfileVersion:'].join(
+            '\n'
+          )
+        );
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithOverride,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        expect(result).not.toMatch(/^overrides:/m);
+        expect(result).toContain('typescript@4.8.4');
+      });
+
+      it('should keep a patch declared with an unversioned key when the package survives the prune', () => {
+        const typescriptPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json.fixture'
+          )
+        );
+        // pnpm accepts a name-only patch key (patches every version) and then
+        // records it in the lockfile under the bare name while the package key
+        // stays versioned (typescript@4.8.4). The survivor filter must match
+        // the bare key against `${name}@...` package keys, not just the exact
+        // and `(patch_hash=...)` forms, or the patch is silently dropped and
+        // the dependency ships unpatched.
+        const lockFileWithUnversionedPatch = lockFile.replace(
+          'lockfileVersion:',
+          [
+            'patchedDependencies:',
+            '  typescript:',
+            '    hash: sha256-tspatch',
+            '    path: patches/typescript.patch',
+            '',
+            'lockfileVersion:',
+          ].join('\n')
+        );
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithUnversionedPatch,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        expect(result).toMatch(/^patchedDependencies:/m);
+        expect(result).toContain('patches/typescript.patch');
+      });
+
+      it('should keep a patch declared with a semver-range key when a matching version survives the prune', () => {
+        const typescriptPackageJson = loadJsonFixture(
+          joinPathFragments(
+            __dirname,
+            '__fixtures__/pruning/typescript/package.json.fixture'
+          )
+        );
+        // pnpm accepts a range key (patches every matching version) and records
+        // it verbatim, while the package key stays the resolved exact version
+        // (typescript@4.8.4). The survivor filter must satisfy the range against
+        // the resolved version, not string-match, or the patch is dropped and
+        // the frozen install aborts with a config mismatch.
+        const lockFileWithRangePatch = lockFile.replace(
+          'lockfileVersion:',
+          [
+            'patchedDependencies:',
+            '  typescript@^4.0.0:',
+            '    hash: sha256-tspatch',
+            '    path: patches/typescript.patch',
+            '',
+            'lockfileVersion:',
+          ].join('\n')
+        );
+
+        const prunedGraph = pruneProjectGraph(graph, typescriptPackageJson);
+        const result = stringifyPnpmLockfile(
+          prunedGraph,
+          lockFileWithRangePatch,
+          typescriptPackageJson,
+          '/virtual'
+        );
+
+        expect(result).toMatch(/^patchedDependencies:/m);
+        expect(result).toContain('patches/typescript.patch');
       });
     });
   });
@@ -3352,6 +3465,90 @@ snapshots:
       expect(result).toMatch(
         /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+lodash: 4\.17\.21/
       );
+    });
+
+    it('should emit a directory package for a workspace module in the app peerDependencies', () => {
+      // The app lists @myorg/lib-a under peerDependencies, but pnpm auto-installs
+      // the workspace peer and records it under the importer's dependencies. The
+      // pruned manifest also moves a peer-declared workspace module into
+      // dependencies (pnpm rejects a file: spec under peerDependencies), so the
+      // root importer must reference it as a file: directory package under
+      // dependencies, not peerDependencies.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        peerDependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {
+          'npm:lodash': {
+            type: 'npm',
+            name: 'npm:lodash',
+            data: {
+              version: '4.17.21',
+              packageName: 'lodash',
+              hash: 'sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==',
+            },
+          },
+        },
+        {
+          '@myorg/lib-a': ['npm:lodash'],
+        }
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // lib-a is emitted as a directory package...
+      expect(result).toContain(
+        `'@myorg/lib-a@file:workspace_modules/@myorg/lib-a':`
+      );
+      // ...referenced from the root importer under dependencies via file: (the
+      // peer collapsed into dependencies)...
+      expect(result).toMatch(
+        /dependencies:\s+'@myorg\/lib-a':\s+specifier: file:\.\/workspace_modules\/@myorg\/lib-a\s+version: file:workspace_modules\/@myorg\/lib-a/
+      );
+      // ...and never emitted under peerDependencies (pnpm rejects file: there).
+      expect(result).not.toMatch(/peerDependencies:/);
     });
 
     it('should emit a directory package for a workspace module in the app devDependencies', () => {
