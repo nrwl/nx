@@ -17,5 +17,10 @@
       }
     }
   ],
-  "analytics": false
+  "analytics": false,
+  "pluginsConfig": {
+    "@nx/js": {
+      "analyzeSourceFiles": true
+    }
+  }
 }
