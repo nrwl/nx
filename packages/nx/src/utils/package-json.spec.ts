@@ -1224,6 +1224,27 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ).toEqual({ allowBuilds: { esbuild: true } });
   });
 
+  it('removes a stale settings file when the pruned output no longer has settings', () => {
+    mockPnpmVersion('11.2.2');
+    // Root once approved a build script, so a prior deploy wrote settings out.
+    writeRootWorkspaceYaml('allowBuilds:\n  some-absent-native-dep: true\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    const outputFile = join(outputDir, 'pnpm-workspace.yaml');
+    // Leftover from that earlier deploy (a cache replay restores only the files
+    // the newer entry holds, so an emptied settings set leaves this behind).
+    writeFileSync(outputFile, 'allowBuilds:\n  some-absent-native-dep: true\n');
+
+    // The current pruned lockfile approves nothing, so there are no settings.
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWith('lodash@4.17.21')
+    );
+
+    expect(existsSync(outputFile)).toBe(false);
+  });
+
   it('prefers passed lockfile content over re-reading it from disk', () => {
     mockPnpmVersion('11.2.2');
     writeRootWorkspaceYaml(

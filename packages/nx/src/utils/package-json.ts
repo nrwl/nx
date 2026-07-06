@@ -1,6 +1,6 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { dirname, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
@@ -1103,9 +1103,11 @@ export function emitPrunedPnpmInstallAssets(
  * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
  * `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus the
  * pnpm <=10 `patchedDependencies` declaration in the emitted package.json. Does
- * nothing for whatever the workspace does not use. `allowBuilds` and the patch
- * scope come from `lockfileContent` when the caller already has it in hand,
- * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
+ * nothing for whatever the workspace does not use, and removes a stale
+ * pnpm-workspace.yaml a prior deploy left when the output no longer has settings.
+ * `allowBuilds` and the patch scope come from `lockfileContent` when the caller
+ * already has it in hand, otherwise from the pruned lockfile it just wrote to
+ * `outputDirectory`.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
@@ -1118,8 +1120,14 @@ export function writePrunedPnpmInstallSettings(
     workspaceRootPath,
     prunedLockfileContent
   );
+  const settingsPath = join(outputDirectory, 'pnpm-workspace.yaml');
   if (yaml !== null) {
-    writeFileSync(join(outputDirectory, 'pnpm-workspace.yaml'), yaml);
+    writeFileSync(settingsPath, yaml);
+  } else if (existsSync(settingsPath)) {
+    // A cache replay restores only the files the newer entry holds, so once the
+    // settings empty out a prior deploy's pnpm-workspace.yaml would linger and
+    // pnpm 11 would read its patchedDependencies as a lockfile mismatch. Drop it.
+    rmSync(settingsPath);
   }
 
   const { patchFiles, packageJsonPatchedDependencies } =
