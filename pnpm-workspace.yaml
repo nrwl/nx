@@ -6,10 +6,7 @@ packages:
   - 'nx-dev/*'
   - 'tools/*'
   - 'astro-docs'
-  - 'examples/*/*'
-  # the examples are standalone pnpm workspaces with their own lockfiles
-  - '!examples/react/basic'
-  - '!examples/angular-rspack/**'
+  # examples/ contains standalone pnpm workspaces with their own lockfiles
   - 'packages/nx/native-packages/*'
 minimumReleaseAge: 1440
 minimumReleaseAgeExclude:
