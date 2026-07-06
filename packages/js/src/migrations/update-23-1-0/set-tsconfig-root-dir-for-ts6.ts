@@ -49,9 +49,9 @@ interface Candidate {
  * compilation and emit layout are unchanged under 6.0. The value is computed by
  * the compiler itself: a throwaway program built with `configFilePath` cleared
  * takes the file-derived branch of `getCommonSourceDirectory`, so it matches
- * `tsc` exactly, including project-reference redirects. Configs whose inferred
- * directory already equals the tsconfig directory (the 6.0 default) are left
- * untouched.
+ * `tsc` exactly, including project-reference redirects. Configs already at the
+ * 6.0 default are left untouched: their inferred directory equals the tsconfig
+ * directory, or they are composite (which defaulted there before 6.0 too).
  *
  * To keep the diff minimal, when several configs that extend the same
  * project-local base all need the identical new `rootDir`, it is written once to
@@ -132,6 +132,13 @@ function analyze(
   }
   if (!setsEmitGate(options) || fileNames.length === 0) {
     return { kind: 'inert' };
+  }
+  // Composite already defaults `rootDir` to the tsconfig's own directory in both
+  // 5.x and 6.0, so the 6.0 change leaves it alone. Treat it as own-dir: never
+  // pin a file-derived value, and block a base collapse that would otherwise
+  // make it inherit one.
+  if (options.composite) {
+    return { kind: 'own-dir' };
   }
 
   const commonDir = computeCommonSourceDirectory(

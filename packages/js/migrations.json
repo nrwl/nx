@@ -40,7 +40,7 @@
     },
     "23-1-0-set-tsconfig-root-dir-for-ts6": {
       "version": "23.1.0-beta.8",
-      "description": "Sets an explicit `rootDir` on project `tsconfig*.json` files that lack one, pinned to the source directory TypeScript 5 inferred implicitly, so programs whose input files span more than one directory (for example a spec tsconfig importing another project's source through a `paths` alias) keep compiling under TypeScript 6, which otherwise hard-fails with TS5011 or TS6059. The value is computed by the compiler, so emit layout is unchanged; when sibling configs that share a base all need the same value it is written once to the base.",
+      "description": "Sets an explicit `rootDir` on project `tsconfig*.json` files that lack one, pinned to the source directory TypeScript 5 inferred implicitly, so programs whose input files span more than one directory (for example a spec tsconfig importing another project's source through a `paths` alias) keep compiling under TypeScript 6, which otherwise hard-fails with TS5011 or TS6059. The value is computed by the compiler, so emit layout is unchanged; when sibling configs that share a base all need the same value it is written once to the base. Composite projects are left untouched, since their `rootDir` already defaulted to the tsconfig directory before TypeScript 6.",
       "requires": {
         "typescript": ">=6.0.0"
       },

@@ -152,4 +152,79 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/col/tsconfig.lib.json')).toBeUndefined();
     expect(rootDirOf('libs/col/tsconfig.spec.json')).toBeUndefined();
   });
+
+  it('leaves a composite project untouched (its rootDir already defaults to its own directory)', async () => {
+    write('libs/comp/project.json', { name: 'comp', root: 'libs/comp' });
+    write('libs/comp/src/index.ts', `export const c = 5;\n`);
+    write('libs/comp/tsconfig.lib.json', {
+      compilerOptions: {
+        composite: true,
+        outDir: '../../dist/out-tsc',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['src/**/*.ts'],
+    });
+
+    await run();
+
+    // Without the composite guard, the file-derived branch would pin "src" here,
+    // stripping the src/ prefix from the emit layout composite keeps by default.
+    expect(rootDirOf('libs/comp/tsconfig.lib.json')).toBeUndefined();
+  });
+
+  it('blocks a base collapse a composite sibling would be dragged into', async () => {
+    write('libs/mix/project.json', { name: 'mix', root: 'libs/mix' });
+    write('libs/mix/src/index.ts', `export const m = 6;\n`);
+    write('libs/mix/src/index.spec.ts', `export const s = 7;\n`);
+    write('libs/mix/src/index.e2e.ts', `export const e = 8;\n`);
+    write('libs/mix/tsconfig.json', {
+      files: [],
+      references: [
+        { path: './tsconfig.lib.json' },
+        { path: './tsconfig.spec.json' },
+        { path: './tsconfig.e2e.json' },
+      ],
+    });
+    // composite -> own-dir, must not inherit a rootDir collapsed onto the base
+    write('libs/mix/tsconfig.lib.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        composite: true,
+        outDir: '../../dist/out-tsc',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['src/**/*.ts'],
+    });
+    // two non-composite writers that agree on the same target
+    write('libs/mix/tsconfig.spec.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        outDir: '../../dist/out-tsc',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['src/**/*.ts'],
+    });
+    write('libs/mix/tsconfig.e2e.json', {
+      extends: './tsconfig.json',
+      compilerOptions: {
+        outDir: '../../dist/out-tsc',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['src/**/*.ts'],
+    });
+
+    await run();
+
+    // composite keeps its own-directory default...
+    expect(rootDirOf('libs/mix/tsconfig.lib.json')).toBeUndefined();
+    // ...and by blocking the collapse, the base stays untouched and each
+    // non-composite writer pins its own rootDir instead of inheriting one.
+    expect(rootDirOf('libs/mix/tsconfig.json')).toBeUndefined();
+    expect(rootDirOf('libs/mix/tsconfig.spec.json')).toBe('src');
+    expect(rootDirOf('libs/mix/tsconfig.e2e.json')).toBe('src');
+  });
 });
