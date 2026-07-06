@@ -64,7 +64,7 @@ export default async function pruneLockfileExecutor(
     // pnpm 11 reads build-script approvals and supportedArchitectures only from
     // pnpm-workspace.yaml, so re-emit them there for the standalone output.
     if (packageManager === 'pnpm') {
-      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot);
+      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot, lockFile);
     }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
@@ -86,21 +86,45 @@ function createPrunedLockfile(
 
   // Point every workspace-module dependency at its copied directory so the
   // standalone output installs them as pnpm `file:` directory dependencies.
-  // peerDependencies are intentionally not rewritten: a workspace module
-  // consumed only as a peer is out of scope for pruning. Gate strictly on graph
-  // membership: a `file:`/`link:` spec to a non-workspace local path (e.g. a
-  // vendored tarball) is left alone, since copy-workspace-modules only ever
-  // copies actual workspace projects.
+  // pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
+  // workspace module is moved into dependencies instead (an optional peer
+  // becomes required, which is moot since the module is always copied in). Gate
+  // strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+  // local path (e.g. a vendored tarball) is left alone, since
+  // copy-workspace-modules only ever copies actual workspace projects.
   for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
     }
     for (const pkgName of Object.keys(deps)) {
-      if (workspacePackages.has(pkgName)) {
-        deps[pkgName] = `file:./workspace_modules/${pkgName}`;
+      if (!workspacePackages.has(pkgName)) {
+        continue;
+      }
+      const fileSpec = `file:./workspace_modules/${pkgName}`;
+      if (section === 'peerDependencies') {
+        (packageJson.dependencies ??= {})[pkgName] = fileSpec;
+        delete deps[pkgName];
+        // drop the now-orphaned optional/required marker for the moved module
+        if (packageJson.peerDependenciesMeta) {
+          delete packageJson.peerDependenciesMeta[pkgName];
+        }
+      } else {
+        deps[pkgName] = fileSpec;
       }
     }
+  }
+  if (
+    packageJson.peerDependencies &&
+    Object.keys(packageJson.peerDependencies).length === 0
+  ) {
+    delete packageJson.peerDependencies;
+  }
+  if (
+    packageJson.peerDependenciesMeta &&
+    Object.keys(packageJson.peerDependenciesMeta).length === 0
+  ) {
+    delete packageJson.peerDependenciesMeta;
   }
 
   return {

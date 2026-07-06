@@ -781,9 +781,12 @@ describe('updatePackageJson', () => {
 
     // pnpm 11 reads build-script approvals only from pnpm-workspace.yaml, so the
     // executor must re-emit them into the output dir (context.root is the source).
+    // The generated lockfile content is passed through so allowBuilds is scoped
+    // without re-reading it from disk.
     expect(mockWritePrunedPnpmInstallSettings).toHaveBeenCalledWith(
       'dist/libs/lib1',
-      '/root'
+      '/root',
+      'lock-file-content'
     );
   });
 

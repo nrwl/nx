@@ -28,13 +28,20 @@ type CopiedManifest = {
   optionalDependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
+  peerDependenciesMeta?: Record<string, { optional?: boolean }>;
   [key: string]: unknown;
 };
 
-const DEPENDENCY_SECTIONS = [
+// Sections of a copied module's own manifest whose workspace-module deps are
+// rewritten to file: and recursed into. pnpm installs a transitive dependency's
+// regular, optional, and auto-installed peer deps (a workspace peer is linked
+// and recorded under the depending importer's dependencies in the lockfile), but
+// never its devDependencies. A workspace-module peer is moved into dependencies,
+// since pnpm rejects a file: spec under peerDependencies (mirrors the app-level
+// move in prune-lockfile).
+const TRANSITIVE_INSTALL_SECTIONS = [
   'dependencies',
   'optionalDependencies',
-  'devDependencies',
   'peerDependencies',
 ] as const;
 
@@ -48,7 +55,7 @@ function resolveCatalogReferences(
     return false;
   }
   let modified = false;
-  for (const section of DEPENDENCY_SECTIONS) {
+  for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
       continue;
@@ -93,13 +100,15 @@ function handleWorkspaceModules(
     dependencies?: Record<string, string>;
     optionalDependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
+    peerDependencies?: Record<string, string>;
   },
   projectGraph: ProjectGraph
 ) {
   if (
     !packageJson.dependencies &&
     !packageJson.optionalDependencies &&
-    !packageJson.devDependencies
+    !packageJson.devDependencies &&
+    !packageJson.peerDependencies
   ) {
     return;
   }
@@ -167,23 +176,43 @@ function handleWorkspaceModules(
       catalogManager
     );
 
-    // Rewrite sibling workspace-module deps to file: paths and recurse. Cover
-    // both prod-installed sections: the pruned lockfile emits directory
-    // packages for workspace modules in either, so leaving one un-rewritten
-    // would leave the manifest specifier out of sync with the lockfile.
-    for (const section of ['dependencies', 'optionalDependencies'] as const) {
+    // Rewrite sibling workspace-module deps to file: paths and recurse. A peer
+    // is moved into dependencies (pnpm rejects a file: spec under
+    // peerDependencies), dropping its now-orphaned optional/required marker.
+    for (const section of TRANSITIVE_INSTALL_SECTIONS) {
       const deps = copiedPackageJson[section];
       if (!deps) {
         continue;
       }
       for (const depName of Object.keys(deps)) {
-        if (workspaceModules.has(depName)) {
-          const relativePath = calculateRelativePath(pkgName, depName);
-          deps[depName] = `file:${relativePath}`;
-          packageJsonModified = true;
-          processModule(depName);
+        if (!workspaceModules.has(depName)) {
+          continue;
         }
+        const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
+        if (section === 'peerDependencies') {
+          (copiedPackageJson.dependencies ??= {})[depName] = fileSpec;
+          delete deps[depName];
+          if (copiedPackageJson.peerDependenciesMeta) {
+            delete copiedPackageJson.peerDependenciesMeta[depName];
+          }
+        } else {
+          deps[depName] = fileSpec;
+        }
+        packageJsonModified = true;
+        processModule(depName);
       }
+    }
+    if (
+      copiedPackageJson.peerDependencies &&
+      Object.keys(copiedPackageJson.peerDependencies).length === 0
+    ) {
+      delete copiedPackageJson.peerDependencies;
+    }
+    if (
+      copiedPackageJson.peerDependenciesMeta &&
+      Object.keys(copiedPackageJson.peerDependenciesMeta).length === 0
+    ) {
+      delete copiedPackageJson.peerDependenciesMeta;
     }
 
     if (packageJsonModified) {

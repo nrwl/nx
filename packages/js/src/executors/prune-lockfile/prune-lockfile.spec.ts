@@ -6,6 +6,8 @@ import { join } from 'path';
 import { type PackageJson } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { createLockFile } from 'nx/src/plugins/js/lock-file/lock-file';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';
@@ -333,6 +335,106 @@ describe('pruneLockfileExecutor - workspace module dependencies', () => {
     expect(generated.dependencies).toEqual({ lodash: '^4.17.21' });
   });
 
+  it('moves workspace packages declared under peerDependencies into dependencies', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        peerDependencies: { '@myorg/peer-lib': 'workspace:*' },
+        peerDependenciesMeta: { '@myorg/peer-lib': { optional: true } },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValueOnce(
+      new Map([['@myorg/peer-lib', { data: { root: 'libs/peer-lib' } } as any]])
+    );
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    // pnpm rejects a file: spec under peerDependencies, so a peer-declared
+    // workspace project is moved into dependencies (installed as a regular dep);
+    // a workspace:* spec, or a file: spec left under peer, fails the install.
+    expect(generated.dependencies).toEqual({
+      lodash: '^4.17.21',
+      '@myorg/peer-lib': 'file:./workspace_modules/@myorg/peer-lib',
+    });
+    expect(generated.peerDependencies).toBeUndefined();
+    // the orphaned optional marker for the moved module is dropped
+    expect(generated.peerDependenciesMeta).toBeUndefined();
+  });
+
+  it('moves a required (non-optional) peer workspace package into dependencies', async () => {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
+      'package-lock.json': JSON.stringify({ name: 'root', lockfileVersion: 3 }),
+      // A required peer carries no peerDependenciesMeta entry.
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { lodash: '^4.17.21' },
+        peerDependencies: { '@myorg/peer-lib': 'workspace:*' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValueOnce(
+      new Map([['@myorg/peer-lib', { data: { root: 'libs/peer-lib' } } as any]])
+    );
+
+    await pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+
+    const generated: PackageJson = JSON.parse(
+      readFileSync(join(tempFs.tempDir, 'dist', 'app', 'package.json'), 'utf-8')
+    );
+    expect(generated.dependencies).toEqual({
+      lodash: '^4.17.21',
+      '@myorg/peer-lib': 'file:./workspace_modules/@myorg/peer-lib',
+    });
+    expect(generated.peerDependencies).toBeUndefined();
+    expect(generated.peerDependenciesMeta).toBeUndefined();
+  });
+
   it('strips the pruned manifest pnpm config so a standalone install matches the lockfile', async () => {
     tempFs.createFilesSync({
       'package.json': JSON.stringify({ name: 'root', version: '0.0.0' }),
@@ -587,6 +689,17 @@ describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
         '    - linux',
         '  cpu:',
         '    - x64',
+        '',
+      ].join('\n')
+    );
+    // allowBuilds is scoped to packages the pruned lockfile installs, so the
+    // approved package must appear in it for the approval to carry through.
+    (createLockFile as jest.Mock).mockReturnValueOnce(
+      [
+        "lockfileVersion: '9.0'",
+        'packages:',
+        '  esbuild@0.21.5:',
+        '    resolution: {integrity: sha512-abc}',
         '',
       ].join('\n')
     );

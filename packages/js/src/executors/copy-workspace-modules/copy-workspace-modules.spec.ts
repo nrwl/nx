@@ -195,6 +195,43 @@ describe('copyWorkspaceModules', () => {
     ).toBe(true);
   });
 
+  it('copies a workspace module the app declares only under peerDependencies', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        peerDependencies: { '@scope/peerlib': 'workspace:*' },
+      }),
+      'libs/peerlib/package.json': JSON.stringify({
+        name: '@scope/peerlib',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map([
+        [
+          '@scope/peerlib',
+          { data: { root: moduleRoot('libs/peerlib') } } as any,
+        ],
+      ])
+    );
+
+    await runExecutor();
+
+    // pnpm auto-installs an app's peers, so a workspace module reached only
+    // through peerDependencies must be copied too.
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/peerlib/package.json'
+        )
+      )
+    ).toBe(true);
+  });
+
   it('rewrites sibling workspace-module deps to file: and copies them recursively', async () => {
     tempFs.createFilesSync({
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
@@ -310,6 +347,191 @@ describe('copyWorkspaceModules', () => {
         join(
           tempFs.tempDir,
           'dist/app/workspace_modules/@scope/libb/package.json'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('moves a peerDependencies sibling into dependencies as file: and copies it recursively', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        peerDependencies: { '@scope/libb': 'workspace:*' },
+        peerDependenciesMeta: { '@scope/libb': { optional: true } },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // pnpm links liba's workspace peer and records it under liba's dependencies
+    // in the lockfile, so the copied manifest moves it there (pnpm rejects a
+    // file: spec under peerDependencies) and drops the orphaned peer marker...
+    const liba = readCopiedManifest('@scope/liba');
+    expect(liba.dependencies).toEqual({ '@scope/libb': 'file:../libb' });
+    expect(liba.peerDependencies).toBeUndefined();
+    expect(liba.peerDependenciesMeta).toBeUndefined();
+    // ...and the sibling itself is copied by the recursion.
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/libb/package.json'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('moves a required (non-optional) peerDependencies sibling into dependencies', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      // A required peer carries no peerDependenciesMeta entry.
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        peerDependencies: { '@scope/libb': 'workspace:*' },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // The required peer moves into dependencies just like the optional one; the
+    // absent peerDependenciesMeta stays absent.
+    const liba = readCopiedManifest('@scope/liba');
+    expect(liba.dependencies).toEqual({ '@scope/libb': 'file:../libb' });
+    expect(liba.peerDependencies).toBeUndefined();
+    expect(liba.peerDependenciesMeta).toBeUndefined();
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/libb/package.json'
+        )
+      )
+    ).toBe(true);
+  });
+
+  it('terminates on a workspace-module dependency cycle', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { '@scope/libb': 'workspace:*' },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // The A -> B -> A cycle terminates (processedModules guards re-entry) and
+    // each module's sibling reference is rewritten to the copied directory.
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      '@scope/libb': 'file:../libb',
+    });
+    expect(readCopiedManifest('@scope/libb').dependencies).toEqual({
+      '@scope/liba': 'file:../liba',
+    });
+  });
+
+  it('copies a diamond-shared workspace module reached from two paths', async () => {
+    tempFs.createFilesSync({
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: {
+          '@scope/liba': 'workspace:*',
+          '@scope/libb': 'workspace:*',
+        },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { '@scope/shared': 'workspace:*' },
+      }),
+      'libs/libb/package.json': JSON.stringify({
+        name: '@scope/libb',
+        version: '0.0.1',
+        dependencies: { '@scope/shared': 'workspace:*' },
+      }),
+      'libs/shared/package.json': JSON.stringify({
+        name: '@scope/shared',
+        version: '0.0.1',
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+        ['@scope/libb', { data: { root: moduleRoot('libs/libb') } }],
+        ['@scope/shared', { data: { root: moduleRoot('libs/shared') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // Both parents rewrite the shared dep to the single copied directory.
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      '@scope/shared': 'file:../shared',
+    });
+    expect(readCopiedManifest('@scope/libb').dependencies).toEqual({
+      '@scope/shared': 'file:../shared',
+    });
+    expect(
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/workspace_modules/@scope/shared/package.json'
         )
       )
     ).toBe(true);

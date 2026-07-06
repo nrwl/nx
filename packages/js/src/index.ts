@@ -26,5 +26,6 @@ export {
 export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
 export {
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPatchArtifacts,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
