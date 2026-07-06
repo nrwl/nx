@@ -188,6 +188,36 @@ describe('js plugin lockfile cache resilience', () => {
     });
   });
 
+  it('does not persist a reduced edge set when the ctx is transiently incomplete', async () => {
+    await runPlugin(async (h) => {
+      await h.runCreateNodes();
+      // A daemon cycle can hand createDependencies an incomplete external
+      // node set (e.g. after a transient plugin error). Returned edges are
+      // filtered, but the cache written under the real hash must keep the
+      // full lockfile-derived set.
+      const deps = await h.runCreateDependencies({});
+      expect(deps).toEqual([]);
+      const cache = JSON.parse(readFileSync(h.depsCachePath, 'utf-8'));
+      expect(cache.dependencies).toContainEqual(
+        expect.objectContaining({
+          source: 'npm:autoprefixer',
+          target: 'npm:picocolors',
+        })
+      );
+    });
+    // Next healthy cycle serves the full set from that cache
+    await runPlugin(async (h) => {
+      const externalNodes = await h.runCreateNodes();
+      const deps = await h.runCreateDependencies(externalNodes);
+      expect(deps).toContainEqual(
+        expect.objectContaining({
+          source: 'npm:autoprefixer',
+          target: 'npm:picocolors',
+        })
+      );
+    });
+  });
+
   it('reprocesses when cache files are truncated or corrupted', async () => {
     await runPlugin(async (h) => {
       const externalNodes = await h.runCreateNodes();

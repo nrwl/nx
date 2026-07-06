@@ -218,31 +218,33 @@ function loadFromDisk<T>(cachePath: string): {
  *
  * Writes to a temp file in the same directory and renames it into place so
  * concurrent readers (daemon workers, parallel nx processes) never observe
- * a partially-written file.
- *
- * Strategy:
- * 1. Attempt mkdirSync + writeFileSync to temp file + renameSync
- * 2. On failure: remove temp and existing cache file, log warning, return without throwing
+ * a partially-written file. Rename can fail transiently (e.g. EPERM on
+ * Windows when a reader holds the destination open), so it retries with a
+ * fresh temp file - mirroring nx-deps-cache - and only removes the existing
+ * cache file after all attempts fail, so one transient error does not
+ * discard a previously-good cache.
  */
 export function safeWriteFileCache(cachePath: string, content: string): void {
-  const tmpPath = `${cachePath}.${process.pid}.tmp`;
-  try {
-    mkdirSync(dirname(cachePath), { recursive: true });
-    writeFileSync(tmpPath, content);
-    renameSync(tmpPath, cachePath);
-  } catch (e) {
-    logger.warn(
-      `Failed to write cache at ${cachePath}: ${
-        e instanceof Error ? e.message : 'unknown error'
-      }. Removing existing cache file.`
-    );
-    tryRemoveFile(tmpPath);
-    tryRemoveFile(cachePath);
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    const unique = (Math.random().toString(16) + '0000000').slice(2, 10);
+    const tmpPath = `${cachePath}~${unique}`;
+    try {
+      mkdirSync(dirname(cachePath), { recursive: true });
+      writeFileSync(tmpPath, content);
+      renameSync(tmpPath, cachePath);
+      return;
+    } catch {
+      tryRemoveFile(tmpPath);
+    }
   }
+  logger.warn(
+    `Failed to write cache at ${cachePath} after 5 attempts. Removing existing cache file.`
+  );
+  tryRemoveFile(cachePath);
 }
 
 /**
- * Best-effort file removal — missing files and fs errors are ignored.
+ * Best-effort file removal - missing files and fs errors are ignored.
  */
 export function tryRemoveFile(path: string): void {
   try {

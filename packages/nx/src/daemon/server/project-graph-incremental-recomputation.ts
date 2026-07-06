@@ -383,7 +383,7 @@ async function processCollectedUpdatedAndDeletedFiles(
       return { fileMap: fresh, configHash, knownExternalNodes: externalNodes };
     }
 
-    // Config unchanged → patch the existing file map in place. External
+    // Config unchanged -> patch the existing file map in place. External
     // nodes still refresh from this cycle's createNodes results: a
     // lockfile-only change (install without config changes) alters them
     // without touching the config hash, and keeping the stale set makes

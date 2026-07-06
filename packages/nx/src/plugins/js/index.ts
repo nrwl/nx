@@ -153,33 +153,38 @@ function getLockfileDependenciesSafely(
   try {
     const lockFileContents = readLockFileContents(packageManager, lockFilePath);
     const lockFileHash = getLockFileHash(lockFileContents);
-    // Inconsistent means the lockfile changed between createNodes and
-    // createDependencies (e.g. mid-install): ctx.externalNodes reflect the
-    // old state, so skip the caches - the next run sees a settled lockfile
-    // and reprocesses both phases consistently.
-    const consistent = lockFileHash === state.lockFileHash;
-
-    if (consistent) {
-      const cachedDependencies = readCachedDependencies(lockFileHash);
-      // A cached entry referencing nodes that no longer exist is poisoned
-      // (e.g. written by an interrupted process) - reparse instead of
-      // failing graph construction with "Source project does not exist".
-      if (cachedDependencies?.every((d) => dependencyIsValid(d, ctx))) {
-        return cachedDependencies;
-      }
+    // The lockfile changed between createNodes and createDependencies (e.g.
+    // mid-install). Parsing it with the older keyMap would mix lockfile
+    // generations, so skip lockfile edges for this run - the next run sees
+    // a settled lockfile and reprocesses both phases consistently.
+    if (lockFileHash !== state.lockFileHash) {
+      return [];
     }
 
+    const cachedDependencies = readCachedDependencies(lockFileHash);
+    // A cached entry referencing nodes that no longer exist is poisoned
+    // (e.g. written by an interrupted process) - reparse instead of
+    // failing graph construction with "Source project does not exist".
+    if (cachedDependencies?.every((d) => dependencyIsValid(d, ctx))) {
+      return cachedDependencies;
+    }
+
+    // Parse against the node set derived from this same lockfile, not the
+    // caller's ctx: a transiently incomplete ctx (e.g. a daemon cycle that
+    // committed partial external nodes after a plugin error) would make the
+    // parsers throw or silently drop edges, persisting a reduced edge set
+    // under the real hash. The cache must describe the lockfile - which is
+    // what the embedded hash vouches for - so only the returned value is
+    // filtered to what the graph can actually hold.
     const lockfileDependencies = getLockFileDependencies(
       packageManager,
       lockFileContents,
       lockFileHash,
-      ctx,
+      { ...ctx, externalNodes: state.nodes },
       state.keyMap
-    ).filter((d) => dependencyIsValid(d, ctx));
-    if (consistent) {
-      writeDependenciesCache(lockFileHash, lockfileDependencies);
-    }
-    return lockfileDependencies;
+    );
+    writeDependenciesCache(lockFileHash, lockfileDependencies);
+    return lockfileDependencies.filter((d) => dependencyIsValid(d, ctx));
   } catch (e) {
     logger.warn(
       `Could not resolve dependencies from ${lockFilePath}. External dependency information may be incomplete until the next run. ${
