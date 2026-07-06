@@ -28,6 +28,40 @@ pub struct HashPlanner {
     external_deps_mapped: OnceLock<HashMap<String, Vec<String>>>,
 }
 
+/// Resolution of a target's own `externalDependencies` inputs. The variant
+/// decides both the external hash instructions added at the task's own level
+/// and whether `^`-dependency inputs may contribute external nodes (#36239).
+enum TargetExternalInput {
+    /// Executor deps can't be determined (target missing, or a local-plugin
+    /// executor we can't introspect). Contributes no external instructions.
+    Unknown,
+    /// A specific set of external nodes: an @nx executor's deps, or an explicit
+    /// non-empty `externalDependencies` list.
+    Specific(Vec<HashInstruction>),
+    /// No `externalDependencies` input declared, so hash every external dep.
+    All,
+    /// An empty `externalDependencies` input: the task opted out of external
+    /// deps, so `^`-dependency traversal must skip external nodes (#36239).
+    OptedOut,
+}
+
+impl TargetExternalInput {
+    /// External hash instructions contributed at the task's own level.
+    fn into_instructions(self) -> Vec<HashInstruction> {
+        match self {
+            TargetExternalInput::Specific(instructions) => instructions,
+            TargetExternalInput::All => vec![HashInstruction::AllExternalDependencies],
+            TargetExternalInput::Unknown | TargetExternalInput::OptedOut => vec![],
+        }
+    }
+
+    /// Whether the task opted out of external deps via an empty
+    /// `externalDependencies` input.
+    fn opted_out(&self) -> bool {
+        matches!(self, TargetExternalInput::OptedOut)
+    }
+}
+
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
@@ -71,12 +105,13 @@ impl HashPlanner {
                     .ok_or_else(|| anyhow::anyhow!("Task with id '{id}' not found"))?;
                 let inputs = get_inputs(task, &self.project_graph, &self.nx_json)?;
 
-                let target = self.target_input(
+                let target_external = self.target_input(
                     &task.target.project,
                     &task.target.target,
                     &inputs.self_inputs,
                     external_deps_mapped,
                 )?;
+                let external_deps_opted_out = target_external.opted_out();
 
                 let self_inputs = self.self_and_deps_inputs(
                     &task.target.project,
@@ -84,11 +119,12 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     external_deps_mapped,
+                    external_deps_opted_out,
                     &mut Box::new(hashbrown::HashSet::from([task.target.project.as_str()])),
                 )?;
 
-                let mut inputs: Vec<HashInstruction> = target
-                    .unwrap_or(vec![])
+                let mut inputs: Vec<HashInstruction> = target_external
+                    .into_instructions()
                     .into_iter()
                     .chain(vec![
                         HashInstruction::Environment("NX_CLOUD_ENCRYPTION_KEY".into()),
@@ -151,16 +187,20 @@ impl HashPlanner {
         Ok(External::new(plans))
     }
 
+    /// Resolves the target's own `externalDependencies` inputs. The returned
+    /// `TargetExternalInput` tells the caller both what external hash
+    /// instructions to add at the task's own level and whether `^`-dependency
+    /// inputs may pull in external nodes (#36239).
     fn target_input<'a>(
         &'a self,
         project_name: &str,
         target_name: &str,
         self_inputs: &[Input],
         external_deps_map: &'a HashMap<String, Vec<String>>,
-    ) -> anyhow::Result<Option<Vec<HashInstruction>>> {
+    ) -> anyhow::Result<TargetExternalInput> {
         let project = &self.project_graph.nodes[project_name];
         let Some(target) = project.targets.get(target_name) else {
-            return Ok(None);
+            return Ok(TargetExternalInput::Unknown);
         };
 
         // we can only vouch for @nx packages's executor dependencies
@@ -182,7 +222,7 @@ impl HashPlanner {
             else {
                 // this usually happens because the executor was a local plugin.
                 // todo)) @Cammisuli: we need to gather the project's inputs and its dep inputs similar to how we do it in `self_and_deps_inputs`
-                return Ok(None);
+                return Ok(TargetExternalInput::Unknown);
             };
             let mut external_deps: Vec<&'a String> = vec![];
             trace!(
@@ -195,7 +235,7 @@ impl HashPlanner {
             );
             external_deps.push(existing_package);
             external_deps.extend(&external_deps_map[existing_package]);
-            Ok(Some(
+            Ok(TargetExternalInput::Specific(
                 external_deps
                     .iter()
                     .map(|s| HashInstruction::External(s.to_string()))
@@ -245,16 +285,19 @@ impl HashPlanner {
                 }
             }
             if !external_deps.is_empty() {
-                Ok(Some(
+                Ok(TargetExternalInput::Specific(
                     external_deps
                         .iter()
                         .map(|s| HashInstruction::External(s.to_string()))
                         .collect(),
                 ))
             } else if !has_external_deps {
-                Ok(Some(vec![HashInstruction::AllExternalDependencies]))
+                Ok(TargetExternalInput::All)
             } else {
-                Ok(None)
+                // An `externalDependencies` input was declared but resolved to no
+                // packages (e.g. `{ externalDependencies: [] }`). The task opted
+                // out of external deps entirely.
+                Ok(TargetExternalInput::OptedOut)
             }
         }
     }
@@ -266,6 +309,7 @@ impl HashPlanner {
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
+        external_deps_opted_out: bool,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[project_name];
@@ -276,6 +320,7 @@ impl HashPlanner {
             task_graph,
             project_deps,
             external_deps_mapped,
+            external_deps_opted_out,
             visited,
         )?;
 
@@ -319,6 +364,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
+        external_deps_opted_out: bool,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         if inputs.len() == 1 {
@@ -328,6 +374,7 @@ impl HashPlanner {
                 task_graph,
                 project_deps,
                 external_deps_mapped,
+                external_deps_opted_out,
                 visited,
             );
         }
@@ -345,6 +392,7 @@ impl HashPlanner {
                 task_graph,
                 project_deps,
                 external_deps_mapped,
+                external_deps_opted_out,
                 &mut visited_for_input,
             )?);
         }
@@ -359,6 +407,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
+        external_deps_opted_out: bool,
         visited: &mut Box<hashbrown::HashSet<&'a str>>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut deps_inputs: Vec<HashInstruction> = Vec::with_capacity(project_deps.len());
@@ -378,16 +427,24 @@ impl HashPlanner {
                 else {
                     continue;
                 };
+                // Propagate the opt-out flag: an opted-out task must skip
+                // external nodes at every depth of the `^`-dependency chain,
+                // not only its direct deps (#36239).
                 deps_inputs.extend(self.self_and_deps_inputs(
                     dep,
                     task,
                     &dep_inputs,
                     task_graph,
                     external_deps_mapped,
+                    external_deps_opted_out,
                     visited,
                 )?);
-            } else {
-                // todo(jcammisuli): add a check to skip this when the new task hasher is ready, and when `AllExternalDependencies` is used
+            } else if !external_deps_opted_out {
+                // A `^`-dependency input pulls in the external nodes of the
+                // traversed projects. Skip them when the task opted out of
+                // external dependencies via an empty `externalDependencies`
+                // input, otherwise they defeat that opt-out (#36239).
+                // todo(jcammisuli): also skip this when `AllExternalDependencies` is used, once the new task hasher is ready
                 if let Some(external_deps) = external_deps_mapped.get(dep) {
                     deps_inputs.push(HashInstruction::External(dep.to_string()));
                     deps_inputs.extend(

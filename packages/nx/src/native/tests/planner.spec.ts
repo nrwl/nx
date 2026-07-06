@@ -766,6 +766,126 @@ describe('task planner', () => {
     expect(plans['proj:build']).not.toContain('AllExternalDependencies');
   });
 
+  it('should respect empty externalDependencies when dependency inputs are present', async () => {
+    let projectFileMap = {
+      proj: [{ file: '/file.ts', hash: 'file.hash' }],
+    };
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'proj',
+      type: 'lib',
+      data: {
+        root: 'libs/proj',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [{ externalDependencies: [] }, 'production', '^production'],
+          },
+        },
+      },
+    });
+    builder.addExternalNode({
+      name: 'npm:react',
+      type: 'npm',
+      data: {
+        version: '17.0.0',
+        packageName: 'react',
+      },
+    });
+    builder.addStaticDependency('proj', 'npm:react', '/file.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['proj'],
+      ['build'],
+      undefined,
+      {}
+    );
+    let nxJson = {
+      namedInputs: {
+        production: ['{projectRoot}/**/*'],
+      },
+    } as any;
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+
+    const plans = planner.getPlans(['proj:build'], taskGraph);
+    // `externalDependencies: []` opts the task out of hashing npm packages;
+    // the `^production` dependency input must not re-introduce them.
+    expect(plans['proj:build']).not.toContain('AllExternalDependencies');
+    expect(plans['proj:build']).not.toContain('npm:react');
+    // the opt-out must not strip legitimate file inputs.
+    expect(plans['proj:build']).toContain('proj:libs/proj/**/*');
+  });
+
+  it('should respect empty externalDependencies for transitive dependency inputs', async () => {
+    let projectFileMap = {
+      proj: [{ file: '/proj.ts', hash: 'proj.hash' }],
+      libA: [{ file: '/libA.ts', hash: 'libA.hash' }],
+    };
+    let builder = new ProjectGraphBuilder(undefined, projectFileMap);
+    builder.addNode({
+      name: 'proj',
+      type: 'lib',
+      data: {
+        root: 'libs/proj',
+        targets: {
+          build: {
+            executor: 'nx:run-commands',
+            inputs: [{ externalDependencies: [] }, 'production', '^production'],
+          },
+        },
+      },
+    });
+    builder.addNode({
+      name: 'libA',
+      type: 'lib',
+      data: {
+        root: 'libs/libA',
+        targets: { build: { executor: 'nx:run-commands' } },
+      },
+    });
+    builder.addExternalNode({
+      name: 'npm:lodash',
+      type: 'npm',
+      data: {
+        version: '4.17.21',
+        packageName: 'lodash',
+      },
+    });
+    builder.addStaticDependency('proj', 'libA', '/proj.ts');
+    builder.addStaticDependency('libA', 'npm:lodash', '/libA.ts');
+    let projectGraph = builder.getUpdatedProjectGraph();
+    let taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['proj'],
+      ['build'],
+      undefined,
+      {}
+    );
+    let nxJson = {
+      namedInputs: {
+        production: ['{projectRoot}/**/*'],
+      },
+    } as any;
+    const planner = new HashPlanner(
+      nxJson,
+      transferProjectGraph(transformProjectGraphForRust(projectGraph))
+    );
+
+    const plans = planner.getPlans(['proj:build'], taskGraph);
+    // `^production` recurses through libA to its own deps, so the opt-out must
+    // skip libA's npm nodes too, not just proj's direct ones (#36239).
+    expect(plans['proj:build']).not.toContain('AllExternalDependencies');
+    expect(plans['proj:build']).not.toContain('npm:lodash');
+    // the traversal still reached libA and kept its file inputs.
+    expect(plans['proj:build']).toContain('libA:libs/libA/**/*');
+  });
+
   it('should include npm projects', async () => {
     let projectFileMap = {
       app: [{ file: '/filea.ts', hash: 'a.hash' }],
