@@ -941,18 +941,23 @@ function getPrunedPatchedDependencies(
  * prune target's cached `patches` output and be dropped on a cache replay, and a
  * `..` asset name is not one a bundler can emit. The source sub-structure is
  * kept under `patches/`, so two patches that share a file name in different
- * directories do not collide; a leading `patches/` is dropped so the common
- * layout is not nested under a second `patches/`.
+ * directories do not collide; `.` and `..` segments are dropped anywhere they
+ * appear (not just a leading run) so the result can never resolve outside
+ * `patches/`, and a leading `patches/` is stripped so the common layout is not
+ * nested under a second `patches/`.
  * `filterPatchedDependenciesToPrunedPackages` in the pnpm lock-file parser calls
  * this same helper for the lockfile's object-form path (pnpm 9-10), which pnpm
  * --frozen-lockfile cross-checks against this config path, so the two agree.
  */
 export function normalizePrunedPatchPath(patchPath: string): string {
-  const relative = patchPath
+  const segments = patchPath
     .replace(/\\/g, '/')
-    .replace(/^(?:\.\.?\/)+/, '')
-    .replace(/^patches\//, '');
-  return `patches/${relative}`;
+    .split('/')
+    .filter((segment) => segment !== '' && segment !== '.' && segment !== '..');
+  if (segments[0] === 'patches') {
+    segments.shift();
+  }
+  return `patches/${segments.join('/')}`;
 }
 
 function normalizePrunedPatchedDependencies(
@@ -1030,8 +1035,8 @@ export function getPrunedPnpmPatchArtifacts(
   for (const patchPath of new Set(Object.values(patchedDependencies))) {
     const source = join(workspaceRootPath, patchPath);
     if (existsSync(source)) {
-      // Ship the patch under the flattened `patches/<file>` path the pruned
-      // output declares, reading it from wherever the workspace kept it.
+      // Ship the patch under the `patches/<subpath>` path the pruned output
+      // declares, reading it from wherever the workspace kept it.
       patchFiles.push({
         path: normalizePrunedPatchPath(patchPath),
         content: readFileSync(source, 'utf-8'),

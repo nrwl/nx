@@ -22,6 +22,7 @@ import {
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmPatchArtifacts,
   installPackageToTmp,
+  normalizePrunedPatchPath,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
@@ -982,6 +983,40 @@ catalogs:
       expect(reactVersion).toBe('^18.2.0');
       expect(lodashVersion).toBe('^4.17.21');
     });
+  });
+});
+
+describe('normalizePrunedPatchPath', () => {
+  it.each([
+    // the default patches/ layout is unchanged
+    ['patches/is-number.patch', 'patches/is-number.patch'],
+    // a custom directory keeps its subpath under patches/
+    ['tools/patches/is-number.patch', 'patches/tools/patches/is-number.patch'],
+    // a leading parent-relative segment is dropped, not carried outside patches/
+    ['../shared/is-number.patch', 'patches/shared/is-number.patch'],
+    // backslash separators (Windows-authored config) are normalized
+    [
+      'tools\\patches\\is-number.patch',
+      'patches/tools/patches/is-number.patch',
+    ],
+    // an absolute path does not produce a double slash
+    ['/abs/is-number.patch', 'patches/abs/is-number.patch'],
+    // embedded ../ segments are dropped so the result cannot escape patches/
+    ['a/../../../etc/passwd.patch', 'patches/a/etc/passwd.patch'],
+  ])('maps %j to %j under patches/', (input, expected) => {
+    expect(normalizePrunedPatchPath(input)).toBe(expected);
+  });
+
+  it('never lets a normalized patch path escape patches/', () => {
+    for (const input of [
+      '../../../etc/passwd.patch',
+      'a/../../b/../../../x.patch',
+      './patches/../../../x.patch',
+    ]) {
+      const result = normalizePrunedPatchPath(input);
+      expect(result.startsWith('patches/')).toBe(true);
+      expect(result.split('/')).not.toContain('..');
+    }
   });
 });
 
