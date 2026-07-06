@@ -1,7 +1,7 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { dirname, join, resolve } from 'path';
+import { dirname, isAbsolute, join, resolve } from 'path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
@@ -1033,7 +1033,12 @@ export function getPrunedPnpmPatchArtifacts(
   }
   const patchFiles: Array<{ path: string; content: string }> = [];
   for (const patchPath of new Set(Object.values(patchedDependencies))) {
-    const source = join(workspaceRootPath, patchPath);
+    // The config/lockfile side normalizes an absolute patch path under patches/,
+    // so read its source from that absolute location to keep the shipped file in
+    // sync; only a relative path resolves against the workspace root.
+    const source = isAbsolute(patchPath)
+      ? patchPath
+      : join(workspaceRootPath, patchPath);
     if (existsSync(source)) {
       // Ship the patch under the `patches/<subpath>` path the pruned output
       // declares, reading it from wherever the workspace kept it.

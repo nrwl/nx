@@ -1450,6 +1450,33 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     ]);
   });
 
+  it('ships a patch referenced by an absolute config path', () => {
+    mockPnpmVersion('11.2.2');
+    // pnpm accepts an absolute patchedDependencies path even though its own
+    // patch-commit writes relative ones. The config/lockfile side already maps
+    // it under patches/, so the file must ship from its absolute source or the
+    // standalone install would reference a patch that was never copied in.
+    const absolutePatchPath = join(tempDir, 'patches', 'is-number@7.0.0.patch');
+    writeRootWorkspaceYaml(
+      [
+        'patchedDependencies:',
+        `  is-number@7.0.0: ${absolutePatchPath}`,
+        '',
+      ].join('\n')
+    );
+    writeRootPatch('patches/is-number@7.0.0.patch', 'THE PATCH\n');
+
+    const { patchFiles } = getPrunedPnpmPatchArtifacts(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    expect(patchFiles).toHaveLength(1);
+    expect(patchFiles[0].content).toBe('THE PATCH\n');
+    expect(patchFiles[0].path.startsWith('patches/')).toBe(true);
+    expect(patchFiles[0].path.endsWith('/is-number@7.0.0.patch')).toBe(true);
+  });
+
   it('relocates a custom patch path under patches/ preserving its subpath in the package.json declaration on pnpm 10', () => {
     mockPnpmVersion('10.13.1');
     writeFileSync(
