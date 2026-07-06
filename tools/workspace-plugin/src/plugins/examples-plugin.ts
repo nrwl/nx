@@ -48,7 +48,12 @@ export const createNodes: CreateNodes = [
               projectType: 'application' as const,
               targets: {
                 'validate-example': {
-                  command: 'pnpm install && pnpm validate',
+                  // --ignore-scripts: the example's postinstall builds the
+                  // linked packages through the repo root, which dependsOn
+                  // ^build already guarantees here; skipping it keeps the
+                  // sandboxed task from spawning a root-workspace nx run
+                  // with unpredictable config reads.
+                  command: 'pnpm install --ignore-scripts && pnpm validate',
                   options: {
                     cwd: exampleRoot,
                     env: {
@@ -67,6 +72,9 @@ export const createNodes: CreateNodes = [
                       transitive: true,
                     },
                   ],
+                  // The inner build/e2e write dist inside the example
+                  // (module-federation members write <member>/dist).
+                  outputs: ['{projectRoot}/dist', '{projectRoot}/*/dist'],
                   cache: true,
                 },
               },
