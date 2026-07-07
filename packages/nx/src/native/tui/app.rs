@@ -2575,7 +2575,25 @@ impl App {
                     });
                 }
             }
-            None => {}
+            None => {
+                // A press on the status bar arms a text selection over the bar
+                // so a drag highlights and copies (e.g. the cloud URL); a plain
+                // click still resolves links on release.
+                if let Some(bar_area) = self
+                    .layout_areas
+                    .as_ref()
+                    .and_then(|areas| areas.status_bar)
+                    && bar_area.contains(Position::new(col, row))
+                {
+                    self.clear_all_pane_selections();
+                    self.region_selection = Some(RegionSelection {
+                        anchor: (col, row),
+                        cursor: (col, row),
+                        area: bar_area,
+                        dragging: true,
+                    });
+                }
+            }
         }
     }
 
@@ -4023,6 +4041,28 @@ mod tests {
             Some("https://nx.app/runs/abc".to_string())
         );
         assert_eq!(app.link_at(5, 29), None);
+    }
+
+    /// A press on the status bar arms a text selection over the bar so a drag
+    /// can highlight and copy its content (e.g. the cloud URL).
+    #[test]
+    fn test_status_bar_press_arms_a_region_selection() {
+        let mut app = create_test_app();
+        app.layout_areas = Some(LayoutAreas {
+            task_list: Some(Rect::new(0, 0, 100, 38)),
+            terminal_panes: Vec::new(),
+            status_bar: Some(Rect::new(0, 39, 100, 1)),
+        });
+
+        app.handle_left_press(50, 39);
+        let sel = app
+            .region_selection
+            .expect("press on the bar arms a selection");
+        assert_eq!(sel.area, Rect::new(0, 39, 100, 1));
+
+        // A press outside the bar (e.g. the spacer row above it) arms nothing.
+        app.handle_left_press(50, 38);
+        assert!(app.region_selection.is_none());
     }
 
     /// `print_task_terminal_output` must hide the cursor whether or not the
