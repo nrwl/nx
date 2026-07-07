@@ -1,0 +1,60 @@
+---
+title: Nx Cloud vs Blacksmith
+description: Blacksmith replaces GitHub Actions runners with faster machines. Nx Cloud reduces how much work runs at all with affected detection, remote task caching, and dynamic distribution. Compare them, or run both together.
+filter: 'type:Guides'
+sidebar:
+  label: Nx Cloud vs Blacksmith
+---
+
+[Blacksmith](https://www.blacksmith.sh/) is a drop-in replacement for GitHub Actions hosted runners: change the `runs-on` label and your jobs move to faster bare-metal machines with accelerated caches and Docker layer caching. Nx Cloud operates on a different layer. Blacksmith is a runner provider; Nx Cloud is a task-distribution orchestrator that decides which tasks run at all and which machine runs each one, based on your project graph.
+
+The two aren't mutually exclusive. Blacksmith runners are standard GitHub Actions runners, so an Nx workspace can run its CI on Blacksmith while Nx Cloud provides [affected detection](/docs/features/ci-features/affected), [remote caching](/docs/features/ci-features/remote-cache), and [distribution](/docs/features/ci-features/distribute-task-execution) on top: cheaper minutes, and fewer of them.
+
+| Topic                                                             | Nx Cloud                                                  | Blacksmith                                            |
+| ----------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
+| [Model](#model)                                                   | Task orchestration on any CI provider                     | Faster runners for GitHub Actions                     |
+| [Remote caching](#remote-caching)                                 | Content-addressed task cache, shared with local dev       | Accelerated `actions/cache` and per-job sticky disks  |
+| [Distribution](#distribution)                                     | Task-level, dynamically balanced from timing history      | Static workflow matrix with manual sharding           |
+| [Test splitting and flaky tests](#test-splitting-and-flaky-tests) | Atomizer, flaky re-runs, self-healing CI                  | Read-only test analytics with PR comments             |
+| [Observability](#observability)                                   | Task-level cache, timing, and agent utilization analytics | Job-level performance and cost dashboards, log search |
+| [Pricing model](#pricing-model)                                   | Credit-based plans                                        | Per-minute usage billing with a monthly free tier     |
+
+## Model
+
+Blacksmith's pitch is speed per job: ephemeral Firecracker microVMs on high-clock CPUs, cache downloads it advertises at 4x GitHub's speed, and its flagship Docker layer caching. Migration is a one-line label change, with a wizard that rewrites your workflows. If your workflows are slow because GitHub's hosted runners are slow, it delivers.
+
+What it can't see is the work inside the job. Blacksmith runs whatever your workflow matrix declares, on every push, whether or not the change affected those projects. Nx Cloud starts from the task graph: prune what the change can't reach, replay what already ran, distribute the rest.
+
+## Remote caching
+
+Blacksmith transparently accelerates the `actions/cache` API and offers sticky disks, persistent volumes remounted between jobs, for dependencies and Docker layers. Both operate at the job and disk level: they make restoring state faster, but a task that already ran with identical inputs still reruns.
+
+[Nx Replay](/docs/features/ci-features/remote-cache) caches at the task level. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/concepts/ci-concepts/cache-security).
+
+## Distribution
+
+On Blacksmith, parallelism is your GitHub Actions matrix: one job per check, fixed runner sizes chosen per job, and manual test sharding that you rebalance by hand as the repository grows. A slow shard idles the rest of the fleet until it finishes. In one customer evaluation comparing the two approaches on the same monorepo, the hand-maintained matrix took roughly 620 lines of workflow configuration; moving distribution to Nx Agents halved it to about 290 and eliminated shard rebalancing entirely.
+
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) assign tasks to machines continuously as agents free up, balance from historical timing data, and support assignment rules for CPU- or memory-heavy outliers.
+
+## Test splitting and flaky tests
+
+Blacksmith's test analytics parse JUnit output and job logs to report failing tests in PR comments. Reporting is where it ends: there is no test splitting, no flaky test re-running, and no failure remediation.
+
+Nx Cloud acts on what it detects. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits e2e suites into per-file tasks that distribute across agents, [flaky task detection](/docs/features/ci-features/flaky-tasks) retries nondeterministic tasks in isolation instead of failing the pipeline, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for real failures.
+
+## Observability
+
+Blacksmith provides job-level dashboards: performance and cost per team, run history, global log search, and SSH into live jobs. Nx Cloud's analytics operate at the task level: cache hit rates, per-task timings, and agent utilization breakdowns per run, the data that shows which task to tune when CI slows down.
+
+## Pricing model
+
+Blacksmith bills per minute, monthly, with a free tier and no annual commitment, a genuinely lower-friction way to start than committing to usage up front. Nx Cloud plans are credit-based; heavy Nx Agents usage on enterprise plans typically involves an annual credit commitment, which requires estimating usage ahead of time. If pure billing flexibility is the deciding factor, Blacksmith has the simpler model.
+
+## When Blacksmith is enough
+
+A single app with a handful of workflows gets most of its possible win from faster machines, and Docker-heavy pipelines benefit from Blacksmith's layer caching no matter what else runs. In a monorepo, the equation shifts: most tasks on most PRs are unaffected or already cached, and no runner speed recovers the cost of running them anyway. Since Nx Cloud is runner-agnostic, teams don't have to pick a side: run the workflow on Blacksmith's machines and let Nx Cloud decide what actually needs to run on them.
+
+{% aside type="tip" title="Set up Nx Cloud" %}
+See [CI features](/docs/features/ci-features) for what Nx Cloud adds to an existing pipeline, and [CI setup](/docs/getting-started/setup-ci) to connect a workspace.
+{% /aside %}
