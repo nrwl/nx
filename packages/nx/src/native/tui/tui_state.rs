@@ -107,9 +107,10 @@ pub struct TuiState {
     // === Batch Metadata (for mode switching persistence) ===
     batch_metadata: HashMap<String, StoredBatchState>,
 
-    // === Filter State (for mode switching persistence) ===
-    /// Filter text from TasksList (always persisted when restored)
-    ui_filter_text: String,
+    // === Filter State ===
+    /// Canonical filter text. TasksList mutates it via its state handle; the
+    /// status bar reads it for the filter display.
+    filter_text: String,
 
     /// Batch expansion states for mode switching restoration
     ui_batch_expansion_states: HashbrownHashMap<String, bool>,
@@ -165,7 +166,7 @@ impl TuiState {
             ui_selected_item: None,
             batch_metadata: HashMap::new(),
             ui_max_parallel: None,
-            ui_filter_text: String::new(),
+            filter_text: String::new(),
             ui_batch_expansion_states: HashbrownHashMap::new(),
             dimensions,
         }
@@ -246,6 +247,40 @@ impl TuiState {
                 )
             })
             .count()
+    }
+
+    /// Whether every task reached a terminal state. Unlike
+    /// `get_completed_task_count`, this includes `Stopped` so a cancelled run
+    /// still reads as finished.
+    pub fn is_run_completed(&self) -> bool {
+        !self.task_status_map.is_empty()
+            && self.task_status_map.values().all(|status| {
+                matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::Failure
+                        | TaskStatus::Skipped
+                        | TaskStatus::Stopped
+                        | TaskStatus::LocalCache
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::RemoteCache
+                )
+            })
+    }
+
+    /// Whether any task failed
+    pub fn has_failures(&self) -> bool {
+        self.task_status_map
+            .values()
+            .any(|status| *status == TaskStatus::Failure)
+    }
+
+    /// (first task start, last task end) in epoch ms, when both exist
+    pub fn run_time_range(&self) -> Option<(i64, i64)> {
+        Some((
+            *self.task_start_times.values().min()?,
+            *self.task_end_times.values().max()?,
+        ))
     }
 
     /// Get names of tasks that failed
@@ -479,6 +514,11 @@ impl TuiState {
         self.exit_summary.clone()
     }
 
+    /// Whether the run report exists yet (run finished) without cloning the payload
+    pub fn has_exit_summary(&self) -> bool {
+        self.exit_summary.is_some()
+    }
+
     // === Forced Shutdown Methods ===
 
     /// Set the forced shutdown flag
@@ -529,7 +569,7 @@ impl TuiState {
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
         self.ui_selected_item = selected_item;
-        self.ui_filter_text = filter_text;
+        self.filter_text = filter_text;
         self.ui_batch_expansion_states = batch_expansion_states;
     }
 
@@ -625,9 +665,14 @@ impl TuiState {
         self.ui_max_parallel
     }
 
-    /// Get saved filter text for mode switching restoration
+    /// Get the canonical filter text
     pub fn get_filter_text(&self) -> &str {
-        &self.ui_filter_text
+        &self.filter_text
+    }
+
+    /// Set the canonical filter text
+    pub fn set_filter_text(&mut self, text: String) {
+        self.filter_text = text;
     }
 
     /// Get saved batch expansion states for mode switching restoration
