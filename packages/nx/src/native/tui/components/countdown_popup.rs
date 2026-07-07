@@ -389,8 +389,9 @@ impl CountdownPopup {
                 format!("{time_remaining}"),
                 Style::default().fg(THEME.info),
             ));
-            spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
+            spans.push(Span::styled("...", Style::default().fg(THEME.primary_fg)));
         }
+        spans.push(Span::raw("  "));
         spans
     }
 
