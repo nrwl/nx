@@ -50,12 +50,16 @@ impl HintPopup {
 
     /// The bordered popup box drawn last frame, if visible.
     pub fn last_area(&self) -> Option<Rect> {
-        self.last_area
+        if self.visible { self.last_area } else { None }
     }
 
     /// The inner text area drawn last frame, if visible.
     pub fn content_area(&self) -> Option<Rect> {
-        self.content_area
+        if self.visible {
+            self.content_area
+        } else {
+            None
+        }
     }
 
     /// Shows the popup with the given message

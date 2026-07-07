@@ -2664,9 +2664,11 @@ impl App {
     fn active_modal_kind(&self) -> Option<Focus> {
         match self.focus() {
             Focus::HelpPopup | Focus::CountdownPopup => Some(self.focus()),
-            // The hint popup auto-dismisses, so focus can briefly outlive it;
-            // only a *visible* hint is a modal, otherwise mouse events would
-            // be absorbed by an invisible layer.
+            // Invariant: every hint hide is paired with close_popup in the
+            // same handler, so a focused-but-hidden hint should be impossible.
+            // The visibility check is defense in depth — if an unpaired hide
+            // ever slips in, the dead layer must not become an invisible modal
+            // that absorbs all mouse events (this wedged the whole TUI once).
             focus @ Focus::HintPopup if focus.is_active(self) => Some(focus),
             _ => None,
         }
@@ -4134,6 +4136,96 @@ mod tests {
         let sel = selection((6, 0), (5, 2), snap.area);
         // Trailing whitespace on each row is trimmed when copying.
         assert_eq!(snap.selected_text(&sel), "line\nsecond line\nthird");
+    }
+
+    /// The `ModalPopup` contract: a hidden popup reports no hit-test geometry,
+    /// including in the window between being hidden and the next draw (the
+    /// draw pass also clears the recorded areas, but lazily — consumers must
+    /// never observe a stale `Some` from the previous render).
+    #[test]
+    fn hidden_popup_reports_no_modal_geometry() {
+        fn draw_popup<T: Component>(app: &mut App) {
+            let mut terminal =
+                ratatui::Terminal::new(ratatui::backend::TestBackend::new(120, 40)).unwrap();
+            terminal
+                .draw(|f| {
+                    let area = f.area();
+                    if let Some(popup) = app
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<T>())
+                    {
+                        let _ = popup.draw(f, area);
+                    }
+                })
+                .unwrap();
+        }
+
+        // Hint popup: hide() without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .show("hint".to_string());
+        app.focus_stack = vec![Focus::TaskList, Focus::HintPopup];
+        draw_popup::<HintPopup>(&mut app);
+        assert!(app.active_modal_area().is_some(), "visible hint has a box");
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .hide();
+        assert!(
+            app.active_modal_area().is_none(),
+            "hidden hint must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
+
+        // Help popup: set_visible(false) without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+            .unwrap()
+            .set_visible(true);
+        app.focus_stack = vec![Focus::TaskList, Focus::HelpPopup];
+        draw_popup::<HelpPopup>(&mut app);
+        assert!(app.active_modal_area().is_some(), "visible help has a box");
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+            .unwrap()
+            .set_visible(false);
+        assert!(
+            app.active_modal_area().is_none(),
+            "hidden help must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
+
+        // Run report: cancel_countdown() without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+            .unwrap()
+            .reopen();
+        app.focus_stack = vec![Focus::TaskList, Focus::CountdownPopup];
+        draw_popup::<CountdownPopup>(&mut app);
+        assert!(
+            app.active_modal_area().is_some(),
+            "visible report has a box"
+        );
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+            .unwrap()
+            .cancel_countdown();
+        assert!(
+            app.active_modal_area().is_none(),
+            "dismissed report must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
     }
 
     #[test]
