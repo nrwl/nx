@@ -31,10 +31,6 @@ This ensures:
 - `BLOG_URL`: The nx-blog site URL (e.g., `https://blog.nx.app`)
 - `GA_MEASUREMENT_ID` / `GA_API_SECRET`: GA4 server-side page tracking
 
-### `api-geo-block.ts`
-
-Blocks `/api/*` requests from countries where the OpenAI-backed endpoints cannot be offered, before the request reaches the `query-ai-embeddings` Netlify Function (`netlify/functions/`).
-
 ### `additional-sitemaps.ts`
 
 Proxies the per-source sitemaps referenced by the root sitemap index and rewrites URLs to use `nx.dev`. Separate from the main Framer/blog proxy so that proxy can keep `accept: ['text/html']` for compute cost savings.

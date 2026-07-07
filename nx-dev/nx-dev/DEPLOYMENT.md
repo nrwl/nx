@@ -17,7 +17,7 @@ Request -> Netlify Edge Functions -> _redirects -> static assets / functions
 
 **Routing priority:**
 
-1. Edge functions - `api-geo-block.ts` (geo restriction for `/api/*`), `rewrite-framer-urls.ts` (proxies marketing pages to Framer and blog/changelog/courses to nx-blog), `additional-sitemaps.ts`
+1. Edge functions - `rewrite-framer-urls.ts` (proxies marketing pages to Framer and blog/changelog/courses to nx-blog), `additional-sitemaps.ts`
 2. `_redirects` - 301 permanent redirects, plus 200 proxies for `/docs/*` (astro-docs) and `/api/query-ai-embeddings` (Netlify Function). Environment-dependent rules are appended at build time by `scripts/build-site.mjs`
 3. Static assets from `public/` (favicons, fonts, images, socials) and the generated `sitemap.xml`
 
@@ -30,7 +30,6 @@ Edge functions run first. Located at `/netlify/edge-functions/` in the repositor
 | Edge Function            | Path Pattern                       | Purpose                                                              |
 | ------------------------ | ---------------------------------- | -------------------------------------------------------------------- |
 | `rewrite-framer-urls.ts` | `/*`                               | Proxies marketing pages to Framer, blog/changelog/courses to nx-blog |
-| `api-geo-block.ts`       | `/api/*`                           | Blocks restricted countries before the AI function runs              |
 | `additional-sitemaps.ts` | `/sitemap-1.xml`, `/sitemap-2.xml` | Proxies Framer's and nx-blog's sitemaps with URL rewriting           |
 
 ### 2. Netlify Redirects (`_redirects`)

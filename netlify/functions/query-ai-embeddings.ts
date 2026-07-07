@@ -7,8 +7,7 @@
  * be preserved.
  *
  * Express app wrapped as a Netlify Function (see the /api/* rewrite in
- * nx-dev/nx-dev/_redirects). Geo restrictions are enforced by the
- * api-geo-block edge function before requests reach this handler.
+ * nx-dev/nx-dev/_redirects).
  *
  * Env vars: NX_OPENAI_KEY, NX_NEXT_PUBLIC_SUPABASE_URL,
  * NX_SUPABASE_SERVICE_ROLE_KEY, NX_TOKEN_COUNT_LIMIT (optional).
