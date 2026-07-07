@@ -8,6 +8,7 @@ import { reverse } from '../../../project-graph/operators';
 import { ProjectGraphBuilder } from '../../../project-graph/project-graph-builder';
 import { getCatalogManager } from '../../../utils/catalog';
 import { PackageJson } from '../../../utils/package-json';
+import { PackageManager } from '../../../utils/package-manager';
 import { workspaceRoot } from '../../../utils/workspace-root';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 
@@ -18,7 +19,8 @@ import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-f
 export function pruneProjectGraph(
   graph: ProjectGraph,
   prunedPackageJson: PackageJson,
-  workspaceRootPath: string = workspaceRoot
+  workspaceRootPath: string = workspaceRoot,
+  packageManager?: PackageManager
 ): ProjectGraph {
   const builder = new ProjectGraphBuilder();
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
@@ -26,7 +28,8 @@ export function pruneProjectGraph(
     prunedPackageJson,
     graph,
     workspacePackages,
-    workspaceRootPath
+    workspaceRootPath,
+    packageManager
   );
 
   addNodesAndDependencies(
@@ -54,7 +57,8 @@ function normalizeDependencies(
   packageJson: PackageJson,
   graph: ProjectGraph,
   workspacePackages: Map<string, ProjectGraphProjectNode>,
-  workspaceRootPath: string
+  workspaceRootPath: string,
+  packageManager?: PackageManager
 ) {
   const {
     dependencies,
@@ -123,6 +127,13 @@ function normalizeDependencies(
         combinedDependencies[packageName] = resolvedVersionRange;
       } else if (localPathNode) {
         combinedDependencies[packageName] = localPathNode.data.version;
+      } else if (
+        packageManager === 'pnpm' &&
+        resolvedVersionRange.startsWith('link:')
+      ) {
+        // Only a link: is valid importer-only in a pnpm lockfile (see
+        // mapRootSnapshot); a nodeless file: (stale lockfile) or npm/yarn still throw.
+        combinedDependencies[packageName] = resolvedVersionRange;
       } else {
         throw new Error(
           `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${resolvedVersionRange}`
