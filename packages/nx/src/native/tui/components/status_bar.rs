@@ -1,7 +1,8 @@
 //! Full-width status bar on the bottom row(s) of the full-screen TUI.
 //!
-//! The bar shows the " NX " badge with the run status on the left, the Nx
-//! Cloud message/link in the middle, and the keyboard hints on the right.
+//! The bar shows the run progress counts on the left (clickable into the Nx
+//! Cloud run when a link exists), free-text cloud messages or focused-pane
+//! feedback in the middle, and context-aware keyboard hints on the right.
 //! While the task filter is active the whole row swaps to the filter display,
 //! vim-style.
 //!
@@ -73,8 +74,11 @@ pub struct PaneProps {
 }
 
 impl StatusBarProps {
-    fn has_cloud_content(&self) -> bool {
-        self.cloud_message.is_some() || self.cloud_link.is_some()
+    /// Whether a free-text cloud message needs the middle display. A
+    /// structured cloud link supersedes it (the progress counts become the
+    /// link, so nothing renders in the middle).
+    fn has_cloud_message(&self) -> bool {
+        self.cloud_link.is_none() && self.cloud_message.is_some()
     }
 }
 
@@ -113,23 +117,24 @@ impl StatusBar {
     /// Rows the bar needs at `width`. Pure and in agreement with `render` so
     /// the app can reserve the rows in its layout before drawing. The filter
     /// never affects the height — a filtering bar just leaves row 2 blank.
-    pub fn required_height(width: u16, has_cloud_content: bool) -> u16 {
-        match Self::layout_for(width, has_cloud_content) {
+    pub fn required_height(width: u16, has_cloud_message: bool) -> u16 {
+        match Self::layout_for(width, has_cloud_message) {
             BarLayout::SingleLine => 1,
             BarLayout::TwoLine => 2,
         }
     }
 
-    fn layout_for(width: u16, has_cloud_content: bool) -> BarLayout {
-        // With cloud content, wrap to two rows when one row can't hold every
-        // section's minimum.
+    fn layout_for(width: u16, has_cloud_message: bool) -> BarLayout {
+        // With a free-text cloud message, wrap to two rows when one row can't
+        // hold every section's minimum. (A structured cloud link lives on the
+        // counts, so it never needs a second row.)
         let single_line_min = STATUS_MIN_WIDTH
             + MIN_BOTTOM_SPACING
             + MIN_CLOUD_URL_WIDTH
             + MIN_BOTTOM_SPACING
             + MIN_HELP_WIDTH
             + RIGHT_MARGIN;
-        if has_cloud_content && width < single_line_min {
+        if has_cloud_message && width < single_line_min {
             BarLayout::TwoLine
         } else {
             BarLayout::SingleLine
@@ -161,10 +166,11 @@ impl StatusBar {
             return;
         }
 
-        let layout = Self::layout_for(area.width, props.has_cloud_content());
+        let layout = Self::layout_for(area.width, props.has_cloud_message());
         match layout {
             BarLayout::TwoLine if area.height >= 2 => {
-                self.render_status(f, first_row, props);
+                let status_line = Self::status_line(props);
+                self.render_status(f, first_row, status_line, props);
                 let second_row = Rect {
                     y: area.y + 1,
                     height: 1,
@@ -254,10 +260,7 @@ impl StatusBar {
             ])
             .split(row);
 
-        f.render_widget(
-            NxParagraph::new(status_line).alignment(Alignment::Left),
-            chunks[0],
-        );
+        self.render_status(f, chunks[0], status_line, props);
         if middle_width > 0 {
             self.render_middle(f, chunks[2], props);
         }
@@ -265,15 +268,16 @@ impl StatusBar {
     }
 
     /// Natural width of the middle section's content: a focused pane's
-    /// transient message, the cloud link label, or the cloud message.
+    /// transient message, or the cloud message. (A structured cloud link has
+    /// no middle display — the progress counts are the link.)
     fn middle_natural_width(props: &StatusBarProps) -> Option<u16> {
         if let Some(pane) = &props.pane
             && let Some(message) = &pane.status_message
         {
             return Some(Span::raw(message.as_str()).width() as u16);
         }
-        if let Some((label, _)) = &props.cloud_link {
-            return Some(Span::raw(label.as_str()).width() as u16);
+        if props.cloud_link.is_some() {
+            return None;
         }
         props
             .cloud_message
@@ -305,11 +309,34 @@ impl StatusBar {
         self.render_cloud_message(f, area, props);
     }
 
-    fn render_status(&self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
+    /// Render the progress counts and, when a structured cloud link exists,
+    /// register their rect as the clickable way into the Nx Cloud run.
+    fn render_status(
+        &mut self,
+        f: &mut Frame<'_>,
+        area: Rect,
+        status_line: Line<'static>,
+        props: &StatusBarProps,
+    ) {
+        let clickable_width = (status_line.width() as u16).min(area.width);
         f.render_widget(
-            NxParagraph::new(Self::status_line(props)).alignment(Alignment::Left),
+            NxParagraph::new(status_line).alignment(Alignment::Left),
             area,
         );
+        if let Some((_, url)) = &props.cloud_link
+            && clickable_width > 0
+            && area.height > 0
+        {
+            self.link_registry.push(
+                Rect {
+                    x: area.x,
+                    y: area.y,
+                    width: clickable_width,
+                    height: 1,
+                },
+                url.clone(),
+            );
+        }
     }
 
     /// Minimal progress counts. Deliberately quiet — the " NX " badge in the
@@ -320,6 +347,11 @@ impl StatusBar {
         }
 
         let mut counts_style = Style::default().fg(THEME.secondary_fg);
+        // A quiet affordance: the counts are the clickable way into the Nx
+        // Cloud run when a structured link exists.
+        if props.cloud_link.is_some() {
+            counts_style = counts_style.add_modifier(Modifier::UNDERLINED);
+        }
         let mut dim_style = Style::default().dim();
         if props.is_dimmed {
             counts_style = counts_style.add_modifier(Modifier::DIM);
@@ -393,14 +425,6 @@ impl StatusBar {
             return;
         }
         let is_dimmed = props.is_dimmed;
-
-        // A structured cloud link takes precedence: render its label as a
-        // clickable link that opens the (different) href.
-        if let Some((label, url)) = &props.cloud_link {
-            let link = Link::new(label.clone(), url.clone()).dim(is_dimmed);
-            f.render_stateful_widget(&link, area, &mut self.link_registry);
-            return;
-        }
 
         let Some(message) = &props.cloud_message else {
             return;
@@ -617,9 +641,13 @@ mod tests {
         });
         let (terminal, bar) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
-        // The cloud link is suppressed while the message shows, so nothing is
-        // registered for click hit-testing.
+        // The message occupies the middle, while the counts stay clickable
+        // into the cloud run.
         assert_eq!(bar.link_registry().hit_test(50, 0), None);
+        assert_eq!(
+            bar.link_registry().hit_test(1, 0),
+            Some("https://nx.app/runs/KnGk4A47qk")
+        );
     }
 
     #[test]
@@ -632,23 +660,34 @@ mod tests {
     }
 
     #[test]
-    fn cloud_link_renders_label_and_registers_href() {
+    fn cloud_link_rides_on_the_counts() {
         let mut props = base_props();
         props.cloud_link = Some((
             "View in Nx Cloud".to_string(),
             "https://nx.app/runs/KnGk4A47qk".to_string(),
         ));
         let (terminal, bar) = render_bar(140, 1, &props);
+        // No separate middle display: the counts are the link.
         insta::assert_snapshot!(terminal.backend());
 
-        // The label's drawn rect is hit-testable and resolves to the full href.
-        let buffer_text: String = (0..140)
-            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
-            .collect();
-        let label_x = buffer_text.find("View in Nx Cloud").unwrap() as u16;
+        // The counts rect is hit-testable, resolves to the run URL, and gets
+        // the quiet underline affordance.
         assert_eq!(
-            bar.link_registry().hit_test(label_x, 0),
+            bar.link_registry().hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
+        );
+        assert!(
+            terminal.backend().buffer()[(1, 0)]
+                .modifier
+                .contains(Modifier::UNDERLINED)
+        );
+        // Without a link there is no underline and nothing registered.
+        let (terminal, bar) = render_bar(140, 1, &base_props());
+        assert_eq!(bar.link_registry().hit_test(1, 0), None);
+        assert!(
+            !terminal.backend().buffer()[(1, 0)]
+                .modifier
+                .contains(Modifier::UNDERLINED)
         );
     }
 

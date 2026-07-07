@@ -1932,11 +1932,13 @@ impl App {
 
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
-            let has_cloud_content = {
+            // Only a free-text cloud message can need a second bar row; a
+            // structured cloud link rides on the progress counts.
+            let has_cloud_message = {
                 let state = self.core.state().lock();
-                state.get_cloud_message().is_some() || state.get_cloud_link().is_some()
+                state.get_cloud_link().is_none() && state.get_cloud_message().is_some()
             };
-            let status_bar_height = StatusBar::required_height(frame_area.width, has_cloud_content);
+            let status_bar_height = StatusBar::required_height(frame_area.width, has_cloud_message);
             self.layout_areas = Some(
                 self.layout_manager
                     .calculate_layout(frame_area, status_bar_height),
