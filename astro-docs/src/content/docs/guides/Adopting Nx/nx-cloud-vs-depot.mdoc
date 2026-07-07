@@ -1,0 +1,63 @@
+---
+title: Nx Cloud vs Depot
+description: Depot makes every CI minute faster and cheaper with better runners and colocated caches. Nx Cloud removes minutes entirely with affected detection, remote task caching, and distributed execution. They solve different layers, and they compose.
+filter: 'type:Guides'
+sidebar:
+  label: Nx Cloud vs Depot
+---
+
+[Depot](https://depot.dev/) sells faster CI compute: GitHub Actions runners on newer CPUs with high-throughput colocated caches, accelerated container builds, and its own CI engine. Nx Cloud operates a layer above the machine. It reads your task graph to skip work that already ran ([remote caching](/docs/features/ci-features/remote-cache)), avoid work your change doesn't touch ([affected detection](/docs/features/ci-features/affected)), and spread the rest across machines ([Nx Agents](/docs/features/ci-features/distribute-task-execution)). Depot makes every minute cheaper and faster. Nx Cloud reduces how many minutes run at all.
+
+Because they solve different layers, this isn't an exclusive choice. Nx Cloud runs on any CI provider, so an Nx workspace can run on Depot runners with Nx Cloud handling caching and distribution on top: cheaper minutes and fewer of them.
+
+| Topic                                                             | Nx Cloud                                                 | Depot                                                 |
+| ----------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| [Model](#model)                                                   | Task-graph platform on top of your existing CI           | Faster runners, container builds, and a CI engine     |
+| [Remote caching](#remote-caching)                                 | Nx Replay caches Nx tasks across developers and CI       | Depot Cache supports Turborepo, Bazel, Gradle; not Nx |
+| [Cache security](#cache-security)                                 | Enforced branch-scoped isolation against cache poisoning | Shared namespace, isolation left to your cache keys   |
+| [Affected detection](#affected-detection)                         | `nx affected` prunes tasks before anything runs          | Not available                                         |
+| [Distribution](#distribution)                                     | Task-level distribution with dynamic balancing           | Job-level scheduling, sharding is manual              |
+| [Test splitting and flaky tests](#test-splitting-and-flaky-tests) | Atomizer, flaky detection, self-healing CI               | Not available                                         |
+| [Observability](#observability)                                   | Task-level cache and utilization analytics               | Job and machine metrics, log search                   |
+
+## Model
+
+Depot's runners are a one-line `runs-on` swap that puts your jobs on 4th-generation AMD CPUs with RAM-disk options and cache throughput Depot advertises at up to 1000 MiB/s, billed per second. Depot CI, released in 2026, goes further with its own orchestrator that runs GitHub Actions-compatible pipelines with fast job startup and SSH debugging. If your CI is slow because the machines are slow, Depot fixes that directly.
+
+What Depot doesn't see is your workspace. Every job still runs whatever your pipeline tells it to, whether or not the change affected those projects, and whether or not the same task already ran with identical inputs. Nx Cloud starts from the task graph, so those two questions get answered before compute is spent.
+
+## Remote caching
+
+Depot Cache is a remote cache backend for Turborepo, Bazel, Gradle, sccache, and Pants. Nx is not a supported tool. For Nx workspaces, Depot's docs point to filesystem caching paired with generic CI cache actions.
+
+[Nx Replay](/docs/features/ci-features/remote-cache) is built for Nx tasks: every developer machine and CI run shares one cache, plugins derive correct inputs and outputs from your tool configuration, and replayed tasks restore terminal output and artifacts exactly.
+
+## Cache security
+
+Depot Cache scopes entries by repository but does not enforce isolation between branches; its docs leave cache-key hygiene to you. That is the attack surface [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) describes: without enforced isolation, anyone who can open a PR can potentially poison artifacts that later ship from a protected branch.
+
+Nx Cloud enforces branch-scoped cache isolation so PR-produced artifacts can't be written into a trusted scope. See [cache security](/docs/concepts/ci-concepts/cache-security) for the model.
+
+## Affected detection
+
+Fast runners run everything faster, including the 80% of tasks a one-library PR never needed. [`nx affected`](/docs/features/ci-features/affected) compares your change against the base branch and hands CI only the impacted tasks. This pruning happens before any cache lookup or scheduling, and it compounds with faster hardware rather than competing with it.
+
+## Distribution
+
+Depot schedules at the job level: your workflow defines the jobs, and parallelizing a test suite means maintaining a matrix and shard assignments by hand. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute individual tasks across machines, balancing dynamically from historical timing data and rebalancing as your workspace grows, with no shard boundaries to maintain.
+
+## Test splitting and flaky tests
+
+Depot has no test-level features. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits slow e2e suites into per-file tasks that distribute across agents. [Flaky task detection](/docs/features/ci-features/flaky-tasks) identifies flaky tests from history and retries them in isolation instead of failing the pipeline. [Self-healing CI](/docs/features/ci-features/self-healing-ci) analyzes failures and proposes verified fixes on the PR.
+
+## Observability
+
+Depot provides job and machine-level analytics: CPU and memory per job, step timings, and cross-run log search. Nx Cloud's analytics are task-aware: cache hit rates per task, agent utilization per run, and task timing trends, the data you need to answer "why is CI slow" at the level where monorepo time is actually spent.
+
+## When Depot is enough
+
+If your repository is small enough that CI runs everything on every push anyway, faster machines are the whole answer, and Depot delivers them with almost no setup. Container-build-heavy pipelines also get real value from Depot's Docker layer caching regardless of what else you use. Once you're in a monorepo where most tasks on most PRs are redundant, machine speed stops being the bottleneck; skipping and distributing work is. Since Nx Cloud is CI-agnostic, teams don't have to choose: run Nx Cloud on Depot runners and stack both savings.
+
+{% aside type="tip" title="Set up Nx Cloud" %}
+See [CI features](/docs/features/ci-features) for what Nx Cloud adds to your existing pipeline, and [CI setup](/docs/getting-started/setup-ci) to connect a workspace.
+{% /aside %}
