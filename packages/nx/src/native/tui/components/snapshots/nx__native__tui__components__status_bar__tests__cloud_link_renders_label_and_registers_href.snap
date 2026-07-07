@@ -2,4 +2,4 @@
 source: packages/nx/src/native/tui/components/status_bar.rs
 expression: terminal.backend()
 ---
-" 0/3    View in Nx Cloud                                                                                                    quit: q  help: ?"
+" 0/3    View in Nx Cloud                                quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

@@ -24,15 +24,12 @@ use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
 
-const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
-// Wide enough for the longest help line: the pane hints with the leading
-// NON-INTERACTIVE mode indicator.
-const FULL_HELP_WIDTH: u16 = 92;
+const MIN_HELP_WIDTH: u16 = 19; // The first two help items: "quit: q  help: ?"
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between sections
 const RIGHT_MARGIN: u16 = 1;
 const LEFT_MARGIN: u16 = 2;
-/// Badge + a minimum useful amount of the run status text.
+/// A minimum useful amount of the run status text.
 const STATUS_MIN_WIDTH: u16 = 25;
 
 /// Per-frame view props derived from canonical state.
@@ -82,9 +79,9 @@ impl StatusBarProps {
 }
 
 enum BarLayout {
-    /// [status] ... [cloud?] ... [help]
-    SingleLine { help_collapsed: bool },
-    /// Status row above a cloud + collapsed-help row.
+    /// [status] [message/cloud] ... [help]
+    SingleLine,
+    /// Status row above a cloud + help row.
     TwoLine,
 }
 
@@ -118,41 +115,24 @@ impl StatusBar {
     /// never affects the height — a filtering bar just leaves row 2 blank.
     pub fn required_height(width: u16, has_cloud_content: bool) -> u16 {
         match Self::layout_for(width, has_cloud_content) {
-            BarLayout::SingleLine { .. } => 1,
+            BarLayout::SingleLine => 1,
             BarLayout::TwoLine => 2,
         }
     }
 
     fn layout_for(width: u16, has_cloud_content: bool) -> BarLayout {
-        if has_cloud_content {
-            let full_help = STATUS_MIN_WIDTH
-                + MIN_BOTTOM_SPACING
-                + MIN_CLOUD_URL_WIDTH
-                + MIN_BOTTOM_SPACING
-                + FULL_HELP_WIDTH
-                + RIGHT_MARGIN;
-            let collapsed_help = STATUS_MIN_WIDTH
-                + MIN_BOTTOM_SPACING
-                + MIN_CLOUD_URL_WIDTH
-                + MIN_BOTTOM_SPACING
-                + COLLAPSED_HELP_WIDTH
-                + RIGHT_MARGIN;
-            if width >= full_help {
-                BarLayout::SingleLine {
-                    help_collapsed: false,
-                }
-            } else if width >= collapsed_help {
-                BarLayout::SingleLine {
-                    help_collapsed: true,
-                }
-            } else {
-                BarLayout::TwoLine
-            }
+        // With cloud content, wrap to two rows when one row can't hold every
+        // section's minimum.
+        let single_line_min = STATUS_MIN_WIDTH
+            + MIN_BOTTOM_SPACING
+            + MIN_CLOUD_URL_WIDTH
+            + MIN_BOTTOM_SPACING
+            + MIN_HELP_WIDTH
+            + RIGHT_MARGIN;
+        if has_cloud_content && width < single_line_min {
+            BarLayout::TwoLine
         } else {
-            let full_help = STATUS_MIN_WIDTH + MIN_BOTTOM_SPACING + FULL_HELP_WIDTH + RIGHT_MARGIN;
-            BarLayout::SingleLine {
-                help_collapsed: width < full_help,
-            }
+            BarLayout::SingleLine
         }
     }
 
@@ -190,63 +170,86 @@ impl StatusBar {
                     height: 1,
                     ..area
                 };
+                let help = Self::build_help(props);
+                let help_width = help.fitted_width(second_row.width.saturating_sub(
+                    LEFT_MARGIN + MIN_CLOUD_URL_WIDTH + MIN_BOTTOM_SPACING + RIGHT_MARGIN,
+                ));
                 let chunks = Layout::default()
                     .direction(Direction::Horizontal)
                     .constraints([
                         Constraint::Length(LEFT_MARGIN),
                         Constraint::Fill(1),
                         Constraint::Length(MIN_BOTTOM_SPACING),
-                        Constraint::Length(COLLAPSED_HELP_WIDTH + RIGHT_MARGIN),
+                        Constraint::Length(help_width + RIGHT_MARGIN),
                     ])
                     .split(second_row);
                 self.render_middle(f, chunks[1], props);
-                self.render_help_text(f, chunks[3], true, props);
+                help.render(f, chunks[3]);
             }
             // A TwoLine layout squeezed into a 1-row area (stale cached layout
             // for a frame) degrades to a single line without the cloud message.
             BarLayout::TwoLine => {
-                self.render_single_line(f, first_row, true, false, props);
+                self.render_single_line(f, first_row, false, props);
             }
-            BarLayout::SingleLine { help_collapsed } => {
-                let show_middle = props.has_cloud_content()
-                    || props
-                        .pane
-                        .as_ref()
-                        .is_some_and(|pane| pane.status_message.is_some());
-                self.render_single_line(f, first_row, help_collapsed, show_middle, props);
+            BarLayout::SingleLine => {
+                self.render_single_line(f, first_row, true, props);
             }
         }
     }
 
+    /// Lay the row out by natural content widths: the status and the middle
+    /// message take exactly what they need, and the help absorbs the remaining
+    /// space one whole hint item at a time. Slack sits between the middle and
+    /// the right-aligned help.
     fn render_single_line(
         &mut self,
         f: &mut Frame<'_>,
         row: Rect,
-        help_collapsed: bool,
-        show_middle: bool,
+        allow_middle: bool,
         props: &StatusBarProps,
     ) {
-        let help_width = if help_collapsed {
-            COLLAPSED_HELP_WIDTH
-        } else {
-            FULL_HELP_WIDTH
-        };
         let status_line = Self::status_line(props);
-        let natural_status_width = status_line.width() as u16;
-        let reserved = if show_middle {
-            help_width + RIGHT_MARGIN + 2 * MIN_BOTTOM_SPACING + MIN_CLOUD_URL_WIDTH
+        let status_natural = status_line.width() as u16;
+        let help = Self::build_help(props);
+        let middle_natural = if allow_middle {
+            Self::middle_natural_width(props)
         } else {
-            help_width + RIGHT_MARGIN + MIN_BOTTOM_SPACING
+            None
         };
-        let status_width = natural_status_width.min(row.width.saturating_sub(reserved));
+
+        let (middle_min, gaps) = match middle_natural {
+            Some(natural) => (natural.min(MIN_CLOUD_URL_WIDTH), 2 * MIN_BOTTOM_SPACING),
+            None => (0, MIN_BOTTOM_SPACING),
+        };
+        // The status text truncates only once the other sections' minimums
+        // wouldn't fit.
+        let status_width = status_natural.min(
+            row.width
+                .saturating_sub(gaps + middle_min + MIN_HELP_WIDTH + RIGHT_MARGIN),
+        );
+        // The middle takes its natural width next (the Link/message truncate
+        // themselves when squeezed below it), preserving the help minimum.
+        let middle_width = middle_natural
+            .map(|natural| {
+                natural.min(
+                    row.width
+                        .saturating_sub(status_width + gaps + MIN_HELP_WIDTH + RIGHT_MARGIN),
+                )
+            })
+            .unwrap_or(0);
+        // The help absorbs whatever remains, one whole item at a time.
+        let help_width = help.fitted_width(
+            row.width
+                .saturating_sub(status_width + middle_width + gaps + RIGHT_MARGIN),
+        );
 
         let chunks = Layout::default()
             .direction(Direction::Horizontal)
             .constraints([
                 Constraint::Length(status_width),
                 Constraint::Length(MIN_BOTTOM_SPACING),
+                Constraint::Length(middle_width),
                 Constraint::Fill(1),
-                Constraint::Length(MIN_BOTTOM_SPACING),
                 Constraint::Length(help_width + RIGHT_MARGIN),
             ])
             .split(row);
@@ -255,10 +258,27 @@ impl StatusBar {
             NxParagraph::new(status_line).alignment(Alignment::Left),
             chunks[0],
         );
-        if show_middle {
+        if middle_width > 0 {
             self.render_middle(f, chunks[2], props);
         }
-        self.render_help_text(f, chunks[4], help_collapsed, props);
+        help.render(f, chunks[4]);
+    }
+
+    /// Natural width of the middle section's content: a focused pane's
+    /// transient message, the cloud link label, or the cloud message.
+    fn middle_natural_width(props: &StatusBarProps) -> Option<u16> {
+        if let Some(pane) = &props.pane
+            && let Some(message) = &pane.status_message
+        {
+            return Some(Span::raw(message.as_str()).width() as u16);
+        }
+        if let Some((label, _)) = &props.cloud_link {
+            return Some(Span::raw(label.as_str()).width() as u16);
+        }
+        props
+            .cloud_message
+            .as_ref()
+            .map(|message| Span::raw(message.as_str()).width() as u16)
     }
 
     /// The middle section: a focused pane's transient feedback takes the slot
@@ -459,13 +479,7 @@ impl StatusBar {
         f.render_stateful_widget(&link, link_area, &mut self.link_registry);
     }
 
-    fn render_help_text(
-        &self,
-        f: &mut Frame<'_>,
-        area: Rect,
-        is_collapsed: bool,
-        props: &StatusBarProps,
-    ) {
+    fn build_help(props: &StatusBarProps) -> HelpText {
         let context = match &props.pane {
             Some(pane) => HelpTextContext::Pane {
                 can_be_interactive: pane.interactive.is_some(),
@@ -475,7 +489,7 @@ impl StatusBar {
                 show_perf_report: props.perf_report_available,
             },
         };
-        HelpText::new(is_collapsed, props.is_dimmed, false, context).render(f, area);
+        HelpText::new(props.is_dimmed, false, context)
     }
 }
 
@@ -517,7 +531,7 @@ mod tests {
     }
 
     #[test]
-    fn running_state_narrow_collapses_help() {
+    fn running_state_narrow_shows_fewer_help_items() {
         let props = base_props();
         let (terminal, _) = render_bar(80, 1, &props);
         insta::assert_snapshot!(terminal.backend());
@@ -714,7 +728,7 @@ mod tests {
         assert_eq!(StatusBar::required_height(60, false), 1);
         assert_eq!(StatusBar::required_height(40, false), 1);
 
-        // Cloud content wraps to two rows only below the collapsed-help threshold.
+        // Cloud content wraps to two rows only when the section minimums cannot share one row.
         assert_eq!(StatusBar::required_height(200, true), 1);
         assert_eq!(StatusBar::required_height(135, true), 1);
         assert_eq!(StatusBar::required_height(68, true), 1);

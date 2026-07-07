@@ -8,6 +8,9 @@ use ratatui::{
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
+/// Columns between adjacent help items.
+const ITEM_SEPARATOR: &str = "  ";
+
 /// What the help line describes: the task list, or a focused terminal pane.
 pub enum HelpTextContext {
     TaskList {
@@ -19,30 +22,38 @@ pub enum HelpTextContext {
     },
 }
 
+/// The keyboard hints for the current focus context, rendered as whole items:
+/// as many fit the given area as possible, dropping from the end (items are
+/// ordered most-important first).
 pub struct HelpText {
-    collapsed_mode: bool,
     is_dimmed: bool,
     align_left: bool,
     context: HelpTextContext,
 }
 
 impl HelpText {
-    pub fn new(
-        collapsed_mode: bool,
-        is_dimmed: bool,
-        align_left: bool,
-        context: HelpTextContext,
-    ) -> Self {
+    pub fn new(is_dimmed: bool, align_left: bool, context: HelpTextContext) -> Self {
         Self {
-            collapsed_mode,
             is_dimmed,
             align_left,
             context,
         }
     }
 
-    pub fn set_collapsed_mode(&mut self, collapsed: bool) {
-        self.collapsed_mode = collapsed;
+    /// The width the help line actually renders at inside `max_width`: the
+    /// longest prefix of whole items that fits. Lets the caller reserve
+    /// exactly the used columns and give the rest to other sections.
+    pub fn fitted_width(&self, max_width: u16) -> u16 {
+        let mut used = 0usize;
+        for (idx, item) in self.items().iter().enumerate() {
+            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
+            let item_width = Self::item_width(item);
+            if used + separator + item_width > max_width as usize {
+                break;
+            }
+            used += separator + item_width;
+        }
+        used as u16
     }
 
     pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
@@ -63,136 +74,116 @@ impl HelpText {
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
 
-        let base_style = if self.is_dimmed {
-            Style::default().add_modifier(Modifier::DIM)
+        // Keep the longest prefix of whole items that fits the area.
+        let label_style = self.label_style();
+        let mut spans: Vec<Span<'static>> = Vec::new();
+        let mut used = 0usize;
+        for (idx, item) in self.items().into_iter().enumerate() {
+            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
+            let item_width = Self::item_width(&item);
+            if used + separator + item_width > safe_area.width as usize {
+                break;
+            }
+            if idx > 0 {
+                spans.push(Span::styled(ITEM_SEPARATOR, label_style));
+            }
+            spans.extend(item);
+            used += separator + item_width;
+        }
+        if spans.is_empty() {
+            return;
+        }
+
+        let alignment = if self.align_left {
+            Alignment::Left
         } else {
-            Style::default()
+            Alignment::Right
         };
-        let key_style = base_style.fg(THEME.info);
-        let label_style = base_style.fg(THEME.secondary_fg);
-
-        // While a pane is interactive, every key except the toggle is forwarded
-        // to the task, so the toggle is the only honest hint to show.
-        if let HelpTextContext::Pane {
-            is_interactive: true,
-            ..
-        } = self.context
-        {
-            let hint = if self.collapsed_mode {
-                vec![
-                    Span::styled("exit: ", label_style),
-                    Span::styled("<ctrl>+z", key_style),
-                ]
-            } else {
-                vec![
-                    Span::styled("INTERACTIVE", base_style.fg(THEME.primary_fg)),
-                    Span::styled("  ", label_style),
-                    Span::styled("exit interactive: ", label_style),
-                    Span::styled("<ctrl>+z", key_style),
-                ]
-            };
-            f.render_widget(
-                NxParagraph::new(Line::from(hint)).alignment(self.alignment()),
-                safe_area,
-            );
-            return;
-        }
-
-        if self.collapsed_mode {
-            // Show minimal hint
-            let hint = vec![
-                Span::styled("quit: ", label_style),
-                Span::styled("q", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("help: ", label_style),
-                Span::styled("?", key_style),
-            ];
-            f.render_widget(
-                NxParagraph::new(Line::from(hint)).alignment(self.alignment()),
-                safe_area,
-            );
-            return;
-        }
-
-        // Show full shortcuts, led by the pane's interactivity indicator when
-        // it applies (moved off the pane's bottom border).
-        let mut shortcuts = vec![];
-        if let HelpTextContext::Pane {
-            can_be_interactive: true,
-            ..
-        } = self.context
-        {
-            shortcuts.push(Span::styled("NON-INTERACTIVE", label_style));
-            shortcuts.push(Span::styled("  ", label_style));
-        }
-        shortcuts.extend([
-            Span::styled("quit: ", label_style),
-            Span::styled("q", key_style),
-            Span::styled("  ", label_style),
-            Span::styled("help: ", label_style),
-            Span::styled("?", key_style),
-        ]);
-
-        match self.context {
-            HelpTextContext::TaskList { show_perf_report } => {
-                shortcuts.extend([
-                    Span::styled("  ", label_style),
-                    Span::styled("navigate: ", label_style),
-                    Span::styled("↑ ↓", key_style),
-                    Span::styled("  ", label_style),
-                    Span::styled("filter: ", label_style),
-                    Span::styled("/", key_style),
-                    Span::styled("  ", label_style),
-                    Span::styled("pin output: ", label_style),
-                    Span::styled("", label_style),
-                    Span::styled("1", key_style),
-                    Span::styled(" or ", label_style),
-                    Span::styled("2", key_style),
-                    Span::styled("  ", label_style),
-                    Span::styled("show output: ", label_style),
-                    Span::styled("<enter>", key_style),
-                ]);
-
-                // Only advertise the performance report once it exists (run finished).
-                if show_perf_report {
-                    shortcuts.push(Span::styled("  ", label_style));
-                    shortcuts.push(Span::styled("perf report: ", label_style));
-                    shortcuts.push(Span::styled("p", key_style));
-                }
-            }
-            HelpTextContext::Pane {
-                can_be_interactive, ..
-            } => {
-                shortcuts.extend([
-                    Span::styled("  ", label_style),
-                    Span::styled("scroll: ", label_style),
-                    Span::styled("↑ ↓", key_style),
-                    Span::styled("  ", label_style),
-                    Span::styled("copy: ", label_style),
-                    Span::styled("c", key_style),
-                    Span::styled("  ", label_style),
-                    Span::styled("full screen: ", label_style),
-                    Span::styled("<enter>", key_style),
-                ]);
-                if can_be_interactive {
-                    shortcuts.push(Span::styled("  ", label_style));
-                    shortcuts.push(Span::styled("interact: ", label_style));
-                    shortcuts.push(Span::styled("i", key_style));
-                }
-            }
-        }
-
         f.render_widget(
-            NxParagraph::new(Line::from(shortcuts)).alignment(Alignment::Right),
+            NxParagraph::new(Line::from(spans)).alignment(alignment),
             safe_area,
         );
     }
 
-    fn alignment(&self) -> Alignment {
-        if self.align_left {
-            Alignment::Left
-        } else {
-            Alignment::Right
+    /// The hint items for the context, most important first (later items are
+    /// the first to disappear when space runs out).
+    fn items(&self) -> Vec<Vec<Span<'static>>> {
+        let label_style = self.label_style();
+        let key_style = self.base_style().fg(THEME.info);
+        let item = |label: &'static str, key: &'static str| {
+            vec![
+                Span::styled(label, label_style),
+                Span::styled(key, key_style),
+            ]
+        };
+
+        match self.context {
+            // While a pane is interactive, every key except the toggle is
+            // forwarded to the task, so the toggle is the only honest hint.
+            HelpTextContext::Pane {
+                is_interactive: true,
+                ..
+            } => {
+                vec![vec![
+                    Span::styled("INTERACTIVE", self.base_style().fg(THEME.primary_fg)),
+                    Span::styled(ITEM_SEPARATOR, label_style),
+                    Span::styled("exit interactive: ", label_style),
+                    Span::styled("<ctrl>+z", key_style),
+                ]]
+            }
+            HelpTextContext::Pane {
+                can_be_interactive, ..
+            } => {
+                let mut items = vec![];
+                if can_be_interactive {
+                    items.push(vec![Span::styled("NON-INTERACTIVE", label_style)]);
+                }
+                items.push(item("quit: ", "q"));
+                items.push(item("help: ", "?"));
+                if can_be_interactive {
+                    items.push(item("interact: ", "i"));
+                }
+                items.push(item("full screen: ", "<enter>"));
+                items.push(item("copy: ", "c"));
+                items.push(item("scroll: ", "↑ ↓"));
+                items
+            }
+            HelpTextContext::TaskList { show_perf_report } => {
+                let mut items = vec![
+                    item("quit: ", "q"),
+                    item("help: ", "?"),
+                    item("navigate: ", "↑ ↓"),
+                    item("filter: ", "/"),
+                    vec![
+                        Span::styled("pin output: ", label_style),
+                        Span::styled("1", key_style),
+                        Span::styled(" or ", label_style),
+                        Span::styled("2", key_style),
+                    ],
+                    item("show output: ", "<enter>"),
+                ];
+                // Only advertise the performance report once it exists (run finished).
+                if show_perf_report {
+                    items.push(item("perf report: ", "p"));
+                }
+                items
+            }
         }
+    }
+
+    fn item_width(item: &[Span<'static>]) -> usize {
+        item.iter().map(|span| span.width()).sum()
+    }
+
+    fn base_style(&self) -> Style {
+        if self.is_dimmed {
+            Style::default().add_modifier(Modifier::DIM)
+        } else {
+            Style::default()
+        }
+    }
+
+    fn label_style(&self) -> Style {
+        self.base_style().fg(THEME.secondary_fg)
     }
 }
