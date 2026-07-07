@@ -1,3 +1,6 @@
+// Keep in sync with packages/nx/src/utils/catalog/manager-utils.ts; the body below
+// the imports is duplicated because @nx/devkit supports a range of nx majors and
+// this logic isn't part of the nx surface it can import across that range.
 import { load } from '@zkochan/js-yaml';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

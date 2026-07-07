@@ -853,6 +853,33 @@ catalog: *legacy
       expect(result.catalog.react).toBe('^18.3.0');
     });
 
+    it('should create a named catalog when catalogs is absent', () => {
+      // Exercises multi-level fresh-map creation: neither `catalogs` nor the
+      // named catalog exists yet, so both maps are seeded before the entry.
+      tree.write(
+        '.yarnrc.yml',
+        `packages:
+  - 'packages/*'
+`
+      );
+
+      manager.updateCatalogVersions(tree, [
+        { packageName: 'react', version: '^17.0.2', catalogName: 'legacy' },
+      ]);
+
+      const content = tree.read('.yarnrc.yml', 'utf-8');
+      expect(content).toMatchInlineSnapshot(`
+        "packages:
+          - 'packages/*'
+        catalogs:
+          legacy:
+            react: ^17.0.2
+        "
+      `);
+      const result = load(content);
+      expect(result.catalogs.legacy.react).toBe('^17.0.2');
+    });
+
     it('should surface a YAML parse error with location detail on malformed input', () => {
       // parseDocument records errors instead of throwing; the update must still
       // fail loudly with the line/column detail the old load() surfaced.
@@ -868,7 +895,7 @@ catalog: *legacy
         manager.updateCatalogVersions(tree, [
           { packageName: 'react', version: '^18.3.0' },
         ])
-      ).toThrow('Map keys must be unique');
+      ).toThrow('Map keys must be unique at line 3, column 3');
     });
 
     it('should surface an unresolved alias with location detail', () => {
