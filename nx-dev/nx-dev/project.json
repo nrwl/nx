@@ -4,54 +4,27 @@
   "sourceRoot": "nx-dev/nx-dev",
   "projectType": "application",
   "targets": {
-    "next:build": {
-      "dependsOn": ["^build", "^typecheck", "typecheck"],
+    "build": {
       "inputs": [
-        "...",
-        { "dependentTasksOutputFiles": "**/*", "transitive": true },
+        "{projectRoot}/public/**/*",
+        "{projectRoot}/_redirects",
+        "{projectRoot}/scripts/build-site.mjs",
         { "env": "NEXT_PUBLIC_ASTRO_URL" },
         { "env": "NX_DEV_URL" },
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
-      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/.next"]
-    },
-    "sitemap": {
-      "dependsOn": ["nx-dev:next:build"],
-      "inputs": [
-        "production",
-        "{projectRoot}/next-sitemap.config.js",
-        "{projectRoot}/scripts/patch-sitemap-index.mjs",
-        {
-          "dependentTasksOutputFiles": "**/.next/{build-manifest,export-marker,prerender-manifest,routes-manifest}.json"
-        },
-        { "env": "NX_DEV_URL" },
-        { "env": "NEXT_PUBLIC_NO_INDEX" }
-      ],
-      "outputs": ["{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml"],
-      "command": "next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
+      "outputs": ["{projectRoot}/dist"],
+      "command": "node ./scripts/build-site.mjs",
       "options": {
         "cwd": "nx-dev/nx-dev"
       }
     },
-    "copy-redirects": {
-      "dependsOn": ["next:build"],
-      "inputs": ["{projectRoot}/_redirects"],
-      "outputs": ["{projectRoot}/.next/_redirects"],
-      "command": "cp nx-dev/nx-dev/_redirects nx-dev/nx-dev/.next/_redirects"
-    },
-    "build": {
-      "dependsOn": ["sitemap", "copy-redirects"],
-      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
-    },
     "deploy-build": {
       "dependsOn": ["build"],
-      "outputs": ["{projectRoot}/.next", "{projectRoot}/public/sitemap*.xml"]
-    },
-    "serve": {
-      "command": "nx dev nx-dev"
-    },
-    "start": {
-      "command": "nx next:start nx-dev"
+      "outputs": ["{projectRoot}/dist"],
+      "configurations": {
+        "netlify": {}
+      }
     }
   },
   "tags": ["scope:nx-dev", "type:app"]

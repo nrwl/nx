@@ -1,5 +1,7 @@
 # Netlify _redirects file
-# All rules are permanent (301) redirects.
+# Mostly permanent (301) redirects, plus a few 200 rewrites (proxies).
+# Environment-dependent rules (astro-docs proxy) are appended at build time
+# by scripts/build-site.mjs.
 #
 # Netlify processes these top-to-bottom, first match wins.
 # Specific rules MUST come before wildcard rules.
@@ -7,6 +9,13 @@
 # --- favicon ---
 /favicon.ico /favicon/favicon.ico 301
 /favicon.svg /favicon/favicon.svg 301
+
+# --- ai-chat (removed page) ---
+/ai-chat / 301
+/ai-chat/* / 301
+
+# --- api (Netlify Function, used by the Nx MCP nx_docs tool) ---
+/api/query-ai-embeddings /.netlify/functions/query-ai-embeddings 200
 
 # --- docs ---
 /docs /docs/getting-started/intro 301

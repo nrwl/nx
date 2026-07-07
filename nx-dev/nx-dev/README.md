@@ -1,6 +1,23 @@
 # nx.dev
 
-This folder contains the app and libs to power [nx.dev](https://nx.dev).
+This folder contains the static router site for [nx.dev](https://nx.dev). It no longer contains an application framework - the site is a set of static assets (`public/`), redirect rules (`_redirects`), and a small build script (`scripts/build-site.mjs`) that assembles the deployable output in `dist/`.
+
+All page content is served by other systems and proxied/redirected from here:
+
+- **Framer** - marketing pages (default for all paths)
+- **astro-docs** (`astro-docs/`) - `/docs/*`, proxied via generated `_redirects` rules
+- **nx-blog** (separate repo) - `/blog`, `/changelog`, `/courses`, proxied via the `rewrite-framer-urls` edge function
+- **Netlify Functions** (`netlify/functions/`) - `/api/query-ai-embeddings` for the Nx MCP `nx_docs` tool
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for the full routing architecture.
+
+## Building
+
+```bash
+nx build nx-dev   # writes dist/ (static assets + _redirects + sitemap.xml)
+```
+
+The build reads `NEXT_PUBLIC_ASTRO_URL` (astro-docs origin), `NX_DEV_URL` (canonical site URL for the sitemap index), and `NEXT_PUBLIC_NO_INDEX`. On deploy previews it automatically points the docs proxy at the matching astro-docs preview.
 
 ## Canary Docs
 
@@ -10,7 +27,7 @@ This folder contains the app and libs to power [nx.dev](https://nx.dev).
 
 The previous major's docs are preserved at `{major}.nx.dev` (e.g. `22.nx.dev`) using pre-built static snapshots on orphan branches, deployed via Netlify branch deploys.
 
-**The primary docs site now lives in `astro-docs/`.** This Next.js app is only built into a versioned snapshot for legacy majors (Nx 18–20) and will stop being versioned once those are retired. See [`astro-docs/README.md`](../../astro-docs/README.md#versioned-docs) for the authoritative versioning workflow.
+**The primary docs site lives in `astro-docs/`.** Legacy majors (Nx 18–20) are versioned by building the old Next.js app from the corresponding release tags (the app no longer exists on master; the snapshot script checks out the tag to build). See [`astro-docs/README.md`](../../astro-docs/README.md#versioned-docs) for the authoritative versioning workflow.
 
 ### Creating a Version Snapshot
 
@@ -20,7 +37,7 @@ From the repo root:
 # Nx 21+ (builds astro-docs)
 node ./scripts/create-versioned-docs.mts 22
 
-# Nx 18–20 (builds this Next.js app with static export) — legacy path
+# Nx 18–20 (builds the old Next.js app from the release tag) — legacy path
 node ./scripts/create-versioned-docs.mts 20
 
 # Retire an old versioned site (301 everything to nx.dev/docs, no build)
@@ -39,53 +56,5 @@ git push -f origin 22
 
 Versioned sites are served via Netlify branch deploys of the main `nx-dev` Netlify site, with custom domains managed in Squarespace.
 
-- **Netlify** — each `{major}` branch is deployed as a [branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls). The branch's root `netlify.toml` overrides the UI build settings so Netlify serves the pre-built static files (no rebuild, no `@netlify/plugin-nextjs`). Add the branch to the site's branch deploy allowlist, then add `{major}.nx.dev` as a domain alias pointing at the branch deploy
+- **Netlify** — each `{major}` branch is deployed as a [branch deploy](https://docs.netlify.com/site-deploys/overview/#branch-deploy-controls). The branch's root `netlify.toml` overrides the UI build settings so Netlify serves the pre-built static files (no rebuild). Add the branch to the site's branch deploy allowlist, then add `{major}.nx.dev` as a domain alias pointing at the branch deploy
 - **Squarespace** — DNS for `nx.dev` is managed in Squarespace. Add a CNAME for `{major}` pointing at the Netlify branch deploy hostname
-
-## Banner Configuration
-
-The floating banner promotes events/webinars. It's fetched at **build time** from a Framer CMS page and stored locally.
-
-### Setup
-
-Set `NEXT_PUBLIC_BANNER_URL` to point to a Framer page that renders banner JSON:
-
-```
-NEXT_PUBLIC_BANNER_URL=https://your-framer-site.framer.app/api/banners/main
-```
-
-The Framer page should render JSON inside a `<pre>` tag:
-
-```json
-{
-  "title": "Event Title",
-  "description": "Event description",
-  "primaryCtaUrl": "https://...",
-  "primaryCtaText": "Learn More",
-  "secondaryCtaUrl": "",
-  "secondaryCtaText": "",
-  "enabled": true,
-  "activeUntil": "2025-12-31T00:00:00.000Z"
-}
-```
-
-### Schema
-
-| Field              | Type     | Required | Description               |
-| ------------------ | -------- | -------- | ------------------------- |
-| `title`            | string   | Yes      | Banner headline           |
-| `description`      | string   | Yes      | Banner body text          |
-| `primaryCtaUrl`    | string   | Yes      | Primary button URL        |
-| `primaryCtaText`   | string   | Yes      | Primary button text       |
-| `secondaryCtaUrl`  | string   | No       | Secondary button URL      |
-| `secondaryCtaText` | string   | No       | Secondary button text     |
-| `enabled`          | boolean  | Yes      | Show/hide the banner      |
-| `activeUntil`      | ISO 8601 | No       | Auto-hide after this date |
-
-### Behavior
-
-- Banner is fetched during `prebuild-banner` target and saved to `lib/banner.json` as a collection (array)
-- Requires rebuild/redeploy to update the banner
-- Users can dismiss the banner (stored in localStorage)
-- If `enabled` is `false` or `activeUntil` has passed, the banner won't show
-- If `NEXT_PUBLIC_BANNER_URL` is not set, an empty collection is generated

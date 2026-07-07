@@ -1,8 +1,0 @@
-{
-  "name": "data-access-courses",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/data-access-courses/src",
-  "projectType": "library",
-  "targets": {},
-  "tags": []
-}

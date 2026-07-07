@@ -1,28 +1,31 @@
+# Netlify configuration for the nx-dev site (nx.dev router).
+# Must live at the repo root: the site's base directory is the repo root, and
+# Netlify only reads netlify.toml from the base directory.
+
+[build]
+  command = "npx nx run nx-dev:build --skip-nx-cache"
+  publish = "nx-dev/nx-dev/dist"
+
+[build.environment]
+  # The repo root package.json still depends on `next` (shared nx-dev UI libs
+  # import next/link), so Netlify auto-injects the Next.js runtime. This site
+  # is a static router - skip the plugin.
+  NETLIFY_NEXT_PLUGIN_SKIP = "true"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [[headers]]
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
     Content-Security-Policy = "frame-ancestors 'none'"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-[functions]
-# Exclude large native binaries from function bundles to stay under the 250MB limit.
-# should also look at outputFileTracingExcludes in next.config.js.
-included_files = [
-  "!node_modules/@swc/core-*/**",
-  "!node_modules/@esbuild/**",
-  "!node_modules/esbuild/**",
-  "!node_modules/@nx/nx-darwin-arm64/**",
-  "!node_modules/@nx/nx-darwin-x64/**",
-  "!node_modules/@nx/nx-freebsd-x64/**",
-  "!node_modules/@nx/nx-linux-*/**",
-  "!node_modules/@nx/nx-win32-*/**",
-  "!node_modules/typescript/**",
-  "!node_modules/webpack/**",
-  "!node_modules/sass/**",
-]
+    X-DNS-Prefetch-Control = "on"
+    Strict-Transport-Security = "max-age=63072000; includeSubDomains; preload"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
 
 [[redirects]]
   from = "https://16.nx.dev/*"

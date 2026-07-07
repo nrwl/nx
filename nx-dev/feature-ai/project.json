@@ -1,8 +1,0 @@
-{
-  "name": "nx-dev-feature-ai",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "nx-dev/feature-ai/src",
-  "projectType": "library",
-  "targets": {},
-  "tags": ["scope:nx-dev", "type:feature"]
-}

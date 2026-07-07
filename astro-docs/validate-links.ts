@@ -3,7 +3,7 @@ import path from 'node:path';
 import { workspaceRoot } from '@nx/devkit';
 
 // Links to pages hosted outside of both astro-docs and nx-dev sites
-const ignoredLinks = ['/contact', '/blog'];
+const ignoredLinks = ['/contact', '/blog', '/courses'];
 
 // These are more so until we cut over and can modify production file links
 const filesToIgnore = [
