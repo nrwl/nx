@@ -654,7 +654,7 @@ mod tests {
         let row: String = (0..120)
             .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
             .collect();
-        assert!(row.contains("exit interactive: <ctrl>+z"), "got: {row}");
+        assert!(row.contains("INTERACTIVE <ctrl>+z to toggle"), "got: {row}");
     }
 
     #[test]
