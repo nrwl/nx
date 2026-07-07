@@ -93,6 +93,100 @@ describe('project-configuration-utils', () => {
       `);
     });
 
+    // Regression: a specified plugin (e.g. @nx/gradle) infers a target with a
+    // dependsOn, and project.json (a default plugin) overrides that dependsOn
+    // outright. The default value wins, so its attribution must win too — the
+    // stale specified-plugin source used to survive at the overlapping array
+    // positions when default-plugin attribution was reconciled after the fact
+    // instead of written by the merge itself. The target node + executor stay
+    // attributed to the plugin that created the target, since project.json
+    // changed no identity prop — it only layered the dependsOn onto it.
+    it('should attribute a project.json-overridden dependsOn to project.json, not the specified plugin that inferred the target', () => {
+      const specifiedResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            '@nx/gradle',
+            'apps/nx-api/build.gradle.kts',
+            {
+              projects: {
+                'apps/nx-api': {
+                  name: 'nx-api',
+                  root: 'apps/nx-api',
+                  targets: {
+                    processResources: {
+                      executor: '@nx/gradle:gradle',
+                      dependsOn: ['nx-api:classes'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const defaultResults: CreateNodesResultEntry[][] = [
+        [
+          [
+            'nx/core/project-json',
+            'apps/nx-api/project.json',
+            {
+              projects: {
+                'apps/nx-api': {
+                  name: 'nx-api',
+                  root: 'apps/nx-api',
+                  targets: {
+                    processResources: {
+                      dependsOn: [
+                        'nx-packages-client-bundle:bundle',
+                        'polygraph-bundle:bundle',
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults,
+        defaultResults,
+        {},
+        '/tmp/test',
+        errors
+      );
+
+      const target =
+        result.projectRootMap['apps/nx-api'].targets!.processResources;
+      // Sanity: project.json's dependsOn replaced the inferred one.
+      expect(target.dependsOn).toEqual([
+        'nx-packages-client-bundle:bundle',
+        'polygraph-bundle:bundle',
+      ]);
+
+      const PROJECT_JSON: SourceInformation = [
+        'apps/nx-api/project.json',
+        'nx/core/project-json',
+      ];
+      const GRADLE: SourceInformation = [
+        'apps/nx-api/build.gradle.kts',
+        '@nx/gradle',
+      ];
+      const sm = result.configurationSourceMaps['apps/nx-api'];
+      // dependsOn — every position, plus the field-level entry — is now
+      // project.json, not the gradle plugin.
+      expect(sm['targets.processResources.dependsOn']).toEqual(PROJECT_JSON);
+      expect(sm['targets.processResources.dependsOn.0']).toEqual(PROJECT_JSON);
+      expect(sm['targets.processResources.dependsOn.1']).toEqual(PROJECT_JSON);
+      // The target node and executor still belong to the plugin that created
+      // the target.
+      expect(sm['targets.processResources']).toEqual(GRADLE);
+      expect(sm['targets.processResources.executor']).toEqual(GRADLE);
+    });
+
     // Regression: default-plugin batches merge into an intermediate
     // rootmap, not the manager's main rootmap, so filtering substitutor
     // registration to roots the manager already knows about used to drop
@@ -244,14 +338,12 @@ describe('project-configuration-utils', () => {
       ]);
     });
 
-    // Forward reference from one default-plugin batch to another:
-    // intermediate merges don't touch the manager's nameMap, so a
-    // default-plugin reference to a project that won't be created
-    // until a later default batch starts life as a usage (forward)
-    // ref. The intermediate apply loop later fires
-    // identifyProjectWithRoot for the new project; that promotion has
-    // to reach the earlier batch's pending sentinel or the final
-    // configuration will still hold a leftover NameRef object.
+    // Forward reference from one default-plugin batch to another: a
+    // default-plugin reference to a project that won't be created until a
+    // later default batch starts life as a usage (forward) ref. Merging the
+    // later batch fires identifyProjectWithRoot for the new project; that
+    // promotion has to reach the earlier batch's pending sentinel or the
+    // final configuration will still hold a leftover NameRef object.
     it('should promote forward refs introduced by one default plugin to a project created by another default plugin', () => {
       const defaultResults: CreateNodesResultEntry[][] = [
         [
@@ -311,17 +403,15 @@ describe('project-configuration-utils', () => {
       expect(typeof (aTargets.test.dependsOn as unknown[])[0]).toBe('string');
     });
 
-    // Rebinding-after-spread regression: when a specified plugin seeds
-    // a dependsOn array and a default plugin contributes a spread
-    // (`['...', ...]`), the intermediate apply runs merge logic on the
-    // owner and rebuilds the array. Sentinels inserted against the
-    // specified-plugin merge now live in an array that's been
-    // discarded — the follow-up
-    //   nodesManager.registerNameRefs(intermediateDefaultRootMap)
-    // call after the intermediate apply rebinds them to the merged
-    // array. Without it, the later rename would leave an unresolved
-    // sentinel in the first slot (the one originating from specified).
-    it('should rebind sentinels inserted by specified plugins when the intermediate apply spread-merges their array', () => {
+    // Rebinding-after-spread regression: when a specified plugin seeds a
+    // dependsOn array and a default plugin contributes a spread
+    // (`['...', ...]`), the default merge rebuilds the array. Sentinels
+    // inserted during the specified-plugin merge now live in an array that's
+    // been discarded — the default batch's own name-ref registration walks
+    // the merged config and rebinds each sentinel's parent to the new array.
+    // Without it, the later rename would leave an unresolved sentinel in the
+    // first slot (the one originating from specified).
+    it('should rebind sentinels inserted by specified plugins when a default plugin spread-merges their array', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
         [
           [
@@ -1432,14 +1522,10 @@ describe('project-configuration-utils', () => {
       expect(errors).toEqual([]);
     });
 
-    // Regression guard for the `defaultConfigurationSourceMaps` overlay
-    // in project-configuration-utils.ts: when a default plugin target
-    // lists keys before `...`, those keys yield to the specified-plugin
-    // base during the final apply, but the intermediate merge already
-    // wrote their attribution into `defaultConfigurationSourceMaps`.
-    // The overlay uses "only fill missing" semantics so that stale
-    // default-plugin entries can't clobber the correct specified-plugin
-    // attribution already recorded in `configurationSourceMaps`.
+    // When a default plugin target lists keys before `...`, those keys yield
+    // to the specified-plugin base during the merge. The spread-aware merge
+    // must leave the base's attribution untouched for them — only keys the
+    // default layer actually wins get reattributed.
     it('should attribute target-level keys that yield to base via `...` to the base source, not the default plugin', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
         [
@@ -1500,10 +1586,6 @@ describe('project-configuration-utils', () => {
       // Sanity: `cache` before `...` means base (specified) wins.
       expect(build.cache).toEqual(false);
 
-      // But the overlay misattributes `cache` to the default plugin
-      // because the intermediate merge wrote it into
-      // defaultConfigurationSourceMaps before the final apply
-      // decided base won.
       const sm = result.configurationSourceMaps['libs/a'];
       expect(sm['targets.build.cache']).toEqual([
         'libs/a/tool.config.ts',
