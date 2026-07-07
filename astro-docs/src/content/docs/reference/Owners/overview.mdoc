@@ -339,3 +339,49 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 
 {% /tabitem %}
 {% /tabs %}
+
+## Set a default owner
+
+To give the whole repository a fallback owner, use a file wildcard (`files: ["*"]`), not a project wildcard (`projects: ["*"]`). The two behave differently:
+
+- `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. It's verbose, and it only covers files that live inside a project. Files outside every project root — a top-level `package.json`, workspace config, or other loose files at the repository root — get no owner, so this isn't a true repo-wide catch-all.
+- `files: ["*"]` emits a single `* @owner` rule that matches every file in the repository. This is the repo-wide default owner. List it first and let the more specific patterns below it win, because CODEOWNERS applies the last matching rule for a given file.
+
+{% aside type="note" title="Order matters" %}
+CODEOWNERS resolves a file to the **last** pattern that matches it. Put the `files: ["*"]` catch-all at the top of your `patterns` array so the specific rules that follow override it.
+{% /aside %}
+
+```jsonc
+// nx.json
+{
+  "owners": {
+    "format": "github",
+    "outputPath": "CODEOWNERS",
+    "patterns": [
+      {
+        "description": "Default owner for everything",
+        "files": ["*"],
+        "owners": ["@platform-team"],
+      },
+      {
+        "description": "The Finance team owns these projects",
+        "projects": ["finance-*"],
+        "owners": ["@finance-team"],
+      },
+    ],
+  },
+}
+```
+
+Nx generates the following CODEOWNERS file:
+
+```yaml {% title=".github/CODEOWNERS" %}
+# Default owner for everything
+* @platform-team
+
+# The Finance team owns these projects
+/packages/finance-ui @finance-team
+/packages/finance-data @finance-team
+```
+
+Every file falls back to `@platform-team`, and the later, more specific rule reassigns the finance projects to `@finance-team`.
