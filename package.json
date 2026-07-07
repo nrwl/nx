@@ -5,7 +5,7 @@
   "private": true,
   "packageManager": "pnpm@11.2.2",
   "scripts": {
-    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,tools-documentation-create-embeddings,nx-dev-util-ai",
+    "build": "nx run-many --target build --parallel 8 --exclude nx-dev,tools-documentation-create-embeddings,nx-dev-util-ai,astro-docs",
     "commit": "czg",
     "check-commit": "node ./scripts/commit-lint.js",
     "check-format": "nx format:check --all",
