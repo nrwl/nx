@@ -2793,9 +2793,9 @@ impl TasksList {
     /// the connect hint when space is tight.
     fn cloud_connection_status_text(status: CloudConnectionStatus, short: bool) -> &'static str {
         match (status, short) {
-            (CloudConnectionStatus::Connected, _) => "Nx Cloud: connected",
-            (CloudConnectionStatus::NotConnected, false) => "Not connected: <shift>+c",
-            (CloudConnectionStatus::NotConnected, true) => "Not connected",
+            (CloudConnectionStatus::Connected, _) => "connected",
+            (CloudConnectionStatus::NotConnected, false) => "not connected: <shift>+c",
+            (CloudConnectionStatus::NotConnected, true) => "not connected",
         }
     }
 
@@ -2847,7 +2847,7 @@ impl TasksList {
                 // Same "label: key" shape as the help hints on the right.
                 CloudConnectionStatus::NotConnected => Line::from(vec![
                     Span::styled(dot, dot_style),
-                    Span::styled("Not connected: ", label_style),
+                    Span::styled("not connected: ", label_style),
                     Span::styled("<shift>+c", key_style),
                 ]),
             }
