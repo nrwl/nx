@@ -256,10 +256,7 @@ function collectProjectTsconfigs(tree: Tree): string[] {
     // whose (unknown) extenders we would silently affect.
     if (
       projectRoots.some(
-        (root) =>
-          root === '' ||
-          normalized === root ||
-          normalized.startsWith(`${root}/`)
+        (root) => root === '' || normalized.startsWith(`${root}/`)
       )
     ) {
       tsconfigs.push(filePath);

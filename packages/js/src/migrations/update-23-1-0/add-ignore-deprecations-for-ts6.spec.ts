@@ -1010,5 +1010,46 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
           .ignoreDeprecations
       ).toBe('6.0');
     });
+
+    it('flags a child that inherits a deprecated value through array-form "extends"', async () => {
+      // TypeScript merges array "extends" left to right, later wins. base-b's
+      // node10 overrides base-a's clean resolution, so the merged config is
+      // deprecated and the child must carry the flag. Neither base is named
+      // tsconfig*.json, so neither is collected or edited on its own.
+      tree.write(
+        'libs/a/base-a.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'bundler' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'libs/a/base-b.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'libs/a/tsconfig.app.json',
+        JSON.stringify(
+          {
+            extends: ['./base-a.json', './base-b.json'],
+            compilerOptions: {},
+          },
+          null,
+          2
+        )
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'libs/a/tsconfig.app.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
   });
 });

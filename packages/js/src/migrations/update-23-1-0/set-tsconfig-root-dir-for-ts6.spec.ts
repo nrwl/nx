@@ -255,4 +255,35 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     // Pinned to its own directory so it does not inherit the base's "..".
     expect(rootDirOf('libs/base/tsconfig.child.json')).toBe('.');
   });
+
+  it('shields a composite child from a rootDir pinned on its extends base', async () => {
+    // Same shape as above, but the child is composite. Its rootDir already
+    // defaults to its own directory, so it is never given a file-derived pin;
+    // yet once the base is pinned to "..", the composite would inherit that and
+    // shift its emit layout, so it is pinned to "." to keep the default.
+    write('libs/comp-base/project.json', {
+      name: 'comp-base',
+      root: 'libs/comp-base',
+    });
+    write(
+      'libs/comp-base/src/index.ts',
+      `import { b } from '@proj/b';\nexport const x = b;\n`
+    );
+    write('libs/comp-base/main.ts', `export const m = 1;\n`);
+    write('libs/comp-base/tsconfig.json', {
+      extends: '../../tsconfig.base.json',
+      compilerOptions: { outDir: '../../dist/out-tsc' },
+      include: ['src/**/*.ts'],
+    });
+    write('libs/comp-base/tsconfig.child.json', {
+      extends: './tsconfig.json',
+      compilerOptions: { composite: true },
+      include: ['main.ts'],
+    });
+
+    await run();
+
+    expect(rootDirOf('libs/comp-base/tsconfig.json')).toBe('..');
+    expect(rootDirOf('libs/comp-base/tsconfig.child.json')).toBe('.');
+  });
 });
