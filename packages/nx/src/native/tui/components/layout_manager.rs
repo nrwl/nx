@@ -248,16 +248,6 @@ impl LayoutManager {
             TaskListVisibility::Visible => self.calculate_layout_visible_task_list(main_area),
         };
         areas.status_bar = status_bar;
-
-        // The borderless task list gets a blank spacer row above the bar;
-        // terminal panes don't need one (their bottom border separates them).
-        if status_bar.is_some()
-            && let Some(task_list) = &mut areas.task_list
-            && task_list.y + task_list.height == main_area.y + main_area.height
-            && task_list.height > 1
-        {
-            task_list.height -= 1;
-        }
         areas
     }
 
@@ -480,27 +470,20 @@ mod tests {
     }
 
     #[test]
-    fn test_status_bar_reserves_bottom_rows_plus_a_spacer() {
+    fn test_status_bar_reserves_bottom_rows() {
         let layout_manager = LayoutManager::new(5);
         let area = create_test_area(100, 40);
 
+        // Content reaches the bar directly; the task list handles its own
+        // bottom breathing room internally so its scrollbar stays
+        // bottom-aligned with the panes'.
         let layout = layout_manager.calculate_layout(area, 1);
         assert_eq!(layout.status_bar, Some(Rect::new(0, 39, 100, 1)));
-        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 38)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 39)));
 
         let layout = layout_manager.calculate_layout(area, 2);
         assert_eq!(layout.status_bar, Some(Rect::new(0, 38, 100, 2)));
-        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 37)));
-    }
-
-    #[test]
-    fn test_status_bar_spacer_is_dropped_when_exactly_fitting() {
-        let layout_manager = LayoutManager::new(5);
-        // Area is exactly bar height + 1: the bar fits but the spacer doesn't.
-        let area = create_test_area(100, 3);
-        let layout = layout_manager.calculate_layout(area, 2);
-        assert_eq!(layout.status_bar, Some(Rect::new(0, 1, 100, 2)));
-        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 1)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 38)));
     }
 
     #[test]
@@ -536,34 +519,18 @@ mod tests {
     }
 
     #[test]
-    fn test_status_bar_spacer_applies_to_the_task_list_column_only() {
+    fn test_status_bar_columns_share_the_same_bottom_edge() {
         let mut layout_manager = LayoutManager::new(5);
         layout_manager.set_mode(LayoutMode::Horizontal);
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         let area = create_test_area(120, 40);
 
-        // Side by side: the list column keeps a blank row above the bar, the
-        // pane's bottom border reaches it.
+        // Side by side, both columns end at the bar so their scrollbars
+        // bottom-align.
         let layout = layout_manager.calculate_layout(area, 1);
         let task_list = layout.task_list.unwrap();
-        assert_eq!(task_list.height, 38);
+        assert_eq!(task_list.height, 39);
         assert_eq!(layout.terminal_panes[0].height, 39);
-    }
-
-    #[test]
-    fn test_status_bar_no_spacer_in_vertical_layout() {
-        let mut layout_manager = LayoutManager::new(5);
-        layout_manager.set_mode(LayoutMode::Vertical);
-        layout_manager.set_pane_arrangement(PaneArrangement::Single);
-        let area = create_test_area(100, 40);
-
-        // Stacked: the pane sits at the bottom, so nothing needs a spacer and
-        // the list keeps its full third.
-        let layout = layout_manager.calculate_layout(area, 1);
-        let task_list = layout.task_list.unwrap();
-        let pane = layout.terminal_panes[0];
-        assert_eq!(task_list.height, 13); // (40 - 1 bar row) / 3
-        assert_eq!(pane.y + pane.height, 39); // reaches the bar
     }
 
     #[test]

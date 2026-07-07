@@ -11,4 +11,4 @@ expression: terminal.backend()
 "> ·    app10:test                                              ...        ...  ║"
 "  ·    app1:test                                               ...        ...  ║"
 "  ·    app2:test                                               ...        ...  ║"
-"  ·    app3:test                                               ...        ...  ↓"
+"                                                                               ↓"

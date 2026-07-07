@@ -21,4 +21,4 @@ expression: terminal.backend()
 "  ·    app21:lint                                              ...        ...  ║"
 "  ·    app22:test                                              ...        ...  ║"
 "  ·    app23:build                                             ...        ...  ║"
-"  ·    app24:lint                                              ...        ...  ↓"
+"                                                                               ↓"

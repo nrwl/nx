@@ -31,4 +31,4 @@ expression: terminal.backend()
 "  ·    app30:lint                                              ...        ...  ║"
 "  ·    app31:test                                              ...        ...  ║"
 "  ·    app32:build                                             ...        ...  ║"
-"  ·    app33:lint                                              ...        ...  ↓"
+"                                                                               ↓"

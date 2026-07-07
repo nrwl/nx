@@ -46,6 +46,9 @@ const DEFAULT_MAX_PARALLEL: usize = 0;
 
 // Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
 const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
+// The table's bottom row stays blank as breathing room above the status bar;
+// the scrollbar still spans it so it bottom-aligns with the terminal panes.
+const BOTTOM_PADDING_ROWS: u16 = 1;
 // Rows before the scrollbar track starts: top_margin(1) + header content(1)
 // The scrollbar spans from the spacing row (which is part of the visual table area) downward
 const SCROLLBAR_Y_OFFSET: u16 = 2;
@@ -2228,6 +2231,13 @@ impl TasksList {
             (table_area, None)
         };
 
+        // The table leaves its bottom row blank (breathing room above the
+        // status bar); the scrollbar spans the full height regardless.
+        let table_render_area = Rect {
+            height: table_render_area.height.saturating_sub(BOTTOM_PADDING_ROWS),
+            ..table_render_area
+        };
+
         // Render the table in the allocated area (with space reserved for scrollbar if needed)
         let t = Table::new(all_rows, &constraints)
             .header(header)
@@ -2524,7 +2534,8 @@ impl Component for TasksList {
         self.perform_initial_in_progress_selection_if_needed();
 
         // Check if the scrollbar will be needed before calculating column visibility
-        let needs_scrollbar = self.will_need_scrollbar(area.height);
+        let needs_scrollbar =
+            self.will_need_scrollbar(area.height.saturating_sub(BOTTOM_PADDING_ROWS));
 
         // Calculate effective width for column visibility (accounting for scrollbar if needed)
         let effective_width = if needs_scrollbar {
@@ -2551,7 +2562,9 @@ impl Component for TasksList {
         let scroll_metrics = {
             let mut manager = self.selection_manager.lock();
             manager.update_viewport_and_get_metrics(
-                area.height.saturating_sub(TABLE_HEADER_OVERHEAD_ROWS) as usize,
+                area.height
+                    .saturating_sub(TABLE_HEADER_OVERHEAD_ROWS + BOTTOM_PADDING_ROWS)
+                    as usize,
             )
         };
         self.render_task_table(

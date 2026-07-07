@@ -7,4 +7,4 @@ expression: terminal.backend()
 "                                       ↑"
 "                                       █"
 "> ·    app100:test                ...  ║"
-"  ·    app10:test                 ...  ↓"
+"                                       ↓"
