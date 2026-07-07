@@ -2788,14 +2788,23 @@ impl TasksList {
         f.render_stateful_widget(&link, link_area, &mut self.link_registry);
     }
 
-    /// The static connection-status text for the cloud slot. The short variant
-    /// drops the connect hint when space is tight.
+    /// The static connection-status text for the cloud slot (without the
+    /// status dot, which is prepended at render time). The short variant drops
+    /// the connect hint when space is tight.
     fn cloud_connection_status_text(status: CloudConnectionStatus, short: bool) -> &'static str {
         match (status, short) {
             (CloudConnectionStatus::Connected, _) => "Nx Cloud: connected",
             (CloudConnectionStatus::NotConnected, false) => "Not connected: <shift>+c",
             (CloudConnectionStatus::NotConnected, true) => "Not connected",
         }
+    }
+
+    /// Display width of the rendered status: the text plus the status dot and
+    /// its trailing space. The dot is multi-byte UTF-8, so `len()` on a
+    /// combined string would overestimate the width - account for it as 2
+    /// columns explicitly.
+    fn cloud_connection_status_width(status: CloudConnectionStatus, short: bool) -> u16 {
+        Self::cloud_connection_status_text(status, short).len() as u16 + 2
     }
 
     /// Renders the Nx Cloud connection status in the cloud slot. Only shown
@@ -2809,29 +2818,50 @@ impl TasksList {
 
         let mut label_style = Style::default().fg(THEME.secondary_fg);
         let mut key_style = Style::default().fg(THEME.info);
+        let mut dot_style = match status {
+            CloudConnectionStatus::Connected => Style::default().fg(THEME.success),
+            CloudConnectionStatus::NotConnected => Style::default().fg(THEME.secondary_fg),
+        };
         if is_dimmed {
             label_style = label_style.dim();
             key_style = key_style.dim();
+            dot_style = dot_style.dim();
         }
 
-        let full_text = Self::cloud_connection_status_text(status, false);
-        let line = if full_text.len() <= available_width {
+        // Status dot: filled when connected, hollow when not.
+        let dot = match status {
+            CloudConnectionStatus::Connected => "● ",
+            CloudConnectionStatus::NotConnected => "○ ",
+        };
+
+        let line = if Self::cloud_connection_status_width(status, false) as usize <= available_width
+        {
             match status {
-                CloudConnectionStatus::Connected => {
-                    Line::from(Span::styled(full_text, label_style))
-                }
+                CloudConnectionStatus::Connected => Line::from(vec![
+                    Span::styled(dot, dot_style),
+                    Span::styled(
+                        Self::cloud_connection_status_text(status, false),
+                        label_style,
+                    ),
+                ]),
                 // Same "label: key" shape as the help hints on the right.
                 CloudConnectionStatus::NotConnected => Line::from(vec![
+                    Span::styled(dot, dot_style),
                     Span::styled("Not connected: ", label_style),
                     Span::styled("<shift>+c", key_style),
                 ]),
             }
         } else {
-            let short_text = Self::cloud_connection_status_text(status, true);
-            if short_text.len() > available_width {
+            if Self::cloud_connection_status_width(status, true) as usize > available_width {
                 return;
             }
-            Line::from(Span::styled(short_text, label_style))
+            Line::from(vec![
+                Span::styled(dot, dot_style),
+                Span::styled(
+                    Self::cloud_connection_status_text(status, true),
+                    label_style,
+                ),
+            ])
         };
 
         f.render_widget(NxParagraph::new(line).alignment(Alignment::Left), area);
@@ -2914,11 +2944,11 @@ impl Component for TasksList {
                     .saturating_sub(SCROLLBAR_WIDTH)
                     .saturating_sub(COLLAPSED_HELP_WIDTH)
                     .saturating_sub(MIN_BOTTOM_SPACING);
-                let full_width = Self::cloud_connection_status_text(status, false).len() as u16;
+                let full_width = Self::cloud_connection_status_width(status, false);
                 if full_width <= available_for_cloud {
                     full_width
                 } else {
-                    Self::cloud_connection_status_text(status, true).len() as u16
+                    Self::cloud_connection_status_width(status, true)
                 }
             } else {
                 0
