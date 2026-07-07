@@ -1,4 +1,5 @@
 import { LoaderContext } from '@rspack/core';
+import { toTypeScriptFileCacheKey } from '@nx/angular-rspack-compiler';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
 
 export default function loader(this: LoaderContext<unknown>, content: string) {
@@ -30,25 +31,53 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
       callback(null, content);
       return;
     }
-    if (!content.includes('@angular')) {
-      callback(null, content);
+
+    const normalizedRequest = toTypeScriptFileCacheKey(request);
+    const cached = typescriptFileCache.get(normalizedRequest);
+    if (cached !== undefined) {
+      if (typeof cached !== 'string') {
+        callback(null, cached.code, cached.map);
+        return;
+      }
+
+      // A string entry is raw JavaScript emitted by the Angular compilation
+      // (allowJs); it always needs the JavaScript transformations applied.
+      javascriptTransformer
+        .transformData(normalizedRequest, cached, true, false)
+        .then(
+          (transformed: Uint8Array) => {
+            const text = Buffer.from(transformed).toString('utf8');
+            // A newer emit may have replaced the entry while transforming;
+            // only store the result for the emit it was produced from.
+            if (typescriptFileCache.get(normalizedRequest) === cached) {
+              typescriptFileCache.set(normalizedRequest, {
+                code: text,
+                map: undefined,
+              });
+            }
+            callback(null, text);
+          },
+          (error) => {
+            // Fail the module instead of leaving the loader callback pending,
+            // which would hang the build.
+            callback(error instanceof Error ? error : new Error(String(error)));
+          }
+        );
       return;
     }
 
-    const existingTransform = typescriptFileCache.get(request);
-    if (existingTransform) {
-      const existingContents =
-        typeof existingTransform === 'string'
-          ? existingTransform
-          : Buffer.from(existingTransform).toString('utf8');
-      callback(null, existingContents);
+    if (!content.includes('@angular')) {
+      callback(null, content);
       return;
     }
 
     javascriptTransformer.transformFile(request, false, false).then(
       (contents) => {
         const transformedCode = Buffer.from(contents).toString('utf8');
-        typescriptFileCache.set(request, transformedCode);
+        typescriptFileCache.set(normalizedRequest, {
+          code: transformedCode,
+          map: undefined,
+        });
         callback(null, transformedCode);
       },
       (error) => {

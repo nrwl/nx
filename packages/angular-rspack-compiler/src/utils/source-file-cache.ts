@@ -7,30 +7,47 @@
  */
 
 import * as path from 'node:path';
-import { pathToFileURL } from 'node:url';
 import type ts from 'typescript';
 import { isUsingWindows } from './utils';
 
 const WINDOWS_SEP_REGEXP = new RegExp(`\\${path.win32.sep}`, 'g');
 
+/**
+ * Angular compilation output after the JavaScript transformer has run, with
+ * any inline sourcemap already split off the code.
+ */
+export interface TransformedSource {
+  code: string;
+  map: string | undefined;
+}
+
+/**
+ * Key used by `typeScriptFileCache`: the normalized path with any Windows
+ * drive letter stripped, so emitted filenames and loader resource paths match.
+ */
+export function toTypeScriptFileCacheKey(file: string): string {
+  return path.normalize(file.replace(/^[A-Z]:/, ''));
+}
+
 export class SourceFileCache extends Map<string, ts.SourceFile> {
   readonly modifiedFiles = new Set<string>();
-  readonly babelFileCache = new Map<string, Uint8Array>();
-  readonly typeScriptFileCache = new Map<string, string | Uint8Array>();
+
+  /**
+   * Emitted build output keyed by {@link toTypeScriptFileCacheKey}. A `string`
+   * entry is the raw, untransformed emit; the loaders replace it in place with
+   * a {@link TransformedSource} once the JavaScript transformer has run.
+   * Overwriting an entry with a fresh raw emit evicts the stale transform.
+   */
+  readonly typeScriptFileCache = new Map<string, string | TransformedSource>();
 
   referencedFiles?: readonly string[];
-
-  constructor(readonly persistentCachePath?: string) {
-    super();
-  }
 
   invalidate(files: Iterable<string>): void {
     if (files !== this.modifiedFiles) {
       this.modifiedFiles.clear();
     }
     for (let file of files) {
-      this.babelFileCache.delete(file);
-      this.typeScriptFileCache.delete(pathToFileURL(file).href);
+      file = path.normalize(file);
 
       // Normalize separators to allow matching TypeScript Host paths
       if (isUsingWindows()) {

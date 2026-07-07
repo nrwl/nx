@@ -1,9 +1,9 @@
 import type { LoaderContext } from '@rspack/core';
-import { normalize } from 'path';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
 import {
   StyleUrlsResolver,
   TemplateUrlsResolver,
+  toTypeScriptFileCacheKey,
 } from '@nx/angular-rspack-compiler';
 
 const _styleUrlsResolver = new StyleUrlsResolver();
@@ -28,9 +28,11 @@ export default function loader(
   ) {
     callback(null, content);
   } else {
-    const { typescriptFileCache, angularCompilationFailed } = (
-      this._compilation as NgRspackCompilation
-    )[NG_RSPACK_SYMBOL_NAME]();
+    const {
+      typescriptFileCache,
+      javascriptTransformer,
+      angularCompilationFailed,
+    } = (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME]();
 
     if (angularCompilationFailed) {
       // The Angular compilation failure is already reported as a compilation
@@ -40,8 +42,7 @@ export default function loader(
       return;
     }
 
-    const request = this.resourcePath.replace(/^[A-Z]:/, '');
-    const normalizedRequest = normalize(request);
+    const normalizedRequest = toTypeScriptFileCacheKey(this.resourcePath);
 
     const templateUrls = templateUrlsResolver.resolve(
       content,
@@ -56,13 +57,36 @@ export default function loader(
       this.addDependency(absoluteFileUrl);
     }
 
-    const contents = typescriptFileCache.get(normalizedRequest);
-    if (contents === undefined) {
-      callback(null, content);
-    } else if (typeof contents === 'string') {
-      callback(null, contents);
-    } else {
-      callback(null, Buffer.from(contents));
+    const cached = typescriptFileCache.get(normalizedRequest);
+    if (cached !== undefined) {
+      if (typeof cached !== 'string') {
+        callback(null, cached.code, cached.map);
+        return;
+      }
+
+      // A string entry is a raw emit from the Angular compilation: run the
+      // JavaScript transformations on demand and replace the entry with the
+      // result, matching the on-demand transformation in `@angular/build`'s
+      // esbuild compiler plugin `onLoad` hook. Subsequent loader calls hit
+      // the fast path above until a fresh emit replaces the entry again.
+      javascriptTransformer
+        .transformData(normalizedRequest, cached, true, false)
+        .then((transformed: Uint8Array) => {
+          const text = Buffer.from(transformed).toString();
+          // A newer emit may have replaced the entry while transforming;
+          // only store the result for the emit it was produced from.
+          if (typescriptFileCache.get(normalizedRequest) === cached) {
+            typescriptFileCache.set(normalizedRequest, {
+              code: text,
+              map: undefined,
+            });
+          }
+          callback(null, text);
+        })
+        .catch((err: Error) => callback(err));
+      return;
     }
+
+    callback(null, content);
   }
 }
