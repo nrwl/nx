@@ -36,6 +36,7 @@ use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
 use super::components::nx_paragraph::NxParagraph;
+use super::components::status_bar::{StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -114,6 +115,10 @@ pub struct App {
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
+    /// Full-width bottom status bar. Not a `Component`: it renders from
+    /// per-frame props derived from canonical state and persists only so its
+    /// link registry survives from the draw pass to the mouse-release hit-test.
+    status_bar: StatusBar,
     spacebar_mode: bool,
     pane_tasks: [Option<SelectionEntry>; 2], // Selections assigned to panes 1 and 2 (0-indexed)
     resize_debounce_timer: Option<u128>,     // Timer for debouncing resize events
@@ -563,6 +568,7 @@ impl App {
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
+            status_bar: StatusBar::new(),
             spacebar_mode: saved_spacebar_mode,
             pane_tasks: saved_pane_tasks,
             resize_debounce_timer: None,
@@ -1546,6 +1552,25 @@ impl App {
                 }
             }
             Action::Render => {
+                // Derive the status bar's props from canonical state up front,
+                // taking the state lock once and dropping it before drawing.
+                let status_bar_props = {
+                    let state = self.core.state().lock();
+                    StatusBarProps {
+                        is_dimmed: !matches!(self.focus, Focus::TaskList),
+                        perf_report_available: state.has_exit_summary(),
+                        cloud_message: state.get_cloud_message().map(str::to_string),
+                        cloud_link: state.get_cloud_link().cloned(),
+                        title_text: state.title_text().to_string(),
+                        completed_count: state.get_completed_task_count(),
+                        total_count: state.tasks().len(),
+                        all_completed: state.is_run_completed(),
+                        has_failures: state.has_failures(),
+                        run_time_range: state.run_time_range(),
+                        filter: None,
+                    }
+                };
+
                 // Hit-test regions are rebuilt every frame inside the draw closure,
                 // then stored on self so mouse events can resolve what's under the cursor.
                 let mut captured_regions: Vec<MouseRegion> = Vec::new();
@@ -1560,6 +1585,7 @@ impl App {
                             registry.clear();
                         }
                     }
+                    self.status_bar.link_registry_mut().clear();
 
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
@@ -1573,6 +1599,7 @@ impl App {
 
                     let frame_area = self.frame_area.unwrap();
                     let layout_areas = self.layout_areas.as_ref().unwrap();
+                    let status_bar_area = layout_areas.status_bar;
 
                     if self.debug_mode {
                         let debug_widget = TuiLoggerSmartWidget::default().state(&self.debug_state);
@@ -1758,6 +1785,12 @@ impl App {
                         physical_idx += 1;
                     }
 
+                    // Draw the full-width status bar into its reserved bottom
+                    // row(s), before the popups so they overlay it.
+                    if let Some(bar_area) = status_bar_area {
+                        self.status_bar.render(f, bar_area, &status_bar_props);
+                    }
+
                     // Draw the popups (help, countdown, interstitial)
                     // Draw each popup sequentially to avoid multiple mutable borrows
                     if let Some(help_popup) = self
@@ -1861,22 +1894,15 @@ impl App {
     }
 
     pub fn set_cloud_message(&mut self, message: Option<String>) {
-        // Store in state (for mode switching persistence)
-        self.core.state().lock().set_cloud_message(message.clone());
-        // Dispatch to TasksList component for UI rendering
-        if let Some(message) = message {
-            self.dispatch_action(Action::UpdateCloudMessage(message));
-        }
+        self.core.state().lock().set_cloud_message(message);
+        // Cloud content affects the status bar height on narrow terminals.
+        self.layout_areas = None;
     }
 
     pub fn set_cloud_link(&mut self, label: String, url: String) {
-        // Store in state (for mode switching persistence)
-        self.core
-            .state()
-            .lock()
-            .set_cloud_link(Some((label.clone(), url.clone())));
-        // Dispatch to TasksList component for UI rendering
-        self.dispatch_action(Action::UpdateCloudLink(label, url));
+        self.core.state().lock().set_cloud_link(Some((label, url)));
+        // Cloud content affects the status bar height on narrow terminals.
+        self.layout_areas = None;
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -1886,7 +1912,15 @@ impl App {
 
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
-            self.layout_areas = Some(self.layout_manager.calculate_layout(frame_area));
+            let has_cloud_content = {
+                let state = self.core.state().lock();
+                state.get_cloud_message().is_some() || state.get_cloud_link().is_some()
+            };
+            let status_bar_height = StatusBar::required_height(frame_area.width, has_cloud_content);
+            self.layout_areas = Some(
+                self.layout_manager
+                    .calculate_layout(frame_area, status_bar_height),
+            );
         }
     }
 
@@ -2640,6 +2674,7 @@ impl App {
         self.components
             .iter()
             .filter_map(|c| c.link_registry())
+            .chain(std::iter::once(self.status_bar.link_registry()))
             .find_map(|registry| registry.hit_test(col, row))
             .map(str::to_string)
     }

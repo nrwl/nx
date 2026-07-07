@@ -75,6 +75,8 @@ pub struct LayoutAreas {
     pub task_list: Option<Rect>,
     /// Areas for terminal panes.
     pub terminal_panes: Vec<Rect>,
+    /// Full-width status bar row(s) at the bottom of the frame, if reserved.
+    pub status_bar: Option<Rect>,
 }
 
 /// Manages the layout of components in the TUI application.
@@ -216,20 +218,37 @@ impl LayoutManager {
 
     /// Calculates the layout based on the given terminal area.
     ///
+    /// `status_bar_height` rows are reserved for the full-width status bar at
+    /// the bottom of the frame before the remaining area is partitioned
+    /// between the task list and terminal panes.
+    ///
     /// Returns a LayoutAreas struct containing the calculated areas for each component.
-    pub fn calculate_layout(&self, area: Rect) -> LayoutAreas {
+    pub fn calculate_layout(&self, area: Rect, status_bar_height: u16) -> LayoutAreas {
         // Basic bounds checking to prevent crashes
         if area.width == 0 || area.height == 0 {
             return LayoutAreas {
                 task_list: None,
                 terminal_panes: Vec::new(),
+                status_bar: None,
             };
         }
 
-        match self.task_list_visibility {
-            TaskListVisibility::Hidden => self.calculate_layout_hidden_task_list(area),
-            TaskListVisibility::Visible => self.calculate_layout_visible_task_list(area),
-        }
+        let (main_area, status_bar) = if status_bar_height > 0 && area.height > status_bar_height {
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Fill(1), Constraint::Length(status_bar_height)])
+                .split(area);
+            (chunks[0], Some(chunks[1]))
+        } else {
+            (area, None)
+        };
+
+        let mut areas = match self.task_list_visibility {
+            TaskListVisibility::Hidden => self.calculate_layout_hidden_task_list(main_area),
+            TaskListVisibility::Visible => self.calculate_layout_visible_task_list(main_area),
+        };
+        areas.status_bar = status_bar;
+        areas
     }
 
     /// Calculates the layout when the task list is hidden.
@@ -250,6 +269,7 @@ impl LayoutManager {
         LayoutAreas {
             task_list: None,
             terminal_panes,
+            status_bar: None,
         }
     }
 
@@ -276,6 +296,7 @@ impl LayoutManager {
             return LayoutAreas {
                 task_list: Some(area),
                 terminal_panes: Vec::new(),
+                status_bar: None,
             };
         }
 
@@ -321,6 +342,7 @@ impl LayoutManager {
         LayoutAreas {
             task_list: Some(task_list_area),
             terminal_panes,
+            status_bar: None,
         }
     }
 
@@ -331,6 +353,7 @@ impl LayoutManager {
             return LayoutAreas {
                 task_list: Some(area),
                 terminal_panes: Vec::new(),
+                status_bar: None,
             };
         }
 
@@ -376,6 +399,7 @@ impl LayoutManager {
         LayoutAreas {
             task_list: Some(task_list_area),
             terminal_panes,
+            status_bar: None,
         }
     }
 
@@ -494,7 +518,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_none());
         assert_eq!(layout.terminal_panes.len(), 1);
         assert_eq!(layout.terminal_panes[0], area);
@@ -509,7 +533,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Double);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_none());
         assert_eq!(layout.terminal_panes.len(), 2);
         assert_eq!(layout.terminal_panes[0].width, 50); // Half of total width
@@ -526,7 +550,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_some());
 
         // In horizontal layout, task list should be on the left, taking about 1/3 of width
@@ -547,7 +571,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_some());
 
         // In vertical layout, task list should be on top, taking about 1/3 of height
@@ -568,7 +592,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_some());
 
         // Even though terminal is wide, layout should be vertical
@@ -589,7 +613,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_some());
 
         // Even though terminal is tall, layout should be horizontal
@@ -610,7 +634,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Double);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert_eq!(layout.terminal_panes.len(), 2);
 
         // In vertical layout with two panes, they should be side by side
@@ -634,7 +658,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::Double);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert_eq!(layout.terminal_panes.len(), 2);
 
         // In horizontal layout with two panes, they should be stacked
@@ -657,7 +681,7 @@ mod tests {
         layout_manager.set_pane_arrangement(PaneArrangement::None);
         layout_manager.set_task_count(5);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         assert!(layout.task_list.is_some());
         assert_eq!(layout.terminal_panes.len(), 0);
     }
@@ -692,7 +716,7 @@ mod tests {
         layout_manager.set_task_list_visibility(TaskListVisibility::Visible);
         layout_manager.set_pane_arrangement(PaneArrangement::Single);
 
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
 
@@ -701,7 +725,7 @@ mod tests {
 
         // Test with increased horizontal padding
         layout_manager.set_horizontal_padding(3);
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
 
@@ -710,7 +734,7 @@ mod tests {
 
         // Test with vertical layout and default vertical padding (1)
         layout_manager.set_mode(LayoutMode::Vertical);
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
 
@@ -719,7 +743,7 @@ mod tests {
 
         // Test with increased vertical padding
         layout_manager.set_vertical_padding(2);
-        let layout = layout_manager.calculate_layout(area);
+        let layout = layout_manager.calculate_layout(area, 0);
         let task_list = layout.task_list.unwrap();
         let terminal_pane = layout.terminal_panes[0];
 
@@ -744,7 +768,7 @@ mod tests {
 
             terminal
                 .draw(|frame| {
-                    let areas = layout_manager.calculate_layout(frame.area());
+                    let areas = layout_manager.calculate_layout(frame.area(), 0);
 
                     // Render task list if visible
                     if let Some(task_list_area) = areas.task_list {
@@ -914,7 +938,7 @@ mod tests {
             layout_manager.set_pane_arrangement(PaneArrangement::Double);
             layout_manager.set_task_count(5);
 
-            let layout = layout_manager.calculate_layout(area);
+            let layout = layout_manager.calculate_layout(area, 0);
 
             // Verify task list exists and is on the left
             assert!(layout.task_list.is_some());
@@ -944,7 +968,7 @@ mod tests {
             layout_manager.set_pane_arrangement(PaneArrangement::Double);
             layout_manager.set_task_count(5);
 
-            let layout = layout_manager.calculate_layout(area);
+            let layout = layout_manager.calculate_layout(area, 0);
 
             // Verify task list exists and is on top
             assert!(layout.task_list.is_some());
