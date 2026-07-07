@@ -1,0 +1,48 @@
+---
+title: Nx Cloud vs GitHub Actions runner providers
+description: WarpBuild, Namespace, RunsOn, and Ubicloud lower the price of a CI minute with faster or cheaper runners. Nx Cloud lowers the number of minutes with affected detection, remote task caching, and distribution. The two levers stack.
+filter: 'type:Guides'
+sidebar:
+  label: Nx Cloud vs runner providers
+---
+
+A wave of providers replaces GitHub Actions hosted runners with faster or cheaper machines: [WarpBuild](https://www.warpbuild.com/), [Namespace](https://namespace.so/), [RunsOn](https://runs-on.com/), and [Ubicloud](https://www.ubicloud.com/), alongside [Depot](/docs/guides/adopting-nx/nx-cloud-vs-depot) and [Blacksmith](/docs/guides/adopting-nx/nx-cloud-vs-blacksmith), which have their own pages. The pitch is shared: swap the `runs-on` label, get better CPUs, a faster cache backend, and a lower per-minute price.
+
+Nx Cloud pulls a different lever. Runner providers lower the price of a CI minute; Nx Cloud lowers the number of minutes by [skipping unaffected tasks](/docs/features/ci-features/affected), [replaying cached results](/docs/features/ci-features/remote-cache), and [distributing what remains](/docs/features/ci-features/distribute-task-execution). The levers are independent, and they stack: Nx Cloud runs on any of these providers' runners.
+
+| Capability                        | Runner providers                                   | Nx Cloud                                   |
+| --------------------------------- | -------------------------------------------------- | ------------------------------------------ |
+| Faster machines                   | Core offering                                      | Runs on whatever machines you choose       |
+| `actions/cache` acceleration      | Common (colocated or in-VPC storage)               | Not applicable; caches tasks, not archives |
+| Build-tool remote cache           | Namespace only, and not for Nx                     | Nx Replay, shared with local development   |
+| Affected detection                | Not available                                      | `nx affected` from the project graph       |
+| Task distribution                 | Not available; parallelism is your workflow matrix | Nx Agents, dynamically balanced            |
+| Test splitting and flaky handling | Not available                                      | Atomizer, flaky re-runs, self-healing CI   |
+
+## The providers
+
+**WarpBuild** offers managed runners across Linux, Windows, and macOS Apple Silicon, plus a bring-your-own-cloud option that deploys runners into your own AWS, GCP, or Azure account. Machine-level snapshots can resume builds from a warm state.
+
+**Namespace** has the broadest surface: runners, Docker builders, persistent cache volumes, dev environments for AI agents, and native remote cache endpoints for Bazel, Turborepo, Gradle, Pants, moon, and sccache. Nx is not among its supported cache integrations.
+
+**RunsOn** is a self-hosted orchestrator installed in your own AWS account: one ephemeral EC2 instance per job at raw AWS spot prices, with a flat annual license instead of per-minute markup. The cheapest path for teams already on AWS that want full instance control.
+
+**Ubicloud** is an open-source cloud whose runners set the category's price floor, with ephemeral KVM-isolated VMs and generous included cache storage. Deliberately a compute commodity.
+
+## What faster minutes can't do
+
+None of the four understands the workload it runs. There's no dependency graph, so a PR that touches one library still triggers every job the workflow declares. There's no task-level cache, so work that ran on another machine, or on a developer's laptop, runs again. Parallelism remains the matrix you write and rebalance by hand, and no provider in the category ships test splitting or flaky test remediation. Namespace's build-tool caches are the partial exception, and they cover Turborepo, Bazel, and Gradle rather than Nx.
+
+These are workload-level features, and they're exactly what [Nx Cloud](/docs/features/ci-features) provides: graph-based affected detection, a content-addressed task cache with [branch-scoped isolation](/docs/concepts/ci-concepts/cache-security), [Nx Agents](/docs/features/ci-features/distribute-task-execution) task distribution, [Atomizer](/docs/features/ci-features/split-e2e-tasks) e2e splitting, [flaky task re-runs](/docs/features/ci-features/flaky-tasks), and [self-healing CI](/docs/features/ci-features/self-healing-ci).
+
+## Stacking both
+
+Nx Cloud communicates over HTTPS from whatever machine runs `nx`, so it works on any of these providers without configuration changes. A common setup: move workflows to a cheaper runner provider for the per-minute savings, and let Nx Cloud cut the minutes, with `nx affected` pruning the task list, Nx Replay skipping repeated work, and Nx Agents replacing the manual matrix. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), including these providers' runners.
+
+## When a faster runner is enough
+
+If CI runs one application's build and test on every push, and the pain is purely that GitHub's hosted runners are slow or expensive, a runner swap captures most of the available win in an afternoon. The equation changes in a monorepo: when most PRs touch a fraction of the projects, the biggest cost is work that didn't need to run, and no per-minute price fixes that. Teams with real monorepos usually need the workload lever first, and can pull both.
+
+{% aside type="tip" title="Set up Nx Cloud" %}
+See [CI features](/docs/features/ci-features) for what Nx Cloud adds to an existing pipeline, and [CI setup](/docs/getting-started/setup-ci) to connect a workspace.
+{% /aside %}
