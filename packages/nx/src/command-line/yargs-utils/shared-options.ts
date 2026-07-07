@@ -1,7 +1,7 @@
 import { readNxJson } from '../../config/nx-json';
 import { shouldUseTui } from '../../tasks-runner/is-tui-enabled';
 import { NxArgs } from '../../utils/command-line-utils';
-import { Argv, coerce, ParserConfigurationOptions } from 'yargs';
+import type { Argv, ParserConfigurationOptions } from 'yargs';
 import { availableParallelism, cpus } from 'node:os';
 
 interface ExcludeOptions {
