@@ -1,4 +1,4 @@
-use super::{Component, Frame};
+use super::{Component, Frame, ModalPopup};
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::tui::action::Action;
 use crate::native::tui::components::nx_paragraph::NxParagraph;
@@ -445,6 +445,20 @@ impl HelpPopup {
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }
+    }
+}
+
+impl ModalPopup for HelpPopup {
+    fn is_visible(&self) -> bool {
+        HelpPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        HelpPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        HelpPopup::content_area(self)
     }
 }
 

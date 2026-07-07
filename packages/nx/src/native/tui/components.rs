@@ -123,3 +123,20 @@ pub trait Component: Any + Send {
     fn as_any(&self) -> &dyn Any;
     fn as_any_mut(&mut self) -> &mut dyn Any;
 }
+
+/// A popup component that acts as a modal focus layer while focused: it
+/// records its rendered geometry for mouse hit-testing and reports whether it
+/// is currently shown. `Focus::modal` resolves the focused layer to the
+/// component behind it through this trait.
+pub trait ModalPopup: Component {
+    /// Whether the popup is currently shown.
+    fn is_visible(&self) -> bool;
+
+    /// The bordered popup box from the last render, used for
+    /// click-outside-to-dismiss hit-testing. `None` while hidden.
+    fn last_area(&self) -> Option<Rect>;
+
+    /// The inner text area (inside the border and padding) from the last
+    /// render, used to bound text selection. `None` while hidden.
+    fn content_area(&self) -> Option<Rect>;
+}

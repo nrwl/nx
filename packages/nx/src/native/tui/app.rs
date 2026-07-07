@@ -28,7 +28,6 @@ use crate::native::{
 
 use super::action::Action;
 use super::clipboard::copy_to_clipboard;
-use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
@@ -42,6 +41,7 @@ use super::components::task_selection_manager::{
 };
 use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
+use super::components::{Component, ModalPopup};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
@@ -169,17 +169,25 @@ impl Focus {
         )
     }
 
+    /// The popup component backing this focus layer, when it is a popup.
+    fn modal(self, app: &App) -> Option<&dyn ModalPopup> {
+        match self {
+            Focus::HelpPopup => app.component::<HelpPopup>().map(|p| p as &dyn ModalPopup),
+            Focus::CountdownPopup => app
+                .component::<CountdownPopup>()
+                .map(|p| p as &dyn ModalPopup),
+            Focus::HintPopup => app.component::<HintPopup>().map(|p| p as &dyn ModalPopup),
+            Focus::TaskList | Focus::MultipleOutput(_) => None,
+        }
+    }
+
     /// Whether this focus layer is still visible/meaningful to the user.
     /// Consulted when pruning layers revealed by `App::close_popup`; base
     /// layers are the floor of the stack and always count as active.
     fn is_active(self, app: &App) -> bool {
         match self {
-            Focus::HelpPopup => app.component::<HelpPopup>().is_some_and(|p| p.is_visible()),
-            Focus::CountdownPopup => app
-                .component::<CountdownPopup>()
-                .is_some_and(|p| p.is_visible()),
-            Focus::HintPopup => app.component::<HintPopup>().is_some_and(|p| p.is_visible()),
             Focus::TaskList | Focus::MultipleOutput(_) => true,
+            _ => self.modal(app).is_some_and(|p| p.is_visible()),
         }
     }
 }
@@ -2667,72 +2675,24 @@ impl App {
     /// The bordered box of the currently focused popup, as recorded during the
     /// last render.
     fn active_modal_area(&self) -> Option<Rect> {
-        match self.focus() {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.last_area()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.last_area()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.last_area()),
-            _ => None,
-        }
+        self.focus().modal(self)?.last_area()
     }
 
     /// The inner text area of the focused popup (inside the border, clear of the
     /// scrollbar). Selections and link hit-tests are confined to this.
     fn active_modal_content_area(&self) -> Option<Rect> {
-        match self.focus() {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.content_area()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.content_area()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.content_area()),
-            _ => None,
-        }
+        self.focus().modal(self)?.content_area()
     }
 
     /// The external link at `(col, row)` belonging to the active modal, if any.
     /// Scoped to the modal so a click can't fall through to a link on the layer
     /// underneath (and so the modal's own links still work).
     fn active_modal_link_at(&self, col: u16, row: u16) -> Option<String> {
-        let registry = match self.focus() {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.link_registry()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.link_registry()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.link_registry()),
-            _ => None,
-        }?;
-        registry.hit_test(col, row).map(str::to_string)
+        self.focus()
+            .modal(self)?
+            .link_registry()?
+            .hit_test(col, row)
+            .map(str::to_string)
     }
 
     /// Keep the focused modal open on interaction. For the auto-exit report this

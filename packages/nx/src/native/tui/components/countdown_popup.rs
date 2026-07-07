@@ -16,9 +16,9 @@ use crate::native::tui::lifecycle::{Link as SummaryLink, PerformanceSummaryPaylo
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration, pluralize};
 
-use super::Component;
 use super::link::{Link, LinkRegistry};
 use super::nx_paragraph::{NxLine, NxParagraph, NxSpan, NxText};
+use super::{Component, ModalPopup};
 
 /// Convert a styled line into an `NxLine`, turning any occurrence of a known
 /// link phrase into a clickable [`Link`]. Replaces the old buffer-scanning OSC 8
@@ -625,6 +625,20 @@ impl CountdownPopup {
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }
+    }
+}
+
+impl ModalPopup for CountdownPopup {
+    fn is_visible(&self) -> bool {
+        CountdownPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        CountdownPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        CountdownPopup::content_area(self)
     }
 }
 
