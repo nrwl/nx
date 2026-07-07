@@ -322,6 +322,10 @@ const learnGroups: SidebarItems = [
             link: 'guides/adopting-nx/nx-vs-turborepo',
           },
           {
+            label: 'Nx vs Vite+',
+            link: 'guides/adopting-nx/nx-vs-vite-plus',
+          },
+          {
             label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
