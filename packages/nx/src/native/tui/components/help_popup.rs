@@ -52,6 +52,10 @@ impl HelpPopup {
         self.visible = visible;
     }
 
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
+
     /// The bordered popup box drawn last frame, if visible.
     pub fn last_area(&self) -> Option<Rect> {
         self.last_area
