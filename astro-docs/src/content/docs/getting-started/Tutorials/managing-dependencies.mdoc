@@ -236,7 +236,32 @@ npm does not have catalog support. Enforce a single version policy by defining a
 {% /tabitem %}
 {% tabitem label="bun" %}
 
-Bun does not currently support catalogs. Define shared dependency versions in the root `package.json` and reference them using `workspace:*` for internal packages.
+```jsonc
+// package.json
+{
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ],
+    "catalog": {
+      "react": ^19.0.0
+      "react-dom": ^19.0.0
+    }
+  }
+}
+```
+
+```jsonc
+// packages/app/package.json
+{
+  "dependencies": {
+    "react": "catalog:",
+    "react-dom": "catalog:",
+  },
+}
+```
+
+See the [Bun catalogs documentation here](https://bun.com/docs/pm/catalogs#catalogs).
 
 {% /tabitem %}
 {% /tabs %}
