@@ -2,10 +2,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 
 use anyhow::*;
-use dashmap::DashMap;
-use once_cell::sync::OnceCell;
 use tracing::{trace, trace_span};
 
+use super::once_cache::OnceCache;
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
@@ -15,7 +14,7 @@ pub struct ProjectFilesHashResult {
     pub files: Vec<String>,
 }
 
-pub(crate) type ProjectFileSetCache = DashMap<String, Arc<OnceCell<Arc<ProjectFilesHashResult>>>>;
+pub(crate) type ProjectFileSetCache = OnceCache<ProjectFilesHashResult>;
 
 fn project_file_set_cache_key(project_name: &str, file_sets: &[String]) -> String {
     let mut sorted_file_sets: Vec<&str> = file_sets.iter().map(String::as_str).collect();
@@ -62,17 +61,9 @@ pub(crate) fn hash_project_files_with_inputs_cached(
     project_file_map: &HashMap<String, Vec<FileData>>,
     cache: &ProjectFileSetCache,
 ) -> Result<Arc<ProjectFilesHashResult>> {
-    let cache_key = project_file_set_cache_key(project_name, file_sets);
-    let cache_cell = cache
-        .entry(cache_key)
-        .or_insert_with(|| Arc::new(OnceCell::new()))
-        .clone();
-
-    cache_cell
-        .get_or_try_init(|| {
-            hash_project_files_with_inputs(project_name, file_sets, project_file_map).map(Arc::new)
-        })
-        .cloned()
+    cache.get_or_try_init(project_file_set_cache_key(project_name, file_sets), || {
+        hash_project_files_with_inputs(project_name, file_sets, project_file_map)
+    })
 }
 
 /// base function that should be testable (to make sure that we're getting the proper files back)
