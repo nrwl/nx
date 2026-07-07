@@ -28,7 +28,6 @@ use crate::native::{
 
 use super::action::Action;
 use super::clipboard::copy_to_clipboard;
-use super::components::Component;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
@@ -42,6 +41,7 @@ use super::components::task_selection_manager::{
 };
 use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
+use super::components::{Component, ModalPopup};
 use super::graph_utils::{get_task_count, is_task_continuous};
 use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
@@ -102,8 +102,11 @@ pub struct App {
 
     // === Full-Screen UI State ===
     pub components: Vec<Box<dyn Component>>,
-    focus: Focus,
-    previous_focus: Focus,
+    /// Focus layers, bottom to top; the top entry is the current focus.
+    /// Never empty: index 0 is always a base layer (`TaskList` or
+    /// `MultipleOutput`), replaced in place by lateral navigation, while popup
+    /// layers are pushed above it (each at most once).
+    focus_stack: Vec<Focus>,
     layout_manager: LayoutManager,
     // Cached frame area used for layout calculations, only updated on terminal resize
     frame_area: Option<Rect>,
@@ -154,6 +157,39 @@ pub enum Focus {
     HelpPopup,
     CountdownPopup,
     HintPopup,
+}
+
+impl Focus {
+    /// Popup layers stack over the base layer of the focus stack; base layers
+    /// (`TaskList`, `MultipleOutput`) are replaced in place instead.
+    fn is_popup(self) -> bool {
+        matches!(
+            self,
+            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
+        )
+    }
+
+    /// The popup component backing this focus layer, when it is a popup.
+    fn modal(self, app: &App) -> Option<&dyn ModalPopup> {
+        match self {
+            Focus::HelpPopup => app.component::<HelpPopup>().map(|p| p as &dyn ModalPopup),
+            Focus::CountdownPopup => app
+                .component::<CountdownPopup>()
+                .map(|p| p as &dyn ModalPopup),
+            Focus::HintPopup => app.component::<HintPopup>().map(|p| p as &dyn ModalPopup),
+            Focus::TaskList | Focus::MultipleOutput(_) => None,
+        }
+    }
+
+    /// Whether this focus layer is still visible/meaningful to the user.
+    /// Consulted when pruning layers revealed by `App::close_popup`; base
+    /// layers are the floor of the stack and always count as active.
+    fn is_active(self, app: &App) -> bool {
+        match self {
+            Focus::TaskList | Focus::MultipleOutput(_) => true,
+            _ => self.modal(app).is_some_and(|p| p.is_visible()),
+        }
+    }
 }
 
 /// A rectangular region captured during the last render that mouse events can
@@ -521,8 +557,7 @@ impl App {
         Ok(Self {
             core: TuiCore::new(state),
             components,
-            focus: initial_focus,
-            previous_focus: Focus::TaskList,
+            focus_stack: vec![initial_focus],
             layout_manager,
             frame_area: None,
             layout_areas: None,
@@ -787,7 +822,7 @@ impl App {
             .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
         {
             countdown_popup.start_countdown(countdown_duration);
-            self.update_focus(Focus::CountdownPopup);
+            self.push_focus(Focus::CountdownPopup);
             self.core
                 .schedule_quit(std::time::Duration::from_secs(countdown_duration));
         }
@@ -904,7 +939,7 @@ impl App {
                 // Handle Ctrl+C to quit, unless we're in interactive mode and the focus is on a terminal pane
                 if key.code == KeyCode::Char('c')
                     && key.modifiers == KeyModifiers::CONTROL
-                    && !(matches!(self.focus, Focus::MultipleOutput(_))
+                    && !(matches!(self.focus(), Focus::MultipleOutput(_))
                         && self.is_interactive_mode())
                 {
                     // Use TuiCore to handle Ctrl+C (end command, set forced shutdown, quit)
@@ -912,7 +947,7 @@ impl App {
                     return Ok(false);
                 }
 
-                if matches!(self.focus, Focus::MultipleOutput(_)) && self.is_interactive_mode() {
+                if matches!(self.focus(), Focus::MultipleOutput(_)) && self.is_interactive_mode() {
                     return match key.code {
                         KeyCode::Char('z') if key.modifiers == KeyModifiers::CONTROL => {
                             // Disable interactive mode when Ctrl+Z is pressed
@@ -947,7 +982,7 @@ impl App {
                 // F11 toggles between full-screen and inline mode
                 // Don't allow mode switch during countdown (user is about to quit)
                 if matches!(key.code, KeyCode::F(11))
-                    && !matches!(self.focus, Focus::CountdownPopup)
+                    && !matches!(self.focus(), Focus::CountdownPopup)
                 {
                     self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
                     return Ok(false);
@@ -961,9 +996,9 @@ impl App {
                 // Only handle '?' key if we're not in interactive mode and the countdown popup is not open
                 if matches!(key.code, KeyCode::Char('?'))
                     && !self.is_interactive_mode()
-                    && !matches!(self.focus, Focus::CountdownPopup)
+                    && !matches!(self.focus(), Focus::CountdownPopup)
                 {
-                    let show_help_popup = !matches!(self.focus, Focus::HelpPopup);
+                    let show_help_popup = !matches!(self.focus(), Focus::HelpPopup);
                     if let Some(help_popup) = self
                         .components
                         .iter_mut()
@@ -972,9 +1007,9 @@ impl App {
                         help_popup.set_visible(show_help_popup);
                     }
                     if show_help_popup {
-                        self.update_focus(Focus::HelpPopup);
+                        self.push_focus(Focus::HelpPopup);
                     } else {
-                        self.update_focus(self.previous_focus);
+                        self.close_popup(Focus::HelpPopup);
                     }
                     return Ok(false);
                 }
@@ -990,7 +1025,7 @@ impl App {
                 if matches!(key.code, KeyCode::Char('p') | KeyCode::Char('P'))
                     && !self.is_interactive_mode()
                     && !is_filtering
-                    && !matches!(self.focus, Focus::CountdownPopup | Focus::HelpPopup)
+                    && !matches!(self.focus(), Focus::CountdownPopup | Focus::HelpPopup)
                 {
                     if let Some(countdown_popup) = self
                         .components
@@ -999,14 +1034,14 @@ impl App {
                     {
                         if countdown_popup.has_summary() {
                             countdown_popup.reopen();
-                            self.update_focus(Focus::CountdownPopup);
+                            self.push_focus(Focus::CountdownPopup);
                         }
                     }
                     return Ok(false);
                 }
 
                 // If countdown popup is open, handle its keyboard events
-                if matches!(self.focus, Focus::CountdownPopup) {
+                if matches!(self.focus(), Focus::CountdownPopup) {
                     // Control keys (q, Ctrl-C, scroll/pin, p, Esc) are handled here and
                     // return. Any other key dismisses the popup and then falls through
                     // to its normal handler below, so the keystroke isn't wasted just
@@ -1056,7 +1091,7 @@ impl App {
                                 // summary, so `p` falls through to the dismiss catch-all.
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
-                                self.update_focus(self.previous_focus);
+                                self.close_popup(Focus::CountdownPopup);
                                 return Ok(false);
                             }
                             KeyCode::Esc => {
@@ -1069,7 +1104,7 @@ impl App {
                                 } else {
                                     countdown_popup.cancel_countdown();
                                     self.core.state().lock().cancel_quit();
-                                    self.update_focus(self.previous_focus);
+                                    self.close_popup(Focus::CountdownPopup);
                                 }
                                 return Ok(false);
                             }
@@ -1080,7 +1115,7 @@ impl App {
                                 // switch wouldn't happen until a second press.
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
-                                self.update_focus(self.previous_focus);
+                                self.close_popup(Focus::CountdownPopup);
                                 self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
                                 return Ok(false);
                             }
@@ -1089,7 +1124,7 @@ impl App {
                                 // return) so this key still performs its normal action.
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
-                                self.update_focus(self.previous_focus);
+                                self.close_popup(Focus::CountdownPopup);
                             }
                         }
                     }
@@ -1098,19 +1133,24 @@ impl App {
                 }
 
                 // If hint popup is open, only ESC dismisses it
-                if matches!(self.focus, Focus::HintPopup) {
+                if matches!(self.focus(), Focus::HintPopup) {
                     if let Some(hint_popup) = self
                         .components
                         .iter_mut()
                         .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                        && hint_popup.is_visible()
                     {
                         if key.code == KeyCode::Esc {
                             hint_popup.hide();
-                            self.update_focus(self.previous_focus);
+                            self.close_popup(Focus::HintPopup);
                         }
                         // All other keys are consumed while hint popup is visible
+                        return Ok(false);
                     }
-                    return Ok(false);
+                    // Focus points at a hint popup that is no longer visible;
+                    // repair the focus and let the key take its normal path
+                    // instead of feeding it to an invisible modal.
+                    self.close_popup(Focus::HintPopup);
                 }
 
                 if let Some(tasks_list) = self
@@ -1129,7 +1169,7 @@ impl App {
                 }
 
                 // If shortcuts popup is open, handle its keyboard events
-                if matches!(self.focus, Focus::HelpPopup) {
+                if matches!(self.focus(), Focus::HelpPopup) {
                     match key.code {
                         KeyCode::Esc => {
                             if let Some(help_popup) = self
@@ -1139,7 +1179,7 @@ impl App {
                             {
                                 help_popup.set_visible(false);
                             }
-                            self.update_focus(self.previous_focus);
+                            self.close_popup(Focus::HelpPopup);
                         }
                         KeyCode::Up | KeyCode::Char('k') => {
                             if let Some(help_popup) = self
@@ -1187,7 +1227,7 @@ impl App {
                 }
 
                 // Handle Up/Down/PageUp/PageDown keys for scrolling first
-                if matches!(self.focus, Focus::MultipleOutput(_)) {
+                if matches!(self.focus(), Focus::MultipleOutput(_)) {
                     match key.code {
                         KeyCode::Up | KeyCode::Down | KeyCode::PageUp | KeyCode::PageDown => {
                             self.handle_key_event(key).ok();
@@ -1202,12 +1242,13 @@ impl App {
                 }
 
                 // Get tasks list component for handling some key events
+                let focus = self.focus();
                 if let Some(tasks_list) = self
                     .components
                     .iter_mut()
                     .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
                 {
-                    match self.focus {
+                    match focus {
                         Focus::MultipleOutput(_) => {
                             if self.is_interactive_mode() {
                                 // Send all other keys to the task list (and ultimately through the terminal pane to the PTY)
@@ -1223,7 +1264,7 @@ impl App {
                                     }
                                     KeyCode::Esc => {
                                         if !self.is_task_list_hidden() {
-                                            self.update_focus(Focus::TaskList);
+                                            self.set_base_focus(Focus::TaskList);
                                         }
                                     }
                                     // Add our new shortcuts here
@@ -1266,7 +1307,7 @@ impl App {
 
                             let is_filter_mode = tasks_list.filter_mode;
 
-                            match self.focus {
+                            match focus {
                                 Focus::TaskList => match key.code {
                                     KeyCode::Char('j') if !is_filter_mode => {
                                         self.dispatch_action(Action::NextTask);
@@ -1287,7 +1328,7 @@ impl App {
                                         tasks_list.try_collapse_selected_batch();
                                     }
                                     KeyCode::Esc => {
-                                        if matches!(self.focus, Focus::HelpPopup) {
+                                        if matches!(focus, Focus::HelpPopup) {
                                             if let Some(help_popup) =
                                                 self.components.iter_mut().find_map(|c| {
                                                     c.as_any_mut().downcast_mut::<HelpPopup>()
@@ -1295,7 +1336,7 @@ impl App {
                                             {
                                                 help_popup.set_visible(false);
                                             }
-                                            self.update_focus(self.previous_focus);
+                                            self.close_popup(Focus::HelpPopup);
                                         } else {
                                             // Only clear filter when help popup is not in focus
 
@@ -1357,7 +1398,7 @@ impl App {
                                     KeyCode::Enter if is_filter_mode => {
                                         tasks_list.persist_filter();
                                     }
-                                    KeyCode::Enter if matches!(self.focus, Focus::TaskList) => {
+                                    KeyCode::Enter if matches!(self.focus(), Focus::TaskList) => {
                                         self.display_and_focus_current_task_in_terminal_pane(false);
                                     }
                                     _ => {}
@@ -1441,10 +1482,9 @@ impl App {
                 {
                     if hint_popup.should_auto_dismiss() {
                         hint_popup.hide();
-                        // Restore focus if hint popup was focused
-                        if matches!(self.focus, Focus::HintPopup) {
-                            self.update_focus(self.previous_focus);
-                        }
+                        // Drop the hint's focus layer wherever it sits — it may
+                        // be buried under another popup rather than on top.
+                        self.close_popup(Focus::HintPopup);
                     }
                 }
 
@@ -1464,7 +1504,7 @@ impl App {
             // Cancel quitting
             Action::CancelQuit => {
                 self.core.state().lock().cancel_quit();
-                self.update_focus(self.previous_focus);
+                self.close_popup(Focus::CountdownPopup);
             }
             Action::Resize(w, h) => {
                 let rect = Rect::new(0, 0, *w, *h);
@@ -1485,7 +1525,6 @@ impl App {
                 if self.mouse_capture_enabled {
                     let _ = crate::native::tui::tui::enable_mouse_capture();
                     // Returning to in-app behavior; drop the explanatory hint.
-                    let was_hint_focused = matches!(self.focus, Focus::HintPopup);
                     if let Some(hint_popup) = self
                         .components
                         .iter_mut()
@@ -1493,9 +1532,7 @@ impl App {
                         && hint_popup.is_visible()
                     {
                         hint_popup.hide();
-                        if was_hint_focused {
-                            self.update_focus(self.previous_focus);
-                        }
+                        self.close_popup(Focus::HintPopup);
                     }
                 } else {
                     let _ = crate::native::tui::tui::disable_mouse_capture();
@@ -1649,7 +1686,7 @@ impl App {
                     };
 
                     // Capture focus state before mutable borrows
-                    let current_focus = self.focus;
+                    let current_focus = self.focus();
 
                     // Iterate over panes in order, mapping to physical positions
                     // Physical position 0 gets the first pinned task, position 1 gets the second
@@ -1779,7 +1816,7 @@ impl App {
                         .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
                     {
                         hint_popup.show(message.clone());
-                        self.update_focus(Focus::HintPopup);
+                        self.push_focus(Focus::HintPopup);
                     }
                 }
             }
@@ -1885,7 +1922,7 @@ impl App {
         self.clear_pane_pty_reference(0);
         self.clear_pane_pty_reference(1);
 
-        self.update_focus(Focus::TaskList);
+        self.set_base_focus(Focus::TaskList);
         self.set_spacebar_mode(false, None);
         self.dispatch_action(Action::UnpinAllTasks);
     }
@@ -1950,7 +1987,7 @@ impl App {
             return;
         }
 
-        let focus = match self.focus {
+        let focus = match self.focus() {
             Focus::TaskList => {
                 // Move to first visible pane
                 if let Some(first_pane) = self.pane_tasks.iter().position(|t| t.is_some()) {
@@ -1984,7 +2021,7 @@ impl App {
             Focus::HintPopup => Focus::TaskList,
         };
 
-        self.update_focus(focus);
+        self.set_base_focus(focus);
     }
 
     fn focus_previous(&mut self) {
@@ -1993,7 +2030,7 @@ impl App {
             return; // No panes to focus
         }
 
-        let focus = match self.focus {
+        let focus = match self.focus() {
             Focus::TaskList => {
                 // When on task list, go to the rightmost (highest index) pane
                 if let Some(last_pane) = (0..2).rev().find(|&idx| self.pane_tasks[idx].is_some()) {
@@ -2050,7 +2087,7 @@ impl App {
             Focus::HintPopup => Focus::TaskList,
         };
 
-        self.update_focus(focus);
+        self.set_base_focus(focus);
     }
 
     fn toggle_task_list(&mut self) {
@@ -2087,7 +2124,7 @@ impl App {
             let pinned_count = self.pane_tasks.iter().filter(|t| t.is_some()).count();
             match pinned_count {
                 0 => {
-                    self.update_focus(Focus::TaskList);
+                    self.set_base_focus(Focus::TaskList);
                     self.set_spacebar_mode(false, Some(SelectionMode::TrackByPosition));
                     self.layout_manager
                         .set_pane_arrangement(PaneArrangement::None);
@@ -2173,7 +2210,7 @@ impl App {
     fn navigate_to_task_in_pane(&mut self, task_name: &str, pane_idx: usize) {
         self.selection_manager.lock().select_task(task_name);
         self.assign_current_task_to_pane(pane_idx);
-        self.update_focus(Focus::MultipleOutput(pane_idx));
+        self.set_base_focus(Focus::MultipleOutput(pane_idx));
     }
 
     fn assign_current_task_to_pane(&mut self, pane_idx: usize) -> Option<()> {
@@ -2224,7 +2261,7 @@ impl App {
 
             self.dispatch_action(Action::PinSelection(selection.clone(), pane_idx));
             self.pane_tasks[pane_idx] = Some(selection);
-            self.update_focus(Focus::TaskList);
+            self.set_base_focus(Focus::TaskList);
 
             self.set_spacebar_mode(false, Some(SelectionMode::TrackByName));
 
@@ -2252,7 +2289,7 @@ impl App {
 
     /// Forward key events to the currently focused pane, if any.
     fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<()> {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
+        if let Focus::MultipleOutput(pane_idx) = self.focus() {
             // Get the task assigned to this pane to determine how to handle keys
             // In spacebar mode, use selection manager; in pinned mode, use pane_tasks
             let selection = if self.spacebar_mode {
@@ -2402,7 +2439,7 @@ impl App {
         direction: ScrollDirection,
         action_tx: &mpsc::UnboundedSender<Action>,
     ) {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
+        if let Focus::MultipleOutput(pane_idx) = self.focus() {
             self.terminal_pane_data[pane_idx].handle_mouse_scroll(direction);
         } else {
             self.send_list_scroll(direction, action_tx);
@@ -2434,7 +2471,7 @@ impl App {
         match self.region_at(col, row) {
             Some(MouseRegionKind::Pane(pane_idx)) => {
                 // Focus the clicked pane; double-click drops to inline (NXC-3942).
-                self.update_focus(Focus::MultipleOutput(pane_idx));
+                self.set_base_focus(Focus::MultipleOutput(pane_idx));
                 self.terminal_pane_data[pane_idx].clear_selection();
                 // A dependency-view pane behaves like the task list: a plain click
                 // navigates to the dependency, a click+drag selects text. Defer the
@@ -2577,7 +2614,7 @@ impl App {
             // Selecting a task focuses the list (NXC-3941); double-click opens and
             // focuses the task in the main terminal pane (same as pressing Enter).
             // Inline mode is reserved for double-clicking a pane (NXC-3943).
-            Some(TaskListClick::Select) => self.update_focus(Focus::TaskList),
+            Some(TaskListClick::Select) => self.set_base_focus(Focus::TaskList),
             Some(TaskListClick::OpenInPane) => {
                 self.display_and_focus_current_task_in_terminal_pane(false)
             }
@@ -2625,8 +2662,14 @@ impl App {
 
     /// The focused popup acting as a modal layer, if any.
     fn active_modal_kind(&self) -> Option<Focus> {
-        match self.focus {
-            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup => Some(self.focus),
+        match self.focus() {
+            Focus::HelpPopup | Focus::CountdownPopup => Some(self.focus()),
+            // Invariant: every hint hide is paired with close_popup in the
+            // same handler, so a focused-but-hidden hint should be impossible.
+            // The visibility check is defense in depth — if an unpaired hide
+            // ever slips in, the dead layer must not become an invisible modal
+            // that absorbs all mouse events (this wedged the whole TUI once).
+            focus @ Focus::HintPopup if focus.is_active(self) => Some(focus),
             _ => None,
         }
     }
@@ -2634,72 +2677,24 @@ impl App {
     /// The bordered box of the currently focused popup, as recorded during the
     /// last render.
     fn active_modal_area(&self) -> Option<Rect> {
-        match self.focus {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.last_area()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.last_area()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.last_area()),
-            _ => None,
-        }
+        self.focus().modal(self)?.last_area()
     }
 
     /// The inner text area of the focused popup (inside the border, clear of the
     /// scrollbar). Selections and link hit-tests are confined to this.
     fn active_modal_content_area(&self) -> Option<Rect> {
-        match self.focus {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.content_area()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.content_area()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.content_area()),
-            _ => None,
-        }
+        self.focus().modal(self)?.content_area()
     }
 
     /// The external link at `(col, row)` belonging to the active modal, if any.
     /// Scoped to the modal so a click can't fall through to a link on the layer
     /// underneath (and so the modal's own links still work).
     fn active_modal_link_at(&self, col: u16, row: u16) -> Option<String> {
-        let registry = match self.focus {
-            Focus::HelpPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HelpPopup>())
-                .and_then(|p| p.link_registry()),
-            Focus::CountdownPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
-                .and_then(|p| p.link_registry()),
-            Focus::HintPopup => self
-                .components
-                .iter()
-                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
-                .and_then(|p| p.link_registry()),
-            _ => None,
-        }?;
-        registry.hit_test(col, row).map(str::to_string)
+        self.focus()
+            .modal(self)?
+            .link_registry()?
+            .hit_test(col, row)
+            .map(str::to_string)
     }
 
     /// Keep the focused modal open on interaction. For the auto-exit report this
@@ -2707,7 +2702,7 @@ impl App {
     /// the keyboard scroll/pin path. Other popups have no countdown, so it's a
     /// no-op for them.
     fn pin_active_modal_open(&mut self) {
-        if !matches!(self.focus, Focus::CountdownPopup) {
+        if !matches!(self.focus(), Focus::CountdownPopup) {
             return;
         }
         if let Some(p) = self
@@ -2799,7 +2794,7 @@ impl App {
     /// Scroll the focused popup, if it supports scrolling. Any scroll
     /// invalidates the screen-coordinate selection, so it is cleared.
     fn scroll_active_modal(&mut self, direction: ScrollDirection) {
-        match self.focus {
+        match self.focus() {
             Focus::HelpPopup => {
                 if let Some(p) = self
                     .components
@@ -2832,7 +2827,7 @@ impl App {
 
     /// Dismiss the focused popup, mirroring its keyboard-dismiss behavior.
     fn dismiss_active_modal(&mut self) {
-        match self.focus {
+        match self.focus() {
             Focus::HelpPopup => {
                 if let Some(p) = self
                     .components
@@ -2841,7 +2836,7 @@ impl App {
                 {
                     p.set_visible(false);
                 }
-                self.update_focus(self.previous_focus);
+                self.close_popup(Focus::HelpPopup);
             }
             Focus::CountdownPopup => {
                 // Clicking away keeps the TUI running, like pressing any key.
@@ -2853,7 +2848,7 @@ impl App {
                     p.cancel_countdown();
                 }
                 self.core.state().lock().cancel_quit();
-                self.update_focus(self.previous_focus);
+                self.close_popup(Focus::CountdownPopup);
             }
             Focus::HintPopup => {
                 if let Some(p) = self
@@ -2863,7 +2858,7 @@ impl App {
                 {
                     p.hide();
                 }
-                self.update_focus(self.previous_focus);
+                self.close_popup(Focus::HintPopup);
             }
             _ => {}
         }
@@ -2983,14 +2978,14 @@ impl App {
 
     /// Returns true if the currently focused pane is in interactive mode.
     fn is_interactive_mode(&self) -> bool {
-        match self.focus {
+        match self.focus() {
             Focus::MultipleOutput(pane_idx) => self.terminal_pane_data[pane_idx].is_interactive(),
             _ => false,
         }
     }
 
     pub fn set_interactive_mode(&mut self, interactive: bool) {
-        if let Focus::MultipleOutput(pane_idx) = self.focus {
+        if let Focus::MultipleOutput(pane_idx) = self.focus() {
             self.terminal_pane_data[pane_idx].set_interactive(interactive);
         }
     }
@@ -3092,7 +3087,7 @@ impl App {
             if let Some(ref sel) = selection {
                 if let Some(pane_idx) = self.pane_tasks.iter().position(|t| t.as_ref() == Some(sel))
                 {
-                    self.update_focus(Focus::MultipleOutput(pane_idx));
+                    self.set_base_focus(Focus::MultipleOutput(pane_idx));
                     return;
                 }
             }
@@ -3100,19 +3095,77 @@ impl App {
         }
         // Focus the pane if one is now visible
         if self.has_visible_panes() {
-            self.update_focus(Focus::MultipleOutput(0));
+            self.set_base_focus(Focus::MultipleOutput(0));
         }
     }
 
-    fn update_focus(&mut self, focus: Focus) {
-        // A region text selection belongs to the focused layer; drop it whenever
-        // focus moves elsewhere so it can't bleed onto another layer.
-        if self.focus != focus {
-            self.region_selection = None;
+    /// The first component of concrete type `T`, if one exists.
+    fn component<T: 'static>(&self) -> Option<&T> {
+        self.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<T>())
+    }
+
+    /// The current focus: the top of the focus stack.
+    fn focus(&self) -> Focus {
+        *self.focus_stack.last().expect("focus stack is never empty")
+    }
+
+    /// Replace the base focus layer (lateral navigation between the task list
+    /// and output panes). Popup layers stacked above it are undisturbed.
+    fn set_base_focus(&mut self, focus: Focus) {
+        debug_assert!(
+            !focus.is_popup(),
+            "set_base_focus takes a base layer, got {focus:?}"
+        );
+        let old_top = self.focus();
+        self.focus_stack[0] = focus;
+        self.sync_focus_change(old_top);
+    }
+
+    /// Focus a popup layer, stacking it over whatever is focused now. Pushing
+    /// the layer that is already on top is a no-op, and a layer buried deeper
+    /// in the stack is moved to the top rather than duplicated — the stack can
+    /// never hold the same layer twice, so closing popups can never loop.
+    fn push_focus(&mut self, focus: Focus) {
+        debug_assert!(
+            focus.is_popup(),
+            "push_focus takes a popup layer, got {focus:?}"
+        );
+        let old_top = self.focus();
+        if old_top == focus {
+            return;
         }
-        self.previous_focus = self.focus;
-        self.focus = focus;
-        self.dispatch_action(Action::UpdateFocus(focus));
+        self.focus_stack.retain(|&layer| layer != focus);
+        self.focus_stack.push(focus);
+        self.sync_focus_change(old_top);
+    }
+
+    /// Dismiss a popup layer, removing it from the stack wherever it sits
+    /// (popups can die while buried, e.g. a hint auto-expiring under the run
+    /// report). Any layers revealed on top that are no longer active are
+    /// pruned too, so focus always lands on something the user can see.
+    fn close_popup(&mut self, focus: Focus) {
+        let old_top = self.focus();
+        self.focus_stack.retain(|&layer| layer != focus);
+        while self.focus_stack.len() > 1 && !self.focus().is_active(self) {
+            self.focus_stack.pop();
+        }
+        if self.focus_stack.is_empty() {
+            self.focus_stack.push(Focus::TaskList);
+        }
+        self.sync_focus_change(old_top);
+    }
+
+    /// Shared plumbing after a stack mutation: if the top changed, drop the
+    /// region text selection (it belongs to the previously focused layer) and
+    /// notify components of the new focus.
+    fn sync_focus_change(&mut self, old_top: Focus) {
+        let new_top = self.focus();
+        if new_top != old_top {
+            self.region_selection = None;
+            self.dispatch_action(Action::UpdateFocus(new_top));
+        }
     }
 
     fn handle_debug_event(&mut self, key: KeyEvent) {
@@ -3790,7 +3843,7 @@ impl TuiApp for App {
         // If focus is on a terminal pane, return that pane's item
         // In spacebar mode, return the selected item (it follows selection)
         // Otherwise return the pinned item from that pane
-        match self.focus {
+        match self.focus() {
             Focus::MultipleOutput(pane_idx) => {
                 if self.spacebar_mode {
                     self.selection_manager.lock().get_selection().cloned()
@@ -3807,7 +3860,7 @@ impl TuiApp for App {
     }
 
     fn save_ui_state_for_mode_switch(&self) {
-        let focused_pane = match self.focus {
+        let focused_pane = match self.focus() {
             Focus::MultipleOutput(pane_idx) => Some(pane_idx),
             _ => None,
         };
@@ -4085,19 +4138,201 @@ mod tests {
         assert_eq!(snap.selected_text(&sel), "line\nsecond line\nthird");
     }
 
+    /// The `ModalPopup` contract: a hidden popup reports no hit-test geometry,
+    /// including in the window between being hidden and the next draw (the
+    /// draw pass also clears the recorded areas, but lazily — consumers must
+    /// never observe a stale `Some` from the previous render).
+    #[test]
+    fn hidden_popup_reports_no_modal_geometry() {
+        fn draw_popup<T: Component>(app: &mut App) {
+            let mut terminal =
+                ratatui::Terminal::new(ratatui::backend::TestBackend::new(120, 40)).unwrap();
+            terminal
+                .draw(|f| {
+                    let area = f.area();
+                    if let Some(popup) = app
+                        .components
+                        .iter_mut()
+                        .find_map(|c| c.as_any_mut().downcast_mut::<T>())
+                    {
+                        let _ = popup.draw(f, area);
+                    }
+                })
+                .unwrap();
+        }
+
+        // Hint popup: hide() without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .show("hint".to_string());
+        app.focus_stack = vec![Focus::TaskList, Focus::HintPopup];
+        draw_popup::<HintPopup>(&mut app);
+        assert!(app.active_modal_area().is_some(), "visible hint has a box");
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .hide();
+        assert!(
+            app.active_modal_area().is_none(),
+            "hidden hint must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
+
+        // Help popup: set_visible(false) without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+            .unwrap()
+            .set_visible(true);
+        app.focus_stack = vec![Focus::TaskList, Focus::HelpPopup];
+        draw_popup::<HelpPopup>(&mut app);
+        assert!(app.active_modal_area().is_some(), "visible help has a box");
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HelpPopup>())
+            .unwrap()
+            .set_visible(false);
+        assert!(
+            app.active_modal_area().is_none(),
+            "hidden help must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
+
+        // Run report: cancel_countdown() without a redraw.
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+            .unwrap()
+            .reopen();
+        app.focus_stack = vec![Focus::TaskList, Focus::CountdownPopup];
+        draw_popup::<CountdownPopup>(&mut app);
+        assert!(
+            app.active_modal_area().is_some(),
+            "visible report has a box"
+        );
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+            .unwrap()
+            .cancel_countdown();
+        assert!(
+            app.active_modal_area().is_none(),
+            "dismissed report must not leak stale hit-test geometry"
+        );
+        assert!(app.active_modal_content_area().is_none());
+    }
+
     #[test]
     fn active_modal_kind_only_for_popups() {
         let mut app = create_test_app();
-        for (focus, expected) in [
-            (Focus::TaskList, false),
-            (Focus::MultipleOutput(0), false),
-            (Focus::HelpPopup, true),
-            (Focus::CountdownPopup, true),
-            (Focus::HintPopup, true),
+        for (stack, expected) in [
+            (vec![Focus::TaskList], false),
+            (vec![Focus::MultipleOutput(0)], false),
+            (vec![Focus::TaskList, Focus::HelpPopup], true),
+            (vec![Focus::TaskList, Focus::CountdownPopup], true),
         ] {
-            app.focus = focus;
-            assert_eq!(app.active_modal_kind().is_some(), expected, "{focus:?}");
+            app.focus_stack = stack.clone();
+            assert_eq!(app.active_modal_kind().is_some(), expected, "{stack:?}");
         }
+
+        // The hint popup is only a modal while it is actually visible. A
+        // hidden hint that still holds focus must not absorb mouse events.
+        app.focus_stack = vec![Focus::TaskList, Focus::HintPopup];
+        assert!(
+            app.active_modal_kind().is_none(),
+            "a hidden hint popup must not act as a modal"
+        );
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .show("hint".to_string());
+        assert!(
+            app.active_modal_kind().is_some(),
+            "a visible hint popup is a modal"
+        );
+    }
+
+    // === Focus stack (regression: hint popup focus wedge) ===
+
+    /// A second `ShowHint` while a hint was already focused used to record
+    /// `HintPopup` as its own previous focus in the old one-slot register,
+    /// making every restore self-loop and parking focus on an invisible modal
+    /// until an F11 mode round-trip rebuilt the app. With the stack, pushing
+    /// an already-top layer is a no-op and closing it lands on the base layer.
+    #[test]
+    fn repeated_hint_push_cannot_poison_focus_restore() {
+        let mut app = create_test_app();
+        // First hint focuses the popup...
+        app.push_focus(Focus::HintPopup);
+        // ...and a second hint arrives while it is still focused (e.g. the
+        // F10 mouse-capture toast fired while another toast was up).
+        app.push_focus(Focus::HintPopup);
+        assert_eq!(
+            app.focus_stack,
+            vec![Focus::TaskList, Focus::HintPopup],
+            "pushing the focused layer again must not grow the stack"
+        );
+        app.close_popup(Focus::HintPopup);
+        assert_eq!(app.focus(), Focus::TaskList);
+    }
+
+    /// A popup can die while buried under another popup (the hint auto-expires
+    /// while the run report is focused). Closing the top popup must skip the
+    /// dead layer and land on the base layer, not on a hidden popup.
+    #[test]
+    fn closing_top_popup_prunes_dead_buried_layers() {
+        let mut app = create_test_app();
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .show("hint".to_string());
+        app.push_focus(Focus::HintPopup);
+        // The run report opens over the hint...
+        app.push_focus(Focus::CountdownPopup);
+        assert_eq!(
+            app.focus_stack,
+            vec![Focus::TaskList, Focus::HintPopup, Focus::CountdownPopup]
+        );
+        // ...and the hint expires while buried.
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .hide();
+        // Dismissing the report lands on the task list, not the hidden hint.
+        app.close_popup(Focus::CountdownPopup);
+        assert_eq!(app.focus(), Focus::TaskList);
+    }
+
+    /// Defense in depth: even if focus points at a hidden hint popup, keys
+    /// must fall through to their normal handlers instead of being consumed
+    /// by an invisible modal.
+    #[test]
+    fn hidden_hint_focus_does_not_swallow_keys() {
+        let mut app = create_test_app();
+        // Wedged state: the popup is focused but not visible.
+        app.focus_stack = vec![Focus::TaskList, Focus::HintPopup];
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_event(
+            tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)),
+            &tx,
+        )
+        .unwrap();
+
+        assert!(
+            app.core.state().lock().is_forced_shutdown(),
+            "`q` must reach the quit handler instead of being swallowed by a hidden hint popup"
+        );
     }
 
     #[test]
@@ -4108,7 +4343,7 @@ mod tests {
             .state()
             .lock()
             .schedule_quit(std::time::Duration::from_secs(0));
-        app.focus = Focus::CountdownPopup;
+        app.focus_stack = vec![Focus::TaskList, Focus::CountdownPopup];
         assert!(
             app.core.state().lock().should_quit(),
             "auto-exit is due before any interaction"
@@ -4245,11 +4480,10 @@ mod tests {
     }
 
     #[test]
-    fn update_focus_clears_region_selection() {
+    fn focus_change_clears_region_selection() {
         let mut app = create_test_app();
-        app.focus = Focus::HelpPopup;
         app.region_selection = Some(selection((1, 1), (3, 1), Rect::new(0, 0, 10, 5)));
-        app.update_focus(Focus::TaskList);
+        app.push_focus(Focus::HelpPopup);
         assert!(
             app.region_selection.is_none(),
             "moving focus must drop the region selection"
@@ -4315,7 +4549,7 @@ mod tests {
             popup.set_summary(PerformanceSummaryPayload::default());
             popup.start_countdown(3);
         }
-        app.update_focus(Focus::CountdownPopup);
+        app.push_focus(Focus::CountdownPopup);
         // Arm an already-due quit so cancellation is observable via should_quit().
         app.core
             .state()

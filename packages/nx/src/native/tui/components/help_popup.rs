@@ -1,4 +1,4 @@
-use super::{Component, Frame};
+use super::{Component, Frame, ModalPopup};
 use crate::native::ide::detection::{SupportedEditor, get_current_editor};
 use crate::native::tui::action::Action;
 use crate::native::tui::components::nx_paragraph::NxParagraph;
@@ -52,14 +52,22 @@ impl HelpPopup {
         self.visible = visible;
     }
 
+    pub fn is_visible(&self) -> bool {
+        self.visible
+    }
+
     /// The bordered popup box drawn last frame, if visible.
     pub fn last_area(&self) -> Option<Rect> {
-        self.last_area
+        if self.visible { self.last_area } else { None }
     }
 
     /// The inner text area drawn last frame, if visible.
     pub fn content_area(&self) -> Option<Rect> {
-        self.content_area
+        if self.visible {
+            self.content_area
+        } else {
+            None
+        }
     }
 
     pub fn set_console_available(&mut self, available: bool) {
@@ -441,6 +449,20 @@ impl HelpPopup {
 
             f.render_stateful_widget(scrollbar, popup_area, &mut self.scrollbar_state);
         }
+    }
+}
+
+impl ModalPopup for HelpPopup {
+    fn is_visible(&self) -> bool {
+        HelpPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        HelpPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        HelpPopup::content_area(self)
     }
 }
 
