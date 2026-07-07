@@ -421,6 +421,9 @@ export function mergeCreateNodesResults(
     // Stage the default layer for synthesis. Merge errors are discarded and
     // external nodes land in a scratch object — the same results merge into
     // the manager below, where both surface once with proper plugin context.
+    // The discard is safe because every merge throw depends only on the
+    // plugin's own config, never on the merge base (which differs between
+    // the two passes).
     // Name references are NOT registered here: sentinels registered against
     // the throwaway rootMap would mutate the plugin results and be orphaned.
     const stagingErrors: MergeError[] = [];

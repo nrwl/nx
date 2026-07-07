@@ -802,6 +802,25 @@ describe('spread syntax in mergeTargetConfigurations', () => {
     });
   });
 
+  // The integer-key/spread ambiguity is a property of the authored config
+  // (key hoisting loses the position), not of the merge base — so it must
+  // throw whether or not the base target is compatible. This also keeps the
+  // error identical between the target-defaults staging merge (default-only
+  // base) and the real merge (full base), so discarding staging errors can't
+  // lose it.
+  it('should throw for an integer-like key alongside a spread even when the base target is incompatible', () => {
+    expect(() =>
+      mergeTargetConfigurations(
+        {
+          executor: '@acme/b:build',
+          '123': 'ambiguous',
+          '...': true,
+        } as any,
+        { executor: '@acme/a:build' }
+      )
+    ).toThrow(/integer-like key/i);
+  });
+
   it('should replace array without spread token', () => {
     const result = mergeTargetConfigurations(
       {

@@ -420,9 +420,12 @@ export function mergeTargetConfigurations(
     : new Set<string>();
 
   // Integer-like keys get hoisted to targetKeys[0], making their position
-  // relative to '...' unrecoverable.
+  // relative to '...' unrecoverable. This is a property of the authored
+  // config, not of the base, so it throws regardless of compatibility —
+  // which also keeps the error identical between the target-defaults staging
+  // merge and the real merge, whose bases differ.
   if (
-    hasSpread &&
+    spreadPosInTarget >= 0 &&
     targetKeys[0] &&
     INTEGER_LIKE_KEY_PATTERN.test(targetKeys[0])
   ) {
