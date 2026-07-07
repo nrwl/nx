@@ -598,6 +598,7 @@ module.exports.BatchStatus = nativeBinding.BatchStatus
 module.exports.canInstallNxConsole = nativeBinding.canInstallNxConsole
 module.exports.canInstallNxConsoleForEditor = nativeBinding.canInstallNxConsoleForEditor
 module.exports.closeDbConnection = nativeBinding.closeDbConnection
+module.exports.CloudConnectionStatus = nativeBinding.CloudConnectionStatus
 module.exports.connectToNxDb = nativeBinding.connectToNxDb
 module.exports.copy = nativeBinding.copy
 module.exports.detectAiAgent = nativeBinding.detectAiAgent

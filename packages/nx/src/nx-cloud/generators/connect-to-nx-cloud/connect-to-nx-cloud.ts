@@ -200,7 +200,8 @@ export async function connectToNxCloud(
     !schema.generateToken &&
     isGitHubDetected &&
     (schema.installationSource === 'nx-connect' ||
-      schema.installationSource === 'nx-console')
+      schema.installationSource === 'nx-console' ||
+      schema.installationSource === 'nx-tui')
   )
     return null;
 

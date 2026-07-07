@@ -29,7 +29,7 @@ use crate::native::{
 use super::action::Action;
 use super::clipboard::copy_to_clipboard;
 use super::components::Component;
-use super::components::countdown_popup::CountdownPopup;
+use super::components::countdown_popup::{CONNECT_BUTTON_HREF, CloudConnectState, CountdownPopup};
 use super::components::dependency_view::{DependencyView, DependencyViewState};
 use super::components::help_popup::HelpPopup;
 use super::components::hint_popup::HintPopup;
@@ -43,7 +43,9 @@ use super::components::task_selection_manager::{
 use super::components::tasks_list::{TaskListClick, TaskStatus, TasksList};
 use super::components::terminal_pane::{TerminalPane, TerminalPaneData, TerminalPaneState};
 use super::graph_utils::{get_task_count, is_task_continuous};
-use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
+use super::lifecycle::{
+    BatchStatus, CloudConnectionStatus, PerformanceSummaryPayload, RunMode, TuiMode,
+};
 use super::pty::PtyInstance;
 use super::theme::THEME;
 use super::tui;
@@ -476,6 +478,14 @@ impl App {
         if let Some(summary) = state.lock().exit_summary() {
             countdown_popup.set_summary(summary);
             tasks_list.set_perf_report_available(true);
+        }
+        // Re-hydrate the cloud connection status and any connect-attempt
+        // result so the report popup's enable-remote-cache affordances (and a
+        // generated URL) survive mode switches.
+        {
+            let state_lock = state.lock();
+            countdown_popup.set_cloud_connection_status(state_lock.get_cloud_connection_status());
+            countdown_popup.set_connect_state(state_lock.get_cloud_connect_state());
         }
         let hint_popup = HintPopup::new();
 
@@ -1082,6 +1092,16 @@ impl App {
                                 self.core.state().lock().cancel_quit();
                                 self.update_focus(self.previous_focus);
                                 self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                                return Ok(false);
+                            }
+                            KeyCode::Char('C') if countdown_popup.should_start_connect() => {
+                                // Start the enable-remote-cache connect flow the
+                                // footer hint advertises. Keep the report open
+                                // (pinned) so the URL renders inside it when the
+                                // flow completes.
+                                countdown_popup.pin_open();
+                                self.core.state().lock().cancel_quit();
+                                self.start_cloud_connect_from_report();
                                 return Ok(false);
                             }
                             _ => {
@@ -1840,6 +1860,76 @@ impl App {
             .set_cloud_link(Some((label.clone(), url.clone())));
         // Dispatch to TasksList component for UI rendering
         self.dispatch_action(Action::UpdateCloudLink(label, url));
+    }
+
+    pub fn set_cloud_connection_status(&mut self, status: Option<CloudConnectionStatus>) {
+        // Store in state (for mode switching persistence)
+        self.core.state().lock().set_cloud_connection_status(status);
+        // Update the report popup directly (it gates the enable-remote-cache
+        // affordances on this)
+        if let Some(countdown_popup) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            countdown_popup.set_cloud_connection_status(status);
+        }
+    }
+
+    /// Deliver the Nx Cloud onboarding URL to the report popup. Also persisted
+    /// in TuiState so it survives mode switches (and reopens of the report).
+    pub fn set_connect_url(&mut self, url: String) {
+        self.core
+            .state()
+            .lock()
+            .set_cloud_connect_state(CloudConnectState::Ready(url.clone()));
+        if let Some(countdown_popup) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            countdown_popup.set_connect_state(CloudConnectState::Ready(url));
+        }
+    }
+
+    /// Surface a connect failure in the report popup (see `set_connect_url`).
+    pub fn set_connect_error(&mut self, message: String) {
+        self.core
+            .state()
+            .lock()
+            .set_cloud_connect_state(CloudConnectState::Error(message.clone()));
+        if let Some(countdown_popup) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            countdown_popup.set_connect_state(CloudConnectState::Error(message));
+        }
+    }
+
+    /// Kick off the connect flow from the report popup: mark it loading and
+    /// fire the JS callback, which runs the `nx connect` logic headlessly and
+    /// pushes the URL back via `set_connect_url`.
+    fn start_cloud_connect_from_report(&mut self) {
+        if let Some(countdown_popup) = self
+            .components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+        {
+            countdown_popup.set_connect_state(CloudConnectState::Loading);
+        }
+        let fired = {
+            let mut state = self.core.state().lock();
+            state.set_cloud_connect_state(CloudConnectState::Loading);
+            state.call_connect_to_cloud_callback()
+        };
+        if !fired {
+            // JS never registered a connect callback; fail instead of hanging
+            // in the loading state.
+            self.set_connect_error(
+                "The connect flow is not available in this session.".to_string(),
+            );
+        }
     }
 
     /// Dispatches an action to the action tx for other components to handle however they see fit
@@ -2753,7 +2843,14 @@ impl App {
                     .or_else(|| self.region_url_at(col, row))
                 {
                     self.pin_active_modal_open();
-                    self.open_url_or_hint(&href);
+                    // The report's "Enable remote cache" button is a link with
+                    // a sentinel href: start the connect flow instead of
+                    // opening a browser.
+                    if href == CONNECT_BUTTON_HREF {
+                        self.start_cloud_connect_from_report();
+                    } else {
+                        self.open_url_or_hint(&href);
+                    }
                     return;
                 }
                 // Only a click *outside* the modal dismisses it.
@@ -3871,6 +3968,18 @@ impl TuiApp for App {
     fn set_cloud_link(&mut self, label: String, url: String) {
         App::set_cloud_link(self, label, url);
     }
+
+    fn set_cloud_connection_status(&mut self, status: Option<CloudConnectionStatus>) {
+        App::set_cloud_connection_status(self, status);
+    }
+
+    fn set_connect_url(&mut self, url: String) {
+        App::set_connect_url(self, url);
+    }
+
+    fn set_connect_error(&mut self, message: String) {
+        App::set_connect_error(self, message);
+    }
 }
 
 #[cfg(test)]
@@ -3905,6 +4014,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
             None,
         )));
 
@@ -4452,5 +4562,104 @@ mod tests {
             switched_to_inline,
             "Enter on the report should switch to inline in one press"
         );
+    }
+
+    fn report_connect_state(app: &App) -> CloudConnectState {
+        app.components
+            .iter()
+            .find_map(|c| c.as_any().downcast_ref::<CountdownPopup>())
+            .map(|p| p.connect_state().clone())
+            .unwrap()
+    }
+
+    fn press_key(app: &mut App, code: KeyCode, modifiers: KeyModifiers) {
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.handle_event(tui::Event::Key(KeyEvent::new(code, modifiers)), &tx)
+            .unwrap();
+    }
+
+    /// `<shift>+c` on the focused report starts the connect flow: the report
+    /// stays open (pinned) in the loading state and the pending auto-exit is
+    /// cancelled.
+    #[test]
+    fn connect_shortcut_on_report_starts_loading_and_keeps_it_open() {
+        let mut app = create_test_app();
+        app.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        show_focused_report(&mut app);
+
+        press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+
+        assert!(
+            report_visible(&app),
+            "the report stays open to show the URL"
+        );
+        assert_eq!(report_connect_state(&app), CloudConnectState::Loading);
+        assert_eq!(
+            app.core.state().lock().get_cloud_connect_state(),
+            CloudConnectState::Loading,
+            "loading state is persisted for mode switches"
+        );
+        assert!(
+            !app.core.state().lock().should_quit(),
+            "starting the connect flow cancels the pending auto-exit"
+        );
+    }
+
+    /// When the workspace is already connected (or cloud is disabled), the
+    /// shortcut falls through to the generic any-key dismissal and starts
+    /// nothing.
+    #[test]
+    fn connect_shortcut_inert_when_connected_or_disabled() {
+        for status in [Some(CloudConnectionStatus::Connected), None] {
+            let mut app = create_test_app();
+            app.set_cloud_connection_status(status);
+            show_focused_report(&mut app);
+
+            press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+
+            assert_eq!(
+                report_connect_state(&app),
+                CloudConnectState::NotStarted,
+                "no connect attempt starts for status {status:?}"
+            );
+        }
+    }
+
+    /// The delivered URL lands in the report popup and is persisted in
+    /// TuiState, so an app rebuilt from the same state (mode switch)
+    /// re-hydrates it instead of losing it against the memoized JS promise.
+    #[test]
+    fn connect_url_reaches_report_and_survives_mode_switch_rebuild() {
+        let mut app = create_test_app();
+        app.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        show_focused_report(&mut app);
+        press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+
+        app.set_connect_url("https://cloud.nx.app/connect/abcd1234".to_string());
+        assert_eq!(
+            report_connect_state(&app),
+            CloudConnectState::Ready("https://cloud.nx.app/connect/abcd1234".to_string())
+        );
+
+        let shared_state = app.core.state().clone();
+        let rebuilt = App::with_state(shared_state, TuiMode::FullScreen).unwrap();
+        assert_eq!(
+            report_connect_state(&rebuilt),
+            CloudConnectState::Ready("https://cloud.nx.app/connect/abcd1234".to_string()),
+            "rebuilt app re-hydrates the connect result from TuiState"
+        );
+    }
+
+    /// A failed attempt allows a retry with the same shortcut.
+    #[test]
+    fn connect_error_allows_retry_from_report() {
+        let mut app = create_test_app();
+        app.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        show_focused_report(&mut app);
+        press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+        app.set_connect_error("network down".to_string());
+
+        press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+        assert_eq!(report_connect_state(&app), CloudConnectState::Loading);
     }
 }
