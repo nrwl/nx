@@ -2793,10 +2793,8 @@ impl TasksList {
     fn cloud_connection_status_text(status: CloudConnectionStatus, short: bool) -> &'static str {
         match (status, short) {
             (CloudConnectionStatus::Connected, _) => "Nx Cloud: connected",
-            (CloudConnectionStatus::NotConnected, false) => {
-                "Nx Cloud: not connected (press C to connect)"
-            }
-            (CloudConnectionStatus::NotConnected, true) => "Nx Cloud: not connected",
+            (CloudConnectionStatus::NotConnected, false) => "Not connected: <shift>+c",
+            (CloudConnectionStatus::NotConnected, true) => "Not connected",
         }
     }
 
@@ -2822,10 +2820,10 @@ impl TasksList {
                 CloudConnectionStatus::Connected => {
                     Line::from(Span::styled(full_text, label_style))
                 }
+                // Same "label: key" shape as the help hints on the right.
                 CloudConnectionStatus::NotConnected => Line::from(vec![
-                    Span::styled("Nx Cloud: not connected (press ", label_style),
-                    Span::styled("C", key_style),
-                    Span::styled(" to connect)", label_style),
+                    Span::styled("Not connected: ", label_style),
+                    Span::styled("<shift>+c", key_style),
                 ]),
             }
         } else {
@@ -4850,9 +4848,9 @@ mod tests {
     #[test]
     fn test_cloud_connection_status_narrow_uses_short_text() {
         let (mut tasks_list, _) = create_test_tasks_list();
-        // 60 wide: single-line mode with collapsed help; the full text with the
-        // connect hint doesn't fit, so the short variant renders.
-        let mut terminal = create_test_terminal(60, 15);
+        // 45 wide: single-line mode with collapsed help leaves a slot narrower
+        // than the full text with the key hint, so the short variant renders.
+        let mut terminal = create_test_terminal(45, 15);
 
         tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
 

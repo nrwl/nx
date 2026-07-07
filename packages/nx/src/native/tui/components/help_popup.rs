@@ -182,7 +182,7 @@ impl HelpPopup {
         // Only advertise the connect shortcut while the workspace is not
         // connected to Nx Cloud.
         if self.cloud_connect_available {
-            keybindings.push(("C", "Connect to Nx Cloud"));
+            keybindings.push(("<shift>+c", "Connect to Nx Cloud"));
         }
 
         keybindings.extend([

@@ -156,7 +156,7 @@ impl ConnectPopup {
                 NxLine::default(),
                 NxLine::from_spans(vec![
                     text("Press ", Style::default().fg(THEME.secondary_fg)),
-                    text("C", Style::default().fg(THEME.info)),
+                    text("<shift>+c", Style::default().fg(THEME.info)),
                     text(
                         " to try again, or run `nx connect` in your terminal.",
                         Style::default().fg(THEME.secondary_fg),
