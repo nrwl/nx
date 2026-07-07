@@ -308,6 +308,139 @@ describe('copyWorkspaceModules', () => {
     ).toBe(true);
   });
 
+  it('rewrites a copied module non-workspace link: dep from the module directory', async () => {
+    tempFs.createFilesSync({
+      // The local-path relocation is pnpm-gated on the workspace lockfile.
+      'pnpm-lock.yaml': '',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { 'vendored-thing': 'link:../../vendor/thing' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // The link: target (workspace-root vendor/thing) is re-relativized from the
+    // copied module dir workspace_modules/@scope/liba (3 segments up).
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      'vendored-thing': 'link:../../../vendor/thing',
+    });
+  });
+
+  it('moves a copied module non-workspace link: peer into dependencies', async () => {
+    tempFs.createFilesSync({
+      'pnpm-lock.yaml': '',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        peerDependencies: { 'vendored-thing': 'link:../../vendor/thing' },
+        peerDependenciesMeta: { 'vendored-thing': { optional: true } },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    const manifest = readCopiedManifest('@scope/liba');
+    expect(manifest.dependencies).toEqual({
+      'vendored-thing': 'link:../../../vendor/thing',
+    });
+    expect(manifest.peerDependencies).toBeUndefined();
+    expect(manifest.peerDependenciesMeta).toBeUndefined();
+  });
+
+  it('leaves a copied module non-workspace local-path dep untouched outside pnpm', async () => {
+    // An npm workspace: its prune path ships no local-path targets, so the
+    // manifest must not be relocated.
+    tempFs.createFilesSync({
+      'package-lock.json': '{}',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { 'vendored-thing': 'link:../../vendor/thing' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      'vendored-thing': 'link:../../vendor/thing',
+    });
+  });
+
+  it('leaves an absolute local-path dep in a copied module as-is with a warning', async () => {
+    const { logger } = require('@nx/devkit');
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    tempFs.createFilesSync({
+      'pnpm-lock.yaml': '',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { 'vendored-thing': 'link:/opt/vendor/thing' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // join() would silently rebase the absolute target under the module root;
+    // it must stay as-is and warn instead.
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      'vendored-thing': 'link:/opt/vendor/thing',
+    });
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+    warn.mockRestore();
+  });
+
   it('copies a workspace module the app declares only under optionalDependencies', async () => {
     tempFs.createFilesSync({
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({

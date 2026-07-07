@@ -27,7 +27,10 @@ import {
 import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
-import { normalizePrunedPatchPath } from '../../../utils/package-json';
+import {
+  normalizePrunedPatchPath,
+  relocatePrunedLocalPathSpec,
+} from '../../../utils/package-json';
 import {
   findLocalPathNode,
   findNodeMatchingVersion,
@@ -705,9 +708,21 @@ export function stringifyPnpmLockfile(
       for (const [depName, ref] of Object.entries(deps)) {
         // Sibling workspace modules resolve to their own directory package; npm
         // deps (resolved peers included) keep the ref from the source importer.
-        resolved[depName] = workspaceModules.has(depName)
-          ? `file:workspace_modules/${depName}`
-          : ref;
+        if (workspaceModules.has(depName)) {
+          resolved[depName] = `file:workspace_modules/${depName}`;
+        } else if (ref.startsWith('link:')) {
+          // link: refs resolve from the moved module's dir, so relocate them
+          // (file: refs resolve from the lockfile dir and stay; an unshippable
+          // target keeps its ref, matching the copied manifest).
+          const relocation = relocatePrunedLocalPathSpec(
+            ref,
+            importerPath,
+            `workspace_modules/${packageName}`
+          );
+          resolved[depName] = relocation?.spec ?? ref;
+        } else {
+          resolved[depName] = ref;
+        }
       }
       snapshot[depType] = resolved;
     }
@@ -1135,15 +1150,23 @@ function mapRootSnapshot(
           if (!node && isLocalPathSpecifier(version)) {
             node = findLocalPathNode(graph, packageName);
           }
+          // peer dependencies are mapped to dependencies
+          const section =
+            depType === 'peerDependencies' ? 'dependencies' : depType;
           if (!node) {
+            if (version.startsWith('link:')) {
+              // A link: needs no packages: entry; emit the manifest value (made
+              // workspace-root-relative by the pre-lockfile rewrite) directly.
+              snapshot.specifiers[packageName] = version;
+              snapshot[section] = snapshot[section] || {};
+              snapshot[section][packageName] = version;
+              return;
+            }
             throw new Error(
               `Could not find external node for package ${packageName}@${version}.`
             );
           }
           snapshot.specifiers[packageName] = version;
-          // peer dependencies are mapped to dependencies
-          let section =
-            depType === 'peerDependencies' ? 'dependencies' : depType;
           snapshot[section] = snapshot[section] || {};
           snapshot[section][packageName] = findOriginalKeys(
             packages,

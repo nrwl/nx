@@ -24,7 +24,10 @@ export {
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 export { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+export { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 export {
   emitPrunedPnpmInstallAssets,
+  rewritePrunedLocalPathSpecifiers,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';

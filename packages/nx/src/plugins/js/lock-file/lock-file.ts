@@ -287,6 +287,11 @@ export function getLockFilePath(packageManager: PackageManager): string {
 /**
  * Create lock file based on the root level lock file and (pruned) package.json
  *
+ * On a pruning error the root lockfile is returned as a fail-open fallback;
+ * `options.onPruneFallback` fires just before that so callers can skip work
+ * that only makes sense for an actually pruned lockfile (e.g. link-closure
+ * validation and local-path artifact shipping).
+ *
  * @param packageJson
  * @param isProduction
  * @param packageManager
@@ -295,18 +300,30 @@ export function getLockFilePath(packageManager: PackageManager): string {
 export function createLockFile(
   packageJson: PackageJson,
   graph: ProjectGraph,
-  packageManager: PackageManager = detectPackageManager(workspaceRoot)
+  packageManager: PackageManager = detectPackageManager(workspaceRoot),
+  options?: { onPruneFallback?: (error: Error) => void }
 ): string {
   const normalizedPackageJson = normalizePackageJson(packageJson);
   const content = readFileSync(getLockFilePath(packageManager), 'utf8');
 
   try {
+    if (packageManager === 'bun') {
+      output.log({
+        title:
+          "Unable to create bun lock files. Run bun install it's just as quick",
+      });
+      return '';
+    }
+    const prunedGraph = pruneProjectGraph(
+      graph,
+      packageJson,
+      workspaceRoot,
+      packageManager
+    );
     if (packageManager === 'yarn') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyYarnLockfile(prunedGraph, content, normalizedPackageJson);
     }
     if (packageManager === 'pnpm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyPnpmLockfile(
         prunedGraph,
         content,
@@ -315,17 +332,10 @@ export function createLockFile(
       );
     }
     if (packageManager === 'npm') {
-      const prunedGraph = pruneProjectGraph(graph, packageJson);
       return stringifyNpmLockfile(prunedGraph, content, normalizedPackageJson);
     }
-    if (packageManager === 'bun') {
-      output.log({
-        title:
-          "Unable to create bun lock files. Run bun install it's just as quick",
-      });
-      return '';
-    }
   } catch (e) {
+    options?.onPruneFallback?.(e);
     if (!isPostInstallProcess()) {
       const additionalInfo = [
         'To prevent the build from breaking we are returning the root lock file.',

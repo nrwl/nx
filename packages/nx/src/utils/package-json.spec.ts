@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from 'fs';
 import { tmpdir } from 'os';
@@ -23,15 +24,18 @@ import {
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmPackageJsonBuildSettings,
   getPrunedPnpmPatchArtifacts,
-  getPrunedPnpmTarballArtifacts,
+  getPrunedPnpmLocalPathArtifacts,
   installPackageToTmp,
   normalizePrunedPatchPath,
   PackageJson,
   readModulePackageJson,
   readNxMigrateConfig,
   readTargetsFromPackageJson,
+  rewritePrunedLocalPathSpecifiers,
+  validatePrunedLinkClosure,
   writePrunedPnpmInstallSettings,
 } from './package-json';
+import * as catalog from './catalog';
 import * as pacakgeManager from './package-manager';
 import { getPackageManagerCommand } from './package-manager';
 import { workspaceRoot } from './workspace-root';
@@ -2099,7 +2103,7 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
   });
 });
 
-describe('getPrunedPnpmTarballArtifacts', () => {
+describe('getPrunedPnpmLocalPathArtifacts', () => {
   let tempDir: string;
 
   beforeEach(() => {
@@ -2127,19 +2131,19 @@ describe('getPrunedPnpmTarballArtifacts', () => {
     const bytes = Buffer.from([0, 1, 2, 3]);
     writeFileSync(join(tempDir, 'vendor/vendored-lib-1.0.0.tgz'), bytes);
 
-    const artifacts = getPrunedPnpmTarballArtifacts(
+    const artifacts = getPrunedPnpmLocalPathArtifacts(
       tempDir,
       lockfileWithTarball('file:vendor/vendored-lib-1.0.0.tgz')
     );
 
     expect(artifacts).toHaveLength(1);
     expect(artifacts[0].path).toBe('vendor/vendored-lib-1.0.0.tgz');
-    expect(artifacts[0].content.equals(bytes)).toBe(true);
+    expect(readFileSync(artifacts[0].sourcePath).equals(bytes)).toBe(true);
   });
 
   it('does not ship an https tarball', () => {
     expect(
-      getPrunedPnpmTarballArtifacts(
+      getPrunedPnpmLocalPathArtifacts(
         tempDir,
         lockfileWithTarball('https://example.com/vendored-lib-1.0.0.tgz')
       )
@@ -2157,14 +2161,14 @@ describe('getPrunedPnpmTarballArtifacts', () => {
       '',
     ].join('\n');
 
-    expect(getPrunedPnpmTarballArtifacts(tempDir, lockfile)).toEqual([]);
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
   });
 
   it('warns and skips a tarball resolved outside the workspace root', () => {
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
 
     expect(
-      getPrunedPnpmTarballArtifacts(
+      getPrunedPnpmLocalPathArtifacts(
         tempDir,
         lockfileWithTarball('file:../external/vendored-lib-1.0.0.tgz')
       )
@@ -2178,7 +2182,7 @@ describe('getPrunedPnpmTarballArtifacts', () => {
     const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
 
     expect(
-      getPrunedPnpmTarballArtifacts(
+      getPrunedPnpmLocalPathArtifacts(
         tempDir,
         lockfileWithTarball('file:vendor/missing.tgz')
       )
@@ -2186,8 +2190,605 @@ describe('getPrunedPnpmTarballArtifacts', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('was not found'));
   });
 
+  it('ships a file: directory tree and filters node_modules', () => {
+    mkdirSync(join(tempDir, 'vendor/dir/nested'), { recursive: true });
+    mkdirSync(join(tempDir, 'vendor/dir/node_modules'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/dir/index.js'), 'module.exports={}');
+    writeFileSync(join(tempDir, 'vendor/dir/nested/util.js'), 'exports.x=1');
+    writeFileSync(join(tempDir, 'vendor/dir/node_modules/junk.js'), 'junk');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  vendored-dir@file:vendor/dir:',
+      '    resolution: {directory: vendor/dir, type: directory}',
+      '',
+    ].join('\n');
+
+    const paths = getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)
+      .map((a) => a.path)
+      .sort();
+    expect(paths).toEqual(['vendor/dir/index.js', 'vendor/dir/nested/util.js']);
+  });
+
+  it('ships a root importer link: target tree', () => {
+    mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/linked/index.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:vendor/linked',
+      '        version: link:vendor/linked',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([
+      {
+        path: 'vendor/linked/index.js',
+        sourcePath: join(tempDir, 'vendor/linked/index.js'),
+      },
+    ]);
+  });
+
+  it('ships a copied module link: snapshot target', () => {
+    mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/linked/index.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  mylib@file:workspace_modules/mylib:',
+      '    resolution: {directory: workspace_modules/mylib, type: directory}',
+      '',
+      'snapshots:',
+      '',
+      '  mylib@file:workspace_modules/mylib:',
+      '    dependencies:',
+      '      linked-lib: link:../../vendor/linked',
+      '',
+    ].join('\n');
+
+    expect(
+      getPrunedPnpmLocalPathArtifacts(tempDir, lockfile).map((a) => a.path)
+    ).toEqual(['vendor/linked/index.js']);
+  });
+
+  it('does not ship a link: that points into workspace_modules', () => {
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      my-workspace-lib:',
+      '        specifier: link:workspace_modules/my-workspace-lib',
+      '        version: link:workspace_modules/my-workspace-lib',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+  });
+
+  it('dedups a target referenced by both the importer and a copied module', () => {
+    mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/linked/index.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:vendor/linked',
+      '        version: link:vendor/linked',
+      '',
+      'packages:',
+      '',
+      '  mylib@file:workspace_modules/mylib:',
+      '    resolution: {directory: workspace_modules/mylib, type: directory}',
+      '',
+      'snapshots:',
+      '',
+      '  mylib@file:workspace_modules/mylib:',
+      '    dependencies:',
+      '      linked-lib: link:../../vendor/linked',
+      '',
+    ].join('\n');
+
+    expect(
+      getPrunedPnpmLocalPathArtifacts(tempDir, lockfile).map((a) => a.path)
+    ).toEqual(['vendor/linked/index.js']);
+  });
+
+  it('warns and skips a link: target resolved outside the workspace root', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:../external/linked',
+      '        version: link:../external/linked',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('warns and skips a link: target missing on disk', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:vendor/ghost',
+      '        version: link:vendor/ghost',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('was not found'));
+  });
+
+  it('warns and skips an absolute link: target instead of rebasing it under the workspace root', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    // A same-named directory inside the workspace must not be shipped in its place.
+    mkdirSync(join(tempDir, 'opt/linked'), { recursive: true });
+    writeFileSync(join(tempDir, 'opt/linked/index.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:/opt/linked',
+      '        version: link:/opt/linked',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('warns and skips a link: target that resolves to the workspace root itself', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    writeFileSync(join(tempDir, 'file-at-root.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      root-pkg:',
+      '        specifier: link:.',
+      '        version: link:.',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('workspace root itself')
+    );
+  });
+
+  it('ships a link: target referenced from a vendored file: directory snapshot', () => {
+    mkdirSync(join(tempDir, 'vendor/dir'), { recursive: true });
+    mkdirSync(join(tempDir, 'vendor/helper'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/dir/index.js'), 'module.exports={}');
+    writeFileSync(join(tempDir, 'vendor/helper/index.js'), 'exports.h=1');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  vendored-dir@file:vendor/dir:',
+      '    resolution: {directory: vendor/dir, type: directory}',
+      '',
+      'snapshots:',
+      '',
+      '  vendored-dir@file:vendor/dir:',
+      '    dependencies:',
+      '      helper: link:../helper',
+      '',
+    ].join('\n');
+
+    const paths = getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)
+      .map((a) => a.path)
+      .sort();
+    expect(paths).toEqual(['vendor/dir/index.js', 'vendor/helper/index.js']);
+  });
+
+  it('warns about a symbolic link inside a shipped directory instead of silently dropping it', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/linked/index.js'), 'module.exports={}');
+    symlinkSync(
+      join(tempDir, 'vendor/linked/index.js'),
+      join(tempDir, 'vendor/linked/alias.js')
+    );
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      '        specifier: link:vendor/linked',
+      '        version: link:vendor/linked',
+      '',
+    ].join('\n');
+
+    expect(
+      getPrunedPnpmLocalPathArtifacts(tempDir, lockfile).map((a) => a.path)
+    ).toEqual(['vendor/linked/index.js']);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('symbolic link'));
+  });
+
   it('returns [] when there is no pruned lockfile content', () => {
-    expect(getPrunedPnpmTarballArtifacts(tempDir)).toEqual([]);
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir)).toEqual([]);
+  });
+});
+
+describe('rewritePrunedLocalPathSpecifiers', () => {
+  const WS = '/ws';
+
+  beforeEach(() => {
+    // Isolate from any real catalog config; the catalog test overrides this.
+    jest.spyOn(catalog, 'getCatalogManager').mockReturnValue(null);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('rewrites a file: directory specifier to be workspace-root-relative', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { vendored: 'file:./vendor/pkg' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.vendored).toBe('file:apps/api/vendor/pkg');
+  });
+
+  it('rewrites a link: specifier to be workspace-root-relative', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { shared: 'link:../shared' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.shared).toBe('link:apps/shared');
+  });
+
+  it('resolves the path from a nested project root', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { lib: 'link:../../lib' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      'apps/nested/api',
+      WS,
+      new Set()
+    );
+
+    expect(packageJson.dependencies.lib).toBe('link:apps/lib');
+  });
+
+  it('moves a file:/link: peer dependency into dependencies and drops its meta', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      peerDependencies: { shared: 'link:../shared' },
+      peerDependenciesMeta: { shared: { optional: true } },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies).toEqual({ shared: 'link:apps/shared' });
+    expect(packageJson.peerDependencies.shared).toBeUndefined();
+    expect(packageJson.peerDependenciesMeta.shared).toBeUndefined();
+  });
+
+  it('leaves a target that escapes the workspace root as-is with a warning', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { external: 'file:../../../outside/pkg' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.external).toBe('file:../../../outside/pkg');
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('leaves an absolute local-path specifier as-is with a warning', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { vendored: 'link:/opt/thing' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.vendored).toBe('link:/opt/thing');
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('leaves a link: to the workspace root itself as-is with a warning', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { 'root-pkg': 'link:../..' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies['root-pkg']).toBe('link:../..');
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('workspace root itself')
+    );
+  });
+
+  it('still moves an unshippable local-path peer into dependencies', () => {
+    // pnpm rejects any file:/link: spec under peerDependencies, so even a
+    // warned-about target must move or the whole install fails.
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      peerDependencies: { external: 'link:../../../outside/shared' },
+      peerDependenciesMeta: { external: { optional: true } },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies).toEqual({
+      external: 'link:../../../outside/shared',
+    });
+    expect(packageJson.peerDependencies.external).toBeUndefined();
+    expect(packageJson.peerDependenciesMeta.external).toBeUndefined();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('skips a workspace package declared via link:', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { '@scope/lib': 'link:../../libs/lib' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      'apps/api',
+      WS,
+      new Set(['@scope/lib'])
+    );
+
+    expect(packageJson.dependencies['@scope/lib']).toBe('link:../../libs/lib');
+  });
+
+  it('leaves a registry specifier untouched', () => {
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.lodash).toBe('^4.17.21');
+  });
+
+  it('resolves a catalog: reference before rewriting the local path', () => {
+    jest.spyOn(catalog, 'getCatalogManager').mockReturnValue({
+      isCatalogReference: (spec: string) => spec === 'catalog:',
+      resolveCatalogReference: () => 'link:../shared',
+    } as any);
+    const packageJson: PackageJson = {
+      name: 'api',
+      version: '0.0.1',
+      dependencies: { shared: 'catalog:' },
+    };
+
+    rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
+
+    expect(packageJson.dependencies.shared).toBe('link:apps/shared');
+  });
+});
+
+describe('validatePrunedLinkClosure', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-link-closure-'));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  // A pruned lockfile whose root importer links a vendored package.
+  const lockfileLinking = (linkPath: string) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      linked-lib:',
+      `        specifier: link:${linkPath}`,
+      `        version: link:${linkPath}`,
+      '',
+    ].join('\n');
+
+  function writeLinkedManifest(manifest: Record<string, unknown>) {
+    mkdirSync(join(tempDir, 'vendor/linked'), { recursive: true });
+    writeFileSync(
+      join(tempDir, 'vendor/linked/package.json'),
+      JSON.stringify({ name: 'linked-lib', version: '1.0.0', ...manifest })
+    );
+  }
+
+  it('passes when the linked package required deps are app direct dependencies', () => {
+    writeLinkedManifest({ dependencies: { lodash: '^4.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).not.toThrow();
+  });
+
+  it('passes when the required dep is an app optionalDependency', () => {
+    writeLinkedManifest({ dependencies: { fsevents: '^2.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      optionalDependencies: { fsevents: '^2.3.0' },
+    };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).not.toThrow();
+  });
+
+  it('passes when the required dep is an app peerDependency', () => {
+    // The pruned lockfile's root importer folds app peers into dependencies,
+    // so the deploy install provides them.
+    writeLinkedManifest({ dependencies: { react: '^18.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      peerDependencies: { react: '^18.0.0' },
+    };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).not.toThrow();
+  });
+
+  it('fails when a linked package requires a dep absent from the app direct deps', () => {
+    writeLinkedManifest({ dependencies: { 'missing-dep': '^1.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).toThrow(
+      /linked package linked-lib requires missing-dep.*Convert linked-lib to a file: dependency.*add missing-dep to app/s
+    );
+  });
+
+  it('warns (not fails) when the required dep is only an app devDependency', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    writeLinkedManifest({ dependencies: { typescript: '^5.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      devDependencies: { typescript: '^5.4.0' },
+    };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('only a devDependency')
+    );
+  });
+
+  it('warns (not fails) on a link target peer dependency not visible to the app', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+    writeLinkedManifest({ peerDependencies: { react: '^18.0.0' } });
+    const app: PackageJson = { name: 'app', version: '0.0.1' };
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('may need react')
+    );
+  });
+
+  it('does nothing when the pruned lockfile has no link: targets', () => {
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  lodash@4.17.21:',
+      '    resolution: {integrity: sha512-abc}',
+      '',
+    ].join('\n');
+
+    expect(() =>
+      validatePrunedLinkClosure(app, tempDir, lockfile)
+    ).not.toThrow();
   });
 });
 

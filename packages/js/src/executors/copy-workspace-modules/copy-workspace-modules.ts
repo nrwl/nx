@@ -1,4 +1,5 @@
 import {
+  detectPackageManager,
   type ExecutorContext,
   logger,
   parseTargetString,
@@ -7,6 +8,10 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getCatalogManager } from '@nx/devkit/internal';
+import {
+  relocatePrunedLocalPathSpec,
+  warnUnshippableLocalPathSpec,
+} from 'nx/src/utils/package-json';
 import { interpolate } from 'nx/src/tasks-runner/utils';
 import { type CopyWorkspaceModulesOptions } from './schema';
 import {
@@ -16,7 +21,7 @@ import {
   readFileSync,
   writeFileSync,
 } from 'node:fs';
-import { dirname, join, relative, sep } from 'path';
+import { dirname, isAbsolute, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
@@ -116,6 +121,9 @@ function handleWorkspaceModules(
 
   const workspaceModules = getWorkspacePackagesFromGraph(projectGraph);
   const catalogManager = getCatalogManager(workspaceRoot);
+  // Only the pnpm prune path ships non-workspace local-path targets, so only
+  // pnpm manifests get their file:/link: specs relocated.
+  const isPnpmWorkspace = detectPackageManager(workspaceRoot) === 'pnpm';
   const processedModules = new Set<string>();
   const workspaceModulesDir = join(outputDirectory, 'workspace_modules');
 
@@ -147,6 +155,12 @@ function handleWorkspaceModules(
 
     const workspaceModuleProject = workspaceModules.get(pkgName);
     const workspaceModuleRoot = workspaceModuleProject.data.root;
+    // data.root is workspace-root-relative in the graph, but may arrive
+    // absolute; normalize so the local-path relocation math is in
+    // workspace-root space.
+    const moduleWsRelativeRoot = isAbsolute(workspaceModuleRoot)
+      ? relative(workspaceRoot, workspaceModuleRoot).split(sep).join('/')
+      : workspaceModuleRoot;
     const newWorkspaceModulePath = join(workspaceModulesDir, pkgName);
 
     // Copy the module
@@ -186,21 +200,54 @@ function handleWorkspaceModules(
         continue;
       }
       for (const depName of Object.keys(deps)) {
-        if (!workspaceModules.has(depName)) {
+        if (workspaceModules.has(depName)) {
+          const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
+          if (section === 'peerDependencies') {
+            (copiedPackageJson.dependencies ??= {})[depName] = fileSpec;
+            delete deps[depName];
+            if (copiedPackageJson.peerDependenciesMeta) {
+              delete copiedPackageJson.peerDependenciesMeta[depName];
+            }
+          } else {
+            deps[depName] = fileSpec;
+          }
+          packageJsonModified = true;
+          processModule(depName);
           continue;
         }
-        const fileSpec = `file:${calculateRelativePath(pkgName, depName)}`;
+        // A non-workspace file:/link: dep must resolve from the copied module's
+        // new location, so relocate it (pnpm-only; see isPnpmWorkspace).
+        if (!isPnpmWorkspace) {
+          continue;
+        }
+        const spec = deps[depName];
+        const relocation = relocatePrunedLocalPathSpec(
+          spec,
+          moduleWsRelativeRoot,
+          `workspace_modules/${pkgName}`
+        );
+        if (!relocation) {
+          continue;
+        }
+        if (relocation.reason) {
+          warnUnshippableLocalPathSpec(
+            `"${spec}" in ${pkgName}`,
+            relocation.reason
+          );
+        }
         if (section === 'peerDependencies') {
-          (copiedPackageJson.dependencies ??= {})[depName] = fileSpec;
+          // pnpm rejects a file:/link: spec under peerDependencies even when the
+          // target cannot ship, so always move it into dependencies.
+          (copiedPackageJson.dependencies ??= {})[depName] = relocation.spec;
           delete deps[depName];
           if (copiedPackageJson.peerDependenciesMeta) {
             delete copiedPackageJson.peerDependenciesMeta[depName];
           }
-        } else {
-          deps[depName] = fileSpec;
+          packageJsonModified = true;
+        } else if (!relocation.reason) {
+          deps[depName] = relocation.spec;
+          packageJsonModified = true;
         }
-        packageJsonModified = true;
-        processModule(depName);
       }
     }
     if (

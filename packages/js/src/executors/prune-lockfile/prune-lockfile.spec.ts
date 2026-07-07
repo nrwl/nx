@@ -735,3 +735,128 @@ describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
     expect(existsSync(outputWorkspaceYaml())).toBe(false);
   });
 });
+
+describe('pruneLockfileExecutor - link: targets and the root lockfile fallback', () => {
+  const mockGetWorkspacePackages =
+    getWorkspacePackagesFromGraph as jest.MockedFunction<
+      typeof getWorkspacePackagesFromGraph
+    >;
+  let tempFs: TempFs;
+
+  beforeEach(() => {
+    tempFs = new TempFs('prune-lockfile');
+    mockWorkspaceRoot = tempFs.tempDir;
+    mockGetWorkspacePackages.mockReturnValue(new Map());
+  });
+
+  afterEach(() => {
+    tempFs.cleanup();
+    jest.clearAllMocks();
+  });
+
+  function setupPnpmWorkspace(linkedManifest: PackageJson) {
+    tempFs.createFilesSync({
+      'package.json': JSON.stringify({
+        name: 'root',
+        version: '0.0.0',
+        packageManager: 'pnpm@11.2.2',
+      }),
+      'pnpm-lock.yaml': `lockfileVersion: '9.0'\n`,
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        // Project-relative; the executor rewrites it to link:vendor/linked.
+        dependencies: { 'linked-lib': 'link:../../vendor/linked' },
+      }),
+      'vendor/linked/package.json': JSON.stringify(linkedManifest),
+      'vendor/linked/index.js': 'module.exports = {};',
+    });
+    tempFs.createDirSync('dist/app');
+  }
+
+  async function runExecutor() {
+    return pruneLockfileExecutor(
+      {
+        buildTarget: 'app:build',
+        outputPath: join(tempFs.tempDir, 'dist/app'),
+      },
+      {
+        root: tempFs.tempDir,
+        cwd: tempFs.tempDir,
+        isVerbose: false,
+        projectGraph: {
+          nodes: {
+            app: { name: 'app', type: 'app', data: { root: PROJECT_ROOT } },
+          },
+          dependencies: {},
+          externalNodes: {},
+        },
+      } as unknown as ExecutorContext
+    );
+  }
+
+  const lockfileLinkingVendor = [
+    "lockfileVersion: '9.0'",
+    '',
+    'importers:',
+    '',
+    '  .:',
+    '    dependencies:',
+    '      linked-lib:',
+    '        specifier: link:vendor/linked',
+    '        version: link:vendor/linked',
+    '',
+  ].join('\n');
+
+  it('ships the link: target tree of an actually pruned lockfile', async () => {
+    setupPnpmWorkspace({ name: 'linked-lib', version: '1.0.0' });
+    (createLockFile as jest.Mock).mockReturnValueOnce(lockfileLinkingVendor);
+
+    await runExecutor();
+
+    expect(
+      existsSync(join(tempFs.tempDir, 'dist/app/vendor/linked/index.js'))
+    ).toBe(true);
+  });
+
+  it('fails the build when a linked package requires a dep the app does not install', async () => {
+    setupPnpmWorkspace({
+      name: 'linked-lib',
+      version: '1.0.0',
+      dependencies: { 'missing-dep': '^1.0.0' },
+    });
+    (createLockFile as jest.Mock).mockReturnValueOnce(lockfileLinkingVendor);
+
+    await expect(runExecutor()).rejects.toThrow(
+      /linked package linked-lib requires missing-dep/
+    );
+  });
+
+  it('skips link-closure validation and local-path shipping on the root lockfile fallback', async () => {
+    // The fallback content describes the whole workspace, not the pruned app:
+    // validating it would fail the designed fail-open path, and shipping its
+    // link: targets would copy unrelated source trees into the output.
+    setupPnpmWorkspace({
+      name: 'linked-lib',
+      version: '1.0.0',
+      dependencies: { 'missing-dep': '^1.0.0' },
+    });
+    (createLockFile as jest.Mock).mockImplementationOnce(
+      (_packageJson, _graph, _packageManager, options) => {
+        options?.onPruneFallback?.(new Error('pruning failed'));
+        return lockfileLinkingVendor;
+      }
+    );
+
+    await expect(runExecutor()).resolves.toEqual({ success: true });
+
+    // The fallback lockfile is still written...
+    expect(
+      readFileSync(join(tempFs.tempDir, 'dist/app/package-lock.json'), 'utf-8')
+    ).toBe(lockfileLinkingVendor);
+    // ...but its link: target tree is not shipped.
+    expect(
+      existsSync(join(tempFs.tempDir, 'dist/app/vendor/linked/index.js'))
+    ).toBe(false);
+  });
+});

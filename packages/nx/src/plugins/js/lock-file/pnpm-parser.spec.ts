@@ -10,6 +10,7 @@ import {
 } from '../../../config/project-graph';
 import { vol } from 'memfs';
 import { pruneProjectGraph } from './project-graph-pruning';
+import { getPrunedPnpmLocalPathArtifacts } from '../../../utils/package-json';
 import {
   ProjectGraphBuilder,
   RawProjectGraphDependency,
@@ -17,6 +18,16 @@ import {
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 
 jest.mock('node:fs', () => {
+  const memFs = require('memfs').fs;
+  return {
+    ...memFs,
+    existsSync: (p) => (p.endsWith('.node') ? true : memFs.existsSync(p)),
+  };
+});
+
+// The artifact collector (utils/package-json) reads through 'fs', so mirror the
+// mock there for the stringify -> collect round-trip test.
+jest.mock('fs', () => {
   const memFs = require('memfs').fs;
   return {
     ...memFs,
@@ -4001,6 +4012,292 @@ snapshots:
       );
       // The normal npm dependency is unaffected.
       expect(result).toContain('lodash@4.17.21:');
+    });
+
+    it('emits a nodeless link: dependency as a direct root importer entry', () => {
+      // A `link:` to a non-workspace directory has no lockfile packages: entry
+      // and no external node, so the pruned lockfile must carry it as a direct
+      // root importer entry rather than throwing "could not find external node".
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'vendored-lib': 'link:vendor/vendored-lib',
+        },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:lodash': {
+          type: 'npm',
+          name: 'npm:lodash',
+          data: {
+            version: '4.17.21',
+            packageName: 'lodash',
+            hash: 'sha512-lodash',
+          },
+        },
+      } as any);
+
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      // The link: dep is a direct importer entry (specifier + version)...
+      expect(result).toMatch(
+        /vendored-lib:\s+specifier: link:vendor\/vendored-lib\s+version: link:vendor\/vendored-lib/
+      );
+      // ...and never gets a packages:/snapshots: entry of its own.
+      expect(result).not.toMatch(/vendored-lib@/);
+    });
+
+    it('rewrites a copied module link: snapshot ref relative to workspace_modules', () => {
+      // A copied workspace module (@myorg/lib-a) links a vendored package. In the
+      // deploy the module lives at workspace_modules/@myorg/lib-a and the target
+      // ships at its workspace-root-relative path, so the snapshot ref must be
+      // re-relativized from the copied module's directory.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      vendored-thing:
+        specifier: link:../../vendor/thing
+        version: link:../../vendor/thing
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      // The copied module's link: ref is re-relativized from
+      // workspace_modules/@myorg/lib-a (3 segments up) to the ws-root target.
+      expect(result).toMatch(
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:\.\.\/\.\.\/\.\.\/vendor\/thing/
+      );
+    });
+
+    it('throws on a nodeless file: dependency instead of emitting a broken importer entry', () => {
+      // Only a link: is valid importer-only; a file: importer entry without a
+      // packages: entry fails pnpm's frozen install with a broken lockfile.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'vendored-lib': 'file:vendor/vendored-lib',
+        },
+      };
+
+      const graph = makeGraph([], {}, {
+        'npm:lodash': {
+          type: 'npm',
+          name: 'npm:lodash',
+          data: {
+            version: '4.17.21',
+            packageName: 'lodash',
+            hash: 'sha512-lodash',
+          },
+        },
+      } as any);
+
+      expect(() =>
+        stringifyPnpmLockfile(graph, lockFile, packageJson, '/root')
+      ).toThrow(
+        'Could not find external node for package vendored-lib@file:vendor/vendored-lib'
+      );
+    });
+
+    it('keeps a copied module link: ref that escapes the workspace root unrewritten', () => {
+      // copy-workspace-modules leaves the copied manifest's spec untouched for
+      // an unshippable target, so the lockfile ref must match it or a frozen
+      // install trips on the mismatch.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      vendored-thing:
+        specifier: link:../../../outside
+        version: link:../../../outside
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(result).toMatch(
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:\.\.\/\.\.\/\.\.\/outside/
+      );
+    });
+
+    it('round-trips: the artifact collector finds the link target the stringifier emits', () => {
+      // Feeds the stringifier's actual output into the artifact collector so
+      // key-format or shape drift between the writer and the reader fails here
+      // instead of silently shipping nothing.
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies: {}`,
+          'vendor/thing/package.json':
+            '{"name":"vendored-thing","version":"1.0.0"}',
+          'vendor/thing/index.js': 'module.exports = {};',
+        },
+        '/root'
+      );
+
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/lib-a':
+        specifier: workspace:*
+        version: link:libs/lib-a
+
+  libs/lib-a:
+    dependencies:
+      vendored-thing:
+        specifier: link:../../vendor/thing
+        version: link:../../vendor/thing
+
+packages: {}
+
+snapshots: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { '@myorg/lib-a': 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [
+          {
+            projectName: '@myorg/lib-a',
+            packageName: '@myorg/lib-a',
+            root: 'libs/lib-a',
+          },
+        ],
+        {},
+        {}
+      );
+
+      const result = stringifyPnpmLockfile(
+        graph,
+        lockFile,
+        packageJson,
+        '/root'
+      );
+
+      expect(
+        getPrunedPnpmLocalPathArtifacts('/root', result)
+          .map((a) => a.path)
+          .sort()
+      ).toEqual(['vendor/thing/index.js', 'vendor/thing/package.json']);
     });
   });
 

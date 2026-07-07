@@ -1,7 +1,17 @@
 import { exec, execSync } from 'child_process';
 import { promisify } from 'util';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
-import { dirname, isAbsolute, join, resolve } from 'path';
+import {
+  copyFileSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'fs';
+import { dirname, isAbsolute, join, relative, resolve } from 'path';
+import { normalizePath } from './path';
 
 const execAsync = promisify(exec);
 import { dirSync } from 'tmp';
@@ -1254,77 +1264,499 @@ export function getPrunedPnpmPatchArtifacts(
   };
 }
 
+const WORKSPACE_MODULES_DIR = 'workspace_modules';
+
+const LOCKFILE_DEP_SECTIONS = [
+  'dependencies',
+  'optionalDependencies',
+  'devDependencies',
+] as const;
+
+// A pruned lockfile dep ref is a plain ref string (pre-v9 importers, all package
+// snapshots) or an inline `{ specifier, version }` object (v9 importers).
+type PrunedLockfileDepRef = string | { version?: string };
+type PrunedLockfileSnapshot = {
+  resolution?: { tarball?: string; directory?: string };
+  dependencies?: Record<string, PrunedLockfileDepRef>;
+  optionalDependencies?: Record<string, PrunedLockfileDepRef>;
+  devDependencies?: Record<string, PrunedLockfileDepRef>;
+};
+
+/** True when a workspace-root-relative path escapes the output root. */
+function localPathEscapesOutput(wsRelativePath: string): boolean {
+  // An absolute path counts as escaping: join(workspaceRoot, target) would
+  // silently rebase it under the workspace root instead of resolving it.
+  return (
+    isAbsolute(wsRelativePath) || wsRelativePath.split(/[\\/]/).includes('..')
+  );
+}
+
+/** True when a resolution `directory` points at a copied workspace module. */
+function isUnderWorkspaceModules(directory: string): boolean {
+  return (
+    directory === WORKSPACE_MODULES_DIR ||
+    directory.startsWith(`${WORKSPACE_MODULES_DIR}/`) ||
+    directory.startsWith(`${WORKSPACE_MODULES_DIR}\\`)
+  );
+}
+
 /**
- * The `file:` tarball packages a standalone pruned output must ship so
- * `pnpm install` can resolve them: each vendored `.tgz` the pruned lockfile
- * references (path relative to the output root, plus its bytes). pnpm records a
- * file: tarball's path relative to the workspace root, so a tarball vendored
- * inside the workspace already has a clean output-root-relative subpath and
- * ships as-is, no lockfile or manifest rewrite. A tarball resolved outside the
- * workspace root cannot be placed under the output; it is skipped with a warning
- * (such a source is not reproducibly deployable). Local `file:` directory
- * packages (copied workspace modules) carry a `directory` resolution, not a
- * `tarball`, so they are handled by copy-workspace-modules and skipped here.
- * Returns the file bytes so the file-writing prune paths and the bundler asset
- * pipelines can each ship them their own way.
+ * A snapshot's `link:` target is recorded relative to the package's directory;
+ * the root importer's `link:` targets are workspace-root-relative (baseDir '').
+ * Resolve either to a workspace-root-relative posix path. An absolute target is
+ * returned as-is (join would rebase it) so the escape check can reject it.
  */
-export function getPrunedPnpmTarballArtifacts(
+function resolveLinkTarget(baseDir: string, linkRef: string): string {
+  const refPath = linkRef.slice('link:'.length);
+  return normalizePath(isAbsolute(refPath) ? refPath : join(baseDir, refPath));
+}
+
+type ParsedPrunedLockfile = {
+  packages?: Record<string, PrunedLockfileSnapshot>;
+  snapshots?: Record<string, PrunedLockfileSnapshot>;
+  importers?: Record<string, PrunedLockfileSnapshot>;
+};
+
+function parsePrunedLockfile(content: string): ParsedPrunedLockfile | null {
+  try {
+    const { load } = require('@zkochan/js-yaml');
+    return load(content) ?? {};
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The non-workspace `link:` target directories the pruned lockfile references
+ * (root importer versions and directory-package snapshot refs, i.e. copied
+ * workspace modules and vendored `file:` directories), each resolved to a
+ * workspace-root-relative posix path paired with the lockfile ref it came from.
+ * Targets under `workspace_modules/` are excluded (copy-workspace-modules ships
+ * those); a target that escapes the workspace root is included so the caller
+ * can report it; a target that is the workspace root itself is skipped with a
+ * warning (shipping it would copy the entire workspace).
+ */
+function collectPrunedLinkTargetDirs(
+  parsed: ParsedPrunedLockfile
+): Array<{ target: string; ref: string }> {
+  const targets = new Map<string, string>();
+  const addRef = (baseDir: string, value: PrunedLockfileDepRef): void => {
+    const ref = typeof value === 'string' ? value : value?.version;
+    if (typeof ref !== 'string' || !ref.startsWith('link:')) {
+      return;
+    }
+    const target = resolveLinkTarget(baseDir, ref);
+    if (target === '' || target === '.') {
+      logger.warn(
+        `Local-path dependency "${ref}" resolves to the workspace root itself and cannot be shipped into the pruned output.`
+      );
+      return;
+    }
+    if (!isUnderWorkspaceModules(target) && !targets.has(target)) {
+      targets.set(target, ref);
+    }
+  };
+
+  const rootImporter = parsed.importers?.['.'] ?? {};
+  for (const section of LOCKFILE_DEP_SECTIONS) {
+    for (const value of Object.values(rootImporter[section] ?? {})) {
+      addRef('', value);
+    }
+  }
+  // A snapshot's link: refs resolve from the package's own directory, so scan
+  // every directory-resolution package (the resolution lives in `packages`).
+  for (const [sectionName, section] of [
+    ['snapshots', parsed.snapshots],
+    ['packages', parsed.packages],
+  ] as const) {
+    for (const [key, snapshot] of Object.entries(section ?? {})) {
+      const directory =
+        snapshot?.resolution?.directory ??
+        (sectionName === 'snapshots'
+          ? parsed.packages?.[key]?.resolution?.directory
+          : undefined);
+      if (!directory) {
+        continue;
+      }
+      const base = normalizePath(directory);
+      for (const depSection of LOCKFILE_DEP_SECTIONS) {
+        for (const value of Object.values(snapshot?.[depSection] ?? {})) {
+          addRef(base, value);
+        }
+      }
+    }
+  }
+  return [...targets].map(([target, ref]) => ({ target, ref }));
+}
+
+/**
+ * The non-workspace local-path packages a standalone pruned output must ship so
+ * `pnpm install` can resolve them, each as `{ path, sourcePath }` (path relative
+ * to the output root, sourcePath the absolute file to ship there). pnpm records
+ * every such path relative to the workspace root, and the deploy root is the
+ * workspace root, so a source vendored inside the workspace has a clean
+ * output-root-relative subpath and ships as-is. Three shapes are shipped:
+ * - a `file:` tarball (`resolution.tarball`) -> the `.tgz` file.
+ * - a `file:` directory (`resolution.directory`) not under `workspace_modules/`
+ *   -> the directory tree (copied workspace modules carry a `workspace_modules/`
+ *   directory resolution and are shipped by copy-workspace-modules, so they are
+ *   skipped here).
+ * - a `link:` target (a root importer `link:` version, or a directory-package
+ *   `link:` snapshot ref) -> the target directory tree.
+ * `node_modules` is filtered from every directory copy; symlinked entries are
+ * skipped with a warning; entries are deduped by destination. A source that
+ * resolves outside the workspace root, or is missing on disk, is skipped with a
+ * warning (it is not reproducibly deployable). Returns source paths rather than
+ * bytes so the file-writing prune paths can copy without buffering whole trees;
+ * the bundler asset pipelines read the bytes as they emit.
+ */
+export function getPrunedPnpmLocalPathArtifacts(
   workspaceRootPath: string = workspaceRoot,
   prunedLockfileContent?: string
-): Array<{ path: string; content: Buffer }> {
+): Array<{ path: string; sourcePath: string }> {
   if (!prunedLockfileContent) {
     return [];
   }
-  let parsed: {
-    packages?: Record<string, { resolution?: { tarball?: string } }>;
-  };
-  try {
-    const { load } = require('@zkochan/js-yaml');
-    parsed = load(prunedLockfileContent) ?? {};
-  } catch {
+  const parsed = parsePrunedLockfile(prunedLockfileContent);
+  if (!parsed) {
     return [];
   }
-  const artifacts: Array<{ path: string; content: Buffer }> = [];
-  const seen = new Set<string>();
+
+  const artifacts: Array<{ path: string; sourcePath: string }> = [];
+  const shippedRoots = new Set<string>();
+  const seenDestinations = new Set<string>();
+
+  // The absolute source for a shippable target, or null (with a warning) when
+  // the target escapes the workspace root or is missing on disk.
+  const resolveShippableSource = (
+    wsRelativePath: string,
+    origin: string
+  ): string | null => {
+    if (localPathEscapesOutput(wsRelativePath)) {
+      logger.warn(
+        `Local-path dependency "${origin}" resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
+      );
+      return null;
+    }
+    const source = join(workspaceRootPath, wsRelativePath);
+    if (!existsSync(source)) {
+      logger.warn(
+        `Local-path dependency "${origin}" was not found at ${source}; the pruned output references it but cannot ship it.`
+      );
+      return null;
+    }
+    return source;
+  };
+
+  const shipFile = (wsRelativePath: string, origin: string): void => {
+    if (shippedRoots.has(wsRelativePath)) {
+      return;
+    }
+    shippedRoots.add(wsRelativePath);
+    const source = resolveShippableSource(wsRelativePath, origin);
+    if (!source || seenDestinations.has(wsRelativePath)) {
+      return;
+    }
+    seenDestinations.add(wsRelativePath);
+    artifacts.push({ path: wsRelativePath, sourcePath: source });
+  };
+
+  const shipDirectory = (wsRelativePath: string, origin: string): void => {
+    if (shippedRoots.has(wsRelativePath)) {
+      return;
+    }
+    shippedRoots.add(wsRelativePath);
+    const source = resolveShippableSource(wsRelativePath, origin);
+    if (!source) {
+      return;
+    }
+    if (!statSync(source).isDirectory()) {
+      logger.warn(
+        `Local-path dependency "${origin}" is not a directory at ${source}; the pruned output references it but cannot ship it.`
+      );
+      return;
+    }
+    // Walk the tree, skipping node_modules, deduping by destination.
+    const walk = (absoluteDir: string, destinationDir: string): void => {
+      for (const entry of readdirSync(absoluteDir, { withFileTypes: true })) {
+        if (entry.name === 'node_modules') {
+          continue;
+        }
+        const absoluteEntry = join(absoluteDir, entry.name);
+        const destinationEntry = `${destinationDir}/${entry.name}`;
+        if (entry.isDirectory()) {
+          walk(absoluteEntry, destinationEntry);
+        } else if (entry.isFile()) {
+          if (seenDestinations.has(destinationEntry)) {
+            continue;
+          }
+          seenDestinations.add(destinationEntry);
+          artifacts.push({ path: destinationEntry, sourcePath: absoluteEntry });
+        } else if (entry.isSymbolicLink()) {
+          // Following links risks cycles and machine-specific targets, so they
+          // are not shipped; surface the gap instead of silently dropping it.
+          logger.warn(
+            `Local-path dependency "${origin}" contains a symbolic link at ${absoluteEntry}, which is not shipped into the pruned output.`
+          );
+        }
+      }
+    };
+    walk(source, wsRelativePath);
+  };
+
+  // file: tarball + file: directory resolutions (resolutions live in `packages`).
   for (const snapshot of Object.values(parsed.packages ?? {})) {
     const tarball = snapshot?.resolution?.tarball;
-    if (!tarball?.startsWith('file:')) {
+    if (tarball?.startsWith('file:')) {
+      shipFile(tarball.slice('file:'.length), tarball);
       continue;
     }
-    const relativePath = tarball.slice('file:'.length);
-    if (seen.has(relativePath)) {
-      continue;
+    const directory = snapshot?.resolution?.directory;
+    if (directory && !isUnderWorkspaceModules(directory)) {
+      shipDirectory(normalizePath(directory), `file:${directory}`);
     }
-    seen.add(relativePath);
-    // pnpm records the path relative to the workspace root; a `..` segment would
-    // escape the output root, so the tarball cannot be shipped into the output.
-    if (relativePath.split(/[\\/]/).includes('..')) {
-      logger.warn(
-        `Tarball dependency "${tarball}" resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
-      );
-      continue;
-    }
-    const source = join(workspaceRootPath, relativePath);
-    if (!existsSync(source)) {
-      // Referenced by the lockfile but missing on disk (already a broken
-      // workspace). Warn rather than abort, matching the missing-patch handling.
-      logger.warn(
-        `Tarball dependency "${tarball}" was not found at ${source}; the pruned output references it but cannot ship the file.`
-      );
-      continue;
-    }
-    artifacts.push({ path: relativePath, content: readFileSync(source) });
   }
+
+  // link: targets (root importer versions + directory-package snapshot refs).
+  for (const { target, ref } of collectPrunedLinkTargetDirs(parsed)) {
+    shipDirectory(target, ref);
+  }
+
   return artifacts;
+}
+
+/**
+ * Fails the pruned build when a shipped `link:` target has a required dependency
+ * that will not be resolvable in the standalone deploy. `link:` is a symlink, not
+ * a packed package: pnpm never installs the linked target's own dependency
+ * closure, so a re-homed target resolves its `require`s only from the deploy-root
+ * node_modules, i.e. the app's direct dependencies. A required dep of the target
+ * that is not a direct (or optional) dependency of the final app manifest would
+ * fail at runtime with MODULE_NOT_FOUND, so this throws at build time with the
+ * remedy (convert the linked package to a `file:` dependency, which packs a
+ * closure, or add the missing dep to the app).
+ *
+ * Only a required dep absent from the app's installed direct deps fails. A peer
+ * or optional dep of the target, or a required dep present only in the app's
+ * devDependencies (a `--prod` install may omit it), warns instead; these are not
+ * provably broken. The app's own peerDependencies count as installed: the pruned
+ * lockfile's root importer folds them into `dependencies` (mirroring pnpm's
+ * autoInstallPeers), so the deploy install provides them. pnpm-only; call sites
+ * gate on the package manager.
+ */
+export function validatePrunedLinkClosure(
+  packageJson: PackageJson,
+  workspaceRootPath: string,
+  prunedLockfileContent?: string
+): void {
+  if (!prunedLockfileContent) {
+    return;
+  }
+  const parsed = parsePrunedLockfile(prunedLockfileContent);
+  if (!parsed) {
+    return;
+  }
+  const linkTargets = collectPrunedLinkTargetDirs(parsed)
+    .map(({ target }) => target)
+    .filter((target) => !localPathEscapesOutput(target));
+  if (linkTargets.length === 0) {
+    return;
+  }
+  const rootInstalled = new Set([
+    ...Object.keys(packageJson.dependencies ?? {}),
+    ...Object.keys(packageJson.optionalDependencies ?? {}),
+    ...Object.keys(packageJson.peerDependencies ?? {}),
+  ]);
+  const rootDev = new Set(Object.keys(packageJson.devDependencies ?? {}));
+  const appName = packageJson.name || 'the app';
+
+  for (const target of linkTargets) {
+    const manifestPath = join(workspaceRootPath, target, 'package.json');
+    if (!existsSync(manifestPath)) {
+      continue;
+    }
+    let targetManifest: PackageJson;
+    try {
+      targetManifest = readJsonFile(manifestPath);
+    } catch {
+      continue;
+    }
+    const linkName = targetManifest.name || target;
+
+    for (const dep of Object.keys(targetManifest.dependencies ?? {})) {
+      if (rootInstalled.has(dep)) {
+        continue;
+      }
+      if (rootDev.has(dep)) {
+        logger.warn(
+          `linked package ${linkName} requires ${dep}, which is only a devDependency of ${appName}; a production (--prod) install of the standalone deploy would omit it.`
+        );
+        continue;
+      }
+      throw new Error(
+        `linked package ${linkName} requires ${dep}, which won't be resolvable in the standalone deploy (link: cannot provide a self-contained dependency closure). Convert ${linkName} to a file: dependency for a self-contained artifact, or add ${dep} to ${appName}'s dependencies.`
+      );
+    }
+
+    for (const dep of [
+      ...Object.keys(targetManifest.peerDependencies ?? {}),
+      ...Object.keys(targetManifest.optionalDependencies ?? {}),
+    ]) {
+      if (rootInstalled.has(dep) || rootDev.has(dep)) {
+        continue;
+      }
+      logger.warn(
+        `linked package ${linkName} may need ${dep} at runtime, which is not a dependency of ${appName}; add it to ${appName} if the linked package fails to resolve it.`
+      );
+    }
+  }
+}
+
+/**
+ * Relocates a `file:`/`link:` specifier recorded relative to `sourceDir` so it
+ * resolves from `destDir` instead (both workspace-root-relative posix paths, ''
+ * meaning the workspace root itself). Returns null for a non-local-path spec.
+ * When the target cannot ship into the pruned output, `spec` is returned
+ * unchanged with the `reason`: absolute or escaping the workspace root
+ * (`outside-workspace`), or the workspace root itself (`workspace-root`).
+ * Every layer of the pruned output (app manifest, copied-module manifests,
+ * lockfile snapshot refs) relocates through this one function so the layers
+ * cannot disagree.
+ */
+export function relocatePrunedLocalPathSpec(
+  spec: string,
+  sourceDir: string,
+  destDir: string
+): { spec: string; reason?: 'outside-workspace' | 'workspace-root' } | null {
+  const protocol = spec.startsWith('link:')
+    ? 'link:'
+    : spec.startsWith('file:')
+      ? 'file:'
+      : null;
+  if (!protocol) {
+    return null;
+  }
+  const rawPath = spec.slice(protocol.length);
+  // join() does not reset on an absolute segment; it would silently rebase the
+  // target under sourceDir, so reject absolutes up front.
+  if (isAbsolute(rawPath)) {
+    return { spec, reason: 'outside-workspace' };
+  }
+  const wsRelativeTarget = normalizePath(join(sourceDir, rawPath));
+  if (wsRelativeTarget.split('/').includes('..')) {
+    return { spec, reason: 'outside-workspace' };
+  }
+  if (wsRelativeTarget === '' || wsRelativeTarget === '.') {
+    return { spec, reason: 'workspace-root' };
+  }
+  const relocated =
+    destDir === '' || destDir === '.'
+      ? wsRelativeTarget
+      : normalizePath(relative(destDir, wsRelativeTarget));
+  return { spec: `${protocol}${relocated}` };
+}
+
+/** Warns that a local-path target cannot ship, with the reason-specific remedy. */
+export function warnUnshippableLocalPathSpec(
+  description: string,
+  reason: 'outside-workspace' | 'workspace-root'
+): void {
+  logger.warn(
+    reason === 'workspace-root'
+      ? `Local-path dependency ${description} resolves to the workspace root itself and cannot be shipped into the pruned output.`
+      : `Local-path dependency ${description} resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
+  );
+}
+
+/**
+ * Rewrites a standalone pruned manifest's non-workspace local-path specifiers
+ * (`file:` tarball/dir, `link:` dir) to be relative to the workspace root, so a
+ * non-frozen `pnpm install` of the deploy output resolves them: pnpm re-resolves
+ * a manifest specifier relative to the referencing package, and the deploy root
+ * is the workspace root, so the shipped source (see
+ * `getPrunedPnpmLocalPathArtifacts`) sits at that path. Mutates `packageJson` in
+ * place. pnpm-only; call sites gate on the package manager (the rewrite must not
+ * touch npm/yarn/bun manifests).
+ *
+ * Per specifier, in order: resolve a `catalog:` reference first (the bundler's
+ * `createPackageJson` does not), skip a workspace package (copied to
+ * `workspace_modules/`), then relocate a non-workspace local path from
+ * `projectRoot`-relative to workspace-root-relative. A `file:`/`link:` peer
+ * dependency is moved into `dependencies` with its `peerDependenciesMeta` entry
+ * dropped even when the target cannot ship (pnpm rejects a `file:`/`link:` spec
+ * under peerDependencies outright, so leaving it would fail the whole install),
+ * mirroring the workspace-module handling. An unshippable target otherwise keeps
+ * its specifier, with a warning (see `getPrunedPnpmLocalPathArtifacts`).
+ */
+export function rewritePrunedLocalPathSpecifiers(
+  packageJson: PackageJson,
+  projectRoot: string,
+  workspaceRootPath: string,
+  workspacePackageNames: Set<string>
+): void {
+  const catalogManager = getCatalogManager(workspaceRootPath);
+  const sections: PackageJsonDependencySection[] = [
+    'dependencies',
+    'optionalDependencies',
+    'devDependencies',
+    'peerDependencies',
+  ];
+  for (const section of sections) {
+    const deps = packageJson[section];
+    if (!deps) {
+      continue;
+    }
+    for (const [name, specifier] of Object.entries(deps)) {
+      let resolved = specifier;
+      if (catalogManager?.isCatalogReference(specifier)) {
+        const resolvedCatalog = catalogManager.resolveCatalogReference(
+          workspaceRootPath,
+          name,
+          specifier
+        );
+        if (resolvedCatalog) {
+          resolved = resolvedCatalog;
+          deps[name] = resolvedCatalog;
+        }
+      }
+      if (workspacePackageNames.has(name)) {
+        continue;
+      }
+      const relocation = relocatePrunedLocalPathSpec(resolved, projectRoot, '');
+      if (!relocation) {
+        continue;
+      }
+      if (relocation.reason) {
+        warnUnshippableLocalPathSpec(
+          `"${name}": "${resolved}"`,
+          relocation.reason
+        );
+      }
+      if (section === 'peerDependencies') {
+        // pnpm rejects a file:/link: spec under peerDependencies, so move it into
+        // dependencies (matching the workspace-module handling) and drop the
+        // now-orphaned peerDependenciesMeta entry.
+        packageJson.dependencies ??= {};
+        packageJson.dependencies[name] = relocation.spec;
+        delete deps[name];
+        if (packageJson.peerDependenciesMeta) {
+          delete packageJson.peerDependenciesMeta[name];
+        }
+      } else if (!relocation.reason) {
+        deps[name] = relocation.spec;
+      }
+    }
+  }
 }
 
 /**
  * Emits the pnpm install-time artifacts a standalone pruned output needs through
  * a caller-provided `emit` sink: the pnpm 11 settings-only pnpm-workspace.yaml
  * (see `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
- * `file:` tarball dependencies (see `getPrunedPnpmTarballArtifacts`), plus, for
- * pnpm <=10, the build-script approvals and `patchedDependencies` declaration
- * folded into `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`).
+ * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
+ * targets, see `getPrunedPnpmLocalPathArtifacts`), plus, for pnpm <=10, the
+ * build-script approvals and `patchedDependencies` declaration folded into
+ * `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`).
  * The bundler plugins (webpack, rspack) hold the manifest in memory and emit it
  * as a compilation asset after this returns, so the pnpm <=10 additions are
  * mutated onto `packageJson` rather than written; the file-writing executors use
@@ -1362,11 +1794,11 @@ export function emitPrunedPnpmInstallAssets(
   for (const { path, content } of patchFiles) {
     emit(path, content);
   }
-  for (const { path, content } of getPrunedPnpmTarballArtifacts(
+  for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
     workspaceRootPath,
     prunedLockfileContent
   )) {
-    emit(path, content);
+    emit(path, readFileSync(sourcePath));
   }
   const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
     workspaceRootPath,
@@ -1383,18 +1815,23 @@ export function emitPrunedPnpmInstallAssets(
 /**
  * Writes the pnpm install-time artifacts a standalone pruned output needs into
  * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
- * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the `file:`
- * tarball dependencies, plus the pnpm <=10 build-script approvals and
+ * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
+ * non-workspace local-path dependencies (`file:` tarballs/dirs and `link:`
+ * targets), plus the pnpm <=10 build-script approvals and
  * `patchedDependencies` declaration in the emitted package.json. Does nothing for
  * whatever the workspace does not use, and removes a stale pnpm-workspace.yaml a
  * prior deploy left when the output no longer has settings. `allowBuilds` and the
  * patch scope come from `lockfileContent` when the caller already has it in hand,
  * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
+ * Pass `includeLocalPathArtifacts: false` when the lockfile is createLockFile's
+ * root-lockfile fallback: its importer references the whole workspace, so
+ * shipping its local-path trees would copy unrelated sources into the output.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
   workspaceRootPath: string = workspaceRoot,
-  lockfileContent?: string
+  lockfileContent?: string,
+  options?: { includeLocalPathArtifacts?: boolean }
 ): void {
   const prunedLockfileContent =
     lockfileContent ?? readPrunedLockfile(outputDirectory);
@@ -1427,18 +1864,29 @@ export function writePrunedPnpmInstallSettings(
     // pnpm 11 would read its patchedDependencies as a lockfile mismatch. Drop it.
     rmSync(settingsPath);
   }
+  // Directory trees flow through here one file at a time, so dedupe the
+  // recursive mkdir per destination directory.
+  const createdDirs = new Set<string>();
+  const ensureDir = (dir: string): void => {
+    if (!createdDirs.has(dir)) {
+      mkdirSync(dir, { recursive: true });
+      createdDirs.add(dir);
+    }
+  };
   for (const { path, content } of patchFiles) {
     const destination = join(outputDirectory, path);
-    mkdirSync(dirname(destination), { recursive: true });
+    ensureDir(dirname(destination));
     writeFileSync(destination, content);
   }
-  for (const { path, content } of getPrunedPnpmTarballArtifacts(
-    workspaceRootPath,
-    prunedLockfileContent
-  )) {
-    const destination = join(outputDirectory, path);
-    mkdirSync(dirname(destination), { recursive: true });
-    writeFileSync(destination, content);
+  if (options?.includeLocalPathArtifacts !== false) {
+    for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
+      workspaceRootPath,
+      prunedLockfileContent
+    )) {
+      const destination = join(outputDirectory, path);
+      ensureDir(dirname(destination));
+      copyFileSync(sourcePath, destination);
+    }
   }
   const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
     workspaceRootPath,
