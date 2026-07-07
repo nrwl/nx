@@ -303,11 +303,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         );
       }
 
-      try {
-        await this.#javascriptTransformer.close();
-      } catch {
-        // Best-effort cleanup that must never hang the build.
-      }
       callback();
     });
 
@@ -411,8 +406,10 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     // Failed builds skip the done hook (afterSeal fails the seal), so release
-    // the esbuild service and worker pool here too. Runs on close for both
-    // one-shot and watch; both teardowns are idempotent.
+    // the esbuild service here too. The JavaScriptTransformer is closed only
+    // on shutdown (like @angular/build's onDispose): a per-build close would
+    // tear down its worker pool on every watch rebuild. Runs on close for
+    // both one-shot and watch; both teardowns are idempotent.
     compiler.hooks.shutdown.tapAsync(
       `${PLUGIN_NAME}_cleanup`,
       async (callback) => {

@@ -232,12 +232,22 @@ describe('AngularRspackPlugin', () => {
     // emit must resolve (the callback fires) rather than leak the rejection
     await fireAsyncTaps(compiler.hooks.emit, compilation);
 
-    expect(transformerCloseMock).toHaveBeenCalled();
     expect(
       compilation.errors.some((error) =>
         error.message.includes('Angular diagnostics failed.')
       )
     ).toBe(true);
+  });
+
+  it('should not close the JS transformer worker pool on emit', async () => {
+    const compiler = applyPlugin();
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(transformerCloseMock).not.toHaveBeenCalled();
   });
 
   it('should clear the error and recover on a rebuild that initializes successfully', async () => {
