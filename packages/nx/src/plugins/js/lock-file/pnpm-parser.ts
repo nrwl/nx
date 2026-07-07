@@ -28,7 +28,11 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import { normalizePrunedPatchPath } from '../../../utils/package-json';
-import { findNodeMatchingVersion } from './project-graph-pruning';
+import {
+  findLocalPathNode,
+  findNodeMatchingVersion,
+  isLocalPathSpecifier,
+} from './project-graph-pruning';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'node:fs';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
@@ -958,8 +962,12 @@ function findOriginalKeys(
       : Object.entries(packages);
   const matchedKeys = [];
   for (const [key, snapshot] of candidates) {
-    // tarball package
+    // tarball package (legacy lockfile formats key these differently; on v9+ the
+    // version-keyed branch below returns the correct full `name@<spec>` key, so
+    // restricting this to <9 avoids emitting a duplicate, name-stripped key for
+    // file:/https: tarball packages).
     if (
+      lockfileVersion < 9 &&
       key.startsWith(`${packageName}@${version}`) &&
       snapshot.resolution?.['tarball']
     ) {
@@ -1114,12 +1122,19 @@ function mapRootSnapshot(
               `file:workspace_modules/${packageName}`;
           }
         } else {
-          const node =
+          let node =
             graph.externalNodes[`npm:${packageName}@${version}`] ||
             (graph.externalNodes[`npm:${packageName}`] &&
             graph.externalNodes[`npm:${packageName}`].data.version === version
               ? graph.externalNodes[`npm:${packageName}`]
               : findNodeMatchingVersion(graph, packageName, version));
+          // A file:/link: local-path dependency records its path relative to the
+          // declaring package here but relative to the workspace root in the
+          // lockfile, so match it to its sole external node by name instead of
+          // by the (mismatched) path (see findLocalPathNode).
+          if (!node && isLocalPathSpecifier(version)) {
+            node = findLocalPathNode(graph, packageName);
+          }
           if (!node) {
             throw new Error(
               `Could not find external node for package ${packageName}@${version}.`

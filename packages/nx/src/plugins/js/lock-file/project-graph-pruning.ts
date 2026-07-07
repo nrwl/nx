@@ -105,11 +105,24 @@ function normalizeDependencies(
         packageName,
         resolvedVersionRange
       );
+      // A file:/link: local-path dependency (e.g. a vendored tarball) records its
+      // path relative to the declaring package in the manifest but relative to
+      // the workspace root in the lockfile, so the two specifiers never match by
+      // string. There is exactly one external node per such package, so match it
+      // by name once the version-based lookups above fail.
+      const localPathNode =
+        !node &&
+        !workspacePackages.has(packageName) &&
+        isLocalPathSpecifier(resolvedVersionRange)
+          ? findLocalPathNode(graph, packageName)
+          : undefined;
       if (node) {
         combinedDependencies[packageName] = node.data.version;
       } else if (workspacePackages.has(packageName)) {
         // workspace module, leave as is
         combinedDependencies[packageName] = resolvedVersionRange;
+      } else if (localPathNode) {
+        combinedDependencies[packageName] = localPathNode.data.version;
       } else {
         throw new Error(
           `Pruned lock file creation failed. The following package was not found in the root lock file: ${packageName}@${resolvedVersionRange}`
@@ -118,6 +131,32 @@ function normalizeDependencies(
     }
   );
   return combinedDependencies;
+}
+
+/**
+ * A `file:` (local tarball or directory) or `link:` specifier resolves to a
+ * single local package. pnpm records its path relative to the workspace root in
+ * the lockfile, while the manifest records it relative to the declaring package,
+ * so the two never match by string.
+ */
+export function isLocalPathSpecifier(versionExpr: string): boolean {
+  return versionExpr.startsWith('file:') || versionExpr.startsWith('link:');
+}
+
+/**
+ * The external node for a `file:`/`link:` local-path dependency, matched by
+ * package name (its path-based version cannot be matched by string across the
+ * manifest/lockfile boundary; see `isLocalPathSpecifier`).
+ */
+export function findLocalPathNode(
+  graph: ProjectGraph,
+  packageName: string
+): ProjectGraphExternalNode | undefined {
+  return Object.values(graph.externalNodes).find(
+    (node) =>
+      node.data.packageName === packageName &&
+      isLocalPathSpecifier(node.data.version)
+  );
 }
 
 export function findNodeMatchingVersion(

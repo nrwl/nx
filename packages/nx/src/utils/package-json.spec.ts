@@ -23,6 +23,7 @@ import {
   getPrunedPnpmInstallSettingsYaml,
   getPrunedPnpmPackageJsonBuildSettings,
   getPrunedPnpmPatchArtifacts,
+  getPrunedPnpmTarballArtifacts,
   installPackageToTmp,
   normalizePrunedPatchPath,
   PackageJson,
@@ -2095,6 +2096,98 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
     expect(new Set(pkg.pnpm.onlyBuiltDependencies)).toEqual(
       new Set(['app-native', 'esbuild'])
     );
+  });
+});
+
+describe('getPrunedPnpmTarballArtifacts', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-tarball-'));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  const lockfileWithTarball = (tarballSpec: string) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      `  vendored-lib@${tarballSpec}:`,
+      `    resolution: {integrity: sha512-abc, tarball: ${tarballSpec}}`,
+      '',
+    ].join('\n');
+
+  it('ships a file: tarball vendored inside the workspace', () => {
+    mkdirSync(join(tempDir, 'vendor'));
+    const bytes = Buffer.from([0, 1, 2, 3]);
+    writeFileSync(join(tempDir, 'vendor/vendored-lib-1.0.0.tgz'), bytes);
+
+    const artifacts = getPrunedPnpmTarballArtifacts(
+      tempDir,
+      lockfileWithTarball('file:vendor/vendored-lib-1.0.0.tgz')
+    );
+
+    expect(artifacts).toHaveLength(1);
+    expect(artifacts[0].path).toBe('vendor/vendored-lib-1.0.0.tgz');
+    expect(artifacts[0].content.equals(bytes)).toBe(true);
+  });
+
+  it('does not ship an https tarball', () => {
+    expect(
+      getPrunedPnpmTarballArtifacts(
+        tempDir,
+        lockfileWithTarball('https://example.com/vendored-lib-1.0.0.tgz')
+      )
+    ).toEqual([]);
+  });
+
+  it('does not ship a copied workspace module (directory resolution)', () => {
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      "  '@scope/lib@file:workspace_modules/@scope/lib':",
+      '    resolution: {directory: workspace_modules/@scope/lib, type: directory}',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmTarballArtifacts(tempDir, lockfile)).toEqual([]);
+  });
+
+  it('warns and skips a tarball resolved outside the workspace root', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    expect(
+      getPrunedPnpmTarballArtifacts(
+        tempDir,
+        lockfileWithTarball('file:../external/vendored-lib-1.0.0.tgz')
+      )
+    ).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('outside the workspace root')
+    );
+  });
+
+  it('warns and skips a tarball missing on disk', () => {
+    const warn = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    expect(
+      getPrunedPnpmTarballArtifacts(
+        tempDir,
+        lockfileWithTarball('file:vendor/missing.tgz')
+      )
+    ).toEqual([]);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('was not found'));
+  });
+
+  it('returns [] when there is no pruned lockfile content', () => {
+    expect(getPrunedPnpmTarballArtifacts(tempDir)).toEqual([]);
   });
 });
 

@@ -1255,9 +1255,74 @@ export function getPrunedPnpmPatchArtifacts(
 }
 
 /**
+ * The `file:` tarball packages a standalone pruned output must ship so
+ * `pnpm install` can resolve them: each vendored `.tgz` the pruned lockfile
+ * references (path relative to the output root, plus its bytes). pnpm records a
+ * file: tarball's path relative to the workspace root, so a tarball vendored
+ * inside the workspace already has a clean output-root-relative subpath and
+ * ships as-is, no lockfile or manifest rewrite. A tarball resolved outside the
+ * workspace root cannot be placed under the output; it is skipped with a warning
+ * (such a source is not reproducibly deployable). Local `file:` directory
+ * packages (copied workspace modules) carry a `directory` resolution, not a
+ * `tarball`, so they are handled by copy-workspace-modules and skipped here.
+ * Returns the file bytes so the file-writing prune paths and the bundler asset
+ * pipelines can each ship them their own way.
+ */
+export function getPrunedPnpmTarballArtifacts(
+  workspaceRootPath: string = workspaceRoot,
+  prunedLockfileContent?: string
+): Array<{ path: string; content: Buffer }> {
+  if (!prunedLockfileContent) {
+    return [];
+  }
+  let parsed: {
+    packages?: Record<string, { resolution?: { tarball?: string } }>;
+  };
+  try {
+    const { load } = require('@zkochan/js-yaml');
+    parsed = load(prunedLockfileContent) ?? {};
+  } catch {
+    return [];
+  }
+  const artifacts: Array<{ path: string; content: Buffer }> = [];
+  const seen = new Set<string>();
+  for (const snapshot of Object.values(parsed.packages ?? {})) {
+    const tarball = snapshot?.resolution?.tarball;
+    if (!tarball?.startsWith('file:')) {
+      continue;
+    }
+    const relativePath = tarball.slice('file:'.length);
+    if (seen.has(relativePath)) {
+      continue;
+    }
+    seen.add(relativePath);
+    // pnpm records the path relative to the workspace root; a `..` segment would
+    // escape the output root, so the tarball cannot be shipped into the output.
+    if (relativePath.split(/[\\/]/).includes('..')) {
+      logger.warn(
+        `Tarball dependency "${tarball}" resolves outside the workspace root and cannot be shipped into the pruned output. Vendor it inside the workspace to deploy it.`
+      );
+      continue;
+    }
+    const source = join(workspaceRootPath, relativePath);
+    if (!existsSync(source)) {
+      // Referenced by the lockfile but missing on disk (already a broken
+      // workspace). Warn rather than abort, matching the missing-patch handling.
+      logger.warn(
+        `Tarball dependency "${tarball}" was not found at ${source}; the pruned output references it but cannot ship the file.`
+      );
+      continue;
+    }
+    artifacts.push({ path: relativePath, content: readFileSync(source) });
+  }
+  return artifacts;
+}
+
+/**
  * Emits the pnpm install-time artifacts a standalone pruned output needs through
  * a caller-provided `emit` sink: the pnpm 11 settings-only pnpm-workspace.yaml
- * (see `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus, for
+ * (see `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the
+ * `file:` tarball dependencies (see `getPrunedPnpmTarballArtifacts`), plus, for
  * pnpm <=10, the build-script approvals and `patchedDependencies` declaration
  * folded into `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`).
  * The bundler plugins (webpack, rspack) hold the manifest in memory and emit it
@@ -1269,7 +1334,7 @@ export function emitPrunedPnpmInstallAssets(
   workspaceRootPath: string,
   prunedLockfileContent: string,
   packageJson: PackageJson,
-  emit: (assetPath: string, content: string) => void
+  emit: (assetPath: string, content: string | Buffer) => void
 ): void {
   const config: PrunedPnpmConfig = {
     pnpmMajor: getPnpmMajor(workspaceRootPath),
@@ -1297,6 +1362,12 @@ export function emitPrunedPnpmInstallAssets(
   for (const { path, content } of patchFiles) {
     emit(path, content);
   }
+  for (const { path, content } of getPrunedPnpmTarballArtifacts(
+    workspaceRootPath,
+    prunedLockfileContent
+  )) {
+    emit(path, content);
+  }
   const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
     workspaceRootPath,
     prunedLockfileContent,
@@ -1312,13 +1383,13 @@ export function emitPrunedPnpmInstallAssets(
 /**
  * Writes the pnpm install-time artifacts a standalone pruned output needs into
  * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
- * `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus the
- * pnpm <=10 build-script approvals and `patchedDependencies` declaration in the
- * emitted package.json. Does nothing for whatever the workspace does not use, and
- * removes a stale pnpm-workspace.yaml a prior deploy left when the output no
- * longer has settings. `allowBuilds` and the patch scope come from
- * `lockfileContent` when the caller already has it in hand, otherwise from the
- * pruned lockfile it just wrote to `outputDirectory`.
+ * `getPrunedPnpmInstallSettingsYaml`), the `pnpm patch` files, and the `file:`
+ * tarball dependencies, plus the pnpm <=10 build-script approvals and
+ * `patchedDependencies` declaration in the emitted package.json. Does nothing for
+ * whatever the workspace does not use, and removes a stale pnpm-workspace.yaml a
+ * prior deploy left when the output no longer has settings. `allowBuilds` and the
+ * patch scope come from `lockfileContent` when the caller already has it in hand,
+ * otherwise from the pruned lockfile it just wrote to `outputDirectory`.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
@@ -1357,6 +1428,14 @@ export function writePrunedPnpmInstallSettings(
     rmSync(settingsPath);
   }
   for (const { path, content } of patchFiles) {
+    const destination = join(outputDirectory, path);
+    mkdirSync(dirname(destination), { recursive: true });
+    writeFileSync(destination, content);
+  }
+  for (const { path, content } of getPrunedPnpmTarballArtifacts(
+    workspaceRootPath,
+    prunedLockfileContent
+  )) {
     const destination = join(outputDirectory, path);
     mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, content);

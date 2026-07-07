@@ -3907,6 +3907,101 @@ snapshots:
         /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+lodash: 4\.17\.21/
       );
     });
+
+    it('prunes a file: tarball dependency without throwing on the manifest/lockfile path mismatch', () => {
+      // A vendored `file:` tarball is recorded relative to the declaring package
+      // in the manifest (app-relative `../../vendor/...`) but relative to the
+      // workspace root in the lockfile/external node (`vendor/...`), so the two
+      // specifiers never match by string. Pruning must match it by name instead
+      // of throwing "not found in the root lock file" and falling back to the
+      // unpruned root lockfile.
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+      vendored-lib:
+        specifier: file:../../vendor/vendored-lib-1.0.0.tgz
+        version: file:vendor/vendored-lib-1.0.0.tgz
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+
+  vendored-lib@file:vendor/vendored-lib-1.0.0.tgz:
+    resolution: {integrity: sha512-vendored, tarball: file:vendor/vendored-lib-1.0.0.tgz}
+    version: 1.0.0
+
+snapshots:
+
+  lodash@4.17.21: {}
+
+  vendored-lib@file:vendor/vendored-lib-1.0.0.tgz: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: {
+          lodash: '^4.17.21',
+          'vendored-lib': 'file:../../vendor/vendored-lib-1.0.0.tgz',
+        },
+      };
+
+      // No workspace projects: the app is the pruned root, and both deps are
+      // external (a normal npm package and the vendored file: tarball).
+      const graph = makeGraph([], {}, {
+        'npm:lodash': {
+          type: 'npm',
+          name: 'npm:lodash',
+          data: {
+            version: '4.17.21',
+            packageName: 'lodash',
+            hash: 'sha512-lodash',
+          },
+        },
+        'npm:vendored-lib': {
+          type: 'npm',
+          name: 'npm:vendored-lib',
+          data: {
+            version: 'file:vendor/vendored-lib-1.0.0.tgz',
+            packageName: 'vendored-lib',
+            hash: 'sha512-vendored',
+          },
+        },
+      } as any);
+
+      // Neither pruning nor stringifying may throw on the path mismatch.
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // The tarball keeps its single, name-prefixed package key...
+      expect(result).toContain(
+        `vendored-lib@file:vendor/vendored-lib-1.0.0.tgz:`
+      );
+      // ...and never the spurious, name-stripped duplicate key a v9 tarball used
+      // to emit from findOriginalKeys.
+      expect(result).not.toMatch(
+        /^\s+file:vendor\/vendored-lib-1\.0\.0\.tgz:\s*$/m
+      );
+      // The root importer keeps the manifest's app-relative specifier (matching
+      // package.json for pnpm's frozen check) with the lockfile's workspace-root
+      // -relative version (used to resolve the shipped tarball).
+      expect(result).toMatch(
+        /vendored-lib:\s+specifier: file:\.\.\/\.\.\/vendor\/vendored-lib-1\.0\.0\.tgz\s+version: file:vendor\/vendored-lib-1\.0\.0\.tgz/
+      );
+      // The normal npm dependency is unaffected.
+      expect(result).toContain('lodash@4.17.21:');
+    });
   });
 
   describe('missing .modules.yaml', () => {
