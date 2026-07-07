@@ -8,14 +8,16 @@ import {
   isAlias,
   isMap,
   isScalar,
+  LineCounter,
   parseDocument,
+  visit,
   YAMLMap,
   type Node,
 } from 'yaml';
 import type { CatalogDefinitions } from './types';
 
 // Walks `path` resolving aliases at every step so structural checks can
-// see through `key: *anchor` references — neither `doc.getIn` nor
+// see through `key: *anchor` references. Neither `doc.getIn` nor
 // `doc.hasIn` traverse aliases on their own. Returns the resolved node, or
 // `undefined` if any ancestor isn't a map.
 function resolveAt(doc: Document, path: string[]): Node | null | undefined {
@@ -37,7 +39,7 @@ function existsAt(doc: Document, path: string[]): boolean {
   return resolveAt(doc, path) !== undefined;
 }
 
-// `doc.getIn` does not traverse aliases — for aliased paths it returns
+// `doc.getIn` does not traverse aliases. For aliased paths it returns
 // undefined even when the resolved node has a value. Use the alias-aware
 // walk and unwrap scalar nodes to their JS value.
 function getValueAt(doc: Document, path: string[]): unknown {
@@ -169,7 +171,8 @@ export function updateCatalogVersionsInFile(
   try {
     // parseDocument keeps comments and anchors so a catalog bump doesn't
     // rewrite the user's config file.
-    const doc = parseDocument(readYaml());
+    const lineCounter = new LineCounter();
+    const doc = parseDocument(readYaml(), { lineCounter });
 
     // parseDocument collects syntax errors instead of throwing; surface them
     // now, with their line/column detail, rather than failing later in
@@ -177,6 +180,26 @@ export function updateCatalogVersionsInFile(
     // malformed file (the previous js-yaml `load()` threw here).
     if (doc.errors.length > 0) {
       throw new Error(doc.errors.map((e) => e.message).join('\n'));
+    }
+
+    // A dangling alias (`*ref` with no matching `&ref`) is not a syntax error,
+    // so parseDocument leaves it out of doc.errors. Surface it here with the
+    // same line/column detail the old js-yaml `load()` reported; otherwise a
+    // broken reference is silently overwritten or written back untouched.
+    const unresolvedAliases: string[] = [];
+    visit(doc, {
+      Alias(_key, node) {
+        if (node.resolve(doc) !== undefined) return;
+        const pos = node.range ? lineCounter.linePos(node.range[0]) : undefined;
+        unresolvedAliases.push(
+          pos
+            ? `Unresolved alias "${node.source}" at line ${pos.line}, column ${pos.col}`
+            : `Unresolved alias "${node.source}"`
+        );
+      },
+    });
+    if (unresolvedAliases.length > 0) {
+      throw new Error(unresolvedAliases.join('\n'));
     }
 
     let hasChanges = false;
@@ -188,7 +211,7 @@ export function updateCatalogVersionsInFile(
       let targetPath: string[];
       if (!normalizedCatalogName) {
         // An empty `catalog:` placeholder must not claim the default route
-        // when `catalogs.default` is populated — that would create a
+        // when `catalogs.default` is populated; that would create a
         // duplicate-default config rejected by pnpm.
         if (isMapAt(doc, ['catalog'])) {
           targetPath = ['catalog', packageName];

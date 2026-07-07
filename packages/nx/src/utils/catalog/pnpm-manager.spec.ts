@@ -862,8 +862,26 @@ catalog: *legacy
       ).toThrow('Map keys must be unique');
     });
 
+    it('should surface an unresolved alias with location detail', () => {
+      // A dangling alias is not a syntax error, so parseDocument keeps
+      // doc.errors empty; the update must still fail loudly instead of
+      // silently overwriting the broken reference.
+      tree.write(
+        'pnpm-workspace.yaml',
+        `catalog:
+  react: *missing
+`
+      );
+
+      expect(() =>
+        manager.updateCatalogVersions(tree, [
+          { packageName: 'react', version: '^18.3.0' },
+        ])
+      ).toThrow('Unresolved alias "missing" at line 2');
+    });
+
     it('should be a no-op when the aliased catalog already has the target version', () => {
-      // Regression: the change-detection check must traverse aliases —
+      // Regression: the change-detection check must traverse aliases,
       // otherwise an identical write fires every time on aliased paths.
       const original = `_defaults: &defaults
   react: ^18.0.0
