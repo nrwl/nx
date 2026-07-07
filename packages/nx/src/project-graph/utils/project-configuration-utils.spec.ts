@@ -256,19 +256,21 @@ describe('project-configuration-utils', () => {
       ]);
     });
 
-    // Regression: default-plugin batches merge into an intermediate
-    // rootmap, not the manager's main rootmap, so filtering substitutor
-    // registration to roots the manager already knows about used to drop
-    // every default-plugin project's own dependsOn/inputs. Any
-    // cross-project reference those arrays introduced therefore never
-    // received a sentinel and stayed stale through applySubstitutions.
+    // Regression: name-reference sentinels must be registered for
+    // default-plugin batches just like specified ones. Sentinel
+    // registration is scoped to roots the manager's rootMap already
+    // knows about, and default-plugin batches used to merge somewhere
+    // else first — so every default-plugin project's own dependsOn/inputs
+    // was dropped, and any cross-project reference those arrays
+    // introduced never received a sentinel and stayed stale through
+    // applySubstitutions.
     //
     // This test drives that gap by having a default plugin rename a
     // specified-plugin project (libs/b 'b-old' → 'b-new') while a
     // separate default-plugin project.json owns a dependsOn referencing
     // the *old* name. Without sentinel registration on the default
     // batch, the final dependsOn would still say 'b-old:build'.
-    it('should resolve dependsOn refs owned by default plugins when the referenced project is renamed during the default apply', () => {
+    it('should resolve dependsOn refs owned by default plugins when another default plugin renames the referenced project', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
         [
           [
@@ -338,7 +340,7 @@ describe('project-configuration-utils', () => {
     // processInputs and processDependsOn share the createRef plumbing,
     // but the substitution sweep walks each array separately. Locks in
     // that default-plugin inputs references get sentinel treatment too.
-    it('should resolve inputs refs owned by default plugins when the referenced project is renamed during the default apply', () => {
+    it('should resolve inputs refs owned by default plugins when another default plugin renames the referenced project', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
         [
           [

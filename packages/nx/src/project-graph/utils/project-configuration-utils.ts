@@ -263,14 +263,13 @@ type MergeFn = (
  * Runs a single plugin batch through two passes:
  *
  * 1. Every project node in every plugin result is handed to `mergeFn`,
- *    which decides where it lands (the manager's rootMap, an
- *    intermediate rootMap, etc.). Any failure is collected into
- *    `errors`; processing keeps going. External nodes are accumulated
- *    onto the shared `externalNodes` record.
+ *    which merges it into the manager's rootMap. Any failure is
+ *    collected into `errors`; processing keeps going. External nodes
+ *    are accumulated onto the shared `externalNodes` record.
  * 2. After every project in the batch has been merged, name-reference
- *    sentinels for the batch are registered against `nameRefRootMap` —
- *    the rootMap the batch was merged into — so sentinels point at the
- *    target objects that actually received the merges.
+ *    sentinels for the batch are registered against the manager's
+ *    rootMap, so sentinels point at the target objects that actually
+ *    received the merges.
  *
  * The two passes can't be collapsed: a sentinel registered too early
  * would point at the pre-merge object, and a later project in the same
@@ -282,17 +281,11 @@ function mergeCreateNodesResultsFromSinglePlugin(
   pluginResults: CreateNodesResultEntry[],
   mergeFn: MergeFn,
   nodesManager: ProjectNodesManager,
-  nameRefRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   errors: MergeError[]
 ): void {
   mergeSinglePluginResults(pluginResults, mergeFn, externalNodes, errors);
-  registerNameRefsFromSinglePlugin(
-    pluginResults,
-    nodesManager,
-    nameRefRootMap,
-    errors
-  );
+  registerNameRefsFromSinglePlugin(pluginResults, nodesManager, errors);
 }
 
 function mergeSinglePluginResults(
@@ -327,7 +320,6 @@ function mergeSinglePluginResults(
 function registerNameRefsFromSinglePlugin(
   pluginResults: CreateNodesResultEntry[],
   nodesManager: ProjectNodesManager,
-  nameRefRootMap: Record<string, ProjectConfiguration>,
   errors: MergeError[]
 ): void {
   for (const result of pluginResults) {
@@ -335,7 +327,7 @@ function registerNameRefsFromSinglePlugin(
     const { projects: projectNodes } = nodes;
 
     try {
-      nodesManager.registerNameRefs(projectNodes, nameRefRootMap);
+      nodesManager.registerNameRefs(projectNodes);
     } catch (error) {
       errors.push(
         new MergeNodesError({ file, pluginName, error, pluginIndex })
@@ -385,7 +377,6 @@ export function mergeCreateNodesResults(
       pluginResults,
       mergeToManager,
       nodesManager,
-      nodesManager.getRootMap(),
       externalNodes,
       errors
     );
@@ -449,7 +440,6 @@ export function mergeCreateNodesResults(
         targetDefaultsResults,
         mergeToManager,
         nodesManager,
-        nodesManager.getRootMap(),
         externalNodes,
         errors
       );
@@ -469,7 +459,6 @@ export function mergeCreateNodesResults(
       pluginResults,
       mergeToManager,
       nodesManager,
-      nodesManager.getRootMap(),
       externalNodes,
       errors
     );

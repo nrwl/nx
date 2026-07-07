@@ -355,26 +355,22 @@ export class ProjectNodesManager {
 
   /**
    * Inserts project-name sentinels into `inputs` and `dependsOn` on the
-   * merged objects from `mergedRootMap` (defaulting to this manager's
-   * rootMap). Walking the merged entries matters because a spread-produced
-   * array is a fresh instance.
-   *
-   * Pass a different `mergedRootMap` for the default-plugin intermediate
-   * pass, then call again with `this.rootMap` after it's applied so
-   * name refs introduced by that merge are sentinelized as well.
+   * merged objects in this manager's rootMap. Walking the merged entries —
+   * not the plugin results — matters because a spread-produced array is a
+   * fresh instance, and because sentinels written into plugin-result arrays
+   * would corrupt them for any later merge that re-reads the results.
    */
   registerNameRefs(
     pluginResultProjects?: Record<
       string,
       Omit<ProjectConfiguration, 'root'> & Partial<ProjectConfiguration>
-    >,
-    mergedRootMap: Record<string, ProjectConfiguration> = this.rootMap
+    >
   ): void {
     if (!pluginResultProjects) return;
     const scoped: Record<string, ProjectConfiguration> = {};
     for (const root in pluginResultProjects) {
-      if (mergedRootMap[root]) {
-        scoped[root] = mergedRootMap[root];
+      if (this.rootMap[root]) {
+        scoped[root] = this.rootMap[root];
       }
     }
     this.nameSubstitutionManager.registerNameRefs(scoped);
