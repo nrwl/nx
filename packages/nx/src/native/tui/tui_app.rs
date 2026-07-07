@@ -12,15 +12,18 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::connect_popup::ConnectPopupState;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
-use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, TuiMode};
+use super::lifecycle::{
+    BatchInfo, BatchStatus, CloudConnectionStatus, PerformanceSummaryPayload, TuiMode,
+};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_core::TuiCore;
 use super::tui_state::TuiState;
 #[cfg(not(test))]
-use super::tui_state::{DoneCallback, ForcedShutdownCallback};
+use super::tui_state::{ConnectToCloudCallback, DoneCallback, ForcedShutdownCallback};
 use super::utils::write_output_to_pty;
 use crate::native::utils::time::current_timestamp_millis;
 
@@ -399,6 +402,42 @@ pub trait TuiApp: Send {
     /// so the rendered TasksList picks the link up.
     fn set_cloud_link(&mut self, label: String, url: String) {
         self.state().lock().set_cloud_link(Some((label, url)));
+    }
+
+    /// Set the Nx Cloud connection status shown in the bottom bar.
+    ///
+    /// Default implementation stores the status directly in TuiState.
+    /// The full-screen app overrides this to also dispatch a UI action.
+    fn set_cloud_connection_status(&mut self, status: Option<CloudConnectionStatus>) {
+        self.state().lock().set_cloud_connection_status(status);
+    }
+
+    /// Register the callback fired when the user presses the connect-to-cloud
+    /// shortcut. Stored in TuiState so it survives mode switches.
+    #[cfg(not(test))]
+    fn set_connect_to_cloud_callback(&mut self, callback: ConnectToCloudCallback) {
+        self.state().lock().set_connect_to_cloud_callback(callback);
+    }
+
+    /// Deliver the Nx Cloud onboarding URL to the connect popup.
+    ///
+    /// Default implementation persists it in TuiState so a URL arriving while
+    /// in inline mode (no popups there) is picked up when the full-screen
+    /// popup is rebuilt. The full-screen app overrides this to also update the
+    /// live popup.
+    fn set_connect_url(&mut self, url: String) {
+        self.state()
+            .lock()
+            .set_connect_popup_state(ConnectPopupState::Ready(url));
+    }
+
+    /// Surface a connect failure in the connect popup.
+    ///
+    /// Default implementation persists it in TuiState (see `set_connect_url`).
+    fn set_connect_error(&mut self, message: String) {
+        self.state()
+            .lock()
+            .set_connect_popup_state(ConnectPopupState::Error(message));
     }
 
     /// Set the run report shown in the exit-countdown popup.

@@ -10,6 +10,7 @@ use super::{
 };
 use link::LinkRegistry;
 
+pub mod connect_popup;
 pub mod countdown_popup;
 pub mod dependency_view;
 pub mod help_popup;

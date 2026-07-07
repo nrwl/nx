@@ -115,6 +115,7 @@ impl InlineApp {
             task_graph,
             HashMap::new(), // estimated_task_timings - will be set later via set_estimated_task_timings()
             None,
+            None,
         )));
 
         Ok(Self {
@@ -1172,6 +1173,7 @@ mod tests {
             existing_graph,
             HashMap::new(),
             None,
+            None,
         )));
 
         // Create app with existing state
@@ -1617,6 +1619,7 @@ mod tests {
             task_graph,
             HashMap::new(),
             None,
+            None,
         )));
 
         let mut app = InlineApp::with_state(state.clone(), None).unwrap();
@@ -1650,6 +1653,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
             None,
         )));
 
@@ -1804,6 +1808,7 @@ mod integration_tests {
             String::from("Shared"),
             task_graph,
             HashMap::new(),
+            None,
             None,
         )));
 

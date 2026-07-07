@@ -25,6 +25,9 @@ pub struct HelpPopup {
     visible: bool,
     action_tx: Option<UnboundedSender<Action>>,
     console_available: bool,
+    /// Whether the connect-to-cloud shortcut should be advertised (only while
+    /// the workspace is not connected to Nx Cloud).
+    cloud_connect_available: bool,
     /// Screen rect of the bordered popup box from the last render, used for
     /// click-outside-to-dismiss hit-testing.
     last_area: Option<Rect>,
@@ -43,6 +46,7 @@ impl HelpPopup {
             visible: false,
             action_tx: None,
             console_available: false,
+            cloud_connect_available: false,
             last_area: None,
             content_area: None,
         }
@@ -50,6 +54,10 @@ impl HelpPopup {
 
     pub fn set_visible(&mut self, visible: bool) {
         self.visible = visible;
+    }
+
+    pub fn is_visible(&self) -> bool {
+        self.visible
     }
 
     /// The bordered popup box drawn last frame, if visible.
@@ -64,6 +72,10 @@ impl HelpPopup {
 
     pub fn set_console_available(&mut self, available: bool) {
         self.console_available = available;
+    }
+
+    pub fn set_cloud_connect_available(&mut self, available: bool) {
+        self.cloud_connect_available = available;
     }
 
     // Ensure the scroll state is reset to avoid recalc issues
@@ -165,6 +177,15 @@ impl HelpPopup {
             ("?", "Toggle this popup"),
             ("q or <ctrl>+c", "Quit the TUI"),
             ("p", "Open performance report"),
+        ];
+
+        // Only advertise the connect shortcut while the workspace is not
+        // connected to Nx Cloud.
+        if self.cloud_connect_available {
+            keybindings.push(("<shift>+c", "Connect to Nx Cloud"));
+        }
+
+        keybindings.extend([
             ("", ""),
             // Navigation
             ("↑ or k", "Navigate/scroll task output up"),
@@ -201,7 +222,7 @@ impl HelpPopup {
             // Interactive Mode
             ("i", "Interact with a continuous task when it is in focus"),
             ("<ctrl>+z", "Stop interacting with a continuous task"),
-        ];
+        ]);
 
         if self.console_available {
             // add Copilot specific keybindings for AI assistance
@@ -467,6 +488,12 @@ impl Component for HelpPopup {
             }
             Action::ConsoleMessengerAvailable(available) => {
                 self.set_console_available(available);
+            }
+            Action::UpdateCloudConnectionStatus(status) => {
+                self.set_cloud_connect_available(matches!(
+                    status,
+                    crate::native::tui::lifecycle::CloudConnectionStatus::NotConnected
+                ));
             }
             _ => {}
         }

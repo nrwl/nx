@@ -25,7 +25,7 @@ use crate::native::{
         action::Action,
         app::Focus,
         components::Component,
-        lifecycle::{BatchStatus, RunMode},
+        lifecycle::{BatchStatus, CloudConnectionStatus, RunMode},
         scroll_momentum::{ScrollDirection, ScrollMomentum},
         status_icons::{get_batch_status_char, get_status_char, get_status_style},
         theme::THEME,
@@ -262,6 +262,9 @@ pub struct TasksList {
     /// Structured Nx Cloud link (display label, href URL). When set, it renders
     /// as a clickable label in place of the raw `cloud_message`.
     cloud_link: Option<(String, String)>,
+    /// Nx Cloud connection status shown in the cloud slot when no cloud
+    /// message/link is present. `None` = cloud disabled, show nothing.
+    cloud_connection_status: Option<CloudConnectionStatus>,
     max_parallel: usize, // Maximum number of parallel tasks
     title_text: String,
     pub action_tx: Option<UnboundedSender<Action>>,
@@ -336,6 +339,7 @@ impl TasksList {
             spacebar_mode: false,
             cloud_message: None,
             cloud_link: None,
+            cloud_connection_status: None,
             max_parallel: DEFAULT_MAX_PARALLEL,
             title_text,
             action_tx: None,
@@ -363,6 +367,11 @@ impl TasksList {
     /// bar can start advertising the `p` shortcut to reopen it.
     pub fn set_perf_report_available(&mut self, v: bool) {
         self.perf_report_available = v;
+    }
+
+    /// Sets the Nx Cloud connection status shown in the bottom bar.
+    pub fn set_cloud_connection_status(&mut self, status: Option<CloudConnectionStatus>) {
+        self.cloud_connection_status = status;
     }
 
     pub fn set_max_parallel(&mut self, max_parallel: Option<u32>) {
@@ -2703,6 +2712,8 @@ impl TasksList {
         // Clone so the borrow of `self.cloud_message` ends before we render the
         // link, which needs `&mut self.link_registry`.
         let Some(message) = self.cloud_message.clone() else {
+            // No cloud message either: fall back to the static connection status.
+            self.render_cloud_connection_status(f, cloud_message_area, is_dimmed);
             return;
         };
 
@@ -2776,6 +2787,85 @@ impl TasksList {
         let link = Link::new(url, url).dim(is_dimmed);
         f.render_stateful_widget(&link, link_area, &mut self.link_registry);
     }
+
+    /// The static connection-status text for the cloud slot (without the
+    /// status dot, which is prepended at render time). The short variant drops
+    /// the connect hint when space is tight.
+    fn cloud_connection_status_text(status: CloudConnectionStatus, short: bool) -> &'static str {
+        match (status, short) {
+            (CloudConnectionStatus::Connected, _) => "connected",
+            (CloudConnectionStatus::NotConnected, false) => "not connected: <shift>+c",
+            (CloudConnectionStatus::NotConnected, true) => "not connected",
+        }
+    }
+
+    /// Display width of the rendered status: the text plus the status dot and
+    /// its trailing space. The dot is multi-byte UTF-8, so `len()` on a
+    /// combined string would overestimate the width - account for it as 2
+    /// columns explicitly.
+    fn cloud_connection_status_width(status: CloudConnectionStatus, short: bool) -> u16 {
+        Self::cloud_connection_status_text(status, short).len() as u16 + 2
+    }
+
+    /// Renders the Nx Cloud connection status in the cloud slot. Only shown
+    /// when no cloud message/link occupies the slot; renders nothing when the
+    /// status is unknown/disabled or even the short text doesn't fit.
+    fn render_cloud_connection_status(&self, f: &mut Frame<'_>, area: Rect, is_dimmed: bool) {
+        let Some(status) = self.cloud_connection_status else {
+            return;
+        };
+        let available_width = area.width as usize;
+
+        let mut label_style = Style::default().fg(THEME.secondary_fg);
+        let mut key_style = Style::default().fg(THEME.info);
+        let mut dot_style = match status {
+            CloudConnectionStatus::Connected => Style::default().fg(THEME.success),
+            CloudConnectionStatus::NotConnected => Style::default().fg(THEME.secondary_fg),
+        };
+        if is_dimmed {
+            label_style = label_style.dim();
+            key_style = key_style.dim();
+            dot_style = dot_style.dim();
+        }
+
+        // Status dot: filled when connected, hollow when not.
+        let dot = match status {
+            CloudConnectionStatus::Connected => "● ",
+            CloudConnectionStatus::NotConnected => "○ ",
+        };
+
+        let line = if Self::cloud_connection_status_width(status, false) as usize <= available_width
+        {
+            match status {
+                CloudConnectionStatus::Connected => Line::from(vec![
+                    Span::styled(dot, dot_style),
+                    Span::styled(
+                        Self::cloud_connection_status_text(status, false),
+                        label_style,
+                    ),
+                ]),
+                // Same "label: key" shape as the help hints on the right.
+                CloudConnectionStatus::NotConnected => Line::from(vec![
+                    Span::styled(dot, dot_style),
+                    Span::styled("not connected: ", label_style),
+                    Span::styled("<shift>+c", key_style),
+                ]),
+            }
+        } else {
+            if Self::cloud_connection_status_width(status, true) as usize > available_width {
+                return;
+            }
+            Line::from(vec![
+                Span::styled(dot, dot_style),
+                Span::styled(
+                    Self::cloud_connection_status_text(status, true),
+                    label_style,
+                ),
+            ])
+        };
+
+        f.render_widget(NxParagraph::new(line).alignment(Alignment::Left), area);
+    }
 }
 
 impl Component for TasksList {
@@ -2800,9 +2890,12 @@ impl Component for TasksList {
         // --- 1. Initial Context ---
         let filter_is_active = self.filter_mode || !self.filter_text.is_empty();
         let is_dimmed = !self.is_task_list_focused();
-        // A structured cloud link takes precedence over a raw cloud message, but
-        // either counts as "has cloud content" for laying out the bottom bar.
-        let has_cloud_message = self.cloud_message.is_some() || self.cloud_link.is_some();
+        // A structured cloud link takes precedence over a raw cloud message,
+        // which takes precedence over the static connection status; any of them
+        // counts as "has cloud content" for laying out the bottom bar.
+        let has_cloud_message = self.cloud_message.is_some()
+            || self.cloud_link.is_some()
+            || self.cloud_connection_status.is_some();
 
         // --- 2. Determine Bottom Layout Mode ---
         enum BottomLayoutMode {
@@ -2842,6 +2935,20 @@ impl Component for TasksList {
                     }
                 } else {
                     message.len() as u16
+                }
+            } else if let Some(status) = self.cloud_connection_status {
+                // Mirror render_cloud_connection_status: the full text when it
+                // fits alongside collapsed help, otherwise the short variant.
+                let available_for_cloud = area
+                    .width
+                    .saturating_sub(SCROLLBAR_WIDTH)
+                    .saturating_sub(COLLAPSED_HELP_WIDTH)
+                    .saturating_sub(MIN_BOTTOM_SPACING);
+                let full_width = Self::cloud_connection_status_width(status, false);
+                if full_width <= available_for_cloud {
+                    full_width
+                } else {
+                    Self::cloud_connection_status_width(status, true)
                 }
             } else {
                 0
@@ -3176,6 +3283,9 @@ impl Component for TasksList {
             }
             Action::UpdateCloudLink(label, url) => {
                 self.cloud_link = Some((label, url));
+            }
+            Action::UpdateCloudConnectionStatus(status) => {
+                self.cloud_connection_status = Some(status);
             }
             Action::ScrollUp => {
                 self.scroll_up();
@@ -4735,6 +4845,75 @@ mod tests {
         tasks_list
             .update(Action::UpdateCloudMessage(
                 "View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_connection_status_not_connected() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        // Wide enough for the full status text + full help row.
+        let mut terminal = create_test_terminal(150, 15);
+
+        tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_connection_status_connected() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(150, 15);
+
+        tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::Connected));
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_connection_status_narrow_uses_short_text() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        // 45 wide: single-line mode with collapsed help leaves a slot narrower
+        // than the full text with the key hint, so the short variant renders.
+        let mut terminal = create_test_terminal(45, 15);
+
+        tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_message_takes_precedence_over_connection_status() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(150, 15);
+
+        tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        tasks_list
+            .update(Action::UpdateCloudMessage(
+                "This is some warning from Nx Cloud".to_string(),
+            ))
+            .ok();
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn test_cloud_connection_status_updates_via_action() {
+        let (mut tasks_list, _) = create_test_tasks_list();
+        let mut terminal = create_test_terminal(150, 15);
+
+        tasks_list.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        // A successful TUI-initiated connect pushes the new status mid-run.
+        tasks_list
+            .update(Action::UpdateCloudConnectionStatus(
+                CloudConnectionStatus::Connected,
             ))
             .ok();
 

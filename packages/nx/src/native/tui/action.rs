@@ -3,7 +3,7 @@ use crate::native::tasks::types::{Task, TaskResult};
 use super::{
     app::Focus,
     components::{task_selection_manager::SelectionEntry, tasks_list::TaskStatus},
-    lifecycle::{BatchInfo, BatchStatus, TuiMode},
+    lifecycle::{BatchInfo, BatchStatus, CloudConnectionStatus, TuiMode},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -37,6 +37,9 @@ pub enum Action {
     /// label, href URL). Distinct from `UpdateCloudMessage` so the displayed
     /// text and the opened URL can differ (e.g. "View in Nx Cloud").
     UpdateCloudLink(String, String),
+    /// Update the Nx Cloud connection status shown in the bottom bar and used
+    /// to gate the connect shortcut.
+    UpdateCloudConnectionStatus(CloudConnectionStatus),
     UpdateFocus(Focus),
     StartCommand(Option<u32>),
     StartTasks(Vec<Task>),
