@@ -469,3 +469,198 @@ impl StatusBar {
         .render(f, area);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::Terminal;
+    use ratatui::backend::TestBackend;
+
+    fn base_props() -> StatusBarProps {
+        StatusBarProps {
+            title_text: "3 tasks".to_string(),
+            total_count: 3,
+            ..Default::default()
+        }
+    }
+
+    fn render_bar(
+        width: u16,
+        height: u16,
+        props: &StatusBarProps,
+    ) -> (Terminal<TestBackend>, StatusBar) {
+        let mut bar = StatusBar::new();
+        let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                bar.render(f, area, props);
+            })
+            .unwrap();
+        (terminal, bar)
+    }
+
+    #[test]
+    fn running_state_wide_shows_counts_and_full_help() {
+        let mut props = base_props();
+        props.completed_count = 1;
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn running_state_narrow_collapses_help() {
+        let props = base_props();
+        let (terminal, _) = render_bar(80, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn completed_state_shows_title_and_duration() {
+        let mut props = base_props();
+        props.all_completed = true;
+        props.completed_count = 3;
+        props.run_time_range = Some((0, 4200));
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn badge_is_green_on_success_and_red_on_failure() {
+        let mut props = base_props();
+        props.all_completed = true;
+
+        let (terminal, _) = render_bar(140, 1, &props);
+        // The badge starts after the 1-col left margin.
+        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.success);
+
+        props.has_failures = true;
+        let (terminal, _) = render_bar(140, 1, &props);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.error);
+    }
+
+    #[test]
+    fn badge_is_info_while_running() {
+        let props = base_props();
+        let (terminal, _) = render_bar(140, 1, &props);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.info);
+    }
+
+    #[test]
+    fn cloud_message_shares_the_single_line() {
+        let mut props = base_props();
+        props.cloud_message =
+            Some("View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string());
+        let (terminal, _) = render_bar(180, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn cloud_link_renders_label_and_registers_href() {
+        let mut props = base_props();
+        props.cloud_link = Some((
+            "View in Nx Cloud".to_string(),
+            "https://nx.app/runs/KnGk4A47qk".to_string(),
+        ));
+        let (terminal, bar) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+
+        // The label's drawn rect is hit-testable and resolves to the full href.
+        let buffer_text: String = (0..140)
+            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
+            .collect();
+        let label_x = buffer_text.find("View in Nx Cloud").unwrap() as u16;
+        assert_eq!(
+            bar.link_registry().hit_test(label_x, 0),
+            Some("https://nx.app/runs/KnGk4A47qk")
+        );
+    }
+
+    #[test]
+    fn narrow_width_with_cloud_wraps_to_two_lines() {
+        let mut props = base_props();
+        props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
+        let (terminal, _) = render_bar(60, 2, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn two_line_layout_squeezed_into_one_row_drops_the_cloud_message() {
+        let mut props = base_props();
+        props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
+        let (terminal, bar) = render_bar(60, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+        assert_eq!(bar.link_registry().hit_test(30, 0), None);
+    }
+
+    #[test]
+    fn filter_display_preempts_the_whole_bar() {
+        let mut props = base_props();
+        props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
+        props.filter = Some(FilterProps {
+            text: "build".to_string(),
+            persisted: false,
+            hidden_count: 4,
+        });
+        let (terminal, bar) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+        // No cloud link is registered while the filter preempts the bar.
+        assert_eq!(bar.link_registry().hit_test(70, 0), None);
+    }
+
+    #[test]
+    fn persisted_filter_shows_edit_hint() {
+        let mut props = base_props();
+        props.filter = Some(FilterProps {
+            text: "build".to_string(),
+            persisted: true,
+            hidden_count: 4,
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn filter_with_no_hidden_tasks_shows_clear_hint() {
+        let mut props = base_props();
+        props.filter = Some(FilterProps {
+            text: "build".to_string(),
+            persisted: false,
+            hidden_count: 0,
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn dimmed_bar_dims_the_status_text() {
+        let mut props = base_props();
+        props.is_dimmed = true;
+        let (terminal, _) = render_bar(140, 1, &props);
+        // The "Running ..." text starts after the badge and margin spans.
+        let buffer_text: String = (0..140)
+            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
+            .collect();
+        let running_x = buffer_text.find("Running").unwrap() as u16;
+        assert!(
+            terminal.backend().buffer()[(running_x, 0)]
+                .modifier
+                .contains(Modifier::DIM)
+        );
+    }
+
+    #[test]
+    fn required_height_matches_layout_thresholds() {
+        // No cloud content: always a single row.
+        assert_eq!(StatusBar::required_height(200, false), 1);
+        assert_eq!(StatusBar::required_height(60, false), 1);
+        assert_eq!(StatusBar::required_height(40, false), 1);
+
+        // Cloud content wraps to two rows only below the collapsed-help threshold.
+        assert_eq!(StatusBar::required_height(200, true), 1);
+        assert_eq!(StatusBar::required_height(135, true), 1);
+        assert_eq!(StatusBar::required_height(68, true), 1);
+        assert_eq!(StatusBar::required_height(67, true), 2);
+        assert_eq!(StatusBar::required_height(40, true), 2);
+    }
+}

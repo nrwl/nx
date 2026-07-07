@@ -470,6 +470,51 @@ mod tests {
     }
 
     #[test]
+    fn test_status_bar_reserves_bottom_rows() {
+        let layout_manager = LayoutManager::new(5);
+        let area = create_test_area(100, 40);
+
+        let layout = layout_manager.calculate_layout(area, 1);
+        assert_eq!(layout.status_bar, Some(Rect::new(0, 39, 100, 1)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 39)));
+
+        let layout = layout_manager.calculate_layout(area, 2);
+        assert_eq!(layout.status_bar, Some(Rect::new(0, 38, 100, 2)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 38)));
+    }
+
+    #[test]
+    fn test_status_bar_zero_height_reserves_nothing() {
+        let layout_manager = LayoutManager::new(5);
+        let area = create_test_area(100, 40);
+        let layout = layout_manager.calculate_layout(area, 0);
+        assert_eq!(layout.status_bar, None);
+        assert_eq!(layout.task_list, Some(area));
+    }
+
+    #[test]
+    fn test_status_bar_skipped_when_area_is_too_short() {
+        let layout_manager = LayoutManager::new(5);
+        let area = create_test_area(100, 2);
+        let layout = layout_manager.calculate_layout(area, 2);
+        assert_eq!(layout.status_bar, None);
+        assert_eq!(layout.task_list, Some(area));
+    }
+
+    #[test]
+    fn test_status_bar_survives_hidden_task_list() {
+        let mut layout_manager = LayoutManager::new(5);
+        layout_manager.set_task_list_visibility(TaskListVisibility::Hidden);
+        layout_manager.set_pane_arrangement(PaneArrangement::Single);
+        let area = create_test_area(100, 40);
+
+        let layout = layout_manager.calculate_layout(area, 1);
+        assert_eq!(layout.status_bar, Some(Rect::new(0, 39, 100, 1)));
+        assert_eq!(layout.task_list, None);
+        assert_eq!(layout.terminal_panes, vec![Rect::new(0, 0, 100, 39)]);
+    }
+
+    #[test]
     fn test_default_mode_is_auto() {
         let layout_manager = LayoutManager::new(5);
         assert_eq!(layout_manager.get_mode(), LayoutMode::Auto);

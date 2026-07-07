@@ -3985,6 +3985,23 @@ mod tests {
         App::with_state(state, TuiMode::FullScreen).unwrap()
     }
 
+    /// Clicks on the cloud link resolve through `link_at`, which chains the
+    /// status bar's registry after the component registries.
+    #[test]
+    fn test_link_at_finds_status_bar_links() {
+        let mut app = create_test_app();
+        app.status_bar.link_registry_mut().push(
+            Rect::new(2, 30, 10, 1),
+            "https://nx.app/runs/abc".to_string(),
+        );
+
+        assert_eq!(
+            app.link_at(5, 30),
+            Some("https://nx.app/runs/abc".to_string())
+        );
+        assert_eq!(app.link_at(5, 29), None);
+    }
+
     /// `print_task_terminal_output` must hide the cursor whether or not the
     /// PTY pre-existed. The PTY-exists branch (e.g. a batch task whose
     /// terminal output was streamed via `append_task_output` first) used to

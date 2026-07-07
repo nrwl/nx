@@ -2735,6 +2735,89 @@ mod tests {
             .unwrap();
     }
 
+    /// Filter keystrokes must write through to the canonical TuiState (the
+    /// status bar and mode-switch persistence read it from there).
+    #[test]
+    fn filter_typing_writes_canonical_state() {
+        let test_tasks = vec![
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
+        let state = test_tui_state();
+        let mut tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            Arc::new(Mutex::new(TaskSelectionManager::new(10))),
+            state.clone(),
+        );
+
+        tasks_list.update(Action::EnterFilterMode).unwrap();
+        for c in "app1".chars() {
+            tasks_list.update(Action::AddFilterChar(c)).unwrap();
+        }
+        assert_eq!(state.lock().get_filter_text(), "app1");
+
+        let filter_text = state.lock().get_filter_text().to_string();
+        let display = tasks_list
+            .filter_display(&filter_text)
+            .expect("filter session is active");
+        assert_eq!(display.text, "app1");
+        assert!(!display.persisted);
+        assert_eq!(display.hidden_count, 1);
+
+        tasks_list.update(Action::RemoveFilterChar).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "app");
+
+        tasks_list.update(Action::ClearFilter).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "");
+        assert!(tasks_list.filter_display("").is_none());
+    }
+
+    /// A non-empty canonical filter (e.g. restored across a mode switch) is
+    /// picked up and persisted by a freshly constructed list — the old
+    /// set_filter_text restoration step no longer exists.
+    #[test]
+    fn restored_filter_is_persisted_and_applied_on_construction() {
+        let test_tasks = vec![
+            Task::new("app1", "test")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app1", "build")
+                .with_project_root("")
+                .with_continuous(false),
+            Task::new("app2", "lint")
+                .with_project_root("")
+                .with_continuous(false),
+        ];
+        let state = test_tui_state();
+        state.lock().set_filter_text("app1".to_string());
+
+        let tasks_list = TasksList::new(
+            test_tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            Focus::TaskList,
+            Arc::new(Mutex::new(TaskSelectionManager::new(10))),
+            state.clone(),
+        );
+
+        assert!(tasks_list.filter_persisted);
+        let display = tasks_list
+            .filter_display("app1")
+            .expect("restored filter is active");
+        assert!(display.persisted);
+        assert_eq!(display.hidden_count, 1);
+    }
+
     #[test]
     fn test_initial_rendering() {
         let (mut tasks_list, _) = create_test_tasks_list();
