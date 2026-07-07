@@ -268,19 +268,14 @@ impl TuiState {
             })
     }
 
-    /// Whether any task failed
-    pub fn has_failures(&self) -> bool {
-        self.task_status_map
-            .values()
-            .any(|status| *status == TaskStatus::Failure)
+    /// First task start in epoch ms, when any task has started
+    pub fn run_start_time(&self) -> Option<i64> {
+        self.task_start_times.values().min().copied()
     }
 
-    /// (first task start, last task end) in epoch ms, when both exist
-    pub fn run_time_range(&self) -> Option<(i64, i64)> {
-        Some((
-            *self.task_start_times.values().min()?,
-            *self.task_end_times.values().max()?,
-        ))
+    /// Last task end in epoch ms, when any task has ended
+    pub fn run_end_time(&self) -> Option<i64> {
+        self.task_end_times.values().max().copied()
     }
 
     /// Get names of tasks that failed

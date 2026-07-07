@@ -234,11 +234,18 @@ impl LayoutManager {
         }
 
         let (main_area, status_bar) = if status_bar_height > 0 && area.height > status_bar_height {
+            // Leave a blank spacer row above the bar when there's room so it
+            // doesn't sit flush against the content.
+            let spacer = u16::from(area.height > status_bar_height + 1);
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([Constraint::Fill(1), Constraint::Length(status_bar_height)])
+                .constraints([
+                    Constraint::Fill(1),
+                    Constraint::Length(spacer),
+                    Constraint::Length(status_bar_height),
+                ])
                 .split(area);
-            (chunks[0], Some(chunks[1]))
+            (chunks[0], Some(chunks[2]))
         } else {
             (area, None)
         };
@@ -470,17 +477,27 @@ mod tests {
     }
 
     #[test]
-    fn test_status_bar_reserves_bottom_rows() {
+    fn test_status_bar_reserves_bottom_rows_plus_a_spacer() {
         let layout_manager = LayoutManager::new(5);
         let area = create_test_area(100, 40);
 
         let layout = layout_manager.calculate_layout(area, 1);
         assert_eq!(layout.status_bar, Some(Rect::new(0, 39, 100, 1)));
-        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 39)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 38)));
 
         let layout = layout_manager.calculate_layout(area, 2);
         assert_eq!(layout.status_bar, Some(Rect::new(0, 38, 100, 2)));
-        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 38)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 37)));
+    }
+
+    #[test]
+    fn test_status_bar_spacer_is_dropped_when_exactly_fitting() {
+        let layout_manager = LayoutManager::new(5);
+        // Area is exactly bar height + 1: the bar fits but the spacer doesn't.
+        let area = create_test_area(100, 3);
+        let layout = layout_manager.calculate_layout(area, 2);
+        assert_eq!(layout.status_bar, Some(Rect::new(0, 1, 100, 2)));
+        assert_eq!(layout.task_list, Some(Rect::new(0, 0, 100, 1)));
     }
 
     #[test]
@@ -511,7 +528,7 @@ mod tests {
         let layout = layout_manager.calculate_layout(area, 1);
         assert_eq!(layout.status_bar, Some(Rect::new(0, 39, 100, 1)));
         assert_eq!(layout.task_list, None);
-        assert_eq!(layout.terminal_panes, vec![Rect::new(0, 0, 100, 39)]);
+        assert_eq!(layout.terminal_panes, vec![Rect::new(0, 0, 100, 38)]);
     }
 
     #[test]

@@ -2,4 +2,4 @@
 source: packages/nx/src/native/tui/components/status_bar.rs
 expression: terminal.backend()
 ---
-" 1/3 tasks                                              quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+" 1/3                                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

@@ -85,6 +85,8 @@ impl HelpText {
                 ]
             } else {
                 vec![
+                    Span::styled("INTERACTIVE", base_style.fg(THEME.primary_fg)),
+                    Span::styled("  ", label_style),
                     Span::styled("exit interactive: ", label_style),
                     Span::styled("<ctrl>+z", key_style),
                 ]
@@ -112,14 +114,24 @@ impl HelpText {
             return;
         }
 
-        // Show full shortcuts
-        let mut shortcuts = vec![
+        // Show full shortcuts, led by the pane's interactivity indicator when
+        // it applies (moved off the pane's bottom border).
+        let mut shortcuts = vec![];
+        if let HelpTextContext::Pane {
+            can_be_interactive: true,
+            ..
+        } = self.context
+        {
+            shortcuts.push(Span::styled("NON-INTERACTIVE", label_style));
+            shortcuts.push(Span::styled("  ", label_style));
+        }
+        shortcuts.extend([
             Span::styled("quit: ", label_style),
             Span::styled("q", key_style),
             Span::styled("  ", label_style),
             Span::styled("help: ", label_style),
             Span::styled("?", key_style),
-        ];
+        ]);
 
         match self.context {
             HelpTextContext::TaskList { show_perf_report } => {

@@ -22,10 +22,12 @@ use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
-use crate::native::tui::utils::format_duration_since;
+use crate::native::tui::utils::{format_duration_since, format_live_duration};
 
 const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
-const FULL_HELP_WIDTH: u16 = 86; // Full help text width
+// Wide enough for the longest help line: the pane hints with the leading
+// NON-INTERACTIVE mode indicator.
+const FULL_HELP_WIDTH: u16 = 92;
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between sections
 const RIGHT_MARGIN: u16 = 1;
@@ -43,9 +45,10 @@ pub struct StatusBarProps {
     pub completed_count: usize,
     pub total_count: usize,
     pub all_completed: bool,
-    pub has_failures: bool,
-    /// (first task start, last task end) in epoch ms, for the completed timing
-    pub run_time_range: Option<(i64, i64)>,
+    /// First task start in epoch ms; drives the live overall duration
+    pub run_started_at: Option<i64>,
+    /// Last task end in epoch ms; freezes the duration once the run completes
+    pub run_ended_at: Option<i64>,
     /// When set, the bar's row swaps entirely to the filter display
     pub filter: Option<FilterProps>,
     /// When set, a terminal pane has focus: the help hints describe the pane
@@ -289,25 +292,14 @@ impl StatusBar {
         );
     }
 
-    /// Minimal progress counts, colored by run state (the " NX " badge and the
-    /// run title live in the task list's header).
+    /// Minimal progress counts. Deliberately quiet — the " NX " badge in the
+    /// task list header carries the run-state color signal.
     fn status_line(props: &StatusBarProps) -> Line<'static> {
         if props.total_count == 0 {
             return Line::default();
         }
 
-        let state_color = if props.all_completed {
-            if props.has_failures {
-                THEME.error
-            } else {
-                THEME.success
-            }
-        } else {
-            THEME.info
-        };
-        let mut counts_style = Style::default()
-            .fg(state_color)
-            .add_modifier(Modifier::BOLD);
+        let mut counts_style = Style::default().fg(THEME.secondary_fg);
         let mut dim_style = Style::default().dim();
         if props.is_dimmed {
             counts_style = counts_style.add_modifier(Modifier::DIM);
@@ -317,34 +309,19 @@ impl StatusBar {
         let mut spans = vec![
             Span::raw(" "),
             Span::styled(
-                format!("{}/{} tasks", props.completed_count, props.total_count),
+                format!("{}/{}", props.completed_count, props.total_count),
                 counts_style,
             ),
         ];
-        if props.all_completed
-            && let Some((first_start, last_end)) = props.run_time_range
-        {
-            spans.push(Span::styled(
-                format!(" ({})", format_duration_since(first_start, last_end)),
-                dim_style,
-            ));
-        }
-
-        // The focused pane's interactivity indicator (moved off the pane's
-        // bottom border).
-        if let Some(pane) = &props.pane
-            && let Some(is_interactive) = pane.interactive
-        {
-            let (mode_text, mode_color) = if is_interactive {
-                ("INTERACTIVE", THEME.primary_fg)
-            } else {
-                ("NON-INTERACTIVE", THEME.secondary_fg)
+        // Overall run duration: live while running, frozen once complete.
+        if let Some(started_at) = props.run_started_at {
+            let duration = match props.run_ended_at {
+                Some(ended_at) if props.all_completed => {
+                    format_duration_since(started_at, ended_at)
+                }
+                _ => format_live_duration(started_at),
             };
-            let mut mode_style = Style::default().fg(mode_color);
-            if props.is_dimmed {
-                mode_style = mode_style.add_modifier(Modifier::DIM);
-            }
-            spans.push(Span::styled(format!("  {}", mode_text), mode_style));
+            spans.push(Span::styled(format!(" ({})", duration), dim_style));
         }
 
         Line::from(spans)
@@ -547,35 +524,48 @@ mod tests {
     }
 
     #[test]
-    fn completed_state_shows_title_and_duration() {
+    fn completed_state_shows_counts_and_frozen_duration() {
         let mut props = base_props();
         props.all_completed = true;
         props.completed_count = 3;
-        props.run_time_range = Some((0, 4200));
+        props.run_started_at = Some(0);
+        props.run_ended_at = Some(4200);
         let (terminal, _) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
     }
 
     #[test]
-    fn counts_are_green_on_success_and_red_on_failure() {
+    fn counts_stay_quiet_regardless_of_run_state() {
+        // The " NX " badge in the task list header carries the run-state
+        // color; the counts are deliberately plain in every state.
         let mut props = base_props();
-        props.all_completed = true;
-        props.completed_count = 3;
-
         let (terminal, _) = render_bar(140, 1, &props);
         // The counts text starts after the 1-col left margin.
-        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.success);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.secondary_fg);
+        assert!(
+            !terminal.backend().buffer()[(1, 0)]
+                .modifier
+                .contains(Modifier::BOLD)
+        );
 
-        props.has_failures = true;
+        props.all_completed = true;
+        props.completed_count = 3;
         let (terminal, _) = render_bar(140, 1, &props);
-        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.error);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.secondary_fg);
     }
 
     #[test]
-    fn counts_are_info_colored_while_running() {
-        let props = base_props();
+    fn running_duration_is_live_while_incomplete() {
+        let mut props = base_props();
+        props.completed_count = 1;
+        props.run_started_at = Some(0);
+        // No run_ended_at and not all_completed: the duration ticks live, so
+        // only assert its presence rather than its (time-dependent) value.
         let (terminal, _) = render_bar(140, 1, &props);
-        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.info);
+        let row: String = (0..140)
+            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
+            .collect();
+        assert!(row.starts_with(" 1/3 ("), "got: {row}");
     }
 
     #[test]
