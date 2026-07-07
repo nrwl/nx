@@ -545,7 +545,9 @@ export function mergeTargetConfigurations(
       !isCompatible ||
       (target.executor !== undefined &&
         target.executor !== baseTarget?.executor) ||
-      (target.command !== undefined && target.command !== baseTarget?.command);
+      (target.command !== undefined &&
+        target.command !== baseTarget?.command) ||
+      suppliesNewOptionsIdentity(baseTarget, target);
     recordTargetIdentitySourceMapInfo(
       projectConfigSourceMap,
       targetIdentifier,
@@ -640,6 +642,32 @@ export function isCompatibleTarget(
   }
 
   return true;
+}
+
+/**
+ * Run-commands and run-script targets carry their runnable identity in
+ * `options` (see {@link isCompatibleTarget}). A layer that supplies that
+ * identity where the base had none changed what the target runs — the same
+ * identity change as setting an executor on a target that had none.
+ */
+function suppliesNewOptionsIdentity(
+  baseTarget: TargetConfiguration | undefined,
+  target: TargetConfiguration
+): boolean {
+  const executor = target.executor ?? baseTarget?.executor;
+  if (executor === 'nx:run-commands') {
+    const baseCommand =
+      baseTarget?.options?.command ??
+      baseTarget?.options?.commands?.join(' && ');
+    const targetCommand =
+      target.options?.command ?? target.options?.commands?.join(' && ');
+    return !!targetCommand && targetCommand !== baseCommand;
+  }
+  if (executor === 'nx:run-script') {
+    const targetScript = target.options?.script;
+    return !!targetScript && targetScript !== baseTarget?.options?.script;
+  }
+  return false;
 }
 
 export function resolveNxTokensInOptions<T extends Object | Array<unknown>>(

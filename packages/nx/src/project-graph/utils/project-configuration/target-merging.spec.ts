@@ -750,6 +750,56 @@ describe('spread syntax in mergeTargetConfigurations', () => {
         'plugin-a',
       ]);
     });
+
+    it('transfers the target node key when a plugin supplies the command a run-commands target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-a created `build` as a bare nx:run-commands target with no
+      // command; plugin-b supplies `options.command` — the runnable identity
+      // for run-commands (see isCompatibleTarget) — so ownership moves, just
+      // like setting an executor on a target that had none.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' } },
+        { executor: 'nx:run-commands' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('transfers the target node key when a plugin supplies the script a run-script target was missing', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.test': ['a.config.ts', 'plugin-a'],
+      };
+      mergeTargetConfigurations(
+        { options: { script: 'test' } },
+        { executor: 'nx:run-script' },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.test'
+      );
+
+      expect(sourceMap['targets.test']).toEqual(['b.config.ts', 'plugin-b']);
+    });
+
+    it('keeps the target node key with its creator when a second plugin re-states the same command', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+      };
+      // Same runnable identity, just layered fields — no transfer.
+      mergeTargetConfigurations(
+        { options: { command: 'vite build' }, cache: true },
+        { executor: 'nx:run-commands', options: { command: 'vite build' } },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
   });
 
   it('should replace array without spread token', () => {
