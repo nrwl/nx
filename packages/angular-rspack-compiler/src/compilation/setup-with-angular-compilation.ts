@@ -33,6 +33,14 @@ export async function setupCompilationWithAngularCompilation(
     !options.hasServer,
     false
   );
+
+  // Drop the bundler's cached results for files the watcher reported as
+  // modified so dependent stylesheets get rebuilt; skipped on the initial
+  // build when there's nothing to invalidate.
+  if (modifiedFiles) {
+    componentStylesheetBundler.invalidate(modifiedFiles);
+  }
+
   modifiedFiles ??= new Set(rootNames);
 
   const fileReplacements: Record<string, string> =

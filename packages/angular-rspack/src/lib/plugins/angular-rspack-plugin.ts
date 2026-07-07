@@ -144,7 +144,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
                 compiler.options.resolve.tsConfig,
                 watchingModifiedFiles.size > 0
                   ? watchingModifiedFiles
-                  : undefined
+                  : undefined,
+                true
               );
 
               await this.buildAndAnalyze();
@@ -500,7 +501,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   private async setupCompilation(
     root: string,
     tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
-    modifiedFiles?: Set<string>
+    modifiedFiles?: Set<string>,
+    watch = false
   ) {
     this.#initializationError = undefined;
     this.#emitError = undefined;
@@ -526,6 +528,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           hasServer: this.#_options.hasServer,
           includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
           sass: this.#_options.stylePreprocessorOptions?.sass,
+          watch,
         },
         this.#sourceFileCache,
         this.#angularCompilation,

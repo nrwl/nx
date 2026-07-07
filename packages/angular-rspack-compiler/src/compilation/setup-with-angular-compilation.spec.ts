@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { AngularCompilation, SourceFileCache } from '../models';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation';
 import {
+  setupCompilation,
   styleTransform,
   type SetupCompilationOptions,
 } from './setup-compilation';
@@ -58,6 +59,50 @@ describe('setupCompilationWithAngularCompilation', () => {
 
     expect(sourceFileCache.referencedFiles).toEqual(['/root/src/main.ts']);
     expect(result.angularCompilation).toBe(angularCompilation);
+  });
+
+  it('should invalidate the stylesheet bundler for modified files', async () => {
+    const invalidate = vi.fn();
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions: {},
+      componentStylesheetBundler: { invalidate },
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+    const modifiedFiles = new Set(['/root/src/app/app.component.css']);
+
+    await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation,
+      modifiedFiles
+    );
+
+    expect(invalidate).toHaveBeenCalledWith(modifiedFiles);
+  });
+
+  it('should not invalidate the stylesheet bundler on the initial build', async () => {
+    const invalidate = vi.fn();
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions: {},
+      componentStylesheetBundler: { invalidate },
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+
+    await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    expect(invalidate).not.toHaveBeenCalled();
   });
 
   it('should collect stylesheet metafile inputs keyed by stylesheet', async () => {
