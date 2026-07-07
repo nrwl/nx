@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                                                                                        "
-" NX    Running Test Tasks...                                                                            Cache   Duration"
+"                                                                                                        Cache   Duration"
 " │                                                                                                                      "
 ">│⠋    app1:test                                                                                          ...       <1ms"
 " │·    Waiting for task...                                                                                              "
@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"                                                                                                                        "

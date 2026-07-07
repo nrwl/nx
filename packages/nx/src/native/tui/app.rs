@@ -406,7 +406,6 @@ impl App {
             initiating_tasks,
             run_mode,
             _,
-            title_text,
             task_count,
             task_status_map,
             task_start_times,
@@ -422,8 +421,6 @@ impl App {
             batch_expansion_states,
             // Max parallel for restoration
             saved_max_parallel,
-            // Filter text for restoration
-            saved_filter_text,
         ) = {
             let state_lock = state.lock();
             (
@@ -431,7 +428,6 @@ impl App {
                 state_lock.initiating_tasks().clone(),
                 state_lock.run_mode(),
                 state_lock.pinned_tasks().to_vec(),
-                state_lock.title_text().to_owned(),
                 get_task_count(state_lock.task_graph()),
                 state_lock.get_task_status_map().clone(),
                 state_lock.get_task_start_times().clone(),
@@ -447,8 +443,6 @@ impl App {
                 state_lock.get_batch_expansion_states().clone(),
                 // Get max_parallel for restoration
                 state_lock.get_max_parallel(),
-                // Get filter text for restoration
-                state_lock.get_filter_text().to_owned(),
             )
         };
 
@@ -466,8 +460,8 @@ impl App {
             initiating_tasks,
             run_mode,
             initial_focus,
-            title_text,
             selection_manager.clone(),
+            state.clone(),
         );
 
         // Restore max_parallel for proper decorator line rendering
@@ -506,17 +500,11 @@ impl App {
             }
         }
 
-        // Restore filter text
-        if !saved_filter_text.is_empty() {
-            tasks_list.set_filter_text(saved_filter_text);
-        }
-
         let help_popup = HelpPopup::new();
         let mut countdown_popup = CountdownPopup::new();
         // Re-hydrate the run report from shared state so it survives mode switches.
         if let Some(summary) = state.lock().exit_summary() {
             countdown_popup.set_summary(summary);
-            tasks_list.set_perf_report_available(true);
         }
         let hint_popup = HintPopup::new();
 
@@ -1553,23 +1541,32 @@ impl App {
             }
             Action::Render => {
                 // Derive the status bar's props from canonical state up front,
-                // taking the state lock once and dropping it before drawing.
-                let status_bar_props = {
+                // taking the state lock once and dropping it before the
+                // TasksList read (its filter methods take the same lock).
+                let (mut status_bar_props, filter_text) = {
                     let state = self.core.state().lock();
-                    StatusBarProps {
-                        is_dimmed: !matches!(self.focus, Focus::TaskList),
-                        perf_report_available: state.has_exit_summary(),
-                        cloud_message: state.get_cloud_message().map(str::to_string),
-                        cloud_link: state.get_cloud_link().cloned(),
-                        title_text: state.title_text().to_string(),
-                        completed_count: state.get_completed_task_count(),
-                        total_count: state.tasks().len(),
-                        all_completed: state.is_run_completed(),
-                        has_failures: state.has_failures(),
-                        run_time_range: state.run_time_range(),
-                        filter: None,
-                    }
+                    (
+                        StatusBarProps {
+                            is_dimmed: !matches!(self.focus, Focus::TaskList),
+                            perf_report_available: state.has_exit_summary(),
+                            cloud_message: state.get_cloud_message().map(str::to_string),
+                            cloud_link: state.get_cloud_link().cloned(),
+                            title_text: state.title_text().to_string(),
+                            completed_count: state.get_completed_task_count(),
+                            total_count: state.tasks().len(),
+                            all_completed: state.is_run_completed(),
+                            has_failures: state.has_failures(),
+                            run_time_range: state.run_time_range(),
+                            filter: None,
+                        },
+                        state.get_filter_text().to_string(),
+                    )
                 };
+                status_bar_props.filter = self
+                    .components
+                    .iter()
+                    .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                    .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
 
                 // Hit-test regions are rebuilt every frame inside the draw closure,
                 // then stored on self so mouse events can resolve what's under the cursor.
@@ -3827,7 +3824,8 @@ impl TuiApp for App {
 
     fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
         // Persist in shared state so the report survives mode switches (rebuilt
-        // apps re-hydrate their fresh popup from here).
+        // apps re-hydrate their fresh popup from here). The status bar's help
+        // text reads the flag from state, so no component sync is needed.
         self.core.state().lock().set_exit_summary(summary.clone());
         if let Some(countdown_popup) = self
             .components
@@ -3835,13 +3833,6 @@ impl TuiApp for App {
             .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
         {
             countdown_popup.set_summary(summary);
-        }
-        if let Some(tasks_list) = self
-            .components
-            .iter_mut()
-            .find_map(|c| c.as_any_mut().downcast_mut::<TasksList>())
-        {
-            tasks_list.set_perf_report_available(true);
         }
     }
 
@@ -3902,17 +3893,13 @@ impl TuiApp for App {
 
         let selected_item = self.selection_manager.lock().get_selection().cloned();
 
-        // Get batch expansion states and filter text from TasksList
-        let (batch_expansion_states, filter_text) = self
+        // Get batch expansion states from TasksList. (The filter text needs no
+        // saving: TuiState owns it canonically.)
+        let batch_expansion_states = self
             .components
             .iter()
             .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-            .map(|tasks_list| {
-                (
-                    tasks_list.get_batch_expansion_states(),
-                    tasks_list.get_filter_text().to_owned(),
-                )
-            })
+            .map(|tasks_list| tasks_list.get_batch_expansion_states())
             .unwrap_or_default();
 
         let mut state = self.core.state().lock();
@@ -3922,7 +3909,6 @@ impl TuiApp for App {
             focused_pane,
             selected_item,
             batch_expansion_states,
-            filter_text,
         );
     }
 

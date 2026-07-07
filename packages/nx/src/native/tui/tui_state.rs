@@ -563,13 +563,11 @@ impl TuiState {
         focused_pane: Option<usize>,
         selected_item: Option<SelectionEntry>,
         batch_expansion_states: HashbrownHashMap<String, bool>,
-        filter_text: String,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
         self.ui_selected_item = selected_item;
-        self.filter_text = filter_text;
         self.ui_batch_expansion_states = batch_expansion_states;
     }
 

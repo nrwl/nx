@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                                                "
-" NX    Running Test Tasks with Scrollbar...                  Cache   Duration   "
+"                                                             Cache   Duration   "
 "                                                                               ↑"
 "                                                                               █"
 "> ·    app10:test                                              ...        ...  █"
@@ -30,5 +30,5 @@ expression: terminal.backend()
 "  ·    app2:build                                              ...        ...  ║"
 "  ·    app30:lint                                              ...        ...  ║"
 "  ·    app31:test                                              ...        ...  ║"
-"  ·    app32:build                                             ...        ...  ↓"
-"                                                                quit: q  help: ?"
+"  ·    app32:build                                             ...        ...  ║"
+"  ·    app33:lint                                              ...        ...  ↓"
