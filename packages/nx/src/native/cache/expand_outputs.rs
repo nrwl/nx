@@ -106,6 +106,43 @@ where
     Ok(found_paths)
 }
 
+#[napi]
+/// Statically checks which `paths` would be captured by the given output
+/// `entries`, without touching the file system. Mirrors `expand_outputs`
+/// semantics: non-glob entries match themselves and anything nested under
+/// them, and negated (`!`-prefixed) entries exclude matches from the whole
+/// entry set. A list with no positive entries matches nothing.
+pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    if !entries.iter().any(|entry| !entry.starts_with('!')) {
+        return Ok(vec![false; paths.len()]);
+    }
+
+    let globs = entries
+        .iter()
+        .flat_map(|entry| {
+            let (negation, pattern) = match entry.strip_prefix('!') {
+                Some(rest) => ("!", rest),
+                None => ("", entry.as_str()),
+            };
+            let pattern = pattern.strip_suffix('/').unwrap_or(pattern);
+            if contains_glob_pattern(pattern) {
+                vec![format!("{negation}{pattern}")]
+            } else {
+                // Non-glob entries are files or directories: match the entry
+                // itself and anything nested under it, like expand_outputs
+                // does when it includes an existing directory wholesale.
+                vec![
+                    format!("{negation}{pattern}"),
+                    format!("{negation}{pattern}/**"),
+                ]
+            }
+        })
+        .collect::<Vec<_>>();
+
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
+}
+
 fn partition_globs_into_map(globs: Vec<String>) -> anyhow::Result<HashMap<String, Vec<String>>> {
     globs
         .iter()
@@ -303,6 +340,67 @@ mod test {
                 "apps/web/.next/static/contents"
             ]
         );
+    }
+
+    #[test]
+    fn should_match_output_paths_statically() {
+        let entries = vec![
+            "apps/web/.next/**".to_string(),
+            "!apps/web/.next/cache/**".to_string(),
+        ];
+        let paths = vec![
+            "apps/web/.next/static/chunk.js".to_string(),
+            "apps/web/.next/cache/webpack/a.pack".to_string(),
+            "apps/web/other.txt".to_string(),
+        ];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![true, false, false]);
+    }
+
+    #[test]
+    fn should_match_output_paths_with_directory_containment() {
+        let entries = vec!["dist/libs/dep".to_string()];
+        let paths = vec![
+            "dist/libs/dep".to_string(),
+            "dist/libs/dep/index.d.ts".to_string(),
+            "dist/libs/dep/nested/deep.js".to_string(),
+            "dist/libs/dep-other/index.d.ts".to_string(),
+        ];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![true, true, true, false]);
+    }
+
+    #[test]
+    fn should_match_nothing_without_positive_entries() {
+        let entries = vec!["!dist/cache/**".to_string()];
+        let paths = vec!["src/index.ts".to_string(), "dist/main.js".to_string()];
+        let result = match_output_paths(entries, paths).unwrap();
+        assert_eq!(result, vec![false, false]);
+    }
+
+    #[test]
+    fn should_match_output_paths_consistently_with_expand_outputs() {
+        // Same fixture and entries as should_handle_multiple_outputs_with_negation:
+        // every path expand_outputs finds on disk must statically match, and the
+        // excluded cache subtree must not.
+        let temp = setup_fs();
+        let entries = vec![
+            "apps/web/.next".to_string(),
+            "!apps/web/.next/cache".to_string(),
+        ];
+        let expanded = expand_outputs(temp.display().to_string(), entries.clone()).unwrap();
+        assert!(!expanded.is_empty());
+
+        let matches = match_output_paths(entries.clone(), expanded.clone()).unwrap();
+        assert!(
+            matches.iter().all(|m| *m),
+            "every expanded output should statically match: {:?}",
+            expanded
+        );
+
+        let excluded =
+            match_output_paths(entries, vec!["apps/web/.next/cache/contents".to_string()]).unwrap();
+        assert_eq!(excluded, vec![false]);
     }
 
     #[test]

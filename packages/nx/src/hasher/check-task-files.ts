@@ -5,13 +5,13 @@ import type {
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
 import type { HashInputs } from '../native';
+import { matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import {
   createTaskId,
   getOutputsForTargetAndConfiguration,
 } from '../tasks-runner/utils';
-import { getMatchingStringsWithCache } from '../utils/find-matching-projects';
 import { normalizePath } from '../utils/path';
 import { projectHasTargetAndConfiguration } from '../utils/project-graph-utils';
 import { splitTarget } from '../utils/split-target';
@@ -230,24 +230,10 @@ function collectUpstreamTaskIds(
 }
 
 /**
- * True if `path` is covered by `pattern`. Two cases:
- *   1. Directory containment — `path` lives inside `pattern` as a directory prefix.
- *   2. Exact / glob match via cached minimatch regex (getMatchingStringsWithCache).
- *
- * No canonical helper exists that combines directory-prefix containment with
- * glob matching; `getMatchingStringsWithCache` handles globs only.
- */
-function pathMatchesPattern(normalizedPath: string, pattern: string): boolean {
-  const np = normalizePath(pattern);
-  if (normalizedPath.startsWith(np + '/')) return true;
-  return getMatchingStringsWithCache(np, [normalizedPath]).length > 0;
-}
-
-/**
- * Whole-list output matching: a path is an output when it matches at least one
- * positive pattern and no negated (`!`-prefixed) pattern. Mirrors the task
- * runner's expand_outputs semantics, where negated globs are exclusions
- * applied to the full pattern set rather than standalone matchers.
+ * Whole-list output matching via the native matcher shared with the task
+ * runner's expand_outputs: non-glob patterns match themselves and anything
+ * nested under them, and negated (`!`-prefixed) patterns act as exclusions
+ * over the full pattern set.
  */
 function isOutput(
   taskId: string,
@@ -255,15 +241,8 @@ function isOutput(
   projectGraph: ProjectGraph
 ): boolean {
   const normalized = normalizePath(path);
-  let matched = false;
-  for (const pattern of getOutputs(taskId, projectGraph)) {
-    if (pattern.startsWith('!')) {
-      if (pathMatchesPattern(normalized, pattern.slice(1))) return false;
-    } else if (!matched) {
-      matched = pathMatchesPattern(normalized, pattern);
-    }
-  }
-  return matched;
+  const patterns = getOutputs(taskId, projectGraph).map(normalizePath);
+  return matchOutputPaths(patterns, [normalized])[0];
 }
 
 function matchesDependentTaskOutputs(
@@ -283,7 +262,7 @@ function matchesDependentTaskOutputs(
 
   for (const { dependentTasksOutputFiles, transitive } of depsOutputs) {
     const glob = normalizePath(dependentTasksOutputFiles);
-    if (getMatchingStringsWithCache(glob, [normalized]).length === 0) continue;
+    if (!matchGlobPaths([glob], [normalized])[0]) continue;
     const upstreamIds = collectUpstreamTaskIds(
       taskGraph,
       canonicalTaskId,
@@ -352,15 +331,17 @@ export async function checkFilesAreOutputs(
   // Validate taskId eagerly so callers always get an error for invalid IDs,
   // even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
+  const patterns = getOutputs(taskId, ctx.projectGraph).map(normalizePath);
+  const results = matchOutputPaths(patterns, files.map(normalizePath));
   const matched: string[] = [];
   const unmatched: string[] = [];
-  for (const file of files) {
-    if (isOutput(taskId, file, ctx.projectGraph)) {
+  files.forEach((file, i) => {
+    if (results[i]) {
       matched.push(file);
     } else {
       unmatched.push(file);
     }
-  }
+  });
   return { matched, unmatched };
 }
 

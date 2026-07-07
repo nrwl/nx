@@ -124,6 +124,15 @@ pub(crate) fn build_glob_set<S: AsRef<str> + Debug>(globs: &[S]) -> anyhow::Resu
     Ok(glob_set)
 }
 
+#[napi]
+/// Checks which `paths` match the given `globs`, using the same glob engine
+/// as the task hasher (`build_glob_set`). Used to statically match
+/// `dependentTasksOutputFiles` globs against candidate paths.
+pub fn match_glob_paths(globs: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
+    let glob_set = build_glob_set(&globs)?;
+    Ok(paths.iter().map(|path| glob_set.is_match(path)).collect())
+}
+
 pub(crate) fn contains_glob_pattern(value: &str) -> bool {
     value.contains('!')
         || value.contains('?')
@@ -143,6 +152,19 @@ pub(crate) fn contains_glob_pattern(value: &str) -> bool {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn should_match_glob_paths() {
+        let result = match_glob_paths(
+            vec!["**/*.d.ts".to_string()],
+            vec![
+                "dist/libs/dep/index.d.ts".to_string(),
+                "dist/libs/dep/index.js".to_string(),
+            ],
+        )
+        .unwrap();
+        assert_eq!(result, vec![true, false]);
+    }
 
     #[test]
     fn should_work_with_simple_globs() {
