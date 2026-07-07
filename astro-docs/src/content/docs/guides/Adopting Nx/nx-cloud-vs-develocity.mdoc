@@ -1,0 +1,76 @@
+---
+title: Nx Cloud vs Develocity
+description: Develocity (formerly Gradle Enterprise) accelerates and observes JVM builds. Nx Cloud covers the whole monorepo, JS/TS and JVM and beyond, with one graph, one cache, and task-level distribution.
+filter: 'type:Guides'
+sidebar:
+  label: Nx Cloud vs Develocity
+---
+
+[Develocity](https://develocity.ai/), formerly Gradle Enterprise, is the most mature build acceleration and observability platform in the JVM ecosystem: build caching for Gradle and Maven, test distribution, ML-based test selection, and deep per-build forensics through Build Scan. Nx Cloud solves the same problems at a different boundary: the whole repository. Nx builds one project graph across JavaScript, TypeScript, Java, Kotlin, .NET, and more, and Nx Cloud caches, prunes, and distributes every task in that graph, not only the JVM ones.
+
+For a polyglot organization, a Gradle backend and a Next.js frontend for example, that boundary is the decision. Develocity accelerates the JVM half and observes the JS half. Nx Cloud treats both as one graph with one cache, one affected computation, and one distribution layer.
+
+| Topic                                         | Nx Cloud                                                    | Develocity                                                  |
+| --------------------------------------------- | ----------------------------------------------------------- | ----------------------------------------------------------- |
+| [Scope](#scope)                               | One graph across JS/TS, JVM, .NET, and more                 | Gradle, Maven, Bazel, sbt; npm is observed, not accelerated |
+| [Build caching](#build-caching)               | Every cacheable task in the workspace                       | Gradle, Maven, and Bazel builds                             |
+| [Test selection](#test-selection)             | Deterministic `nx affected` at project level, all languages | ML-based Predictive Test Selection, Gradle and Maven only   |
+| [Distribution](#distribution)                 | Any task type across dynamically balanced agents            | JVM test executions on JUnit Platform                       |
+| [E2E splitting](#e2e-splitting)               | Atomizer splits Playwright/Cypress suites per file          | Not available                                               |
+| [Flaky tests](#flaky-tests)                   | Detection and isolated re-runs                              | Detection, retries, quarantine, and org-wide trends         |
+| [AI integration](#ai-integration)             | Self-healing CI proposes and verifies fixes                 | MCP servers and failure grouping provide context            |
+| [Adoption and pricing](#adoption-and-pricing) | Self-serve, public pricing, free tier, single-tenant option | Per-committer enterprise contracts, mature on-prem story    |
+
+## Scope
+
+Develocity's compatibility matrix tells the story: Build Scan, caching, test distribution, and Predictive Test Selection are available for Gradle and Maven, with scans and caching for Bazel and scans for sbt. Its npm agent captures Build Scans, test insights, and failure analytics for JS builds, but the compatibility matrix lists no build caching, distribution, or test selection for npm. There is no repository-level project graph; agents wrap individual build invocations.
+
+Nx starts from the repository. The [`@nx/gradle`](/docs/technologies/java/gradle/introduction) plugin puts Gradle projects in the same graph as your JS/TS projects, alongside plugins for Maven, .NET, and community plugins for Python, Rust, and Go. Every Nx Cloud feature below applies to that whole graph.
+
+## Build caching
+
+Develocity's build cache for Gradle and Maven is mature and fine-grained, caching at the task and goal level inside a build. They built the original Gradle build cache, and it shows.
+
+[Nx Replay](/docs/features/ci-features/remote-cache) applies the same idea to every cacheable task in the workspace: JS builds, tests, lint runs, Gradle tasks orchestrated through Nx, and anything else with declared inputs and outputs, shared across all developers and CI with [enforced branch-scoped isolation](/docs/concepts/ci-concepts/cache-security).
+
+## Test selection
+
+Predictive Test Selection is a genuine Develocity differentiator: an ML model trained on your build history scores individual test classes and skips ones unlikely to fail, with selectable risk profiles. Nx has no per-test ML equivalent. The trade-off is scope and determinism. PTS covers Gradle and Maven tests only, and as a probabilistic model it can skip a test that would have failed.
+
+[`nx affected`](/docs/features/ci-features/affected) is deterministic: it computes which projects a change can reach through the graph and skips everything else, for every task type in every language. Nothing reachable is skipped, and nothing unreachable runs.
+
+## Distribution
+
+Develocity Test Distribution fans JVM test executions out to remote agents, with partitioning based on historical timing. It requires tests on the JUnit Platform and covers Gradle test tasks and Maven Surefire/Failsafe goals. Compilation, linting, packaging, and non-JVM work stay on the build machine.
+
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute any task in the graph, builds, tests, lint, e2e, and Docker included, across machines that balance dynamically from timing history.
+
+## E2E splitting
+
+Develocity has no support for JS e2e runners. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits Playwright and Cypress suites into per-file tasks so the slowest suites spread across agents instead of serializing a pipeline.
+
+## Flaky tests
+
+Develocity's flaky test management is the most built-out in the industry: detection across Gradle, Maven, Bazel, and npm builds, retry integration, a quarantine workflow, and org-wide flakiness trends. If deep flaky-test governance for JVM suites is your top requirement, it's excellent.
+
+Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) from execution history and re-runs them in isolation automatically, covering every task type, so a flaky Playwright spec is handled the same way as a flaky JUnit class.
+
+## AI integration
+
+Develocity's 2026 AI direction is context: MCP servers that let coding agents query build history, AI-powered failure grouping, and failure classification skills. It informs the agent; remediation is yours.
+
+Nx Cloud's [self-healing CI](/docs/features/ci-features/self-healing-ci) acts: it analyzes the failed task, proposes a fix, verifies it, and surfaces it on the PR. Nx also ships an [MCP server](/docs/reference/nx-mcp) and agent skills for local coding agents, so both context and remediation are covered.
+
+## Adoption and pricing
+
+Develocity is sold per committer on annual enterprise contracts with no public pricing, deployed SaaS, hybrid, bring-your-own-cloud, or self-hosted. Its on-prem and air-gapped story is long-established.
+
+Nx Cloud has public pricing with a free tier and self-serve signup, and [single-tenant hosted or on-prem options](/docs/enterprise/single-tenant/overview) for enterprises.
+
+## When Develocity is the right call
+
+A pure Gradle or Maven organization with large JVM test suites, a hard on-prem requirement, and appetite for ML-based test selection gets real value from Develocity that nothing else matches, and its Build Scan forensics go deeper into JVM build internals than Nx Cloud's task analytics. The calculus changes when the repository isn't purely JVM. Then the choice is between accelerating one language deeply while the rest of the repo goes untouched, or covering the entire graph with one platform. The two can also coexist: Develocity Build Scans keep working inside Gradle tasks that Nx orchestrates.
+
+{% aside type="tip" title="Nx for Gradle" %}
+See the [Gradle plugin](/docs/technologies/java/gradle/introduction) for adding Gradle projects to the Nx graph, and [CI features](/docs/features/ci-features) for what Nx Cloud layers on top.
+{% /aside %}
