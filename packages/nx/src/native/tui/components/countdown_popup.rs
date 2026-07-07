@@ -22,14 +22,11 @@ use super::Component;
 use super::link::{Link, LinkRegistry};
 use super::nx_paragraph::{NxLine, NxParagraph, NxSpan, NxText};
 
-/// Sentinel `href` for the "Enable remote cache" button. It is registered in
-/// the link registry like a real link (so its rendered rect is hit-testable),
-/// but the app intercepts it and starts the connect flow instead of opening a
-/// browser.
+/// Sentinel `href` for the clickable "Enable remote cache" footer hint. It is
+/// registered in the link registry like a real link (so its rendered rect is
+/// hit-testable), but the app intercepts it and starts the connect flow
+/// instead of opening a browser.
 pub const CONNECT_BUTTON_HREF: &str = "nx-tui://enable-remote-cache";
-
-/// Display text of the inline "Enable remote cache" button.
-const CONNECT_BUTTON_LABEL: &str = "[ Enable remote cache ]";
 
 /// State of the TUI-initiated connect attempt kicked off from the report's
 /// "Enable remote cache" affordances. Persisted in `TuiState` so it survives
@@ -482,7 +479,7 @@ impl CountdownPopup {
         let has_report = !report.is_empty();
         // Two modes: a finished run shows the Performance Report; otherwise (e.g. q
         // pressed mid-run) the original exit dialog with just the interactive hints.
-        let mut content = if has_report {
+        let content = if has_report {
             self.report_mode_content(report)
         } else {
             Self::exit_dialog_content()
@@ -491,43 +488,11 @@ impl CountdownPopup {
         // Turn the recommendation phrases into clickable links, then lay the report
         // out through NxParagraph so each link's rect is recorded.
         self.link_registry.clear();
-        let mut all_links: Vec<SummaryLink> = self
+        let all_links: Vec<SummaryLink> = self
             .summary
             .as_ref()
             .map(|s| s.links.clone())
             .unwrap_or_default();
-
-        // "Enable remote cache" button: appended inline right after the
-        // remote-cache recommendation, only while the workspace is not
-        // connected and no connect attempt has been made yet. It is a synthetic
-        // link with a sentinel href that the app intercepts to start the
-        // connect flow (linkify below turns it into a clickable rect).
-        let show_connect_button = has_report
-            && self.can_connect_to_cloud()
-            && matches!(self.connect_state, CloudConnectState::NotStarted);
-        if show_connect_button {
-            let cache_link_texts: Vec<String> = all_links
-                .iter()
-                .filter(|l| l.href.contains("remote-cache"))
-                .map(|l| l.text.clone())
-                .collect();
-            let cache_line = content.iter_mut().find(|line| {
-                let raw: String = line
-                    .spans
-                    .iter()
-                    .map(|s| s.content.as_ref())
-                    .collect::<String>();
-                cache_link_texts.iter().any(|t| raw.contains(t.as_str()))
-            });
-            if let Some(line) = cache_line {
-                line.spans.push(Span::raw(" "));
-                line.spans.push(Span::raw(CONNECT_BUTTON_LABEL));
-                all_links.push(SummaryLink {
-                    text: CONNECT_BUTTON_LABEL.to_string(),
-                    href: CONNECT_BUTTON_HREF.to_string(),
-                });
-            }
-        }
 
         let nx_content: NxText = content
             .into_iter()
@@ -586,16 +551,19 @@ impl CountdownPopup {
 
         // Keybinding actions in the bottom border — only with a report, where there's
         // a pane to reopen and possibly scroll (scroll only when the report overflows).
+        // The connect hint doubles as a clickable CTA; its width is captured so
+        // its rendered rect can be registered for mouse hit-testing below.
+        let mut connect_hint_width: Option<u16> = None;
         let bottom_hints: Option<Vec<Span>> = if has_report {
             let mut footer = vec![Span::raw("  ")];
             // Advertise the connect shortcut while it can start an attempt
             // (fresh or retry after an error).
             if self.should_start_connect() {
-                footer.push(Span::styled(
-                    "Enable remote cache: ",
-                    Style::default().fg(THEME.secondary_fg),
-                ));
-                footer.push(Span::styled("<shift>+c", Style::default().fg(THEME.info)));
+                let label = "Enable remote cache: ";
+                let key = "<shift>+c";
+                connect_hint_width = Some((label.len() + key.len()) as u16);
+                footer.push(Span::styled(label, Style::default().fg(THEME.secondary_fg)));
+                footer.push(Span::styled(key, Style::default().fg(THEME.info)));
                 footer.push(Span::raw("   "));
             }
             footer.extend([
@@ -750,6 +718,28 @@ impl CountdownPopup {
 
         f.render_widget(Clear, popup_area);
         f.render_widget(block.clone(), popup_area);
+
+        // Register the "Enable remote cache" footer hint's rendered rect under
+        // the sentinel href, so clicking it starts the connect flow like the
+        // shortcut does. The bottom title is right-aligned within the border
+        // (popup width minus the two corner columns); the hint sits after the
+        // footer's leading 2-space pad.
+        if let Some(hint_width) = connect_hint_width {
+            let titles_width = popup_width.saturating_sub(2);
+            let line_start =
+                popup_area.x + 1 + titles_width.saturating_sub(bottom_width.min(titles_width));
+            let hint_rect = Rect {
+                x: line_start + 2,
+                y: popup_area.y + popup_area.height.saturating_sub(1),
+                width: hint_width,
+                height: 1,
+            }
+            .intersection(popup_area);
+            if hint_rect.width > 0 {
+                self.link_registry
+                    .push(hint_rect, CONNECT_BUTTON_HREF.to_string());
+            }
+        }
         // NxParagraph records each rendered link's rect into the registry, which
         // the app's modal mouse handler hit-tests to open it.
         f.render_stateful_widget(popup, main_area, &mut self.link_registry);
@@ -856,7 +846,7 @@ mod tests {
     // The remote-cache CTA text/href the payload carries (built in TS); the popup must
     // render and hyperlink exactly these.
     const CACHE_PHRASE: &str =
-        "Drastically reduce your run duration by sharing a cache across your team and CI";
+        "Enable remote cache to reduce your run duration by sharing it with your team and CI";
     const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache";
 
     fn summary_with(recommendations: Vec<String>) -> PerformanceSummaryPayload {
@@ -1038,61 +1028,57 @@ mod tests {
     }
 
     #[test]
-    fn shows_connect_button_and_hint_only_when_not_connected() {
-        // Not connected: the button follows the cache rec, is clickable via the
-        // sentinel href, and the footer advertises the shortcut.
+    fn connect_hint_shows_and_is_clickable_only_when_not_connected() {
+        // Not connected: the footer CTA renders and its rect is clickable via
+        // the sentinel href.
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with_cache_rec());
         popup.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
         let (text, hrefs) = render_with_registry(&mut popup);
-        assert!(text.contains("[ Enable remote cache ]"));
         assert!(text.contains("Enable remote cache: <shift>+c"));
         assert!(hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
 
-        // Connected: neither the button nor the footer hint render.
+        // Connected: the footer hint does not render and nothing is clickable.
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with_cache_rec());
         popup.set_cloud_connection_status(Some(CloudConnectionStatus::Connected));
         let (text, hrefs) = render_with_registry(&mut popup);
-        assert!(!text.contains("[ Enable remote cache ]"));
         assert!(!text.contains("<shift>+c"));
         assert!(!hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
 
         // No status at all (cloud disabled): same as connected.
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with_cache_rec());
-        let (text, _) = render_with_registry(&mut popup);
-        assert!(!text.contains("[ Enable remote cache ]"));
+        let (text, hrefs) = render_with_registry(&mut popup);
         assert!(!text.contains("<shift>+c"));
+        assert!(!hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
     }
 
     #[test]
     fn footer_hint_shows_even_without_the_cache_rec() {
         // A run without the remote-cache recommendation (e.g. good hit rate but
-        // still unconnected) has no button to attach, but the footer shortcut
-        // still offers the connect flow.
+        // still unconnected) still offers the connect flow via the footer CTA.
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with(vec!["Some other recommendation".to_string()]));
         popup.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
         let (text, hrefs) = render_with_registry(&mut popup);
-        assert!(!text.contains("[ Enable remote cache ]"));
         assert!(text.contains("Enable remote cache: <shift>+c"));
-        assert!(!hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
+        assert!(hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
     }
 
     #[test]
     fn connect_states_render_at_the_bottom() {
-        // Loading: progress text, button and hint gone (attempt in flight).
+        // Loading: progress text; the footer CTA is gone (attempt in flight).
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with_cache_rec());
         popup.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
         popup.set_connect_state(CloudConnectState::Loading);
-        let (text, _) = render_with_registry(&mut popup);
+        let (text, hrefs) = render_with_registry(&mut popup);
         assert!(text.contains("Generating your Nx Cloud connect URL..."));
-        assert!(!text.contains("[ Enable remote cache ]"));
         assert!(!text.contains("<shift>+c"));
+        assert!(!hrefs.iter().any(|h| h == CONNECT_BUTTON_HREF));
 
-        // Ready: the short URL renders and is clickable; still no button.
+        // Ready: the short URL renders and is clickable.
         let url = "https://cloud.nx.app/connect/abcd1234";
         let mut popup = CountdownPopup::new();
         popup.set_summary(summary_with_cache_rec());
@@ -1101,7 +1087,6 @@ mod tests {
         let (text, hrefs) = render_with_registry(&mut popup);
         assert!(text.contains(&format!("Finish your setup: {url}")));
         assert!(hrefs.iter().any(|h| h == url));
-        assert!(!text.contains("[ Enable remote cache ]"));
 
         // The URL stays visible after the workspace flips to connected (the
         // user still needs it to finish onboarding in the browser).

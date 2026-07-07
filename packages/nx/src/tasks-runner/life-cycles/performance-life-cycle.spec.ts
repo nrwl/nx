@@ -711,7 +711,7 @@ describe('cache reporting', () => {
     expect(s.remoteCacheEnabled).toBe(false);
     const report = formatReport(s);
     // No-TTY jest env → no hyperlinks → the tagged URL prints verbatim.
-    expect(report).toContain('sharing a cache across your team and CI');
+    expect(report).toContain('sharing it with your team and CI');
     expect(report).toContain(
       'https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache'
     );
@@ -734,7 +734,7 @@ describe('cache reporting', () => {
       // the hidden target — never a raw URL. Sequence: ESC]8;; <target> BEL <phrase>.
       const OSC8 = ']8;;';
       expect(report).toContain(
-        `${OSC8}https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cacheDrastically reduce your run duration by sharing a cache across your team and CI`
+        `${OSC8}https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cacheEnable remote cache to reduce your run duration by sharing it with your team and CI`
       );
       // The URL must never appear as plain visible text: every occurrence is
       // immediately preceded by the OSC 8 target preamble.
@@ -841,7 +841,7 @@ describe('exit summary payload (TUI countdown)', () => {
       // links the text it was handed without a byte-identical constant of its own.
       expect(payload.links).toEqual([
         {
-          text: 'Drastically reduce your run duration by sharing a cache across your team and CI',
+          text: 'Enable remote cache to reduce your run duration by sharing it with your team and CI',
           href: 'https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache',
         },
       ]);
@@ -992,7 +992,7 @@ describe('formatReport', () => {
 
     if (cores >= 2) {
       const parallelAt = report.indexOf('Increase parallelism');
-      const cacheAt = report.indexOf('Drastically reduce');
+      const cacheAt = report.indexOf('Enable remote cache');
       expect(parallelAt).toBeGreaterThanOrEqual(0);
       expect(cacheAt).toBeGreaterThan(parallelAt);
     }
@@ -1040,9 +1040,11 @@ describe('formatReport', () => {
     );
 
     expect(report).toContain('Recommendations:');
-    expect(report).toContain('- Drastically reduce your run duration');
+    expect(report).toContain(
+      '- Enable remote cache to reduce your run duration'
+    );
     expect(report).toMatch(/- Speed up or split/);
-    const cacheAt = report.indexOf('Drastically reduce');
+    const cacheAt = report.indexOf('Enable remote cache');
     const distributeAt = report.indexOf('Distribute across machines');
     const speedUpAt = report.indexOf('Speed up or split');
     expect(cacheAt).toBeGreaterThanOrEqual(0);
@@ -1086,7 +1088,7 @@ describe('formatReport', () => {
           Recoverable time:  800ms (40% of the run)
 
           Recommendations:
-            - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
+            - Enable remote cache to reduce your run duration by sharing it with your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
             - Distribute across machines with Nx Agents → https://nx.dev/ci/features/distribute-task-execution?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=nx-agents.
             - Speed up or split the longest tasks on the critical path:
                 np    1.2s"
@@ -1181,7 +1183,7 @@ describe('formatReportMarkdown', () => {
 
       ### Recommendations
 
-      - [Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache).
+      - [Enable remote cache to reduce your run duration by sharing it with your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache).
       - Speed up or split the longest tasks on the critical path:<br>a    3.0s"
     `);
   });
@@ -1227,7 +1229,7 @@ describe('formatReportMarkdown', () => {
     })!;
 
     expect(formatReportMarkdown(s, '')).toContain(
-      '[Drastically reduce your run duration by sharing a cache across your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache)'
+      '[Enable remote cache to reduce your run duration by sharing it with your team and CI](https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache)'
     );
   });
 });

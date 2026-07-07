@@ -18,7 +18,7 @@ const NX_REMOTE_CACHE_LINK = `${NX_REMOTE_CACHE_URL}${utm('remote-cache')}`;
  * copy of this string; it gets the phrase + href from the exit payload's `links`.
  */
 const NX_REMOTE_CACHE_CTA =
-  'Drastically reduce your run duration by sharing a cache across your team and CI';
+  'Enable remote cache to reduce your run duration by sharing it with your team and CI';
 const NX_DISTRIBUTE_CTA = 'Distribute across machines with Nx Agents';
 
 /**
