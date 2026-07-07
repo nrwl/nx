@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { AngularCompilation, SourceFileCache } from '../models';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation';
-import type { SetupCompilationOptions } from './setup-compilation';
+import {
+  styleTransform,
+  type SetupCompilationOptions,
+} from './setup-compilation';
 
 vi.mock('./setup-compilation', () => ({
   setupCompilation: vi.fn().mockResolvedValue({
@@ -55,5 +58,68 @@ describe('setupCompilationWithAngularCompilation', () => {
 
     expect(sourceFileCache.referencedFiles).toEqual(['/root/src/main.ts']);
     expect(result.angularCompilation).toBe(angularCompilation);
+  });
+
+  it('should collect stylesheet metafile inputs keyed by stylesheet', async () => {
+    vi.mocked(styleTransform).mockReturnValueOnce(async () => ({
+      contents: '.a{}',
+      metafile: {
+        outputs: {
+          'out.css': {
+            inputs: {
+              'node_modules/css-pkg/styles.css': { bytesInOutput: 3 },
+            },
+          },
+        },
+      },
+    }));
+    let hostOptions:
+      | {
+          transformStylesheet: (
+            styles: string,
+            containingFile: string,
+            stylesheetFile?: string,
+            order?: number,
+            className?: string
+          ) => Promise<string>;
+        }
+      | undefined;
+    const angularCompilation = {
+      initialize: vi.fn().mockImplementation((_tsconfig, host) => {
+        hostOptions = host;
+        return Promise.resolve({ referencedFiles: [] });
+      }),
+    } as unknown as AngularCompilation;
+
+    const result = await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    await hostOptions!.transformStylesheet(
+      '.a{}',
+      '/root/src/app/app.component.ts',
+      '/root/src/app/app.component.scss'
+    );
+    await hostOptions!.transformStylesheet(
+      '.b{}',
+      '/root/src/app/app.component.ts',
+      undefined,
+      0,
+      'AppComponent'
+    );
+
+    expect(result.collectedStylesheetMetafileInputs).toEqual([
+      {
+        source: '/root/src/app/app.component.scss',
+        inputs: { 'node_modules/css-pkg/styles.css': { bytesInOutput: 3 } },
+      },
+      {
+        source: '/root/src/app/app.component.ts?class=AppComponent&order=0',
+        inputs: { 'node_modules/css-pkg/styles.css': { bytesInOutput: 3 } },
+      },
+    ]);
   });
 });

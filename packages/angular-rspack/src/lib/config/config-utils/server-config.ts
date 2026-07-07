@@ -6,6 +6,7 @@ import type {
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
+import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { isPackageInstalled } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
@@ -15,7 +16,8 @@ import { isServeMode } from '../../utils/rspack-serve-env';
 export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
-  defaultConfig: Configuration
+  defaultConfig: Configuration,
+  sharedLicenseInputs?: SharedLicenseInputs
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
@@ -94,6 +96,7 @@ export async function getServerConfig(
       new NgRspackPlugin(normalizedOptions, {
         i18nOptions: i18n,
         platform: 'server',
+        sharedLicenseInputs,
       }),
       ...(normalizedOptions.prerender ||
       (normalizedOptions.appShell && !isDevServer)

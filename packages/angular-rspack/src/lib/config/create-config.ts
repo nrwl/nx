@@ -15,6 +15,7 @@ import {
 } from './config-utils/user-defined-config-helpers';
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
 import { isServeMode } from '../utils/rspack-serve-env';
+import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
 
 export async function createConfig(
   defaultOptions: {
@@ -67,12 +68,18 @@ export async function _createConfig(
     hashFormat
   );
 
+  // The browser and server compilers write the licenses file to the same
+  // location; sharing the collected inputs makes each emit the union.
+  const sharedLicenseInputs: SharedLicenseInputs | undefined =
+    normalizedOptions.hasServer ? new Map() : undefined;
+
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
       normalizedOptions,
       i18n,
-      defaultConfig
+      defaultConfig,
+      sharedLicenseInputs
     );
     const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
     configs.push(mergedConfig);
@@ -82,7 +89,8 @@ export async function _createConfig(
     normalizedOptions,
     i18n,
     hashFormat,
-    defaultConfig
+    defaultConfig,
+    sharedLicenseInputs
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);

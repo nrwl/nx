@@ -137,6 +137,7 @@ describe('AngularRspackPlugin', () => {
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
       collectedStylesheetAssets: [],
+      collectedStylesheetMetafileInputs: [],
     });
   });
 
@@ -281,5 +282,71 @@ describe('AngularRspackPlugin', () => {
 
     expect(transformerCloseMock).toHaveBeenCalled();
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
+  });
+
+  it('should expose the stylesheet metafile inputs to other plugins', async () => {
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
+      collectedStylesheetAssets: [],
+      collectedStylesheetMetafileInputs: [
+        {
+          source: '/root/src/app/app.component.scss',
+          inputs: { 'node_modules/css-pkg/styles.css': { bytesInOutput: 5 } },
+        },
+      ],
+    });
+    const compiler = applyPlugin();
+
+    await runBuildStart(compiler);
+
+    const compilation = createFakeCompilation(compiler);
+    fireSyncTaps(compiler.hooks.compilation, compilation);
+    const state = (compilation as unknown as NgRspackCompilation)[
+      NG_RSPACK_SYMBOL_NAME
+    ]();
+    expect(state.stylesheetMetafileInputs).toEqual({
+      'node_modules/css-pkg/styles.css': { bytesInOutput: 5 },
+    });
+  });
+
+  it('should drop stylesheet metafile inputs for modified files, including inline-style entries', async () => {
+    setupCompilationMock.mockResolvedValueOnce({
+      angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
+      collectedStylesheetAssets: [],
+      collectedStylesheetMetafileInputs: [
+        {
+          source: '/root/src/app/app.component.ts?class=AppComponent&order=0',
+          inputs: { 'node_modules/css-pkg/styles.css': { bytesInOutput: 5 } },
+        },
+        {
+          source: '/root/src/app/other.component.scss',
+          inputs: { 'node_modules/other-pkg/styles.css': { bytesInOutput: 5 } },
+        },
+      ],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin(options);
+    plugin.apply(compiler as never);
+
+    // first watch build collects the stylesheet inputs
+    await fireAsyncTaps(compiler.hooks.watchRun, compiler);
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    // rebuild with the inline-styled component modified
+    (compiler as { watching?: unknown }).watching = {
+      compiler: {
+        modifiedFiles: new Set(['/root/src/app/app.component.ts']),
+      },
+    };
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    const compilation = createFakeCompilation(compiler);
+    fireSyncTaps(compiler.hooks.compilation, compilation);
+    const state = (compilation as unknown as NgRspackCompilation)[
+      NG_RSPACK_SYMBOL_NAME
+    ]();
+    expect(state.stylesheetMetafileInputs).toEqual({
+      'node_modules/other-pkg/styles.css': { bytesInOutput: 5 },
+    });
   });
 });

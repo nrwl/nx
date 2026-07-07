@@ -1,3 +1,5 @@
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AngularRspackPluginOptions } from '../models';
@@ -46,6 +48,35 @@ describe('createConfig', () => {
       expect.objectContaining({ mode: 'development' }),
     ]);
   });
+
+  it('should share the license inputs between the browser and server configs', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+
+      expect(configs).toHaveLength(2);
+      const [browserPlugin, serverPlugin] = configs.map((config) =>
+        config.plugins?.find(
+          (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+        )
+      );
+      expect(browserPlugin['sharedLicenseInputs']).toBeInstanceOf(Map);
+      expect(browserPlugin['sharedLicenseInputs']).toBe(
+        serverPlugin['sharedLicenseInputs']
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
 
   describe('createConfig', () => {
     const runCreateConfig = () => {

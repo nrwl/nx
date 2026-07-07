@@ -2266,9 +2266,6 @@ importers:
       less-loader:
         specifier: catalog:css
         version: 12.3.1(@rspack/core@1.6.8(@swc/helpers@0.5.23))(less@4.5.1)(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2)))
-      license-webpack-plugin:
-        specifier: ^4.0.2
-        version: 4.0.2(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2)))
       loader-utils:
         specifier: 3.3.1
         version: 3.3.1
@@ -47714,12 +47711,6 @@ snapshots:
       treeify: 1.1.0
     transitivePeerDependencies:
       - supports-color
-
-  license-webpack-plugin@4.0.2(webpack@5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))):
-    dependencies:
-      webpack-sources: 3.3.3
-    optionalDependencies:
-      webpack: 5.105.2(@swc/core@1.15.10(@swc/helpers@0.5.18))(esbuild@0.27.3)(lightningcss@1.32.0)(postcss@8.5.15)(webpack-cli@7.0.3(webpack-bundle-analyzer@4.10.2)(webpack-dev-server@5.2.4)(webpack@5.105.2))
 
   license-webpack-plugin@4.0.2(webpack@5.105.2):
     dependencies:

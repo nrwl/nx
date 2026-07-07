@@ -13,6 +13,9 @@ export type NG_RSPACK_COMPILATION_STATE = {
   // True when the Angular compilation failed to initialize or emit, meaning
   // the typescript file cache cannot be relied on for this build.
   angularCompilationFailed: boolean;
+  // Metafile inputs of the bundled component stylesheets, for license
+  // extraction (workspace-relative paths).
+  stylesheetMetafileInputs: Record<string, { bytesInOutput: number }>;
   i18n?: I18nOptions;
 };
 export type NgRspackCompilation = Compilation & {

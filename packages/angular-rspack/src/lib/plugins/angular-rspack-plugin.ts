@@ -13,6 +13,7 @@ import {
   maxWorkers,
   setupCompilationWithAngularCompilation,
   AngularCompilation,
+  type StylesheetMetafileInputs,
 } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
 import {
@@ -46,6 +47,14 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   // This will be defined in the apply method correctly
   #angularCompilation: AngularCompilation;
   #collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
+  // Latest bundled inputs per stylesheet, persisted across rebuilds since
+  // only re-bundled stylesheets produce new results.
+  #stylesheetMetafileInputsBySource = new Map<
+    string,
+    StylesheetMetafileInputs['inputs']
+  >();
+  #stylesheetMetafileInputs: StylesheetMetafileInputs['inputs'] = {};
+  #collectedStylesheetMetafileInputs: StylesheetMetafileInputs[] = [];
   #initializationError: string | undefined;
   #emitError: string | undefined;
 
@@ -120,6 +129,15 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
               if (this.#angularCompilation) {
                 this.#sourceFileCache.invalidate(watchingModifiedFiles);
+                for (const file of watchingModifiedFiles) {
+                  // Inline styles are keyed `<file>?class=...`; drop those
+                  // along with the file's own entry.
+                  for (const key of this.#stylesheetMetafileInputsBySource.keys()) {
+                    if (key === file || key.startsWith(`${file}?`)) {
+                      this.#stylesheetMetafileInputsBySource.delete(key);
+                    }
+                  }
+                }
               }
               await this.setupCompilation(
                 root,
@@ -429,6 +447,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         angularCompilationFailed:
           this.#initializationError !== undefined ||
           this.#emitError !== undefined,
+        stylesheetMetafileInputs: this.#stylesheetMetafileInputs,
         i18n: this.#i18n,
       });
     });
@@ -514,6 +533,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       );
       this.#angularCompilation = result.angularCompilation;
       this.#collectedStylesheetAssets = result.collectedStylesheetAssets;
+      this.#collectedStylesheetMetafileInputs =
+        result.collectedStylesheetMetafileInputs ?? [];
     } catch (error) {
       this.#initializationError = `Angular compilation initialization failed.\n${formatError(
         error
@@ -536,6 +557,20 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         error
       )}`;
     }
+    this.#mergeStylesheetMetafileInputs();
+  }
+
+  // Fold this build's stylesheet bundling results into the persistent
+  // per-stylesheet map and refresh the flattened view exposed to plugins.
+  #mergeStylesheetMetafileInputs() {
+    for (const { source, inputs } of this.#collectedStylesheetMetafileInputs) {
+      this.#stylesheetMetafileInputsBySource.set(source, inputs);
+    }
+    const flattened: StylesheetMetafileInputs['inputs'] = {};
+    for (const inputs of this.#stylesheetMetafileInputsBySource.values()) {
+      Object.assign(flattened, inputs);
+    }
+    this.#stylesheetMetafileInputs = flattened;
   }
 }
 

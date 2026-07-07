@@ -15,6 +15,10 @@ import { loadEsmModule } from '../utils/misc-helpers';
 import { isServeMode } from '../utils/rspack-serve-env';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
 import { AngularSsrDevServer } from './angular-ssr-dev-server';
+import {
+  ExtractLicensesPlugin,
+  type SharedLicenseInputs,
+} from './extract-licenses-plugin';
 import { I18nInlinePlugin } from './i18n-inline-plugin';
 import { IndexHtmlPlugin } from './index-html-plugin';
 import { ProgressPlugin } from './progress-plugin';
@@ -24,17 +28,25 @@ export class NgRspackPlugin implements RspackPluginInstance {
   readonly pluginOptions: NormalizedAngularRspackPluginOptions;
   readonly isPlatformServer: boolean;
   readonly i18n: I18nOptions;
+  private readonly sharedLicenseInputs: SharedLicenseInputs | undefined;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
     extraOptions: {
       platform: 'browser' | 'server';
       i18nOptions: I18nOptions;
+      /**
+       * License extraction inputs shared across the compilers of an SSR
+       * build, so the browser and server compilers emit the union instead of
+       * overwriting each other's licenses file.
+       */
+      sharedLicenseInputs?: SharedLicenseInputs;
     }
   ) {
     this.pluginOptions = pluginOptions;
     this.i18n = extraOptions.i18nOptions;
     this.isPlatformServer = extraOptions.platform === 'server';
+    this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
   }
 
   apply(compiler: Compiler) {
@@ -103,13 +115,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
       }).apply(compiler);
     }
     if (this.pluginOptions.extractLicenses) {
-      const { LicenseWebpackPlugin } = require('license-webpack-plugin');
-      new LicenseWebpackPlugin({
-        stats: {
-          warnings: false,
-          errors: false,
-        },
-        perChunkOutput: false,
+      new ExtractLicensesPlugin({
         outputFilename: posix.join(
           relative(
             this.pluginOptions.outputPath.browser,
@@ -117,8 +123,9 @@ export class NgRspackPlugin implements RspackPluginInstance {
           ),
           '3rdpartylicenses.txt'
         ),
-        skipChildCompilers: true,
-      }).apply(compiler as any);
+        rootDirectory: root,
+        sharedInputs: this.sharedLicenseInputs,
+      }).apply(compiler);
     }
     if (this.i18n.shouldInline) {
       new I18nInlinePlugin(this.pluginOptions, this.i18n).apply(compiler);

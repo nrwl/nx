@@ -8,8 +8,16 @@ import {
   setupCompilation,
   styleTransform,
   SetupCompilationOptions,
-  StylesheetTransformResult,
 } from './setup-compilation';
+
+/**
+ * The files bundled into a component stylesheet, keyed by the stylesheet
+ * they were bundled from. Used to attribute package licenses.
+ */
+export interface StylesheetMetafileInputs {
+  source: string;
+  inputs: Record<string, { bytesInOutput: number }>;
+}
 
 export async function setupCompilationWithAngularCompilation(
   config: Pick<RsbuildConfig, 'source'>,
@@ -35,19 +43,36 @@ export async function setupCompilationWithAngularCompilation(
 
   // Store collected stylesheet output files
   const collectedStylesheetAssets: Array<{ path: string; text: string }> = [];
+  const collectedStylesheetMetafileInputs: StylesheetMetafileInputs[] = [];
 
   // Create a wrapper around styleTransform to collect outputFiles
   const transformFn = styleTransform(componentStylesheetBundler);
   const wrappedTransformStylesheet = async (
     styles: string,
     containingFile: string,
-    stylesheetFile?: string
+    stylesheetFile?: string,
+    order?: number,
+    className?: string
   ) => {
     const result = await transformFn(styles, containingFile, stylesheetFile);
 
     // Collect outputFiles if present
     if (result.outputFiles && result.outputFiles.length > 0) {
       collectedStylesheetAssets.push(...result.outputFiles);
+    }
+
+    if (result.metafile) {
+      // Inline styles share the containing file; disambiguate like
+      // `@angular/build` does so entries stay unique per stylesheet.
+      let source = stylesheetFile ?? containingFile;
+      if (!stylesheetFile) {
+        source += `?class=${className}&order=${order}`;
+      }
+      const inputs: StylesheetMetafileInputs['inputs'] = {};
+      for (const output of Object.values(result.metafile.outputs)) {
+        Object.assign(inputs, output.inputs);
+      }
+      collectedStylesheetMetafileInputs.push({ source, inputs });
     }
 
     // Return just the contents string as expected by Angular compilation
@@ -76,5 +101,6 @@ export async function setupCompilationWithAngularCompilation(
   return {
     angularCompilation,
     collectedStylesheetAssets,
+    collectedStylesheetMetafileInputs,
   };
 }

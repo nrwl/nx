@@ -16,6 +16,13 @@ import { createRequire } from 'node:module';
 export interface StylesheetTransformResult {
   contents: string;
   outputFiles?: Array<{ path: string; text: string }>;
+  /** Bundle metadata listing the files that went into the stylesheet. */
+  metafile?: {
+    outputs: Record<
+      string,
+      { inputs: Record<string, { bytesInOutput: number }> }
+    >;
+  };
 }
 
 export interface SetupCompilationOptions {
@@ -174,10 +181,10 @@ export function styleTransform(
         }
       }
 
-      // Return both contents and outputFiles
       return {
         contents: stylesheetResult.contents,
         outputFiles: stylesheetResult.outputFiles,
+        metafile: stylesheetResult.metafile,
       };
     } catch (e) {
       console.error(
