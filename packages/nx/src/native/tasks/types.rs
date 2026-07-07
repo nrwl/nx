@@ -1,6 +1,9 @@
 use std::fmt::Formatter;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::{collections::HashMap, fmt, ptr};
 
+use dashmap::DashMap;
 use napi::{
     bindgen_prelude::{ToNapiValue, check_status},
     sys,
@@ -161,6 +164,57 @@ pub enum HashInstruction {
     External(String),
     AllExternalDependencies,
     JsonFileSet(Box<JsonFileSetInput>),
+}
+
+/// Append-only interner for hash instructions. Plans store `u32` ids into the
+/// pool, so each unique instruction is materialized once per planner instance
+/// instead of once per task that references it.
+#[derive(Default)]
+pub struct InstructionPool {
+    ids: DashMap<HashInstruction, u32>,
+    items: DashMap<u32, HashInstruction>,
+    next_id: AtomicU32,
+}
+
+impl InstructionPool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// Returns the id for the instruction, allocating one on first sight.
+    /// Value-equal instructions always intern to the same id, so sorting a
+    /// plan's ids and deduping is equivalent to value-level dedup.
+    pub fn intern(&self, instruction: HashInstruction) -> u32 {
+        if let Some(id) = self.ids.get(&instruction) {
+            return *id;
+        }
+        match self.ids.entry(instruction) {
+            dashmap::mapref::entry::Entry::Occupied(existing) => *existing.get(),
+            dashmap::mapref::entry::Entry::Vacant(vacant) => {
+                let id = self.next_id.fetch_add(1, Ordering::Relaxed);
+                self.items.insert(id, vacant.key().clone());
+                vacant.insert(id);
+                id
+            }
+        }
+    }
+
+    pub fn get(&self, id: u32) -> dashmap::mapref::one::Ref<'_, u32, HashInstruction> {
+        self.items
+            .get(&id)
+            .expect("instruction ids are only handed out by intern()")
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
+    }
+}
+
+/// Hash plans as pool-interned instruction ids, plus the pool that resolves
+/// them. This is what crosses from the HashPlanner to the TaskHasher.
+pub struct HashPlans {
+    pub pool: Arc<InstructionPool>,
+    pub plans: HashMap<String, Vec<u32>>,
 }
 
 impl ToNapiValue for HashInstruction {
