@@ -36,7 +36,7 @@ use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
 use super::components::nx_paragraph::NxParagraph;
-use super::components::status_bar::{PaneProps, StatusBar, StatusBarProps};
+use super::components::status_bar::{PaneProps, PaneSearchProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -961,6 +961,16 @@ impl App {
                     };
                 }
 
+                // While a pane search is capturing input, every key belongs to
+                // the query — global shortcuts like q/?/p must type into it
+                // instead of firing. (Ctrl+C still quits via the handler above.)
+                if let Focus::MultipleOutput(pane_idx) = self.focus()
+                    && self.terminal_pane_data[pane_idx].search_input_active()
+                {
+                    self.handle_key_event(key).ok();
+                    return Ok(false);
+                }
+
                 if matches!(key.code, KeyCode::F(12)) {
                     self.dispatch_action(Action::ToggleDebugMode);
                     return Ok(false);
@@ -1257,7 +1267,16 @@ impl App {
                                         self.focus_previous();
                                     }
                                     KeyCode::Esc => {
-                                        if !self.is_task_list_hidden() {
+                                        // An active pane search consumes Esc
+                                        // (clears it) before focus moves back.
+                                        let pane_has_search = matches!(
+                                            self.focus(),
+                                            Focus::MultipleOutput(idx)
+                                                if self.terminal_pane_data[idx].search.is_some()
+                                        );
+                                        if pane_has_search {
+                                            self.handle_key_event(key).ok();
+                                        } else if !self.is_task_list_hidden() {
                                             self.set_base_focus(Focus::TaskList);
                                         }
                                     }
@@ -1547,7 +1566,7 @@ impl App {
                     let state = self.core.state().lock();
                     // Focused-pane details: interactivity only applies while
                     // the pane's task is running and has an interactive PTY.
-                    let pane = if let Focus::MultipleOutput(pane_idx) = self.focus {
+                    let pane = if let Focus::MultipleOutput(pane_idx) = self.focus() {
                         let pane_data = &self.terminal_pane_data[pane_idx];
                         let task_in_progress =
                             self.pane_tasks[pane_idx].as_ref().is_some_and(|entry| {
@@ -1561,6 +1580,12 @@ impl App {
                                 .status_message
                                 .as_ref()
                                 .map(|(message, _)| message.clone()),
+                            search: pane_data.search.as_ref().map(|search| PaneSearchProps {
+                                query: search.query.clone(),
+                                input_mode: search.input_mode,
+                                current: search.current,
+                                total: search.matches.len(),
+                            }),
                         })
                     } else {
                         None
@@ -1568,7 +1593,7 @@ impl App {
                     (
                         StatusBarProps {
                             is_dimmed: matches!(
-                                self.focus,
+                                self.focus(),
                                 Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
                             ),
                             perf_report_available: state.has_exit_summary(),
@@ -1585,11 +1610,17 @@ impl App {
                         state.get_filter_text().to_string(),
                     )
                 };
-                status_bar_props.filter = self
-                    .components
-                    .iter()
-                    .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                    .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
+                // The filter display describes typing into the task list, so
+                // it only takes the bar while the list has focus — a focused
+                // pane's own context (search, hints) wins otherwise, even with
+                // a filter still applied to the list.
+                if matches!(self.focus(), Focus::TaskList) {
+                    status_bar_props.filter = self
+                        .components
+                        .iter()
+                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                        .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
+                }
 
                 // Hit-test regions are rebuilt every frame inside the draw closure,
                 // then stored on self so mouse events can resolve what's under the cursor.
@@ -1957,6 +1988,7 @@ impl App {
             self.terminal_pane_data[pane_idx].pty = None;
             self.terminal_pane_data[pane_idx].can_be_interactive = false;
             self.terminal_pane_data[pane_idx].set_interactive(false);
+            self.terminal_pane_data[pane_idx].search = None;
         }
     }
 

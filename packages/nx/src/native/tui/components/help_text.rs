@@ -188,6 +188,7 @@ impl HelpText {
                 vec![
                     item("quit: ", "q"),
                     item("help: ", "?"),
+                    item("search: ", "/"),
                     item("full screen: ", "<enter>"),
                     item("copy: ", "c"),
                     item("scroll: ", "↑ ↓"),

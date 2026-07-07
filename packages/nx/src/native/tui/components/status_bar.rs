@@ -71,6 +71,20 @@ pub struct PaneProps {
     /// Transient feedback (e.g. "copied to clipboard"), shown in place of the
     /// cloud message until it expires.
     pub status_message: Option<String>,
+    /// A vim-style search over the pane's output; swaps the bar's row to the
+    /// search display while set.
+    pub search: Option<PaneSearchProps>,
+}
+
+/// The focused pane's search session, for the bar's search display.
+#[derive(Debug, Clone, Default)]
+pub struct PaneSearchProps {
+    pub query: String,
+    /// Typing into the query (true) vs navigating matches with n/N (false).
+    pub input_mode: bool,
+    /// Zero-based index of the match the view last jumped to.
+    pub current: usize,
+    pub total: usize,
 }
 
 impl StatusBarProps {
@@ -163,6 +177,17 @@ impl StatusBar {
         // The filter display preempts the entire bar while active.
         if let Some(filter) = &props.filter {
             self.render_filter(f, first_row, filter, props.is_dimmed);
+            return;
+        }
+
+        // Likewise the focused pane's search input while the query is being
+        // typed. A confirmed search renders compactly in the middle slot
+        // instead, so the pane hints and interactivity indicator come back.
+        if let Some(pane) = &props.pane
+            && let Some(search) = &pane.search
+            && search.input_mode
+        {
+            self.render_search(f, first_row, search, props.is_dimmed);
             return;
         }
 
@@ -271,13 +296,19 @@ impl StatusBar {
     }
 
     /// Natural width of the middle section's content: a focused pane's
-    /// transient message, or the cloud message. (A structured cloud link has
-    /// no middle display — the progress counts are the link.)
+    /// transient message, its confirmed search, or the cloud message. (A
+    /// structured cloud link has no middle display — the progress counts are
+    /// the link.)
     fn middle_natural_width(props: &StatusBarProps) -> Option<u16> {
-        if let Some(pane) = &props.pane
-            && let Some(message) = &pane.status_message
-        {
-            return Some(Span::raw(message.as_str()).width() as u16);
+        if let Some(pane) = &props.pane {
+            if let Some(message) = &pane.status_message {
+                return Some(Span::raw(message.as_str()).width() as u16);
+            }
+            if let Some(search) = &pane.search {
+                return Some(
+                    Span::raw(Self::confirmed_search_text(search).as_str()).width() as u16,
+                );
+            }
         }
         if props.cloud_link.is_some() {
             return None;
@@ -288,26 +319,51 @@ impl StatusBar {
             .map(|message| Span::raw(message.as_str()).width() as u16)
     }
 
+    /// The compact middle-slot text for a confirmed search session.
+    fn confirmed_search_text(search: &PaneSearchProps) -> String {
+        if search.total > 0 {
+            format!(
+                "/{}  {}/{} (n/N)",
+                search.query,
+                search.current + 1,
+                search.total
+            )
+        } else {
+            format!("/{}  no matches", search.query)
+        }
+    }
+
     /// The middle section: a focused pane's transient feedback takes the slot
-    /// over the cloud message until it expires.
+    /// over its confirmed search, which takes it over the cloud message.
     fn render_middle(&mut self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
         if area.width == 0 || area.height == 0 {
             return;
         }
-        if let Some(pane) = &props.pane
-            && let Some(message) = &pane.status_message
-        {
-            let style = if props.is_dimmed {
-                Style::default().fg(THEME.info).dim()
-            } else {
-                Style::default().fg(THEME.info)
-            };
-            f.render_widget(
-                NxParagraph::new(Line::from(Span::styled(message.clone(), style)))
+        let info_style = if props.is_dimmed {
+            Style::default().fg(THEME.info).dim()
+        } else {
+            Style::default().fg(THEME.info)
+        };
+        if let Some(pane) = &props.pane {
+            if let Some(message) = &pane.status_message {
+                f.render_widget(
+                    NxParagraph::new(Line::from(Span::styled(message.clone(), info_style)))
+                        .alignment(Alignment::Left),
+                    area,
+                );
+                return;
+            }
+            if let Some(search) = &pane.search {
+                f.render_widget(
+                    NxParagraph::new(Line::from(Span::styled(
+                        Self::confirmed_search_text(search),
+                        info_style,
+                    )))
                     .alignment(Alignment::Left),
-                area,
-            );
-            return;
+                    area,
+                );
+                return;
+            }
         }
         self.render_cloud_message(f, area, props);
     }
@@ -380,6 +436,46 @@ impl StatusBar {
         }
 
         Line::from(spans)
+    }
+
+    /// The whole-row search display for the focused pane's vim-style search.
+    fn render_search(
+        &self,
+        f: &mut Frame<'_>,
+        row: Rect,
+        search: &PaneSearchProps,
+        is_dimmed: bool,
+    ) {
+        let base = if is_dimmed {
+            Style::default().dim()
+        } else {
+            Style::default()
+        };
+        let query_style = base.fg(THEME.info);
+        let hint_style = base.fg(THEME.secondary_fg);
+
+        let counts = if search.total > 0 {
+            format!("{}/{} matches", search.current + 1, search.total)
+        } else if search.query.is_empty() {
+            String::new()
+        } else {
+            "no matches".to_string()
+        };
+        let hints = if search.input_mode {
+            "<enter> confirm, <esc> cancel"
+        } else {
+            "n/N to navigate, <esc> to clear"
+        };
+
+        let mut spans = vec![Span::styled(format!(" /{}", search.query), query_style)];
+        if !counts.is_empty() {
+            spans.push(Span::styled(format!("   {}", counts), hint_style));
+        }
+        spans.push(Span::styled(format!("   {}", hints), hint_style));
+        f.render_widget(
+            NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
+            row,
+        );
     }
 
     /// The whole-row filter display, ported from the task list's old two-line
@@ -615,6 +711,7 @@ mod tests {
         props.pane = Some(PaneProps {
             interactive: Some(false),
             status_message: None,
+            search: None,
         });
         let (terminal, _) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
@@ -626,6 +723,7 @@ mod tests {
         props.pane = Some(PaneProps {
             interactive: Some(true),
             status_message: None,
+            search: None,
         });
         let (terminal, _) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
@@ -641,6 +739,7 @@ mod tests {
         props.pane = Some(PaneProps {
             interactive: Some(false),
             status_message: None,
+            search: None,
         });
         let (terminal, _) = render_bar(120, 1, &props);
         insta::assert_snapshot!(terminal.backend());
@@ -649,6 +748,7 @@ mod tests {
         props.pane = Some(PaneProps {
             interactive: Some(true),
             status_message: None,
+            search: None,
         });
         let (terminal, _) = render_bar(120, 1, &props);
         let row: String = (0..120)
@@ -667,6 +767,7 @@ mod tests {
         props.pane = Some(PaneProps {
             interactive: None,
             status_message: Some("copied to clipboard".to_string()),
+            search: None,
         });
         let (terminal, bar) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
@@ -750,6 +851,41 @@ mod tests {
         insta::assert_snapshot!(terminal.backend());
         // No cloud link is registered while the filter preempts the bar.
         assert_eq!(bar.link_registry().hit_test(70, 0), None);
+    }
+
+    #[test]
+    fn pane_search_preempts_the_whole_bar() {
+        let mut props = base_props();
+        props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
+        props.pane = Some(PaneProps {
+            interactive: Some(false),
+            status_message: None,
+            search: Some(PaneSearchProps {
+                query: "error".to_string(),
+                input_mode: true,
+                current: 2,
+                total: 17,
+            }),
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn confirmed_pane_search_shows_navigation_hints() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            interactive: Some(false),
+            status_message: None,
+            search: Some(PaneSearchProps {
+                query: "error".to_string(),
+                input_mode: false,
+                current: 2,
+                total: 17,
+            }),
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
     }
 
     #[test]

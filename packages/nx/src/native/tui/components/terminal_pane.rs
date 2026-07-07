@@ -80,6 +80,18 @@ struct TerminalPaneConfig {
     short_tab_text: &'static str,
 }
 
+/// A vim-style search session over a pane's terminal content.
+#[derive(Debug, Clone, Default)]
+pub struct PaneSearch {
+    pub query: String,
+    /// Typing into the query (true) vs navigating matches with n/N (false).
+    pub input_mode: bool,
+    /// Match positions in the PTY's visual coordinates: (row, col, char_len).
+    pub matches: Vec<(usize, usize, usize)>,
+    /// Index into `matches` of the match the view last jumped to.
+    pub current: usize,
+}
+
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
     pub is_interactive: bool,
@@ -91,6 +103,8 @@ pub struct TerminalPaneData {
     pub status_message: Option<(String, Instant)>,
     /// Active text selection within this pane, if any (NXC-3946).
     selection: Option<TextSelection>,
+    /// Active search session, if any.
+    pub search: Option<PaneSearch>,
     /// Inner content rect (inside borders/padding) captured during the last
     /// render, used to translate mouse coordinates into content coordinates.
     last_content_area: Option<Rect>,
@@ -106,11 +120,160 @@ impl TerminalPaneData {
             scroll_momentum: ScrollMomentum::new(),
             status_message: None,
             selection: None,
+            search: None,
             last_content_area: None,
         }
     }
 
+    /// Whether the search input is capturing keystrokes (the app routes every
+    /// key here while this is true).
+    pub fn search_input_active(&self) -> bool {
+        self.search.as_ref().is_some_and(|search| search.input_mode)
+    }
+
+    /// Recompute matches for the current query and optionally jump to the
+    /// nearest match at or below the current viewport top.
+    fn recompute_search(&mut self, jump: bool) {
+        let Some(pty) = &self.pty else {
+            return;
+        };
+        let top = pty.visual_top();
+        let positions = self
+            .search
+            .as_ref()
+            .map(|search| pty.search_visual_positions(&search.query))
+            .unwrap_or_default();
+        let Some(search) = &mut self.search else {
+            return;
+        };
+        search.matches = positions;
+        search.current = search
+            .matches
+            .iter()
+            .position(|(row, _, _)| *row >= top)
+            .unwrap_or(0);
+        if jump {
+            self.jump_to_current_match();
+        }
+    }
+
+    /// Refresh the match list against the current content (it may have grown)
+    /// WITHOUT re-anchoring `current` to the scroll position: n/N must step
+    /// relative to the match the user is on, not whatever scrolled into view.
+    fn refresh_matches(&mut self) {
+        let Some(pty) = &self.pty else {
+            return;
+        };
+        let positions = self
+            .search
+            .as_ref()
+            .map(|search| pty.search_visual_positions(&search.query))
+            .unwrap_or_default();
+        if let Some(search) = &mut self.search {
+            let previous = search.matches.get(search.current).copied();
+            search.matches = positions;
+            search.current = previous
+                .and_then(|prev| search.matches.iter().position(|m| *m == prev))
+                .unwrap_or_else(|| search.current.min(search.matches.len().saturating_sub(1)));
+        }
+    }
+
+    /// Step to the next (+1) or previous (-1) match, wrapping around.
+    fn search_step(&mut self, direction: i64) {
+        if let Some(search) = &mut self.search {
+            let len = search.matches.len();
+            if len == 0 {
+                return;
+            }
+            search.current = ((search.current as i64 + direction).rem_euclid(len as i64)) as usize;
+        }
+        self.jump_to_current_match();
+    }
+
+    fn jump_to_current_match(&mut self) {
+        let Some(search) = &self.search else {
+            return;
+        };
+        let Some((row, _, _)) = search.matches.get(search.current).copied() else {
+            return;
+        };
+        if let Some(pty) = &self.pty {
+            let mut pty_mut = pty.as_ref().clone();
+            pty_mut.scroll_to_visual_row(row);
+        }
+    }
+
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<Option<Action>> {
+        // Vim-style search input: while typing, every key edits the query.
+        if self.search_input_active() {
+            match key.code {
+                KeyCode::Esc => {
+                    self.search = None;
+                }
+                KeyCode::Enter => {
+                    // Confirm and switch to n/N navigation; an empty or
+                    // matchless query just closes the search.
+                    if self
+                        .search
+                        .as_ref()
+                        .is_some_and(|search| !search.matches.is_empty())
+                    {
+                        if let Some(search) = &mut self.search {
+                            search.input_mode = false;
+                        }
+                    } else {
+                        self.search = None;
+                    }
+                }
+                KeyCode::Backspace => {
+                    if let Some(search) = &mut self.search {
+                        search.query.pop();
+                    }
+                    self.recompute_search(true);
+                }
+                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    if let Some(search) = &mut self.search {
+                        search.query.push(c);
+                    }
+                    self.recompute_search(true);
+                }
+                _ => {}
+            }
+            return Ok(None);
+        }
+
+        if !self.is_interactive {
+            // A confirmed search navigates with n/N and clears with Esc.
+            if self.search.is_some() {
+                match key.code {
+                    KeyCode::Char('n') => {
+                        // Content may have grown since the last search.
+                        self.refresh_matches();
+                        self.search_step(1);
+                        return Ok(None);
+                    }
+                    KeyCode::Char('N') => {
+                        self.refresh_matches();
+                        self.search_step(-1);
+                        return Ok(None);
+                    }
+                    KeyCode::Esc => {
+                        self.search = None;
+                        return Ok(None);
+                    }
+                    _ => {}
+                }
+            }
+            // '/' opens a fresh search over the pane's content.
+            if key.code == KeyCode::Char('/') && self.pty.is_some() {
+                self.search = Some(PaneSearch {
+                    input_mode: true,
+                    ..Default::default()
+                });
+                return Ok(None);
+            }
+        }
+
         if let Some(pty) = &mut self.pty {
             let mut pty_mut = pty.as_ref().clone();
             match key.code {
@@ -901,6 +1064,49 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         }
                     }
 
+                    // Overlay search-match highlights the same way: plain
+                    // matches in reverse-video, the current match on a
+                    // distinct warning-colored background (like vim's
+                    // CurSearch) so it stands out from its siblings.
+                    if let Some(search) = &pty_data.search
+                        && !search.matches.is_empty()
+                    {
+                        let (_, pty_cols) = pty.get_dimensions();
+                        let cols = (pty_cols as usize).max(1);
+                        let top = selection_content_rows
+                            .saturating_sub(inner_area.height as usize)
+                            .saturating_sub(current_scroll);
+                        let bottom = top + inner_area.height as usize;
+                        for (idx, (row, col, len)) in search.matches.iter().enumerate() {
+                            // Walk the match cells, following wraps onto
+                            // subsequent visual rows.
+                            for i in 0..*len {
+                                let offset = col + i;
+                                let cell_row = row + offset / cols;
+                                let cell_col = offset % cols;
+                                if cell_row < top
+                                    || cell_row >= bottom
+                                    || cell_col >= inner_area.width as usize
+                                {
+                                    continue;
+                                }
+                                if let Some(cell) = buf.cell_mut((
+                                    inner_area.x + cell_col as u16,
+                                    inner_area.y + (cell_row - top) as u16,
+                                )) {
+                                    if idx == search.current {
+                                        cell.set_bg(THEME.warning);
+                                        cell.set_fg(ratatui::style::Color::Black);
+                                        cell.modifier.remove(Modifier::DIM);
+                                        cell.modifier.remove(Modifier::REVERSED);
+                                    } else {
+                                        cell.modifier |= Modifier::REVERSED;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     // Only render scrollbar if needed
                     if needs_scrollbar {
                         let scrollbar = Scrollbar::default()
@@ -1006,6 +1212,63 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 mod tests {
     use super::*;
     use ratatui::layout::Rect;
+
+    fn press(pane: &mut TerminalPaneData, code: KeyCode) {
+        pane.handle_key_event(KeyEvent::new(code, KeyModifiers::NONE))
+            .unwrap();
+    }
+
+    /// Regression: n used to re-anchor the current match to the scroll
+    /// position before stepping, so it stopped advancing after one press.
+    #[test]
+    fn search_n_and_shift_n_step_relative_to_the_current_match() {
+        let mut pane = TerminalPaneData::new();
+        // No pty: refresh/jump are no-ops, leaving pure index stepping.
+        pane.search = Some(PaneSearch {
+            query: "x".to_string(),
+            input_mode: false,
+            matches: vec![(1, 0, 1), (5, 0, 1), (9, 0, 1)],
+            current: 0,
+        });
+
+        let current = |pane: &TerminalPaneData| pane.search.as_ref().unwrap().current;
+        press(&mut pane, KeyCode::Char('n'));
+        assert_eq!(current(&pane), 1);
+        press(&mut pane, KeyCode::Char('n'));
+        assert_eq!(current(&pane), 2);
+        press(&mut pane, KeyCode::Char('n'));
+        assert_eq!(current(&pane), 0, "n wraps forward");
+        press(&mut pane, KeyCode::Char('N'));
+        assert_eq!(current(&pane), 2, "N wraps backward");
+
+        // Esc clears the whole search session.
+        press(&mut pane, KeyCode::Esc);
+        assert!(pane.search.is_none());
+    }
+
+    /// The search input captures printable keys into the query and Enter
+    /// confirms into n/N navigation only when matches exist.
+    #[test]
+    fn search_input_edits_the_query_and_enter_without_matches_closes() {
+        let mut pane = TerminalPaneData::new();
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search.is_none(), "no pty: '/' does not open a search");
+
+        pane.pty = Some(Arc::new(PtyInstance::non_interactive_with_dimensions(
+            24, 80,
+        )));
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search_input_active());
+
+        press(&mut pane, KeyCode::Char('e'));
+        press(&mut pane, KeyCode::Char('r'));
+        press(&mut pane, KeyCode::Backspace);
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
+
+        // No matches in an empty terminal: Enter closes the session.
+        press(&mut pane, KeyCode::Enter);
+        assert!(pane.search.is_none());
+    }
 
     #[test]
     fn test_text_selection_contains_inclusive_range() {

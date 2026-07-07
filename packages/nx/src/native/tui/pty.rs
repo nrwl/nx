@@ -712,6 +712,75 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
+    /// The absolute visual row currently at the top of the viewport — the same
+    /// coordinate basis as `content_coords_at` and `search_visual_positions`.
+    pub fn visual_top(&self) -> usize {
+        let parser = self.parser.read();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        total
+            .saturating_sub(viewport)
+            .saturating_sub(screen.scrollback())
+    }
+
+    /// Scroll so the given absolute visual row sits about a third from the
+    /// viewport top (bringing some context above the match into view).
+    pub fn scroll_to_visual_row(&mut self, row: usize) {
+        let mut parser = self.parser.write();
+        let screen = parser.screen();
+        let total = screen.get_total_content_rows();
+        let viewport = screen.size().0 as usize;
+        let max_scrollback = total.saturating_sub(viewport);
+        let desired_top = row.saturating_sub(viewport / 3);
+        let scrollback = total
+            .saturating_sub(viewport)
+            .saturating_sub(desired_top)
+            .min(max_scrollback);
+        parser.screen_mut().set_scrollback(scrollback);
+    }
+
+    /// Case-insensitively find every occurrence of `query` in the terminal
+    /// content (scrollback included). Positions are returned in the wrapped
+    /// visual coordinate basis shared with `content_coords_at`, as
+    /// `(visual_row, col, char_len)`, in reading order. Matches inside a
+    /// wrapped logical line are found across the wrap (the position walks past
+    /// the row's column count into the following visual rows).
+    pub fn search_visual_positions(&self, query: &str) -> Vec<(usize, usize, usize)> {
+        if query.is_empty() {
+            return Vec::new();
+        }
+        let (contents, cols) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            (screen.all_contents(), screen.size().1 as usize)
+        };
+        if cols == 0 {
+            return Vec::new();
+        }
+
+        let needle = query.to_lowercase();
+        let needle_chars = needle.chars().count();
+        let mut matches = Vec::new();
+        let mut consumed_rows = 0usize;
+        for line in contents.lines() {
+            let haystack = line.to_lowercase();
+            let mut from = 0usize;
+            while let Some(found) = haystack[from..].find(&needle) {
+                let byte = from + found;
+                let char_offset = haystack[..byte].chars().count();
+                matches.push((
+                    consumed_rows + char_offset / cols,
+                    char_offset % cols,
+                    needle_chars,
+                ));
+                from = byte + needle.len().max(1);
+            }
+            consumed_rows += wrap_logical_line(line, cols);
+        }
+        matches
+    }
+
     /// Extract the plain text covered by a selection expressed in absolute
     /// content-row + column coordinates (both ends inclusive).
     ///
@@ -1033,5 +1102,44 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect enquirer-style cursor manipulation"
         );
+    }
+
+    #[test]
+    fn search_finds_case_insensitive_matches_in_visual_coordinates() {
+        let pty = create_test_pty_instance(false);
+        pty.parser
+            .write()
+            .process(b"first Error here\r\nnothing\r\nlast ERROR\r\n");
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 6, 5), (2, 5, 5)]);
+
+        // Wrapped lines report positions past the first visual row.
+        let long_line = format!("{}error\r\n", "x".repeat(80));
+        pty.parser.write().process(long_line.as_bytes());
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches.last(), Some(&(4, 0, 5)));
+
+        assert!(pty.search_visual_positions("").is_empty());
+        assert!(pty.search_visual_positions("absent").is_empty());
+    }
+
+    #[test]
+    fn scroll_to_visual_row_brings_the_row_into_view() {
+        let mut pty = create_test_pty_instance(false);
+        for i in 0..100 {
+            pty.parser
+                .write()
+                .process(format!("line {}\r\n", i).as_bytes());
+        }
+
+        pty.scroll_to_visual_row(10);
+        let top = pty.visual_top();
+        assert!(top <= 10, "row 10 must be at or below the top, top={top}");
+        assert!(top + 24 > 10, "row 10 must be within the 24-row viewport");
+
+        // Jumping to the very end clamps to the bottom.
+        pty.scroll_to_visual_row(10_000);
+        assert_eq!(pty.get_scroll_offset(), 0);
     }
 }

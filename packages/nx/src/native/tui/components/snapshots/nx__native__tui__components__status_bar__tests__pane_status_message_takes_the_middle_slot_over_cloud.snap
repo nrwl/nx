@@ -2,4 +2,4 @@
 source: packages/nx/src/native/tui/components/status_bar.rs
 expression: terminal.backend()
 ---
-" 0/3    copied to clipboard                                                     quit: q  help: ?  full screen: <enter>  copy: c  scroll: ↑ ↓"
+" 0/3    copied to clipboard                                          quit: q  help: ?  search: /  full screen: <enter>  copy: c  scroll: ↑ ↓"
