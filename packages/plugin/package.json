@@ -44,6 +44,14 @@
   "devDependencies": {
     "nx": "workspace:*"
   },
+  "peerDependencies": {
+    "@nx/vitest": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nx/vitest": {
+      "optional": true
+    }
+  },
   "publishConfig": {
     "access": "public"
   },

@@ -139,6 +139,11 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
       {
         [options.unitTestRunner === 'vitest' ? '@nx/vitest' : '@nx/jest']:
           nxVersion,
+        ...(options.e2eTestRunner === 'vitest'
+          ? { '@nx/vitest': nxVersion }
+          : options.e2eTestRunner === 'jest'
+            ? { '@nx/jest': nxVersion }
+            : {}),
         '@nx/js': nxVersion,
         '@nx/plugin': nxVersion,
       }
@@ -168,6 +173,7 @@ export async function pluginGeneratorInternal(host: Tree, schema: Schema) {
         linter: options.linter,
         useProjectJson: options.useProjectJson,
         addPlugin: options.addPlugin,
+        testRunner: options.e2eTestRunner as 'jest' | 'vitest',
       })
     );
   }
