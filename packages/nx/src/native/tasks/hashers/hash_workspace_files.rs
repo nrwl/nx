@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 use rayon::prelude::*;
 
+use super::once_cache::OnceCache;
 use crate::native::glob::build_glob_set;
 use crate::native::glob::glob_files::glob_files;
 use crate::native::hasher::hash;
@@ -11,6 +14,19 @@ use tracing::{debug, debug_span, trace, warn};
 pub struct WorkspaceFilesHashResult {
     pub hash: String,
     pub files: Vec<String>,
+}
+
+pub(crate) type WorkspaceFileSetCache = OnceCache<WorkspaceFilesHashResult>;
+
+fn workspace_file_set_cache_key(workspace_file_sets: &[String]) -> String {
+    let mut sorted_file_sets: Vec<&str> = workspace_file_sets.iter().map(String::as_str).collect();
+    sorted_file_sets.sort();
+
+    format!(
+        "{}\0{}",
+        sorted_file_sets.len(),
+        sorted_file_sets.join("\0")
+    )
 }
 
 /// Expands workspace file set patterns by stripping `{workspaceRoot}/` prefix.
@@ -84,6 +100,16 @@ pub fn hash_workspace_files_with_inputs(
             hash: hashed_value,
             files,
         })
+    })
+}
+
+pub(crate) fn hash_workspace_files_with_inputs_cached(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: &WorkspaceFileSetCache,
+) -> Result<Arc<WorkspaceFilesHashResult>> {
+    cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
+        hash_workspace_files_with_inputs(workspace_file_sets, all_workspace_files)
     })
 }
 
@@ -162,5 +188,38 @@ mod test {
             .unwrap();
             assert_eq!(result.hash, "13759877301064854697");
         }
+    }
+
+    #[test]
+    fn should_cache_by_fileset_combo_regardless_of_order() {
+        let first_file_sets = &[
+            "{workspaceRoot}/**/*".to_string(),
+            "!{workspaceRoot}/**/*.spec.ts".to_string(),
+        ];
+        let second_file_sets = &[
+            "!{workspaceRoot}/**/*.spec.ts".to_string(),
+            "{workspaceRoot}/**/*".to_string(),
+        ];
+        let all_workspace_files = vec![
+            FileData {
+                file: "test1.ts".into(),
+                hash: "file_data1".into(),
+            },
+            FileData {
+                file: "test.spec.ts".into(),
+                hash: "file_data2".into(),
+            },
+        ];
+
+        let cache = WorkspaceFileSetCache::new();
+        let first =
+            hash_workspace_files_with_inputs_cached(first_file_sets, &all_workspace_files, &cache)
+                .unwrap();
+        let second =
+            hash_workspace_files_with_inputs_cached(second_file_sets, &all_workspace_files, &cache)
+                .unwrap();
+
+        assert_eq!(cache.len(), 1);
+        assert!(Arc::ptr_eq(&first, &second));
     }
 }
