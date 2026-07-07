@@ -40,6 +40,31 @@ impl HelpText {
         }
     }
 
+    /// The width of the hints that must never be crowded out by other
+    /// sections: quit/help for the task list, everything through the
+    /// interactivity toggle for a pane (the whole line while interactive,
+    /// since it is a single item).
+    pub fn essential_width(&self) -> u16 {
+        let essential_items = match self.context {
+            HelpTextContext::TaskList { .. } => 2,
+            HelpTextContext::Pane {
+                is_interactive: true,
+                ..
+            } => 1,
+            HelpTextContext::Pane {
+                can_be_interactive: true,
+                ..
+            } => 4, // NON-INTERACTIVE, quit, help, interact
+            HelpTextContext::Pane { .. } => 2,
+        };
+        let mut used = 0usize;
+        for (idx, item) in self.items().iter().take(essential_items).enumerate() {
+            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
+            used += separator + Self::item_width(item);
+        }
+        used as u16
+    }
+
     /// The width the help line actually renders at inside `max_width`: the
     /// longest prefix of whole items that fits. Lets the caller reserve
     /// exactly the used columns and give the rest to other sections.

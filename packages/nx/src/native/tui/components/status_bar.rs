@@ -223,6 +223,9 @@ impl StatusBar {
             None
         };
 
+        // The context's essential hints (e.g. the interactivity toggle while a
+        // pane is focused) are never crowded out by the middle message.
+        let help_min = help.essential_width();
         let (middle_min, gaps) = match middle_natural {
             Some(natural) => (natural.min(MIN_CLOUD_URL_WIDTH), 2 * MIN_BOTTOM_SPACING),
             None => (0, MIN_BOTTOM_SPACING),
@@ -231,15 +234,15 @@ impl StatusBar {
         // wouldn't fit.
         let status_width = status_natural.min(
             row.width
-                .saturating_sub(gaps + middle_min + MIN_HELP_WIDTH + RIGHT_MARGIN),
+                .saturating_sub(gaps + middle_min + help_min + RIGHT_MARGIN),
         );
         // The middle takes its natural width next (the Link/message truncate
-        // themselves when squeezed below it), preserving the help minimum.
+        // themselves when squeezed below it), preserving the essential hints.
         let middle_width = middle_natural
             .map(|natural| {
                 natural.min(
                     row.width
-                        .saturating_sub(status_width + gaps + MIN_HELP_WIDTH + RIGHT_MARGIN),
+                        .saturating_sub(status_width + gaps + help_min + RIGHT_MARGIN),
                 )
             })
             .unwrap_or(0);
@@ -626,6 +629,32 @@ mod tests {
         });
         let (terminal, _) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn cloud_message_never_crowds_out_the_pane_essentials() {
+        // Regression: a long cloud message used to squeeze the help down to
+        // quit/help, hiding the interactivity indicator and toggle hint.
+        let mut props = base_props();
+        props.cloud_message =
+            Some("View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string());
+        props.pane = Some(PaneProps {
+            interactive: Some(false),
+            status_message: None,
+        });
+        let (terminal, _) = render_bar(120, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+
+        // The single-item INTERACTIVE toggle survives the same squeeze.
+        props.pane = Some(PaneProps {
+            interactive: Some(true),
+            status_message: None,
+        });
+        let (terminal, _) = render_bar(120, 1, &props);
+        let row: String = (0..120)
+            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
+            .collect();
+        assert!(row.contains("exit interactive: <ctrl>+z"), "got: {row}");
     }
 
     #[test]
