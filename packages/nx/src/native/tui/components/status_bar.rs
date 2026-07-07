@@ -40,7 +40,6 @@ pub struct StatusBarProps {
     pub perf_report_available: bool,
     pub cloud_message: Option<String>,
     pub cloud_link: Option<(String, String)>,
-    pub title_text: String,
     pub completed_count: usize,
     pub total_count: usize,
     pub all_completed: bool,
@@ -294,11 +293,15 @@ impl StatusBar {
             Span::raw("  "),
         ];
 
+        // The run title stays with the task list's header; the bar only shows
+        // the run state and progress counts.
+        let counts = if props.total_count > 0 {
+            format!(" {}/{}", props.completed_count, props.total_count)
+        } else {
+            String::new()
+        };
         if props.all_completed {
-            spans.push(Span::styled(
-                format!("Completed {}", props.title_text),
-                title_style,
-            ));
+            spans.push(Span::styled(format!("Completed{}", counts), title_style));
             if let Some((first_start, last_end)) = props.run_time_range {
                 spans.push(Span::styled(
                     format!(" ({})", format_duration_since(first_start, last_end)),
@@ -306,16 +309,7 @@ impl StatusBar {
                 ));
             }
         } else {
-            spans.push(Span::styled(
-                format!("Running {}...", props.title_text),
-                title_style,
-            ));
-            if props.total_count > 0 {
-                spans.push(Span::styled(
-                    format!(" {}/{}", props.completed_count, props.total_count),
-                    dim_style,
-                ));
-            }
+            spans.push(Span::styled(format!("Running{}...", counts), title_style));
         }
 
         Line::from(spans)
@@ -478,7 +472,6 @@ mod tests {
 
     fn base_props() -> StatusBarProps {
         StatusBarProps {
-            title_text: "3 tasks".to_string(),
             total_count: 3,
             ..Default::default()
         }

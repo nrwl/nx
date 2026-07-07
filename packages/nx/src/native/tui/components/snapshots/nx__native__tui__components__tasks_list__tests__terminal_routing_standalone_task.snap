@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                                                                                        "
-"                                                                                                        Cache   Duration"
+"       Test Tasks                                                                                       Cache   Duration"
 " │                                                                                                                      "
 ">│⠋    app:build                                                                                          ...       <1ms"
 " │·    Waiting for task...                                                                                              "

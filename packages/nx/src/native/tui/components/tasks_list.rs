@@ -1355,14 +1355,15 @@ impl TasksList {
             THEME.info
         };
 
-        // Leave first cell empty for the logo
+        // The first (status icon) column has no label
         let status_cell = Cell::from("").style(status_style);
 
-        // Completion status text is now shown with the logo in the first cell
-        // Just provide an empty second cell
-        let status_text = String::new();
+        // The run title heads the task name column, in the same quiet style as
+        // the column labels (run state and counts live in the status bar).
+        let title_cell =
+            Cell::from(self.tui_state.lock().title_text().to_string()).style(status_style);
 
-        let mut header_cells = vec![status_cell, Cell::from(status_text)];
+        let mut header_cells = vec![status_cell, title_cell];
 
         // Add cache status column header if visible
         if column_visibility.show_cache_status {
@@ -2683,7 +2684,7 @@ mod tests {
             RunMode::RunMany,
             Vec::new(),
             TuiConfig::new(None, None, &cli_args),
-            String::from("Test"),
+            String::from("Test Tasks"),
             TaskGraph {
                 tasks: StdHashMap::new(),
                 dependencies: StdHashMap::new(),

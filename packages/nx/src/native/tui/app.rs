@@ -1551,7 +1551,6 @@ impl App {
                             perf_report_available: state.has_exit_summary(),
                             cloud_message: state.get_cloud_message().map(str::to_string),
                             cloud_link: state.get_cloud_link().cloned(),
-                            title_text: state.title_text().to_string(),
                             completed_count: state.get_completed_task_count(),
                             total_count: state.tasks().len(),
                             all_completed: state.is_run_completed(),
