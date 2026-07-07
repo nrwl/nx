@@ -663,12 +663,12 @@ impl CountdownPopup {
             .max(1);
         let estimated_rows = nx_content.wrapped_rows(inner_width, false);
         // Rows reserved at the bottom of the inner area for the connect
-        // progress/URL line (plus a blank separator row above it).
+        // progress/URL line, plus a divider row and a blank row above it.
         let connect_rows: u16 = connect_line
             .as_ref()
             .map(|l| {
                 let text: NxText = vec![l.clone()].into();
-                text.wrapped_rows(inner_width, false).max(1) as u16 + 1
+                text.wrapped_rows(inner_width, false).max(1) as u16 + 2
             })
             .unwrap_or(0);
         let popup_height = ((estimated_rows as u16)
@@ -710,9 +710,8 @@ impl CountdownPopup {
             ..inner_area
         };
         let connect_area = Rect {
-            // Skip the blank separator row above the connect line.
-            y: inner_area.y + main_area.height + 1,
-            height: connect_rows.saturating_sub(1),
+            y: inner_area.y + main_area.height,
+            height: connect_rows,
             ..inner_area
         }
         // On a tiny terminal the clamped popup may not fit the reserved rows.
@@ -755,13 +754,19 @@ impl CountdownPopup {
         // the app's modal mouse handler hit-tests to open it.
         f.render_stateful_widget(popup, main_area, &mut self.link_registry);
 
-        // The connect progress/URL line, centered above the footer hints.
+        // The connect section: a divider separating it from the report, then
+        // the progress/URL line centered above the footer hints.
         if let Some(line) = connect_line
             && connect_area.height > 0
         {
-            let connect_paragraph = NxParagraph::new(NxText::from(vec![line]))
-                .alignment(Alignment::Center)
-                .wrap(Wrap { trim: false });
+            let divider = NxLine::from_spans(vec![NxSpan::Text(Span::styled(
+                "─".repeat(connect_area.width as usize),
+                Style::default().fg(THEME.info),
+            ))]);
+            let connect_paragraph =
+                NxParagraph::new(NxText::from(vec![divider, NxLine::default(), line]))
+                    .alignment(Alignment::Center)
+                    .wrap(Wrap { trim: false });
             f.render_stateful_widget(connect_paragraph, connect_area, &mut self.link_registry);
         }
 
@@ -1150,6 +1155,16 @@ mod tests {
         let (text, _) = render_with_registry(&mut popup);
 
         let line_text = format!("Finish your setup: {url}");
+
+        // A divider row separates the report from the connect section: an
+        // inner row (bordered by │ on both sides) made of ─ characters.
+        let has_divider = text.lines().any(|l| {
+            let chars: Vec<char> = l.chars().collect();
+            chars.iter().filter(|&&c| c == '│').count() == 2
+                && chars.iter().filter(|&&c| c == '─').count() > 20
+        });
+        assert!(has_divider, "a divider renders above the connect line");
+
         let url_row = text.lines().find(|l| l.contains(&line_text)).unwrap();
         // Compare the space padding between the border columns on either side
         // of the line (work in chars: the border glyphs are multi-byte).
