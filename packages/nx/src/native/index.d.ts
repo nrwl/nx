@@ -28,7 +28,7 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, cloudConnectionStatus?: CloudConnectionStatus | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
@@ -53,6 +53,21 @@ export declare class AppLifeCycle {
    * Cloud client can call it via the lifecycle it already receives.
    */
   setCloudLink(label: string, url: string): void
+  /**
+   * Register the callback fired when the user presses the connect-to-cloud
+   * shortcut. JS runs the `nx connect` logic and pushes the resulting URL
+   * back via `setConnectUrl` / `setConnectError`.
+   */
+  registerConnectToCloudCallback(connectCallback: (() => unknown)): void
+  /** Deliver the Nx Cloud onboarding URL to the connect popup. */
+  setConnectUrl(url: string): void
+  /** Surface a connect failure in the connect popup. */
+  setConnectError(message: string): void
+  /**
+   * Update the Nx Cloud connection status shown in the bottom bar (e.g.
+   * after a TUI-initiated connect wrote an nxCloudId to nx.json).
+   */
+  setCloudConnectionStatus(status: CloudConnectionStatus): void
 }
 
 export declare class ChildProcess {
@@ -295,6 +310,17 @@ export declare function canInstallNxConsole(): Promise<boolean>
 export declare function canInstallNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
 export declare function closeDbConnection(connection: ExternalObject<NxDbConnection>): void
+
+/**
+ * Whether the workspace is connected to Nx Cloud. Computed by JS at startup
+ * and updated mid-run after a successful TUI-initiated connect. Passing no
+ * status at all (JS `undefined`) means cloud is disabled for the workspace
+ * and the TUI shows no cloud status.
+ */
+export declare const enum CloudConnectionStatus {
+  Connected = 'Connected',
+  NotConnected = 'NotConnected'
+}
 
 export declare function connectToNxDb(cacheDir: string, dbName?: string | undefined | null): ExternalObject<NxDbConnection>
 

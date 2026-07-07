@@ -16,7 +16,9 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, RunMode};
+use super::lifecycle::{
+    BatchInfo, BatchStatus, CloudConnectionStatus, PerformanceSummaryPayload, RunMode,
+};
 use super::pty::PtyInstance;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
@@ -26,11 +28,15 @@ use super::pty::PtyInstance;
 pub type DoneCallback = ();
 #[cfg(test)]
 pub type ForcedShutdownCallback = ();
+#[cfg(test)]
+pub type ConnectToCloudCallback = ();
 
 #[cfg(not(test))]
 pub type DoneCallback = ThreadsafeFunction<(), Unknown<'static>, (), Status, false>;
 #[cfg(not(test))]
 pub type ForcedShutdownCallback = ThreadsafeFunction<(), Unknown<'static>, (), Status, false>;
+#[cfg(not(test))]
+pub type ConnectToCloudCallback = ThreadsafeFunction<(), Unknown<'static>, (), Status, false>;
 
 /// Batch metadata stored for mode switching persistence
 #[derive(Debug, Clone)]
@@ -72,6 +78,7 @@ pub struct TuiState {
     // In test mode these are () which is zero-sized and has no Drop impl
     done_callback: Option<DoneCallback>,
     forced_shutdown_callback: Option<ForcedShutdownCallback>,
+    connect_to_cloud_callback: Option<ConnectToCloudCallback>,
 
     // === Console Messaging ===
     console_messenger: Option<NxConsoleMessageConnection>,
@@ -86,6 +93,10 @@ pub struct TuiState {
     /// Structured Nx Cloud link (display label, href URL), shown as a clickable
     /// label in place of the raw cloud message when set.
     cloud_link: Option<(String, String)>,
+    /// Nx Cloud connection status, computed by JS at startup and updated after
+    /// a TUI-initiated connect. `None` means cloud is disabled for the
+    /// workspace (NX_NO_CLOUD / neverConnectToCloud) and no status is shown.
+    cloud_connection_status: Option<CloudConnectionStatus>,
 
     // === Performance Report ===
     /// Stored here (not on the per-instance popup) so it survives mode switches;
@@ -130,6 +141,7 @@ impl TuiState {
         task_graph: TaskGraph,
         estimated_task_timings: HashMap<String, i64>,
         dimensions: Option<(u16, u16)>,
+        cloud_connection_status: Option<CloudConnectionStatus>,
     ) -> Self {
         // Initialize task status map with NotStarted for all tasks
         let mut task_status_map = HashMap::new();
@@ -152,12 +164,14 @@ impl TuiState {
             title_text,
             done_callback: None,
             forced_shutdown_callback: None,
+            connect_to_cloud_callback: None,
             console_messenger: None,
             quit_at: None,
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
             cloud_link: None,
+            cloud_connection_status,
             exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
@@ -366,6 +380,33 @@ impl TuiState {
         self.forced_shutdown_callback = Some(callback);
     }
 
+    /// Set the connect-to-cloud callback (fired when the user presses the
+    /// connect shortcut; JS runs the `nx connect` logic and pushes the URL back)
+    #[cfg(not(test))]
+    pub fn set_connect_to_cloud_callback(&mut self, callback: ConnectToCloudCallback) {
+        self.connect_to_cloud_callback = Some(callback);
+    }
+
+    /// Fire the connect-to-cloud callback. Returns false when JS never
+    /// registered one, so the caller can surface an error instead of hanging
+    /// in a loading state.
+    #[cfg(not(test))]
+    pub fn call_connect_to_cloud_callback(&self) -> bool {
+        if let Some(callback) = &self.connect_to_cloud_callback {
+            callback.call((), ThreadsafeFunctionCallMode::NonBlocking);
+            true
+        } else {
+            false
+        }
+    }
+
+    // In test mode pretend the callback fired so tests can exercise the
+    // loading state of the connect popup.
+    #[cfg(test)]
+    pub fn call_connect_to_cloud_callback(&self) -> bool {
+        true
+    }
+
     /// Call the done callback if it exists
     /// Can be called multiple times safely
     /// If is_forced_shutdown is true, also calls the forced_shutdown_callback first
@@ -511,6 +552,16 @@ impl TuiState {
     /// Get the structured cloud link (if any).
     pub fn get_cloud_link(&self) -> Option<&(String, String)> {
         self.cloud_link.as_ref()
+    }
+
+    /// Set the Nx Cloud connection status.
+    pub fn set_cloud_connection_status(&mut self, status: Option<CloudConnectionStatus>) {
+        self.cloud_connection_status = status;
+    }
+
+    /// Get the Nx Cloud connection status (None = cloud disabled, show nothing).
+    pub fn get_cloud_connection_status(&self) -> Option<CloudConnectionStatus> {
+        self.cloud_connection_status
     }
 
     // === UI State Methods (for mode switching persistence) ===
@@ -681,6 +732,7 @@ mod tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
             None,
         )
     }
@@ -1029,6 +1081,7 @@ mod integration_tests {
             String::from("Test"),
             task_graph,
             HashMap::new(),
+            None,
             None,
         )
     }
