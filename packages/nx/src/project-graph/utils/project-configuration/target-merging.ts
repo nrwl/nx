@@ -534,16 +534,23 @@ export function mergeTargetConfigurations(
     }
   }
 
-  // Update source map once after loop. Real plugins win last, but a target
-  // default — which only stamps fields onto an existing target and never
-  // authors its existence — must not steal the node key from the plugin that
-  // introduced the target. An incompatible replace clears these keys above, so
-  // a replacing real plugin still re-owns the node.
+  // Update the node key once after the loop. Ownership follows identity: this
+  // merge claims `targets.<name>` only when it changed the target's identity
+  // (a new/different executor or command, or an incompatible replace — whose
+  // key purge above empties the slot anyway). A plugin that only layers fields
+  // onto an existing target leaves the node with its creator; weak
+  // target-defaults stamps are always reclaimable.
   if (projectConfigSourceMap) {
+    const identityChanged =
+      !isCompatible ||
+      (target.executor !== undefined &&
+        target.executor !== baseTarget?.executor) ||
+      (target.command !== undefined && target.command !== baseTarget?.command);
     recordTargetIdentitySourceMapInfo(
       projectConfigSourceMap,
       targetIdentifier,
-      sourceInformation
+      sourceInformation,
+      identityChanged
     );
   }
 

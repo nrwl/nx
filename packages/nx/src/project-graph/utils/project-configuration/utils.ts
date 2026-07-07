@@ -1,6 +1,7 @@
 import {
   readArrayItemSourceInfo,
   readObjectPropertySourceInfo,
+  TARGET_DEFAULTS_PLUGIN_NAME,
   type SourceInformation,
 } from './source-maps';
 
@@ -85,10 +86,31 @@ export function getMergeValueResult<T>(
   // plugin already set, purely as a merge guard — must not steal provenance
   // from the layer that introduced the value. A genuinely new value (no base,
   // or a different one) still attributes to the new layer.
-  if (!isUnchangedPrimitive(newValue, baseValue)) {
+  //
+  // The exception cuts the other way too: when the *existing* attribution is a
+  // target-defaults stamp (TD merges before the plugin whose value it
+  // predicted, so its stamp lands first), a real plugin re-stating that value
+  // is the genuine author and reclaims the key.
+  if (
+    !isUnchangedPrimitive(newValue, baseValue) ||
+    isReclaimableTargetDefaultsStamp(sourceMapContext)
+  ) {
     writeTopLevelSourceMap(sourceMapContext);
   }
   return newValue;
+}
+
+// Whether the key's current attribution is a weak target-defaults stamp that
+// the (non-target-defaults) writer should reclaim despite the value being
+// unchanged.
+function isReclaimableTargetDefaultsStamp(
+  ctx: SourceMapContext | undefined
+): boolean {
+  return (
+    !!ctx &&
+    ctx.sourceMap[ctx.key]?.[1] === TARGET_DEFAULTS_PLUGIN_NAME &&
+    ctx.sourceInformation[1] !== TARGET_DEFAULTS_PLUGIN_NAME
+  );
 }
 
 // Whether `newValue` leaves a defined primitive base untouched. Objects fall

@@ -176,10 +176,10 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        // A target default stamping fields onto an existing target must not
-        // steal provenance for the target's existence; real plugins still win
-        // last. Field-level attribution is handled inside
-        // `mergeTargetConfigurations`.
+        // Claims the node key for a newly-created target (or reclaims it from
+        // a weak target-defaults stamp). Whether an *existing* target changes
+        // owners is decided inside `mergeTargetConfigurations`, which knows
+        // whether this merge changed the target's identity.
         recordTargetIdentitySourceMapInfo(
           sourceMap,
           targetSourceMapKey(targetName),

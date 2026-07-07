@@ -711,11 +711,12 @@ describe('spread syntax in mergeTargetConfigurations', () => {
       ]);
     });
 
-    it('lets a real plugin claim the target node key last (target defaults aside)', () => {
+    it('keeps the target node key with its creator when a second plugin only layers fields', () => {
       const sourceMap: Record<string, SourceInformation> = {
         'targets.build': ['a.config.ts', 'plugin-a'],
       };
-      // A second real plugin augments the same target — real plugins win last.
+      // plugin-b re-states the same executor and adds `cache` — no identity
+      // change, so plugin-a still owns the target.
       mergeTargetConfigurations(
         { executor: 'nx:run-commands', cache: true },
         { executor: 'nx:run-commands' },
@@ -724,7 +725,30 @@ describe('spread syntax in mergeTargetConfigurations', () => {
         'targets.build'
       );
 
+      expect(sourceMap['targets.build']).toEqual(['a.config.ts', 'plugin-a']);
+    });
+
+    it('transfers the target node key when a plugin changes the target identity', () => {
+      const sourceMap: Record<string, SourceInformation> = {
+        'targets.build': ['a.config.ts', 'plugin-a'],
+        'targets.build.cache': ['a.config.ts', 'plugin-a'],
+      };
+      // plugin-b sets an executor on a target that had none — an identity
+      // change, so ownership of the node moves with it.
+      mergeTargetConfigurations(
+        { executor: '@acme/b:build' },
+        { cache: true },
+        sourceMap,
+        ['b.config.ts', 'plugin-b'],
+        'targets.build'
+      );
+
       expect(sourceMap['targets.build']).toEqual(['b.config.ts', 'plugin-b']);
+      // Fields it didn't touch keep their origin.
+      expect(sourceMap['targets.build.cache']).toEqual([
+        'a.config.ts',
+        'plugin-a',
+      ]);
     });
   });
 
