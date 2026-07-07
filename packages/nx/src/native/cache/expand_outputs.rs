@@ -110,10 +110,11 @@ where
 /// Statically checks which `paths` would be captured by the given output
 /// `entries`, without touching the file system. Mirrors `expand_outputs`
 /// semantics: non-glob entries match themselves and anything nested under
-/// them, and negated (`!`-prefixed) entries exclude matches from the whole
-/// entry set. A list with no positive entries matches nothing.
+/// them, negated (`!`-prefixed) entries exclude matches from the whole entry
+/// set, and a non-empty list with only negated entries matches everything not
+/// excluded. An empty list matches nothing.
 pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
-    if !entries.iter().any(|entry| !entry.starts_with('!')) {
+    if entries.is_empty() {
         return Ok(vec![false; paths.len()]);
     }
 
@@ -371,11 +372,24 @@ mod test {
     }
 
     #[test]
-    fn should_match_nothing_without_positive_entries() {
+    fn should_match_everything_not_excluded_when_only_negated_entries() {
+        // Matches expand_outputs: with no positive entries, the walk keeps
+        // everything the negated globs don't exclude.
         let entries = vec!["!dist/cache/**".to_string()];
-        let paths = vec!["src/index.ts".to_string(), "dist/main.js".to_string()];
+        let paths = vec![
+            "src/index.ts".to_string(),
+            "dist/main.js".to_string(),
+            "dist/cache/a.js".to_string(),
+        ];
         let result = match_output_paths(entries, paths).unwrap();
-        assert_eq!(result, vec![false, false]);
+        assert_eq!(result, vec![true, true, false]);
+    }
+
+    #[test]
+    fn should_match_nothing_for_empty_entries() {
+        let paths = vec!["src/index.ts".to_string()];
+        let result = match_output_paths(vec![], paths).unwrap();
+        assert_eq!(result, vec![false]);
     }
 
     #[test]

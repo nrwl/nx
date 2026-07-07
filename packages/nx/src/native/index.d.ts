@@ -568,8 +568,9 @@ export declare function matchGlobPaths(globs: Array<string>, paths: Array<string
  * Statically checks which `paths` would be captured by the given output
  * `entries`, without touching the file system. Mirrors `expand_outputs`
  * semantics: non-glob entries match themselves and anything nested under
- * them, and negated (`!`-prefixed) entries exclude matches from the whole
- * entry set. A list with no positive entries matches nothing.
+ * them, negated (`!`-prefixed) entries exclude matches from the whole entry
+ * set, and a non-empty list with only negated entries matches everything not
+ * excluded. An empty list matches nothing.
  */
 export declare function matchOutputPaths(entries: Array<string>, paths: Array<string>): Array<boolean>
 

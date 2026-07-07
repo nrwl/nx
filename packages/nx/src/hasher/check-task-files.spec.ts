@@ -586,8 +586,21 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.unmatched).toEqual(['apps/web/.next/cache/webpack/a.pack']);
     });
 
-    it('does NOT match unrelated paths against a standalone negated pattern', async () => {
+    it('matches everything not excluded when only negated patterns are declared', async () => {
+      // Mirrors expand_outputs: with no positive patterns, the output walk
+      // keeps everything the negated globs do not exclude.
       mockGetOutputs.mockReturnValue(['!dist/cache/**']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'src/index.ts',
+        'dist/cache/a.js',
+      ]);
+      expect(result.matched).toEqual(['src/index.ts']);
+      expect(result.unmatched).toEqual(['dist/cache/a.js']);
+    });
+
+    it('matches nothing when no outputs are declared', async () => {
+      mockGetOutputs.mockReturnValue([]);
 
       const result = await checkFilesAreOutputs('myproj:build', [
         'src/index.ts',
