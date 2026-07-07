@@ -243,15 +243,27 @@ function pathMatchesPattern(normalizedPath: string, pattern: string): boolean {
   return getMatchingStringsWithCache(np, [normalizedPath]).length > 0;
 }
 
+/**
+ * Whole-list output matching: a path is an output when it matches at least one
+ * positive pattern and no negated (`!`-prefixed) pattern. Mirrors the task
+ * runner's expand_outputs semantics, where negated globs are exclusions
+ * applied to the full pattern set rather than standalone matchers.
+ */
 function isOutput(
   taskId: string,
   path: string,
   projectGraph: ProjectGraph
 ): boolean {
   const normalized = normalizePath(path);
-  return getOutputs(taskId, projectGraph).some((p) =>
-    pathMatchesPattern(normalized, p)
-  );
+  let matched = false;
+  for (const pattern of getOutputs(taskId, projectGraph)) {
+    if (pattern.startsWith('!')) {
+      if (pathMatchesPattern(normalized, pattern.slice(1))) return false;
+    } else if (!matched) {
+      matched = pathMatchesPattern(normalized, pattern);
+    }
+  }
+  return matched;
 }
 
 function matchesDependentTaskOutputs(
@@ -327,9 +339,10 @@ export async function checkFilesAreInputs(
 }
 
 /**
- * Check which files match any output glob declared for the given task.
+ * Check which files match the output globs declared for the given task.
  * Uses the same path-matching logic as the task runner (directory containment
- * + glob matching via minimatch).
+ * + glob matching via minimatch), including negated (`!`-prefixed) patterns
+ * acting as exclusions over the whole pattern set.
  */
 export async function checkFilesAreOutputs(
   taskId: string,

@@ -557,6 +557,55 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.matched).toEqual([]);
       expect(result.unmatched).toEqual([]);
     });
+
+    it('excludes paths matching a negated glob even when a positive glob matches', async () => {
+      mockGetOutputs.mockReturnValue([
+        'apps/web/.next/**',
+        '!apps/web/.next/cache/**',
+      ]);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'apps/web/.next/static/chunk.js',
+        'apps/web/.next/cache/webpack/a.pack',
+      ]);
+      expect(result.matched).toEqual(['apps/web/.next/static/chunk.js']);
+      expect(result.unmatched).toEqual(['apps/web/.next/cache/webpack/a.pack']);
+    });
+
+    it('excludes paths inside a negated directory pattern (no glob)', async () => {
+      mockGetOutputs.mockReturnValue([
+        'apps/web/.next',
+        '!apps/web/.next/cache',
+      ]);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'apps/web/.next/static/chunk.js',
+        'apps/web/.next/cache/webpack/a.pack',
+      ]);
+      expect(result.matched).toEqual(['apps/web/.next/static/chunk.js']);
+      expect(result.unmatched).toEqual(['apps/web/.next/cache/webpack/a.pack']);
+    });
+
+    it('does NOT match unrelated paths against a standalone negated pattern', async () => {
+      mockGetOutputs.mockReturnValue(['!dist/cache/**']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'src/index.ts',
+      ]);
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual(['src/index.ts']);
+    });
+
+    it('applies exclusion regardless of pattern order', async () => {
+      mockGetOutputs.mockReturnValue(['!dist/cache/**', 'dist/**']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/main.js',
+        'dist/cache/a.js',
+      ]);
+      expect(result.matched).toEqual(['dist/main.js']);
+      expect(result.unmatched).toEqual(['dist/cache/a.js']);
+    });
   });
 
   // ── taskId validation ────────────────────────────────────────────────────
