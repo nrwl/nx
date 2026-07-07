@@ -12,6 +12,7 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::components::connect_popup::ConnectPopupState;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::lifecycle::{
@@ -420,15 +421,24 @@ pub trait TuiApp: Send {
 
     /// Deliver the Nx Cloud onboarding URL to the connect popup.
     ///
-    /// Default implementation is a no-op; the full-screen app forwards it to
-    /// its connect popup (inline mode has no popups).
-    fn set_connect_url(&mut self, _url: String) {}
+    /// Default implementation persists it in TuiState so a URL arriving while
+    /// in inline mode (no popups there) is picked up when the full-screen
+    /// popup is rebuilt. The full-screen app overrides this to also update the
+    /// live popup.
+    fn set_connect_url(&mut self, url: String) {
+        self.state()
+            .lock()
+            .set_connect_popup_state(ConnectPopupState::Ready(url));
+    }
 
     /// Surface a connect failure in the connect popup.
     ///
-    /// Default implementation is a no-op; the full-screen app forwards it to
-    /// its connect popup (inline mode has no popups).
-    fn set_connect_error(&mut self, _message: String) {}
+    /// Default implementation persists it in TuiState (see `set_connect_url`).
+    fn set_connect_error(&mut self, message: String) {
+        self.state()
+            .lock()
+            .set_connect_popup_state(ConnectPopupState::Error(message));
+    }
 
     /// Set the run report shown in the exit-countdown popup.
     ///

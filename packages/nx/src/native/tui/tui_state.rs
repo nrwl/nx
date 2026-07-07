@@ -13,6 +13,7 @@ use crate::native::utils::time::current_timestamp_millis;
 
 // Re-export for backward compatibility with places that use TuiState timing
 
+use super::components::connect_popup::ConnectPopupState;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
@@ -97,6 +98,10 @@ pub struct TuiState {
     /// a TUI-initiated connect. `None` means cloud is disabled for the
     /// workspace (NX_NO_CLOUD / neverConnectToCloud) and no status is shown.
     cloud_connection_status: Option<CloudConnectionStatus>,
+    /// Content of the connect popup (loading/URL/error). Stored here so it
+    /// survives mode switches: the rebuilt full-screen popup re-hydrates from
+    /// this, and a URL arriving while in inline mode is not lost.
+    connect_popup_state: ConnectPopupState,
 
     // === Performance Report ===
     /// Stored here (not on the per-instance popup) so it survives mode switches;
@@ -172,6 +177,7 @@ impl TuiState {
             cloud_message: None,
             cloud_link: None,
             cloud_connection_status,
+            connect_popup_state: ConnectPopupState::default(),
             exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
@@ -562,6 +568,16 @@ impl TuiState {
     /// Get the Nx Cloud connection status (None = cloud disabled, show nothing).
     pub fn get_cloud_connection_status(&self) -> Option<CloudConnectionStatus> {
         self.cloud_connection_status
+    }
+
+    /// Set the connect popup content (loading/URL/error).
+    pub fn set_connect_popup_state(&mut self, state: ConnectPopupState) {
+        self.connect_popup_state = state;
+    }
+
+    /// Get the connect popup content for mode-switch rehydration.
+    pub fn get_connect_popup_state(&self) -> ConnectPopupState {
+        self.connect_popup_state.clone()
     }
 
     // === UI State Methods (for mode switching persistence) ===

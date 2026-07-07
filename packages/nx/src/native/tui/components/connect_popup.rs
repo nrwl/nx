@@ -8,10 +8,11 @@ use ratatui::{
 };
 use std::any::Any;
 
-use crate::native::tui::components::nx_paragraph::NxParagraph;
+use crate::native::tui::components::nx_paragraph::{NxLine, NxParagraph, NxSpan, NxText};
 use crate::native::tui::theme::THEME;
 
 use super::Component;
+use super::link::{Link, LinkRegistry};
 
 const MIN_POPUP_WIDTH: u16 = 60;
 const MAX_POPUP_WIDTH: u16 = 100;
@@ -19,9 +20,12 @@ const MAX_POPUP_WIDTH: u16 = 100;
 /// Content of the connect popup. The URL arrives asynchronously from JS after
 /// the user presses the connect shortcut, so the popup opens in `Loading` and
 /// is mutated in place (popups rebuild their content from state every frame).
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// Also persisted in `TuiState` so it survives mode switches (the rebuilt
+/// popup re-hydrates from there).
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum ConnectPopupState {
     /// No connect attempt has been made yet.
+    #[default]
     NotStarted,
     /// JS is creating the workspace / generating the onboarding URL.
     Loading,
@@ -43,6 +47,10 @@ pub struct ConnectPopup {
     /// Screen rect of the inner text area (inside the border) from the last
     /// render, used to bound text selection and make the URL clickable.
     content_area: Option<Rect>,
+    /// The URL rendered as a curated [`Link`] recorded here, so a click opens
+    /// the full href even when the URL wraps across rows (the raw row-by-row
+    /// URL scan would only see one row's fragment).
+    link_registry: LinkRegistry,
 }
 
 impl ConnectPopup {
@@ -52,6 +60,7 @@ impl ConnectPopup {
             state: ConnectPopupState::NotStarted,
             last_area: None,
             content_area: None,
+            link_registry: LinkRegistry::new(),
         }
     }
 
@@ -111,36 +120,44 @@ impl ConnectPopup {
         &self.state
     }
 
-    fn content_lines(&self) -> Vec<Line<'static>> {
+    /// Restore the state persisted in `TuiState` (mode-switch rehydration).
+    pub fn set_state(&mut self, state: ConnectPopupState) {
+        self.state = state;
+    }
+
+    fn content_lines(&self) -> Vec<NxLine> {
         let primary = Style::default().fg(THEME.primary_fg);
+        let text = |s: &str, style: Style| NxSpan::Text(Span::styled(s.to_string(), style));
         match &self.state {
             ConnectPopupState::NotStarted | ConnectPopupState::Loading => {
-                vec![Line::from(Span::styled(
+                vec![NxLine::from_spans(vec![text(
                     "Generating your Nx Cloud connect URL...",
                     primary,
-                ))]
+                )])]
             }
             ConnectPopupState::Ready(url) => vec![
-                Line::from(Span::styled(
+                NxLine::from_spans(vec![text(
                     "Follow this link to finish connecting your workspace to Nx Cloud.",
                     primary,
-                )),
-                Line::from(Span::styled("The setup takes about 2 minutes:", primary)),
-                Line::from(""),
-                Line::from(Span::styled(url.clone(), Style::default().fg(THEME.info))),
+                )]),
+                NxLine::from_spans(vec![text("The setup takes about 2 minutes:", primary)]),
+                NxLine::default(),
+                // A curated link so a click always opens the full href, even
+                // when the display text wraps across rows.
+                NxLine::from_spans(vec![NxSpan::Link(Link::new(url, url))]),
             ],
             ConnectPopupState::Error(message) => vec![
-                Line::from(Span::styled(
+                NxLine::from_spans(vec![text(
                     "Could not connect to Nx Cloud.",
                     Style::default().fg(THEME.error),
-                )),
-                Line::from(""),
-                Line::from(Span::styled(message.clone(), primary)),
-                Line::from(""),
-                Line::from(vec![
-                    Span::styled("Press ", Style::default().fg(THEME.secondary_fg)),
-                    Span::styled("C", Style::default().fg(THEME.info)),
-                    Span::styled(
+                )]),
+                NxLine::default(),
+                NxLine::from_spans(vec![text(message, primary)]),
+                NxLine::default(),
+                NxLine::from_spans(vec![
+                    text("Press ", Style::default().fg(THEME.secondary_fg)),
+                    text("C", Style::default().fg(THEME.info)),
+                    text(
                         " to try again, or run `nx connect` in your terminal.",
                         Style::default().fg(THEME.secondary_fg),
                     ),
@@ -166,11 +183,14 @@ impl ConnectPopup {
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
 
+        // Cleared and repopulated on every render (the app also clears it at
+        // the start of each draw pass).
+        self.link_registry.clear();
+
         let content = self.content_lines();
 
-        // Size the popup to fit the URL on a single line when possible, so the
-        // raw-URL click detection (which scans row by row) sees the whole URL.
-        let max_line_width = content.iter().map(|l| l.width()).max().unwrap_or(0) as u16;
+        // Size the popup to fit the URL on a single line when possible.
+        let max_line_width = content.iter().map(|l| l.width()).max().unwrap_or(0);
         // Border (2) + proportional padding (2 per side horizontally).
         let horizontal_overhead: u16 = 2 + 4;
         let popup_width = (max_line_width + horizontal_overhead)
@@ -178,11 +198,10 @@ impl ConnectPopup {
             .min(safe_area.width.saturating_sub(2));
         let inner_width = popup_width.saturating_sub(horizontal_overhead).max(1);
 
-        // Account for lines that wrap within the inner width.
-        let content_height: u16 = content
-            .iter()
-            .map(|l| (l.width() as u16).div_ceil(inner_width).max(1))
-            .sum();
+        // Account for lines that wrap within the inner width, using the same
+        // layout logic the paragraph renders with.
+        let content_text: NxText = content.into();
+        let content_height = content_text.wrapped_rows(inner_width, false).max(1) as u16;
         // Border (2) + proportional padding (1 per side vertically).
         let popup_height = (content_height + 4).min(safe_area.height.saturating_sub(2));
 
@@ -231,12 +250,14 @@ impl ConnectPopup {
         // The text area sits inside the border + padding.
         self.content_area = Some(block.inner(popup_area));
 
-        let popup = NxParagraph::new(content)
+        let popup = NxParagraph::new(content_text)
             .block(block)
             .wrap(ratatui::widgets::Wrap { trim: false });
 
         f.render_widget(Clear, popup_area);
-        f.render_widget(popup, popup_area);
+        // Stateful render records the URL link's screen rects into the
+        // registry for mouse hit-testing.
+        f.render_stateful_widget(popup, popup_area, &mut self.link_registry);
     }
 }
 
@@ -255,6 +276,14 @@ impl Component for ConnectPopup {
             self.content_area = None;
         }
         Ok(())
+    }
+
+    fn link_registry(&self) -> Option<&LinkRegistry> {
+        Some(&self.link_registry)
+    }
+
+    fn link_registry_mut(&mut self) -> Option<&mut LinkRegistry> {
+        Some(&mut self.link_registry)
     }
 
     fn as_any(&self) -> &dyn Any {
