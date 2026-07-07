@@ -56,7 +56,8 @@
     "semver": "catalog:",
     "yargs-parser": "catalog:",
     "minimatch": "catalog:",
-    "enquirer": "catalog:"
+    "enquirer": "catalog:",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "jest": "catalog:jest",
