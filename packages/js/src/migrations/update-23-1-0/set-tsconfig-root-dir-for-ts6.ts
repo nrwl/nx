@@ -39,8 +39,8 @@ interface Candidate {
  * TypeScript 6.0 changed the implicit `rootDir`. Before 6.0 an unset `rootDir`
  * was inferred as the common directory of a program's non-declaration input
  * files; 6.0 defaults it to the tsconfig's own directory instead. A program
- * whose files resolve outside that directory - most commonly a spec/e2e tsconfig
- * importing another project's source through a `paths` alias - then hard-fails
+ * whose files resolve outside that directory (most commonly a spec/e2e tsconfig
+ * importing another project's source through a `paths` alias) then hard-fails
  * with TS5011 or TS6059.
  *
  * For every project `tsconfig*.json` that lacks an explicit `rootDir`, this pins

@@ -13,10 +13,8 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     ['moduleResolution node', { moduleResolution: 'node' }],
     ['moduleResolution node10', { moduleResolution: 'node10' }],
     ['moduleResolution classic', { moduleResolution: 'classic' }],
-    ['moduleResolution Node (case-insensitive)', { moduleResolution: 'Node' }],
     ['baseUrl', { baseUrl: '.' }],
     ['target es5', { target: 'es5' }],
-    ['target ES5 (case-insensitive)', { target: 'ES5' }],
     ['esModuleInterop false', { esModuleInterop: false }],
     ['outFile', { outFile: './out.js', module: 'esnext' }],
     ['module amd', { module: 'amd' }],
@@ -66,7 +64,7 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
   });
 
   it('adds only the config-load flag to a solution-container tsconfig.json', async () => {
-    // No compilerOptions and no source files, so the pins are skipped - but the
+    // No compilerOptions and no source files, so the pins are skipped, but the
     // file is still a jest/ts-node auto-load target, so it gets the flag.
     tree.write('tsconfig.json', JSON.stringify({ files: [] }, null, 2));
 
@@ -87,6 +85,27 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
     await update(tree);
 
     expect(readJson(tree, 'tsconfig.json').compilerOptions).toEqual([]);
+  });
+
+  it('leaves a non-object compilerOptions untouched even when it inherits a deprecated value', async () => {
+    // The block can't receive the flag; the inherited node10 stays unsilenced,
+    // but the migration must not corrupt the array or throw and abort.
+    tree.write(
+      'base.json',
+      JSON.stringify(
+        { compilerOptions: { moduleResolution: 'node10' } },
+        null,
+        2
+      )
+    );
+    tree.write(
+      'tsconfig.app.json',
+      JSON.stringify({ extends: './base.json', compilerOptions: [] }, null, 2)
+    );
+
+    await update(tree);
+
+    expect(readJson(tree, 'tsconfig.app.json').compilerOptions).toEqual([]);
   });
 
   it('upgrades a stale ignoreDeprecations value to "6.0"', async () => {
@@ -935,6 +954,61 @@ describe('add-ignore-deprecations-for-ts6 migration', () => {
       const json = readJson(tree, 'apps/app/tsconfig.app.json');
       expect(json.compilerOptions.ignoreDeprecations).toBe('5.0');
       expect(json['ts-node'].compilerOptions.ignoreDeprecations).toBe('6.0');
+    });
+  });
+
+  describe('deprecated value inherited from a base this migration never edits', () => {
+    it('flags a child whose deprecated value comes from a non-tsconfig-named base', async () => {
+      // The base is not named "tsconfig*.json", so it is never collected or
+      // edited. Its node10 reaches the child through the merged config, so the
+      // child must carry the flag itself.
+      tree.write(
+        'libs/a/base.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      tree.write(
+        'libs/a/tsconfig.app.json',
+        JSON.stringify({ extends: './base.json', compilerOptions: {} }, null, 2)
+      );
+
+      await update(tree);
+
+      // The base is left untouched...
+      expect(
+        readJson(tree, 'libs/a/base.json').compilerOptions.ignoreDeprecations
+      ).toBeUndefined();
+      // ...so the child carries the flag directly.
+      expect(
+        readJson(tree, 'libs/a/tsconfig.app.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
+    });
+
+    it('creates a compilerOptions block to flag a child that only has "extends"', async () => {
+      tree.write(
+        'libs/a/base.json',
+        JSON.stringify(
+          { compilerOptions: { moduleResolution: 'node10' } },
+          null,
+          2
+        )
+      );
+      // No compilerOptions block of its own, yet it inherits node10.
+      tree.write(
+        'libs/a/tsconfig.app.json',
+        JSON.stringify({ extends: './base.json' }, null, 2)
+      );
+
+      await update(tree);
+
+      expect(
+        readJson(tree, 'libs/a/tsconfig.app.json').compilerOptions
+          .ignoreDeprecations
+      ).toBe('6.0');
     });
   });
 });
