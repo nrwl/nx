@@ -1,0 +1,74 @@
+---
+title: Nx vs moon
+description: Nx vs moon (moonrepo) on task running, remote caching, CI distribution, code generation, and ecosystem. moon pairs a Rust task runner with toolchain management; Nx adds graph-aware plugins, zero-config remote caching, and a CI platform.
+filter: 'type:Guides'
+sidebar:
+  label: Nx vs moon
+---
+
+[moon](https://moonrepo.dev/) is a Rust-based monorepo task runner paired with [proto](https://moonrepo.dev/proto), a toolchain version manager. The core loop overlaps heavily with Nx: both run tasks from a project graph, cache results by hashing inputs, and detect affected projects against a base branch. The differences concentrate in two places: what surrounds the task runner (code generation, migrations, plugins, release tooling), and what happens on CI, where moon ends at static job sharding and a bring-your-own remote cache while Nx Cloud provides managed caching, distribution, and AI-assisted failure handling.
+
+Both tools are also honest polyglot contenders, and both enforce project boundaries, so this comparison is closer than most. Where your needs sit on the platform spectrum decides it.
+
+| Topic                                                             | Nx                                                       | moon                                                     |
+| ----------------------------------------------------------------- | -------------------------------------------------------- | -------------------------------------------------------- |
+| [Toolchain management](#toolchain-management)                     | Not provided; composes with mise, volta, or proto itself | proto pins and auto-downloads Node, Go, Rust, Python     |
+| [Task configuration](#task-configuration)                         | Inferred from tool configs by plugins                    | Explicit, config-driven with task inheritance            |
+| [Remote caching](#remote-caching)                                 | Nx Cloud, zero-config with a free tier                   | Bring your own Bazel REAPI endpoint                      |
+| [CI distribution](#ci-distribution)                               | Nx Agents, Atomizer, flaky re-runs, self-healing CI      | Static sharding via `--job` / `--job-total`              |
+| [Polyglot support](#polyglot-support)                             | Graph-aware plugins parse Gradle, MSBuild, imports       | Generic process running + WASM toolchains (JS, Rust, Go) |
+| [Code generation and migrations](#code-generation-and-migrations) | AST-aware generators, automated dependency migrations    | Template scaffolding, no update automation               |
+| [Module boundaries](#module-boundaries)                           | Import-analysis lint rule, tags, conformance rules       | Layer and tag constraints in workspace config            |
+| [Ecosystem](#ecosystem)                                           | Framework plugins, Nx Console, large community           | Small, two-maintainer open source project                |
+
+## Toolchain management
+
+This is moon's standout feature, and Nx has no equivalent. proto pins tool versions in `.prototools`, auto-downloads them, and moon runs each task with the exact declared toolchain, so a fresh clone or CI machine needs no setup-node step. If reproducible toolchains across dev and CI are a top priority, moon owns this layer.
+
+Nx composes with existing version managers instead of replacing them, including proto itself: nothing stops you from using proto for versions and Nx for everything below.
+
+## Task configuration
+
+moon is explicit by design: tasks, inputs, and outputs are declared in `moon.yml` and inherited through workspace-level task files scoped by toolchain, layer, or tag. The inheritance model keeps large workspaces consistent, at the cost of maintaining those contracts by hand.
+
+Nx [infers tasks from the tools themselves](/docs/concepts/inferred-tasks): `@nx/vite` reads `vite.config.ts`, `@nx/gradle` reads your Gradle build, and cache inputs and outputs come from the tool's own configuration. Both models support explicit overrides; they differ in what the default requires of you. Nx also maintains workspace housekeeping like TypeScript project references through [sync generators](/docs/concepts/sync-generators), and generates CODEOWNERS from project-level [owners](/docs/enterprise/owners).
+
+## Remote caching
+
+moon's hosted cache service, moonbase, was sunset in March 2025. Remote caching now means bringing your own Bazel Remote Execution API endpoint: a self-hosted `bazel-remote` instance or a third-party cache service, which you operate, secure, and pay for separately. moon's docs note its TLS/mTLS support is unstable.
+
+[Nx Replay](/docs/features/ci-features/remote-cache) is zero-config: connect a workspace to Nx Cloud, which has a free tier, and every developer and CI machine shares a managed cache with [access control and branch-scoped isolation](/docs/concepts/ci-concepts/cache-security) built in.
+
+## CI distribution
+
+moon's CI story is `moon ci` with static sharding: `--job N --job-total M` slices the task graph across a fixed set of jobs you provision. There is no dynamic balancing, no test splitting, and flaky handling is a static per-task `retryCount`.
+
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) allocate tasks to machines continuously based on historical timings, [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits e2e suites into distributable per-file tasks, [flaky task detection](/docs/features/ci-features/flaky-tasks) identifies and retries nondeterministic tasks automatically, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes. Both tools ship an MCP server for local AI agents; the CI-side AI capabilities are Nx-only.
+
+## Polyglot support
+
+moon runs anything on PATH without requiring Node for non-JS lanes, and its v2 WASM toolchain system extends the project graph for JavaScript, Rust, and Go, with Python and Ruby unstable. For repositories where JS is just one lane among Go or Rust services, that runtime neutrality is a real draw.
+
+The Nx language plugins go deeper per ecosystem: [`@nx/gradle`](/docs/technologies/java/gradle/introduction) and the Maven and .NET plugins parse the build definitions themselves to infer projects, dependencies, and tasks, so the graph reflects actual code relationships rather than declared ones. Community plugins cover Python, Rust, and Go.
+
+## Code generation and migrations
+
+moon scaffolds files from Tera templates and can merge JSON/YAML. Nx generators are programmatic: they modify TypeScript ASTs, read the project graph, and compose, and the same machinery powers [`nx migrate`](/docs/features/automate-updating-dependencies), which updates your dependencies and transforms your configuration and code between versions automatically. moon has no update automation equivalent; its migration extensions cover importing workspaces from Nx and Turborepo, not keeping your own tooling current.
+
+## Module boundaries
+
+moon enforces layer and tag relationship constraints declared in workspace config, language-agnostic and on by default, a genuinely solid design. Nx [enforces boundaries](/docs/features/enforce-module-boundaries) at the import level for JS/TS by analyzing actual import statements through a lint rule, with [conformance rules](/docs/enterprise/conformance) extending enforcement to other languages.
+
+## Ecosystem
+
+moon is maintained by a two-person team as an MIT project, with an active release cadence and a small community; its npm downloads run around 94K weekly against 8.9M for Nx, with the caveat that moon also installs through proto and Homebrew. There are no framework-level plugins, so React, Angular, or Storybook integration is yours to wire.
+
+Nx ships [first-party plugins](/docs/plugin-registry) across frameworks and languages, [Nx Console](/docs/getting-started/editor-setup) for VS Code and JetBrains, and a full-time team behind both the CLI and Nx Cloud.
+
+## When moon is enough
+
+A polyglot repository with Go or Rust lanes, a team that wants pinned toolchains without external version managers, and CI modest enough for static sharding is a good moon fit, and proto is worth a look even if you don't adopt moon. The platform gap opens when CI needs distribution or test splitting, when remote caching should not be a service you operate yourself, or when a framework-heavy JS workspace wants generators and automated migrations instead of hand-maintained config.
+
+{% aside type="tip" title="Ready to try Nx?" %}
+See [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project) for setup instructions.
+{% /aside %}
