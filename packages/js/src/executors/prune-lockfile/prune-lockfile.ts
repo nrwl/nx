@@ -16,7 +16,9 @@ import {
   type PackageJsonDependencySection,
 } from '@nx/devkit/internal';
 import { getLockFileName, createLockFile } from '@nx/devkit/internal';
+import { rewritePrunedLocalPathSpecifiers } from '@nx/devkit/internal';
 import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
+import { validatePrunedLinkClosure } from '@nx/devkit/internal';
 import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
@@ -42,11 +44,30 @@ export default async function pruneLockfileExecutor(
       JSON.stringify(packageJson, null, 2)
     );
   } else {
-    const { lockfileName, lockFile } = createPrunedLockfile(
+    // pnpm re-resolves local-path manifest specifiers on a non-frozen install,
+    // so make them deploy-root-relative before the lockfile copies them.
+    if (packageManager === 'pnpm') {
+      const { project } = parseTargetString(schema.buildTarget, context);
+      const projectRoot = context.projectGraph.nodes[project].data.root;
+      rewritePrunedLocalPathSpecifiers(
+        packageJson,
+        projectRoot,
+        workspaceRoot,
+        new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+      );
+    }
+    const { lockfileName, lockFile, pruned } = createPrunedLockfile(
       packageJson,
       context.projectGraph,
       packageManager
     );
+    // A shipped link: target has no packed closure, so fail fast if one requires
+    // a dependency that won't resolve from the deploy root (see the validator).
+    // Skip on the root-lockfile fallback: its importer describes the whole
+    // workspace, not this app, so validating it would fail the fail-open path.
+    if (packageManager === 'pnpm' && pruned) {
+      validatePrunedLinkClosure(packageJson, workspaceRoot, lockFile);
+    }
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
     // The pruned lockfile bakes pnpm config into its snapshots, so strip the
@@ -58,8 +79,12 @@ export default async function pruneLockfileExecutor(
     );
     // pnpm 11 reads build-script approvals and supportedArchitectures only from
     // pnpm-workspace.yaml, so re-emit them there for the standalone output.
+    // Local-path artifacts ship only for an actually pruned lockfile; the
+    // fallback root lockfile references the whole workspace's sources.
     if (packageManager === 'pnpm') {
-      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot, lockFile);
+      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot, lockFile, {
+        includeLocalPathArtifacts: pruned,
+      });
     }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
@@ -75,7 +100,13 @@ function createPrunedLockfile(
   packageManager: ReturnType<typeof detectPackageManager>
 ) {
   const lockfileName = getLockFileName(packageManager);
-  const lockFile = createLockFile(packageJson, graph, packageManager);
+  // `pruned` flips off when createLockFile falls back to the root lockfile.
+  let pruned = true;
+  const lockFile = createLockFile(packageJson, graph, packageManager, {
+    onPruneFallback: () => {
+      pruned = false;
+    },
+  });
 
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
@@ -125,6 +156,7 @@ function createPrunedLockfile(
   return {
     lockfileName,
     lockFile,
+    pruned,
   };
 }
 
