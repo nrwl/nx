@@ -1103,14 +1103,19 @@ impl App {
                         .components
                         .iter_mut()
                         .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+                        && hint_popup.is_visible()
                     {
                         if key.code == KeyCode::Esc {
                             hint_popup.hide();
                             self.update_focus(self.previous_focus);
                         }
                         // All other keys are consumed while hint popup is visible
+                        return Ok(false);
                     }
-                    return Ok(false);
+                    // Focus points at a hint popup that is no longer visible;
+                    // repair the focus and let the key take its normal path
+                    // instead of feeding it to an invisible modal.
+                    self.update_focus(self.previous_focus);
                 }
 
                 if let Some(tasks_list) = self
@@ -2626,7 +2631,16 @@ impl App {
     /// The focused popup acting as a modal layer, if any.
     fn active_modal_kind(&self) -> Option<Focus> {
         match self.focus {
-            Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup => Some(self.focus),
+            Focus::HelpPopup | Focus::CountdownPopup => Some(self.focus),
+            // The hint popup auto-dismisses, so focus can briefly outlive it;
+            // only a *visible* hint is a modal, otherwise mouse events would
+            // be absorbed by an invisible layer.
+            Focus::HintPopup => self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<HintPopup>())
+                .filter(|p| p.is_visible())
+                .map(|_| self.focus),
             _ => None,
         }
     }
@@ -3105,11 +3119,15 @@ impl App {
     }
 
     fn update_focus(&mut self, focus: Focus) {
+        // A no-op transition must not record a layer as its own previous
+        // focus: restoring previous_focus would then self-loop, e.g. parking
+        // focus forever on a hint popup that has since auto-dismissed.
+        if self.focus == focus {
+            return;
+        }
         // A region text selection belongs to the focused layer; drop it whenever
         // focus moves elsewhere so it can't bleed onto another layer.
-        if self.focus != focus {
-            self.region_selection = None;
-        }
+        self.region_selection = None;
         self.previous_focus = self.focus;
         self.focus = focus;
         self.dispatch_action(Action::UpdateFocus(focus));
@@ -4093,11 +4111,74 @@ mod tests {
             (Focus::MultipleOutput(0), false),
             (Focus::HelpPopup, true),
             (Focus::CountdownPopup, true),
-            (Focus::HintPopup, true),
         ] {
             app.focus = focus;
             assert_eq!(app.active_modal_kind().is_some(), expected, "{focus:?}");
         }
+
+        // The hint popup is only a modal while it is actually visible. A
+        // hidden hint that still holds focus must not absorb mouse events.
+        app.focus = Focus::HintPopup;
+        assert!(
+            app.active_modal_kind().is_none(),
+            "a hidden hint popup must not act as a modal"
+        );
+        app.components
+            .iter_mut()
+            .find_map(|c| c.as_any_mut().downcast_mut::<HintPopup>())
+            .unwrap()
+            .show("hint".to_string());
+        assert!(
+            app.active_modal_kind().is_some(),
+            "a visible hint popup is a modal"
+        );
+    }
+
+    // === Hint popup focus wedge (regression) ===
+
+    /// A second `ShowHint` while a hint is already focused used to record
+    /// `HintPopup` as its own previous focus. Every later restore
+    /// (auto-dismiss, Esc, click-away) then self-looped, parking focus on an
+    /// invisible modal that swallowed all keys and mouse events until an F11
+    /// mode round-trip rebuilt the app.
+    #[test]
+    fn repeated_hint_focus_does_not_poison_previous_focus() {
+        let mut app = create_test_app();
+        // First hint focuses the popup...
+        app.update_focus(Focus::HintPopup);
+        // ...and a second hint arrives while it is still focused (e.g. a
+        // "Copy failed" toast fired from inside the hint modal).
+        app.update_focus(Focus::HintPopup);
+        assert_eq!(
+            app.previous_focus,
+            Focus::TaskList,
+            "a no-op focus transition must not clobber previous_focus"
+        );
+        // The dismissal path must land back on the task list.
+        app.update_focus(app.previous_focus);
+        assert_eq!(app.focus, Focus::TaskList);
+    }
+
+    /// Defense in depth: even if focus points at a hidden hint popup, keys
+    /// must fall through to their normal handlers instead of being consumed
+    /// by an invisible modal.
+    #[test]
+    fn hidden_hint_focus_does_not_swallow_keys() {
+        let mut app = create_test_app();
+        app.focus = Focus::HintPopup; // wedged state: the popup is not visible
+
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+        app.handle_event(
+            tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE)),
+            &tx,
+        )
+        .unwrap();
+
+        assert!(
+            app.core.state().lock().is_forced_shutdown(),
+            "`q` must reach the quit handler instead of being swallowed by a hidden hint popup"
+        );
     }
 
     #[test]
