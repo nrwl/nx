@@ -18,7 +18,7 @@ use ratatui::{
     text::{Line, Span},
 };
 
-use super::help_text::HelpText;
+use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
@@ -48,6 +48,9 @@ pub struct StatusBarProps {
     pub run_time_range: Option<(i64, i64)>,
     /// When set, the bar's row swaps entirely to the filter display
     pub filter: Option<FilterProps>,
+    /// When set, a terminal pane has focus: the help hints describe the pane
+    /// and its interactive state / transient feedback show in the bar.
+    pub pane: Option<PaneProps>,
 }
 
 /// Filter session details shown while the task filter is active.
@@ -56,6 +59,17 @@ pub struct FilterProps {
     pub text: String,
     pub persisted: bool,
     pub hidden_count: usize,
+}
+
+/// Focused-pane details shown while a terminal pane has focus.
+#[derive(Debug, Clone, Default)]
+pub struct PaneProps {
+    /// Whether the pane's task can take input, and whether it currently is
+    /// (`None` when interactivity doesn't apply, e.g. a finished task).
+    pub interactive: Option<bool>,
+    /// Transient feedback (e.g. "copied to clipboard"), shown in place of the
+    /// cloud message until it expires.
+    pub status_message: Option<String>,
 }
 
 impl StatusBarProps {
@@ -182,7 +196,7 @@ impl StatusBar {
                         Constraint::Length(COLLAPSED_HELP_WIDTH + RIGHT_MARGIN),
                     ])
                     .split(second_row);
-                self.render_cloud_message(f, chunks[1], props);
+                self.render_middle(f, chunks[1], props);
                 self.render_help_text(f, chunks[3], true, props);
             }
             // A TwoLine layout squeezed into a 1-row area (stale cached layout
@@ -191,13 +205,12 @@ impl StatusBar {
                 self.render_single_line(f, first_row, true, false, props);
             }
             BarLayout::SingleLine { help_collapsed } => {
-                self.render_single_line(
-                    f,
-                    first_row,
-                    help_collapsed,
-                    props.has_cloud_content(),
-                    props,
-                );
+                let show_middle = props.has_cloud_content()
+                    || props
+                        .pane
+                        .as_ref()
+                        .is_some_and(|pane| pane.status_message.is_some());
+                self.render_single_line(f, first_row, help_collapsed, show_middle, props);
             }
         }
     }
@@ -207,7 +220,7 @@ impl StatusBar {
         f: &mut Frame<'_>,
         row: Rect,
         help_collapsed: bool,
-        show_cloud: bool,
+        show_middle: bool,
         props: &StatusBarProps,
     ) {
         let help_width = if help_collapsed {
@@ -217,7 +230,7 @@ impl StatusBar {
         };
         let status_line = Self::status_line(props);
         let natural_status_width = status_line.width() as u16;
-        let reserved = if show_cloud {
+        let reserved = if show_middle {
             help_width + RIGHT_MARGIN + 2 * MIN_BOTTOM_SPACING + MIN_CLOUD_URL_WIDTH
         } else {
             help_width + RIGHT_MARGIN + MIN_BOTTOM_SPACING
@@ -239,10 +252,34 @@ impl StatusBar {
             NxParagraph::new(status_line).alignment(Alignment::Left),
             chunks[0],
         );
-        if show_cloud {
-            self.render_cloud_message(f, chunks[2], props);
+        if show_middle {
+            self.render_middle(f, chunks[2], props);
         }
         self.render_help_text(f, chunks[4], help_collapsed, props);
+    }
+
+    /// The middle section: a focused pane's transient feedback takes the slot
+    /// over the cloud message until it expires.
+    fn render_middle(&mut self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
+        if area.width == 0 || area.height == 0 {
+            return;
+        }
+        if let Some(pane) = &props.pane
+            && let Some(message) = &pane.status_message
+        {
+            let style = if props.is_dimmed {
+                Style::default().fg(THEME.info).dim()
+            } else {
+                Style::default().fg(THEME.info)
+            };
+            f.render_widget(
+                NxParagraph::new(Line::from(Span::styled(message.clone(), style)))
+                    .alignment(Alignment::Left),
+                area,
+            );
+            return;
+        }
+        self.render_cloud_message(f, area, props);
     }
 
     fn render_status(&self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
@@ -252,12 +289,14 @@ impl StatusBar {
         );
     }
 
-    /// The " NX " badge plus the run status, ported from the task list's old
-    /// table header (badge/title styling and completed timing included).
+    /// Minimal progress counts, colored by run state (the " NX " badge and the
+    /// run title live in the task list's header).
     fn status_line(props: &StatusBarProps) -> Line<'static> {
-        let logo_color = if props.total_count == 0 {
-            THEME.info
-        } else if props.all_completed {
+        if props.total_count == 0 {
+            return Line::default();
+        }
+
+        let state_color = if props.all_completed {
             if props.has_failures {
                 THEME.error
             } else {
@@ -266,50 +305,46 @@ impl StatusBar {
         } else {
             THEME.info
         };
-
-        let title_color = if props.all_completed {
-            logo_color
-        } else {
-            THEME.primary_fg
-        };
-        let mut title_style = Style::default()
-            .fg(title_color)
+        let mut counts_style = Style::default()
+            .fg(state_color)
             .add_modifier(Modifier::BOLD);
         let mut dim_style = Style::default().dim();
         if props.is_dimmed {
-            title_style = title_style.add_modifier(Modifier::DIM);
+            counts_style = counts_style.add_modifier(Modifier::DIM);
             dim_style = dim_style.add_modifier(Modifier::DIM);
         }
 
         let mut spans = vec![
             Span::raw(" "),
             Span::styled(
-                " NX ",
-                Style::reset()
-                    .add_modifier(Modifier::BOLD)
-                    .bg(logo_color)
-                    .fg(THEME.primary_fg),
+                format!("{}/{} tasks", props.completed_count, props.total_count),
+                counts_style,
             ),
-            Span::raw("  "),
         ];
+        if props.all_completed
+            && let Some((first_start, last_end)) = props.run_time_range
+        {
+            spans.push(Span::styled(
+                format!(" ({})", format_duration_since(first_start, last_end)),
+                dim_style,
+            ));
+        }
 
-        // The run title stays with the task list's header; the bar only shows
-        // the run state and progress counts.
-        let counts = if props.total_count > 0 {
-            format!(" {}/{}", props.completed_count, props.total_count)
-        } else {
-            String::new()
-        };
-        if props.all_completed {
-            spans.push(Span::styled(format!("Completed{}", counts), title_style));
-            if let Some((first_start, last_end)) = props.run_time_range {
-                spans.push(Span::styled(
-                    format!(" ({})", format_duration_since(first_start, last_end)),
-                    dim_style,
-                ));
+        // The focused pane's interactivity indicator (moved off the pane's
+        // bottom border).
+        if let Some(pane) = &props.pane
+            && let Some(is_interactive) = pane.interactive
+        {
+            let (mode_text, mode_color) = if is_interactive {
+                ("INTERACTIVE", THEME.primary_fg)
+            } else {
+                ("NON-INTERACTIVE", THEME.secondary_fg)
+            };
+            let mut mode_style = Style::default().fg(mode_color);
+            if props.is_dimmed {
+                mode_style = mode_style.add_modifier(Modifier::DIM);
             }
-        } else {
-            spans.push(Span::styled(format!("Running{}...", counts), title_style));
+            spans.push(Span::styled(format!("  {}", mode_text), mode_style));
         }
 
         Line::from(spans)
@@ -454,13 +489,16 @@ impl StatusBar {
         is_collapsed: bool,
         props: &StatusBarProps,
     ) {
-        HelpText::new(
-            is_collapsed,
-            props.is_dimmed,
-            false,
-            props.perf_report_available,
-        )
-        .render(f, area);
+        let context = match &props.pane {
+            Some(pane) => HelpTextContext::Pane {
+                can_be_interactive: pane.interactive.is_some(),
+                is_interactive: pane.interactive == Some(true),
+            },
+            None => HelpTextContext::TaskList {
+                show_perf_report: props.perf_report_available,
+            },
+        };
+        HelpText::new(is_collapsed, props.is_dimmed, false, context).render(f, area);
     }
 }
 
@@ -519,24 +557,65 @@ mod tests {
     }
 
     #[test]
-    fn badge_is_green_on_success_and_red_on_failure() {
+    fn counts_are_green_on_success_and_red_on_failure() {
         let mut props = base_props();
         props.all_completed = true;
+        props.completed_count = 3;
 
         let (terminal, _) = render_bar(140, 1, &props);
-        // The badge starts after the 1-col left margin.
-        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.success);
+        // The counts text starts after the 1-col left margin.
+        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.success);
 
         props.has_failures = true;
         let (terminal, _) = render_bar(140, 1, &props);
-        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.error);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.error);
     }
 
     #[test]
-    fn badge_is_info_while_running() {
+    fn counts_are_info_colored_while_running() {
         let props = base_props();
         let (terminal, _) = render_bar(140, 1, &props);
-        assert_eq!(terminal.backend().buffer()[(1, 0)].bg, THEME.info);
+        assert_eq!(terminal.backend().buffer()[(1, 0)].fg, THEME.info);
+    }
+
+    #[test]
+    fn pane_focus_swaps_help_to_pane_hints_and_shows_mode() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            interactive: Some(false),
+            status_message: None,
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn interactive_pane_shows_only_the_exit_toggle() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            interactive: Some(true),
+            status_message: None,
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn pane_status_message_takes_the_middle_slot_over_cloud() {
+        let mut props = base_props();
+        props.cloud_link = Some((
+            "View in Nx Cloud".to_string(),
+            "https://nx.app/runs/KnGk4A47qk".to_string(),
+        ));
+        props.pane = Some(PaneProps {
+            interactive: None,
+            status_message: Some("copied to clipboard".to_string()),
+        });
+        let (terminal, bar) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+        // The cloud link is suppressed while the message shows, so nothing is
+        // registered for click hit-testing.
+        assert_eq!(bar.link_registry().hit_test(50, 0), None);
     }
 
     #[test]
@@ -630,13 +709,9 @@ mod tests {
         let mut props = base_props();
         props.is_dimmed = true;
         let (terminal, _) = render_bar(140, 1, &props);
-        // The "Running ..." text starts after the badge and margin spans.
-        let buffer_text: String = (0..140)
-            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
-            .collect();
-        let running_x = buffer_text.find("Running").unwrap() as u16;
+        // The counts text starts after the 1-col left margin.
         assert!(
-            terminal.backend().buffer()[(running_x, 0)]
+            terminal.backend().buffer()[(1, 0)]
                 .modifier
                 .contains(Modifier::DIM)
         );

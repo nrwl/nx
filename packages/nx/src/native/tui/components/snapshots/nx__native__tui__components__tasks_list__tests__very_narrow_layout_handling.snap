@@ -3,7 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                         "
-"       Test Tasks        "
+" NX    Test Tasks        "
 "                         "
 "> ⠋    app1:test         "
 "                         "

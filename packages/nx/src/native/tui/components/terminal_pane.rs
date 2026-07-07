@@ -912,163 +912,6 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
                     }
 
-                    let show_interactive_status = state.task_status == TaskStatus::InProgress
-                        && state.is_focused
-                        && pty_data.can_be_interactive;
-
-                    // Show status message and/or interactive status for focused, in progress tasks
-                    if show_interactive_status || pty_data.status_message.is_some() {
-                        // Get status message if present
-                        let status_msg = pty_data
-                            .status_message
-                            .as_ref()
-                            .map(|(msg, _)| msg.as_str());
-
-                        // Determine mode text
-                        let mode_text = if self.is_currently_interactive() {
-                            "INTERACTIVE"
-                        } else {
-                            "NON-INTERACTIVE"
-                        };
-
-                        let mode_style = if self.is_currently_interactive() {
-                            Style::default().fg(THEME.primary_fg)
-                        } else {
-                            Style::default().fg(THEME.secondary_fg)
-                        };
-
-                        // Build the bottom text based on what we need to display
-                        let bottom_text = if let Some(msg) = status_msg {
-                            if show_interactive_status {
-                                // Both status and interactive mode to show
-                                let combined_text = format!("  {} │ {}  ", msg, mode_text);
-                                let combined_width = combined_text.len();
-
-                                // Check if we have enough space for both
-                                if combined_width as u16 + Self::CONFIG.right_margin
-                                    < safe_area.width
-                                {
-                                    // Enough space: show both with separator
-                                    Line::from(vec![
-                                        Span::styled(
-                                            format!("  {} ", msg),
-                                            Style::default().fg(THEME.info),
-                                        ),
-                                        Span::styled("│", Style::default().fg(THEME.secondary_fg)),
-                                        Span::styled(format!(" {}  ", mode_text), mode_style),
-                                    ])
-                                } else {
-                                    // Limited space: status message takes priority
-                                    Line::from(vec![Span::styled(
-                                        format!("  {}  ", msg),
-                                        Style::default().fg(THEME.info),
-                                    )])
-                                }
-                            } else {
-                                // Only status message (no interactive status)
-                                Line::from(vec![Span::styled(
-                                    format!("  {}  ", msg),
-                                    Style::default().fg(THEME.info),
-                                )])
-                            }
-                        } else if show_interactive_status {
-                            // No status message, show full interactive status with toggle hint
-                            if self.is_currently_interactive() {
-                                Line::from(vec![
-                                    Span::styled(
-                                        "  INTERACTIVE ",
-                                        Style::default().fg(THEME.primary_fg),
-                                    ),
-                                    Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
-                                    Span::styled(
-                                        " to toggle  ",
-                                        Style::default().fg(THEME.primary_fg),
-                                    ),
-                                ])
-                            } else {
-                                Line::from(vec![
-                                    Span::styled(
-                                        "  NON-INTERACTIVE ",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ),
-                                    Span::styled("i", Style::default().fg(THEME.info)),
-                                    Span::styled(
-                                        " to toggle  ",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ),
-                                ])
-                            }
-                        } else {
-                            // Nothing to show (shouldn't reach here due to outer condition)
-                            Line::from(vec![])
-                        };
-
-                        let text_width = bottom_text
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>();
-
-                        // Ensure status text doesn't extend past safe area
-                        if text_width > 0
-                            && text_width as u16 + Self::CONFIG.right_margin < safe_area.width
-                        {
-                            let bottom_right_area = Rect {
-                                x: safe_area.x + safe_area.width
-                                    - text_width as u16
-                                    - Self::CONFIG.right_margin,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: text_width as u16 + Self::CONFIG.width_padding,
-                                height: 1,
-                            };
-
-                            Widget::render(
-                                NxParagraph::new(bottom_text)
-                                    .alignment(Alignment::Right)
-                                    .style(border_style),
-                                bottom_right_area,
-                                buf,
-                            );
-                        }
-                    }
-
-                    // Show "enter to view full screen" help text in bottom left when focused
-                    if state.is_focused {
-                        let help_line = Line::from(vec![
-                            Span::styled("  <", Style::default().fg(THEME.secondary_fg)),
-                            Span::styled("enter", Style::default().fg(THEME.info)),
-                            Span::styled(
-                                "> full screen  ",
-                                Style::default().fg(THEME.secondary_fg),
-                            ),
-                        ]);
-
-                        let help_text_width: u16 = help_line
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>()
-                            as u16;
-
-                        // Ensure help text fits within the safe area
-                        if help_text_width + 2 < safe_area.width && safe_area.height > 1 {
-                            let bottom_left_area = Rect {
-                                x: safe_area.x + 1,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: help_text_width,
-                                height: 1,
-                            };
-
-                            Widget::render(
-                                NxParagraph::new(help_line)
-                                    .alignment(Alignment::Left)
-                                    .style(border_style),
-                                bottom_left_area,
-                                buf,
-                            );
-                        }
-                    }
-
                     // Render scrollbar padding when needed, but not for minimal non-interactive panes
                     if needs_scrollbar {
                         // Render padding for both top and bottom when scrollbar is present
@@ -1095,25 +938,23 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 buf,
                             );
 
-                            // Bottom padding (only if interactive status is not being displayed)
-                            if !show_interactive_status {
-                                let bottom_right_area = Rect {
-                                    x: safe_area.x + safe_area.width
-                                        - padding_width
-                                        - Self::CONFIG.right_margin,
-                                    y: safe_area.y + safe_area.height - 1,
-                                    width: padding_width + Self::CONFIG.width_padding,
-                                    height: 1,
-                                };
+                            // Bottom padding
+                            let bottom_right_area = Rect {
+                                x: safe_area.x + safe_area.width
+                                    - padding_width
+                                    - Self::CONFIG.right_margin,
+                                y: safe_area.y + safe_area.height - 1,
+                                width: padding_width + Self::CONFIG.width_padding,
+                                height: 1,
+                            };
 
-                                Widget::render(
-                                    NxParagraph::new(padding_text)
-                                        .alignment(Alignment::Right)
-                                        .style(border_style),
-                                    bottom_right_area,
-                                    buf,
-                                );
-                            }
+                            Widget::render(
+                                NxParagraph::new(padding_text)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style),
+                                bottom_right_area,
+                                buf,
+                            );
                         }
                     }
 

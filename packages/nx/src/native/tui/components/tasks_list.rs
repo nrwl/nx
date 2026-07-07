@@ -1355,15 +1355,21 @@ impl TasksList {
             THEME.info
         };
 
-        // The first (status icon) column has no label
-        let status_cell = Cell::from("").style(status_style);
+        // The " NX " badge heads the status icon column, colored by run state
+        let badge_cell = Cell::from(Line::from(Span::styled(
+            " NX ",
+            Style::reset()
+                .add_modifier(Modifier::BOLD)
+                .bg(header_color)
+                .fg(THEME.primary_fg),
+        )));
 
         // The run title heads the task name column, in the same quiet style as
         // the column labels (run state and counts live in the status bar).
         let title_cell =
             Cell::from(self.tui_state.lock().title_text().to_string()).style(status_style);
 
-        let mut header_cells = vec![status_cell, title_cell];
+        let mut header_cells = vec![badge_cell, title_cell];
 
         // Add cache status column header if visible
         if column_visibility.show_cache_status {

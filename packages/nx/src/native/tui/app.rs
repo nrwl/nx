@@ -36,7 +36,7 @@ use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
 use super::components::nx_paragraph::NxParagraph;
-use super::components::status_bar::{StatusBar, StatusBarProps};
+use super::components::status_bar::{PaneProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -1545,9 +1545,32 @@ impl App {
                 // TasksList read (its filter methods take the same lock).
                 let (mut status_bar_props, filter_text) = {
                     let state = self.core.state().lock();
+                    // Focused-pane details: interactivity only applies while
+                    // the pane's task is running and has an interactive PTY.
+                    let pane = if let Focus::MultipleOutput(pane_idx) = self.focus {
+                        let pane_data = &self.terminal_pane_data[pane_idx];
+                        let task_in_progress =
+                            self.pane_tasks[pane_idx].as_ref().is_some_and(|entry| {
+                                matches!(entry, SelectionEntry::Task(name)
+                                    if state.get_task_status(name) == Some(TaskStatus::InProgress))
+                            });
+                        Some(PaneProps {
+                            interactive: (task_in_progress && pane_data.can_be_interactive)
+                                .then_some(pane_data.is_interactive),
+                            status_message: pane_data
+                                .status_message
+                                .as_ref()
+                                .map(|(message, _)| message.clone()),
+                        })
+                    } else {
+                        None
+                    };
                     (
                         StatusBarProps {
-                            is_dimmed: !matches!(self.focus, Focus::TaskList),
+                            is_dimmed: matches!(
+                                self.focus,
+                                Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
+                            ),
                             perf_report_available: state.has_exit_summary(),
                             cloud_message: state.get_cloud_message().map(str::to_string),
                             cloud_link: state.get_cloud_link().cloned(),
@@ -1557,6 +1580,7 @@ impl App {
                             has_failures: state.has_failures(),
                             run_time_range: state.run_time_range(),
                             filter: None,
+                            pane,
                         },
                         state.get_filter_text().to_string(),
                     )
