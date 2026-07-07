@@ -137,6 +137,17 @@ pub enum CwdMode {
     Relative,
 }
 
+/// Payload of `HashInstruction::JsonFileSet`. Boxed in the enum: inlined, its
+/// four fields would nearly double the size of every HashInstruction in every
+/// task's plan, whether or not json inputs are used.
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
+pub struct JsonFileSetInput {
+    pub project_name: Option<String>,
+    pub json_path: String,
+    pub fields: Option<Vec<String>>,
+    pub exclude_fields: Option<Vec<String>>,
+}
+
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub enum HashInstruction {
     WorkspaceFileSet(Vec<String>),
@@ -149,12 +160,7 @@ pub enum HashInstruction {
     TaskOutput(String, Vec<String>),
     External(String),
     AllExternalDependencies,
-    JsonFileSet {
-        project_name: Option<String>,
-        json_path: String,
-        fields: Option<Vec<String>>,
-        exclude_fields: Option<Vec<String>>,
-    },
+    JsonFileSet(Box<JsonFileSetInput>),
 }
 
 impl ToNapiValue for HashInstruction {
@@ -217,27 +223,38 @@ impl fmt::Display for HashInstruction {
                 HashInstruction::TsConfiguration(project_name) => {
                     format!("{project_name}:TsConfig")
                 }
-                HashInstruction::JsonFileSet {
-                    project_name,
-                    json_path,
-                    fields,
-                    exclude_fields,
-                } => {
-                    let prefix = project_name
+                HashInstruction::JsonFileSet(json) => {
+                    let prefix = json
+                        .project_name
                         .as_deref()
                         .map(|p| format!("{p}:"))
                         .unwrap_or_default();
-                    let fields_str = fields
+                    let fields_str = json
+                        .fields
                         .as_ref()
                         .map(|f| format!("[{}]", f.join(",")))
                         .unwrap_or_default();
-                    let exclude_str = exclude_fields
+                    let exclude_str = json
+                        .exclude_fields
                         .as_ref()
                         .map(|f| format!("![{}]", f.join(",")))
                         .unwrap_or_default();
-                    format!("{prefix}json:{json_path}{fields_str}{exclude_str}")
+                    format!("{prefix}json:{}{fields_str}{exclude_str}", json.json_path)
                 }
             }
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hash_instruction_stays_small() {
+        // Plans hold one HashInstruction per (task x transitive-dep input) —
+        // millions on large workspaces — and the enum sizes to its largest
+        // variant. Box large payloads instead of growing this (NXC-4604).
+        assert!(std::mem::size_of::<HashInstruction>() <= 56);
     }
 }

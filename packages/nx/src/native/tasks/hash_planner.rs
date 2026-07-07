@@ -1,7 +1,7 @@
 use crate::native::logger::enable_logger;
 use crate::native::tasks::{
     dep_outputs::get_dep_output,
-    types::{CwdMode, HashInstruction, TaskGraph},
+    types::{CwdMode, HashInstruction, JsonFileSetInput, TaskGraph},
 };
 use crate::native::types::{Input, NxJson};
 use crate::native::{
@@ -468,12 +468,12 @@ impl HashPlanner {
                 } else {
                     None
                 };
-                Some(HashInstruction::JsonFileSet {
+                Some(HashInstruction::JsonFileSet(Box::new(JsonFileSetInput {
                     project_name: proj_name,
                     json_path: resolve_tokens(json, project_root, project_name),
                     fields: fields.map(|f| f.to_vec()),
                     exclude_fields: exclude_fields.map(|f| f.to_vec()),
-                })
+                })))
             }
             _ => None,
         });
