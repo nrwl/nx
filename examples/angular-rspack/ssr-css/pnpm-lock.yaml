@@ -51,6 +51,9 @@ importers:
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.25
+      nx:
+        specifier: link:../../../packages/nx
+        version: link:../../../packages/nx
       typescript:
         specifier: ~6.0.3
         version: 6.0.3

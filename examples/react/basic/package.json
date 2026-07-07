@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p vite react playwright eslint eslint-plugin",
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx vite react playwright eslint eslint-plugin",
     "validate": "nx run-many -t lint,test,build,e2e"
   },
   "nx": {
@@ -29,6 +29,7 @@
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.0",
-    "vitest": "^4.0.0"
+    "vitest": "^4.0.0",
+    "nx": "link:../../../packages/nx"
   }
 }

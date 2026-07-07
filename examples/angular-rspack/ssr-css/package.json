@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p angular-rspack rspack",
+    "postinstall": "cd ../../.. && pnpm nx run-many -t build -p nx angular-rspack rspack",
     "validate": "nx run-many -t build"
   },
   "dependencies": {
@@ -23,7 +23,8 @@
     "@rspack/core": "^2.0.4",
     "@rspack/cli": "^2.0.4",
     "@types/express": "^4.17.21",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "nx": "link:../../../packages/nx"
   },
   "nx": {
     "includedScripts": []

@@ -11,6 +11,9 @@ importers:
       '@nx/rspack':
         specifier: link:../../../packages/rspack
         version: link:../../../packages/rspack
+      nx:
+        specifier: link:../../../packages/nx
+        version: link:../../../packages/nx
 
   host:
     dependencies:

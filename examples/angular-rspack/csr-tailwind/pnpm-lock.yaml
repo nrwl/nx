@@ -42,6 +42,9 @@ importers:
       '@tailwindcss/postcss':
         specifier: ^4.1.5
         version: 4.3.2
+      nx:
+        specifier: link:../../../packages/nx
+        version: link:../../../packages/nx
       postcss:
         specifier: ^8.4.38
         version: 8.5.16

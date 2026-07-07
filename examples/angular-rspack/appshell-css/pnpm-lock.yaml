@@ -45,6 +45,9 @@ importers:
       '@rspack/core':
         specifier: ^2.0.4
         version: 2.1.2
+      nx:
+        specifier: link:../../../packages/nx
+        version: link:../../../packages/nx
       typescript:
         specifier: ~6.0.3
         version: 6.0.3

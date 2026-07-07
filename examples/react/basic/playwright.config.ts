@@ -18,11 +18,12 @@ export default defineConfig({
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
   },
-  /* Run the Vite dev server before starting the tests */
+  /* Run the Vite dev server before starting the tests. Using an nx command
+   * lets the @nx/playwright plugin derive a dependsOn on the serve target. */
   webServer: {
-    command: 'npx vite --port 4200',
+    command: 'npx nx run examples-react-basic:serve',
     url: 'http://localhost:4200',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     cwd: __dirname,
   },
   projects: [
