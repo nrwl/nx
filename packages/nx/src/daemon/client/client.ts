@@ -16,7 +16,13 @@ import { hasNxJson, NxJsonConfiguration } from '../../config/nx-json';
 import { FileData, ProjectGraph } from '../../config/project-graph';
 import { Task, TaskGraph } from '../../config/task-graph';
 import { Hash } from '../../hasher/task-hasher';
-import { IS_WASM, NxWorkspaceFiles, TaskRun, TaskTarget } from '../../native';
+import {
+  IS_WASM,
+  isAiAgent,
+  NxWorkspaceFiles,
+  TaskRun,
+  TaskTarget,
+} from '../../native';
 import {
   DaemonProjectGraphError,
   ProjectGraphError,
@@ -120,6 +126,7 @@ import {
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
+  getNxSocketRoot,
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
@@ -1079,6 +1086,16 @@ export class DaemonClient {
         let error: any;
         if (err.message.startsWith('connect ENOENT')) {
           error = daemonProcessException('The Daemon Server is not running');
+        } else if (
+          err.message.startsWith('connect EPERM') ||
+          err.message.startsWith('connect EACCES')
+        ) {
+          error = daemonProcessException(
+            [
+              'The operating system refused the connection to the Nx Daemon socket.',
+              ...sandboxSocketHint(),
+            ].join('\n')
+          );
         } else if (err.message.startsWith('connect ECONNREFUSED')) {
           error = daemonProcessException(
             `A server instance had not been fully shut down. Please try running the command again.`
@@ -1369,7 +1386,13 @@ export class DaemonClient {
       return backgroundProcess.pid;
     } else {
       throw daemonProcessException(
-        'Failed to start or connect to the Nx Daemon process.'
+        [
+          'Failed to start or connect to the Nx Daemon process.',
+          // The daemon can fail to start for many reasons; only surface the
+          // sandbox guidance when an AI agent is driving nx, where a sandbox
+          // blocking socket access is the most likely cause.
+          ...(isAiAgent() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
     }
   }
@@ -1415,6 +1438,28 @@ function isDocker() {
 
 function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
+}
+
+/**
+ * Guidance for socket access being blocked by a sandbox. When an AI agent is
+ * driving nx the message is written for the agent to act on directly; for
+ * humans it is a brief pointer since sandboxing is a less likely cause.
+ */
+function sandboxSocketHint(): string[] {
+  if (isAiAgent()) {
+    return [
+      `Your sandbox is likely blocking unix socket access. Nx creates its sockets under ${getNxSocketRoot()}.`,
+      'To fix this, do one of the following:',
+      '  - Run `nx configure-ai-agents` to write the required sandbox allowances for supported agents.',
+      `  - Configure your sandbox to allow unix socket connections to ${getNxSocketRoot()} and read/write access to its parent directory.`,
+      '  - Set NX_SOCKET_DIR to a directory your sandbox allows.',
+      'See https://nx.dev/docs/troubleshooting/nx-sandbox-unix-sockets for details.',
+    ];
+  }
+  return [
+    `If Nx is running inside a sandboxed environment, allow unix socket access to ${getNxSocketRoot()} or set NX_SOCKET_DIR to an accessible directory.`,
+    'See https://nx.dev/docs/troubleshooting/nx-sandbox-unix-sockets for details.',
+  ];
 }
 
 function daemonProcessException(message: string) {
