@@ -548,9 +548,13 @@ impl CountdownPopup {
                         Style::default().fg(THEME.secondary_fg),
                     ))]))
                 }
-                CloudConnectState::Ready(url) => Some(NxLine::from_spans(vec![NxSpan::Link(
-                    Link::new(url.clone(), url.clone()),
-                )])),
+                CloudConnectState::Ready(url) => Some(NxLine::from_spans(vec![
+                    NxSpan::Text(Span::styled(
+                        "Finish your setup: ".to_string(),
+                        Style::default().fg(THEME.primary_fg),
+                    )),
+                    NxSpan::Link(Link::new(url.clone(), url.clone())),
+                ])),
                 CloudConnectState::Error(message) => {
                     Some(NxLine::from_spans(vec![NxSpan::Text(Span::styled(
                         format!("Could not connect: {message}"),
@@ -1090,7 +1094,7 @@ mod tests {
         popup.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
         popup.set_connect_state(CloudConnectState::Ready(url.to_string()));
         let (text, hrefs) = render_with_registry(&mut popup);
-        assert!(text.contains(url));
+        assert!(text.contains(&format!("Finish your setup: {url}")));
         assert!(hrefs.iter().any(|h| h == url));
         assert!(!text.contains("[ Enable remote cache ]"));
 
@@ -1145,19 +1149,20 @@ mod tests {
         popup.set_connect_state(CloudConnectState::Ready(url.to_string()));
         let (text, _) = render_with_registry(&mut popup);
 
-        let url_row = text.lines().find(|l| l.contains(url)).unwrap();
+        let line_text = format!("Finish your setup: {url}");
+        let url_row = text.lines().find(|l| l.contains(&line_text)).unwrap();
         // Compare the space padding between the border columns on either side
-        // of the URL (work in chars: the border glyphs are multi-byte).
+        // of the line (work in chars: the border glyphs are multi-byte).
         let chars: Vec<char> = url_row.chars().collect();
         let left_border = chars.iter().position(|&c| c == '│').unwrap();
         let right_border = chars.iter().rposition(|&c| c == '│').unwrap();
         let inner: String = chars[left_border + 1..right_border].iter().collect();
-        let start = inner.find(url).unwrap();
+        let start = inner.find(&line_text).unwrap();
         let left_pad = start;
-        let right_pad = inner.len() - start - url.len();
+        let right_pad = inner.len() - start - line_text.len();
         assert!(
             left_pad.abs_diff(right_pad) <= 4,
-            "URL should be roughly centered (left pad {left_pad}, right pad {right_pad})"
+            "the setup line should be roughly centered (left pad {left_pad}, right pad {right_pad})"
         );
     }
 

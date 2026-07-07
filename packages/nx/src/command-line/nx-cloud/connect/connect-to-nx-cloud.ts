@@ -228,10 +228,11 @@ function sleep(ms: number) {
 }
 
 /**
- * Runs the same logic as `nx connect` headlessly for the TUI: no prompts, no
- * spinner, no browser open (the TUI displays the returned onboarding URL in a
- * popup instead). Throws on failure (e.g. offline, missing git remote) so the
- * TUI can surface the error.
+ * Runs the same logic as `nx connect` for the TUI. A flag on
+ * `runConnectToNxCloud` doesn't fit here: the TUI needs the onboarding URL as
+ * the RETURN VALUE (that flow prints it and returns a boolean), failures as
+ * THROWS so the popup can display them (that flow prints and returns false),
+ * no spinner/browser side effects, and the `nx-tui` source for analytics.
  */
 export async function connectToNxCloudFromTui(): Promise<string> {
   const baseMeta = {
@@ -249,7 +250,33 @@ export async function connectToNxCloudFromTui(): Promise<string> {
     meta: { type: 'start', ...baseMeta },
   });
   try {
-    const url = await generateConnectUrlForTui();
+    const nxJson = readNxJson();
+
+    const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
+    const hasRemote = !!getVcsRemoteInfo();
+    if (!hasRemote && checkRemote) {
+      throw new Error(
+        'Push this repository to a VCS provider (e.g. GitHub) first, then try again.'
+      );
+    }
+
+    // The connect affordances are only offered while not connected, but guard
+    // anyway (e.g. the workspace was connected from another terminal mid-run).
+    let url: string;
+    if (isNxCloudUsed(nxJson)) {
+      const token =
+        process.env.NX_CLOUD_AUTH_TOKEN ||
+        process.env.NX_CLOUD_ACCESS_TOKEN ||
+        nxJson.nxCloudAccessToken ||
+        nxJson.nxCloudId;
+      url = await createNxCloudOnboardingURL('nx-tui', token, undefined, false);
+    } else {
+      const token = await connectWorkspaceToCloud({
+        installationSource: 'nx-tui',
+      });
+      url = await createNxCloudOnboardingURL('nx-tui', token, undefined, false);
+    }
+
     await recordStat({
       command: 'connect',
       nxVersion,
@@ -275,34 +302,6 @@ export async function connectToNxCloudFromTui(): Promise<string> {
     });
     throw error;
   }
-}
-
-async function generateConnectUrlForTui(): Promise<string> {
-  const nxJson = readNxJson();
-
-  const checkRemote = process.env.NX_SKIP_CHECK_REMOTE !== 'true';
-  const hasRemote = !!getVcsRemoteInfo();
-  if (!hasRemote && checkRemote) {
-    throw new Error(
-      'Push this repository to a VCS provider (e.g. GitHub) first, then try again.'
-    );
-  }
-
-  // The connect shortcut is only offered while not connected, but guard anyway
-  // (e.g. the workspace was connected from another terminal mid-run).
-  if (isNxCloudUsed(nxJson)) {
-    const token =
-      process.env.NX_CLOUD_AUTH_TOKEN ||
-      process.env.NX_CLOUD_ACCESS_TOKEN ||
-      nxJson.nxCloudAccessToken ||
-      nxJson.nxCloudId;
-    return createNxCloudOnboardingURL('nx-tui', token, undefined, false);
-  }
-
-  const token = await connectWorkspaceToCloud({
-    installationSource: 'nx-tui',
-  });
-  return createNxCloudOnboardingURL('nx-tui', token, undefined, false);
 }
 
 export async function connectExistingRepoToNxCloudPrompt(
