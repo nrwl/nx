@@ -65,6 +65,9 @@
         "production",
         "^production",
         "{projectRoot}/src/content/banner.json",
+        "{projectRoot}/src/content/pylon-kb.json",
+        "{projectRoot}/src/content/pylon-kb-search-cache.json",
+        "{projectRoot}/scripts/pylon/**/*",
         { "env": "NX_DEV_URL" },
         "{workspaceRoot}/packages/*/package.json",
         "{workspaceRoot}/packages/*/{generators,executors,migrations}.json",
@@ -85,8 +88,10 @@
         "{projectRoot}/.astro",
         "{projectRoot}/.netlify"
       ],
-      "command": "astro build",
+      "executor": "nx:run-commands",
       "options": {
+        "commands": ["astro build", "tsx scripts/pylon/federate-search.ts"],
+        "parallel": false,
         "cwd": "astro-docs"
       }
     },
@@ -121,6 +126,20 @@
     },
     "show-report": {
       "command": "playwright show-report dist/astro-docs/playwright-report"
+    },
+    "pylon-audit": {
+      "cache": false,
+      "command": "tsx scripts/pylon/audit-tags.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
+    },
+    "pylon-migrate": {
+      "cache": false,
+      "command": "tsx scripts/pylon/migrate-articles.ts",
+      "options": {
+        "cwd": "astro-docs"
+      }
     },
     "validate-links": {
       "dependsOn": ["build", "nx-dev:build"],

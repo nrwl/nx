@@ -1,0 +1,57 @@
+{
+  "src/content/docs/guides/Tips-n-Tricks/yarn-workspaces.mdoc": {
+    "pylonId": "b9e9a0f8-d9a9-4f49-957b-2df82206bd02",
+    "slug": "yarn-workspaces",
+    "url": "",
+    "title": "Use Yarn Workspaces with Nx",
+    "description": "Set up a Yarn workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.",
+    "docsPath": "/docs/guides/tips-n-tricks/yarn-workspaces",
+    "contentHash": "1e272bc3288021e19ad508c60642689cee0a68d07578cb22522d316204aeafe7",
+    "lastSyncedAt": "2026-07-07T20:02:14.585Z",
+    "published": false
+  },
+  "src/content/docs/guides/Tips-n-Tricks/npm-workspaces.mdoc": {
+    "pylonId": "95e673ae-23c3-40bf-ae33-ed000ce8899f",
+    "slug": "npm-workspaces",
+    "url": "",
+    "title": "Use npm Workspaces with Nx",
+    "description": "Set up an npm workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.",
+    "docsPath": "/docs/guides/tips-n-tricks/npm-workspaces",
+    "contentHash": "c82e91d985c970c050694c6af9804ab65bbd1a3c11c974b140b5e15bd08c1a42",
+    "lastSyncedAt": "2026-07-07T20:02:18.758Z",
+    "published": false
+  },
+  "src/content/docs/guides/Tips-n-Tricks/migrate-nx-imports-to-devkit.mdoc": {
+    "pylonId": "29b85f03-675a-4b96-ba4f-4d3441b0d5dc",
+    "slug": "migrate-nx-imports-to-devkit",
+    "url": "",
+    "title": "Migrate `nx` imports to `@nx/devkit`",
+    "description": "The `nx` package is the CLI, not a public import surface. Move plugin and script imports to `@nx/devkit` so they keep working in future major versions.",
+    "docsPath": "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit",
+    "contentHash": "7858593f7671b1cbcc9d6290beb0c775637361337cf49887786485c0537ece5c",
+    "lastSyncedAt": "2026-07-07T20:02:27.181Z",
+    "published": false
+  },
+  "src/content/docs/troubleshooting/performance-profiling.mdoc": {
+    "pylonId": "92d8b9f0-1083-4112-b0e4-47e56f4bb430",
+    "slug": "performance-profiling",
+    "url": "",
+    "title": "Profiling Performance",
+    "description": "Learn how to profile and optimize Nx task execution performance using Chrome DevTools and environment variables to identify bottlenecks and improve build times.",
+    "docsPath": "/docs/troubleshooting/performance-profiling",
+    "contentHash": "0c593eb872a6660112c545aafa059fd44faaf5d2a98f3fcaec8b7e34490d8606",
+    "lastSyncedAt": "2026-07-07T20:02:35.571Z",
+    "published": false
+  },
+  "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc": {
+    "pylonId": "13cf732b-3b29-4fc1-8a6c-ee723124e33e",
+    "slug": "troubleshoot-cache-misses",
+    "url": "",
+    "title": "Troubleshoot Cache Misses",
+    "description": "Learn how to diagnose and fix issues when Nx tasks are not being replayed from cache as expected, using project configuration checks and Nx Cloud tools.",
+    "docsPath": "/docs/troubleshooting/troubleshoot-cache-misses",
+    "contentHash": "0704693d9c39a6daf2f07f65ac030de406e1eb3332b11199c3c5c5ced91e934b",
+    "lastSyncedAt": "2026-07-07T20:02:57.157Z",
+    "published": false
+  }
+}

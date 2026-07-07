@@ -1,5 +1,6 @@
 import type { APIRoute } from 'astro';
 import { getCollection } from 'astro:content';
+import pylonKbMapping from '../content/pylon-kb.json';
 
 interface DocEntry {
   slug: string;
@@ -184,6 +185,27 @@ export const GET: APIRoute = async ({ site }) => {
       const encodedSlug = entry.slug.replace(/ /g, '%20');
       const url = `${siteUrl}/docs/reference/devkit/${encodedSlug}.md`;
       lines.push(`- [${entry.title}](${url})`);
+    }
+    lines.push('');
+  }
+
+  // Knowledge-base articles that migrated to the Pylon-hosted KB
+  const pylonEntries = Object.values(
+    pylonKbMapping as Record<
+      string,
+      { title: string; description?: string; url: string }
+    >
+  ).sort((a, b) => a.title.localeCompare(b.title));
+  if (pylonEntries.length > 0) {
+    lines.push('## Knowledge Base (external)');
+    lines.push('');
+    lines.push(
+      'The following knowledge-base articles are hosted on the Nx support knowledge base.'
+    );
+    lines.push('');
+    for (const entry of pylonEntries) {
+      const desc = sanitizeDescription(entry.description);
+      lines.push(`- [${entry.title}](${entry.url})${desc ? `: ${desc}` : ''}`);
     }
     lines.push('');
   }

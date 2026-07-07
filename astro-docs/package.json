@@ -23,5 +23,8 @@
     "canvaskit-wasm": "^0.40.0",
     "octokit": "^2.0.14",
     "tailwindcss": "4.1.11"
+  },
+  "devDependencies": {
+    "pagefind": "1.3.0"
   }
 }
