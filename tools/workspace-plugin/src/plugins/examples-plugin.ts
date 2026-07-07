@@ -64,9 +64,15 @@ export const createNodes: CreateNodes = [
                     },
                   },
                   dependsOn: ['^build'],
+                  // ^default (not ^production): the nested tools read files
+                  // production filters out — playwright's transform loads the
+                  // linked packages' tsconfigs (incl. tsconfig.spec.json).
+                  // Root tsconfig.json: esbuild walks ancestor directories up
+                  // to the repo root when resolving through the linked deps.
                   inputs: [
                     'default',
-                    '^production',
+                    '^default',
+                    '{workspaceRoot}/tsconfig.json',
                     {
                       dependentTasksOutputFiles: '**/*',
                       transitive: true,
