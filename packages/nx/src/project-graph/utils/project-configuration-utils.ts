@@ -39,6 +39,7 @@ import type {
 import { createTargetDefaultsResults } from './project-configuration/target-defaults';
 
 export { mergeTargetConfigurations } from './project-configuration/target-merging';
+import { deepClone } from './project-configuration/target-merging';
 export { readTargetDefaultsForTarget } from './project-configuration/target-defaults';
 
 export type ConfigurationResult = {
@@ -402,10 +403,14 @@ export function mergeCreateNodesResults(
     // `filter.plugin`); the real default merge writes the manager's.
     const intermediateDefaultRootMap: Record<string, ProjectConfiguration> = {};
 
+    // The rootMap merge adopts input arrays/objects by reference and grows
+    // them in place (e.g. `mergeMetadata`), so staging works on deep clones —
+    // handing it the plugin results themselves would corrupt them before the
+    // real merge below reads them.
     const mergeToIntermediate: MergeFn = (project, sourceInfo) => {
       mergeProjectConfigurationIntoRootMap(
         intermediateDefaultRootMap,
-        project,
+        deepClone(project),
         undefined,
         sourceInfo,
         false,

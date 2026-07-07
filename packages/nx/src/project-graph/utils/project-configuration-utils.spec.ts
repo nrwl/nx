@@ -187,6 +187,75 @@ describe('project-configuration-utils', () => {
       expect(sm['targets.processResources.executor']).toEqual(GRADLE);
     });
 
+    // Regression: when targetDefaults are present, the default layer is
+    // staged into a throwaway rootMap before its real merge. The rootMap
+    // merge adopts and grows metadata arrays in place on the objects it is
+    // handed, so staging must not hand it the plugin results themselves —
+    // otherwise the first plugin's result object accumulates the second
+    // plugin's metadata during staging, and the real merge then reads the
+    // corrupted results and duplicates every entry.
+    it('should not mutate default-plugin results when staging them for target-default synthesis', () => {
+      const packageJsonResults: CreateNodesResultEntry[] = [
+        [
+          'nx/core/package-json',
+          'libs/a/package.json',
+          {
+            projects: {
+              'libs/a': {
+                name: 'a',
+                root: 'libs/a',
+                metadata: { targetGroups: { Custom: ['echo'] } },
+                targets: {
+                  echo: {
+                    executor: 'nx:run-script',
+                    options: { script: 'echo' },
+                    metadata: { technologies: ['npm'] },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      ];
+      const projectJsonResults: CreateNodesResultEntry[] = [
+        [
+          'nx/core/project-json',
+          'libs/a/project.json',
+          {
+            projects: {
+              'libs/a': {
+                name: 'a',
+                root: 'libs/a',
+                metadata: { targetGroups: { Custom: ['lint'] } },
+                targets: {
+                  echo: { metadata: { technologies: ['custom'] } },
+                },
+              },
+            },
+          },
+        ],
+      ];
+
+      const errors: MergeError[] = [];
+      const result = mergeCreateNodesResults(
+        [],
+        [packageJsonResults, projectJsonResults],
+        { targetDefaults: { build: { cache: true } } },
+        '/tmp/test',
+        errors
+      );
+
+      expect(errors).toEqual([]);
+      const project = result.projectRootMap['libs/a'];
+      expect(project.metadata!.targetGroups).toEqual({
+        Custom: ['echo', 'lint'],
+      });
+      expect(project.targets!.echo.metadata!.technologies).toEqual([
+        'npm',
+        'custom',
+      ]);
+    });
+
     // Regression: default-plugin batches merge into an intermediate
     // rootmap, not the manager's main rootmap, so filtering substitutor
     // registration to roots the manager already knows about used to drop
