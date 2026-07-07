@@ -21,6 +21,7 @@ import {
   emitPrunedPnpmInstallAssets,
   getDependencyVersionFromPackageJson,
   getPrunedPnpmInstallSettingsYaml,
+  getPrunedPnpmPackageJsonBuildSettings,
   getPrunedPnpmPatchArtifacts,
   installPackageToTmp,
   normalizePrunedPatchPath,
@@ -1888,6 +1889,212 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     // The pnpm major is resolved once at the entry point and threaded into both
     // builders, not re-detected inside each.
     expect(versionSpy).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('getPrunedPnpmPackageJsonBuildSettings', () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), 'nx-pruned-pnpm-build-'));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+    jest.restoreAllMocks();
+  });
+
+  function mockPnpmVersion(version: string) {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockReturnValue(version);
+  }
+  function writeRootWorkspaceYaml(content: string) {
+    writeFileSync(join(tempDir, 'pnpm-workspace.yaml'), content);
+  }
+  function writeRootPackageJson(pnpm: Record<string, unknown>) {
+    writeFileSync(join(tempDir, 'package.json'), JSON.stringify({ pnpm }));
+  }
+  const prunedLockfileWith = (...packageKeys: string[]) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      ...packageKeys.flatMap((key) => [
+        `  ${key.startsWith('@') ? `'${key}'` : key}:`,
+        '    resolution: {integrity: sha512-abc}',
+        '',
+      ]),
+    ].join('\n');
+
+  it('returns null on pnpm 11 (build approvals go to pnpm-workspace.yaml)', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
+  });
+
+  it('carries onlyBuiltDependencies from pnpm-workspace.yaml on pnpm 10', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['esbuild'],
+    });
+  });
+
+  it('carries onlyBuiltDependencies from the root package.json pnpm field on pnpm 9', () => {
+    mockPnpmVersion('9.15.9');
+    // pnpm 9 reads build approvals only from the package.json pnpm field.
+    writeRootPackageJson({ onlyBuiltDependencies: ['esbuild'] });
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['esbuild'],
+    });
+  });
+
+  it('folds a root allowBuilds map into on/never-built lists (pnpm 10.26+)', () => {
+    mockPnpmVersion('10.26.0');
+    writeRootWorkspaceYaml(
+      'allowBuilds:\n  esbuild: true\n  telemetry-dep: false\n'
+    );
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['esbuild'],
+      neverBuiltDependencies: ['telemetry-dep'],
+    });
+  });
+
+  it('scopes approvals to the packages present in the pruned lockfile', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml(
+      'onlyBuiltDependencies:\n  - esbuild\n  - some-absent-native-dep\n'
+    );
+
+    expect(
+      getPrunedPnpmPackageJsonBuildSettings(
+        tempDir,
+        prunedLockfileWith('esbuild@0.21.5')
+      )
+    ).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+  });
+
+  it('carries supportedArchitectures', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml(
+      'supportedArchitectures:\n  os:\n    - linux\n  cpu:\n    - x64\n'
+    );
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      supportedArchitectures: { os: ['linux'], cpu: ['x64'] },
+    });
+  });
+
+  it('lets pnpm-workspace.yaml win over the root package.json per field', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootPackageJson({ onlyBuiltDependencies: ['from-package-json'] });
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - from-workspace-yaml\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['from-workspace-yaml'],
+    });
+  });
+
+  it('returns null when the workspace declares no build approvals', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('packages:\n  - packages/*\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
+  });
+
+  it('fails open (null) when the pnpm version cannot be determined', () => {
+    jest
+      .spyOn(pacakgeManager, 'getPackageManagerVersion')
+      .mockImplementation(() => {
+        throw new Error('no pnpm on PATH');
+      });
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
+  });
+
+  it('folds build approvals into the emitted package.json on pnpm 10', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'package.json'),
+      JSON.stringify({ name: 'app', dependencies: { esbuild: '0.21.5' } })
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWith('esbuild@0.21.5')
+    );
+
+    const pkg = JSON.parse(
+      readFileSync(join(outputDir, 'package.json'), 'utf-8')
+    );
+    expect(pkg.pnpm).toEqual({ onlyBuiltDependencies: ['esbuild'] });
+    // pnpm <=10 reads these from package.json, so no workspace file is written.
+    expect(existsSync(join(outputDir, 'pnpm-workspace.yaml'))).toBe(false);
+  });
+
+  it('keeps build approvals out of the emitted package.json on pnpm 11', () => {
+    mockPnpmVersion('11.2.2');
+    writeRootWorkspaceYaml('allowBuilds:\n  esbuild: true\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'package.json'),
+      JSON.stringify({ name: 'app', dependencies: { esbuild: '0.21.5' } })
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWith('esbuild@0.21.5')
+    );
+
+    const pkg = JSON.parse(
+      readFileSync(join(outputDir, 'package.json'), 'utf-8')
+    );
+    expect(pkg.pnpm).toBeUndefined();
+    const { load } = require('@zkochan/js-yaml');
+    expect(
+      load(readFileSync(join(outputDir, 'pnpm-workspace.yaml'), 'utf-8'))
+    ).toEqual({ allowBuilds: { esbuild: true } });
+  });
+
+  it('unions a project-level approval with the carried one', () => {
+    mockPnpmVersion('10.13.1');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+    const outputDir = join(tempDir, 'dist');
+    mkdirSync(outputDir);
+    writeFileSync(
+      join(outputDir, 'package.json'),
+      JSON.stringify({
+        name: 'app',
+        pnpm: { onlyBuiltDependencies: ['app-native'] },
+        dependencies: { esbuild: '0.21.5', 'app-native': '1.0.0' },
+      })
+    );
+
+    writePrunedPnpmInstallSettings(
+      outputDir,
+      tempDir,
+      prunedLockfileWith('esbuild@0.21.5', 'app-native@1.0.0')
+    );
+
+    const pkg = JSON.parse(
+      readFileSync(join(outputDir, 'package.json'), 'utf-8')
+    );
+    expect(new Set(pkg.pnpm.onlyBuiltDependencies)).toEqual(
+      new Set(['app-native', 'esbuild'])
+    );
   });
 });
 

@@ -1011,6 +1011,164 @@ function readRootPatchedDependencies(
   return merged;
 }
 
+type RootPnpmBuildSettings = {
+  onlyBuiltDependencies?: string[];
+  neverBuiltDependencies?: string[];
+  allowBuilds?: Record<string, boolean>;
+  supportedArchitectures?: NonNullable<
+    PackageJson['pnpm']
+  >['supportedArchitectures'];
+};
+
+/**
+ * The workspace root's pnpm build-script settings, read from both the
+ * pnpm-workspace.yaml and the root package.json `pnpm` field, with the
+ * pnpm-workspace.yaml value winning per field (pnpm migrates config there, and
+ * pnpm 10 reads both). Mirrors `readRootPatchedDependencies`.
+ */
+function readRootPnpmBuildSettings(
+  workspaceRootPath: string
+): RootPnpmBuildSettings {
+  const fields = [
+    'onlyBuiltDependencies',
+    'neverBuiltDependencies',
+    'allowBuilds',
+    'supportedArchitectures',
+  ] as const;
+  const merged: RootPnpmBuildSettings = {};
+  try {
+    const sources: RootPnpmBuildSettings[] = [];
+    const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
+    if (existsSync(rootPackageJsonPath)) {
+      sources.push(readJsonFile<PackageJson>(rootPackageJsonPath).pnpm ?? {});
+    }
+    const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
+    if (existsSync(rootWorkspaceYaml)) {
+      sources.push(
+        readYamlFile<RootPnpmBuildSettings>(rootWorkspaceYaml) ?? {}
+      );
+    }
+    // Later source (pnpm-workspace.yaml) wins per field.
+    for (const source of sources) {
+      for (const field of fields) {
+        if (source[field] !== undefined) {
+          merged[field] = source[field] as any;
+        }
+      }
+    }
+  } catch {
+    // Unreadable or malformed root config: carry no settings rather than guess.
+    return {};
+  }
+  return merged;
+}
+
+type PrunedPnpmPackageJsonBuildSettings = Pick<
+  NonNullable<PackageJson['pnpm']>,
+  'onlyBuiltDependencies' | 'neverBuiltDependencies' | 'supportedArchitectures'
+>;
+
+/**
+ * The pnpm build-script approvals a standalone pruned output must declare in its
+ * emitted package.json so native production deps still run their build scripts on
+ * pnpm <=10, or null when there is nothing to carry.
+ *
+ * pnpm <=10 reads `onlyBuiltDependencies`/`neverBuiltDependencies` (and
+ * `supportedArchitectures`) from the package.json `pnpm` field; pnpm 11 removed
+ * those keys and reads `allowBuilds` only from pnpm-workspace.yaml (carried there
+ * by `getPrunedPnpmInstallSettingsYaml`), so this returns null on pnpm 11+. The
+ * root may declare the approvals in pnpm-workspace.yaml (pnpm 10) or the
+ * package.json `pnpm` field (pnpm 9), and pnpm 10.26+ uses the `allowBuilds` map,
+ * so read both root sources and fold a root `allowBuilds` map into the
+ * on/never-built lists pnpm <=10 understands. Approvals are scoped to the
+ * packages the pruned lockfile keeps; one for a dropped package is inert.
+ *
+ * Counterpart to the pnpm 11 `getPrunedPnpmInstallSettingsYaml`; keep the two in
+ * sync when pnpm changes where build approvals are read from.
+ */
+export function getPrunedPnpmPackageJsonBuildSettings(
+  workspaceRootPath: string = workspaceRoot,
+  prunedLockfileContent?: string,
+  precomputed?: PrunedPnpmConfig
+): PrunedPnpmPackageJsonBuildSettings | null {
+  const pnpmMajor = precomputed?.pnpmMajor ?? getPnpmMajor(workspaceRootPath);
+  if (pnpmMajor === null || pnpmMajor >= 11) {
+    return null;
+  }
+  const root = readRootPnpmBuildSettings(workspaceRootPath);
+  const present = prunedLockfileContent
+    ? getPnpmLockfilePackageNames(prunedLockfileContent)
+    : null;
+  const scopeToLockfile = (names: Iterable<string>): string[] => {
+    const scoped = [...names];
+    return present ? scoped.filter((name) => present.has(name)) : scoped;
+  };
+
+  // pnpm 10.26+ declares approvals as an allowBuilds map; fold it into the
+  // on/never-built lists pnpm <=10 reads from package.json.
+  const onlyBuilt = new Set(root.onlyBuiltDependencies ?? []);
+  const neverBuilt = new Set(root.neverBuiltDependencies ?? []);
+  for (const [name, allowed] of Object.entries(root.allowBuilds ?? {})) {
+    (allowed ? onlyBuilt : neverBuilt).add(name);
+  }
+
+  const settings: PrunedPnpmPackageJsonBuildSettings = {};
+  const scopedOnlyBuilt = scopeToLockfile(onlyBuilt);
+  if (scopedOnlyBuilt.length > 0) {
+    settings.onlyBuiltDependencies = scopedOnlyBuilt;
+  }
+  const scopedNeverBuilt = scopeToLockfile(neverBuilt);
+  if (scopedNeverBuilt.length > 0) {
+    settings.neverBuiltDependencies = scopedNeverBuilt;
+  }
+  if (root.supportedArchitectures) {
+    settings.supportedArchitectures = root.supportedArchitectures;
+  }
+  return Object.keys(settings).length > 0 ? settings : null;
+}
+
+/**
+ * Folds the pnpm <=10 package.json additions a standalone pruned output needs
+ * (build approvals from `getPrunedPnpmPackageJsonBuildSettings`, plus the
+ * `patchedDependencies` declaration) onto `packageJson` in place. Build-approval
+ * lists union the manifest's own entries with the carried ones so a project-level
+ * approval is never dropped. Does nothing when there is nothing to add.
+ */
+function applyPrunedPnpmPackageJsonSettings(
+  packageJson: PackageJson,
+  buildSettings: PrunedPnpmPackageJsonBuildSettings | null,
+  patchedDependencies: Record<string, string> | null
+): void {
+  if (!buildSettings && !patchedDependencies) {
+    return;
+  }
+  const union = (a: string[] = [], b: string[] = []) => [
+    ...new Set([...a, ...b]),
+  ];
+  packageJson.pnpm ??= {};
+  if (buildSettings?.onlyBuiltDependencies) {
+    packageJson.pnpm.onlyBuiltDependencies = union(
+      packageJson.pnpm.onlyBuiltDependencies,
+      buildSettings.onlyBuiltDependencies
+    );
+  }
+  if (buildSettings?.neverBuiltDependencies) {
+    packageJson.pnpm.neverBuiltDependencies = union(
+      packageJson.pnpm.neverBuiltDependencies,
+      buildSettings.neverBuiltDependencies
+    );
+  }
+  if (buildSettings?.supportedArchitectures) {
+    packageJson.pnpm.supportedArchitectures = {
+      ...buildSettings.supportedArchitectures,
+      ...packageJson.pnpm.supportedArchitectures,
+    };
+  }
+  if (patchedDependencies) {
+    packageJson.pnpm.patchedDependencies = patchedDependencies;
+  }
+}
+
 function getPrunedLockfilePatchedKeys(
   prunedLockfileContent: string
 ): Set<string> {
@@ -1100,11 +1258,12 @@ export function getPrunedPnpmPatchArtifacts(
  * Emits the pnpm install-time artifacts a standalone pruned output needs through
  * a caller-provided `emit` sink: the pnpm 11 settings-only pnpm-workspace.yaml
  * (see `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus, for
- * pnpm <=10, the `patchedDependencies` declaration folded into `packageJson` in
- * place. The bundler plugins (webpack, rspack) hold the manifest in memory and
- * emit it as a compilation asset after this returns, so the pnpm <=10
- * declaration is mutated onto `packageJson` rather than written; the
- * file-writing executors use `writePrunedPnpmInstallSettings` instead.
+ * pnpm <=10, the build-script approvals and `patchedDependencies` declaration
+ * folded into `packageJson` in place (see `getPrunedPnpmPackageJsonBuildSettings`).
+ * The bundler plugins (webpack, rspack) hold the manifest in memory and emit it
+ * as a compilation asset after this returns, so the pnpm <=10 additions are
+ * mutated onto `packageJson` rather than written; the file-writing executors use
+ * `writePrunedPnpmInstallSettings` instead.
  */
 export function emitPrunedPnpmInstallAssets(
   workspaceRootPath: string,
@@ -1138,24 +1297,28 @@ export function emitPrunedPnpmInstallAssets(
   for (const { path, content } of patchFiles) {
     emit(path, content);
   }
-  if (packageJsonPatchedDependencies) {
-    packageJson.pnpm = {
-      ...packageJson.pnpm,
-      patchedDependencies: packageJsonPatchedDependencies,
-    };
-  }
+  const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
+    workspaceRootPath,
+    prunedLockfileContent,
+    config
+  );
+  applyPrunedPnpmPackageJsonSettings(
+    packageJson,
+    buildSettings,
+    packageJsonPatchedDependencies
+  );
 }
 
 /**
  * Writes the pnpm install-time artifacts a standalone pruned output needs into
  * `outputDirectory`: the pnpm 11 settings-only pnpm-workspace.yaml (see
  * `getPrunedPnpmInstallSettingsYaml`) and the `pnpm patch` files, plus the
- * pnpm <=10 `patchedDependencies` declaration in the emitted package.json. Does
- * nothing for whatever the workspace does not use, and removes a stale
- * pnpm-workspace.yaml a prior deploy left when the output no longer has settings.
- * `allowBuilds` and the patch scope come from `lockfileContent` when the caller
- * already has it in hand, otherwise from the pruned lockfile it just wrote to
- * `outputDirectory`.
+ * pnpm <=10 build-script approvals and `patchedDependencies` declaration in the
+ * emitted package.json. Does nothing for whatever the workspace does not use, and
+ * removes a stale pnpm-workspace.yaml a prior deploy left when the output no
+ * longer has settings. `allowBuilds` and the patch scope come from
+ * `lockfileContent` when the caller already has it in hand, otherwise from the
+ * pruned lockfile it just wrote to `outputDirectory`.
  */
 export function writePrunedPnpmInstallSettings(
   outputDirectory: string,
@@ -1198,12 +1361,20 @@ export function writePrunedPnpmInstallSettings(
     mkdirSync(dirname(destination), { recursive: true });
     writeFileSync(destination, content);
   }
-  if (packageJsonPatchedDependencies) {
+  const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
+    workspaceRootPath,
+    prunedLockfileContent,
+    config
+  );
+  if (buildSettings || packageJsonPatchedDependencies) {
     const packageJsonPath = join(outputDirectory, 'package.json');
     if (existsSync(packageJsonPath)) {
       const packageJson: PackageJson = readJsonFile(packageJsonPath);
-      packageJson.pnpm ??= {};
-      packageJson.pnpm.patchedDependencies = packageJsonPatchedDependencies;
+      applyPrunedPnpmPackageJsonSettings(
+        packageJson,
+        buildSettings,
+        packageJsonPatchedDependencies
+      );
       writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
     }
   }
