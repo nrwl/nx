@@ -7,7 +7,7 @@ use hashbrown::HashSet;
 use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
-    tasks::types::HashInstruction,
+    tasks::types::{HashInstruction, HashPlans},
     types::NapiDashMap,
 };
 use crate::native::{
@@ -201,12 +201,13 @@ impl TaskHasher {
     #[napi(ts_return_type = "Record<string, HashDetails>")]
     pub fn hash_plans(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
         per_task_envs: HashMap<String, HashMap<String, String>>,
         cwd: String,
         collect_task_inputs: Option<bool>,
     ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
-        for task_id in hash_plans.keys() {
+        for task_id in hash_plans.plans.keys() {
             if !per_task_envs.contains_key(task_id) {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
             }
@@ -220,7 +221,7 @@ impl TaskHasher {
 
     fn hash_plans_impl<'a, F>(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        hash_plans: &External<HashPlans>,
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,
@@ -237,8 +238,7 @@ impl TaskHasher {
 
         let function_start = std::time::Instant::now();
 
-        trace!("hashing plans {:?}", &**hash_plans);
-        trace!("Starting hash_plans with {} plans", hash_plans.len());
+        trace!("Starting hash_plans with {} plans", hash_plans.plans.len());
         trace!("all workspace files: {}", self.all_workspace_files.len());
         trace!("project_file_map: {}", self.project_file_map.len());
 
@@ -269,18 +269,17 @@ impl TaskHasher {
         };
         let cwd_path = std::path::Path::new(&cwd);
 
+        let pool = &hash_plans.pool;
         hash_plans
+            .plans
             .iter()
-            .flat_map(|(task_id, instructions)| {
-                instructions
-                    .iter()
-                    .map(move |instruction| (task_id, instruction))
-            })
+            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
             .par_bridge()
-            .try_for_each(|(task_id, instruction)| {
+            .try_for_each(|(task_id, id)| {
+                let instruction_ref = pool.get(id);
                 let (instruction_key, hash_value, inputs) = self.hash_instruction(
                     task_id,
-                    instruction,
+                    instruction_ref.value(),
                     HashInstructionArgs {
                         js_env: resolve_env(task_id),
                         ts_config_hash: &ts_config_hash,
@@ -346,7 +345,7 @@ impl TaskHasher {
         debug!(
             "hash_plans COMPLETED in {:?} - processed {} plans (setup: {:?}, hashing: {:?}, assembly: {:?})",
             total_duration,
-            hash_plans.len(),
+            hash_plans.plans.len(),
             setup_duration,
             hash_duration,
             assemble_duration

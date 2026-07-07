@@ -3,7 +3,7 @@ use crate::native::tasks::hashers::{
     hash_workspace_files_with_inputs, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
-use crate::native::tasks::types::HashInstruction;
+use crate::native::tasks::types::{HashInstruction, HashPlans};
 use crate::native::types::FileData;
 use hashbrown::HashSet;
 use napi::bindgen_prelude::External;
@@ -40,18 +40,19 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, string[]>")]
     pub fn inspect(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
         let project_file_set_cache = ProjectFileSetCache::new();
+        let pool = &hash_plans.pool;
         let results: Vec<(&String, Vec<String>)> = hash_plans
+            .plans
             .iter()
-            .flat_map(|(task_id, instructions)| {
-                instructions
-                    .iter()
-                    .map(move |instruction| (task_id, instruction))
-            })
+            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
             .par_bridge()
-            .map(|(task_id, instruction)| {
+            .map(|(task_id, id)| {
+                let instruction_ref = pool.get(id);
+                let instruction = instruction_ref.value();
                 let strings = match instruction {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
@@ -88,20 +89,20 @@ impl HashPlanInspector {
     #[napi(ts_return_type = "Record<string, HashInputs>")]
     pub fn inspect_inputs(
         &self,
-        hash_plans: &External<HashMap<String, Vec<HashInstruction>>>,
+        #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
+        hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
         let project_file_set_cache = ProjectFileSetCache::new();
+        let pool = &hash_plans.pool;
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
+            .plans
             .iter()
-            .flat_map(|(task_id, instructions)| {
-                instructions
-                    .iter()
-                    .map(move |instruction| (task_id, instruction))
-            })
+            .flat_map(|(task_id, ids)| ids.iter().map(move |id| (task_id, *id)))
             .par_bridge()
-            .map(|(task_id, instruction)| {
-                let builder =
-                    self.resolve_instruction_inputs(instruction, &project_file_set_cache)?;
+            .map(|(task_id, id)| {
+                let instruction_ref = pool.get(id);
+                let builder = self
+                    .resolve_instruction_inputs(instruction_ref.value(), &project_file_set_cache)?;
                 Ok::<_, anyhow::Error>((task_id, builder))
             })
             .collect::<anyhow::Result<_>>()?;
