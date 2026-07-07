@@ -1,6 +1,9 @@
 import type { TargetConfiguration } from '../../../config/workspace-json-project-json';
 import type { HashInputs } from '../../../native';
-import { getTaskRawInputs } from '../../../hasher/check-task-files';
+import {
+  checkFilesAreInputs,
+  getTaskRawInputs,
+} from '../../../hasher/check-task-files';
 import { createTaskId } from '../../../tasks-runner/utils';
 import type { ShowTargetInputsOptions } from '../command-object';
 import {
@@ -41,8 +44,19 @@ export async function showTargetInputsHandler(
 
   if (args.check !== undefined) {
     const checkItems = deduplicateFolderEntries(args.check);
+    // checkFilesAreInputs also statically matches dependentTasksOutputFiles
+    // globs against upstream task outputs, which HashInputs only reflects
+    // after the upstream tasks have actually run.
+    const { matched } = await checkFilesAreInputs(taskId, checkItems);
+    const staticMatches = new Set(matched);
     const results = checkItems.map((input) =>
-      resolveCheckFromInputs(input, projectName, targetName, hashInputs)
+      resolveCheckFromInputs(
+        input,
+        projectName,
+        targetName,
+        hashInputs,
+        staticMatches
+      )
     );
 
     if (results.length >= 2) {
@@ -73,7 +87,8 @@ function resolveCheckFromInputs(
   rawValue: string,
   projectName: string,
   targetName: string,
-  inputs: HashInputs
+  inputs: HashInputs,
+  staticMatches: Set<string>
 ) {
   for (const [category, arr] of [
     ['environment', inputs.environment],
@@ -96,6 +111,18 @@ function resolveCheckFromInputs(
 
   const fileToCheck = normalizePath(rawValue);
   const isFile = inputs.files.includes(fileToCheck);
+
+  if (!isFile && staticMatches.has(rawValue)) {
+    return {
+      value: rawValue,
+      file: fileToCheck,
+      project: projectName,
+      target: targetName,
+      isInput: true,
+      matchedCategory: 'depOutputs' as string,
+      containedInputFiles: [] as string[],
+    };
+  }
 
   let containedInputFiles: string[] = [];
   if (!isFile) {

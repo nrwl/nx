@@ -230,6 +230,67 @@ describe('show target inputs', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('should identify a dependent task output with --check before upstream has run', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                dependsOn: ['^build'],
+                inputs: [
+                  '{projectRoot}/**/*.ts',
+                  { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/dep',
+            name: 'dep',
+            targets: {
+              build: {
+                executor: '@nx/js:tsc',
+                outputs: ['{workspaceRoot}/dist/libs/dep'],
+              },
+            },
+          },
+          'lib'
+        )
+        .addDependency('my-app', 'dep')
+        .build()
+    );
+
+    // Upstream dep:build has not run, so depOutputs is empty — the match must
+    // come from the static dependentTasksOutputFiles check.
+    setMockHashInputs({
+      'my-app:build': {
+        files: [],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    });
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['dist/libs/dep/index.d.ts'],
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    expect(logged).toContain('dist/libs/dep/index.d.ts');
+    expect(logged).toContain('is an input');
+    expect(logged).toContain('depOutputs');
+    expect(process.exitCode).toBe(0);
+  });
+
   it('should report non-match correctly with --check', async () => {
     setGraph(
       new GraphBuilder()
