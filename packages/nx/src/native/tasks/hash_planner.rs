@@ -28,6 +28,46 @@ pub struct HashPlanner {
     external_deps_mapped: OnceLock<HashMap<String, Vec<String>>>,
 }
 
+/// Cycle-detection set with an undo log. Each dependency input needs its own
+/// visitation scope (see `gather_dependency_inputs`); rolling insertions back
+/// keeps that scoping without cloning the whole set per input.
+struct VisitedTracker<'a> {
+    set: hashbrown::HashSet<&'a str>,
+    log: Vec<&'a str>,
+}
+
+impl<'a> VisitedTracker<'a> {
+    /// The root project starts out visited, so a task never traverses
+    /// itself as its own dependency.
+    fn new(root_project: &'a str) -> Self {
+        Self {
+            set: hashbrown::HashSet::from([root_project]),
+            log: Vec::new(),
+        }
+    }
+
+    /// Same contract as `HashSet::insert`: returns whether the project was
+    /// newly inserted. New insertions are logged so `rollback_to` can undo them.
+    fn insert(&mut self, project: &'a str) -> bool {
+        let inserted = self.set.insert(project);
+        if inserted {
+            self.log.push(project);
+        }
+        inserted
+    }
+
+    fn scope_start(&self) -> usize {
+        self.log.len()
+    }
+
+    /// Un-visits everything recorded since `scope_start`.
+    fn rollback_to(&mut self, scope_start: usize) {
+        for project in self.log.drain(scope_start..) {
+            self.set.remove(project);
+        }
+    }
+}
+
 #[napi]
 impl HashPlanner {
     #[napi(constructor)]
@@ -84,7 +124,7 @@ impl HashPlanner {
                     &inputs,
                     &task_graph,
                     external_deps_mapped,
-                    &mut Box::new(hashbrown::HashSet::from([task.target.project.as_str()])),
+                    &mut VisitedTracker::new(task.target.project.as_str()),
                 )?;
 
                 let mut inputs: Vec<HashInstruction> = target
@@ -266,7 +306,7 @@ impl HashPlanner {
         inputs: &SplitInputs,
         task_graph: &TaskGraph,
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
-        visited: &mut Box<hashbrown::HashSet<&'a str>>,
+        visited: &mut VisitedTracker<'a>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let project_deps = &self.project_graph.dependencies[project_name];
         let self_inputs = self.gather_self_inputs(project_name, &inputs.self_inputs);
@@ -319,7 +359,7 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
-        visited: &mut Box<hashbrown::HashSet<&'a str>>,
+        visited: &mut VisitedTracker<'a>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         if inputs.len() == 1 {
             return self.gather_dependency_input(
@@ -337,16 +377,18 @@ impl HashPlanner {
 
         for input in inputs {
             // Dependency inputs are independent. Scope cycle detection to each
-            // input so sibling inputs all apply to the same dependency.
-            let mut visited_for_input = Box::new((**visited).clone());
+            // input so sibling inputs all apply to the same dependency, rolling
+            // this input's visits back instead of cloning the set.
+            let scope = visited.scope_start();
             deps_inputs.extend(self.gather_dependency_input(
                 task,
                 input,
                 task_graph,
                 project_deps,
                 external_deps_mapped,
-                &mut visited_for_input,
+                visited,
             )?);
+            visited.rollback_to(scope);
         }
 
         Ok(deps_inputs)
@@ -359,15 +401,14 @@ impl HashPlanner {
         task_graph: &TaskGraph,
         project_deps: &'a [String],
         external_deps_mapped: &'a HashMap<String, Vec<String>>,
-        visited: &mut Box<hashbrown::HashSet<&'a str>>,
+        visited: &mut VisitedTracker<'a>,
     ) -> anyhow::Result<Vec<HashInstruction>> {
         let mut deps_inputs: Vec<HashInstruction> = Vec::with_capacity(project_deps.len());
 
         for dep in project_deps {
-            if visited.contains(dep.as_str()) {
+            if !visited.insert(dep.as_str()) {
                 continue;
             }
-            visited.insert(dep.as_str());
 
             if self.project_graph.nodes.contains_key(dep) {
                 let Some(dep_inputs) = get_inputs_for_dependency(
@@ -573,5 +614,34 @@ fn find_external_dependency_node_name<'a>(
             }
         }
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::VisitedTracker;
+
+    #[test]
+    fn insert_reports_first_insertion_only() {
+        let mut visited = VisitedTracker::new("seed");
+        assert!(!visited.insert("seed"));
+        assert!(visited.insert("a"));
+        assert!(!visited.insert("a"));
+    }
+
+    #[test]
+    fn rollback_unvisits_only_the_scope() {
+        let mut visited = VisitedTracker::new("seed");
+        assert!(visited.insert("outer"));
+
+        let scope = visited.scope_start();
+        assert!(visited.insert("inner1"));
+        assert!(visited.insert("inner2"));
+        visited.rollback_to(scope);
+
+        // Scoped visits are undone; earlier ones are not.
+        assert!(visited.insert("inner1"));
+        assert!(!visited.insert("outer"));
+        assert!(!visited.insert("seed"));
     }
 }
