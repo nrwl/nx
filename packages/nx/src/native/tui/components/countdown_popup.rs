@@ -603,7 +603,10 @@ impl CountdownPopup {
                 ),
                 Span::styled("p", Style::default().fg(THEME.info)),
             ]);
-            if self.is_scrollable() {
+            // The scroll hint yields to the connect hint: with both, the footer
+            // exceeds the 70-col popup cap and ratatui left-truncates the row.
+            // Scrolling still works; the hint returns once an attempt starts.
+            if self.is_scrollable() && !self.should_start_connect() {
                 footer.push(Span::styled(
                     "   scroll: ",
                     Style::default().fg(THEME.secondary_fg),
@@ -1105,6 +1108,32 @@ mod tests {
         let (text, _) = render_with_registry(&mut popup);
         assert!(text.contains("Could not connect: network down"));
         assert!(text.contains("Enable remote cache: <shift>+c"));
+    }
+
+    #[test]
+    fn scroll_hint_yields_to_the_connect_hint() {
+        // A tall report overflows the popup viewport (scrollable). With the
+        // connect hint shown, both hints together exceed the 70-col cap and
+        // ratatui would left-truncate the footer - so the scroll hint yields.
+        let mut tall = summary_with_cache_rec();
+        tall.recommendations
+            .extend((0..80).map(|i| format!("Recommendation number {i}")));
+
+        let mut popup = CountdownPopup::new();
+        popup.set_summary(tall.clone());
+        popup.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        let (text, _) = render_with_registry(&mut popup);
+        assert!(text.contains("Enable remote cache: <shift>+c"));
+        assert!(
+            !text.contains("scroll:"),
+            "scroll hint yields while the connect hint renders"
+        );
+
+        // Once an attempt started (hint gone), the scroll hint returns.
+        popup.set_connect_state(CloudConnectState::Loading);
+        let (text, _) = render_with_registry(&mut popup);
+        assert!(!text.contains("<shift>+c"));
+        assert!(text.contains("scroll:"));
     }
 
     #[test]

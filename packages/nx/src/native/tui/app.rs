@@ -1094,11 +1094,17 @@ impl App {
                                 self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
                                 return Ok(false);
                             }
-                            KeyCode::Char('C') if countdown_popup.should_start_connect() => {
+                            KeyCode::Char('C')
+                                if countdown_popup.has_summary()
+                                    && countdown_popup.should_start_connect() =>
+                            {
                                 // Start the enable-remote-cache connect flow the
                                 // footer hint advertises. Keep the report open
                                 // (pinned) so the URL renders inside it when the
-                                // flow completes.
+                                // flow completes. Gated on has_summary: the
+                                // no-report exit dialog shows none of the connect
+                                // affordances, so `C` there must fall through to
+                                // the any-key dismissal like every other key.
                                 countdown_popup.pin_open();
                                 self.core.state().lock().cancel_quit();
                                 self.start_cloud_connect_from_report();
@@ -4661,5 +4667,37 @@ mod tests {
 
         press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
         assert_eq!(report_connect_state(&app), CloudConnectState::Loading);
+    }
+
+    /// The mid-run exit dialog (no summary) shows no connect affordances, so
+    /// `<shift>+c` there must behave like any other key - dismiss the dialog -
+    /// and MUST NOT silently start a connect flow (which creates a remote
+    /// workspace and writes nx.json).
+    #[test]
+    fn connect_shortcut_inert_on_no_report_exit_dialog() {
+        let mut app = create_test_app();
+        app.set_cloud_connection_status(Some(CloudConnectionStatus::NotConnected));
+        // q mid-run: countdown dialog without a summary.
+        {
+            let popup = app
+                .components
+                .iter_mut()
+                .find_map(|c| c.as_any_mut().downcast_mut::<CountdownPopup>())
+                .unwrap();
+            popup.start_countdown(3);
+        }
+        app.update_focus(Focus::CountdownPopup);
+
+        press_key(&mut app, KeyCode::Char('C'), KeyModifiers::SHIFT);
+
+        assert_eq!(
+            report_connect_state(&app),
+            CloudConnectState::NotStarted,
+            "no connect attempt starts from the exit dialog"
+        );
+        assert!(
+            !report_visible(&app),
+            "the key falls through to the any-key dismissal"
+        );
     }
 }
