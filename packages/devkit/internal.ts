@@ -279,7 +279,7 @@ export {
   textPrompt,
   unparse,
   validateOutputs,
-  validatePrunedLinkClosure,
+  validatePrunedLocalPathClosure,
   warnUnshippableLocalPathSpec,
   workspaceDataDirectory,
   workspaceRootInner,

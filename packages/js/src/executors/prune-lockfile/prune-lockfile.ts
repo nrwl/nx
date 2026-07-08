@@ -18,7 +18,7 @@ import {
   stripPrunedLockfilePnpmConfig,
   writePrunedPnpmInstallSettings,
   rewritePrunedLocalPathSpecifiers,
-  validatePrunedLinkClosure,
+  validatePrunedLocalPathClosure,
 } from '@nx/devkit/internal';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
@@ -67,7 +67,7 @@ export default async function pruneLockfileExecutor(
     // Skip on the root-lockfile fallback: its importer describes the whole
     // workspace, not this app, so validating it would fail the fail-open path.
     if (packageManager === 'pnpm' && pruned) {
-      validatePrunedLinkClosure(packageJson, workspaceRoot, lockFile);
+      validatePrunedLocalPathClosure(packageJson, workspaceRoot, lockFile);
     }
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);

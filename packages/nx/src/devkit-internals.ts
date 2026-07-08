@@ -278,6 +278,7 @@ export {
   relocatePrunedLocalPathSpec,
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
+  validatePrunedLocalPathClosure,
   warnUnshippableLocalPathSpec,
   writePrunedPnpmInstallSettings,
 } from './utils/package-json';
