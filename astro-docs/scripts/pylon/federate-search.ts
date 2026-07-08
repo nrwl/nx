@@ -75,6 +75,11 @@ function readCache(): SearchRecord[] {
   }
 }
 
+/**
+ * Pagefind ranking weight for a federated record. Configure globally via
+ * PYLON_DEFAULT_SEARCH_WEIGHT in config.ts, or per article via the `weight`
+ * field in migration-list.json (persisted into pylon-kb.json).
+ */
 function weightFor(record: SearchRecord): number {
   try {
     const mapping = JSON.parse(

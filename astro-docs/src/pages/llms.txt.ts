@@ -195,7 +195,10 @@ export const GET: APIRoute = async ({ site }) => {
       string,
       { title: string; description?: string; url: string }
     >
-  ).sort((a, b) => a.title.localeCompare(b.title));
+  )
+    // Unpublished articles have no public URL yet.
+    .filter((entry) => entry.url)
+    .sort((a, b) => a.title.localeCompare(b.title));
   if (pylonEntries.length > 0) {
     lines.push('## Knowledge Base (external)');
     lines.push('');

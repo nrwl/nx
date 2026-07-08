@@ -266,7 +266,9 @@ async function main(): Promise<void> {
         body_html: converted.hasPageUrlPlaceholder
           ? html.replaceAll('{pageUrl}', urlUsed)
           : html,
-        is_published: wantPublished,
+        // Only ever publish, never unpublish: an article published via the
+        // Pylon UI must not be taken down by a stale publish:false flag.
+        ...(wantPublished ? { is_published: true } : {}),
       });
       patched++;
       const finalUrl = updated.url || mapped.url;
