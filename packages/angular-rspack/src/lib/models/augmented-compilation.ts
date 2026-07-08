@@ -20,6 +20,10 @@ export type NG_RSPACK_COMPILATION_STATE = {
   // Metafile inputs of the bundled component stylesheets, for license
   // extraction (workspace-relative paths).
   stylesheetMetafileInputs: Record<string, { bytesInOutput: number }>;
+  // Template and stylesheet dependencies per source file as tracked by the
+  // Angular compiler, keyed like the typescript file cache. Absent for JIT
+  // compilations and @angular/build versions that do not report them.
+  resourceDependencies?: ReadonlyMap<string, readonly string[]>;
   i18n?: I18nOptions;
 };
 export type NgRspackCompilation = Compilation & {

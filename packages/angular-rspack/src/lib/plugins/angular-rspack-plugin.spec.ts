@@ -403,6 +403,9 @@ describe('AngularRspackPlugin', () => {
   });
 
   it('should expose the TypeScript transpilation mode and stylesheet metafile inputs to the loaders', async () => {
+    const resourceDependencies = new Map([
+      ['/root/src/app/app.component.ts', ['/root/src/app/app.component.html']],
+    ]);
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
       collectedStylesheetAssets: [],
@@ -413,6 +416,7 @@ describe('AngularRspackPlugin', () => {
         },
       ],
       useTypeScriptTranspilation: false,
+      resourceDependencies,
     });
     const compiler = applyPlugin();
 
@@ -427,6 +431,7 @@ describe('AngularRspackPlugin', () => {
     expect(state.stylesheetMetafileInputs).toEqual({
       'node_modules/css-pkg/styles.css': { bytesInOutput: 5 },
     });
+    expect(state.resourceDependencies).toBe(resourceDependencies);
   });
 
   it('should drop stylesheet metafile inputs for modified files, including inline-style entries', async () => {

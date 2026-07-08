@@ -34,6 +34,7 @@ export default function loader(
       javascriptTransformer,
       useTypeScriptTranspilation,
       angularCompilationFailed,
+      resourceDependencies,
     } = (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME]();
 
     if (angularCompilationFailed) {
@@ -46,17 +47,27 @@ export default function loader(
 
     const normalizedRequest = toTypeScriptFileCacheKey(this.resourcePath);
 
-    const templateUrls = templateUrlsResolver.resolve(
-      content,
-      normalizedRequest
-    );
-    const styleUrls = styleUrlsResolver.resolve(content, normalizedRequest);
-    for (const urlSet of [...templateUrls, ...styleUrls]) {
-      // `urlSet` is a string where a relative path is joined with an
-      // absolute path using the `|` symbol.
-      // For example: `./app.component.html|/home/projects/analog/src/app/app.component.html`.
-      const [, absoluteFileUrl] = urlSet.split('|');
-      this.addDependency(absoluteFileUrl);
+    const resourceDeps = resourceDependencies?.get(normalizedRequest);
+    if (resourceDeps !== undefined) {
+      // The compiler tracked this file's template and stylesheet
+      // dependencies; registering them keeps the module rebuilding when a
+      // resource changes, at no parsing cost.
+      for (const dependency of resourceDeps) {
+        this.addDependency(dependency);
+      }
+    } else {
+      const templateUrls = templateUrlsResolver.resolve(
+        content,
+        normalizedRequest
+      );
+      const styleUrls = styleUrlsResolver.resolve(content, normalizedRequest);
+      for (const urlSet of [...templateUrls, ...styleUrls]) {
+        // `urlSet` is a string where a relative path is joined with an
+        // absolute path using the `|` symbol.
+        // For example: `./app.component.html|/home/projects/analog/src/app/app.component.html`.
+        const [, absoluteFileUrl] = urlSet.split('|');
+        this.addDependency(absoluteFileUrl);
+      }
     }
 
     const cached = typescriptFileCache.get(normalizedRequest);

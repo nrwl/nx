@@ -83,6 +83,90 @@ describe('angular-transform.loader', () => {
     );
   });
 
+  it('should register compiler-tracked resource dependencies without invoking the resolvers', () => {
+    const styleUrlsResolver = { resolve: vi.fn() };
+    const templateUrlsResolver = { resolve: vi.fn() };
+
+    angularTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: {
+          [NG_RSPACK_SYMBOL_NAME]: () => ({
+            typescriptFileCache,
+            javascriptTransformer,
+            useTypeScriptTranspilation: true,
+            resourceDependencies: new Map([
+              [
+                '/home/projects/analog/src/app/app.component.ts',
+                [
+                  '/home/projects/analog/src/app/app.component.html',
+                  '/home/projects/analog/src/app/app.component.css',
+                ],
+              ],
+            ]),
+          }),
+        } as unknown as NgRspackCompilation,
+        resourcePath: '/home/projects/analog/src/app/app.component.ts',
+        addDependency,
+      },
+      '@Component()',
+      { templateUrlsResolver, styleUrlsResolver } as any
+    );
+
+    expect(addDependency).toHaveBeenCalledTimes(2);
+    expect(addDependency).toHaveBeenNthCalledWith(
+      1,
+      '/home/projects/analog/src/app/app.component.html'
+    );
+    expect(addDependency).toHaveBeenNthCalledWith(
+      2,
+      '/home/projects/analog/src/app/app.component.css'
+    );
+    expect(templateUrlsResolver.resolve).not.toHaveBeenCalled();
+    expect(styleUrlsResolver.resolve).not.toHaveBeenCalled();
+  });
+
+  it('should fall back to the URL resolvers for files the compiler did not track', () => {
+    angularTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: {
+          [NG_RSPACK_SYMBOL_NAME]: () => ({
+            typescriptFileCache,
+            javascriptTransformer,
+            useTypeScriptTranspilation: true,
+            resourceDependencies: new Map([
+              ['/some/other/file.ts', ['/some/other/file.html']],
+            ]),
+          }),
+        } as unknown as NgRspackCompilation,
+        resourcePath: '/home/projects/analog/src/app/app.component.ts',
+        addDependency,
+      },
+      '@Component()',
+      {
+        templateUrlsResolver: new TemplateUrlsResolverMock(
+          () =>
+            './app.component.html|/home/projects/analog/src/app/app.component.html'
+        ),
+        styleUrlsResolver: new StyleUrlsResolverMock(
+          () =>
+            './app.component.css|/home/projects/analog/src/app/app.component.css'
+        ),
+      } as any
+    );
+
+    expect(addDependency).toHaveBeenCalledTimes(2);
+    expect(addDependency).toHaveBeenNthCalledWith(
+      1,
+      '/home/projects/analog/src/app/app.component.html'
+    );
+    expect(addDependency).toHaveBeenNthCalledWith(
+      2,
+      '/home/projects/analog/src/app/app.component.css'
+    );
+  });
+
   it('should emit an empty module when the angular compilation failed', () => {
     angularTransformLoader.call(
       {

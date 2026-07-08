@@ -4,6 +4,7 @@ import {
   createAngularCompilation,
   AngularCompilation,
   SourceFileCache,
+  toTypeScriptFileCacheKey,
 } from '../models';
 import {
   setupCompilation,
@@ -106,22 +107,37 @@ export async function setupCompilationWithAngularCompilation(
   // Initialization errors are intentionally not caught here: callers must
   // surface them as build errors instead of continuing with a compilation
   // that was never initialized.
-  const { compilerOptions: initializedCompilerOptions, referencedFiles } =
-    await angularCompilation.initialize(
-      config.source?.tsconfigPath ?? options.tsConfig,
-      {
-        sourceFileCache,
-        fileReplacements,
-        modifiedFiles,
-        transformStylesheet: wrappedTransformStylesheet,
-        processWebWorker(workerFile: string) {
-          return workerFile;
-        },
+  const {
+    compilerOptions: initializedCompilerOptions,
+    referencedFiles,
+    componentResourcesDependencies,
+  } = await angularCompilation.initialize(
+    config.source?.tsconfigPath ?? options.tsConfig,
+    {
+      sourceFileCache,
+      fileReplacements,
+      modifiedFiles,
+      transformStylesheet: wrappedTransformStylesheet,
+      processWebWorker(workerFile: string) {
+        return workerFile;
       },
-      () => compilerOptions
-    );
+    },
+    () => compilerOptions
+  );
   if (sourceFileCache) {
     sourceFileCache.referencedFiles = referencedFiles;
+  }
+
+  // The compiler already tracks each source file's template and stylesheet
+  // dependencies; re-key them like the emit cache so loaders can register
+  // watch dependencies without re-parsing sources. AOT only: JIT compilations
+  // do not report them and fall back to the URL resolvers.
+  let resourceDependencies: Map<string, readonly string[]> | undefined;
+  if (componentResourcesDependencies) {
+    resourceDependencies = new Map();
+    for (const [file, dependencies] of componentResourcesDependencies) {
+      resourceDependencies.set(toTypeScriptFileCacheKey(file), dependencies);
+    }
   }
 
   // Mirrors @angular/build: with isolated modules and no sourcemaps, Angular
@@ -146,5 +162,6 @@ export async function setupCompilationWithAngularCompilation(
     collectedStylesheetAssets,
     collectedStylesheetMetafileInputs,
     useTypeScriptTranspilation,
+    resourceDependencies,
   };
 }

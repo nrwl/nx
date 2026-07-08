@@ -1,6 +1,10 @@
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-import type { AngularCompilation, SourceFileCache } from '../models';
+import {
+  toTypeScriptFileCacheKey,
+  type AngularCompilation,
+  type SourceFileCache,
+} from '../models';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation';
 import {
   setupCompilation,
@@ -60,6 +64,51 @@ describe('setupCompilationWithAngularCompilation', () => {
 
     expect(sourceFileCache.referencedFiles).toEqual(['/root/src/main.ts']);
     expect(result.angularCompilation).toBe(angularCompilation);
+  });
+
+  it('should re-key the compiler-tracked resource dependencies like the emit cache', async () => {
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({
+        referencedFiles: [],
+        componentResourcesDependencies: new Map([
+          [
+            'C:/root/src/app/app.component.ts',
+            ['/root/src/app/app.component.html'],
+          ],
+        ]),
+      }),
+    } as unknown as AngularCompilation;
+
+    const result = await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    expect(result.resourceDependencies).toEqual(
+      new Map([
+        [
+          toTypeScriptFileCacheKey('C:/root/src/app/app.component.ts'),
+          ['/root/src/app/app.component.html'],
+        ],
+      ])
+    );
+  });
+
+  it('should not build resource dependencies when the compilation does not report them', async () => {
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+
+    const result = await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    expect(result.resourceDependencies).toBeUndefined();
   });
 
   it('should invalidate the stylesheet bundler for modified files', async () => {
