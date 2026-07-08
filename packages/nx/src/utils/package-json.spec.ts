@@ -32,7 +32,7 @@ import {
   readNxMigrateConfig,
   readTargetsFromPackageJson,
   rewritePrunedLocalPathSpecifiers,
-  validatePrunedLinkClosure,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from './package-json';
 import * as catalog from './catalog';
@@ -2646,7 +2646,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
   });
 });
 
-describe('validatePrunedLinkClosure', () => {
+describe('validatePrunedLocalPathClosure', () => {
   let tempDir: string;
 
   beforeEach(() => {
@@ -2690,7 +2690,11 @@ describe('validatePrunedLinkClosure', () => {
     };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).not.toThrow();
   });
 
@@ -2703,7 +2707,11 @@ describe('validatePrunedLinkClosure', () => {
     };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).not.toThrow();
   });
 
@@ -2718,7 +2726,11 @@ describe('validatePrunedLinkClosure', () => {
     };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).not.toThrow();
   });
 
@@ -2731,7 +2743,11 @@ describe('validatePrunedLinkClosure', () => {
     };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).toThrow(
       /linked package linked-lib requires missing-dep.*Convert linked-lib to a file: dependency.*add missing-dep to app/s
     );
@@ -2747,7 +2763,11 @@ describe('validatePrunedLinkClosure', () => {
     };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).not.toThrow();
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('only a devDependency')
@@ -2760,7 +2780,11 @@ describe('validatePrunedLinkClosure', () => {
     const app: PackageJson = { name: 'app', version: '0.0.1' };
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfileLinking('vendor/linked'))
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileLinking('vendor/linked')
+      )
     ).not.toThrow();
     expect(warn).toHaveBeenCalledWith(
       expect.stringContaining('may need react')
@@ -2784,7 +2808,85 @@ describe('validatePrunedLinkClosure', () => {
     ].join('\n');
 
     expect(() =>
-      validatePrunedLinkClosure(app, tempDir, lockfile)
+      validatePrunedLocalPathClosure(app, tempDir, lockfile)
+    ).not.toThrow();
+  });
+
+  // A directory package entry with no dependency edges (a backfilled
+  // autoInstallPeers peer synthesized by the pnpm parser).
+  const lockfileWithDirEntry = (snapshotBody: string) =>
+    [
+      "lockfileVersion: '9.0'",
+      '',
+      'importers:',
+      '',
+      '  .:',
+      '    dependencies:',
+      '      mylib:',
+      '        specifier: file:workspace_modules/mylib',
+      '        version: file:workspace_modules/mylib',
+      '',
+      'packages:',
+      '',
+      '  dir-peer@file:vendor/dir-peer:',
+      '    resolution: {directory: vendor/dir-peer, type: directory}',
+      '',
+      'snapshots:',
+      '',
+      `  dir-peer@file:vendor/dir-peer: ${snapshotBody}`,
+      '',
+    ].join('\n');
+
+  function writeDirPeerManifest(manifest: Record<string, unknown>) {
+    mkdirSync(join(tempDir, 'vendor/dir-peer'), { recursive: true });
+    writeFileSync(
+      join(tempDir, 'vendor/dir-peer/package.json'),
+      JSON.stringify({ name: 'dir-peer', version: '1.0.0', ...manifest })
+    );
+  }
+
+  it('fails when an edge-less directory package requires a dep absent from the app deps', () => {
+    writeDirPeerManifest({ dependencies: { 'missing-dep': '^1.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(app, tempDir, lockfileWithDirEntry('{}'))
+    ).toThrow(
+      /local package dir-peer requires missing-dep.*Declare dir-peer as a regular dependency.*enable autoInstallPeers/s
+    );
+  });
+
+  it('passes when the edge-less directory package required deps are app dependencies', () => {
+    writeDirPeerManifest({ dependencies: { lodash: '^4.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+      dependencies: { lodash: '^4.17.21' },
+    };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(app, tempDir, lockfileWithDirEntry('{}'))
+    ).not.toThrow();
+  });
+
+  it('skips a directory package whose lockfile entry carries resolved edges', () => {
+    // pnpm installs the recorded closure, so the manifest needs no validation.
+    writeDirPeerManifest({ dependencies: { 'missing-dep': '^1.0.0' } });
+    const app: PackageJson = {
+      name: 'app',
+      version: '0.0.1',
+    };
+
+    expect(() =>
+      validatePrunedLocalPathClosure(
+        app,
+        tempDir,
+        lockfileWithDirEntry('\n    dependencies:\n      missing-dep: 1.0.0')
+      )
     ).not.toThrow();
   });
 });

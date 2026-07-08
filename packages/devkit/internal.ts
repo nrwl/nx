@@ -262,7 +262,7 @@ export {
   transformLegacyOutputs,
   unparse,
   validateOutputs,
-  validatePrunedLinkClosure,
+  validatePrunedLocalPathClosure,
   warnUnshippableLocalPathSpec,
   workspaceDataDirectory,
   workspaceRootInner,
