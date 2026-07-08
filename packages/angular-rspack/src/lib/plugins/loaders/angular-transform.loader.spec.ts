@@ -27,12 +27,15 @@ describe('angular-transform.loader', () => {
   const javascriptTransformer = {
     transformData: vi.fn(),
   };
-  const _compilation = {
-    [NG_RSPACK_SYMBOL_NAME]: () => ({
-      typescriptFileCache,
-      javascriptTransformer,
-    }),
-  } as unknown as NgRspackCompilation;
+  const makeCompilation = (useTypeScriptTranspilation = true) =>
+    ({
+      [NG_RSPACK_SYMBOL_NAME]: () => ({
+        typescriptFileCache,
+        javascriptTransformer,
+        useTypeScriptTranspilation,
+      }),
+    }) as unknown as NgRspackCompilation;
+  const _compilation = makeCompilation();
   const thisValue = {
     async: vi.fn(() => callback),
     _compilation: {},
@@ -111,10 +114,10 @@ describe('angular-transform.loader', () => {
     expect(callback).toHaveBeenCalledWith(null, 'content');
   });
 
-  it('should serve a transformed entry without re-transforming', () => {
+  it('should serve a transformed entry with its sourcemap', () => {
     typescriptFileCache.set('/home/projects/analog/src/app/app.component.ts', {
       code: 'transformed content',
-      map: undefined,
+      map: '{"version":3}',
     });
 
     angularTransformLoader.call(
@@ -129,15 +132,23 @@ describe('angular-transform.loader', () => {
     expect(callback).toHaveBeenCalledWith(
       null,
       'transformed content',
-      undefined
+      '{"version":3}'
     );
     expect(javascriptTransformer.transformData).not.toHaveBeenCalled();
   });
 
-  it('should transform the raw emit on demand and cache the result', async () => {
+  it('should transform the raw emit on demand and cache the result with its sourcemap extracted', async () => {
+    const map = JSON.stringify({
+      version: 3,
+      sources: ['/path/to/lazy.ts'],
+      mappings: '',
+    });
+    const inlineMap = Buffer.from(map).toString('base64');
     typescriptFileCache.set('/path/to/lazy.ts', 'raw emit');
     javascriptTransformer.transformData.mockResolvedValue(
-      Buffer.from('transformed content')
+      Buffer.from(
+        `const code = 1;\n//# sourceMappingURL=data:application/json;base64,${inlineMap}`
+      )
     );
 
     angularTransformLoader.call(
@@ -156,11 +167,31 @@ describe('angular-transform.loader', () => {
       true,
       false
     );
-    expect(callback).toHaveBeenCalledWith(null, 'transformed content');
+    expect(callback).toHaveBeenCalledWith(null, 'const code = 1;', map);
     expect(typescriptFileCache.get('/path/to/lazy.ts')).toEqual({
-      code: 'transformed content',
-      map: undefined,
+      code: 'const code = 1;',
+      map,
     });
+  });
+
+  it('should pass the raw emit through untouched when TypeScript transpilation is off', () => {
+    typescriptFileCache.set('/path/to/fast.ts', 'angular-transformed ts');
+
+    angularTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(false),
+        resourcePath: '/path/to/fast.ts',
+      },
+      'content'
+    );
+
+    expect(callback).toHaveBeenCalledWith(null, 'angular-transformed ts');
+    expect(javascriptTransformer.transformData).not.toHaveBeenCalled();
+    // The raw entry stays so later loader calls serve it again.
+    expect(typescriptFileCache.get('/path/to/fast.ts')).toBe(
+      'angular-transformed ts'
+    );
   });
 
   it('should not overwrite a newer emit stored while transforming', async () => {
@@ -185,7 +216,7 @@ describe('angular-transform.loader', () => {
     resolveTransform!(Buffer.from('stale transformed'));
     await vi.waitFor(() => expect(callback).toHaveBeenCalled());
 
-    expect(callback).toHaveBeenCalledWith(null, 'stale transformed');
+    expect(callback).toHaveBeenCalledWith(null, 'stale transformed', undefined);
     expect(typescriptFileCache.get('/path/to/racy.ts')).toBe('newer raw emit');
   });
 

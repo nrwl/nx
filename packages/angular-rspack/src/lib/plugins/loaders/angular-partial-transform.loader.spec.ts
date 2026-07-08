@@ -102,7 +102,7 @@ describe('angular-partial-transform.loader', () => {
     );
 
     await vi.waitFor(() =>
-      expect(callback).toHaveBeenCalledWith(null, 'transformed emit')
+      expect(callback).toHaveBeenCalledWith(null, 'transformed emit', undefined)
     );
     expect(transformData).toHaveBeenCalledWith(
       '/path/to/util.js',
@@ -155,7 +155,7 @@ describe('angular-partial-transform.loader', () => {
     resolveTransform!(Buffer.from('stale transformed'));
     await vi.waitFor(() => expect(callback).toHaveBeenCalled());
 
-    expect(callback).toHaveBeenCalledWith(null, 'stale transformed');
+    expect(callback).toHaveBeenCalledWith(null, 'stale transformed', undefined);
     expect(typescriptFileCache.get('/path/to/racy.js')).toBe('newer raw emit');
   });
 

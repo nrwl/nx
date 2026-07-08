@@ -55,6 +55,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   >();
   #stylesheetMetafileInputs: StylesheetMetafileInputs['inputs'] = {};
   #collectedStylesheetMetafileInputs: StylesheetMetafileInputs[] = [];
+  #useTypeScriptTranspilation = true;
   #initializationError: string | undefined;
   #emitError: string | undefined;
 
@@ -442,6 +443,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         javascriptTransformer: this
           .#javascriptTransformer as unknown as JavaScriptTransformer,
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
+        useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
         angularCompilationFailed:
           this.#initializationError !== undefined ||
           this.#emitError !== undefined,
@@ -526,6 +528,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
           sass: this.#_options.stylePreprocessorOptions?.sass,
           watch,
+          sourceMap: this.#_options.sourceMap.scripts,
         },
         this.#sourceFileCache,
         this.#angularCompilation,
@@ -535,6 +538,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       this.#collectedStylesheetAssets = result.collectedStylesheetAssets;
       this.#collectedStylesheetMetafileInputs =
         result.collectedStylesheetMetafileInputs ?? [];
+      this.#useTypeScriptTranspilation =
+        result.useTypeScriptTranspilation ?? true;
     } catch (error) {
       this.#initializationError = `Angular compilation initialization failed.\n${formatError(
         error

@@ -90,25 +90,45 @@ export async function setupCompilationWithAngularCompilation(
   // Initialization errors are intentionally not caught here: callers must
   // surface them as build errors instead of continuing with a compilation
   // that was never initialized.
-  const { referencedFiles } = await angularCompilation.initialize(
-    config.source?.tsconfigPath ?? options.tsConfig,
-    {
-      sourceFileCache,
-      fileReplacements,
-      modifiedFiles,
-      transformStylesheet: wrappedTransformStylesheet,
-      processWebWorker(workerFile: string) {
-        return workerFile;
+  const { compilerOptions: initializedCompilerOptions, referencedFiles } =
+    await angularCompilation.initialize(
+      config.source?.tsconfigPath ?? options.tsConfig,
+      {
+        sourceFileCache,
+        fileReplacements,
+        modifiedFiles,
+        transformStylesheet: wrappedTransformStylesheet,
+        processWebWorker(workerFile: string) {
+          return workerFile;
+        },
       },
-    },
-    () => compilerOptions
-  );
+      () => compilerOptions
+    );
   if (sourceFileCache) {
     sourceFileCache.referencedFiles = referencedFiles;
   }
+
+  // Mirrors @angular/build: with isolated modules and no sourcemaps, Angular
+  // emits transformed TypeScript and leaves transpilation to the bundler.
+  // Unlike esbuild, the swc rule transpiling that output doesn't read the
+  // project's tsconfig; it assumes the default tsconfig semantics (legacy
+  // decorators without metadata, ES2022 targets, default class-field and
+  // import-elision behavior). Other configs use TypeScript transpilation.
+  const useTypeScriptTranspilation =
+    !initializedCompilerOptions?.isolatedModules ||
+    !!initializedCompilerOptions.sourceMap ||
+    !!initializedCompilerOptions.inlineSourceMap ||
+    !initializedCompilerOptions.experimentalDecorators ||
+    !!initializedCompilerOptions.emitDecoratorMetadata ||
+    initializedCompilerOptions.useDefineForClassFields === false ||
+    !!initializedCompilerOptions.verbatimModuleSyntax ||
+    !!initializedCompilerOptions.importsNotUsedAsValues ||
+    (initializedCompilerOptions.target ?? 0) < 9; /* ts.ScriptTarget.ES2022 */
+
   return {
     angularCompilation,
     collectedStylesheetAssets,
     collectedStylesheetMetafileInputs,
+    useTypeScriptTranspilation,
   };
 }

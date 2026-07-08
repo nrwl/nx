@@ -36,12 +36,12 @@ export interface SetupCompilationOptions {
   includePaths?: string[];
   sass?: Sass;
   watch?: boolean;
+  sourceMap?: boolean;
 }
 
 export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   suppressOutputPathCheck: true,
   outDir: undefined,
-  sourceMap: true,
   declaration: false,
   declarationMap: false,
   allowEmptyCodegenFiles: false,
@@ -57,6 +57,12 @@ export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
 let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
   undefined;
 
+/**
+ * Reads the project's TypeScript configuration with the Angular compiler
+ * defaults applied and creates (or reuses) the shared component stylesheet
+ * bundler. TypeScript sourcemaps are emitted inline and only when
+ * `options.sourceMap` is enabled.
+ */
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
   options: SetupCompilationOptions
@@ -68,9 +74,15 @@ export async function setupCompilation(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
+      // Inline sourcemaps only when script sourcemaps are requested, matching
+      // the esbuild application builder (keeps Angular's fast emit path).
+      inlineSources: !!options.sourceMap,
+      inlineSourceMap: !!options.sourceMap,
+      sourceMap: undefined,
       ...(options.useTsProjectReferences
         ? {
             sourceMap: false,
+            inlineSourceMap: false,
             inlineSources: false,
             isolatedModules: true,
           }

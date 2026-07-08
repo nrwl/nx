@@ -5,6 +5,7 @@ import {
   TemplateUrlsResolver,
   toTypeScriptFileCacheKey,
 } from '@nx/angular-rspack-compiler';
+import { extractInlineSourceMap } from './inline-source-map';
 
 const _styleUrlsResolver = new StyleUrlsResolver();
 const _templateUrlsResolver = new TemplateUrlsResolver();
@@ -31,6 +32,7 @@ export default function loader(
     const {
       typescriptFileCache,
       javascriptTransformer,
+      useTypeScriptTranspilation,
       angularCompilationFailed,
     } = (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME]();
 
@@ -64,24 +66,25 @@ export default function loader(
         return;
       }
 
-      // A string entry is a raw emit from the Angular compilation: run the
-      // JavaScript transformations on demand and replace the entry with the
-      // result, matching the on-demand transformation in `@angular/build`'s
-      // esbuild compiler plugin `onLoad` hook. Subsequent loader calls hit
-      // the fast path above until a fresh emit replaces the entry again.
+      // A string entry is a raw emit from the Angular compilation. Without
+      // TypeScript transpilation it is Angular-transformed TypeScript that
+      // the bundler transpiles as-is, matching `@angular/build`.
+      if (!useTypeScriptTranspilation) {
+        callback(null, cached);
+        return;
+      }
+
       javascriptTransformer
         .transformData(normalizedRequest, cached, true, false)
         .then((transformed: Uint8Array) => {
           const text = Buffer.from(transformed).toString();
+          const [code, map] = extractInlineSourceMap(text);
           // A newer emit may have replaced the entry while transforming;
           // only store the result for the emit it was produced from.
           if (typescriptFileCache.get(normalizedRequest) === cached) {
-            typescriptFileCache.set(normalizedRequest, {
-              code: text,
-              map: undefined,
-            });
+            typescriptFileCache.set(normalizedRequest, { code, map });
           }
-          callback(null, text);
+          callback(null, code, map);
         })
         .catch((err: Error) => callback(err));
       return;

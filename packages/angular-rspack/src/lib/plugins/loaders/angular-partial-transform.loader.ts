@@ -1,6 +1,7 @@
 import { LoaderContext } from '@rspack/core';
 import { toTypeScriptFileCacheKey } from '@nx/angular-rspack-compiler';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
+import { extractInlineSourceMap } from './inline-source-map';
 
 export default function loader(this: LoaderContext<unknown>, content: string) {
   const callback = this.async();
@@ -47,15 +48,13 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
         .then(
           (transformed: Uint8Array) => {
             const text = Buffer.from(transformed).toString('utf8');
+            const [code, map] = extractInlineSourceMap(text);
             // A newer emit may have replaced the entry while transforming;
             // only store the result for the emit it was produced from.
             if (typescriptFileCache.get(normalizedRequest) === cached) {
-              typescriptFileCache.set(normalizedRequest, {
-                code: text,
-                map: undefined,
-              });
+              typescriptFileCache.set(normalizedRequest, { code, map });
             }
-            callback(null, text);
+            callback(null, code, map);
           },
           (error) => {
             // Fail the module instead of leaving the loader callback pending,

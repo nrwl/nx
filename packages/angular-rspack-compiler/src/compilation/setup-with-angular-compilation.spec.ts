@@ -105,6 +105,47 @@ describe('setupCompilationWithAngularCompilation', () => {
     expect(invalidate).not.toHaveBeenCalled();
   });
 
+  // The default tsconfig (isolated modules, legacy decorators, ES2022) with
+  // sourcemaps off takes the fast path; anything the swc rule can't
+  // replicate falls back to TypeScript transpilation.
+  const fastPathOptions = {
+    isolatedModules: true,
+    experimentalDecorators: true,
+    target: 9,
+  };
+  it.each([
+    [fastPathOptions, false],
+    [{}, true],
+    [{ ...fastPathOptions, sourceMap: true }, true],
+    [{ ...fastPathOptions, inlineSourceMap: true }, true],
+    [{ ...fastPathOptions, experimentalDecorators: false }, true],
+    [{ ...fastPathOptions, emitDecoratorMetadata: true }, true],
+    [{ ...fastPathOptions, useDefineForClassFields: false }, true],
+    [{ ...fastPathOptions, verbatimModuleSyntax: true }, true],
+    [{ ...fastPathOptions, importsNotUsedAsValues: 1 }, true],
+    [{ ...fastPathOptions, target: undefined }, true],
+    [{ ...fastPathOptions, target: 4 }, true],
+  ])(
+    'should compute useTypeScriptTranspilation from the initialized compiler options %o',
+    async (initializedCompilerOptions, expected) => {
+      const angularCompilation = {
+        initialize: vi.fn().mockResolvedValue({
+          referencedFiles: [],
+          compilerOptions: initializedCompilerOptions,
+        }),
+      } as unknown as AngularCompilation;
+
+      const result = await setupCompilationWithAngularCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options,
+        undefined,
+        angularCompilation
+      );
+
+      expect(result.useTypeScriptTranspilation).toBe(expected);
+    }
+  );
+
   it('should collect stylesheet metafile inputs keyed by stylesheet', async () => {
     vi.mocked(styleTransform).mockReturnValueOnce(async () => ({
       contents: '.a{}',

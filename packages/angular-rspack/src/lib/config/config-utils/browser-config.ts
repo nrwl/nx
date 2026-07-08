@@ -88,6 +88,13 @@ export async function getBrowserConfig(
                 jsc: {
                   parser: {
                     syntax: 'typescript',
+                    // Angular's fast emit path can leave decorators in the
+                    // output; compile them with the legacy semantics the
+                    // default tsconfig (experimentalDecorators) implies.
+                    decorators: true,
+                  },
+                  transform: {
+                    legacyDecorator: true,
                   },
                   target: 'es2022',
                 },

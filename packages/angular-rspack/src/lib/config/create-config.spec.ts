@@ -49,6 +49,32 @@ describe('createConfig', () => {
     ]);
   });
 
+  it('should compile legacy decorators in the TS transpilation rule', async () => {
+    const configs = await _createConfig(configBase);
+
+    const tsRule = configs[0].module?.rules?.find(
+      (rule) =>
+        typeof rule === 'object' &&
+        rule !== null &&
+        (
+          rule as { use?: Array<{ loader?: string }> }
+        ).use?.[0]?.loader?.includes('swc-loader')
+    ) as unknown as {
+      use: Array<{
+        options: {
+          jsc: {
+            parser: { decorators?: boolean };
+            transform?: { legacyDecorator?: boolean };
+          };
+        };
+      }>;
+    };
+
+    expect(tsRule).toBeDefined();
+    expect(tsRule.use[0].options.jsc.parser.decorators).toBe(true);
+    expect(tsRule.use[0].options.jsc.transform?.legacyDecorator).toBe(true);
+  });
+
   it('should share the license inputs between the browser and server configs', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     try {

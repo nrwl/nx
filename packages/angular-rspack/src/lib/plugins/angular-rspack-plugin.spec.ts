@@ -138,6 +138,7 @@ describe('AngularRspackPlugin', () => {
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
       collectedStylesheetAssets: [],
       collectedStylesheetMetafileInputs: [],
+      useTypeScriptTranspilation: true,
     });
   });
 
@@ -294,7 +295,7 @@ describe('AngularRspackPlugin', () => {
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
   });
 
-  it('should expose the stylesheet metafile inputs to other plugins', async () => {
+  it('should expose the TypeScript transpilation mode and stylesheet metafile inputs to the loaders', async () => {
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
       collectedStylesheetAssets: [],
@@ -304,6 +305,7 @@ describe('AngularRspackPlugin', () => {
           inputs: { 'node_modules/css-pkg/styles.css': { bytesInOutput: 5 } },
         },
       ],
+      useTypeScriptTranspilation: false,
     });
     const compiler = applyPlugin();
 
@@ -314,6 +316,7 @@ describe('AngularRspackPlugin', () => {
     const state = (compilation as unknown as NgRspackCompilation)[
       NG_RSPACK_SYMBOL_NAME
     ]();
+    expect(state.useTypeScriptTranspilation).toBe(false);
     expect(state.stylesheetMetafileInputs).toEqual({
       'node_modules/css-pkg/styles.css': { bytesInOutput: 5 },
     });
@@ -333,6 +336,7 @@ describe('AngularRspackPlugin', () => {
           inputs: { 'node_modules/other-pkg/styles.css': { bytesInOutput: 5 } },
         },
       ],
+      useTypeScriptTranspilation: true,
     });
     const compiler = createFakeCompiler();
     const plugin = new AngularRspackPlugin(options);
