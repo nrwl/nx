@@ -1,13 +1,38 @@
 {
-  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Pilot batch below; graph-tag articles (feature-based-testing, identify-dependencies-between-folders) are excluded pending a screenshot-vs-keep decision.",
+  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Entries are the scored migrate-set (support-style, niche, error-driven content); already-migrated articles whose source .mdoc was deleted are removed from this list but stay in src/content/pylon-kb.json, which drives redirects. Kept in docs (broad/evergreen/onboarding): all package-manager workspace guides, keep-nx-versions-in-sync, define-environment-variables, feature-based-testing, advanced-update, browser-support, include-assets-in-build, standalone-to-monorepo, resolve-circular-dependencies, performance-profiling. Borderline, parked in docs: troubleshoot-nx-install-issues, nx-sandbox-unix-sockets, identify-dependencies-between-folders (interactive graph).",
   "articles": [
     {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/yarn-workspaces.mdoc",
+      "sourcePath": "src/content/docs/troubleshooting/ci-execution-failed.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": false
     },
     {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/npm-workspaces.mdoc",
+      "sourcePath": "src/content/docs/troubleshooting/console-troubleshooting.mdoc",
+      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
+      "publish": false
+    },
+    {
+      "sourcePath": "src/content/docs/troubleshooting/unknown-local-cache.mdoc",
+      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
+      "publish": false
+    },
+    {
+      "sourcePath": "src/content/docs/troubleshooting/troubleshoot-convert-to-inferred.mdoc",
+      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
+      "publish": false
+    },
+    {
+      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/analyze-source-files.mdoc",
+      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
+      "publish": false
+    },
+    {
+      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/include-all-packagejson.mdoc",
+      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
+      "publish": false
+    },
+    {
+      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/yarn-pnp.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": false
     },
@@ -15,16 +40,6 @@
       "sourcePath": "src/content/docs/guides/Tips-n-Tricks/migrate-nx-imports-to-devkit.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": false
-    },
-    {
-      "sourcePath": "src/content/docs/troubleshooting/performance-profiling.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": false
-    },
-    {
-      "sourcePath": "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
     }
   ],
   "extraRedirects": []

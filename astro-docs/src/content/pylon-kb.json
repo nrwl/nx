@@ -1,26 +1,4 @@
 {
-  "src/content/docs/guides/Tips-n-Tricks/yarn-workspaces.mdoc": {
-    "pylonId": "b9e9a0f8-d9a9-4f49-957b-2df82206bd02",
-    "slug": "yarn-workspaces",
-    "url": "",
-    "title": "Use Yarn Workspaces with Nx",
-    "description": "Set up a Yarn workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.",
-    "docsPath": "/docs/guides/tips-n-tricks/yarn-workspaces",
-    "contentHash": "1e272bc3288021e19ad508c60642689cee0a68d07578cb22522d316204aeafe7",
-    "lastSyncedAt": "2026-07-07T20:02:14.585Z",
-    "published": false
-  },
-  "src/content/docs/guides/Tips-n-Tricks/npm-workspaces.mdoc": {
-    "pylonId": "95e673ae-23c3-40bf-ae33-ed000ce8899f",
-    "slug": "npm-workspaces",
-    "url": "",
-    "title": "Use npm Workspaces with Nx",
-    "description": "Set up an npm workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.",
-    "docsPath": "/docs/guides/tips-n-tricks/npm-workspaces",
-    "contentHash": "c82e91d985c970c050694c6af9804ab65bbd1a3c11c974b140b5e15bd08c1a42",
-    "lastSyncedAt": "2026-07-07T20:02:18.758Z",
-    "published": false
-  },
   "src/content/docs/guides/Tips-n-Tricks/migrate-nx-imports-to-devkit.mdoc": {
     "pylonId": "29b85f03-675a-4b96-ba4f-4d3441b0d5dc",
     "slug": "migrate-nx-imports-to-devkit",
@@ -30,17 +8,6 @@
     "docsPath": "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit",
     "contentHash": "7858593f7671b1cbcc9d6290beb0c775637361337cf49887786485c0537ece5c",
     "lastSyncedAt": "2026-07-07T20:02:27.181Z",
-    "published": false
-  },
-  "src/content/docs/troubleshooting/performance-profiling.mdoc": {
-    "pylonId": "92d8b9f0-1083-4112-b0e4-47e56f4bb430",
-    "slug": "performance-profiling",
-    "url": "",
-    "title": "Profiling Performance",
-    "description": "Learn how to profile and optimize Nx task execution performance using Chrome DevTools and environment variables to identify bottlenecks and improve build times.",
-    "docsPath": "/docs/troubleshooting/performance-profiling",
-    "contentHash": "0c593eb872a6660112c545aafa059fd44faaf5d2a98f3fcaec8b7e34490d8606",
-    "lastSyncedAt": "2026-07-07T20:02:35.571Z",
     "published": false
   },
   "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc": {
@@ -53,5 +20,82 @@
     "contentHash": "0704693d9c39a6daf2f07f65ac030de406e1eb3332b11199c3c5c5ced91e934b",
     "lastSyncedAt": "2026-07-08T14:30:49.444Z",
     "published": true
+  },
+  "src/content/docs/troubleshooting/ci-execution-failed.mdoc": {
+    "pylonId": "f1fb3ddf-7bdf-4a0f-94cf-d85739315b2d",
+    "slug": "ci-execution-failed",
+    "url": "",
+    "title": "Understanding \"CI Execution Failed\"",
+    "description": "Common causes and solutions for CI execution failures in Nx Cloud",
+    "docsPath": "/docs/troubleshooting/ci-execution-failed",
+    "contentHash": "1707b9478c113c912096a0866a76512060ede186318dd2aedb82b556c8e311d4",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:10.295Z"
+  },
+  "src/content/docs/troubleshooting/console-troubleshooting.mdoc": {
+    "pylonId": "9e15abf4-1754-4bee-933b-5a3abff5e6e2",
+    "slug": "console-troubleshooting",
+    "url": "",
+    "title": "Troubleshoot Nx Console Issues",
+    "description": "Learn how to resolve common issues with Nx Console, including Node.js version conflicts with nvm and WSL configuration in JetBrains IDEs.",
+    "docsPath": "/docs/troubleshooting/console-troubleshooting",
+    "contentHash": "6ba7e62558e2df5fda52a95e48044246b485b17b5aa142295794350b270f538e",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:14.474Z"
+  },
+  "src/content/docs/troubleshooting/unknown-local-cache.mdoc": {
+    "pylonId": "2144b385-e699-4c80-a8c1-7620081af0aa",
+    "slug": "unknown-local-cache",
+    "url": "",
+    "title": "Unknown Local Cache Error",
+    "description": "Learn how to troubleshoot and resolve Nx cache errors related to machine ID changes, network drives, and understand how Nx ensures cache security.",
+    "docsPath": "/docs/troubleshooting/unknown-local-cache",
+    "contentHash": "a91c3e688c5ff3e58a448211b0b674d823b68ba03016ba79d6c6afda4f13963b",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:18.769Z"
+  },
+  "src/content/docs/troubleshooting/troubleshoot-convert-to-inferred.mdoc": {
+    "pylonId": "b9ac6336-7a05-4b5a-9db6-88fe39e34f48",
+    "slug": "troubleshoot-convert-to-inferred",
+    "url": "",
+    "title": "Troubleshoot Convert to Inferred Migration",
+    "description": "Learn how to resolve common issues when migrating from executor-based tasks to inferred tasks in Nx, with specific solutions for Next.js, Remix, and other frameworks.",
+    "docsPath": "/docs/troubleshooting/troubleshoot-convert-to-inferred",
+    "contentHash": "8104b1f51ebae57e9d8bd44261ba251512b6c2f720f5ea400533581312e13135",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:22.998Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/analyze-source-files.mdoc": {
+    "pylonId": "1a0b8c3e-44b5-4ad8-a9d7-5eec7c665c0a",
+    "slug": "analyze-source-files",
+    "url": "",
+    "title": "Disable Graph Links Created from Analyzing Source Files",
+    "description": "Learn how to configure Nx to only use dependencies defined in package.json instead of detecting dependencies from source code analysis.",
+    "docsPath": "/docs/guides/tips-n-tricks/analyze-source-files",
+    "contentHash": "6469d8b0305afe4353b433665c8de496d55c32a2999d3c74da27b8da75e251d5",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:27.197Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/include-all-packagejson.mdoc": {
+    "pylonId": "b5dba488-40f5-469c-968c-4524cafd9991",
+    "slug": "include-all-packagejson",
+    "url": "",
+    "title": "Include All package.json Files as Projects",
+    "description": "Learn how to configure Nx to include all package.json files as projects in your workspace graph, not just those referenced in workspaces configuration.",
+    "docsPath": "/docs/guides/tips-n-tricks/include-all-packagejson",
+    "contentHash": "26a5b9d705fab4e6081c76535a31156c95272008a466499a6c8e1600f8f03bee",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:31.383Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/yarn-pnp.mdoc": {
+    "pylonId": "77bf4172-4822-4df2-b836-7724016d3f85",
+    "slug": "yarn-pnp",
+    "url": "",
+    "title": "Using Yarn Plug'n'Play with Nx",
+    "description": "Learn how to configure and use Yarn Plug'n'Play (PnP) in your Nx workspace to improve installation speed, reduce disk usage, and enforce dependency constraints.",
+    "docsPath": "/docs/guides/tips-n-tricks/yarn-pnp",
+    "contentHash": "ee6119b930089cec49d07bf76b66a6dea1ac014ccea29f5a28f9ac55c9c85f3e",
+    "published": false,
+    "lastSyncedAt": "2026-07-08T20:30:35.535Z"
   }
 }
