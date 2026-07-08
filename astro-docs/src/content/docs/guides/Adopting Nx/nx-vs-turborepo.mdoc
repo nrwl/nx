@@ -1,12 +1,12 @@
 ---
 title: Nx vs Turborepo
-description: Nx vs Turborepo on the same workspace, with distributed CI in 9m 20s vs 19m 18s, task sandboxing, polyglot builds, generators, and release management.
+description: Nx vs Turborepo on the same workspace, with distributed CI, task sandboxing, polyglot builds, generators, and release management.
 filter: 'type:Guides'
 sidebar:
   label: Nx vs Turborepo
 ---
 
-Both Nx and Turborepo seem to cover very similar ground. They provide task scheduling, caching (local and remote), and affected detection. The differences emerge as your needs grow. While **Turbo covers just the basics**, **Nx provides solutions along the entire software growth lifecycle**, even when you need more advanced features such as distributed CI, polyglot builds, or AI-powered CI workflows. That's where the gap widens.
+Both Nx and Turborepo cover similar ground. They provide task scheduling, caching (local and remote), and affected detection. The differences emerge as your needs grow. While **Turbo covers the basics**, **Nx provides solutions along the entire software growth lifecycle**, even when you need more advanced features such as distributed CI, polyglot builds, or AI-powered CI workflows. That's where the gap widens.
 
 This doesn't come at the cost of adoption complexity though. Nx is designed to be modular from the ground up and can be **adopted incrementally as you need more**.
 
@@ -18,22 +18,22 @@ This page starts with the basics, like onboarding, and progressively moves into 
 
 | Topic                                           | Nx                                                                | Turborepo                                                 |
 | ----------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| [Onboarding](#onboarding)                       | Zero-config or guided `nx init` (+3 lines)                        | Manual `turbo.json` (+144 lines)                          |
+| [Onboarding](#onboarding)                       | Zero-config or guided `nx init`                                   | Manual `turbo.json` configuration                         |
 | [Running tasks](#running-tasks)                 | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
 | [Caching](#caching)                             | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
-| [Task sandboxing](#task-sandboxing)             | IO tracing + cache poisoning protection                           | Not available                                             |
+| [Task sandboxing](#task-sandboxing)             | Sandboxed execution for cache integrity                           | Not available                                             |
 | [Code generation](#code-generation)             | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
 | [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                | Experimental `turbo boundaries` (since 2024)              |
 | [Polyglot support](#polyglot-support)           | Native support for JS/TS, Java, .NET, Python, Rust                | Any CLI via `package.json` scripts, no native graph       |
 | [AI integration](#ai-integration)               | Agent skills, MCP, `configure-ai-agents`, self-healing CI         | Official skill, no MCP or CI integration                  |
-| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution (9m 20s), self-healing, flaky detection    | No CI solution (19m 18s with manual binning)              |
+| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution, self-healing, flaky detection             | Vercel Remote Cache only, no task distribution            |
 | [Release management](#release-management)       | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
 | [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                 | Experimental OpenTelemetry (OTLP) export                  |
 | [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                | Basic TUI and LSP support                                 |
 
 ## Onboarding
 
-Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you immediately get task orchestration, affected detection, and local caching, without writing any task configuration.
+Nx works with your existing `package.json` scripts out of the box. Add the `nx` package to your workspace and you immediately get task orchestration, affected detection, and local caching, without writing any task configuration. Running `npx nx init` detects your tooling, adds the relevant plugins, and scaffolds `nx.json`.
 
 Turborepo requires every task to be explicitly declared in `turbo.json` before anything runs, even if the same tasks already work with your package manager directly:
 
@@ -43,21 +43,42 @@ Turborepo requires every task to be explicitly declared in `turbo.json` before a
   ╰─▶   × Could not find task `build` in project
 ```
 
-For a more guided experience, run `npx nx init`. The interactive setup detects your existing tooling, asks which tasks should be cacheable, and scaffolds an `nx.json` with the right configuration. If you have Next.js and ESLint, for example, Nx automatically infers `build`, `dev`, `start`, and `lint` targets without you declaring them.
+The difference shows up in how much configuration each tool needs before a `build` is cached correctly. Nx plugins read your tool config and automatically configure each build's inputs and outputs, so turning on caching is a single flag:
 
-Looking at the raw impact on a repository using the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools:
+```jsonc
+// nx.json
+{
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+    },
+  },
+}
+```
 
-| Setup        | Config written     | Net impact on codebase                                                    |
-| ------------ | ------------------ | ------------------------------------------------------------------------- |
-| Nx (minimal) | 3 lines            | [+3 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/4)   |
-| Nx (guided)  | 85 lines           | [-15 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/2)  |
-| Turborepo    | 122 lines (manual) | [+144 lines](https://github.com/meeroslav/pnpm-workspace-baseline/pull/3) |
+Turborepo caches by default, but without input scoping a change to any file, tests included, invalidates the build cache. Scoping it means enumerating the inputs on each task:
+
+```jsonc
+// turbo.json
+{
+  "$schema": "https://turborepo.dev/schema.json",
+  "tasks": {
+    "build": {
+      "outputs": ["dist/**"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*"],
+    },
+  },
+}
+```
+
+Nx configures the inputs and outputs for you; Turborepo has you declare them, and repeat them on every cacheable task. The [Caching](#caching) section shows how that compounds across a workspace.
 
 For a full walkthrough, see [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/guides/adopting-nx/from-turborepo).
 
 ## Running tasks
 
-Once installed, both tools run your existing `package.json` scripts. If your project has a `build` script, `nx build` runs it, just like `turbo run build`. No rewiring needed.
+Once installed, both tools run your existing `package.json` scripts. If your project has a `build` script, `nx build` runs it, like `turbo run build`. No rewiring needed.
 
 ```shell
 nx run-many -t build test lint
@@ -65,7 +86,7 @@ nx run-many -t build test lint
 
 Nx also provides [`nx affected`](/docs/features/ci-features/affected) to run only tasks affected by your current changes, which works immediately without configuration.
 
-Where Nx goes further is with [plugins](/docs/concepts/inferred-tasks). Adding an Nx plugin like `@nx/vite` automatically infers tasks from your existing tool configuration (e.g. `vite.config.mts`), so you don't need to maintain manual script definitions. Plugins also read your tool's config to set cache `inputs` and `outputs` automatically, meaning caching works correctly from the start without manual tuning.
+Where Nx goes further is with [plugins](/docs/plugin-registry). Adding an Nx plugin like `@nx/vite` automatically configures tasks from your existing tool configuration (e.g. `vite.config.mts`), so you don't need to maintain manual script definitions. Plugins also read your tool's config to set cache `inputs` and `outputs` automatically, meaning caching works correctly from the start without manual tuning.
 
 ## Caching
 
@@ -212,7 +233,7 @@ In Turborepo, the same exclusion list is repeated across `build`, `build:prod`, 
 
 A cache is only valuable if you can trust it. Turborepo has no task sandboxing. During execution, tasks can read and write anywhere on the filesystem. A task can read files that aren't declared as inputs and produce undeclared outputs that get cached and replayed into a different context. The result: false cache hits, missing artifacts, and hard-to-trace failures.
 
-Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that monitors filesystem access during execution and flags any reads or writes outside declared `inputs` and `outputs`. Undeclared dependencies are surfaced automatically rather than discovered through debugging production incidents.
+Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that runs each task in a sandbox enforcing its declared `inputs` and `outputs`. Undeclared dependencies are surfaced automatically rather than discovered through debugging production incidents.
 
 This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) demonstrated that build systems without cache isolation are vulnerable to cache poisoning, where any contributor with PR access can inject compromised artifacts into production. Nx Cloud prevents this through branch-scoped cache isolation. For more details, see [cache security](/docs/concepts/ci-concepts/cache-security).
 
@@ -249,7 +270,7 @@ Turborepo can orchestrate any language by wrapping CLI commands in `package.json
 
 ## AI integration
 
-Nx actively embraces AI and autonomous agents across the entire development lifecycle, not just individual features. Running [`nx configure-ai-agents`](/blog/nx-ai-agent-skills) sets up everything your AI agent needs in one command: agent skills, an MCP server, and `CLAUDE.md` / `AGENTS.md` guidelines. It works across **Claude Code, Cursor, GitHub Copilot, Gemini, Codex, and OpenCode**.
+Nx actively embraces AI and autonomous agents across the entire development lifecycle, not only individual features. Running [`nx configure-ai-agents`](/blog/nx-ai-agent-skills) sets up everything your AI agent needs in one command: agent skills, an MCP server, and `CLAUDE.md` / `AGENTS.md` guidelines. It works across **Claude Code, Cursor, GitHub Copilot, Gemini, Codex, and OpenCode**.
 
 - **[Agent skills](/blog/why-we-deleted-most-of-our-mcp-tools)** teach agents _how_ to work in your monorepo: when to use generators, how to explore the project graph, how to run tasks efficiently. Skills are loaded incrementally, keeping context focused and token-efficient.
 - **[Self-healing CI](/docs/features/ci-features/self-healing-ci)** is a specialized AI agent that runs on CI, monitors runs, diagnoses broken tasks, provides verified fixes, and automatically identifies and [re-runs flaky tasks](/docs/features/ci-features/flaky-tasks).
@@ -262,7 +283,7 @@ Turborepo provides an [official skill](https://skills.sh/vercel/turborepo-skills
 
 Nx works on any CI provider out of the box. Run `nx affected` or `nx run-many` in your existing pipeline and you get caching, affected detection, and task orchestration without additional setup. For teams that need more, [Nx Cloud](/docs/features/ci-features) layers on remote caching, intelligent task distribution across machines, self-healing CI, and flaky task detection, all integrated directly into your existing CI provider.
 
-Turborepo has no CI-specific solution. It runs tasks on CI the same way it does locally, with no built-in distribution, failure recovery, or CI-aware features.
+Turborepo's CI story is remote caching through Vercel Remote Cache. Beyond that it runs tasks on CI the same way it does locally, with no built-in distribution, failure recovery, or CI-aware features.
 
 ![Nx Cloud CI report integrated into a GitHub PR](../../../../assets/guides/adopting-nx/ci-report.avif)
 
@@ -278,7 +299,7 @@ Its Rust-powered task scheduler produces a more optimal execution order, and its
 | Nx        | 21m 56s  | N/A         |
 | Turborepo | 25m 32s  | ~16% slower |
 
-A 16% gap may sound modest, but on a 30-minute pipeline that's nearly 4 minutes saved on every run. Note that these numbers are without any cache optimization, just both tools running out of the box on the same codebase.
+A 16% gap may sound modest, but on a 30-minute pipeline that's nearly 4 minutes saved on every run. Note that these numbers are without any cache optimization, with both tools running out of the box on the same codebase.
 
 ### Distributed CI
 
