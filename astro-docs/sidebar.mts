@@ -650,10 +650,6 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Telemetry',
-            link: 'guides/nx-console/console-telemetry',
-          },
-          {
             label: 'Run command',
             link: 'guides/nx-console/console-run-command',
           },
@@ -669,10 +665,6 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Project details view',
             link: 'guides/nx-console/console-project-details',
           },
-          {
-            label: 'Troubleshooting',
-            link: 'guides/nx-console/console-troubleshooting',
-          },
         ],
       },
       {
@@ -682,10 +674,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Install Nx in non-JavaScript repo',
             link: 'guides/installation/install-non-javascript',
-          },
-          {
-            label: 'Update global installation',
-            link: 'guides/installation/update-global-installation',
           },
           {
             label: 'Nx Console migration assistance',
@@ -858,10 +846,6 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Heartbeat and manual shutdown handling',
             link: 'concepts/ci-concepts/heartbeat-and-manual-shutdown-handling',
           },
-          {
-            label: 'Fix sandbox violations',
-            link: 'guides/nx-cloud/fix-sandbox-violations',
-          },
         ],
       },
       {
@@ -879,10 +863,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Defining task pipeline',
             link: 'guides/tasks--caching/defining-task-pipeline',
-          },
-          {
-            label: 'Run tasks in parallel',
-            link: 'guides/tasks--caching/run-tasks-in-parallel',
           },
           {
             label: 'Pass args to commands',

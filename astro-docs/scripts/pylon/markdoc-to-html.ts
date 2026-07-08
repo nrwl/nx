@@ -128,6 +128,35 @@ function buildTagConfig(articleDocsPath: string): Config {
           return null;
         },
       },
+      github_repository: {
+        selfClosing: true,
+        transform(node) {
+          const url = String(node.attributes.url ?? '');
+          return new Tag('p', {}, [
+            new Tag('a', { href: url }, [`Example repository: ${url}`]),
+          ]);
+        },
+      },
+      cardgrid: {
+        transform(node, config) {
+          return new Tag('ul', {}, node.transformChildren(config));
+        },
+      },
+      linkcard: {
+        selfClosing: true,
+        transform(node) {
+          const attrs = node.attributes;
+          const href = String(attrs.href ?? '');
+          const title = String(attrs.title ?? href);
+          const description = attrs.description
+            ? ` — ${attrs.description}`
+            : '';
+          return new Tag('li', {}, [
+            new Tag('a', { href }, [title]),
+            String(description),
+          ]);
+        },
+      },
       graph: {
         transform(node) {
           const shot = GRAPH_SCREENSHOTS[articleDocsPath];

@@ -1,3 +1,4 @@
+import GithubSlugger from 'github-slugger';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -50,14 +51,15 @@ export const CANDIDATE_DIRS = [
 
 /**
  * Route path (under /docs) for a .mdoc file, matching Starlight's slug rules:
- * directory names are lowercased (Tips-n-Tricks -> tips-n-tricks).
+ * each path segment is slugified (Tips-n-Tricks -> tips-n-tricks,
+ * "Tasks & Caching" -> tasks--caching, "Nx Console" -> nx-console).
  */
 export function docsPathForSource(sourcePath: string): string {
   const rel = path
     .relative(CONTENT_DOCS_ROOT, sourcePath)
     .replace(/\.mdoc$/, '')
     .split(path.sep)
-    .map((segment) => segment.toLowerCase())
+    .map((segment) => new GithubSlugger().slug(segment))
     .join('/');
   return `${DOCS_BASE_PATH}/${rel}`;
 }
