@@ -105,6 +105,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #useTypeScriptTranspilation = true;
   #resourceDependencies?: ReadonlyMap<string, readonly string[]>;
   #javascriptTransformerCache?: JavascriptTransformerCache;
+  #diagnosticsPromise?: ReturnType<AngularCompilation['diagnoseFiles']>;
   #initializationError: string | undefined;
   #emitError: string | undefined;
 
@@ -190,6 +191,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               ]);
 
               if (this.#angularCompilation) {
+                // The worker-based compilation tracks modified files itself;
+                // the in-process one takes them from the host options.
+                await this.#angularCompilation.update?.(changedFiles);
                 this.#sourceFileCache.invalidate(changedFiles);
                 this.#sourceFileCache.prune(removedFiles);
                 for (const file of changedFiles) {
@@ -336,8 +340,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       // cause, matching @angular/build's application builder.
       try {
         if (!this.#_options.skipTypeChecking && !this.#initializationError) {
-          const { errors, warnings } =
-            await this.#angularCompilation.diagnoseFiles(DiagnosticModes.All);
+          const { errors, warnings } = await (this.#diagnosticsPromise ??
+            this.#angularCompilation.diagnoseFiles(DiagnosticModes.All));
           for (const error of errors ?? []) {
             compilation.errors.push({
               name: PLUGIN_NAME,
@@ -475,6 +479,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         try {
           await this.#javascriptTransformer.close();
           await this.#javascriptTransformerCache?.close();
+          // Terminates the worker of a worker-based compilation, which would
+          // otherwise keep the process alive.
+          await this.#angularCompilation?.close?.();
           await disposeComponentStylesheetBundler();
         } catch {
           // Best-effort cleanup that must never fail the compiler teardown.
@@ -610,6 +617,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   }
 
   private async buildAndAnalyze() {
+    this.#diagnosticsPromise = undefined;
     if (this.#initializationError) {
       return;
     }
@@ -625,6 +633,20 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       )}`;
     }
     this.#mergeStylesheetMetafileInputs();
+
+    // Start type checking now so it overlaps with bundling; with the
+    // worker-based compilation it runs off the main thread and the emit hook
+    // only waits for what is left. Diagnostics still run after an emit
+    // failure since they usually carry the root cause.
+    if (!this.#_options.skipTypeChecking) {
+      const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
+        DiagnosticModes.All
+      );
+      // Failed builds skip the emit hook that reports the result; don't
+      // leave the rejection unhandled.
+      diagnosticsPromise.catch(() => {});
+      this.#diagnosticsPromise = diagnosticsPromise;
+    }
   }
 
   // Fold this build's stylesheet bundling results into the persistent

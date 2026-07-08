@@ -324,6 +324,45 @@ describe('AngularRspackPlugin', () => {
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
   });
 
+  it('should close the Angular compilation on shutdown', async () => {
+    const close = vi.fn();
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: {
+        diagnoseFiles: vi.fn().mockResolvedValue({}),
+        close,
+      },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = applyPlugin();
+    await runBuildStart(compiler);
+
+    await fireAsyncTaps(compiler.hooks.shutdown);
+
+    expect(close).toHaveBeenCalled();
+  });
+
+  it('should start diagnostics with the build and reuse the result on emit', async () => {
+    const diagnoseFiles = vi
+      .fn()
+      .mockResolvedValue({ errors: [{ text: 'type error' }] });
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = applyPlugin();
+
+    await runBuildStart(compiler);
+    expect(diagnoseFiles).toHaveBeenCalledTimes(1);
+
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+
+    expect(diagnoseFiles).toHaveBeenCalledTimes(1);
+    expect(
+      compilation.errors.some((error) => error.message.includes('type error'))
+    ).toBe(true);
+  });
+
   it('should use a persistent cache path scoped to the project', () => {
     new AngularRspackPlugin({ ...options, projectName: 'app' });
 
@@ -418,6 +457,15 @@ describe('AngularRspackPlugin', () => {
   });
 
   it('should invalidate modified and removed files and prune removed files on rebuilds', async () => {
+    const angularCompilation = {
+      diagnoseFiles: vi.fn().mockResolvedValue({}),
+      update: vi.fn(),
+    };
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation,
+      collectedStylesheetAssets: [],
+      collectedStylesheetMetafileInputs: [],
+    });
     const compiler = createFakeCompiler();
     const plugin = new AngularRspackPlugin(options);
     plugin.apply(compiler as never);
@@ -434,6 +482,10 @@ describe('AngularRspackPlugin', () => {
     };
     await fireAsyncTaps(compiler.hooks.beforeCompile, {});
 
+    // A worker-based compilation tracks modified files itself.
+    expect(angularCompilation.update).toHaveBeenCalledWith(
+      new Set(['/root/src/modified.ts', '/root/src/removed.ts'])
+    );
     const sourceFileCache = sourceFileCacheInstances.at(-1)!;
     expect(sourceFileCache.invalidate).toHaveBeenCalledWith(
       new Set(['/root/src/modified.ts', '/root/src/removed.ts'])

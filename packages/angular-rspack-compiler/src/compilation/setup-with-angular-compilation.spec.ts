@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   toTypeScriptFileCacheKey,
   type AngularCompilation,
@@ -12,6 +12,10 @@ import {
   type SetupCompilationOptions,
 } from './setup-compilation';
 
+const { createAngularCompilationMock } = vi.hoisted(() => ({
+  createAngularCompilationMock: vi.fn(),
+}));
+
 vi.mock('./setup-compilation', () => ({
   setupCompilation: vi.fn().mockResolvedValue({
     rootNames: ['/root/src/main.ts'],
@@ -21,7 +25,16 @@ vi.mock('./setup-compilation', () => ({
   styleTransform: vi.fn(() => async () => ({ contents: '' })),
 }));
 
+vi.mock('../models', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../models')>()),
+  createAngularCompilation: createAngularCompilationMock,
+}));
+
 describe('setupCompilationWithAngularCompilation', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   const options: SetupCompilationOptions = {
     root: '/root',
     tsConfig: '/root/tsconfig.json',
@@ -94,6 +107,79 @@ describe('setupCompilationWithAngularCompilation', () => {
         ],
       ])
     );
+  });
+
+  it('should create a worker-based Angular compilation by default', async () => {
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    };
+    createAngularCompilationMock.mockResolvedValueOnce(angularCompilation);
+
+    const result = await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+
+    expect(createAngularCompilationMock).toHaveBeenCalledWith(
+      false,
+      true,
+      true
+    );
+    expect(result.angularCompilation).toBe(angularCompilation);
+  });
+
+  it.each(['0', 'false', 'FALSE'])(
+    'should use the in-process Angular compilation when NG_BUILD_PARALLEL_TS is "%s"',
+    async (value) => {
+      vi.stubEnv('NG_BUILD_PARALLEL_TS', value);
+      createAngularCompilationMock.mockResolvedValueOnce({
+        initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+      });
+
+      await setupCompilationWithAngularCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options
+      );
+
+      expect(createAngularCompilationMock).toHaveBeenCalledWith(
+        false,
+        true,
+        false
+      );
+    }
+  );
+
+  it('should fill transpilation gate options the compilation does not marshal back', async () => {
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions: {
+        isolatedModules: true,
+        experimentalDecorators: true,
+        target: 9,
+      },
+      componentStylesheetBundler: {},
+    } as never);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({
+        referencedFiles: [],
+        // The worker-based compilation only marshals these options back.
+        compilerOptions: {
+          allowJs: false,
+          isolatedModules: true,
+          sourceMap: undefined,
+          inlineSourceMap: undefined,
+        },
+      }),
+    } as unknown as AngularCompilation;
+
+    const result = await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    expect(result.useTypeScriptTranspilation).toBe(false);
   });
 
   it('should not build resource dependencies when the compilation does not report them', async () => {

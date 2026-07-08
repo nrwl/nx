@@ -46,10 +46,14 @@ export async function setupCompilationWithAngularCompilation(
     compilerOptions.incremental = false;
   }
 
+  // Mirrors @angular/build's NG_BUILD_PARALLEL_TS switch: anything but
+  // 0/false runs the Angular compilation in a worker thread, so type
+  // checking overlaps with the bundling work.
+  const parallelTs = process.env['NG_BUILD_PARALLEL_TS'];
   angularCompilation ??= await createAngularCompilation(
     !options.aot,
     !options.hasServer,
-    false
+    parallelTs !== '0' && parallelTs?.toLowerCase() !== 'false'
   );
 
   // Drop the bundler's cached results for changed files so dependent
@@ -140,6 +144,14 @@ export async function setupCompilationWithAngularCompilation(
     }
   }
 
+  // The worker-based compilation only marshals a subset of the initialized
+  // compiler options back; fill the gaps from the options handed to the
+  // compilation, which are what it actually used.
+  const effectiveCompilerOptions = {
+    ...compilerOptions,
+    ...initializedCompilerOptions,
+  };
+
   // Mirrors @angular/build: with isolated modules and no sourcemaps, Angular
   // emits transformed TypeScript and leaves transpilation to the bundler.
   // Unlike esbuild, the swc rule transpiling that output doesn't read the
@@ -147,15 +159,15 @@ export async function setupCompilationWithAngularCompilation(
   // decorators without metadata, ES2022 targets, default class-field and
   // import-elision behavior). Other configs use TypeScript transpilation.
   const useTypeScriptTranspilation =
-    !initializedCompilerOptions?.isolatedModules ||
-    !!initializedCompilerOptions.sourceMap ||
-    !!initializedCompilerOptions.inlineSourceMap ||
-    !initializedCompilerOptions.experimentalDecorators ||
-    !!initializedCompilerOptions.emitDecoratorMetadata ||
-    initializedCompilerOptions.useDefineForClassFields === false ||
-    !!initializedCompilerOptions.verbatimModuleSyntax ||
-    !!initializedCompilerOptions.importsNotUsedAsValues ||
-    (initializedCompilerOptions.target ?? 0) < 9; /* ts.ScriptTarget.ES2022 */
+    !effectiveCompilerOptions.isolatedModules ||
+    !!effectiveCompilerOptions.sourceMap ||
+    !!effectiveCompilerOptions.inlineSourceMap ||
+    !effectiveCompilerOptions.experimentalDecorators ||
+    !!effectiveCompilerOptions.emitDecoratorMetadata ||
+    effectiveCompilerOptions.useDefineForClassFields === false ||
+    !!effectiveCompilerOptions.verbatimModuleSyntax ||
+    !!effectiveCompilerOptions.importsNotUsedAsValues ||
+    (effectiveCompilerOptions.target ?? 0) < 9; /* ts.ScriptTarget.ES2022 */
 
   return {
     angularCompilation,
