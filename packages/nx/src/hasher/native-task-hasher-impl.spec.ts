@@ -226,6 +226,93 @@ describe('native task hasher', () => {
     `);
   });
 
+  it('should hash a shared runtime input against each task env', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+      'libs/child': 'child',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    const runtimeCommand = 'node -e "console.log(process.env.SELECTED_ENV)"';
+    for (const name of ['parent', 'child']) {
+      builder.addNode({
+        name,
+        type: 'lib',
+        data: {
+          root: `libs/${name}`,
+          targets: {
+            build: {
+              executor: 'nx:run-commands',
+              inputs: ['default', { runtime: runtimeCommand }],
+            },
+          },
+        },
+      });
+    }
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent', 'child'],
+      ['build'],
+      undefined,
+      {}
+    );
+    const hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const tasks = [
+      taskGraph.tasks['parent:build'],
+      taskGraph.tasks['child:build'],
+    ];
+    const perTaskEnvs = {
+      'parent:build': { SELECTED_ENV: 'parent-env' },
+      'child:build': { SELECTED_ENV: 'child-env' },
+    };
+    const runtimeKey = `runtime:${runtimeCommand}`;
+
+    // Hashing each task alone cannot share values across tasks, so these
+    // are the reference hashes for each env.
+    const soloParent = await hasher.hashTask(
+      tasks[0],
+      taskGraph,
+      perTaskEnvs['parent:build']
+    );
+    const soloChild = await hasher.hashTask(
+      tasks[1],
+      taskGraph,
+      perTaskEnvs['child:build']
+    );
+    expect(soloParent.details[runtimeKey]).toBeDefined();
+    expect(soloParent.details[runtimeKey]).not.toEqual(
+      soloChild.details[runtimeKey]
+    );
+
+    // Hashing both tasks in one invocation must produce the same
+    // per-task runtime hashes, with and without input collection.
+    for (const collectInputs of [true, false]) {
+      const [parentHash, childHash] = await hasher.hashTasks(
+        tasks,
+        taskGraph,
+        perTaskEnvs,
+        undefined,
+        collectInputs
+      );
+      expect(parentHash.details[runtimeKey]).toEqual(
+        soloParent.details[runtimeKey]
+      );
+      expect(childHash.details[runtimeKey]).toEqual(
+        soloChild.details[runtimeKey]
+      );
+    }
+  });
+
   it('should hash tasks where the project has dependencies', async () => {
     const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
       'libs/parent': 'parent',

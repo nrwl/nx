@@ -159,9 +159,10 @@ impl ToNapiValue for TaskHashes {
     }
 }
 
-/// Returns the shared Arc for `value`, allocating it on first sight. An
-/// input's hash is identical for every task that depends on it, so the same
-/// value string comes back once per downstream task; interning keeps one
+/// Returns the shared Arc for `value`, allocating it on first sight. Only
+/// Environment and Runtime values flow through here: they depend on the
+/// task's env, so they cannot live in the shared per-id slots, but tasks
+/// whose envs agree still produce identical strings; interning keeps one
 /// allocation per unique value.
 fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str> {
     if let Some(existing) = interner.get(&value) {
@@ -277,7 +278,9 @@ impl TaskHasher {
         // expanded fileset file lists are freed once this call returns.
         let project_file_paths_cache = ProjectFilePathsCache::new();
         let workspace_file_paths_cache = WorkspaceFilePathsCache::new();
-        // Deduplicates hash values across tasks; see intern_value.
+        // Deduplicates env-dependent hash values (Environment, Runtime)
+        // across tasks; see intern_value. Other instruction types share
+        // values through per-id slots instead.
         let value_interner: DashMap<String, Arc<str>> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
@@ -315,6 +318,19 @@ impl TaskHasher {
         let cwd_path = std::path::Path::new(&cwd);
 
         let pool = &hash_plans.pool;
+        // Id-indexed snapshots so the hot loop reads a plain Vec instead of
+        // taking a DashMap shard lock per (task, instruction) entry. Every
+        // instruction except Environment and Runtime (whose values depend on
+        // the task's env) hashes to the same value for every task within an
+        // invocation, so its value lives in a per-id slot: a filled OnceCell
+        // is an atomic load, and it lets the loop skip hash_instruction
+        // entirely when inputs are not collected.
+        let instruction_keys: Vec<SharedStr> = (0..pool.len() as u32)
+            .map(|id| SharedStr::from(pool.key(id)))
+            .collect();
+        let value_slots: Vec<OnceCell<SharedStr>> = std::iter::repeat_with(OnceCell::new)
+            .take(pool.len())
+            .collect();
         hash_plans
             .plans
             .iter()
@@ -322,26 +338,64 @@ impl TaskHasher {
             .par_bridge()
             .try_for_each(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
-                let (hash_value, inputs) = self.hash_instruction(
-                    task_id,
-                    instruction_ref.value(),
-                    HashInstructionArgs {
-                        js_env: resolve_env(task_id),
-                        ts_config_hash: &ts_config_hash,
-                        project_root_mappings: &project_root_mappings,
-                        sorted_externals: &sorted_externals,
-                        selectively_hash_tsconfig,
-                        task_output_cache: &task_output_cache,
-                        runtime_cache: &runtime_cache,
-                        project_file_set_cache: &self.project_file_set_cache,
-                        workspace_file_set_cache: &self.workspace_file_set_cache,
-                        project_file_paths_cache: &project_file_paths_cache,
-                        workspace_file_paths_cache: &workspace_file_paths_cache,
-                        json_file_set_cache: &json_file_set_cache,
-                        cwd: cwd_path,
-                        collect_inputs: should_collect_inputs,
-                    },
-                )?;
+                // Env-dependent values cannot be shared across tasks. The
+                // match is exhaustive so a new instruction type must be
+                // classified here before it can ride the shared slots.
+                let slot = match instruction_ref.value() {
+                    HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
+                    HashInstruction::WorkspaceFileSet(_)
+                    | HashInstruction::Cwd(_)
+                    | HashInstruction::ProjectFileSet(_, _)
+                    | HashInstruction::ProjectConfiguration(_)
+                    | HashInstruction::TsConfiguration(_)
+                    | HashInstruction::TaskOutput(_, _)
+                    | HashInstruction::External(_)
+                    | HashInstruction::AllExternalDependencies
+                    | HashInstruction::JsonFileSet(_) => Some(&value_slots[id as usize]),
+                };
+
+                let cached = if should_collect_inputs {
+                    // Inputs are per task, so every entry must run
+                    // hash_instruction to produce them.
+                    None
+                } else {
+                    slot.and_then(|s| s.get()).cloned()
+                };
+                let value = match cached {
+                    Some(value) => value,
+                    None => {
+                        let (hash_value, inputs) = self.hash_instruction(
+                            task_id,
+                            instruction_ref.value(),
+                            HashInstructionArgs {
+                                js_env: resolve_env(task_id),
+                                ts_config_hash: &ts_config_hash,
+                                project_root_mappings: &project_root_mappings,
+                                sorted_externals: &sorted_externals,
+                                selectively_hash_tsconfig,
+                                task_output_cache: &task_output_cache,
+                                runtime_cache: &runtime_cache,
+                                project_file_set_cache: &self.project_file_set_cache,
+                                workspace_file_set_cache: &self.workspace_file_set_cache,
+                                project_file_paths_cache: &project_file_paths_cache,
+                                workspace_file_paths_cache: &workspace_file_paths_cache,
+                                json_file_set_cache: &json_file_set_cache,
+                                cwd: cwd_path,
+                                collect_inputs: should_collect_inputs,
+                            },
+                        )?;
+
+                        // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
+                        if let Some(ref accum) = inputs_accum {
+                            accum.entry(task_id.to_string()).or_default().extend(inputs);
+                        }
+
+                        match slot {
+                            Some(slot) => slot.get_or_init(|| SharedStr::from(hash_value)).clone(),
+                            None => intern_value(&value_interner, hash_value).into(),
+                        }
+                    }
+                };
 
                 // Accumulate hash details
                 let mut entry = hashes
@@ -351,15 +405,9 @@ impl TaskHasher {
                         details: HashMap::new(),
                         inputs: HashInputs::default(),
                     });
-                entry.details.insert(
-                    pool.key(id).into(),
-                    intern_value(&value_interner, hash_value).into(),
-                );
-
-                // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
-                if let Some(ref accum) = inputs_accum {
-                    accum.entry(task_id.to_string()).or_default().extend(inputs);
-                }
+                entry
+                    .details
+                    .insert(instruction_keys[id as usize].clone(), value);
 
                 Ok::<(), anyhow::Error>(())
             })?;
