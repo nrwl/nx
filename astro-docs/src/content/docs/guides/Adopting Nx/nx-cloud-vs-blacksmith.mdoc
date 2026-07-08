@@ -21,7 +21,7 @@ The two aren't mutually exclusive. Blacksmith runners are standard GitHub Action
 
 ## Model
 
-Blacksmith's pitch is speed per job: ephemeral Firecracker microVMs on high-clock CPUs, cache downloads it advertises at 4x GitHub's speed, and its flagship Docker layer caching. Migration is a one-line label change, with a wizard that rewrites your workflows. If your workflows are slow because GitHub's hosted runners are slow, it delivers.
+Blacksmith's pitch is speed per job: ephemeral Firecracker microVMs on high-clock CPUs, fast cache downloads, and its flagship Docker layer caching. Migration is a one-line label change, with a wizard that rewrites your workflows. If your workflows are slow because GitHub's hosted runners are slow, it delivers.
 
 Blacksmith runs whatever your workflow matrix declares, on every push, whether or not the change affected those projects. Nx Cloud starts from the task graph: prune what the change can't reach, replay what already ran, distribute the rest.
 
@@ -33,7 +33,7 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-On Blacksmith, parallelism is your GitHub Actions matrix: one job per check, fixed runner sizes chosen per job, and manual test sharding that you rebalance by hand as the repository grows. A slow shard idles the rest of the fleet until it finishes. In one customer evaluation comparing the two approaches on the same monorepo, the hand-maintained matrix took roughly 620 lines of workflow configuration; moving distribution to Nx Agents halved it to about 290 and eliminated shard rebalancing entirely.
+On Blacksmith, parallelism is your GitHub Actions matrix: one job per check, fixed runner sizes chosen per job, and manual test sharding that you rebalance by hand as the repository grows. A slow shard idles the rest of the fleet until it finishes. In one customer evaluation comparing the two approaches on the same monorepo, moving distribution to Nx Agents roughly halved the workflow configuration and removed shard rebalancing entirely.
 
 [Nx Agents](/docs/features/ci-features/distribute-task-execution) assign tasks to machines continuously as agents free up, balance from historical timing data, and support assignment rules for CPU- or memory-heavy outliers.
 

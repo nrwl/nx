@@ -6,9 +6,17 @@ sidebar:
   label: Nx vs Vite+
 ---
 
-[Vite+](https://viteplus.dev/) unifies the JavaScript toolchain behind a single `vp` CLI: Vite 8 for builds, Vitest for tests, Oxlint and Oxfmt for linting and formatting, and a monorepo task runner (`vp run`) with local caching. Nx orchestrates that same toolchain. The [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugin supports Vite 5 through 8 and infers tasks directly from your `vite.config` files, and [`@nx/vitest`](/docs/technologies/test-tools/vitest/introduction) does the same for tests. The overlap between the two is the task-running layer, and that's where the differences are: Vite+ task running is in beta with a local-only cache, while Nx adds remote caching, affected detection, and distributed CI that have run in production for years.
+Vite+ makes the toolchain on your machine fast. Nx makes that same toolchain fast across every machine, each teammate's laptop and every CI run, by adding remote caching, affected detection, and distributed execution on top of it.
 
-This is not an either/or choice. You can keep the entire Vite toolchain, including Vite DevTools, and use Nx for orchestration, caching, and CI. Nx [adds to an existing workspace](/docs/guides/adopting-nx/adding-to-existing-project) without rewriting any tool configuration.
+## What each tool is
+
+**Nx** is a build system that orchestrates the tools you already use. Plugins infer tasks from your existing configs, caching works locally and remotely, `nx affected` runs only what your change touches, and Nx Cloud distributes tasks across CI machines. It spans JS/TS, JVM, .NET, and more in one graph.
+
+**Vite+** is VoidZero's unified distribution of the Vite toolchain: one `vp` CLI for builds (Vite 8), tests (Vitest), and linting (Oxlint/Oxfmt), plus a monorepo task runner (`vp run`) with local caching. It reached beta in July 2026 and is MIT-licensed.
+
+## Quick takeaway
+
+The two overlap on task running, local caching, and package filtering. They diverge on everything that leaves your laptop: a cache shared between teammates and CI, distribution across machines, and cross-language support. There, Vite+ is either roadmap or absent, while Nx has run these in production for years. And because the [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugin runs the Vite toolchain rather than replacing it, adopting Nx doesn't mean leaving Vite+ behind. For a small JS-only workspace on one CI machine, Vite+ is enough; once the cache needs to travel or CI becomes the bottleneck, Nx is the platform that scales.
 
 {% aside type="note" title="Vite+ is in beta" %}
 Vite+ reached beta in July 2026 and is evolving quickly. The capabilities below reflect the [Vite+ beta announcement](https://voidzero.dev/posts/announcing-vite-plus-beta) and its published roadmap.
@@ -35,7 +43,7 @@ Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing
 
 Both tools run your `package.json` scripts with `dependsOn` ordering across the workspace. Vite+ derives cache inputs automatically by recording file reads and writes during execution, a good default that avoids manual configuration. Its cache is content-based, stored in `node_modules/.vite/task-cache`, and replays terminal output on a hit.
 
-Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/features/ci-features/sandboxing) traces file access during execution and flags reads or writes outside the declared inputs and outputs, catching undeclared dependencies before they poison the cache.
+Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/features/ci-features/sandboxing) runs each task in a sandbox that enforces its declared inputs and outputs, so undeclared dependencies can't slip in and undermine cache integrity.
 
 ## Sharing the cache
 
@@ -75,10 +83,26 @@ Vite+ ships `vp pm stage`, a publishing workflow for getting packages onto a reg
 
 [`nx release`](/docs/features/manage-releases) covers the full lifecycle: determining versions from conventional commits or version plans, updating dependent packages, generating changelogs, and publishing, all from one configurable command.
 
-## When Vite+ is enough
+## Who should pick which
 
-For a small JS/TS-only workspace where CI finishes comfortably on one machine, `vp run` with its local cache covers day-to-day task running, and the unified CLI is a quality-of-life win. The gap shows when the cache needs to travel (between teammates, or from CI run to CI run), when CI time becomes the bottleneck, or when the workspace grows beyond JavaScript. Since Nx runs the same Vite toolchain, adopting it at that point doesn't undo any Vite+ era decisions.
+**Choose Nx if you:**
 
-{% aside type="tip" title="Ready to try Nx?" %}
-See [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project) for setup instructions, and the [Vite plugin](/docs/technologies/build-tools/vite/introduction) for inferred tasks and configuration.
-{% /aside %}
+- Want a cache shared across every developer and CI run, not a single machine
+- Have CI time as a bottleneck and need distribution, e2e splitting, or flaky-test handling
+- Run a polyglot repository with Go, Java, or .NET alongside JavaScript
+- Want the platform layer: generators, automated migrations, release management, and self-healing CI
+
+**Choose Vite+ if you:**
+
+- Have a JS/TS-only workspace where CI finishes comfortably on one machine
+- Want a single unified CLI for building, testing, and linting
+- Don't yet need a shared cache or CI distribution
+
+The choice isn't permanent. Nx runs the Vite toolchain, so a team can start with Vite+ and adopt Nx for orchestration and CI later without undoing any Vite+ decisions.
+
+## Resources
+
+{% cards cols=2 %}
+{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
+{% card title="Nx Vite plugin" description="Infer tasks from your vite.config with caching built in" url="/docs/technologies/build-tools/vite/introduction" /%}
+{% /cards %}

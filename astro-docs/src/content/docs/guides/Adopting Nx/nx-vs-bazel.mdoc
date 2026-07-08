@@ -10,16 +10,16 @@ sidebar:
 
 Nx targets the same CI outcomes, caching, affected detection, distribution, from the opposite direction: it layers onto the tooling you already run. `nx init` works on an existing repository, your `package.json` scripts and Gradle builds keep working, and adoption is incremental rather than a migration project.
 
-| Topic                                         | Nx                                                      | Bazel                                                         |
-| --------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------------------- |
-| [Adoption](#adoption)                         | Incremental on existing tooling via `nx init`           | `BUILD` files per package, multi-year migrations at scale     |
-| [Caching](#caching)                           | Task-level, with IO-tracing sandboxing on Nx Cloud      | Action-level, sandbox-enforced by construction                |
-| [Distribution](#distribution)                 | Task-level Nx Agents plus Atomizer, no rewrite required | Action-level remote execution via third-party REAPI providers |
-| [JavaScript ecosystem](#javascript-ecosystem) | First-party plugins for Vite, Jest, Next.js, Playwright | `rules_js`/`rules_ts` maintained by a single small vendor     |
-| [Polyglot support](#polyglot-support)         | JS/TS native, plugins for Gradle, Maven, .NET           | First-class C++, Java, Go, Rust, Python                       |
-| [Module boundaries](#module-boundaries)       | Tag-based lint rule plus conformance rules              | Native per-target visibility, enforced at build time          |
-| [Affected detection](#affected-detection)     | `nx affected` built in                                  | `bazel query` scripting or target-determinator, DIY           |
-| [Tooling layer](#tooling-layer)               | Generators, migrations, release, TUI, Nx Console, AI    | Not provided; assembled from third-party pieces               |
+| Topic                                         | Nx                                                       | Bazel                                                         |
+| --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
+| [Adoption](#adoption)                         | Incremental on existing tooling via `nx init`            | `BUILD` files per package, multi-year migrations at scale     |
+| [Caching](#caching)                           | Task-level, with sandboxed execution for cache integrity | Action-level, sandbox-enforced by construction                |
+| [Distribution](#distribution)                 | Task-level Nx Agents plus Atomizer, no rewrite required  | Action-level remote execution via third-party REAPI providers |
+| [JavaScript ecosystem](#javascript-ecosystem) | First-party plugins for Vite, Jest, Next.js, Playwright  | `rules_js`/`rules_ts` maintained by a single small vendor     |
+| [Polyglot support](#polyglot-support)         | JS/TS native, plugins for Gradle, Maven, .NET            | First-class C++, Java, Go, Rust, Python                       |
+| [Module boundaries](#module-boundaries)       | Tag-based lint rule plus conformance rules               | Native per-target visibility, enforced at build time          |
+| [Affected detection](#affected-detection)     | `nx affected` built in                                   | `bazel query` scripting or target-determinator, DIY           |
+| [Tooling layer](#tooling-layer)               | Generators, migrations, release, TUI, Nx Console, AI     | Not provided; assembled from third-party pieces               |
 
 ## Adoption
 
@@ -31,7 +31,7 @@ Nx adopts in place. Existing scripts run unchanged, [plugins infer tasks](/docs/
 
 Bazel's caching is the strongest available. It caches per action, and its execution sandbox blocks undeclared file reads by construction, so cache hits are structurally trustworthy. The caveats are operational rather than architectural: hermeticity depends on team discipline (`no-sandbox` tags, unsandboxed repository rules, host toolchain leaks), and there's no sandboxing on Windows.
 
-Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Correctness enforcement comes from [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which traces file access during execution and flags reads or writes outside declared inputs and outputs. Bazel prevents undeclared access by construction; Nx detects it by tracing. [Nx Replay](/docs/features/ci-features/remote-cache) provides the managed remote cache with [branch-scoped isolation](/docs/concepts/ci-concepts/cache-security).
+Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Correctness enforcement comes from [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which runs tasks in a sandbox that enforces declared inputs and outputs. Bazel enforces this at every action by construction; Nx applies it as a sandboxed layer through Nx Cloud. [Nx Replay](/docs/features/ci-features/remote-cache) provides the managed remote cache with [branch-scoped isolation](/docs/concepts/ci-concepts/cache-security).
 
 ## Distribution
 

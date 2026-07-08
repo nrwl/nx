@@ -22,7 +22,7 @@ Because they solve different layers, this isn't an exclusive choice. Nx Cloud ru
 
 ## Model
 
-Depot's runners are a one-line `runs-on` swap that puts your jobs on 4th-generation AMD CPUs with RAM-disk options and cache throughput Depot advertises at up to 1000 MiB/s, billed per second. Depot CI, released in 2026, goes further with its own orchestrator that runs GitHub Actions-compatible pipelines with fast job startup and SSH debugging. If your CI is slow because the machines are slow, Depot fixes that directly.
+Depot's runners are a one-line `runs-on` swap that puts your jobs on 4th-generation AMD CPUs with RAM-disk options and high-throughput colocated caches, billed per second. Depot CI, released in 2026, goes further with its own orchestrator that runs GitHub Actions-compatible pipelines with fast job startup and SSH debugging. If your CI is slow because the machines are slow, Depot fixes that directly.
 
 What Depot doesn't see is your workspace. Every job still runs whatever your pipeline tells it to, whether or not the change affected those projects, and whether or not the same task already ran with identical inputs. Nx Cloud starts from the task graph, so those two questions get answered before compute is spent.
 
@@ -40,7 +40,7 @@ Nx Cloud enforces branch-scoped cache isolation so PR-produced artifacts can't b
 
 ## Affected detection
 
-Fast runners run everything faster, including the 80% of tasks a one-library PR never needed. [`nx affected`](/docs/features/ci-features/affected) compares your change against the base branch and hands CI only the impacted tasks. This pruning happens before any cache lookup or scheduling, and it compounds with faster hardware rather than competing with it.
+Fast runners run everything faster, including the tasks a one-library PR never needed. [`nx affected`](/docs/features/ci-features/affected) compares your change against the base branch and hands CI only the impacted tasks. This pruning happens before any cache lookup or scheduling, and it compounds with faster hardware rather than competing with it.
 
 ## Distribution
 
