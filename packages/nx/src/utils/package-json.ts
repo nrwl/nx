@@ -906,17 +906,45 @@ function filterAllowBuildsToLockfile(
   return filtered;
 }
 
+let lastParsedPnpmLockfile: {
+  content: string;
+  parsed: object | null;
+} | null = null;
+
+/**
+ * Parses pnpm lockfile content, memoizing the last result: one prune run reads
+ * the same content for the patch scope, the build-script approvals, the
+ * local-path artifacts, and the link-closure validation, and a watch-mode
+ * rebuild re-reads an unchanged lockfile. Returns null when the content is not
+ * valid YAML or does not parse to an object. Consumers must not mutate the
+ * returned document.
+ */
+function parsePnpmLockfileYaml(content: string): object | null {
+  if (lastParsedPnpmLockfile?.content !== content) {
+    let parsed: unknown;
+    try {
+      parsed = require('@zkochan/js-yaml').load(content) ?? {};
+    } catch {
+      parsed = null;
+    }
+    lastParsedPnpmLockfile = {
+      content,
+      parsed: typeof parsed === 'object' ? parsed : null,
+    };
+  }
+  return lastParsedPnpmLockfile.parsed;
+}
+
 /**
  * Extracts the package names from a pnpm v9 lockfile's `packages` keys
  * (`name@version`, `@scope/name@version`, optionally with a `(peer@ver)` suffix).
  */
 function getPnpmLockfilePackageNames(lockfileContent: string): Set<string> {
   const names = new Set<string>();
-  let parsed: { packages?: Record<string, unknown> };
-  try {
-    const { load } = require('@zkochan/js-yaml');
-    parsed = load(lockfileContent) ?? {};
-  } catch {
+  const parsed = parsePnpmLockfileYaml(lockfileContent) as {
+    packages?: Record<string, unknown>;
+  } | null;
+  if (!parsed) {
     return names;
   }
   for (const key of Object.keys(parsed.packages ?? {})) {
@@ -1182,14 +1210,10 @@ function applyPrunedPnpmPackageJsonSettings(
 function getPrunedLockfilePatchedKeys(
   prunedLockfileContent: string
 ): Set<string> {
-  try {
-    const { load } = require('@zkochan/js-yaml');
-    const parsed: { patchedDependencies?: Record<string, unknown> } =
-      load(prunedLockfileContent) ?? {};
-    return new Set(Object.keys(parsed.patchedDependencies ?? {}));
-  } catch {
-    return new Set();
-  }
+  const parsed = parsePnpmLockfileYaml(prunedLockfileContent) as {
+    patchedDependencies?: Record<string, unknown>;
+  } | null;
+  return new Set(Object.keys(parsed?.patchedDependencies ?? {}));
 }
 
 /**
@@ -1320,12 +1344,7 @@ type ParsedPrunedLockfile = {
 };
 
 function parsePrunedLockfile(content: string): ParsedPrunedLockfile | null {
-  try {
-    const { load } = require('@zkochan/js-yaml');
-    return load(content) ?? {};
-  } catch {
-    return null;
-  }
+  return parsePnpmLockfileYaml(content) as ParsedPrunedLockfile | null;
 }
 
 /**
@@ -1338,9 +1357,21 @@ function parsePrunedLockfile(content: string): ParsedPrunedLockfile | null {
  * can report it; a target that is the workspace root itself is skipped with a
  * warning (shipping it would copy the entire workspace).
  */
+// The link-closure validator and the local-path artifact collector both walk
+// the same parsed lockfile in one prune run; caching per document runs the walk
+// (and its warnings) once. Callers must not mutate the returned array.
+const collectedPrunedLinkTargets = new WeakMap<
+  ParsedPrunedLockfile,
+  Array<{ target: string; ref: string }>
+>();
+
 function collectPrunedLinkTargetDirs(
   parsed: ParsedPrunedLockfile
 ): Array<{ target: string; ref: string }> {
+  const cached = collectedPrunedLinkTargets.get(parsed);
+  if (cached) {
+    return cached;
+  }
   const targets = new Map<string, string>();
   const addRef = (value: PrunedLockfileDepRef): void => {
     const ref = typeof value === 'string' ? value : value?.version;
@@ -1376,7 +1407,9 @@ function collectPrunedLinkTargetDirs(
       }
     }
   }
-  return [...targets].map(([target, ref]) => ({ target, ref }));
+  const result = [...targets].map(([target, ref]) => ({ target, ref }));
+  collectedPrunedLinkTargets.set(parsed, result);
+  return result;
 }
 
 /**
