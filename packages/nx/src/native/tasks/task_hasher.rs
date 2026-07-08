@@ -8,7 +8,7 @@ use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
     tasks::types::{HashInstruction, HashPlans},
-    types::NapiDashMap,
+    types::{NapiDashMap, SharedStr},
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
@@ -131,7 +131,11 @@ impl From<HashInputsBuilder> for HashInputs {
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
-    pub details: HashMap<String, String>,
+    // Keys and values are shared Arcs: the same instruction key and hash
+    // value appear in the details of every task that depends on the input,
+    // so per-map owned strings would duplicate them once per task.
+    #[napi(ts_type = "Record<string, string>")]
+    pub details: HashMap<SharedStr, SharedStr>,
     /// Structured inputs used for hashing (file patterns, env vars, etc.)
     pub inputs: HashInputs,
 }
@@ -139,6 +143,38 @@ pub struct HashDetails {
 #[napi(object)]
 pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
+}
+
+/// Return type of `hash_plans`. Converts like the wrapped map, but shares one
+/// JS string per unique details value for the duration of the conversion.
+/// napi sets map keys as object property names, so they do not flow through
+/// `SharedStr::to_napi_value`; without this cache, each repeated hash value
+/// would materialize as a separate JS string while converting the result.
+pub struct TaskHashes(pub NapiDashMap<String, HashDetails>);
+
+impl ToNapiValue for TaskHashes {
+    unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> napi::Result<sys::napi_value> {
+        let _guard = SharedStr::install_handle_cache();
+        unsafe { NapiDashMap::to_napi_value(env, val.0) }
+    }
+}
+
+/// Returns the shared Arc for `value`, allocating it on first sight. An
+/// input's hash is identical for every task that depends on it, so the same
+/// value string comes back once per downstream task; interning keeps one
+/// allocation per unique value.
+fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str> {
+    if let Some(existing) = interner.get(&value) {
+        return existing.clone();
+    }
+    match interner.entry(value) {
+        dashmap::mapref::entry::Entry::Occupied(existing) => existing.get().clone(),
+        dashmap::mapref::entry::Entry::Vacant(vacant) => {
+            let shared: Arc<str> = Arc::from(vacant.key().as_str());
+            vacant.insert(shared.clone());
+            shared
+        }
+    }
 }
 
 #[napi]
@@ -209,7 +245,7 @@ impl TaskHasher {
         per_task_envs: HashMap<String, HashMap<String, String>>,
         cwd: String,
         collect_task_inputs: Option<bool>,
-    ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+    ) -> anyhow::Result<TaskHashes> {
         for task_id in hash_plans.plans.keys() {
             if !per_task_envs.contains_key(task_id) {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
@@ -228,7 +264,7 @@ impl TaskHasher {
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,
-    ) -> anyhow::Result<NapiDashMap<String, HashDetails>>
+    ) -> anyhow::Result<TaskHashes>
     where
         F: Fn(&str) -> &'a HashMap<String, String> + Sync,
     {
@@ -241,6 +277,8 @@ impl TaskHasher {
         // expanded fileset file lists are freed once this call returns.
         let project_file_paths_cache = ProjectFilePathsCache::new();
         let workspace_file_paths_cache = WorkspaceFilePathsCache::new();
+        // Deduplicates hash values across tasks; see intern_value.
+        let value_interner: DashMap<String, Arc<str>> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -284,7 +322,7 @@ impl TaskHasher {
             .par_bridge()
             .try_for_each(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
-                let (instruction_key, hash_value, inputs) = self.hash_instruction(
+                let (hash_value, inputs) = self.hash_instruction(
                     task_id,
                     instruction_ref.value(),
                     HashInstructionArgs {
@@ -313,7 +351,10 @@ impl TaskHasher {
                         details: HashMap::new(),
                         inputs: HashInputs::default(),
                     });
-                entry.details.insert(instruction_key, hash_value);
+                entry.details.insert(
+                    pool.key(id).into(),
+                    intern_value(&value_interner, hash_value).into(),
+                );
 
                 // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
                 if let Some(ref accum) = inputs_accum {
@@ -360,7 +401,7 @@ impl TaskHasher {
             assemble_duration
         );
 
-        Ok(hashes)
+        Ok(TaskHashes(hashes))
     }
 
     fn hash_instruction(
@@ -383,7 +424,7 @@ impl TaskHasher {
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
-    ) -> anyhow::Result<(String, String, HashInputsBuilder)> {
+    ) -> anyhow::Result<(String, HashInputsBuilder)> {
         let now = std::time::Instant::now();
         let span = trace_span!("hashing", task_id).entered();
         let empty = HashInputsBuilder::default();
@@ -606,7 +647,7 @@ impl TaskHasher {
                 (cached_entry.hash, inputs)
             }
         };
-        Ok((instruction.to_string(), hash, inputs))
+        Ok((hash, inputs))
     }
 }
 
@@ -625,4 +666,23 @@ struct HashInstructionArgs<'a> {
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn intern_value_shares_one_allocation_per_unique_value() {
+        let interner: DashMap<String, Arc<str>> = DashMap::new();
+
+        let first = intern_value(&interner, "12345".to_string());
+        let second = intern_value(&interner, "12345".to_string());
+        let other = intern_value(&interner, "67890".to_string());
+
+        assert_eq!(&*first, "12345");
+        assert!(Arc::ptr_eq(&first, &second));
+        assert!(!Arc::ptr_eq(&first, &other));
+        assert_eq!(interner.len(), 2);
+    }
 }
