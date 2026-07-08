@@ -335,10 +335,15 @@ describe('AngularRspackPlugin', () => {
     );
   });
 
-  it('should not use a persistent cache path without a project name', () => {
+  it('should scope the persistent cache path by the project root without a project name', () => {
     new AngularRspackPlugin(options);
 
-    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(undefined);
+    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(
+      expect.stringContaining(join('.angular', 'cache'))
+    );
+    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(
+      expect.stringContaining(join('root', 'angular-rspack'))
+    );
   });
 
   it('should give the transformer a persistent cache when a cache path is available', async () => {
@@ -364,6 +369,8 @@ describe('AngularRspackPlugin', () => {
   });
 
   it('should not create a transformer cache when the persistent cache is disabled', () => {
+    vi.stubEnv('CI', '1');
+
     new AngularRspackPlugin(options);
 
     expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();

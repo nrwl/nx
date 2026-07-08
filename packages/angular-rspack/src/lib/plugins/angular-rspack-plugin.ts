@@ -26,7 +26,14 @@ import {
   sources,
 } from '@rspack/core';
 import { createRequire } from 'node:module';
-import { dirname, join, normalize, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 import {
   type I18nOptions,
   NG_RSPACK_SYMBOL_NAME,
@@ -48,9 +55,6 @@ type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 function getPersistentCachePath(
   options: NormalizedAngularRspackPluginOptions
 ): string | undefined {
-  if (!options.projectName) {
-    return undefined;
-  }
   // Same default gating as @angular/build's cache options: disk caching is
   // skipped in CI and in web containers.
   const ci = process.env['CI'];
@@ -60,13 +64,24 @@ function getPersistentCachePath(
   if (process.versions.webcontainer) {
     return undefined;
   }
+  // In Nx workspaces the project name scopes the cache. Outside them (plain
+  // programmatic `createConfig` usage) there is no project graph to name the
+  // project, so scope by the project root instead of skipping the cache.
+  let projectScope = options.projectName;
+  if (!projectScope) {
+    const relativeRoot = relative(workspaceRoot, options.root);
+    projectScope =
+      relativeRoot && !relativeRoot.startsWith('..')
+        ? relativeRoot.replace(/[\\/]/g, '-')
+        : basename(options.root);
+  }
   const { version } = createRequire(__filename)('@angular/build/package.json');
   return join(
     workspaceRoot,
     '.angular',
     'cache',
     version,
-    options.projectName,
+    projectScope,
     'angular-rspack'
   );
 }
