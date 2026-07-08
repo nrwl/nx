@@ -8,13 +8,14 @@ use super::once_cache::OnceCache;
 use crate::native::glob::build_glob_set;
 use crate::native::types::FileData;
 
-/// Result of hashing project files, including the matched file paths
-pub struct ProjectFilesHashResult {
-    pub hash: String,
-    pub files: Vec<String>,
-}
+/// Compute-once cache for project fileset hashes. Holds only the hash, so
+/// retaining it for the TaskHasher lifetime stays O(projects), not O(files).
+pub(crate) type ProjectFileSetCache = OnceCache<String>;
 
-pub(crate) type ProjectFileSetCache = OnceCache<ProjectFilesHashResult>;
+/// Compute-once cache for the matched file paths of a project fileset.
+/// Only populated when task inputs are collected; callers keep it
+/// per-invocation so the expanded paths are freed once that call returns.
+pub(crate) type ProjectFilePathsCache = OnceCache<Vec<String>>;
 
 fn project_file_set_cache_key(project_name: &str, file_sets: &[String]) -> String {
     let mut sorted_file_sets: Vec<&str> = file_sets.iter().map(String::as_str).collect();
@@ -27,42 +28,62 @@ fn project_file_set_cache_key(project_name: &str, file_sets: &[String]) -> Strin
     )
 }
 
-/// Hashes project files and returns both the hash and the list of matched file paths.
-/// This allows callers to reuse the file list without re-globbing.
+/// Hashes project files without materializing the matched file list.
 /// Token resolution ({projectRoot}, {projectName}) is handled upstream by the HashPlanner,
 /// so file_sets are expected to contain already-resolved paths.
-pub fn hash_project_files_with_inputs(
+pub fn hash_project_files(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
-) -> Result<ProjectFilesHashResult> {
+) -> Result<String> {
     let _span = trace_span!("hash_project_files", project_name).entered();
     let collected_files = collect_project_files(project_name, file_sets, project_file_map)?;
     trace!("collected_files: {:?}", collected_files.len());
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    let mut files = Vec::with_capacity(collected_files.len());
 
     for file in collected_files {
         hasher.update(file.hash.as_bytes());
         hasher.update(file.file.as_bytes());
-        files.push(file.file.clone());
     }
 
-    Ok(ProjectFilesHashResult {
-        hash: hasher.digest().to_string(),
-        files,
-    })
+    Ok(hasher.digest().to_string())
 }
 
-pub(crate) fn hash_project_files_with_inputs_cached(
+pub(crate) fn hash_project_files_cached(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
     cache: &ProjectFileSetCache,
-) -> Result<Arc<ProjectFilesHashResult>> {
+) -> Result<Arc<String>> {
     cache.get_or_try_init(project_file_set_cache_key(project_name, file_sets), || {
-        hash_project_files_with_inputs(project_name, file_sets, project_file_map)
+        hash_project_files(project_name, file_sets, project_file_map)
+    })
+}
+
+/// The matched file paths of a project fileset, in project-file-map order
+/// (the same order hashing folds them).
+pub fn collect_project_file_paths(
+    project_name: &str,
+    file_sets: &[String],
+    project_file_map: &HashMap<String, Vec<FileData>>,
+) -> Result<Vec<String>> {
+    Ok(
+        collect_project_files(project_name, file_sets, project_file_map)?
+            .into_iter()
+            .map(|file| file.file.clone())
+            .collect(),
+    )
+}
+
+pub(crate) fn collect_project_file_paths_cached(
+    project_name: &str,
+    file_sets: &[String],
+    project_file_map: &HashMap<String, Vec<FileData>>,
+    cache: &ProjectFilePathsCache,
+) -> Result<Arc<Vec<String>>> {
+    cache.get_or_try_init(project_file_set_cache_key(project_name, file_sets), || {
+        collect_project_file_paths(project_name, file_sets, project_file_map)
     })
 }
 
@@ -182,9 +203,9 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let result = hash_project_files_with_inputs(proj_name, file_sets, &file_map).unwrap();
+        let result = hash_project_files(proj_name, file_sets, &file_map).unwrap();
         assert_eq!(
-            result.hash,
+            result,
             hash(
                 &[
                     file_data1.hash.as_bytes(),
@@ -233,9 +254,9 @@ mod tests {
                 file_data4.clone(),
             ],
         );
-        let result = hash_project_files_with_inputs(proj_name, file_sets, &file_map).unwrap();
+        let result = hash_project_files(proj_name, file_sets, &file_map).unwrap();
         assert_eq!(
-            result.hash,
+            result,
             hash(
                 &[
                     file_data1.hash.as_bytes(),
@@ -246,6 +267,33 @@ mod tests {
                 .concat()
             )
         );
+    }
+
+    #[test]
+    fn should_collect_file_paths_in_file_map_order() {
+        let proj_name = "test_project";
+        let file_sets = &["!test/root/**/*.spec.ts".to_string()];
+        let mut file_map = HashMap::new();
+        file_map.insert(
+            String::from(proj_name),
+            vec![
+                FileData {
+                    file: "test/root/test1.ts".into(),
+                    hash: "file_data1".into(),
+                },
+                FileData {
+                    file: "test/root/test.spec.ts".into(),
+                    hash: "file_data2".into(),
+                },
+                FileData {
+                    file: "test/root/test3.ts".into(),
+                    hash: "file_data3".into(),
+                },
+            ],
+        );
+
+        let paths = collect_project_file_paths(proj_name, file_sets, &file_map).unwrap();
+        assert_eq!(paths, vec!["test/root/test1.ts", "test/root/test3.ts"]);
     }
 
     #[test]
@@ -276,13 +324,22 @@ mod tests {
 
         let cache = ProjectFileSetCache::new();
         let first =
-            hash_project_files_with_inputs_cached(proj_name, first_file_sets, &file_map, &cache)
-                .unwrap();
+            hash_project_files_cached(proj_name, first_file_sets, &file_map, &cache).unwrap();
         let second =
-            hash_project_files_with_inputs_cached(proj_name, second_file_sets, &file_map, &cache)
-                .unwrap();
+            hash_project_files_cached(proj_name, second_file_sets, &file_map, &cache).unwrap();
 
         assert_eq!(cache.len(), 1);
+        assert!(Arc::ptr_eq(&first, &second));
+
+        let paths_cache = ProjectFilePathsCache::new();
+        let first =
+            collect_project_file_paths_cached(proj_name, first_file_sets, &file_map, &paths_cache)
+                .unwrap();
+        let second =
+            collect_project_file_paths_cached(proj_name, second_file_sets, &file_map, &paths_cache)
+                .unwrap();
+
+        assert_eq!(paths_cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
     }
 }
