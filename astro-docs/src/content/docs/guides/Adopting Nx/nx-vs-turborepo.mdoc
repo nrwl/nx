@@ -26,7 +26,7 @@ This page starts with the basics, like onboarding, and progressively moves into 
 | [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                    | Experimental `turbo boundaries` (since 2024)              |
 | [Polyglot support](#polyglot-support)           | Native support for JS/TS, Java, .NET, Python, Rust                    | Any CLI via `package.json` scripts, no native graph       |
 | [AI integration](#ai-integration)               | Agent skills, MCP, `configure-ai-agents`, self-healing CI             | Official skill, no MCP or CI integration                  |
-| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution, self-healing, flaky detection                 | Vercel Remote Cache only, no task distribution            |
+| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution, self-healing, flaky detection                 | Remote caching, no distributed agents or self-healing     |
 | [Release management](#release-management)       | Built-in versioning, changelogs, and publishing                       | Requires manual setup or 3rd party tools                  |
 | [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                     | Experimental OpenTelemetry (OTLP) export                  |
 | [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                    | Basic TUI and LSP support                                 |
@@ -92,7 +92,7 @@ Where Nx goes further is with [plugins](/docs/plugin-registry). Adding an Nx plu
 
 Both tools cache task results, but the defaults and depth of caching support differ significantly. Better cache configuration means fewer false positives, fewer unnecessary re-runs, and faster CI.
 
-**Turborepo caches every task by default**, so you opt out of caching with `cache: false` on tasks like `dev`. **Nx does the opposite: nothing is cached unless you explicitly set `cache: true`.** This is a more cautious opt-in model, since not all tasks are cacheable by default.
+**Turborepo enables caching by default for the tasks you register**, and you opt out with `cache: false` on tasks like `dev`. It stores file artifacts only when a task declares `outputs`; without them it caches the task's logs alone. **Nx caches only targets marked cacheable**, either explicitly with `cache: true` or through inferred plugin configuration.
 
 Nx also provides [`namedInputs`](/docs/reference/inputs), reusable input patterns that you can compose across targets. You define a pattern once (like "production sources") and reference it everywhere. Turborepo's `inputs` are flat lists with no composition, so every target repeats the same exclusions.
 
@@ -235,7 +235,7 @@ A cache is only valuable if you can trust it. Turborepo has no task sandboxing. 
 
 Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that runs each task in a sandbox enforcing its declared `inputs` and `outputs`. Undeclared dependencies are surfaced automatically rather than discovered through debugging production incidents.
 
-This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) demonstrated that build systems without cache isolation are vulnerable to cache poisoning, where any contributor with PR access can inject compromised artifacts into production. Nx Cloud prevents this through branch-scoped cache isolation. For more details, see [cache security](/docs/concepts/ci-concepts/cache-security).
+This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key wins, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/concepts/ci-concepts/cache-security).
 
 Task sandboxing is an architectural difference, not a configuration problem. There's no workaround on the Turborepo side.
 
@@ -243,7 +243,7 @@ Task sandboxing is an architectural difference, not a configuration problem. The
 
 Both tools offer code generation, but the depth differs significantly.
 
-Turborepo provides `turbo gen`, a thin wrapper around [Plop.js](https://plopjs.com/). It can scaffold new workspaces and create files from Handlebars templates, but it's limited to template-based file creation and simple string append/prepend operations. There's no AST-level code modification, no awareness of the project graph, and no migration/codemod system.
+Turborepo provides `turbo gen`, built on [Plop.js](https://plopjs.com/). It scaffolds files from templates and supports custom action functions for programmatic steps. What it doesn't have is AST-level code modification, awareness of the project graph, or a migration and codemod system.
 
 Nx generators are built on top of [Nx Devkit](/docs/extending-nx/intro), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
 
@@ -283,7 +283,7 @@ Turborepo provides an [official skill](https://skills.sh/vercel/turborepo-skills
 
 Nx works on any CI provider out of the box. Run `nx affected` or `nx run-many` in your existing pipeline and you get caching, affected detection, and task orchestration without additional setup. For teams that need more, [Nx Cloud](/docs/features/ci-features) layers on remote caching, intelligent task distribution across machines, self-healing CI, and flaky task detection, all integrated directly into your existing CI provider.
 
-Turborepo's CI story is remote caching through Vercel Remote Cache. Beyond that it runs tasks on CI the same way it does locally, with no built-in distribution, failure recovery, or CI-aware features.
+Turborepo supports CI through remote caching (Vercel Remote Cache) plus flags like `--affected` and `--filter` to scope what runs. What it doesn't provide is built-in distributed CI agents, self-healing CI, or flaky-test recovery.
 
 ![Nx Cloud CI report integrated into a GitHub PR](../../../../assets/guides/adopting-nx/ci-report.avif)
 
