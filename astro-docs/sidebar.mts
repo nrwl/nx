@@ -1014,20 +1014,20 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/adopting-nx/nx-vs-bazel',
           },
           {
-            label: 'Nx Cloud vs Depot',
-            link: 'guides/adopting-nx/nx-cloud-vs-depot',
+            label: 'Nx vs Depot',
+            link: 'guides/adopting-nx/nx-vs-depot',
           },
           {
-            label: 'Nx Cloud vs Blacksmith',
-            link: 'guides/adopting-nx/nx-cloud-vs-blacksmith',
+            label: 'Nx vs Blacksmith',
+            link: 'guides/adopting-nx/nx-vs-blacksmith',
           },
           {
-            label: 'Nx Cloud vs Develocity',
-            link: 'guides/adopting-nx/nx-cloud-vs-develocity',
+            label: 'Nx vs Develocity',
+            link: 'guides/adopting-nx/nx-vs-develocity',
           },
           {
-            label: 'Nx Cloud vs Buildkite',
-            link: 'guides/adopting-nx/nx-cloud-vs-buildkite',
+            label: 'Nx vs Buildkite',
+            link: 'guides/adopting-nx/nx-vs-buildkite',
           },
         ],
       },

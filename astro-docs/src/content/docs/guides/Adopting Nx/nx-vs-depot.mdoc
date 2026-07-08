@@ -1,16 +1,16 @@
 ---
-title: Nx Cloud vs Depot
-description: Depot makes every CI minute faster and cheaper with better runners and colocated caches. Nx Cloud removes minutes entirely with affected detection, remote task caching, and distributed execution. They solve different layers, and they compose.
+title: Nx vs Depot
+description: Depot makes every CI minute faster and cheaper with better runners and colocated caches. Nx removes minutes entirely with affected detection, remote task caching, and distributed execution. They solve different layers, and they compose.
 filter: 'type:Guides'
 sidebar:
-  label: Nx Cloud vs Depot
+  label: Nx vs Depot
 ---
 
-Depot makes every CI minute faster. Nx Cloud makes fewer minutes run at all, by caching, pruning, and distributing work across your task graph. They solve different layers, and they compose.
+Depot makes every CI minute faster. Nx makes fewer minutes run at all, by caching, pruning, and distributing work across your task graph. They solve different layers, and they compose.
 
-## What is Nx Cloud?
+## What is Nx?
 
-Nx Cloud is a monorepo CI platform for Nx workspaces. On top of whatever CI provider you already run, it adds remote caching, task distribution across machines, e2e test splitting, flaky-task handling, and self-healing CI.
+Nx is a monorepo platform: a task-running CLI, remote caching, distributed CI across machines, e2e test splitting, flaky-task handling, self-healing CI, and editor integration, one system rather than separate products. It layers onto whatever CI provider you already run.
 
 ## What is Depot?
 
@@ -78,7 +78,7 @@ Depot fits when any of these apply:
 - The bottleneck is raw machine speed on a repository small enough to run everything each push.
 - You want a runner swap with almost no setup.
 
-Nx Cloud runs on any provider, so the two stack: run Nx Cloud on Depot runners for both savings.
+Nx Cloud runs on any provider, so the two stack: run Nx Cloud on Depot runners for both savings. If container builds are your bottleneck, Nx Cloud also offers [Docker layer caching](/docs/features/ci-features/docker-layer-caching) as an add-on.
 
 ## Resources
 
