@@ -9,6 +9,9 @@ import {
   createLockFile,
   createPackageJson,
   getLockFileName,
+  getWorkspacePackagesFromGraph,
+  rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { fork } from 'child_process';
@@ -73,6 +76,7 @@ export default async function buildExecutor(
   if (!outputIsDirectory) {
     mkdir(options.outputPath);
   }
+  const packageManager = detectPackageManager(context.root);
   let packageJson: PackageJson;
   if (options.generatePackageJson) {
     packageJson = createPackageJson(context.projectName, context.projectGraph, {
@@ -93,24 +97,45 @@ export default async function buildExecutor(
     }
 
     updatePackageJson(packageJson, context);
+    // pnpm re-resolves local-path manifest specifiers on a non-frozen install,
+    // so make them deploy-root-relative before the manifest is written and the
+    // lockfile copies them.
+    if (options.generateLockfile && packageManager === 'pnpm') {
+      rewritePrunedLocalPathSpecifiers(
+        packageJson,
+        projectRoot,
+        context.root,
+        new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+      );
+    }
     writeJsonFile(`${options.outputPath}/package.json`, packageJson);
   } else {
     packageJson = readJsonFile(join(projectRoot, 'package.json'));
   }
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
-
     if (packageManager === 'bun') {
       logger.warn(
         'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
       );
     } else {
+      // `pruned` flips off when createLockFile falls back to the root
+      // lockfile, whose importer describes the whole workspace: skip the
+      // link: closure validation and local-path shipping for it.
+      let pruned = true;
       const lockFile = createLockFile(
         packageJson,
         context.projectGraph,
-        packageManager
+        packageManager,
+        {
+          onPruneFallback: () => {
+            pruned = false;
+          },
+        }
       );
+      if (packageManager === 'pnpm' && pruned) {
+        validatePrunedLocalPathClosure(packageJson, context.root, lockFile);
+      }
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
         lockFile,
@@ -124,7 +149,8 @@ export default async function buildExecutor(
         writePrunedPnpmInstallSettings(
           options.outputPath,
           context.root,
-          lockFile
+          lockFile,
+          { includeLocalPathArtifacts: pruned }
         );
       }
     }

@@ -1819,12 +1819,16 @@ export function rewritePrunedLocalPathSpecifiers(
  * as a compilation asset after this returns, so the pnpm <=10 additions are
  * mutated onto `packageJson` rather than written; the file-writing executors use
  * `writePrunedPnpmInstallSettings` instead.
+ * Pass `includeLocalPathArtifacts: false` when the lockfile is createLockFile's
+ * root-lockfile fallback: its importer references the whole workspace, so
+ * shipping its local-path trees would copy unrelated sources into the output.
  */
 export function emitPrunedPnpmInstallAssets(
   workspaceRootPath: string,
   prunedLockfileContent: string,
   packageJson: PackageJson,
-  emit: (assetPath: string, content: string | Buffer) => void
+  emit: (assetPath: string, content: string | Buffer) => void,
+  options?: { includeLocalPathArtifacts?: boolean }
 ): void {
   const config: PrunedPnpmConfig = {
     pnpmMajor: getPnpmMajor(workspaceRootPath),
@@ -1852,11 +1856,13 @@ export function emitPrunedPnpmInstallAssets(
   for (const { path, content } of patchFiles) {
     emit(path, content);
   }
-  for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
-    workspaceRootPath,
-    prunedLockfileContent
-  )) {
-    emit(path, readFileSync(sourcePath));
+  if (options?.includeLocalPathArtifacts !== false) {
+    for (const { path, sourcePath } of getPrunedPnpmLocalPathArtifacts(
+      workspaceRootPath,
+      prunedLockfileContent
+    )) {
+      emit(path, readFileSync(sourcePath));
+    }
   }
   const buildSettings = getPrunedPnpmPackageJsonBuildSettings(
     workspaceRootPath,
