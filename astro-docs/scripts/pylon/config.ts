@@ -31,11 +31,7 @@ export const MAPPING_PATH = path.join(
   'content',
   'pylon-kb.json'
 );
-export const REDIRECTS_PATH = path.join(
-  ASTRO_DOCS_ROOT,
-  'public',
-  '_redirects'
-);
+export const NETLIFY_TOML_PATH = path.join(ASTRO_DOCS_ROOT, 'netlify.toml');
 
 export const CONTENT_DOCS_ROOT = path.join(
   ASTRO_DOCS_ROOT,

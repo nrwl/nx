@@ -178,6 +178,275 @@ to = "https://trypolygraph.com"
 status = 301
 force = true
 
+# BEGIN pylon-kb redirects (generated)
+# Managed by scripts/pylon/migrate-articles.ts — do not edit this block by hand.
+# Knowledge-base articles migrated to the Pylon KB (help.nx.app).
+[[redirects]]
+from = "/docs/guides/installation/update-global-installation"
+to = "https://help.nx.app/articles/9269507985-Update-Your-Global-Nx-Installation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/fix-sandbox-violations"
+to = "https://help.nx.app/articles/7916263977-Fix-sandbox-violations"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-telemetry"
+to = "https://help.nx.app/articles/4616433565-Nx-Console-Telemetry"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-troubleshooting"
+to = "https://help.nx.app/articles/2815571239-Troubleshoot-Nx-Console-Issues"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/run-tasks-in-parallel"
+to = "https://help.nx.app/articles/1272614753-Run-Tasks-in-Parallel"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/analyze-source-files"
+to = "https://help.nx.app/articles/3124423636-Disable-Graph-Links-Created-from-Analyzing-Source-Files"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/browser-support"
+to = "https://help.nx.app/articles/6610997292-Configuring-Browser-Support"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/identify-dependencies-between-folders"
+to = "https://help.nx.app/articles/9938625422-Identify-Dependencies-Between-Folders"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/include-all-packagejson"
+to = "https://help.nx.app/articles/8209554868-Include-All-package.json-Files-as-Projects"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/include-assets-in-build"
+to = "https://help.nx.app/articles/9290100482-Including-Assets-in-Your-Build"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit"
+to = "https://help.nx.app/articles/9559202270-Migrate-`nx`-imports-to-`@nx/devkit`"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/yarn-pnp"
+to = "https://help.nx.app/articles/9991771374-Using-Yarn-Plug'n'Play-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/setup-incremental-builds-angular"
+to = "https://help.nx.app/articles/6471053373-Setup-Incremental-Builds-for-Angular-Applications"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/use-environment-variables-in-angular"
+to = "https://help.nx.app/articles/4451522585-Using-Environment-Variables-in-Angular-Applications"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects"
+to = "https://help.nx.app/articles/6227648006-Using-Tailwind-CSS-with-Angular"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/dotnet/guides/migrate-from-nx-dotnet-core"
+to = "https://help.nx.app/articles/1261127913-Migrate-from-@nx-dotnet/core-to-@nx/dotnet"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/guides/dependency-checks"
+to = "https://help.nx.app/articles/8821264301-Dependency-Checks-ESLint-Rule"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
+to = "https://help.nx.app/articles/6908494841-Using-Tailwind-CSS-with-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-aws-lambda"
+to = "https://help.nx.app/articles/4380687016-Deploying-AWS-Lambda-Functions-in-Node.js"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-server-fly-io"
+to = "https://help.nx.app/articles/9635861430-Deploying-a-Node-App-to-Fly.io"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/node-serverless-functions-netlify"
+to = "https://help.nx.app/articles/1086270946-Add-and-Deploy-Netlify-Edge-Functions-with-Node"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/wait-for-tasks"
+to = "https://help.nx.app/articles/5968343979-Wait-for-Tasks"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/deploy-nextjs-to-vercel"
+to = "https://help.nx.app/articles/6342955867-Deploying-Next.js-Applications-to-Vercel"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/use-environment-variables-in-react"
+to = "https://help.nx.app/articles/3694424716-Using-Environment-Variables-in-React-Applications"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/using-tailwind-css-in-react"
+to = "https://help.nx.app/articles/1858146033-Using-Tailwind-CSS-with-React"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/next/guides/next-config-setup"
+to = "https://help.nx.app/articles/5237042980-How-to-configure-Next.js-plugins"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-setup-node-events"
+to = "https://help.nx.app/articles/3016831870-Using-setupNodeEvents-with-Cypress-preset"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-v11-migration"
+to = "https://help.nx.app/articles/9360163758-Migrating-to-Cypress-V11"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/playwright/guides/merge-atomized-outputs"
+to = "https://help.nx.app/articles/5602427199-Merge-Atomized-Playwright-Outputs"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/angular-configuring-styles"
+to = "https://help.nx.app/articles/3675443535-Angular---Configuring-styles-and-preprocessor-options"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/angular-storybook-compodoc"
+to = "https://help.nx.app/articles/8556352466-Angular---Set-up-Compodoc-for-Storybook-on-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/upgrading-storybook"
+to = "https://help.nx.app/articles/3327263277-Upgrading-Storybook"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/guides/migrating-from-nx-vite"
+to = "https://help.nx.app/articles/7561963203-Migrating-to-@nx/vitest-from-@nx/vite"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/vitest/guides/testing-without-building-dependencies"
+to = "https://help.nx.app/articles/2617703431-Testing-Without-Building-Dependencies"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/enable-tsc-batch-mode"
+to = "https://help.nx.app/articles/9754133651-Enable-TypeScript-Batch-Mode"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/vue/nuxt/guides/deploy-nuxt-to-vercel"
+to = "https://help.nx.app/articles/7100356525-Deploying-Nuxt-applications-to-Vercel"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/ci-execution-failed"
+to = "https://help.nx.app/articles/7998114218-Understanding-\"CI-Execution-Failed\""
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/console-troubleshooting"
+to = "https://help.nx.app/articles/2815571239-Troubleshoot-Nx-Console-Issues"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/nx-sandbox-unix-sockets"
+to = "https://help.nx.app/articles/6036594279-Fix-Nx-Commands-Failing-in-Claude-Code-Sandbox"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/performance-profiling"
+to = "https://help.nx.app/articles/5822676866-Profiling-Performance"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-cache-misses"
+to = "https://help.nx.app/articles/2042382281-Troubleshoot-Cache-Misses"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-convert-to-inferred"
+to = "https://help.nx.app/articles/7855921932-Troubleshoot-Convert-to-Inferred-Migration"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/troubleshoot-nx-install-issues"
+to = "https://help.nx.app/articles/7622623416-Troubleshoot-Nx-Installations"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting/unknown-local-cache"
+to = "https://help.nx.app/articles/3588128879-Unknown-Local-Cache-Error"
+status = 301
+force = true
+
+# END pylon-kb redirects (generated)
+
 # Rewrite for base path handling (keeps URL the same)
 [[redirects]]
 from = "/docs/*"
