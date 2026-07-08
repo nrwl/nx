@@ -318,42 +318,6 @@ const learnGroups: SidebarItems = [
             link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
-          },
-          {
-            label: 'Nx vs Vite+',
-            link: 'guides/adopting-nx/nx-vs-vite-plus',
-          },
-          {
-            label: 'Nx vs Bazel',
-            link: 'guides/adopting-nx/nx-vs-bazel',
-          },
-          {
-            label: 'Nx vs moon',
-            link: 'guides/adopting-nx/nx-vs-moonrepo',
-          },
-          {
-            label: 'Nx Cloud vs Depot',
-            link: 'guides/adopting-nx/nx-cloud-vs-depot',
-          },
-          {
-            label: 'Nx Cloud vs Blacksmith',
-            link: 'guides/adopting-nx/nx-cloud-vs-blacksmith',
-          },
-          {
-            label: 'Nx Cloud vs Develocity',
-            link: 'guides/adopting-nx/nx-cloud-vs-develocity',
-          },
-          {
-            label: 'Nx Cloud vs Buildkite',
-            link: 'guides/adopting-nx/nx-cloud-vs-buildkite',
-          },
-          {
-            label: 'Nx Cloud vs runner providers',
-            link: 'guides/adopting-nx/nx-cloud-vs-runner-providers',
-          },
-          {
             label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
@@ -1030,6 +994,48 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'TSC batch mode',
             link: 'reference/benchmarks/tsc-batch-mode',
+          },
+        ],
+      },
+      {
+        label: 'Comparisons',
+        collapsed: true,
+        items: [
+          {
+            label: 'Nx vs Turborepo',
+            link: 'guides/adopting-nx/nx-vs-turborepo',
+          },
+          {
+            label: 'Nx vs Vite+',
+            link: 'guides/adopting-nx/nx-vs-vite-plus',
+          },
+          {
+            label: 'Nx vs Bazel',
+            link: 'guides/adopting-nx/nx-vs-bazel',
+          },
+          {
+            label: 'Nx vs moon',
+            link: 'guides/adopting-nx/nx-vs-moonrepo',
+          },
+          {
+            label: 'Nx Cloud vs Depot',
+            link: 'guides/adopting-nx/nx-cloud-vs-depot',
+          },
+          {
+            label: 'Nx Cloud vs Blacksmith',
+            link: 'guides/adopting-nx/nx-cloud-vs-blacksmith',
+          },
+          {
+            label: 'Nx Cloud vs Develocity',
+            link: 'guides/adopting-nx/nx-cloud-vs-develocity',
+          },
+          {
+            label: 'Nx Cloud vs Buildkite',
+            link: 'guides/adopting-nx/nx-cloud-vs-buildkite',
+          },
+          {
+            label: 'Nx Cloud vs runner providers',
+            link: 'guides/adopting-nx/nx-cloud-vs-runner-providers',
           },
         ],
       },
