@@ -10,13 +10,14 @@ use crate::native::types::FileData;
 use anyhow::*;
 use tracing::{debug, debug_span, trace, warn};
 
-/// Result of hashing workspace files, including the matched file paths
-pub struct WorkspaceFilesHashResult {
-    pub hash: String,
-    pub files: Vec<String>,
-}
+/// Compute-once cache for workspace fileset hashes. Holds only the hash, so
+/// retaining it for the TaskHasher lifetime stays O(filesets), not O(files).
+pub(crate) type WorkspaceFileSetCache = OnceCache<String>;
 
-pub(crate) type WorkspaceFileSetCache = OnceCache<WorkspaceFilesHashResult>;
+/// Compute-once cache for the matched file paths of a workspace fileset.
+/// Only populated when task inputs are collected; callers keep it
+/// per-invocation so the expanded paths are freed once that call returns.
+pub(crate) type WorkspaceFilePathsCache = OnceCache<Vec<String>>;
 
 fn workspace_file_set_cache_key(workspace_file_sets: &[String]) -> String {
     let mut sorted_file_sets: Vec<&str> = workspace_file_sets.iter().map(String::as_str).collect();
@@ -64,26 +65,22 @@ pub fn get_workspace_files<'a, 'b>(
     glob_files(all_workspace_files, globs, None)
 }
 
-/// Hash workspace files and return both the hash and the list of matched file paths.
-pub fn hash_workspace_files_with_inputs(
+/// Hashes workspace files without materializing the matched file list.
+pub fn hash_workspace_files(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
-) -> Result<WorkspaceFilesHashResult> {
+) -> Result<String> {
     let globs = globs_from_workspace_globs(workspace_file_sets);
 
     if globs.is_empty() {
-        return Ok(WorkspaceFilesHashResult {
-            hash: hash(b""),
-            files: vec![],
-        });
+        return Ok(hash(b""));
     }
 
     let glob = build_glob_set(&globs)?;
 
     let mut hasher = xxhash_rust::xxh3::Xxh3::new();
-    let mut files = Vec::new();
 
-    debug_span!("Hashing workspace fileset with inputs").in_scope(|| {
+    debug_span!("Hashing workspace fileset").in_scope(|| {
         for file in all_workspace_files
             .iter()
             .filter(|file| glob.is_match(&file.file))
@@ -91,25 +88,52 @@ pub fn hash_workspace_files_with_inputs(
             debug!("Adding {:?} ({:?}) to hash", file.hash, file.file);
             hasher.update(file.file.as_bytes());
             hasher.update(file.hash.as_bytes());
-            files.push(file.file.clone());
         }
         let hashed_value = hasher.digest().to_string();
         debug!("Hash Value: {:?}", hashed_value);
 
-        Ok(WorkspaceFilesHashResult {
-            hash: hashed_value,
-            files,
-        })
+        Ok(hashed_value)
     })
 }
 
-pub(crate) fn hash_workspace_files_with_inputs_cached(
+pub(crate) fn hash_workspace_files_cached(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
     cache: &WorkspaceFileSetCache,
-) -> Result<Arc<WorkspaceFilesHashResult>> {
+) -> Result<Arc<String>> {
     cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        hash_workspace_files_with_inputs(workspace_file_sets, all_workspace_files)
+        hash_workspace_files(workspace_file_sets, all_workspace_files)
+    })
+}
+
+/// The matched file paths of a workspace fileset, in workspace-file order
+/// (the same order hashing folds them).
+pub fn collect_workspace_file_paths(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+) -> Result<Vec<String>> {
+    let globs = globs_from_workspace_globs(workspace_file_sets);
+
+    if globs.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let glob = build_glob_set(&globs)?;
+
+    Ok(all_workspace_files
+        .iter()
+        .filter(|file| glob.is_match(&file.file))
+        .map(|file| file.file.clone())
+        .collect())
+}
+
+pub(crate) fn collect_workspace_file_paths_cached(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: &WorkspaceFilePathsCache,
+) -> Result<Arc<Vec<String>>> {
+    cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
+        collect_workspace_file_paths(workspace_file_sets, all_workspace_files)
     })
 }
 
@@ -121,9 +145,8 @@ mod test {
 
     #[test]
     fn invalid_workspace_input_is_just_empty_hash() {
-        let result =
-            hash_workspace_files_with_inputs(&["packages/{package}".to_string()], &[]).unwrap();
-        assert_eq!(result.hash, hash(b""));
+        let result = hash_workspace_files(&["packages/{package}".to_string()], &[]).unwrap();
+        assert_eq!(result, hash(b""));
     }
 
     #[test]
@@ -144,7 +167,7 @@ mod test {
             file: "packages/project/project.json".into(),
             hash: "abc".into(),
         };
-        let result = hash_workspace_files_with_inputs(
+        let result = hash_workspace_files(
             &["{workspaceRoot}/.gitignore".to_string()],
             &[
                 gitignore_file.clone(),
@@ -154,7 +177,7 @@ mod test {
             ],
         )
         .unwrap();
-        assert_eq!(result.hash, "15841935230129999746");
+        assert_eq!(result, "15841935230129999746");
     }
 
     #[test]
@@ -176,7 +199,7 @@ mod test {
             hash: "abc".into(),
         };
         for _ in 0..1000 {
-            let result = hash_workspace_files_with_inputs(
+            let result = hash_workspace_files(
                 &["{workspaceRoot}/**/*".to_string()],
                 &[
                     gitignore_file.clone(),
@@ -186,8 +209,38 @@ mod test {
                 ],
             )
             .unwrap();
-            assert_eq!(result.hash, "13759877301064854697");
+            assert_eq!(result, "13759877301064854697");
         }
+    }
+
+    #[test]
+    fn should_collect_file_paths_in_workspace_file_order() {
+        let all_workspace_files = vec![
+            FileData {
+                file: ".gitignore".into(),
+                hash: "123".into(),
+            },
+            FileData {
+                file: "package.json".into(),
+                hash: "789".into(),
+            },
+            FileData {
+                file: "packages/project/project.json".into(),
+                hash: "abc".into(),
+            },
+        ];
+
+        let paths = collect_workspace_file_paths(
+            &["{workspaceRoot}/**/*.json".to_string()],
+            &all_workspace_files,
+        )
+        .unwrap();
+        assert_eq!(paths, vec!["package.json", "packages/project/project.json"]);
+
+        let paths =
+            collect_workspace_file_paths(&["packages/{package}".to_string()], &all_workspace_files)
+                .unwrap();
+        assert!(paths.is_empty());
     }
 
     #[test]
@@ -213,13 +266,28 @@ mod test {
 
         let cache = WorkspaceFileSetCache::new();
         let first =
-            hash_workspace_files_with_inputs_cached(first_file_sets, &all_workspace_files, &cache)
-                .unwrap();
+            hash_workspace_files_cached(first_file_sets, &all_workspace_files, &cache).unwrap();
         let second =
-            hash_workspace_files_with_inputs_cached(second_file_sets, &all_workspace_files, &cache)
-                .unwrap();
+            hash_workspace_files_cached(second_file_sets, &all_workspace_files, &cache).unwrap();
 
         assert_eq!(cache.len(), 1);
+        assert!(Arc::ptr_eq(&first, &second));
+
+        let paths_cache = WorkspaceFilePathsCache::new();
+        let first = collect_workspace_file_paths_cached(
+            first_file_sets,
+            &all_workspace_files,
+            &paths_cache,
+        )
+        .unwrap();
+        let second = collect_workspace_file_paths_cached(
+            second_file_sets,
+            &all_workspace_files,
+            &paths_cache,
+        )
+        .unwrap();
+
+        assert_eq!(paths_cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
     }
 }

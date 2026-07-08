@@ -16,10 +16,11 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileSetCache, WorkspaceFileSetCache,
-        hash_all_externals, hash_external, hash_json_files, hash_project_config,
-        hash_project_files_with_inputs_cached, hash_task_output, hash_tsconfig_selectively,
-        hash_workspace_files_with_inputs_cached,
+        CachedTaskOutput, JsonHashResult, ProjectFilePathsCache, ProjectFileSetCache,
+        WorkspaceFilePathsCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
+        hash_project_config, hash_project_files_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_cached,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -152,7 +153,9 @@ pub struct TaskHasher {
     options: Option<HasherOptions>,
     external_cache: Arc<DashMap<String, String>>,
     // Persisted across hash_plans() calls: they only fold the immutable FileData
-    // snapshot, so they never go stale. (Live-disk/exec caches stay per-call — see below.)
+    // snapshot, so they never go stale. Hash-only: matched file lists are only
+    // expanded per-invocation when inputs are collected. (Live-disk/exec caches
+    // stay per-call, see below.)
     workspace_file_set_cache: WorkspaceFileSetCache,
     project_file_set_cache: ProjectFileSetCache,
     // Fold over all externals; identical for every task, so computed once.
@@ -234,6 +237,10 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        // Per-invocation and only populated when collecting inputs, so the
+        // expanded fileset file lists are freed once this call returns.
+        let project_file_paths_cache = ProjectFilePathsCache::new();
+        let workspace_file_paths_cache = WorkspaceFilePathsCache::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -290,6 +297,8 @@ impl TaskHasher {
                         runtime_cache: &runtime_cache,
                         project_file_set_cache: &self.project_file_set_cache,
                         workspace_file_set_cache: &self.workspace_file_set_cache,
+                        project_file_paths_cache: &project_file_paths_cache,
+                        workspace_file_paths_cache: &workspace_file_paths_cache,
                         json_file_set_cache: &json_file_set_cache,
                         cwd: cwd_path,
                         collect_inputs: should_collect_inputs,
@@ -368,6 +377,8 @@ impl TaskHasher {
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
+            project_file_paths_cache,
+            workspace_file_paths_cache,
             json_file_set_cache,
             cwd,
             collect_inputs,
@@ -378,21 +389,26 @@ impl TaskHasher {
         let empty = HashInputsBuilder::default();
         let (hash, inputs) = match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let cached_entry = hash_workspace_files_with_inputs_cached(
+                let hashed = hash_workspace_files_cached(
                     workspace_file_set,
                     &self.all_workspace_files,
                     workspace_file_set_cache,
                 )?;
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
+                    let files = collect_workspace_file_paths_cached(
+                        workspace_file_set,
+                        &self.all_workspace_files,
+                        workspace_file_paths_cache,
+                    )?;
                     HashInputsBuilder {
-                        files: cached_entry.files.iter().cloned().collect(),
+                        files: files.iter().cloned().collect(),
                         ..Default::default()
                     }
                 } else {
                     empty
                 };
-                (cached_entry.hash.clone(), inputs)
+                ((*hashed).clone(), inputs)
             }
             HashInstruction::Runtime(runtime) => {
                 let hashed_runtime =
@@ -422,7 +438,7 @@ impl TaskHasher {
                 (hashed_cwd, empty)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let cached_entry = hash_project_files_with_inputs_cached(
+                let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,
                     &self.project_file_map,
@@ -430,14 +446,20 @@ impl TaskHasher {
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
+                    let files = collect_project_file_paths_cached(
+                        project_name,
+                        file_sets,
+                        &self.project_file_map,
+                        project_file_paths_cache,
+                    )?;
                     HashInputsBuilder {
-                        files: cached_entry.files.iter().cloned().collect(),
+                        files: files.iter().cloned().collect(),
                         ..Default::default()
                     }
                 } else {
                     empty
                 };
-                (cached_entry.hash.clone(), inputs)
+                ((*hashed).clone(), inputs)
             }
             HashInstruction::ProjectConfiguration(project_name) => {
                 let hashed_project_config =
@@ -598,6 +620,8 @@ struct HashInstructionArgs<'a> {
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
+    project_file_paths_cache: &'a ProjectFilePathsCache,
+    workspace_file_paths_cache: &'a WorkspaceFilePathsCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
