@@ -153,6 +153,29 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/col/tsconfig.spec.json')).toBe('..');
   });
 
+  it('pins rootDir to "." when the inferred dir is the config directory (per-file compiles re-infer deeper)', async () => {
+    // Regression: ts-jest's `isolatedModules` compiles each test file as its
+    // own single-file program, so the common source directory collapses to
+    // that file's folder and TS6 fails with TS5011 unless rootDir is explicit.
+    // The declared include spans the config dir root (jest.config.ts), which
+    // used to classify this config as already-safe and skip the pin.
+    write('libs/own/project.json', { name: 'own', root: 'libs/own' });
+    write('libs/own/jest.config.ts', `export default {};\n`);
+    write('libs/own/src/deep/index.test.ts', `export const t = 1;\n`);
+    write('libs/own/tsconfig.spec.json', {
+      compilerOptions: {
+        outDir: 'out-tsc/jest',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['jest.config.ts', 'src/**/*.ts'],
+    });
+
+    await run();
+
+    expect(rootDirOf('libs/own/tsconfig.spec.json')).toBe('.');
+  });
+
   it('leaves a composite project untouched (its rootDir already defaults to its own directory)', async () => {
     write('libs/comp/project.json', { name: 'comp', root: 'libs/comp' });
     write('libs/comp/src/index.ts', `export const c = 5;\n`);
@@ -228,11 +251,12 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/mix/tsconfig.e2e.json')).toBe('src');
   });
 
-  it('shields an own-dir child from a rootDir pinned on its extends base', async () => {
+  it('pins an own-dir child to its own directory instead of inheriting the base pin', async () => {
     // libs/base/tsconfig.json both needs a rootDir (its src imports another
     // project, so its files span up to libs/) and is an extends base. Its child
-    // selects only a local file, so its own rootDir is its own directory; without
-    // a shield it would inherit the base's "..", shifting its emit layout.
+    // selects only a local file, so its own rootDir is its own directory;
+    // pinned to "." it cannot inherit the base's "..", which would shift its
+    // emit layout.
     write('libs/base/project.json', { name: 'base', root: 'libs/base' });
     write(
       'libs/base/src/index.ts',

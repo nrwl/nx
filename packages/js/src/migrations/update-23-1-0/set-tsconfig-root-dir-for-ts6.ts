@@ -22,10 +22,10 @@ type Analysis =
   // No output/containment option or no input files: TypeScript 6 runs neither
   // emit nor the source-containment check, so it needs no `rootDir`.
   | { kind: 'inert' }
-  // Self-contained: its correct `rootDir` is its own directory. It has no
-  // inherited `rootDir` today (or it would be `has-rootDir`), so it only needs a
-  // write to shield it from a `rootDir` this migration pins on an `extends` base.
-  | { kind: 'own-dir' }
+  // Composite: `rootDir` already defaults to the tsconfig's own directory in
+  // both 5.x and 6.0 — for any subset of its files — so it only needs a write to
+  // shield it from a `rootDir` this migration pins on an `extends` base.
+  | { kind: 'composite' }
   // Already sets `rootDir` (explicitly or via `extends`): unaffected.
   | { kind: 'has-rootDir' };
 
@@ -48,16 +48,20 @@ interface Candidate {
  * compilation and emit layout are unchanged under 6.0. The value is computed by
  * the compiler itself: a throwaway program built with `configFilePath` cleared
  * takes the file-derived branch of `getCommonSourceDirectory`, so it matches
- * `tsc` exactly, including project-reference redirects. Configs already at the
- * 6.0 default are left untouched: their inferred directory equals the tsconfig
- * directory, or they are composite (which defaulted there before 6.0 too).
+ * `tsc` exactly, including project-reference redirects. The pin is written even
+ * when the inferred directory already equals the tsconfig directory: inference
+ * is per-program, and tools like ts-jest's `isolatedModules` compile single
+ * files against the same config, collapsing the common directory below the
+ * config dir and failing with TS5011. Only composite configs are exempt — their
+ * `rootDir` defaults to the tsconfig directory in both versions regardless of
+ * the file set.
  *
  * Each config is written on its own; nothing is written to a shared `extends`
  * base, so a config never inherits a `rootDir` computed for a sibling. The one
  * case that needs care is a config that both needs a `rootDir` and is itself an
- * `extends` base: its own-directory children would inherit the new value and
- * shift their emit layout, so each such child is pinned to its own directory to
- * block it. Runs only on TypeScript 6 workspaces (gated by `requires`).
+ * `extends` base: a composite child would inherit the new value and shift its
+ * emit layout, so each such child is pinned to its own directory to block it.
+ * Runs only on TypeScript 6 workspaces (gated by `requires`).
  */
 export default async function (tree: Tree): Promise<void> {
   tsModule ??= ensureTypescript();
@@ -91,8 +95,8 @@ export default async function (tree: Tree): Promise<void> {
     }
   }
 
-  // Phase 3: shield own-dir configs that now inherit a pinned `rootDir` from a
-  // base. Re-parse each from the tree (so Phase 2's writes are visible); when
+  // Phase 3: shield composite configs that now inherit a pinned `rootDir` from
+  // a base. Re-parse each from the tree (so Phase 2's writes are visible); when
   // TypeScript reports an inherited `rootDir` where there was none, pin the
   // config to its own directory so its emit layout does not shift. Repeat until
   // stable, since shielding one config can turn it into a base for another. The
@@ -110,7 +114,7 @@ export default async function (tree: Tree): Promise<void> {
   while (added) {
     added = false;
     for (const c of candidates) {
-      if (c.analysis.kind !== 'own-dir' || shielded.has(c.relPath)) {
+      if (c.analysis.kind !== 'composite' || shielded.has(c.relPath)) {
         continue;
       }
       if (inheritsRootDir(ts, treeParseHost, readFile, c.relPath)) {
@@ -150,11 +154,11 @@ function analyze(
     return { kind: 'inert' };
   }
   // Composite already defaults `rootDir` to the tsconfig's own directory in both
-  // 5.x and 6.0, so the 6.0 change leaves it alone. Treat it as own-dir: never
-  // pin a file-derived value, and shield it from a `rootDir` this migration pins
-  // on an `extends` base.
+  // 5.x and 6.0, so the 6.0 change leaves it alone. Never pin a file-derived
+  // value; only shield it from a `rootDir` this migration pins on an `extends`
+  // base.
   if (options.composite) {
-    return { kind: 'own-dir' };
+    return { kind: 'composite' };
   }
 
   const commonDir = computeCommonSourceDirectory(
@@ -166,16 +170,18 @@ function analyze(
   if (!commonDir) {
     return { kind: 'inert' };
   }
-  if (equalPaths(ts, commonDir, dirname(absPath))) {
-    return { kind: 'own-dir' };
-  }
+  // Written even when `commonDir` is the tsconfig's own directory (the 6.0
+  // default): a tool compiling a subset of the config's files — ts-jest with
+  // `isolatedModules` builds a program per test file — re-infers the common
+  // directory from that subset alone, and without an explicit `rootDir` TS6
+  // fails with TS5011.
   return { kind: 'write', dirAbs: toPosix(commonDir).replace(/\/+$/, '') };
 }
 
-// True when TypeScript resolves an inherited `rootDir` for the config. An own-dir
-// config sets none of its own, so any `rootDir` reported here comes from a base
-// this migration just pinned, and inheriting it would shift the config's emit
-// layout.
+// True when TypeScript resolves an inherited `rootDir` for the config. A
+// composite config sets none of its own (or it would be `has-rootDir`), so any
+// `rootDir` reported here comes from a base this migration just pinned, and
+// inheriting it would shift the config's emit layout.
 function inheritsRootDir(
   ts: typeof import('typescript'),
   parseHost: ts.ParseConfigHost,
@@ -290,18 +296,6 @@ function setRootDir(
 function toRelativeRootDir(tsconfigDir: string, commonDir: string): string {
   const rel = posix.relative(toPosix(tsconfigDir), toPosix(commonDir));
   return rel === '' ? '.' : rel;
-}
-
-function equalPaths(
-  ts: typeof import('typescript'),
-  a: string,
-  b: string
-): boolean {
-  const normalize = (p: string) => {
-    const stripped = toPosix(p).replace(/\/+$/, '');
-    return ts.sys.useCaseSensitiveFileNames ? stripped : stripped.toLowerCase();
-  };
-  return normalize(a) === normalize(b);
 }
 
 function toPosix(p: string): string {
