@@ -11,7 +11,10 @@ import {
   emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
+  getWorkspacePackagesFromGraph,
   readTsConfig,
+  rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
 } from '@nx/js';
 import type { Compiler, RspackPluginInstance } from '@rspack/core';
 
@@ -82,11 +85,38 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
+            // pnpm re-resolves local-path manifest specifiers on a non-frozen
+            // install, so make them deploy-root-relative before the lockfile
+            // copies them.
+            if (packageManager === 'pnpm') {
+              rewritePrunedLocalPathSpecifiers(
+                packageJson,
+                this.projectGraph.nodes[this.context.projectName].data.root,
+                this.context.root,
+                new Set(getWorkspacePackagesFromGraph(this.projectGraph).keys())
+              );
+            }
+            // `pruned` flips off when createLockFile falls back to the root
+            // lockfile, whose importer describes the whole workspace: skip the
+            // link: closure validation and local-path shipping for it.
+            let pruned = true;
             const lockFileContent = createLockFile(
               packageJson,
               this.projectGraph,
-              packageManager
+              packageManager,
+              {
+                onPruneFallback: () => {
+                  pruned = false;
+                },
+              }
             );
+            if (packageManager === 'pnpm' && pruned) {
+              validatePrunedLocalPathClosure(
+                packageJson,
+                this.context.root,
+                lockFileContent
+              );
+            }
             compilation.emitAsset(
               getLockFileName(packageManager),
               new sources.RawSource(lockFileContent)
@@ -104,7 +134,8 @@ export class GeneratePackageJsonPlugin implements RspackPluginInstance {
                   compilation.emitAsset(
                     assetPath,
                     new sources.RawSource(content)
-                  )
+                  ),
+                { includeLocalPathArtifacts: pruned }
               );
             }
           }

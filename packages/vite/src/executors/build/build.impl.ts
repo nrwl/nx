@@ -22,6 +22,9 @@ import {
   createLockFile,
   createPackageJson,
   getLockFileName,
+  getWorkspacePackagesFromGraph,
+  rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
@@ -173,22 +176,49 @@ export async function* viteBuildExecutor(
 
       builtPackageJson.type ??= 'module';
 
+      const packageManager = detectPackageManager(context.root);
+      // pnpm re-resolves local-path manifest specifiers on a non-frozen
+      // install, so make them deploy-root-relative before the manifest is
+      // written and the lockfile copies them.
+      if (packageManager === 'pnpm') {
+        rewritePrunedLocalPathSpecifiers(
+          builtPackageJson,
+          projectRoot,
+          context.root,
+          new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+        );
+      }
       writeJsonFile(
         `${outDirRelativeToWorkspaceRoot}/package.json`,
         builtPackageJson
       );
-      const packageManager = detectPackageManager(context.root);
 
       if (packageManager === 'bun') {
         logger.warn(
           'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
         );
       } else {
+        // `pruned` flips off when createLockFile falls back to the root
+        // lockfile, whose importer describes the whole workspace: skip the
+        // link: closure validation and local-path shipping for it.
+        let pruned = true;
         const lockFile = createLockFile(
           builtPackageJson,
           context.projectGraph,
-          packageManager
+          packageManager,
+          {
+            onPruneFallback: () => {
+              pruned = false;
+            },
+          }
         );
+        if (packageManager === 'pnpm' && pruned) {
+          validatePrunedLocalPathClosure(
+            builtPackageJson,
+            context.root,
+            lockFile
+          );
+        }
         writeFileSync(
           `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
           lockFile,
@@ -202,7 +232,8 @@ export async function* viteBuildExecutor(
           writePrunedPnpmInstallSettings(
             outDirRelativeToWorkspaceRoot,
             context.root,
-            lockFile
+            lockFile,
+            { includeLocalPathArtifacts: pruned }
           );
         }
       }

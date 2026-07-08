@@ -6,8 +6,11 @@ import {
   emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
+  getWorkspacePackagesFromGraph,
   HelperDependency,
   readTsConfig,
+  rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
 } from '@nx/js';
 import {
   detectPackageManager,
@@ -108,11 +111,43 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
+            // pnpm re-resolves local-path manifest specifiers on a non-frozen
+            // install, so make them deploy-root-relative before the lockfile
+            // copies them.
+            if (packageManager === 'pnpm') {
+              rewritePrunedLocalPathSpecifiers(
+                packageJson,
+                this.options.projectGraph.nodes[this.options.projectName].data
+                  .root,
+                this.options.root,
+                new Set(
+                  getWorkspacePackagesFromGraph(
+                    this.options.projectGraph
+                  ).keys()
+                )
+              );
+            }
+            // `pruned` flips off when createLockFile falls back to the root
+            // lockfile, whose importer describes the whole workspace: skip the
+            // link: closure validation and local-path shipping for it.
+            let pruned = true;
             const lockFileContent = createLockFile(
               packageJson,
               this.options.projectGraph,
-              packageManager
+              packageManager,
+              {
+                onPruneFallback: () => {
+                  pruned = false;
+                },
+              }
             );
+            if (packageManager === 'pnpm' && pruned) {
+              validatePrunedLocalPathClosure(
+                packageJson,
+                this.options.root,
+                lockFileContent
+              );
+            }
             compilation.emitAsset(
               getLockFileName(packageManager),
               new sources.RawSource(lockFileContent)
@@ -130,7 +165,8 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                   compilation.emitAsset(
                     assetPath,
                     new sources.RawSource(content)
-                  )
+                  ),
+                { includeLocalPathArtifacts: pruned }
               );
             }
           }

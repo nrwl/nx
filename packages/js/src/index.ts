@@ -29,5 +29,6 @@ export { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-works
 export {
   emitPrunedPnpmInstallAssets,
   rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';

@@ -5,6 +5,8 @@ import {
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { createPackageJson } from 'nx/src/plugins/js/package-json/create-package-json';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports
+import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 
 import {
   detectPackageManager,
@@ -26,7 +28,9 @@ import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from 'nx/src/utils/fileutils';
 import {
   type PackageJson,
+  rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
@@ -130,21 +134,45 @@ export function updatePackageJson(
   // update package specific settings
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
+  const packageManager = detectPackageManager(context.root);
+  // pnpm re-resolves local-path manifest specifiers on a non-frozen install, so
+  // make them deploy-root-relative before the manifest is written and the
+  // lockfile copies them.
+  if (options.generateLockfile && packageManager === 'pnpm') {
+    rewritePrunedLocalPathSpecifiers(
+      packageJson,
+      options.projectRoot,
+      context.root,
+      new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+    );
+  }
+
   // save files
   writeJsonFile(`${options.outputPath}/package.json`, packageJson);
 
   if (options.generateLockfile) {
-    const packageManager = detectPackageManager(context.root);
     if (packageManager === 'bun') {
       logger.warn(
         `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
       );
     } else {
+      // `pruned` flips off when createLockFile falls back to the root
+      // lockfile, whose importer describes the whole workspace: skip the
+      // link: closure validation and local-path shipping for it.
+      let pruned = true;
       const lockFile = createLockFile(
         packageJson,
         context.projectGraph,
-        packageManager
+        packageManager,
+        {
+          onPruneFallback: () => {
+            pruned = false;
+          },
+        }
       );
+      if (packageManager === 'pnpm' && pruned) {
+        validatePrunedLocalPathClosure(packageJson, context.root, lockFile);
+      }
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
         lockFile,
@@ -158,7 +186,8 @@ export function updatePackageJson(
         writePrunedPnpmInstallSettings(
           options.outputPath,
           context.root,
-          lockFile
+          lockFile,
+          { includeLocalPathArtifacts: pruned }
         );
       }
     }
