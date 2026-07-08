@@ -23,5 +23,6 @@ export { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 export {
   emitPrunedPnpmInstallAssets,
   rewritePrunedLocalPathSpecifiers,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';
