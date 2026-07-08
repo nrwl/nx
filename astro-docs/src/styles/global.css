@@ -188,6 +188,34 @@ pre {
     flex-direction: column;
   }
 
+  /* Starlight only gives card backgrounds to result titles and nested
+     sub-results. Injected knowledge-base records also emit a top-level
+     excerpt and a meta-tag row; style them to match the card. */
+  #starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-excerpt {
+    position: relative;
+    background-color: var(--sl-color-black);
+    margin-top: 0;
+    padding: var(--sl-search-result-nested-pad-block)
+      var(--sl-search-result-pad-inline-end);
+    padding-inline-start: var(--sl-search-result-pad-inline-start);
+  }
+
+  #starlight__search .pagefind-ui__result-inner > .pagefind-ui__result-tags {
+    padding-inline-start: var(--sl-search-result-pad-inline-start);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  #starlight__search .pagefind-ui__result-tag {
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-2);
+    background-color: var(--sl-color-gray-6);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 999px;
+    padding: 0.0625rem 0.625rem;
+  }
+
   /* Buttons */
   button,
   .button,

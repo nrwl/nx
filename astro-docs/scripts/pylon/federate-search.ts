@@ -92,10 +92,16 @@ function weightFor(record: SearchRecord): number {
 }
 
 function recordHtml(record: SearchRecord): string {
+  let host = 'knowledge base';
+  try {
+    host = new URL(record.url).host;
+  } catch {
+    // keep fallback label
+  }
   return (
     `<!doctype html><html lang="en"><head><title>${escapeHtml(record.title)}</title></head><body>` +
     `<main data-pagefind-body data-pagefind-weight="${weightFor(record)}" ` +
-    `data-pagefind-filter="type:Knowledge Base" data-pagefind-meta="site:Pylon Knowledge Base">` +
+    `data-pagefind-filter="type:Knowledge Base" data-pagefind-meta="site:${escapeHtml(host)}">` +
     `<h1>${escapeHtml(record.title)}</h1>${record.body_html}</main></body></html>`
   );
 }

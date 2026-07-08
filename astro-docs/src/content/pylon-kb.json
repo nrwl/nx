@@ -46,12 +46,12 @@
   "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc": {
     "pylonId": "13cf732b-3b29-4fc1-8a6c-ee723124e33e",
     "slug": "troubleshoot-cache-misses",
-    "url": "",
+    "url": "https://help.nx.app/articles/2042382281-Troubleshoot-Cache-Misses",
     "title": "Troubleshoot Cache Misses",
     "description": "Learn how to diagnose and fix issues when Nx tasks are not being replayed from cache as expected, using project configuration checks and Nx Cloud tools.",
     "docsPath": "/docs/troubleshooting/troubleshoot-cache-misses",
     "contentHash": "0704693d9c39a6daf2f07f65ac030de406e1eb3332b11199c3c5c5ced91e934b",
-    "lastSyncedAt": "2026-07-07T20:02:57.157Z",
-    "published": false
+    "lastSyncedAt": "2026-07-08T14:30:49.444Z",
+    "published": true
   }
 }

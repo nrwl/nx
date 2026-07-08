@@ -24,7 +24,7 @@
     {
       "sourcePath": "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": false
+      "publish": true
     }
   ],
   "extraRedirects": []
