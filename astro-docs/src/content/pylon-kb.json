@@ -119,5 +119,49 @@
     "contentHash": "10aa47560653d4945159f813520ea77750963261f0ff0df8d902b734cd670959",
     "published": true,
     "lastSyncedAt": "2026-07-08T20:40:13.512Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/include-assets-in-build.mdoc": {
+    "pylonId": "9daa8bfa-c0e9-4e72-a719-ffd424720ad5",
+    "slug": "include-assets-in-build",
+    "url": "https://help.nx.app/articles/9290100482-Including-Assets-in-Your-Build",
+    "title": "Including Assets in Your Build",
+    "description": "Learn how to configure Nx executors to include and copy assets into your output bundle using regex patterns or object format for precise control.",
+    "docsPath": "/docs/guides/tips-n-tricks/include-assets-in-build",
+    "contentHash": "b7eb391812487f157ed992903da0140a7a3ea85c1a7020849f8eee13bda5eb69",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:50:10.361Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/browser-support.mdoc": {
+    "pylonId": "c11833dd-2719-4e6c-b381-720875f95a12",
+    "slug": "browser-support",
+    "url": "https://help.nx.app/articles/6610997292-Configuring-Browser-Support",
+    "title": "Configuring Browser Support",
+    "description": "Learn how to configure browser compatibility for your Nx applications using browserslist, optimize bundle size with modern browser targets, and debug your browser support configuration.",
+    "docsPath": "/docs/guides/tips-n-tricks/browser-support",
+    "contentHash": "22099dafa4c1b14dea80e664721e6a017fb88e6cae5035d30dcad637b740e523",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:50:14.565Z"
+  },
+  "src/content/docs/troubleshooting/performance-profiling.mdoc": {
+    "pylonId": "ab7162ae-2652-4ff0-b522-b61a2fee9a3c",
+    "slug": "performance-profiling",
+    "url": "https://help.nx.app/articles/5822676866-Profiling-Performance",
+    "title": "Profiling Performance",
+    "description": "Learn how to profile and optimize Nx task execution performance using Chrome DevTools and environment variables to identify bottlenecks and improve build times.",
+    "docsPath": "/docs/troubleshooting/performance-profiling",
+    "contentHash": "0c593eb872a6660112c545aafa059fd44faaf5d2a98f3fcaec8b7e34490d8606",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:50:23.151Z"
+  },
+  "src/content/docs/troubleshooting/nx-sandbox-unix-sockets.mdoc": {
+    "pylonId": "ecce1a65-4f67-47d1-96ae-ca7fe444ed63",
+    "slug": "nx-sandbox-unix-sockets",
+    "url": "https://help.nx.app/articles/6036594279-Fix-Nx-Commands-Failing-in-Claude-Code-Sandbox",
+    "title": "Fix Nx Commands Failing in Claude Code Sandbox",
+    "description": "Nx commands fail inside Claude Code sandbox because Unix sockets are blocked. Set allowAllUnixSockets to fix daemon, plugin isolation, and forked process errors.",
+    "docsPath": "/docs/troubleshooting/nx-sandbox-unix-sockets",
+    "contentHash": "a7556c264c09a24338f9d4f736e0cefbef4e32461aef15c0bdf52b77f12f5a82",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:50:27.355Z"
   }
 }

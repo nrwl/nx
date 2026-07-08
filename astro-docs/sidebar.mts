@@ -576,14 +576,6 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Profiling performance',
-            link: 'troubleshooting/performance-profiling',
-          },
-          {
-            label: 'Fix Nx in Claude Code sandbox',
-            link: 'troubleshooting/nx-sandbox-unix-sockets',
-          },
-          {
             label: 'Resolve circular dependencies',
             link: 'troubleshooting/resolve-circular-dependencies',
           },
@@ -614,16 +606,8 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/feature-based-testing',
           },
           {
-            label: 'Configuring browser support',
-            link: 'guides/tips-n-tricks/browser-support',
-          },
-          {
             label: 'Define environment variables',
             link: 'guides/tips-n-tricks/define-environment-variables',
-          },
-          {
-            label: 'Including assets in your build',
-            link: 'guides/tips-n-tricks/include-assets-in-build',
           },
           {
             label: 'Keep Nx versions in sync',

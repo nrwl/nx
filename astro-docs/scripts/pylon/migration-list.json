@@ -1,53 +1,23 @@
 {
-  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Entries are the scored migrate-set (support-style, niche, error-driven content); already-migrated articles whose source .mdoc was deleted are removed from this list but stay in src/content/pylon-kb.json, which drives redirects. Kept in docs (broad/evergreen/onboarding): all package-manager workspace guides, keep-nx-versions-in-sync, define-environment-variables, feature-based-testing, advanced-update, browser-support, include-assets-in-build, standalone-to-monorepo, resolve-circular-dependencies, performance-profiling. Borderline resolved 2026-07-08: troubleshoot-nx-install-issues and identify-dependencies-between-folders migrate (graph replaced by static screenshot); nx-sandbox-unix-sockets parked in docs.",
+  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Entries are the scored migrate-set (support-style, niche, error-driven content); already-migrated articles whose source .mdoc was deleted are removed from this list but stay in src/content/pylon-kb.json, which drives redirects. Kept in docs (broad/evergreen/onboarding): all package-manager workspace guides, keep-nx-versions-in-sync, define-environment-variables, feature-based-testing, advanced-update, standalone-to-monorepo, resolve-circular-dependencies, advanced-update. Borderline resolved 2026-07-08: troubleshoot-nx-install-issues and identify-dependencies-between-folders migrate (graph replaced by static screenshot). Litmus flips migrated 2026-07-08: include-assets-in-build, browser-support, performance-profiling, nx-sandbox-unix-sockets.",
   "articles": [
     {
-      "sourcePath": "src/content/docs/troubleshooting/ci-execution-failed.mdoc",
+      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/include-assets-in-build.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": true
     },
     {
-      "sourcePath": "src/content/docs/troubleshooting/console-troubleshooting.mdoc",
+      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/browser-support.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": true
     },
     {
-      "sourcePath": "src/content/docs/troubleshooting/unknown-local-cache.mdoc",
+      "sourcePath": "src/content/docs/troubleshooting/performance-profiling.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": true
     },
     {
-      "sourcePath": "src/content/docs/troubleshooting/troubleshoot-convert-to-inferred.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/analyze-source-files.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/include-all-packagejson.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/yarn-pnp.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/migrate-nx-imports-to-devkit.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/troubleshooting/troubleshoot-nx-install-issues.mdoc",
-      "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
-      "publish": true
-    },
-    {
-      "sourcePath": "src/content/docs/guides/Tips-n-Tricks/identify-dependencies-between-folders.mdoc",
+      "sourcePath": "src/content/docs/troubleshooting/nx-sandbox-unix-sockets.mdoc",
       "collectionId": "bd2e85a6-896a-457f-9540-8bc5a5cb4e8b",
       "publish": true
     }
