@@ -3780,6 +3780,147 @@ snapshots:
       );
     });
 
+    it('backfills a module local-path peer when pnpm did not auto-install it (autoInstallPeers off)', () => {
+      // app -> mylib (workspace dep); mylib peer-depends on a vendored link:
+      // directory and a vendored file: directory. With autoInstallPeers off the
+      // peers are only visible in mylib's manifest: the copied manifest moves
+      // them into dependencies, so the pruned lockfile must carry the matching
+      // snapshot edges and a synthesized directory package for the file: target
+      // (the shapes pnpm itself writes when it auto-installs the peers).
+      vol.fromJSON({
+        '/virtual/libs/mylib/package.json': JSON.stringify({
+          name: 'mylib',
+          version: '1.0.0',
+          peerDependencies: {
+            'linked-peer': 'link:../../vendor/linked-peer',
+            'dir-peer': 'file:../../vendor/dir-peer',
+          },
+        }),
+        '/virtual/vendor/linked-peer/package.json': JSON.stringify({
+          name: 'linked-peer',
+          version: '1.0.0',
+        }),
+        '/virtual/vendor/dir-peer/package.json': JSON.stringify({
+          name: 'dir-peer',
+          version: '1.0.0',
+        }),
+      });
+
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      mylib:
+        specifier: workspace:*
+        version: link:libs/mylib
+
+  libs/mylib: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { mylib: 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [{ projectName: 'mylib', packageName: 'mylib', root: 'libs/mylib' }],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      // mylib's directory package carries the edges pnpm records with
+      // autoInstallPeers on: lockfile-dir-relative file:/link: refs.
+      expect(result).toMatch(
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?linked-peer: link:vendor\/linked-peer/
+      );
+      expect(result).toMatch(
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?dir-peer: file:vendor\/dir-peer/
+      );
+      // The file: peer gets a synthesized directory package entry...
+      expect(result).toContain('dir-peer@file:vendor/dir-peer:');
+      expect(result).toContain(
+        'resolution: {directory: vendor/dir-peer, type: directory}'
+      );
+      // ...while a link: ref needs no package entry.
+      expect(result).not.toContain('linked-peer@');
+    });
+
+    it('backfills a module local-path tarball peer with a tarball package entry', () => {
+      // A file: peer pointing at a packed tarball synthesizes a tarball
+      // resolution instead of a directory one; integrity is optional for a
+      // local tarball, so none is emitted.
+      vol.fromJSON({
+        '/virtual/libs/mylib/package.json': JSON.stringify({
+          name: 'mylib',
+          version: '1.0.0',
+          peerDependencies: {
+            'tarball-peer': 'file:../../vendor/tarball-peer-1.0.0.tgz',
+          },
+        }),
+        '/virtual/vendor/tarball-peer-1.0.0.tgz': 'tarball-bytes',
+      });
+
+      const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: false
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      mylib:
+        specifier: workspace:*
+        version: link:libs/mylib
+
+  libs/mylib: {}`;
+
+      const packageJson = {
+        name: 'test-app',
+        version: '1.0.0',
+        dependencies: { mylib: 'workspace:*' },
+      };
+
+      const graph = makeGraph(
+        [{ projectName: 'mylib', packageName: 'mylib', root: 'libs/mylib' }],
+        {},
+        {}
+      );
+
+      const prunedGraph = pruneProjectGraph(graph, packageJson);
+      const result = stringifyPnpmLockfile(
+        prunedGraph,
+        lockFile,
+        packageJson,
+        '/virtual'
+      );
+
+      expect(result).toMatch(
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?tarball-peer: file:vendor\/tarball-peer-1\.0\.0\.tgz/
+      );
+      expect(result).toContain(
+        'tarball-peer@file:vendor/tarball-peer-1.0.0.tgz:'
+      );
+      expect(result).toContain(
+        'resolution: {tarball: file:vendor/tarball-peer-1.0.0.tgz}'
+      );
+    });
+
     it('drops a name-only patch whose only surviving match is a workspace directory package', () => {
       // A name-only patchedDependencies entry targets a versioned npm package.
       // If that package is pruned out but a workspace module shares its name,

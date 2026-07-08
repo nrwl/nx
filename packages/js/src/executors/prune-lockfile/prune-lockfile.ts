@@ -16,7 +16,7 @@ import {
   type PackageJsonDependencySection,
   rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
-  validatePrunedLinkClosure,
+  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
@@ -71,7 +71,7 @@ export default async function pruneLockfileExecutor(
     // Skip on the root-lockfile fallback: its importer describes the whole
     // workspace, not this app, so validating it would fail the fail-open path.
     if (packageManager === 'pnpm' && pruned) {
-      validatePrunedLinkClosure(packageJson, workspaceRoot, lockFile);
+      validatePrunedLocalPathClosure(packageJson, workspaceRoot, lockFile);
     }
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);

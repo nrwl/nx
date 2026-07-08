@@ -1516,25 +1516,31 @@ export function getPrunedPnpmLocalPathArtifacts(
 }
 
 /**
- * Fails the pruned build when a shipped `link:` target has a required dependency
- * that will not be resolvable in the standalone deploy. `link:` is a symlink, not
- * a packed package: pnpm never installs the linked target's own dependency
- * closure, so a re-homed target resolves its `require`s only from the deploy-root
- * node_modules, i.e. the app's direct dependencies. A required dep of the target
- * that is not a direct (or optional) dependency of the final app manifest would
- * fail at runtime with MODULE_NOT_FOUND, so this throws at build time with the
- * remedy (convert the linked package to a `file:` dependency, which packs a
- * closure, or add the missing dep to the app).
+ * Fails the pruned build when a shipped local-path target has a required
+ * dependency that will not be resolvable in the standalone deploy. Two shapes
+ * are validated:
+ * - a `link:` target: a symlink, not a packed package, so pnpm never installs
+ *   the linked target's own dependency closure.
+ * - a `file:` directory package whose lockfile entry carries no dependency
+ *   edges (a peer backfilled by the pnpm lock-file parser when
+ *   `autoInstallPeers` is off; pnpm never resolved its closure at source).
+ * In both cases the target itself installs, `pnpm install --frozen-lockfile`
+ * exits 0, and the target resolves its `require`s only from the deploy-root
+ * node_modules, i.e. the app's direct dependencies (verified on pnpm 9.15.9).
+ * A required dep of the target that is not a direct (or optional) dependency of
+ * the final app manifest would fail at runtime with MODULE_NOT_FOUND, so this
+ * throws at build time with the remedy.
  *
  * Only a required dep absent from the app's installed direct deps fails. A peer
  * or optional dep of the target, or a required dep present only in the app's
  * devDependencies (a `--prod` install may omit it), warns instead; these are not
  * provably broken. The app's own peerDependencies count as installed: the pruned
  * lockfile's root importer folds them into `dependencies` (mirroring pnpm's
- * autoInstallPeers), so the deploy install provides them. pnpm-only; call sites
- * gate on the package manager.
+ * autoInstallPeers), so the deploy install provides them. A backfilled `file:`
+ * tarball peer's manifest is inside the archive and is not read, so its closure
+ * is not validated. pnpm-only; call sites gate on the package manager.
  */
-export function validatePrunedLinkClosure(
+export function validatePrunedLocalPathClosure(
   packageJson: PackageJson,
   workspaceRootPath: string,
   prunedLockfileContent?: string
@@ -1546,10 +1552,33 @@ export function validatePrunedLinkClosure(
   if (!parsed) {
     return;
   }
-  const linkTargets = collectPrunedLinkTargetDirs(parsed)
-    .map(({ target }) => target)
-    .filter((target) => !localPathEscapesOutput(target));
-  if (linkTargets.length === 0) {
+  const targets = new Map<string, 'link' | 'directory'>();
+  // Copied workspace modules and entries with resolved edges install their
+  // recorded closure and are skipped; a link: target for the same path wins the
+  // kind so the failure message names the sharper cause.
+  for (const [key, entry] of Object.entries(parsed.packages ?? {})) {
+    const directory = entry?.resolution?.directory;
+    if (
+      !directory ||
+      isUnderWorkspaceModules(directory) ||
+      localPathEscapesOutput(directory)
+    ) {
+      continue;
+    }
+    const snapshot = parsed.snapshots?.[key] ?? entry;
+    const hasEdges = LOCKFILE_DEP_SECTIONS.some(
+      (section) => Object.keys(snapshot?.[section] ?? {}).length > 0
+    );
+    if (!hasEdges) {
+      targets.set(normalizePath(directory), 'directory');
+    }
+  }
+  for (const { target } of collectPrunedLinkTargetDirs(parsed)) {
+    if (!localPathEscapesOutput(target)) {
+      targets.set(target, 'link');
+    }
+  }
+  if (targets.size === 0) {
     return;
   }
   const rootInstalled = new Set([
@@ -1560,7 +1589,7 @@ export function validatePrunedLinkClosure(
   const rootDev = new Set(Object.keys(packageJson.devDependencies ?? {}));
   const appName = packageJson.name || 'the app';
 
-  for (const target of linkTargets) {
+  for (const [target, kind] of targets) {
     const manifestPath = join(workspaceRootPath, target, 'package.json');
     if (!existsSync(manifestPath)) {
       continue;
@@ -1571,7 +1600,8 @@ export function validatePrunedLinkClosure(
     } catch {
       continue;
     }
-    const linkName = targetManifest.name || target;
+    const targetName = targetManifest.name || target;
+    const descriptor = kind === 'link' ? 'linked package' : 'local package';
 
     for (const dep of Object.keys(targetManifest.dependencies ?? {})) {
       if (rootInstalled.has(dep)) {
@@ -1579,12 +1609,14 @@ export function validatePrunedLinkClosure(
       }
       if (rootDev.has(dep)) {
         logger.warn(
-          `linked package ${linkName} requires ${dep}, which is only a devDependency of ${appName}; a production (--prod) install of the standalone deploy would omit it.`
+          `${descriptor} ${targetName} requires ${dep}, which is only a devDependency of ${appName}; a production (--prod) install of the standalone deploy would omit it.`
         );
         continue;
       }
       throw new Error(
-        `linked package ${linkName} requires ${dep}, which won't be resolvable in the standalone deploy (link: cannot provide a self-contained dependency closure). Convert ${linkName} to a file: dependency for a self-contained artifact, or add ${dep} to ${appName}'s dependencies.`
+        kind === 'link'
+          ? `linked package ${targetName} requires ${dep}, which won't be resolvable in the standalone deploy (link: cannot provide a self-contained dependency closure). Convert ${targetName} to a file: dependency for a self-contained artifact, or add ${dep} to ${appName}'s dependencies.`
+          : `local package ${targetName} requires ${dep}, which won't be resolvable in the standalone deploy (its dependency closure was never resolved into the pruned lockfile). Declare ${targetName} as a regular dependency of the package that peer-depends on it, enable autoInstallPeers, or add ${dep} to ${appName}'s dependencies.`
       );
     }
 
@@ -1596,7 +1628,7 @@ export function validatePrunedLinkClosure(
         continue;
       }
       logger.warn(
-        `linked package ${linkName} may need ${dep} at runtime, which is not a dependency of ${appName}; add it to ${appName} if the linked package fails to resolve it.`
+        `${descriptor} ${targetName} may need ${dep} at runtime, which is not a dependency of ${appName}; add it to ${appName} if it fails to resolve.`
       );
     }
   }

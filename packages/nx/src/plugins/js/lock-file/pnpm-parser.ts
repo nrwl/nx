@@ -37,7 +37,7 @@ import {
   isLocalPathSpecifier,
 } from './project-graph-pruning';
 import { join } from 'path';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -602,34 +602,47 @@ export function stringifyPnpmLockfile(
 
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
 
-  // A workspace module declared as a peer of another workspace module is not
-  // recorded under the depending importer when pnpm's `autoInstallPeers` is off,
-  // so the lockfile importer alone cannot surface it. copy-workspace-modules
-  // still moves such a peer into the copied module's `dependencies` as a `file:`
-  // spec (pnpm rejects a `file:` spec under peerDependencies), so read the
-  // module manifest to find those siblings and keep the pruned lockfile in sync;
-  // otherwise `pnpm install --frozen-lockfile` aborts with
-  // ERR_PNPM_OUTDATED_LOCKFILE. Cached per module root.
-  const peerSiblingsCache = new Map<string, string[]>();
-  const getWorkspacePeerSiblings = (importerPath: string): string[] => {
-    let siblings = peerSiblingsCache.get(importerPath);
-    if (siblings) {
-      return siblings;
+  // A peer another workspace module declares is not recorded under the
+  // depending importer when pnpm's `autoInstallPeers` is off, so the lockfile
+  // importer alone cannot surface it. copy-workspace-modules still moves such a
+  // peer into the copied module's `dependencies` (pnpm rejects a `file:`/`link:`
+  // spec under peerDependencies), so read the module manifest to find
+  // workspace-module siblings and non-workspace local-path peers and keep the
+  // pruned lockfile in sync; a missing edge installs cleanly but the module
+  // fails at require time with MODULE_NOT_FOUND. Cached per module root.
+  type ManifestPeers = {
+    workspaceSiblings: string[];
+    localPathPeers: Array<[name: string, spec: string]>;
+  };
+  const manifestPeersCache = new Map<string, ManifestPeers>();
+  const getManifestPeers = (importerPath: string): ManifestPeers => {
+    let peers = manifestPeersCache.get(importerPath);
+    if (peers) {
+      return peers;
     }
-    siblings = [];
+    peers = { workspaceSiblings: [], localPathPeers: [] };
     const manifestPath = join(workspaceRoot, importerPath, 'package.json');
     if (existsSync(manifestPath)) {
       try {
         const manifest = JSON.parse(readFileSync(manifestPath, 'utf-8'));
-        siblings = Object.keys(manifest.peerDependencies ?? {}).filter((name) =>
-          workspaceModules.has(name)
-        );
+        for (const [name, spec] of Object.entries(
+          manifest.peerDependencies ?? {}
+        )) {
+          if (workspaceModules.has(name)) {
+            peers.workspaceSiblings.push(name);
+          } else if (
+            typeof spec === 'string' &&
+            (spec.startsWith('file:') || spec.startsWith('link:'))
+          ) {
+            peers.localPathPeers.push([name, spec]);
+          }
+        }
       } catch {
         // Unreadable/malformed manifest: fall back to the lockfile importer only.
       }
     }
-    peerSiblingsCache.set(importerPath, siblings);
-    return siblings;
+    manifestPeersCache.set(importerPath, peers);
+    return peers;
   };
 
   const { snapshot: rootSnapshot, importers: requiredImporters } =
@@ -676,7 +689,7 @@ export function stringifyPnpmLockfile(
     }
     // Peers pnpm did not auto-install are absent from the importer above; pull
     // them from the manifest so their directory package is emitted too.
-    for (const depName of getWorkspacePeerSiblings(importerPath)) {
+    for (const depName of getManifestPeers(importerPath).workspaceSiblings) {
       enqueueWorkspaceModule(depName);
     }
   }
@@ -689,6 +702,9 @@ export function stringifyPnpmLockfile(
   // the modules resolve as file: directory packages, not workspace packages, so
   // no `packages:` workspace file and no importer blocks for them.
   const workspaceModulePackages: PackageSnapshots = {};
+  // `<name>@file:<ws-relative-path>` keys for backfilled file: peers, mapped to
+  // the workspace-relative target path; entries are synthesized after the loop.
+  const localPathPeerEntries = new Map<string, string>();
   for (const [packageName, importerPath] of Object.entries(
     allRequiredImporters
   )) {
@@ -724,14 +740,32 @@ export function stringifyPnpmLockfile(
       snapshot[depType] = resolved;
     }
 
-    // Workspace-module peers pnpm left out of the importer (autoInstallPeers
-    // off) still ship as file: dependencies, matching the copied manifest that
-    // moves a peer-declared workspace module into dependencies.
-    const peerSiblings = getWorkspacePeerSiblings(importerPath);
-    if (peerSiblings.length > 0) {
+    // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
+    // real dependencies, matching the copied manifest that moves every
+    // peer-declared workspace module or local path into dependencies. A
+    // local-path peer gets the same lockfile-dir-relative snapshot edge pnpm
+    // records when it auto-installs the peer; an unshippable target keeps its
+    // spec, matching the copied manifest (copy-workspace-modules already warned).
+    const { workspaceSiblings, localPathPeers } =
+      getManifestPeers(importerPath);
+    if (workspaceSiblings.length > 0 || localPathPeers.length > 0) {
       snapshot.dependencies ??= {};
-      for (const depName of peerSiblings) {
+      for (const depName of workspaceSiblings) {
         snapshot.dependencies[depName] ??= `file:workspace_modules/${depName}`;
+      }
+      for (const [depName, spec] of localPathPeers) {
+        if (snapshot.dependencies[depName]) {
+          continue;
+        }
+        const relocation = relocatePrunedLocalPathSpec(spec, importerPath, '');
+        const ref = relocation?.spec ?? spec;
+        snapshot.dependencies[depName] = ref;
+        if (ref.startsWith('file:') && !relocation?.reason) {
+          localPathPeerEntries.set(
+            `${depName}@${ref}`,
+            ref.slice('file:'.length)
+          );
+        }
       }
     }
 
@@ -740,13 +774,41 @@ export function stringifyPnpmLockfile(
     ] = snapshot;
   }
 
+  // A backfilled file: peer has no package entry to carry (pnpm never resolved
+  // it), so synthesize the entry pnpm itself writes when it auto-installs the
+  // peer: a directory resolution for a directory target, a tarball resolution
+  // for a packed file (integrity is optional for a local tarball). link: refs
+  // need no entry. Entries the prune already carries win.
+  const localPathPeerPackages: PackageSnapshots = {};
+  for (const [key, wsRelativePath] of localPathPeerEntries) {
+    if (key in snapshots || key in workspaceModulePackages) {
+      continue;
+    }
+    let isFile = false;
+    try {
+      isFile = statSync(join(workspaceRoot, wsRelativePath)).isFile();
+    } catch {
+      // Missing target: emit the directory shape; the install surfaces the
+      // missing path either way.
+    }
+    localPathPeerPackages[key] = {
+      resolution: isFile
+        ? { tarball: `file:${wsRelativePath}` }
+        : { directory: wsRelativePath, type: 'directory' },
+    } as PackageSnapshot;
+  }
+
   const output: Lockfile = {
     ...data,
     lockfileVersion,
     importers: {
       '.': rootSnapshot,
     },
-    packages: sortObjectByKeys({ ...snapshots, ...workspaceModulePackages }),
+    packages: sortObjectByKeys({
+      ...snapshots,
+      ...workspaceModulePackages,
+      ...localPathPeerPackages,
+    }),
   };
 
   stripStandaloneLockfileConfig(output);
