@@ -1,5 +1,18 @@
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { readTsConfigPaths, resolvePathsBaseUrl } from './ts-config';
+import { FsTree } from 'nx/src/generators/tree';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'fs';
+import { tmpdir } from 'os';
+import {
+  createTreeParseConfigHost,
+  readTsConfigPaths,
+  resolvePathsBaseUrl,
+} from './ts-config';
 import { join } from 'path';
 
 describe('resolvePathsBaseUrl', () => {
@@ -314,5 +327,59 @@ describe('readTsConfigPaths', () => {
     );
 
     expect(readTsConfigPaths(join(tempFs.tempDir, 'tsconfig.json'))).toBeNull();
+  });
+});
+
+describe('createTreeParseConfigHost', () => {
+  let root: string;
+  let outside: string;
+  let host: ReturnType<typeof createTreeParseConfigHost>;
+
+  beforeEach(() => {
+    root = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-root-')));
+    outside = realpathSync(mkdtempSync(join(tmpdir(), 'tree-host-out-')));
+    host = createTreeParseConfigHost(new FsTree(root, false));
+  });
+
+  afterEach(() => {
+    rmSync(root, { recursive: true, force: true });
+    rmSync(outside, { recursive: true, force: true });
+  });
+
+  it('reads a file resolved outside the workspace root from disk', () => {
+    // A base reached through a pnpm store or link:/file: target lives outside
+    // tree.root; the fs fallback must still read it.
+    const file = join(outside, 'base.json');
+    writeFileSync(file, '{ "compilerOptions": { "strict": true } }');
+
+    expect(host.fileExists(file)).toBe(true);
+    expect(host.readFile(file)).toContain('strict');
+  });
+
+  it('treats an out-of-root directory as a non-file without throwing', () => {
+    // ts.sys gates fileExists/readFile on isFile; a bare existsSync would call
+    // it a file and readFileSync would throw EISDIR (TS5012), which the
+    // extends-failure guard does not catch.
+    const dir = join(outside, 'somedir');
+    mkdirSync(dir);
+
+    expect(host.fileExists(dir)).toBe(false);
+    expect(host.readFile(dir)).toBeUndefined();
+    expect(host.directoryExists(dir)).toBe(true);
+  });
+
+  it('treats an in-root directory as a non-file so an extension-less extends falls through to its .json sibling', () => {
+    // `tree.exists` answers true for a directory; without the `isFile` gate an
+    // extension-less `extends` ("./config") next to a `config/` directory would
+    // resolve to the directory, read as nothing, and drop the base options.
+    mkdirSync(join(root, 'config'));
+    writeFileSync(
+      join(root, 'config.json'),
+      '{ "compilerOptions": { "strict": true } }'
+    );
+
+    expect(host.fileExists(join(root, 'config'))).toBe(false);
+    expect(host.directoryExists(join(root, 'config'))).toBe(true);
+    expect(host.fileExists(join(root, 'config.json'))).toBe(true);
   });
 });
