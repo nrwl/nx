@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import type { AngularCompilation, SourceFileCache } from '../models';
 import { setupCompilationWithAngularCompilation } from './setup-with-angular-compilation';
@@ -103,6 +104,80 @@ describe('setupCompilationWithAngularCompilation', () => {
     );
 
     expect(invalidate).not.toHaveBeenCalled();
+  });
+
+  it('should persist the TS incremental state when a persistent cache path is available', async () => {
+    const compilerOptions: Record<string, unknown> = {};
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions,
+      componentStylesheetBundler: {},
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+    const sourceFileCache = {
+      persistentCachePath: '/root/.angular/cache/22.0.0/app',
+    } as SourceFileCache;
+
+    await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      sourceFileCache,
+      angularCompilation
+    );
+
+    expect(compilerOptions.incremental).toBe(true);
+    expect(compilerOptions.tsBuildInfoFile).toBe(
+      join('/root/.angular/cache/22.0.0/app', '.tsbuildinfo')
+    );
+  });
+
+  it('should respect an explicitly disabled incremental compilation', async () => {
+    const compilerOptions: Record<string, unknown> = { incremental: false };
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions,
+      componentStylesheetBundler: {},
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+    const sourceFileCache = {
+      persistentCachePath: '/root/.angular/cache/22.0.0/app',
+    } as SourceFileCache;
+
+    await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      sourceFileCache,
+      angularCompilation
+    );
+
+    expect(compilerOptions.incremental).toBe(false);
+    expect(compilerOptions.tsBuildInfoFile).toBeUndefined();
+  });
+
+  it('should disable incremental compilation without a persistent cache path', async () => {
+    const compilerOptions: Record<string, unknown> = {};
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions,
+      componentStylesheetBundler: {},
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockResolvedValue({ referencedFiles: [] }),
+    } as unknown as AngularCompilation;
+
+    await setupCompilationWithAngularCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options,
+      undefined,
+      angularCompilation
+    );
+
+    expect(compilerOptions.incremental).toBe(false);
+    expect(compilerOptions.tsBuildInfoFile).toBeUndefined();
   });
 
   // The default tsconfig (isolated modules, legacy decorators, ES2022) with

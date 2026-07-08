@@ -42,6 +42,10 @@ export class SourceFileCache extends Map<string, ts.SourceFile> {
 
   referencedFiles?: readonly string[];
 
+  constructor(readonly persistentCachePath?: string) {
+    super();
+  }
+
   invalidate(files: Iterable<string>): void {
     if (files !== this.modifiedFiles) {
       this.modifiedFiles.clear();

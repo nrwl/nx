@@ -79,6 +79,9 @@ export async function setupCompilation(
       inlineSources: !!options.sourceMap,
       inlineSourceMap: !!options.sourceMap,
       sourceMap: undefined,
+      // Composite emit is unsupported and conflicts with the incremental
+      // state handling; force off like @angular/build.
+      composite: false,
       ...(options.useTsProjectReferences
         ? {
             sourceMap: false,

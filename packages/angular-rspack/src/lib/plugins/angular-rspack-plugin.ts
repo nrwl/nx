@@ -23,6 +23,7 @@ import {
   type RspackPluginInstance,
   sources,
 } from '@rspack/core';
+import { createRequire } from 'node:module';
 import { dirname, join, normalize, resolve } from 'node:path';
 import {
   type I18nOptions,
@@ -38,6 +39,35 @@ import { getStatsOptions } from '../config/config-utils/get-stats-options';
 
 const PLUGIN_NAME = 'AngularRspackPlugin';
 type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
+
+// A project-scoped directory under the Angular CLI cache directory, with an
+// `angular-rspack` leaf so the state never collides with @angular/build's own
+// cache for the same project.
+function getPersistentCachePath(
+  options: NormalizedAngularRspackPluginOptions
+): string | undefined {
+  if (!options.projectName) {
+    return undefined;
+  }
+  // Same default gating as @angular/build's cache options: disk caching is
+  // skipped in CI and in web containers.
+  const ci = process.env['CI'];
+  if (ci === '1' || ci?.toLowerCase() === 'true') {
+    return undefined;
+  }
+  if (process.versions.webcontainer) {
+    return undefined;
+  }
+  const { version } = createRequire(__filename)('@angular/build/package.json');
+  return join(
+    workspaceRoot,
+    '.angular',
+    'cache',
+    version,
+    options.projectName,
+    'angular-rspack'
+  );
+}
 
 export class AngularRspackPlugin implements RspackPluginInstance {
   #_options: NormalizedAngularRspackPluginOptions;
@@ -65,7 +95,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    this.#sourceFileCache = new SourceFileCache();
+    this.#sourceFileCache = new SourceFileCache(
+      getPersistentCachePath(options)
+    );
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         /**

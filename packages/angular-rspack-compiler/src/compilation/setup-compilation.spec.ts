@@ -70,4 +70,16 @@ describe('setupCompilation', () => {
     expect(compilerOptions.sourceMap).toBe(false);
     expect(compilerOptions.isolatedModules).toBe(true);
   });
+
+  it.each([undefined, true])(
+    'should force composite compilation off (useTsProjectReferences: %s)',
+    async (useTsProjectReferences) => {
+      const { compilerOptions } = await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        { ...options, useTsProjectReferences }
+      );
+
+      expect(compilerOptions.composite).toBe(false);
+    }
+  );
 });

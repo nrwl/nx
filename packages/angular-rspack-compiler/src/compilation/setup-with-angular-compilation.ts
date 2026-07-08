@@ -1,4 +1,5 @@
 import type { RsbuildConfig } from '@rsbuild/core';
+import { join } from 'node:path';
 import {
   createAngularCompilation,
   AngularCompilation,
@@ -28,15 +29,30 @@ export async function setupCompilationWithAngularCompilation(
 ) {
   const { rootNames, compilerOptions, componentStylesheetBundler } =
     await setupCompilation(config, options);
+
+  // Persist the TypeScript incremental state to the cache directory when one
+  // is available, matching the esbuild application builder's gating.
+  if (
+    sourceFileCache?.persistentCachePath &&
+    compilerOptions.incremental !== false
+  ) {
+    compilerOptions.incremental = true;
+    compilerOptions.tsBuildInfoFile = join(
+      sourceFileCache.persistentCachePath,
+      '.tsbuildinfo'
+    );
+  } else {
+    compilerOptions.incremental = false;
+  }
+
   angularCompilation ??= await createAngularCompilation(
     !options.aot,
     !options.hasServer,
     false
   );
 
-  // Drop the bundler's cached results for files the watcher reported as
-  // modified so dependent stylesheets get rebuilt; skipped on the initial
-  // build when there's nothing to invalidate.
+  // Drop the bundler's cached results for changed files so dependent
+  // stylesheets get rebuilt; there's nothing to invalidate on the first build.
   if (modifiedFiles) {
     componentStylesheetBundler.invalidate(modifiedFiles);
   }

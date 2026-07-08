@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NormalizedAngularRspackPluginOptions } from '../models';
 import { NG_RSPACK_SYMBOL_NAME, type NgRspackCompilation } from '../models';
 import { AngularRspackPlugin } from './angular-rspack-plugin';
@@ -8,11 +9,13 @@ const {
   setupCompilationMock,
   disposeComponentStylesheetBundlerMock,
   transformerCloseMock,
+  sourceFileCacheCtorMock,
 } = vi.hoisted(() => ({
   buildAndAnalyzeMock: vi.fn(),
   setupCompilationMock: vi.fn(),
   disposeComponentStylesheetBundlerMock: vi.fn(),
   transformerCloseMock: vi.fn(),
+  sourceFileCacheCtorMock: vi.fn(),
 }));
 
 vi.mock('@nx/angular-rspack-compiler', () => ({
@@ -23,9 +26,12 @@ vi.mock('@nx/angular-rspack-compiler', () => ({
     close = transformerCloseMock;
   },
   SourceFileCache: class {
-    typeScriptFileCache = new Map<string, string | Uint8Array>();
+    typeScriptFileCache = new Map<string, unknown>();
     referencedFiles: string[] = [];
     invalidate = vi.fn();
+    constructor(persistentCachePath?: string) {
+      sourceFileCacheCtorMock(persistentCachePath);
+    }
   },
   maxWorkers: () => 1,
   setupCompilationWithAngularCompilation: setupCompilationMock,
@@ -131,6 +137,9 @@ describe('AngularRspackPlugin', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // The persistent cache is disabled when a CI environment is detected;
+    // clear the variable so tests behave the same locally and in CI.
+    vi.stubEnv('CI', '');
     transformerCloseMock.mockResolvedValue(undefined);
     disposeComponentStylesheetBundlerMock.mockResolvedValue(undefined);
     buildAndAnalyzeMock.mockResolvedValue(undefined);
@@ -140,6 +149,10 @@ describe('AngularRspackPlugin', () => {
       collectedStylesheetMetafileInputs: [],
       useTypeScriptTranspilation: true,
     });
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   function applyPlugin() {
@@ -293,6 +306,59 @@ describe('AngularRspackPlugin', () => {
 
     expect(transformerCloseMock).toHaveBeenCalled();
     expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
+  });
+
+  it('should use a persistent cache path scoped to the project', () => {
+    new AngularRspackPlugin({ ...options, projectName: 'app' });
+
+    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(
+      expect.stringContaining(join('.angular', 'cache'))
+    );
+    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(
+      expect.stringContaining(join('app', 'angular-rspack'))
+    );
+  });
+
+  it('should not use a persistent cache path without a project name', () => {
+    new AngularRspackPlugin(options);
+
+    expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(undefined);
+  });
+
+  it.each(['1', 'true', 'TRUE'])(
+    'should not use a persistent cache path when CI is "%s"',
+    (ci) => {
+      vi.stubEnv('CI', ci);
+
+      new AngularRspackPlugin({ ...options, projectName: 'app' });
+
+      expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(undefined);
+    }
+  );
+
+  it.each(['0', 'false'])(
+    'should keep the persistent cache path when CI is "%s"',
+    (ci) => {
+      vi.stubEnv('CI', ci);
+
+      new AngularRspackPlugin({ ...options, projectName: 'app' });
+
+      expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(
+        expect.stringContaining(join('.angular', 'cache'))
+      );
+    }
+  );
+
+  it('should not use a persistent cache path in a web container', () => {
+    const versions = process.versions as { webcontainer?: string };
+    versions.webcontainer = '1.0.0';
+    try {
+      new AngularRspackPlugin({ ...options, projectName: 'app' });
+
+      expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(undefined);
+    } finally {
+      delete versions.webcontainer;
+    }
   });
 
   it('should expose the TypeScript transpilation mode and stylesheet metafile inputs to the loaders', async () => {
