@@ -14,6 +14,7 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
     const {
       javascriptTransformer,
       typescriptFileCache,
+      babelFileCache,
       angularCompilationFailed,
     } = (this._compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME]();
 
@@ -70,13 +71,16 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
       return;
     }
 
+    const cachedTransform = babelFileCache.get(normalizedRequest);
+    if (cachedTransform !== undefined) {
+      callback(null, cachedTransform);
+      return;
+    }
+
     javascriptTransformer.transformFile(request, false, false).then(
       (contents) => {
         const transformedCode = Buffer.from(contents).toString('utf8');
-        typescriptFileCache.set(normalizedRequest, {
-          code: transformedCode,
-          map: undefined,
-        });
+        babelFileCache.set(normalizedRequest, transformedCode);
         callback(null, transformedCode);
       },
       (error) => {

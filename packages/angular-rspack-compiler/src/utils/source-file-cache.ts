@@ -40,6 +40,13 @@ export class SourceFileCache extends Map<string, ts.SourceFile> {
    */
   readonly typeScriptFileCache = new Map<string, string | TransformedSource>();
 
+  /**
+   * JavaScript transformer output for files outside the Angular compilation
+   * (e.g. package code), keyed by {@link toTypeScriptFileCacheKey}. These are
+   * never re-emitted, so modifying a file must evict its entry.
+   */
+  readonly babelFileCache = new Map<string, string>();
+
   referencedFiles?: readonly string[];
 
   constructor(readonly persistentCachePath?: string) {
@@ -51,6 +58,8 @@ export class SourceFileCache extends Map<string, ts.SourceFile> {
       this.modifiedFiles.clear();
     }
     for (let file of files) {
+      this.babelFileCache.delete(toTypeScriptFileCacheKey(file));
+
       file = path.normalize(file);
 
       // Normalize separators to allow matching TypeScript Host paths
@@ -60,6 +69,18 @@ export class SourceFileCache extends Map<string, ts.SourceFile> {
 
       this.delete(file);
       this.modifiedFiles.add(file);
+    }
+  }
+
+  /**
+   * Drops output cached for files deleted from disk. Modified files don't
+   * need this for emitted output: their next emit overwrites the entry.
+   */
+  prune(removedFiles: Iterable<string>): void {
+    for (const file of removedFiles) {
+      const key = toTypeScriptFileCacheKey(file);
+      this.typeScriptFileCache.delete(key);
+      this.babelFileCache.delete(key);
     }
   }
 }

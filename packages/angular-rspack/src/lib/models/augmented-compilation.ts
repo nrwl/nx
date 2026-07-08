@@ -10,6 +10,7 @@ export const NG_RSPACK_SYMBOL_NAME = 'NG_RSPACK_BUILD';
 export type NG_RSPACK_COMPILATION_STATE = {
   javascriptTransformer: JavaScriptTransformer;
   typescriptFileCache: SourceFileCache['typeScriptFileCache'];
+  babelFileCache: SourceFileCache['babelFileCache'];
   // Mirrors @angular/build: false means Angular emitted transformed
   // TypeScript and the bundler transpiles it (fast path).
   useTypeScriptTranspilation: boolean;

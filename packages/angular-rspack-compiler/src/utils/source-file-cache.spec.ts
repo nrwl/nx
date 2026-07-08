@@ -36,6 +36,57 @@ describe('SourceFileCache', () => {
     ).toBe('raw emit');
   });
 
+  it('should evict transformed package code on invalidate', () => {
+    const cache = new SourceFileCache();
+    cache.babelFileCache.set(
+      toTypeScriptFileCacheKey('/root/dist/lib/index.mjs'),
+      'transformed'
+    );
+
+    cache.invalidate(['/root/dist/lib/index.mjs']);
+
+    // Files outside the Angular compilation are never re-emitted, so a
+    // modification must drop the cached transform.
+    expect(
+      cache.babelFileCache.has(
+        toTypeScriptFileCacheKey('/root/dist/lib/index.mjs')
+      )
+    ).toBe(false);
+  });
+
+  it('should evict emitted output for removed files on prune', () => {
+    const cache = new SourceFileCache();
+    cache.typeScriptFileCache.set(
+      toTypeScriptFileCacheKey('/root/src/removed.ts'),
+      'raw emit'
+    );
+    cache.typeScriptFileCache.set(
+      toTypeScriptFileCacheKey('/root/src/kept.ts'),
+      'raw emit'
+    );
+    cache.babelFileCache.set(
+      toTypeScriptFileCacheKey('/root/src/removed.ts'),
+      'transformed'
+    );
+
+    cache.prune(['/root/src/removed.ts']);
+
+    expect(
+      cache.babelFileCache.has(toTypeScriptFileCacheKey('/root/src/removed.ts'))
+    ).toBe(false);
+
+    expect(
+      cache.typeScriptFileCache.has(
+        toTypeScriptFileCacheKey('/root/src/removed.ts')
+      )
+    ).toBe(false);
+    expect(
+      cache.typeScriptFileCache.has(
+        toTypeScriptFileCacheKey('/root/src/kept.ts')
+      )
+    ).toBe(true);
+  });
+
   it('should strip the Windows drive letter from cache keys', () => {
     expect(toTypeScriptFileCacheKey('C:/root/src/main.ts')).toBe(
       normalize('/root/src/main.ts')

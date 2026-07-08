@@ -10,12 +10,17 @@ const {
   disposeComponentStylesheetBundlerMock,
   transformerCloseMock,
   sourceFileCacheCtorMock,
+  sourceFileCacheInstances,
 } = vi.hoisted(() => ({
   buildAndAnalyzeMock: vi.fn(),
   setupCompilationMock: vi.fn(),
   disposeComponentStylesheetBundlerMock: vi.fn(),
   transformerCloseMock: vi.fn(),
   sourceFileCacheCtorMock: vi.fn(),
+  sourceFileCacheInstances: [] as Array<{
+    invalidate: ReturnType<typeof vi.fn>;
+    prune: ReturnType<typeof vi.fn>;
+  }>,
 }));
 
 vi.mock('@nx/angular-rspack-compiler', () => ({
@@ -27,10 +32,13 @@ vi.mock('@nx/angular-rspack-compiler', () => ({
   },
   SourceFileCache: class {
     typeScriptFileCache = new Map<string, unknown>();
+    babelFileCache = new Map<string, string>();
     referencedFiles: string[] = [];
     invalidate = vi.fn();
+    prune = vi.fn();
     constructor(persistentCachePath?: string) {
       sourceFileCacheCtorMock(persistentCachePath);
+      sourceFileCacheInstances.push(this);
     }
   },
   maxWorkers: () => 1,
@@ -361,6 +369,39 @@ describe('AngularRspackPlugin', () => {
     }
   });
 
+  it('should invalidate modified and removed files and prune removed files on rebuilds', async () => {
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin(options);
+    plugin.apply(compiler as never);
+
+    // first watch build initializes the compilation
+    await fireAsyncTaps(compiler.hooks.watchRun, compiler);
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    (compiler as { watching?: unknown }).watching = {
+      compiler: {
+        modifiedFiles: new Set(['/root/src/modified.ts']),
+        removedFiles: new Set(['/root/src/removed.ts']),
+      },
+    };
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+
+    const sourceFileCache = sourceFileCacheInstances.at(-1)!;
+    expect(sourceFileCache.invalidate).toHaveBeenCalledWith(
+      new Set(['/root/src/modified.ts', '/root/src/removed.ts'])
+    );
+    expect(sourceFileCache.prune).toHaveBeenCalledWith(
+      new Set(['/root/src/removed.ts'])
+    );
+    expect(setupCompilationMock).toHaveBeenLastCalledWith(
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      new Set(['/root/src/modified.ts', '/root/src/removed.ts'])
+    );
+  });
+
   it('should expose the TypeScript transpilation mode and stylesheet metafile inputs to the loaders', async () => {
     setupCompilationMock.mockResolvedValue({
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
@@ -416,6 +457,7 @@ describe('AngularRspackPlugin', () => {
     (compiler as { watching?: unknown }).watching = {
       compiler: {
         modifiedFiles: new Set(['/root/src/app/app.component.ts']),
+        removedFiles: new Set<string>(),
       },
     };
     await fireAsyncTaps(compiler.hooks.beforeCompile, {});

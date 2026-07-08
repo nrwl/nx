@@ -7,6 +7,7 @@ import { default as angularPartialTransformLoader } from './angular-partial-tran
 describe('angular-partial-transform.loader', () => {
   const callback = vi.fn();
   const typescriptFileCache = new Map<string, string | TransformedSource>();
+  const babelFileCache = new Map<string, string>();
   const transformFile = vi.fn();
   const transformData = vi.fn();
   const makeCompilation = (angularCompilationFailed = false) =>
@@ -14,6 +15,7 @@ describe('angular-partial-transform.loader', () => {
       [NG_RSPACK_SYMBOL_NAME]: () => ({
         javascriptTransformer: { transformFile, transformData },
         typescriptFileCache,
+        babelFileCache,
         angularCompilationFailed,
       }),
     }) as unknown as NgRspackCompilation;
@@ -25,6 +27,7 @@ describe('angular-partial-transform.loader', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     typescriptFileCache.clear();
+    babelFileCache.clear();
   });
 
   it('should return content when NG_RSPACK_SYMBOL_NAME is undefined', () => {
@@ -62,13 +65,28 @@ describe('angular-partial-transform.loader', () => {
     await vi.waitFor(() =>
       expect(callback).toHaveBeenCalledWith(null, 'transformed')
     );
-    expect(typescriptFileCache.get('/path/to/file.js')).toEqual({
-      code: 'transformed',
-      map: undefined,
-    });
+    expect(babelFileCache.get('/path/to/file.js')).toBe('transformed');
+    expect(typescriptFileCache.has('/path/to/file.js')).toBe(false);
   });
 
-  it('should serve a previously transformed entry without re-transforming', () => {
+  it('should serve a previously transformed file without re-transforming', () => {
+    babelFileCache.set('/path/to/file.js', 'transformed');
+
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: '/path/to/file.js',
+      },
+      '@angular content'
+    );
+
+    expect(callback).toHaveBeenCalledWith(null, 'transformed');
+    expect(transformFile).not.toHaveBeenCalled();
+    expect(transformData).not.toHaveBeenCalled();
+  });
+
+  it('should serve a transformed emit entry without re-transforming', () => {
     typescriptFileCache.set('/path/to/file.js', {
       code: 'transformed',
       map: undefined,

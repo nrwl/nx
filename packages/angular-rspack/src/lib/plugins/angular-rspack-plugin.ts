@@ -155,14 +155,21 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           compiler.hooks.beforeCompile.tapAsync(
             PLUGIN_NAME,
             async (params, callback) => {
-              const watchingModifiedFiles = compiler.watching?.compiler
-                ?.modifiedFiles
-                ? new Set(compiler.watching.compiler.modifiedFiles)
-                : new Set<string>();
+              const watchingCompiler = compiler.watching?.compiler;
+              const watchingModifiedFiles = new Set(
+                watchingCompiler?.modifiedFiles
+              );
+              const removedFiles = new Set(watchingCompiler?.removedFiles);
+              // Removed files invalidate the compilation like modified ones.
+              const changedFiles = new Set([
+                ...watchingModifiedFiles,
+                ...removedFiles,
+              ]);
 
               if (this.#angularCompilation) {
-                this.#sourceFileCache.invalidate(watchingModifiedFiles);
-                for (const file of watchingModifiedFiles) {
+                this.#sourceFileCache.invalidate(changedFiles);
+                this.#sourceFileCache.prune(removedFiles);
+                for (const file of changedFiles) {
                   // Inline styles are keyed `<file>?class=...`; drop those
                   // along with the file's own entry.
                   for (const key of this.#stylesheetMetafileInputsBySource.keys()) {
@@ -175,9 +182,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               await this.setupCompilation(
                 root,
                 compiler.options.resolve.tsConfig,
-                watchingModifiedFiles.size > 0
-                  ? watchingModifiedFiles
-                  : undefined,
+                changedFiles.size > 0 ? changedFiles : undefined,
                 true
               );
 
@@ -438,11 +443,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     );
 
-    // Failed builds skip the done hook (afterSeal fails the seal), so release
-    // the esbuild service here too. The JavaScriptTransformer is closed only
-    // on shutdown (like @angular/build's onDispose): a per-build close would
-    // tear down its worker pool on every watch rebuild. Runs on close for
-    // both one-shot and watch; both teardowns are idempotent.
+    // Failed builds skip the done hook, so release the esbuild service here
+    // too. The transformer closes only on shutdown: a per-build close would
+    // tear down its worker pool on every watch rebuild. Both are idempotent.
     compiler.hooks.shutdown.tapAsync(
       `${PLUGIN_NAME}_cleanup`,
       async (callback) => {
@@ -475,6 +478,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         javascriptTransformer: this
           .#javascriptTransformer as unknown as JavaScriptTransformer,
         typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
+        babelFileCache: this.#sourceFileCache.babelFileCache,
         useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
         angularCompilationFailed:
           this.#initializationError !== undefined ||
