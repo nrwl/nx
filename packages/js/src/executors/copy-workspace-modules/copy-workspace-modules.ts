@@ -215,8 +215,10 @@ function handleWorkspaceModules(
           processModule(depName);
           continue;
         }
-        // A non-workspace file:/link: dep must resolve from the copied module's
-        // new location, so relocate it (pnpm-only; see isPnpmWorkspace).
+        // A non-workspace file:/link: dep must keep resolving after the module
+        // moves. pnpm reads a non-importer manifest file: spec relative to the
+        // package dir but a link: spec relative to the install root, so each
+        // rebases onto a different base (pnpm-only; see isPnpmWorkspace).
         if (!isPnpmWorkspace) {
           continue;
         }
@@ -224,7 +226,7 @@ function handleWorkspaceModules(
         const relocation = relocatePrunedLocalPathSpec(
           spec,
           moduleWsRelativeRoot,
-          `workspace_modules/${pkgName}`
+          spec.startsWith('link:') ? '' : `workspace_modules/${pkgName}`
         );
         if (!relocation) {
           continue;
