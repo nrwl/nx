@@ -6,9 +6,19 @@ sidebar:
   label: Nx vs Bazel
 ---
 
-[Bazel](https://bazel.build/) is the open-source version of Google's internal build system, and at what it was designed for, hermetic, reproducible builds across billions of lines of polyglot code, it has no equal. Its action-level caching and remote execution are the most rigorous in the industry. The question for most teams isn't whether Bazel is capable; it's whether the cost matches the problem. Adopting Bazel means writing and maintaining `BUILD` files for every package, enforcing hermeticity discipline across the codebase, and staffing the migration: Airbnb's web adoption took a dedicated team over three years, and Aspect, the main vendor behind Bazel's JS support, estimates ongoing maintenance at [0.75 to 1 full-time build engineer](https://blog.aspect.build/estimating-bazel-cicd).
+Bazel gives you the most rigorous caching and remote execution there is. It also asks for a migration measured in years and a standing build team. Nx targets the same CI wins on the tooling you already run, adopted incrementally.
 
-Nx targets the same CI outcomes, caching, affected detection, distribution, from the opposite direction: it layers onto the tooling you already run. `nx init` works on an existing repository, your `package.json` scripts and Gradle builds keep working, and adoption is incremental rather than a migration project.
+## What is Nx?
+
+Nx is a build system that orchestrates the tools you already use. Plugins configure tasks from your existing configs, caching works locally and remotely, `nx affected` runs only what your change touches, and Nx Cloud distributes tasks across CI machines. It spans JS/TS, JVM, .NET, and more in one graph.
+
+## What is Bazel?
+
+Bazel is the open-source version of Google's internal build system, built for hermetic, reproducible builds across large polyglot codebases. It caches and distributes at the level of individual build actions with strong correctness guarantees, and requires explicit `BUILD` files describing every target.
+
+## Quick takeaway
+
+Bazel wins on caching rigor, remote execution granularity, hermeticity, and build-level visibility, and heavily polyglot organizations at massive scale need exactly that. For most teams the deciding factor is cost. Bazel is a migration project plus ongoing upkeep, which Aspect, the main vendor behind Bazel's JS support, estimates at [0.75 to 1 full-time build engineer](https://blog.aspect.build/estimating-bazel-cicd), while Nx adopts in place on your existing scripts and configs. Nx also carries a tooling layer, generators, migrations, release, and AI-assisted CI, that Bazel has no native answer for.
 
 | Topic                                         | Nx                                                       | Bazel                                                         |
 | --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
@@ -19,13 +29,13 @@ Nx targets the same CI outcomes, caching, affected detection, distribution, from
 | [Polyglot support](#polyglot-support)         | JS/TS native, plugins for Gradle, Maven, .NET            | First-class C++, Java, Go, Rust, Python                       |
 | [Module boundaries](#module-boundaries)       | Tag-based lint rule plus conformance rules               | Native per-target visibility, enforced at build time          |
 | [Affected detection](#affected-detection)     | `nx affected` built in                                   | `bazel query` scripting or target-determinator, DIY           |
-| [Tooling layer](#tooling-layer)               | Generators, migrations, release, TUI, Nx Console, AI     | Not provided; assembled from third-party pieces               |
+| [Tooling layer](#tooling-layer)               | Generators, migrations, release, TUI, Nx Console, AI     | Not provided, assembled from third-party pieces               |
 
 ## Adoption
 
 Bazel requires the build to be described up front: a `BUILD` file per package with declared inputs, plus the hermeticity work of breaking undeclared dependencies. Generators like Gazelle and `aspect configure` automate part of it, but at scale the pre-work is real; [Airbnb's web migration](https://medium.com/airbnb-engineering/adopting-bazel-for-web-at-scale-a784b2dbe325) involved `BUILD` files for roughly a thousand top-level directories, custom generation tooling, and repo-wide dependency-cycle cleanup. There is no supported incremental path: a dependency chain converts fully before caching pays off.
 
-Nx adopts in place. Existing scripts run unchanged, [plugins infer tasks](/docs/concepts/inferred-tasks) from the tool configs you already have, and caching starts paying off per task as you opt tasks in. See [adding Nx to an existing project](/docs/guides/adopting-nx/adding-to-existing-project).
+Nx adopts in place. Existing scripts run unchanged, [plugins automatically configure tasks](/docs/concepts/inferred-tasks) from the tool configs you already have, and caching starts paying off per task as you opt tasks in. See [adding Nx to an existing project](/docs/guides/adopting-nx/adding-to-existing-project).
 
 ## Caching
 
@@ -41,13 +51,13 @@ Bazel's remote execution ships individual actions to worker fleets over the open
 
 ## JavaScript ecosystem
 
-Bazel's JavaScript story depends on `rules_js` and `rules_ts`, actively maintained but by a single seed-stage vendor (Aspect), after Google stopped supporting the original `rules_nodejs`. The rules require pnpm with hoisting disabled, put `node_modules` inside `bazel-out`, and have no first-party Vitest ruleset; dev servers run through wrapper tooling. Google's own Angular team shipped Bazel support in the CLI and then [retracted it](https://dev.to/bazel/angular-bazel-leaving-angular-labs-51ja), concluding most Angular applications don't have the problem Bazel solves.
+Bazel's JavaScript story depends on `rules_js` and `rules_ts`, actively maintained but by a single seed-stage vendor (Aspect), after Google stopped supporting the original `rules_nodejs`. The rules require pnpm with hoisting disabled, put `node_modules` inside `bazel-out`, and have no first-party Vitest ruleset, and dev servers run through wrapper tooling. Google's own Angular team shipped Bazel support in the CLI and then [retracted it](https://dev.to/bazel/angular-bazel-leaving-angular-labs-51ja), concluding most Angular applications don't have the problem Bazel solves.
 
 Nx grew up in the JS ecosystem: first-party plugins for Vite, Jest, Vitest, Next.js, Playwright, Storybook, and the rest, with dev servers, HMR, and framework upgrades handled through [automated migrations](/docs/features/automate-updating-dependencies).
 
 ## Polyglot support
 
-Bazel treats C++, Java, Go, Rust, and Python as first-class citizens with mature rulesets, which is why heavily polyglot organizations at large scale reach for it. Polyglot coverage in Nx is younger and plugin-based: [`@nx/gradle`](/docs/technologies/java/gradle/introduction), Maven, and .NET plugins parse those builds into the graph, with community plugins for Python, Rust, and Go. For a JVM-and-JS repository the coverage is comparable; for a C++-heavy one, Bazel is ahead.
+Bazel treats C++, Java, Go, Rust, and Python as first-class citizens with mature rulesets, which is why heavily polyglot organizations at large scale reach for it. Polyglot coverage in Nx is younger and plugin-based: [`@nx/gradle`](/docs/technologies/java/gradle/introduction), Maven, and .NET plugins parse those builds into the graph, with community plugins for Python, Rust, and Go. For a JVM-and-JS repository the coverage is comparable. For a C++-heavy one, Bazel is ahead.
 
 ## Module boundaries
 
@@ -61,10 +71,26 @@ Credit where due: Bazel's per-target `visibility` is stronger enforcement than a
 
 Above the build sits everything else a monorepo team touches daily, and here the gap runs the other way. Nx ships [code generators](/docs/features/generate-code), [automated dependency migrations](/docs/features/automate-updating-dependencies), [release management](/docs/features/manage-releases), a terminal UI, [Nx Console](/docs/getting-started/editor-setup) for VS Code and JetBrains, and AI integration through the [MCP server](/docs/reference/nx-mcp) and agent skills. Bazel provides none of these natively; JetBrains now maintains a solid IntelliJ plugin, and the rest is assembled from third-party or internal tooling.
 
-## When Bazel is the right call
+## Who should pick which
 
-An organization with a thousand-plus engineers, a heavily C++/Go/Java/Rust codebase, strict reproducibility or compliance requirements, and a funded build team gets value from Bazel that nothing else provides. If that doesn't describe your team, the recurring community experience is that migration and maintenance costs land without the payoff. Some teams split the difference, running Nx for the JS/TS side alongside Bazel for backend systems, since Nx adopts incrementally, that coexistence is cheap to try.
+Nx fits when any of these apply:
 
-{% aside type="tip" title="Ready to try Nx?" %}
-See [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project) for setup instructions.
-{% /aside %}
+- You want caching, affected detection, and distribution without a migration project.
+- Your stack is JS/TS-first, or mixes JavaScript with Gradle, Maven, or .NET.
+- You want generators, automated migrations, release management, and AI-assisted CI in one tool.
+- Your team can't dedicate engineers to running a build system.
+
+Bazel fits when any of these apply:
+
+- You run a large, heavily polyglot codebase across C++, Go, Java, and Rust.
+- Strict hermeticity, reproducibility, or compliance is a hard requirement.
+- You have a funded build team to own the migration and ongoing maintenance.
+
+Some teams run both, Nx for the JS/TS side and Bazel for backend systems. Because Nx adopts incrementally, that coexistence is cheap to try.
+
+## Resources
+
+{% cards cols=2 %}
+{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
+{% card title="Nx plugin registry" description="First-party and community plugins across languages and frameworks" url="/docs/plugin-registry" /%}
+{% /cards %}

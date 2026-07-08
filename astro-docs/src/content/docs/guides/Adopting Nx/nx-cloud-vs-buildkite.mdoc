@@ -6,14 +6,24 @@ sidebar:
   label: Nx Cloud vs Buildkite
 ---
 
-[Buildkite](https://buildkite.com/) is a CI/CD platform: a hosted control plane that orchestrates pipelines while the agents run on your own infrastructure (or Buildkite-hosted machines). Adopting it means migrating your CI. Nx Cloud is not a CI platform. It layers [remote caching](/docs/features/ci-features/remote-cache), [affected detection](/docs/features/ci-features/affected), and [distributed execution](/docs/features/ci-features/distribute-task-execution) onto whatever CI you already run, Buildkite included. Buildkite even maintains an official [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/) that wires up `nx affected` base commits, so the two are used together in the wild.
+Buildkite is a CI platform you migrate to. Nx Cloud is a task-graph layer that runs on any CI, Buildkite included, adding caching, affected detection, and distribution without a migration.
 
-The comparison matters where the products overlap: monorepo awareness, test splitting, flaky test handling, and how work spreads across machines.
+## What is Nx Cloud?
+
+Nx Cloud is the CI layer for Nx workspaces. On top of whatever CI provider you already run, it adds remote caching, task distribution across machines, e2e test splitting, flaky-task handling, and self-healing CI.
+
+## What is Buildkite?
+
+Buildkite is a CI/CD platform with a hosted control plane and agents that run on your own infrastructure. It includes Test Engine for test analytics and splitting, package registries, and scales to very high job concurrency.
+
+## Quick takeaway
+
+Buildkite and Nx Cloud aren't alternatives. They sit at different layers. Buildkite replaces your CI platform: you move pipelines onto it, and its hybrid model keeps source code on agents you operate. Nx Cloud replaces nothing, adding task-graph intelligence, caching, affected detection, and distribution, to whatever CI you run. They overlap only on monorepo awareness, test splitting, and how work spreads across machines, and Buildkite itself ships an [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/), a sign the two are already used together.
 
 | Topic                                                             | Nx Cloud                                            | Buildkite                                                     |
 | ----------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------- |
 | [Model](#model)                                                   | Task-graph layer on your existing CI                | CI platform with hybrid control plane + your agents           |
-| [Remote caching](#remote-caching)                                 | Nx Replay, content-addressed, shared with local dev | None; hosted-agent cache volumes are best-effort local disks  |
+| [Remote caching](#remote-caching)                                 | Nx Replay, content-addressed, shared with local dev | None, hosted-agent cache volumes are best-effort local disks  |
 | [Affected detection](#affected-detection)                         | Transitive, from the project graph                  | `monorepo-diff` plugin, folder-path matching                  |
 | [Distribution](#distribution)                                     | Task-level Nx Agents, dynamically balanced          | Job-level `parallelism`, declared manually                    |
 | [Test splitting and flaky tests](#test-splitting-and-flaky-tests) | Atomizer per-file tasks, task-level flaky re-runs   | Test Engine: per-test splitting and quarantine via collectors |
@@ -39,13 +49,13 @@ Buildkite's monorepo answer is the `monorepo-diff` plugin: watch folder paths, t
 
 ## Distribution
 
-Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand; the control plane schedules jobs, not tasks. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
+Buildkite parallelism is declared per job (`parallelism: N`) and maintained by hand. The control plane schedules jobs, not tasks. [Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute individual tasks from the graph across machines, ordering them by task dependencies and balancing from historical timing data, with no static assignments to maintain as the workspace grows.
 
 ## Test splitting and flaky tests
 
 Buildkite Test Engine is a mature test observability product: per-framework collectors feed timing data to the `bktec` CLI for splitting, and flaky management can auto-label, quarantine (mute or skip a single test), notify, and auto-restore tests. Its per-test granularity goes further than Nx in one respect: you can quarantine one test case. It requires instrumenting each runner with a collector SDK, and split plans live in pipeline YAML.
 
-Nx works at the task level with no runner SDKs. [Atomizer](/docs/features/ci-features/split-e2e-tasks) turns an e2e suite into per-file tasks through the plugin-inferred task graph, and each split task is independently cacheable and distributable. [Flaky task detection](/docs/features/ci-features/flaky-tasks) spots nondeterministic tasks from history and retries them on a different agent automatically.
+Nx works at the task level with no runner SDKs. [Atomizer](/docs/features/ci-features/split-e2e-tasks) turns an e2e suite into per-file tasks through the plugin-configured task graph, and each split task is independently cacheable and distributable. [Flaky task detection](/docs/features/ci-features/flaky-tasks) spots nondeterministic tasks from history and retries them on a different agent automatically.
 
 ## AI integration
 
@@ -53,10 +63,25 @@ Buildkite ships agentic building blocks: a remote MCP server, model providers fo
 
 Nx Cloud ships the finished loop: [self-healing CI](/docs/features/ci-features/self-healing-ci) analyzes failed tasks, proposes a fix, verifies it, and posts it to the PR, and the [Nx MCP server](/docs/reference/nx-mcp) gives local coding agents the same workspace and CI context.
 
-## When Buildkite is the right call
+## Who should pick which
 
-If you're replacing your CI platform and need code to stay on your own infrastructure at very large scale, Buildkite is one of the strongest options available, and pairing it with a build graph is how its flagship customers run monorepos. That pairing is the point: Buildkite provides the compute fabric and pipeline orchestration; it does not provide a dependency graph, a task cache, or affected detection. Teams with an Nx workspace on Buildkite keep their pipelines and add Nx Cloud on top, using `nx-set-shas` for affected bases and Nx Agents for distribution.
+Nx Cloud fits when any of these apply:
 
-{% aside type="tip" title="Set up Nx Cloud" %}
-See [CI features](/docs/features/ci-features) for what Nx Cloud adds to an existing pipeline, and [CI setup](/docs/getting-started/setup-ci) to connect a workspace.
-{% /aside %}
+- You want to keep your current CI provider and optimize a monorepo without a migration.
+- You need build-graph-aware distribution, remote task caching, or affected detection.
+- You want e2e splitting, flaky-task handling, or self-healing CI.
+
+Buildkite fits when any of these apply:
+
+- You're replacing your CI platform outright, not layering onto an existing one.
+- Code must stay on your own infrastructure at very high job concurrency.
+- You want a single platform spanning pipelines, test analytics, and package registries.
+
+Many teams run both: Buildkite as the CI platform, Nx Cloud for graph-aware caching and distribution on its agents.
+
+## Resources
+
+{% cards cols=2 %}
+{% card title="Nx Cloud CI features" description="Remote caching, distribution, splitting, and self-healing CI" url="/docs/features/ci-features" /%}
+{% card title="Connect your CI" description="Add Nx Cloud to an existing pipeline" url="/docs/getting-started/setup-ci" /%}
+{% /cards %}

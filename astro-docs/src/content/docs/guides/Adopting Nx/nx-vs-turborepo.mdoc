@@ -16,20 +16,20 @@ All benchmarks on this page use the same [pnpm workspace](https://github.com/mee
 
 This page starts with the basics, like onboarding, and progressively moves into more advanced capabilities.
 
-| Topic                                           | Nx                                                                | Turborepo                                                 |
-| ----------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
-| [Onboarding](#onboarding)                       | Zero-config or guided `nx init`                                   | Manual `turbo.json` configuration                         |
-| [Running tasks](#running-tasks)                 | Runs `package.json` scripts, optional plugin-based task inference | Runs `package.json` scripts, requires `turbo.json` config |
-| [Caching](#caching)                             | Explicit opt-in, composable `namedInputs`                         | Cached by default, flat input lists                       |
-| [Task sandboxing](#task-sandboxing)             | Sandboxed execution for cache integrity                           | Not available                                             |
-| [Code generation](#code-generation)             | Programmatic generators with AST transforms and graph awareness   | Template-based file scaffolding (Plop)                    |
-| [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                | Experimental `turbo boundaries` (since 2024)              |
-| [Polyglot support](#polyglot-support)           | Native support for JS/TS, Java, .NET, Python, Rust                | Any CLI via `package.json` scripts, no native graph       |
-| [AI integration](#ai-integration)               | Agent skills, MCP, `configure-ai-agents`, self-healing CI         | Official skill, no MCP or CI integration                  |
-| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution, self-healing, flaky detection             | Vercel Remote Cache only, no task distribution            |
-| [Release management](#release-management)       | Built-in versioning, changelogs, and publishing                   | Requires manual setup or 3rd party tools                  |
-| [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                 | Experimental OpenTelemetry (OTLP) export                  |
-| [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                | Basic TUI and LSP support                                 |
+| Topic                                           | Nx                                                                    | Turborepo                                                 |
+| ----------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
+| [Onboarding](#onboarding)                       | Zero-config or guided `nx init`                                       | Manual `turbo.json` configuration                         |
+| [Running tasks](#running-tasks)                 | Runs `package.json` scripts, optional plugin-based task configuration | Runs `package.json` scripts, requires `turbo.json` config |
+| [Caching](#caching)                             | Explicit opt-in, composable `namedInputs`                             | Cached by default, flat input lists                       |
+| [Task sandboxing](#task-sandboxing)             | Sandboxed execution for cache integrity                               | Not available                                             |
+| [Code generation](#code-generation)             | Programmatic generators with AST transforms and graph awareness       | Template-based file scaffolding (Plop)                    |
+| [Module boundary rules](#module-boundary-rules) | Tag-based lint rule + conformance rules (polyglot)                    | Experimental `turbo boundaries` (since 2024)              |
+| [Polyglot support](#polyglot-support)           | Native support for JS/TS, Java, .NET, Python, Rust                    | Any CLI via `package.json` scripts, no native graph       |
+| [AI integration](#ai-integration)               | Agent skills, MCP, `configure-ai-agents`, self-healing CI             | Official skill, no MCP or CI integration                  |
+| [CI solution](#running-nx-vs-turbo-on-ci)       | Nx Cloud: distribution, self-healing, flaky detection                 | Vercel Remote Cache only, no task distribution            |
+| [Release management](#release-management)       | Built-in versioning, changelogs, and publishing                       | Requires manual setup or 3rd party tools                  |
+| [Observability](#observability)                 | Integrated dashboards and AI-powered run analysis                     | Experimental OpenTelemetry (OTLP) export                  |
+| [Developer experience](#developer-experience)   | TUI, IDE extensions, and interactive project graph                    | Basic TUI and LSP support                                 |
 
 ## Onboarding
 
@@ -262,9 +262,9 @@ Turborepo added experimental [`turbo boundaries`](https://turborepo.dev/docs/ref
 ## Polyglot support
 
 Nx provides [first-party plugins](/docs/plugin-registry) for Maven, Gradle, .NET, and Docker, plus community plugins for Python (UV, Poetry), Rust (Cargo), Go, and PHP.
-Each plugin provides automatic dependency detection, target inference, caching, affected detection, and distribution.
+Each plugin provides automatic dependency detection, target configuration, caching, affected detection, and distribution.
 
-Turborepo can orchestrate any language by wrapping CLI commands in `package.json` scripts. However, non-JS projects still require a `package.json`, and Turborepo provides no automatic dependency graph analysis or target inference for those languages. You must define everything manually.
+Turborepo can orchestrate any language by wrapping CLI commands in `package.json` scripts. However, non-JS projects still require a `package.json`, and Turborepo provides no automatic dependency graph analysis or target configuration for those languages. You must define everything manually.
 
 **This difference is critical for AI readiness.** When your backend is in Go and your frontend is in Next.js, an AI agent with Nx can see the full cross-language dependency chain. With Turborepo, those services are "islands," and an agent has no way to reason about how a change in the Go API affects the frontend.
 

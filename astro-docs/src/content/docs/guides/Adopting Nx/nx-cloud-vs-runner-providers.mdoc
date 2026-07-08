@@ -6,17 +6,27 @@ sidebar:
   label: Nx Cloud vs runner providers
 ---
 
-A wave of providers replaces GitHub Actions hosted runners with faster or cheaper machines: [WarpBuild](https://www.warpbuild.com/), [Namespace](https://namespace.so/), [RunsOn](https://runs-on.com/), and [Ubicloud](https://www.ubicloud.com/), alongside [Depot](/docs/guides/adopting-nx/nx-cloud-vs-depot) and [Blacksmith](/docs/guides/adopting-nx/nx-cloud-vs-blacksmith), which have their own pages. The pitch is shared: swap the `runs-on` label, get better CPUs, a faster cache backend, and a lower per-minute price.
+WarpBuild, Namespace, RunsOn, and Ubicloud lower the price of a CI minute. Nx Cloud lowers the number of minutes, by caching, pruning, and distributing work across your task graph. The two levers are independent, and they stack.
 
-Nx Cloud pulls a different lever. Runner providers lower the price of a CI minute; Nx Cloud lowers the number of minutes by [skipping unaffected tasks](/docs/features/ci-features/affected), [replaying cached results](/docs/features/ci-features/remote-cache), and [distributing what remains](/docs/features/ci-features/distribute-task-execution). The levers are independent, and they stack: Nx Cloud runs on any of these providers' runners.
+## What is Nx Cloud?
+
+Nx Cloud is the CI layer for Nx workspaces. On top of whatever CI provider you already run, it adds remote caching, task distribution across machines, e2e test splitting, flaky-task handling, and self-healing CI.
+
+## What are runner providers?
+
+WarpBuild, Namespace, RunsOn, and Ubicloud replace GitHub Actions hosted runners with faster or cheaper machines. Swap the `runs-on` label and you get better CPUs, a faster cache backend, and a lower per-minute price. [Depot](/docs/guides/adopting-nx/nx-cloud-vs-depot) and [Blacksmith](/docs/guides/adopting-nx/nx-cloud-vs-blacksmith) belong to the same category and have their own pages.
+
+## Quick takeaway
+
+These providers make each CI minute cheaper and faster, but they run the same minutes. There's no build-graph awareness, no affected pruning, no task-level distribution, and no cross-run task cache. Nx Cloud pulls the other lever, running fewer minutes by skipping unaffected tasks, replaying cached results, and distributing what remains. Because Nx Cloud attaches at the workflow level over HTTPS, it runs on any of these providers, so the sensible setup for a monorepo is both: a cheaper runner, and Nx Cloud to cut the work that reaches it.
 
 | Capability                        | Runner providers                                   | Nx Cloud                                   |
 | --------------------------------- | -------------------------------------------------- | ------------------------------------------ |
 | Faster machines                   | Core offering                                      | Runs on whatever machines you choose       |
-| `actions/cache` acceleration      | Common (colocated or in-VPC storage)               | Not applicable; caches tasks, not archives |
+| `actions/cache` acceleration      | Common (colocated or in-VPC storage)               | Not applicable, caches tasks, not archives |
 | Build-tool remote cache           | Namespace only, and not for Nx                     | Nx Replay, shared with local development   |
 | Affected detection                | Not available                                      | `nx affected` from the project graph       |
-| Task distribution                 | Not available; parallelism is your workflow matrix | Nx Agents, dynamically balanced            |
+| Task distribution                 | Not available, parallelism is your workflow matrix | Nx Agents, dynamically balanced            |
 | Test splitting and flaky handling | Not available                                      | Atomizer, flaky re-runs, self-healing CI   |
 
 ## The providers
@@ -39,10 +49,25 @@ These are workload-level features, and they're exactly what [Nx Cloud](/docs/fea
 
 Nx Cloud communicates over HTTPS from whatever machine runs `nx`, so it works on any of these providers without configuration changes. A common setup: move workflows to a cheaper runner provider for the per-minute savings, and let Nx Cloud cut the minutes, with `nx affected` pruning the task list, Nx Replay skipping repeated work, and Nx Agents replacing the manual matrix. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), including these providers' runners.
 
-## When a faster runner is enough
+## Who should pick which
 
-If CI runs one application's build and test on every push, and the pain is purely that GitHub's hosted runners are slow or expensive, a runner swap captures most of the available win in an afternoon. The equation changes in a monorepo: when most PRs touch a fraction of the projects, the biggest cost is work that didn't need to run, and no per-minute price fixes that. Teams with real monorepos usually need the workload lever first, and can pull both.
+Nx Cloud fits when any of these apply:
 
-{% aside type="tip" title="Set up Nx Cloud" %}
-See [CI features](/docs/features/ci-features) for what Nx Cloud adds to an existing pipeline, and [CI setup](/docs/getting-started/setup-ci) to connect a workspace.
-{% /aside %}
+- Your monorepo runs many tasks per push and most are unaffected or already cached.
+- CI time calls for task distribution, e2e splitting, or flaky-task handling.
+- You want a task cache shared across CI and developer machines.
+
+A faster runner alone fits when any of these apply:
+
+- CI runs one application's build and test on every push.
+- The pain is purely slow or expensive GitHub-hosted machines.
+- You want a one-line swap with no workload changes.
+
+For a real monorepo the workload lever usually matters first, and you can pull both: a cheaper runner, and Nx Cloud on top.
+
+## Resources
+
+{% cards cols=2 %}
+{% card title="Nx Cloud CI features" description="Remote caching, distribution, splitting, and self-healing CI" url="/docs/features/ci-features" /%}
+{% card title="Connect your CI" description="Add Nx Cloud to an existing pipeline" url="/docs/getting-started/setup-ci" /%}
+{% /cards %}
