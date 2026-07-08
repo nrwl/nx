@@ -1029,10 +1029,6 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Nx Cloud vs Buildkite',
             link: 'guides/adopting-nx/nx-cloud-vs-buildkite',
           },
-          {
-            label: 'Nx Cloud vs runner providers',
-            link: 'guides/adopting-nx/nx-cloud-vs-runner-providers',
-          },
         ],
       },
       {
