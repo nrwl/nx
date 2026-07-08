@@ -1014,10 +1014,6 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/adopting-nx/nx-vs-bazel',
           },
           {
-            label: 'Nx vs moon',
-            link: 'guides/adopting-nx/nx-vs-moonrepo',
-          },
-          {
             label: 'Nx Cloud vs Depot',
             link: 'guides/adopting-nx/nx-cloud-vs-depot',
           },
