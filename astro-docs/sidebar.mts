@@ -596,10 +596,6 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'troubleshooting/console-troubleshooting',
           },
           {
-            label: 'Troubleshoot cache misses',
-            link: 'troubleshooting/troubleshoot-cache-misses',
-          },
-          {
             label: 'Troubleshoot Nx installations',
             link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
