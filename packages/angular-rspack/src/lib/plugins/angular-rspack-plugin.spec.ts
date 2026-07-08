@@ -8,14 +8,18 @@ const {
   buildAndAnalyzeMock,
   setupCompilationMock,
   disposeComponentStylesheetBundlerMock,
+  transformerCtorMock,
   transformerCloseMock,
+  createJavascriptTransformerCacheMock,
   sourceFileCacheCtorMock,
   sourceFileCacheInstances,
 } = vi.hoisted(() => ({
   buildAndAnalyzeMock: vi.fn(),
   setupCompilationMock: vi.fn(),
   disposeComponentStylesheetBundlerMock: vi.fn(),
+  transformerCtorMock: vi.fn(),
   transformerCloseMock: vi.fn(),
+  createJavascriptTransformerCacheMock: vi.fn(),
   sourceFileCacheCtorMock: vi.fn(),
   sourceFileCacheInstances: [] as Array<{
     invalidate: ReturnType<typeof vi.fn>;
@@ -25,10 +29,14 @@ const {
 
 vi.mock('@nx/angular-rspack-compiler', () => ({
   buildAndAnalyze: buildAndAnalyzeMock,
+  createJavascriptTransformerCache: createJavascriptTransformerCacheMock,
   DiagnosticModes: { All: 7 },
   disposeComponentStylesheetBundler: disposeComponentStylesheetBundlerMock,
   JavaScriptTransformer: class {
     close = transformerCloseMock;
+    constructor(...args: unknown[]) {
+      transformerCtorMock(...args);
+    }
   },
   SourceFileCache: class {
     typeScriptFileCache = new Map<string, unknown>();
@@ -331,6 +339,39 @@ describe('AngularRspackPlugin', () => {
     new AngularRspackPlugin(options);
 
     expect(sourceFileCacheCtorMock).toHaveBeenCalledWith(undefined);
+  });
+
+  it('should give the transformer a persistent cache when a cache path is available', async () => {
+    const cache = { get: vi.fn(), put: vi.fn() };
+    const close = vi.fn();
+    createJavascriptTransformerCacheMock.mockReturnValueOnce({ cache, close });
+
+    const plugin = new AngularRspackPlugin({ ...options, projectName: 'app' });
+
+    expect(createJavascriptTransformerCacheMock).toHaveBeenCalledWith(
+      expect.stringContaining(join('app', 'angular-rspack'))
+    );
+    expect(transformerCtorMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      cache
+    );
+
+    const compiler = createFakeCompiler();
+    plugin.apply(compiler as never);
+    await fireAsyncTaps(compiler.hooks.shutdown);
+    expect(close).toHaveBeenCalled();
+  });
+
+  it('should not create a transformer cache when the persistent cache is disabled', () => {
+    new AngularRspackPlugin(options);
+
+    expect(createJavascriptTransformerCacheMock).not.toHaveBeenCalled();
+    expect(transformerCtorMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      undefined
+    );
   });
 
   it.each(['1', 'true', 'TRUE'])(

@@ -6,6 +6,7 @@ import {
 } from '@angular/build/private';
 import {
   buildAndAnalyze,
+  createJavascriptTransformerCache,
   DiagnosticModes,
   disposeComponentStylesheetBundler,
   JavaScriptTransformer,
@@ -13,6 +14,7 @@ import {
   maxWorkers,
   setupCompilationWithAngularCompilation,
   AngularCompilation,
+  type JavascriptTransformerCache,
   type StylesheetMetafileInputs,
 } from '@nx/angular-rspack-compiler';
 import { workspaceRoot } from '@nx/devkit';
@@ -87,6 +89,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #collectedStylesheetMetafileInputs: StylesheetMetafileInputs[] = [];
   #useTypeScriptTranspilation = true;
   #resourceDependencies?: ReadonlyMap<string, readonly string[]>;
+  #javascriptTransformerCache?: JavascriptTransformerCache;
   #initializationError: string | undefined;
   #emitError: string | undefined;
 
@@ -96,9 +99,12 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   ) {
     this.#_options = options;
     this.#i18n = i18nOptions;
-    this.#sourceFileCache = new SourceFileCache(
-      getPersistentCachePath(options)
-    );
+    const persistentCachePath = getPersistentCachePath(options);
+    this.#sourceFileCache = new SourceFileCache(persistentCachePath);
+    if (persistentCachePath) {
+      this.#javascriptTransformerCache =
+        createJavascriptTransformerCache(persistentCachePath);
+    }
     this.#javascriptTransformer = new JavaScriptTransformer(
       {
         /**
@@ -113,7 +119,8 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         advancedOptimizations: this.#_options.advancedOptimizations,
         jit: !this.#_options.aot,
       },
-      maxWorkers()
+      maxWorkers(),
+      this.#javascriptTransformerCache?.cache
     ) as unknown as ResolvedJavascriptTransformer;
   }
 
@@ -452,6 +459,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       async (callback) => {
         try {
           await this.#javascriptTransformer.close();
+          await this.#javascriptTransformerCache?.close();
           await disposeComponentStylesheetBundler();
         } catch {
           // Best-effort cleanup that must never fail the compiler teardown.
