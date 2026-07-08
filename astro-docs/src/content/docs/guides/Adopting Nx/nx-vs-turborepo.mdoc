@@ -8,13 +8,21 @@ sidebar:
 
 Both Nx and Turborepo cover similar ground. They provide task scheduling, caching (local and remote), and affected detection. The differences emerge as your needs grow. While **Turbo covers the basics**, **Nx provides solutions along the entire software growth lifecycle**, even when you need more advanced features such as distributed CI, polyglot builds, or AI-powered CI workflows. That's where the gap widens.
 
-This doesn't come at the cost of adoption complexity though. Nx is designed to be modular from the ground up and can be **adopted incrementally as you need more**.
+## What is Nx?
+
+Nx is a build system that orchestrates the tools you already use. Plugins configure tasks from your existing configs, caching works locally and remotely, `nx affected` runs only what your change touches, and Nx Cloud distributes tasks across CI machines. It spans JS/TS, JVM, .NET, and more in one graph.
+
+## What is Turborepo?
+
+Turborepo is a task runner for JavaScript and TypeScript monorepos, maintained by Vercel. It runs your `package.json` scripts with local and remote caching (via Vercel Remote Cache), task scheduling, and change detection, configured through a `turbo.json` file.
+
+## Quick takeaway
+
+Both tools cover the same basics: task scheduling, local and remote caching, and affected detection. Turborepo stays focused there. Nx extends past it into task sandboxing, code generation, polyglot support, release management, and a CI platform (Nx Cloud) with distribution, flaky-task handling, and self-healing. Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite. The sections below walk from onboarding through those advanced capabilities.
 
 {% aside type="note" title="Benchmarks" %}
 All benchmarks on this page use the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools.
 {% /aside %}
-
-This page starts with the basics, like onboarding, and progressively moves into more advanced capabilities.
 
 | Topic                                           | Nx                                                                    | Turborepo                                                 |
 | ----------------------------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -404,10 +412,6 @@ Both tools can visualize the dependency graph, but the implementations differ si
 
 The Nx graph is also available inside [Nx Console](/docs/getting-started/editor-setup), so you can explore dependencies without leaving your editor.
 
-{% aside type="tip" title="Ready to migrate?" %}
-For step-by-step migration instructions, including configuration mapping and command equivalents, see [Migrating from Turborepo to Nx](/docs/guides/adopting-nx/from-turborepo).
-{% /aside %}
-
 ### Terminal UI
 
 Nx ships with a full [terminal UI](/docs/guides/tasks--caching/terminal-ui) that adapts to what you're running.
@@ -424,3 +428,27 @@ You can run tasks, explore the project graph, scaffold with generators, and insp
 It also includes a language server that provides autocompletion in `nx.json` and `project.json` files.
 
 Turborepo provides basic LSP support for `turbo.json`.
+
+## Who should pick which
+
+Nx fits when any of these apply:
+
+- You want task running and caching that grow into distributed CI, sandboxing, and release management.
+- Your repository spans more than JavaScript, with Java, .NET, Python, or Rust alongside it.
+- You want code generation, automated migrations, or self-healing and flaky-task handling on CI.
+- You want editor integration and an interactive project graph.
+
+Turborepo fits when any of these apply:
+
+- Your workspace is JS/TS-only and you want a focused task runner with caching.
+- Remote caching and `--affected` cover your CI needs, without distribution or self-healing.
+- You prefer a minimal configuration surface over a broader platform.
+
+Nx adopts incrementally on your existing scripts, so a Turborepo workspace can move over without a rewrite.
+
+## Resources
+
+{% cards cols=2 %}
+{% card title="Migrate from Turborepo to Nx" description="Step-by-step migration with config and command mapping" url="/docs/guides/adopting-nx/from-turborepo" /%}
+{% card title="Add Nx to an existing project" description="Adopt Nx incrementally without rewriting tool configuration" url="/docs/guides/adopting-nx/adding-to-existing-project" /%}
+{% /cards %}
