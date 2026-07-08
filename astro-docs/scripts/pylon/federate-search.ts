@@ -3,10 +3,11 @@
  * index that Starlight already built, so site search surfaces them with
  * absolute Pylon URLs. Chained after `astro build` in project.json.
  *
- * This script must NEVER fail the build: any Pylon-side problem degrades to
- * the committed cache, then to skipping injection entirely (exit 0).
+ * This script must NEVER fail the build: if PYLON_API_TOKEN is missing or
+ * the Pylon API is unreachable, injection is skipped with a warning and the
+ * build ships without KB records in search (exit 0).
  *
- * Usage: tsx scripts/pylon/federate-search.ts [--refresh-cache]
+ * Usage: tsx scripts/pylon/federate-search.ts
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -14,7 +15,6 @@ import {
   ASTRO_DOCS_ROOT,
   MAPPING_PATH,
   PYLON_DEFAULT_SEARCH_WEIGHT,
-  SEARCH_CACHE_PATH,
 } from './config';
 import { listArticles } from './pylon-api';
 
@@ -26,18 +26,19 @@ interface SearchRecord {
   body_html: string;
 }
 
-const refreshCache = process.argv.includes('--refresh-cache');
 const DIST_DIR = path.join(ASTRO_DOCS_ROOT, 'dist');
 const PAGEFIND_DIR = path.join(DIST_DIR, 'pagefind');
 
 async function fetchRecords(): Promise<SearchRecord[] | null> {
   if (process.env.NX_PYLON_OFFLINE === '1') {
-    console.log('[pylon-search] NX_PYLON_OFFLINE=1 — using committed cache');
+    console.warn(
+      '[pylon-search] NX_PYLON_OFFLINE=1 — building WITHOUT Pylon KB records in search'
+    );
     return null;
   }
   if (!process.env.PYLON_API_TOKEN) {
-    console.log(
-      '[pylon-search] PYLON_API_TOKEN not set — using committed cache'
+    console.warn(
+      '[pylon-search] PYLON_API_TOKEN not set — building WITHOUT Pylon KB records in search'
     );
     return null;
   }
@@ -58,20 +59,9 @@ async function fetchRecords(): Promise<SearchRecord[] | null> {
       }));
   } catch (error) {
     console.warn(
-      `[pylon-search] Pylon API unavailable (${error instanceof Error ? error.message : error}) — using committed cache`
+      `[pylon-search] Pylon API unavailable (${error instanceof Error ? error.message : error}) — building WITHOUT Pylon KB records in search`
     );
     return null;
-  }
-}
-
-function readCache(): SearchRecord[] {
-  try {
-    const cache = JSON.parse(fs.readFileSync(SEARCH_CACHE_PATH, 'utf-8')) as {
-      articles: SearchRecord[];
-    };
-    return cache.articles ?? [];
-  } catch {
-    return [];
   }
 }
 
@@ -126,27 +116,12 @@ async function main(): Promise<void> {
     return;
   }
 
-  const fetched = await fetchRecords();
-  const records = fetched ?? readCache();
-  if (records.length === 0) {
+  const records = await fetchRecords();
+  if (!records || records.length === 0) {
     console.log(
       '[pylon-search] No Pylon articles to inject — leaving index as-is'
     );
     return;
-  }
-
-  if (refreshCache && fetched) {
-    fs.writeFileSync(
-      SEARCH_CACHE_PATH,
-      JSON.stringify(
-        { refreshedAt: new Date().toISOString(), articles: fetched },
-        null,
-        2
-      ) + '\n'
-    );
-    console.log(
-      `[pylon-search] Refreshed ${path.relative(ASTRO_DOCS_ROOT, SEARCH_CACHE_PATH)}`
-    );
   }
 
   // Dynamic import: pagefind is ESM-only and these scripts execute as CJS.

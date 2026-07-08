@@ -17,7 +17,6 @@ import {
   MIGRATION_LIST_PATH,
   NX_AUTHOR_USER_ID,
   REDIRECTS_PATH,
-  SEARCH_CACHE_PATH,
   WRITE_THROTTLE_MS,
 } from './config';
 import {
@@ -140,27 +139,6 @@ function regenerateRedirects(mapping: Mapping, list: MigrationList): void {
     lines.push(`${redirect.from}  ${redirect.to}  301!`);
   }
   fs.writeFileSync(REDIRECTS_PATH, lines.join('\n') + '\n');
-}
-
-async function regenerateSearchCache(): Promise<void> {
-  const articles = await listArticles();
-  const published = articles
-    .filter(
-      (a) =>
-        a.is_published &&
-        (a.visibility_config?.visibility ?? 'public') === 'public'
-    )
-    .map((a) => ({
-      id: a.id,
-      title: a.title,
-      slug: a.slug,
-      url: a.url,
-      body_html: a.current_published_content_html ?? '',
-    }));
-  writeJson(SEARCH_CACHE_PATH, {
-    refreshedAt: new Date().toISOString(),
-    articles: published,
-  });
 }
 
 async function main(): Promise<void> {
@@ -331,15 +309,13 @@ async function main(): Promise<void> {
   }
 
   regenerateRedirects(mapping, list);
-  await regenerateSearchCache();
 
   console.log(
     `\nDone: ${posted} created, ${patched} updated, ${skipped} unchanged.`
   );
   console.log(
     `Updated: ${path.relative(ASTRO_DOCS_ROOT, MAPPING_PATH)}, ` +
-      `${path.relative(ASTRO_DOCS_ROOT, REDIRECTS_PATH)}, ` +
-      `${path.relative(ASTRO_DOCS_ROOT, SEARCH_CACHE_PATH)}`
+      `${path.relative(ASTRO_DOCS_ROOT, REDIRECTS_PATH)}`
   );
 }
 
