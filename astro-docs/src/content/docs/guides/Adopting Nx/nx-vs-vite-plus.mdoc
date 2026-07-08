@@ -1,6 +1,6 @@
 ---
 title: Nx vs Vite+
-description: Nx vs Vite+ on task running, caching, and CI. Vite+ ships a local-only task cache in beta; Nx runs the same Vite toolchain with remote caching, affected detection, and distributed CI.
+description: Nx vs Vite+ on task running, caching, and CI. Vite+ ships a local-only task cache in beta. Nx runs the same Vite toolchain with remote caching, affected detection, and distributed CI.
 filter: 'type:Guides'
 sidebar:
   label: Nx vs Vite+
@@ -45,7 +45,7 @@ Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing
 
 Both tools run your `package.json` scripts with `dependsOn` ordering across the workspace. Vite+ derives cache inputs automatically by recording file reads and writes during execution, a good default that avoids manual configuration. Its cache is content-based, stored in `node_modules/.vite/task-cache`, and replays terminal output on a hit.
 
-Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/features/ci-features/sandboxing) runs each task in a sandbox that enforces its declared inputs and outputs, so undeclared dependencies can't slip in and undermine cache integrity.
+Nx takes a declare-and-verify approach. Caching is [opt-in per task](/docs/concepts/how-caching-works), plugins set inputs and outputs from your tool configuration, and reusable [`namedInputs`](/docs/reference/inputs) patterns compose across targets, so a spec file change doesn't invalidate your build cache. [Task sandboxing](/docs/features/ci-features/sandboxing) runs each task in a sandbox that surfaces undeclared reads or writes, with an opt-in strict mode that fails the task, protecting cache integrity.
 
 ## Sharing the cache
 

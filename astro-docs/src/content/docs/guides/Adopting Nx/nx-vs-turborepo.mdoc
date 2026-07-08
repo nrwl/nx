@@ -80,7 +80,7 @@ Turborepo caches by default, but without input scoping a change to any file, tes
 }
 ```
 
-Nx configures the inputs and outputs for you; Turborepo has you declare them, and repeat them on every cacheable task. The [Caching](#caching) section shows how that compounds across a workspace.
+Nx configures the inputs and outputs for you. Turborepo has you declare them, and repeat them on every cacheable task. The [Caching](#caching) section shows how that compounds across a workspace.
 
 For a full walkthrough, see [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project). If you're coming from Turborepo, see [Migrating from Turborepo to Nx](/docs/guides/adopting-nx/from-turborepo).
 
@@ -100,7 +100,7 @@ Where Nx goes further is with [plugins](/docs/plugin-registry). Adding an Nx plu
 
 Both tools cache task results, but the defaults and depth of caching support differ significantly. Better cache configuration means fewer false positives, fewer unnecessary re-runs, and faster CI.
 
-**Turborepo enables caching by default for the tasks you register**, and you opt out with `cache: false` on tasks like `dev`. It stores file artifacts only when a task declares `outputs`; without them it caches the task's logs alone. **Nx caches only targets marked cacheable**, either explicitly with `cache: true` or through inferred plugin configuration.
+**Turborepo enables caching by default for the tasks you register**, and you opt out with `cache: false` on tasks like `dev`. It stores file artifacts only when a task declares `outputs`, and caches only the task's logs without them. **Nx caches only targets marked cacheable**, either explicitly with `cache: true` or through inferred plugin configuration.
 
 Nx also provides [`namedInputs`](/docs/reference/inputs), reusable input patterns that you can compose across targets. You define a pattern once (like "production sources") and reference it everywhere. Turborepo's `inputs` are flat lists with no composition, so every target repeats the same exclusions.
 
@@ -241,7 +241,7 @@ In Turborepo, the same exclusion list is repeated across `build`, `build:prod`, 
 
 A cache is only valuable if you can trust it. Turborepo has no task sandboxing. During execution, tasks can read and write anywhere on the filesystem. A task can read files that aren't declared as inputs and produce undeclared outputs that get cached and replayed into a different context. The result: false cache hits, missing artifacts, and hard-to-trace failures.
 
-Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that runs each task in a sandbox enforcing its declared `inputs` and `outputs`. Undeclared dependencies are surfaced automatically rather than discovered through debugging production incidents.
+Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that runs each task in a sandbox and surfaces undeclared reads or writes, with an opt-in strict mode that fails the task. Undeclared dependencies show up automatically rather than through debugging production incidents.
 
 This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) showed how remote caches without branch isolation, where the first run to populate a key wins, let a contributor with PR access poison artifacts that protected branches later reuse. It's a property of bucket-style shared caches, not of any one tool. Nx Cloud prevents it through branch-scoped cache isolation. For more details, see [cache security](/docs/concepts/ci-concepts/cache-security).
 

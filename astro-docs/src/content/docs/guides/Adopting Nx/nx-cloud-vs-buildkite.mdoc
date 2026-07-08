@@ -10,7 +10,7 @@ Buildkite is a CI platform you migrate to. Nx Cloud is a task-graph layer that r
 
 ## What is Nx Cloud?
 
-Nx Cloud is the CI layer for Nx workspaces. On top of whatever CI provider you already run, it adds remote caching, task distribution across machines, e2e test splitting, flaky-task handling, and self-healing CI.
+Nx Cloud is a monorepo CI platform for Nx workspaces. On top of whatever CI provider you already run, it adds remote caching, task distribution across machines, e2e test splitting, flaky-task handling, and self-healing CI.
 
 ## What is Buildkite?
 
@@ -31,7 +31,7 @@ Buildkite and Nx Cloud aren't alternatives. They sit at different layers. Buildk
 
 ## Model
 
-Buildkite's hybrid architecture is its strongest card: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
+Buildkite's hybrid architecture is its defining strength: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
 
 Nx Cloud requires no migration. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
 
