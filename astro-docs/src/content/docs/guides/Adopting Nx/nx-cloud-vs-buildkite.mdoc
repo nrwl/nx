@@ -6,7 +6,7 @@ sidebar:
   label: Nx Cloud vs Buildkite
 ---
 
-[Buildkite](https://buildkite.com/) is a CI/CD platform: a hosted control plane that orchestrates pipelines while the agents run on your own infrastructure (or Buildkite-hosted machines). Adopting it means migrating your CI. Nx Cloud is not a CI platform. It layers task-graph intelligence, [remote caching](/docs/features/ci-features/remote-cache), [affected detection](/docs/features/ci-features/affected), and [distributed execution](/docs/features/ci-features/distribute-task-execution), onto whatever CI you already run, Buildkite included. Buildkite even maintains an official [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/) that wires up `nx affected` base commits, so the two are used together in the wild.
+[Buildkite](https://buildkite.com/) is a CI/CD platform: a hosted control plane that orchestrates pipelines while the agents run on your own infrastructure (or Buildkite-hosted machines). Adopting it means migrating your CI. Nx Cloud is not a CI platform. It layers [remote caching](/docs/features/ci-features/remote-cache), [affected detection](/docs/features/ci-features/affected), and [distributed execution](/docs/features/ci-features/distribute-task-execution) onto whatever CI you already run, Buildkite included. Buildkite even maintains an official [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/) that wires up `nx affected` base commits, so the two are used together in the wild.
 
 The comparison matters where the products overlap: monorepo awareness, test splitting, flaky test handling, and how work spreads across machines.
 
@@ -21,7 +21,7 @@ The comparison matters where the products overlap: monorepo awareness, test spli
 
 ## Model
 
-Buildkite's hybrid architecture is genuinely differentiated: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes; Buildkite's Uber case study describes up to 100,000 concurrent agents. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
+Buildkite's hybrid architecture is its strongest card: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes; Buildkite's Uber case study describes up to 100,000 concurrent agents. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
 
 Nx Cloud requires no migration. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
 

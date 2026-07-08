@@ -27,7 +27,7 @@ Vite+ reached beta in July 2026 and is evolving quickly. The capabilities below 
 
 ## Toolchain
 
-Vite+ bundles the toolchain into one CLI: `vp check` runs linting, formatting, and type checking in a single pass, `vp test` runs Vitest, and `vp build` runs Vite 8 on Rolldown. One consistent entry point for the whole JS stack is genuinely convenient.
+Vite+ bundles the toolchain into one CLI: `vp check` runs linting, formatting, and type checking in a single pass, `vp test` runs Vitest, and `vp build` runs Vite 8 on Rolldown. One consistent entry point for the whole JS stack is convenient.
 
 Choosing Nx doesn't mean giving that toolchain up. Nx plugins read your existing `vite.config` and `vitest.config` files and [infer tasks](/docs/concepts/inferred-tasks) with correct cache inputs and outputs, so the same Vite 8 builds and Vitest runs execute under Nx orchestration. Tools Nx doesn't have a plugin for, including `vp` subcommands, run as regular `package.json` scripts.
 
@@ -47,7 +47,7 @@ The Vite+ cache is local-only. Remote caching for `vp run` is listed on the [roa
 
 ## Affected detection
 
-Vite+ has no affected command. Its `--filter` flag selects packages by name, glob, directory, or dependency relationships, but nothing computes which packages a git diff impacts. On CI, the full task graph runs and the local cache decides what to skip, which without a remote cache means running everything.
+Vite+ has no affected command. Its `--filter` flag selects packages by name, glob, directory, or dependency relationships, but nothing computes which packages a git diff impacts. On CI, the full task graph runs and the local cache decides what to skip. Without a remote cache, that means running everything.
 
 [`nx affected`](/docs/features/ci-features/affected) compares your changes against a base branch and runs only the impacted tasks. On a typical PR touching one library, this cuts the task graph before any cache lookup happens.
 
@@ -77,7 +77,7 @@ Vite+ ships `vp pm stage`, a publishing workflow for getting packages onto a reg
 
 ## When Vite+ is enough
 
-For a small JS/TS-only workspace where CI finishes comfortably on one machine, `vp run` with its local cache covers day-to-day task running, and the unified CLI is a real quality-of-life win. The gap shows when the cache needs to travel (between teammates, or from CI run to CI run), when CI time becomes the bottleneck, or when the workspace grows beyond JavaScript. Since Nx runs the same Vite toolchain, adopting it at that point doesn't undo any Vite+ era decisions.
+For a small JS/TS-only workspace where CI finishes comfortably on one machine, `vp run` with its local cache covers day-to-day task running, and the unified CLI is a quality-of-life win. The gap shows when the cache needs to travel (between teammates, or from CI run to CI run), when CI time becomes the bottleneck, or when the workspace grows beyond JavaScript. Since Nx runs the same Vite toolchain, adopting it at that point doesn't undo any Vite+ era decisions.
 
 {% aside type="tip" title="Ready to try Nx?" %}
 See [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project) for setup instructions, and the [Vite plugin](/docs/technologies/build-tools/vite/introduction) for inferred tasks and configuration.

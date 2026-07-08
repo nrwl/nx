@@ -47,7 +47,7 @@ moon's CI story is `moon ci` with static sharding: `--job N --job-total M` slice
 
 ## Polyglot support
 
-moon runs anything on PATH without requiring Node for non-JS lanes, and its v2 WASM toolchain system extends the project graph for JavaScript, Rust, and Go, with Python and Ruby unstable. For repositories where JS is just one lane among Go or Rust services, that runtime neutrality is a real draw.
+moon runs anything on PATH without requiring Node for non-JS lanes, and its v2 WASM toolchain system extends the project graph for JavaScript, Rust, and Go, with Python and Ruby unstable. For repositories where JS is one lane among Go or Rust services, that neutrality is a draw.
 
 The Nx language plugins go deeper per ecosystem: [`@nx/gradle`](/docs/technologies/java/gradle/introduction) and the Maven and .NET plugins parse the build definitions themselves to infer projects, dependencies, and tasks, so the graph reflects actual code relationships rather than declared ones. Community plugins cover Python, Rust, and Go.
 
@@ -57,7 +57,7 @@ moon scaffolds files from Tera templates and can merge JSON/YAML. Nx generators 
 
 ## Module boundaries
 
-moon enforces layer and tag relationship constraints declared in workspace config, language-agnostic and on by default, a genuinely solid design. Nx [enforces boundaries](/docs/features/enforce-module-boundaries) at the import level for JS/TS by analyzing actual import statements through a lint rule, with [conformance rules](/docs/enterprise/conformance) extending enforcement to other languages.
+moon enforces layer and tag relationship constraints declared in workspace config, language-agnostic and on by default. Nx [enforces boundaries](/docs/features/enforce-module-boundaries) at the import level for JS/TS by analyzing actual import statements through a lint rule, with [conformance rules](/docs/enterprise/conformance) extending enforcement to other languages.
 
 ## Ecosystem
 

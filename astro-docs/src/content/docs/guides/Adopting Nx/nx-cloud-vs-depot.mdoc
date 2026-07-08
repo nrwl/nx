@@ -8,7 +8,7 @@ sidebar:
 
 [Depot](https://depot.dev/) sells faster CI compute: GitHub Actions runners on newer CPUs with high-throughput colocated caches, accelerated container builds, and its own CI engine. Nx Cloud operates a layer above the machine. It reads your task graph to skip work that already ran ([remote caching](/docs/features/ci-features/remote-cache)), avoid work your change doesn't touch ([affected detection](/docs/features/ci-features/affected)), and spread the rest across machines ([Nx Agents](/docs/features/ci-features/distribute-task-execution)). Depot makes every minute cheaper and faster. Nx Cloud reduces how many minutes run at all.
 
-Because they solve different layers, this isn't an exclusive choice. Nx Cloud runs on any CI provider, so an Nx workspace can run on Depot runners with Nx Cloud handling caching and distribution on top: cheaper minutes and fewer of them.
+Because they solve different layers, this isn't an exclusive choice. Nx Cloud runs on any CI provider, so an Nx workspace can run on Depot runners with Nx Cloud handling caching and distribution on top.
 
 | Topic                                                             | Nx Cloud                                                 | Depot                                                 |
 | ----------------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------- |
@@ -52,7 +52,7 @@ Depot has no test-level features. [Atomizer](/docs/features/ci-features/split-e2
 
 ## Observability
 
-Depot provides job and machine-level analytics: CPU and memory per job, step timings, and cross-run log search. Nx Cloud's analytics are task-aware: cache hit rates per task, agent utilization per run, and task timing trends, the data you need to answer "why is CI slow" at the level where monorepo time is actually spent.
+Depot provides job and machine-level analytics: CPU and memory per job, step timings, and cross-run log search. Nx Cloud's analytics are task-aware: cache hit rates per task, agent utilization per run, and task timing trends.
 
 ## When Depot is enough
 

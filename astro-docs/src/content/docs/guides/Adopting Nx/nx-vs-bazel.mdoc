@@ -31,13 +31,13 @@ Nx adopts in place. Existing scripts run unchanged, [plugins infer tasks](/docs/
 
 Bazel's caching is the strongest available. It caches per action, and its execution sandbox blocks undeclared file reads by construction, so cache hits are structurally trustworthy. The caveats are operational rather than architectural: hermeticity depends on team discipline (`no-sandbox` tags, unsandboxed repository rules, host toolchain leaks), and there's no sandboxing on Windows.
 
-Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Correctness enforcement comes from [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which traces file access during execution and flags reads or writes outside declared inputs and outputs, detection and enforcement by tracing, where Bazel prevents by construction. [Nx Replay](/docs/features/ci-features/remote-cache) provides the managed remote cache with [branch-scoped isolation](/docs/concepts/ci-concepts/cache-security).
+Nx caches per task, with inputs derived from tool configuration by plugins and composable [`namedInputs`](/docs/reference/inputs). Correctness enforcement comes from [Nx Cloud task sandboxing](/docs/features/ci-features/sandboxing), which traces file access during execution and flags reads or writes outside declared inputs and outputs. Bazel prevents undeclared access by construction; Nx detects it by tracing. [Nx Replay](/docs/features/ci-features/remote-cache) provides the managed remote cache with [branch-scoped isolation](/docs/concepts/ci-concepts/cache-security).
 
 ## Distribution
 
 Bazel's remote execution ships individual actions to worker fleets over the open REAPI protocol, the finest-grained distribution model there is, served by providers like BuildBuddy and EngFlow or self-hosted clusters. It requires full Bazel adoption to use.
 
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute at task granularity with dynamic balancing from timing history, and [Atomizer](/docs/features/ci-features/split-e2e-tasks) narrows the granularity gap where it matters most by splitting slow e2e suites into per-file tasks. Enablement is a single flag on top of unchanged tooling, and [flaky task detection](/docs/features/ci-features/flaky-tasks) plus [self-healing CI](/docs/features/ci-features/self-healing-ci) handle the failure side.
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) distribute at task granularity with dynamic balancing from timing history, and [Atomizer](/docs/features/ci-features/split-e2e-tasks) narrows the granularity gap by splitting slow e2e suites into per-file tasks. Enablement is a single flag on top of unchanged tooling, and [flaky task detection](/docs/features/ci-features/flaky-tasks) plus [self-healing CI](/docs/features/ci-features/self-healing-ci) handle the failure side.
 
 ## JavaScript ecosystem
 
@@ -63,7 +63,7 @@ Above the build sits everything else a monorepo team touches daily, and here the
 
 ## When Bazel is the right call
 
-An organization with a thousand-plus engineers, a heavily C++/Go/Java/Rust codebase, strict reproducibility or compliance requirements, and a funded build team gets value from Bazel that nothing else provides. If that doesn't describe your team, the recurring community experience is that the migration and maintenance costs land without the payoff, and the teams that thrive on Bazel are the ones that budgeted dedicated build engineers for it. Some teams split the difference, running Nx for the JS/TS side alongside Bazel for backend systems, since Nx adopts incrementally, that coexistence is cheap to try.
+An organization with a thousand-plus engineers, a heavily C++/Go/Java/Rust codebase, strict reproducibility or compliance requirements, and a funded build team gets value from Bazel that nothing else provides. If that doesn't describe your team, the recurring community experience is that migration and maintenance costs land without the payoff. Some teams split the difference, running Nx for the JS/TS side alongside Bazel for backend systems, since Nx adopts incrementally, that coexistence is cheap to try.
 
 {% aside type="tip" title="Ready to try Nx?" %}
 See [Adding Nx to your Existing Project](/docs/guides/adopting-nx/adding-to-existing-project) for setup instructions.

@@ -23,7 +23,7 @@ The two aren't mutually exclusive. Blacksmith runners are standard GitHub Action
 
 Blacksmith's pitch is speed per job: ephemeral Firecracker microVMs on high-clock CPUs, cache downloads it advertises at 4x GitHub's speed, and its flagship Docker layer caching. Migration is a one-line label change, with a wizard that rewrites your workflows. If your workflows are slow because GitHub's hosted runners are slow, it delivers.
 
-What it can't see is the work inside the job. Blacksmith runs whatever your workflow matrix declares, on every push, whether or not the change affected those projects. Nx Cloud starts from the task graph: prune what the change can't reach, replay what already ran, distribute the rest.
+Blacksmith runs whatever your workflow matrix declares, on every push, whether or not the change affected those projects. Nx Cloud starts from the task graph: prune what the change can't reach, replay what already ran, distribute the rest.
 
 ## Remote caching
 
@@ -49,7 +49,7 @@ Blacksmith provides job-level dashboards: performance and cost per team, run his
 
 ## Pricing model
 
-Blacksmith bills per minute, monthly, with a free tier and no annual commitment, a genuinely lower-friction way to start than committing to usage up front. Nx Cloud plans are credit-based; heavy Nx Agents usage on enterprise plans typically involves an annual credit commitment, which requires estimating usage ahead of time. If pure billing flexibility is the deciding factor, Blacksmith has the simpler model.
+Blacksmith bills per minute, monthly, with a free tier and no annual commitment: lower friction than committing to usage up front. Nx Cloud plans are credit-based; heavy Nx Agents usage on enterprise plans typically involves an annual credit commitment, which requires estimating usage ahead of time. If pure billing flexibility is the deciding factor, Blacksmith has the simpler model.
 
 ## When Blacksmith is enough
 
