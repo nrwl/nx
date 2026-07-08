@@ -2249,7 +2249,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
       '',
       '  mylib@file:workspace_modules/mylib:',
       '    dependencies:',
-      '      linked-lib: link:../../vendor/linked',
+      '      linked-lib: link:vendor/linked',
       '',
     ].join('\n');
 
@@ -2299,7 +2299,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
       '',
       '  mylib@file:workspace_modules/mylib:',
       '    dependencies:',
-      '      linked-lib: link:../../vendor/linked',
+      '      linked-lib: link:vendor/linked',
       '',
     ].join('\n');
 
@@ -2404,6 +2404,8 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     writeFileSync(join(tempDir, 'vendor/dir/index.js'), 'module.exports={}');
     writeFileSync(join(tempDir, 'vendor/helper/index.js'), 'exports.h=1');
 
+    // pnpm reads a snapshot link: ref relative to the lockfile dir, so a
+    // working source setup records the target workspace-root-relative.
     const lockfile = [
       "lockfileVersion: '9.0'",
       '',
@@ -2416,7 +2418,7 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
       '',
       '  vendored-dir@file:vendor/dir:',
       '    dependencies:',
-      '      helper: link:../helper',
+      '      helper: link:vendor/helper',
       '',
     ].join('\n');
 

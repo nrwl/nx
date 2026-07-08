@@ -4073,11 +4073,11 @@ snapshots:
       expect(result).not.toMatch(/vendored-lib@/);
     });
 
-    it('rewrites a copied module link: snapshot ref relative to workspace_modules', () => {
-      // A copied workspace module (@myorg/lib-a) links a vendored package. In the
-      // deploy the module lives at workspace_modules/@myorg/lib-a and the target
-      // ships at its workspace-root-relative path, so the snapshot ref must be
-      // re-relativized from the copied module's directory.
+    it('rewrites a copied module link: snapshot ref relative to the lockfile dir', () => {
+      // A copied workspace module (@myorg/lib-a) links a vendored package. The
+      // source ref is importer-relative, but pnpm reads a snapshot link: ref
+      // relative to the lockfile dir, so the emitted ref must be rebased onto
+      // the deploy root where the target ships.
       const lockFile = `lockfileVersion: '9.0'
 
 importers:
@@ -4123,10 +4123,10 @@ snapshots: {}`;
         '/root'
       );
 
-      // The copied module's link: ref is re-relativized from
-      // workspace_modules/@myorg/lib-a (3 segments up) to the ws-root target.
+      // The importer-relative ref (libs/lib-a + ../../vendor/thing) lands as
+      // the deploy-root-relative target pnpm resolves from the lockfile dir.
       expect(result).toMatch(
-        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:\.\.\/\.\.\/\.\.\/vendor\/thing/
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:vendor\/thing/
       );
     });
 
