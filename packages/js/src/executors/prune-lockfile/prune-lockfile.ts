@@ -18,7 +18,7 @@ import {
 import { getLockFileName, createLockFile } from '@nx/devkit/internal';
 import { rewritePrunedLocalPathSpecifiers } from '@nx/devkit/internal';
 import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
-import { validatePrunedLinkClosure } from '@nx/devkit/internal';
+import { validatePrunedLocalPathClosure } from '@nx/devkit/internal';
 import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
@@ -66,7 +66,7 @@ export default async function pruneLockfileExecutor(
     // Skip on the root-lockfile fallback: its importer describes the whole
     // workspace, not this app, so validating it would fail the fail-open path.
     if (packageManager === 'pnpm' && pruned) {
-      validatePrunedLinkClosure(packageJson, workspaceRoot, lockFile);
+      validatePrunedLocalPathClosure(packageJson, workspaceRoot, lockFile);
     }
     const lockfileOutputPath = join(outputDirectory, lockfileName);
     writeFileSync(lockfileOutputPath, lockFile);
