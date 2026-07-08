@@ -1301,14 +1301,16 @@ function isUnderWorkspaceModules(directory: string): boolean {
 }
 
 /**
- * A snapshot's `link:` target is recorded relative to the package's directory;
- * the root importer's `link:` targets are workspace-root-relative (baseDir '').
- * Resolve either to a workspace-root-relative posix path. An absolute target is
- * returned as-is (join would rebase it) so the escape check can reject it.
+ * pnpm resolves every pruned-lockfile `link:` ref relative to the lockfile
+ * directory: snapshot refs are read against it directly (verified on pnpm
+ * 9/10/11), and the output's only importer is `.`, the lockfile directory
+ * itself. Normalize the ref to a workspace-root-relative posix path. An
+ * absolute target is returned as-is (join would rebase it) so the escape check
+ * can reject it.
  */
-function resolveLinkTarget(baseDir: string, linkRef: string): string {
+function resolveLinkTarget(linkRef: string): string {
   const refPath = linkRef.slice('link:'.length);
-  return normalizePath(isAbsolute(refPath) ? refPath : join(baseDir, refPath));
+  return normalizePath(isAbsolute(refPath) ? refPath : join(refPath));
 }
 
 type ParsedPrunedLockfile = {
@@ -1328,7 +1330,7 @@ function parsePrunedLockfile(content: string): ParsedPrunedLockfile | null {
 
 /**
  * The non-workspace `link:` target directories the pruned lockfile references
- * (root importer versions and directory-package snapshot refs, i.e. copied
+ * (root importer versions and package snapshot refs, e.g. from copied
  * workspace modules and vendored `file:` directories), each resolved to a
  * workspace-root-relative posix path paired with the lockfile ref it came from.
  * Targets under `workspace_modules/` are excluded (copy-workspace-modules ships
@@ -1340,12 +1342,12 @@ function collectPrunedLinkTargetDirs(
   parsed: ParsedPrunedLockfile
 ): Array<{ target: string; ref: string }> {
   const targets = new Map<string, string>();
-  const addRef = (baseDir: string, value: PrunedLockfileDepRef): void => {
+  const addRef = (value: PrunedLockfileDepRef): void => {
     const ref = typeof value === 'string' ? value : value?.version;
     if (typeof ref !== 'string' || !ref.startsWith('link:')) {
       return;
     }
-    const target = resolveLinkTarget(baseDir, ref);
+    const target = resolveLinkTarget(ref);
     if (target === '' || target === '.') {
       logger.warn(
         `Local-path dependency "${ref}" resolves to the workspace root itself and cannot be shipped into the pruned output.`
@@ -1357,31 +1359,19 @@ function collectPrunedLinkTargetDirs(
     }
   };
 
+  // Every link: ref resolves from the lockfile dir (see resolveLinkTarget), so
+  // scan the root importer and both dependency-carrying package sections.
   const rootImporter = parsed.importers?.['.'] ?? {};
   for (const section of LOCKFILE_DEP_SECTIONS) {
     for (const value of Object.values(rootImporter[section] ?? {})) {
-      addRef('', value);
+      addRef(value);
     }
   }
-  // A snapshot's link: refs resolve from the package's own directory, so scan
-  // every directory-resolution package (the resolution lives in `packages`).
-  for (const [sectionName, section] of [
-    ['snapshots', parsed.snapshots],
-    ['packages', parsed.packages],
-  ] as const) {
-    for (const [key, snapshot] of Object.entries(section ?? {})) {
-      const directory =
-        snapshot?.resolution?.directory ??
-        (sectionName === 'snapshots'
-          ? parsed.packages?.[key]?.resolution?.directory
-          : undefined);
-      if (!directory) {
-        continue;
-      }
-      const base = normalizePath(directory);
+  for (const section of [parsed.snapshots, parsed.packages]) {
+    for (const snapshot of Object.values(section ?? {})) {
       for (const depSection of LOCKFILE_DEP_SECTIONS) {
         for (const value of Object.values(snapshot?.[depSection] ?? {})) {
-          addRef(base, value);
+          addRef(value);
         }
       }
     }
@@ -1401,8 +1391,8 @@ function collectPrunedLinkTargetDirs(
  *   -> the directory tree (copied workspace modules carry a `workspace_modules/`
  *   directory resolution and are shipped by copy-workspace-modules, so they are
  *   skipped here).
- * - a `link:` target (a root importer `link:` version, or a directory-package
- *   `link:` snapshot ref) -> the target directory tree.
+ * - a `link:` target (a root importer `link:` version, or a package `link:`
+ *   snapshot ref) -> the target directory tree.
  * `node_modules` is filtered from every directory copy; symlinked entries are
  * skipped with a warning; entries are deduped by destination. A source that
  * resolves outside the workspace root, or is missing on disk, is skipped with a

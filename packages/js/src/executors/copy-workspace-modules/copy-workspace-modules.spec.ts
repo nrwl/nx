@@ -308,7 +308,7 @@ describe('copyWorkspaceModules', () => {
     ).toBe(true);
   });
 
-  it('rewrites a copied module non-workspace link: dep from the module directory', async () => {
+  it('rewrites a copied module non-workspace link: dep onto the install root', async () => {
     tempFs.createFilesSync({
       // The local-path relocation is pnpm-gated on the workspace lockfile.
       'pnpm-lock.yaml': '',
@@ -333,10 +333,42 @@ describe('copyWorkspaceModules', () => {
 
     await runExecutor();
 
-    // The link: target (workspace-root vendor/thing) is re-relativized from the
-    // copied module dir workspace_modules/@scope/liba (3 segments up).
+    // pnpm reads a non-importer manifest link: spec relative to the install
+    // root, so the module-relative source ref lands deploy-root-relative.
     expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
-      'vendored-thing': 'link:../../../vendor/thing',
+      'vendored-thing': 'link:vendor/thing',
+    });
+  });
+
+  it('rewrites a copied module non-workspace file: dep from the module directory', async () => {
+    tempFs.createFilesSync({
+      'pnpm-lock.yaml': '',
+      [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
+        name: 'app',
+        version: '0.0.1',
+        dependencies: { '@scope/liba': 'workspace:*' },
+      }),
+      'libs/liba/package.json': JSON.stringify({
+        name: '@scope/liba',
+        version: '0.0.1',
+        dependencies: { 'vendored-thing': 'file:../../vendor/thing' },
+      }),
+    });
+    tempFs.createDirSync('dist/app');
+
+    mockGetWorkspacePackages.mockReturnValue(
+      new Map<string, any>([
+        ['@scope/liba', { data: { root: moduleRoot('libs/liba') } }],
+      ])
+    );
+
+    await runExecutor();
+
+    // Unlike link:, pnpm reads a non-importer manifest file: spec relative to
+    // the package dir, so it rebases onto the copied module directory
+    // (3 segments up for a scoped module).
+    expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
+      'vendored-thing': 'file:../../../vendor/thing',
     });
   });
 
@@ -367,7 +399,7 @@ describe('copyWorkspaceModules', () => {
 
     const manifest = readCopiedManifest('@scope/liba');
     expect(manifest.dependencies).toEqual({
-      'vendored-thing': 'link:../../../vendor/thing',
+      'vendored-thing': 'link:vendor/thing',
     });
     expect(manifest.peerDependencies).toBeUndefined();
     expect(manifest.peerDependenciesMeta).toBeUndefined();

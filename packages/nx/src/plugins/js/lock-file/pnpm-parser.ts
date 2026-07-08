@@ -711,14 +711,11 @@ export function stringifyPnpmLockfile(
         if (workspaceModules.has(depName)) {
           resolved[depName] = `file:workspace_modules/${depName}`;
         } else if (ref.startsWith('link:')) {
-          // link: refs resolve from the moved module's dir, so relocate them
-          // (file: refs resolve from the lockfile dir and stay; an unshippable
-          // target keeps its ref, matching the copied manifest).
-          const relocation = relocatePrunedLocalPathSpec(
-            ref,
-            importerPath,
-            `workspace_modules/${packageName}`
-          );
+          // pnpm reads a snapshot link: ref relative to the lockfile dir, so
+          // rebase the importer-relative ref onto the deploy root (file: refs
+          // are already lockfile-dir-relative and stay; an unshippable target
+          // keeps its ref, matching the copied manifest).
+          const relocation = relocatePrunedLocalPathSpec(ref, importerPath, '');
           resolved[depName] = relocation?.spec ?? ref;
         } else {
           resolved[depName] = ref;
