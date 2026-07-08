@@ -576,28 +576,8 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'CI execution failed',
-            link: 'troubleshooting/ci-execution-failed',
-          },
-          {
-            label: 'Unknown local cache error',
-            link: 'troubleshooting/unknown-local-cache',
-          },
-          {
-            label: 'Troubleshoot convert to inferred',
-            link: 'troubleshooting/troubleshoot-convert-to-inferred',
-          },
-          {
             label: 'Profiling performance',
             link: 'troubleshooting/performance-profiling',
-          },
-          {
-            label: 'Troubleshoot Nx Console issues',
-            link: 'troubleshooting/console-troubleshooting',
-          },
-          {
-            label: 'Troubleshoot Nx installations',
-            link: 'troubleshooting/troubleshoot-nx-install-issues',
           },
           {
             label: 'Fix Nx in Claude Code sandbox',
@@ -614,18 +594,6 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Include all package.json files',
-            link: 'guides/tips-n-tricks/include-all-packagejson',
-          },
-          {
-            label: 'Disable graph links from source analysis',
-            link: 'guides/tips-n-tricks/analyze-source-files',
-          },
-          {
-            label: 'Using Yarn PnP with Nx',
-            link: 'guides/tips-n-tricks/yarn-pnp',
-          },
-          {
             label: 'Use npm workspaces with Nx',
             link: 'guides/tips-n-tricks/npm-workspaces',
           },
@@ -640,10 +608,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Use Bun workspaces with Nx',
             link: 'guides/tips-n-tricks/bun-workspaces',
-          },
-          {
-            label: 'Identify dependencies between folders',
-            link: 'guides/tips-n-tricks/identify-dependencies-between-folders',
           },
           {
             label: 'Feature-based testing',
@@ -668,10 +632,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Standalone to monorepo',
             link: 'guides/tips-n-tricks/standalone-to-monorepo',
-          },
-          {
-            label: 'Migrate `nx` imports to `@nx/devkit`',
-            link: 'guides/tips-n-tricks/migrate-nx-imports-to-devkit',
           },
         ],
       },

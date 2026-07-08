@@ -9,7 +9,10 @@ import Markdoc, { Tag, type Config, type Node } from '@markdoc/markdoc';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { NX_DEV_ORIGIN, docsPathForSource } from './config';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 export interface ConvertedArticle {
   title: string;
@@ -28,6 +31,17 @@ export const IMAGE_PLACEHOLDER_PREFIX = 'pylon-image:';
 
 // Sanitizer probe (2026-07-07) confirmed Pylon preserves iframes.
 const ALLOW_IFRAMES = true;
+
+// Interactive {% graph %} components can't survive migration; each affected
+// article needs a pre-captured static screenshot registered here (keyed by
+// docs route). Capture with Playwright against a local preview.
+const GRAPH_SCREENSHOTS: Record<string, string> = {
+  '/docs/guides/tips-n-tricks/identify-dependencies-between-folders': path.join(
+    __dirname,
+    'assets',
+    'identify-dependencies-graph.png'
+  ),
+};
 
 const ASIDE_LABELS: Record<string, string> = {
   note: 'ℹ️ Note',
@@ -112,6 +126,33 @@ function buildTagConfig(articleDocsPath: string): Config {
       llm_only: {
         transform() {
           return null;
+        },
+      },
+      graph: {
+        transform(node) {
+          const shot = GRAPH_SCREENSHOTS[articleDocsPath];
+          if (!shot) {
+            throw new Error(
+              `{% graph %} in ${articleDocsPath} has no screenshot registered in GRAPH_SCREENSHOTS`
+            );
+          }
+          // Children (the inline graph JSON) are intentionally dropped.
+          const title = String(node.attributes.title ?? 'Project graph');
+          return new Tag('div', {}, [
+            new Tag('img', {
+              src: `${IMAGE_PLACEHOLDER_PREFIX}${shot}`,
+              alt: title,
+            }),
+            new Tag('p', {}, [
+              new Tag('em', {}, [
+                'Static snapshot of the interactive graph. Run ',
+              ]),
+              new Tag('code', {}, ['nx graph']),
+              new Tag('em', {}, [
+                ' in your own workspace for the interactive version.',
+              ]),
+            ]),
+          ]);
         },
       },
     },
@@ -201,6 +242,15 @@ export function convertArticle(sourcePath: string): ConvertedArticle {
 
   const images: string[] = [];
   for (const node of ast.walk()) {
+    if (node.type === 'tag' && node.tag === 'graph') {
+      const shot = GRAPH_SCREENSHOTS[docsPath];
+      if (!shot || !fs.existsSync(shot)) {
+        throw new Error(
+          `${sourcePath}: {% graph %} needs a screenshot registered in GRAPH_SCREENSHOTS`
+        );
+      }
+      images.push(shot);
+    }
     if (node.type === 'image') {
       const src = String(node.attributes.src ?? '');
       if (/^(https?:)?\/\//.test(src)) continue;

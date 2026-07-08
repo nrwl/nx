@@ -2,13 +2,13 @@
   "src/content/docs/guides/Tips-n-Tricks/migrate-nx-imports-to-devkit.mdoc": {
     "pylonId": "29b85f03-675a-4b96-ba4f-4d3441b0d5dc",
     "slug": "migrate-nx-imports-to-devkit",
-    "url": "",
+    "url": "https://help.nx.app/articles/9559202270-Migrate-`nx`-imports-to-`@nx/devkit`",
     "title": "Migrate `nx` imports to `@nx/devkit`",
     "description": "The `nx` package is the CLI, not a public import surface. Move plugin and script imports to `@nx/devkit` so they keep working in future major versions.",
     "docsPath": "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit",
     "contentHash": "7858593f7671b1cbcc9d6290beb0c775637361337cf49887786485c0537ece5c",
-    "lastSyncedAt": "2026-07-07T20:02:27.181Z",
-    "published": false
+    "lastSyncedAt": "2026-07-08T20:40:00.851Z",
+    "published": true
   },
   "src/content/docs/troubleshooting/troubleshoot-cache-misses.mdoc": {
     "pylonId": "13cf732b-3b29-4fc1-8a6c-ee723124e33e",
@@ -24,78 +24,100 @@
   "src/content/docs/troubleshooting/ci-execution-failed.mdoc": {
     "pylonId": "f1fb3ddf-7bdf-4a0f-94cf-d85739315b2d",
     "slug": "ci-execution-failed",
-    "url": "",
+    "url": "https://help.nx.app/articles/7998114218-Understanding-\"CI-Execution-Failed\"",
     "title": "Understanding \"CI Execution Failed\"",
     "description": "Common causes and solutions for CI execution failures in Nx Cloud",
     "docsPath": "/docs/troubleshooting/ci-execution-failed",
     "contentHash": "1707b9478c113c912096a0866a76512060ede186318dd2aedb82b556c8e311d4",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:10.295Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:27.114Z"
   },
   "src/content/docs/troubleshooting/console-troubleshooting.mdoc": {
     "pylonId": "9e15abf4-1754-4bee-933b-5a3abff5e6e2",
     "slug": "console-troubleshooting",
-    "url": "",
+    "url": "https://help.nx.app/articles/2815571239-Troubleshoot-Nx-Console-Issues",
     "title": "Troubleshoot Nx Console Issues",
     "description": "Learn how to resolve common issues with Nx Console, including Node.js version conflicts with nvm and WSL configuration in JetBrains IDEs.",
     "docsPath": "/docs/troubleshooting/console-troubleshooting",
     "contentHash": "6ba7e62558e2df5fda52a95e48044246b485b17b5aa142295794350b270f538e",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:14.474Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:31.289Z"
   },
   "src/content/docs/troubleshooting/unknown-local-cache.mdoc": {
     "pylonId": "2144b385-e699-4c80-a8c1-7620081af0aa",
     "slug": "unknown-local-cache",
-    "url": "",
+    "url": "https://help.nx.app/articles/3588128879-Unknown-Local-Cache-Error",
     "title": "Unknown Local Cache Error",
     "description": "Learn how to troubleshoot and resolve Nx cache errors related to machine ID changes, network drives, and understand how Nx ensures cache security.",
     "docsPath": "/docs/troubleshooting/unknown-local-cache",
     "contentHash": "a91c3e688c5ff3e58a448211b0b674d823b68ba03016ba79d6c6afda4f13963b",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:18.769Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:35.601Z"
   },
   "src/content/docs/troubleshooting/troubleshoot-convert-to-inferred.mdoc": {
     "pylonId": "b9ac6336-7a05-4b5a-9db6-88fe39e34f48",
     "slug": "troubleshoot-convert-to-inferred",
-    "url": "",
+    "url": "https://help.nx.app/articles/7855921932-Troubleshoot-Convert-to-Inferred-Migration",
     "title": "Troubleshoot Convert to Inferred Migration",
     "description": "Learn how to resolve common issues when migrating from executor-based tasks to inferred tasks in Nx, with specific solutions for Next.js, Remix, and other frameworks.",
     "docsPath": "/docs/troubleshooting/troubleshoot-convert-to-inferred",
     "contentHash": "8104b1f51ebae57e9d8bd44261ba251512b6c2f720f5ea400533581312e13135",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:22.998Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:39.806Z"
   },
   "src/content/docs/guides/Tips-n-Tricks/analyze-source-files.mdoc": {
     "pylonId": "1a0b8c3e-44b5-4ad8-a9d7-5eec7c665c0a",
     "slug": "analyze-source-files",
-    "url": "",
+    "url": "https://help.nx.app/articles/3124423636-Disable-Graph-Links-Created-from-Analyzing-Source-Files",
     "title": "Disable Graph Links Created from Analyzing Source Files",
     "description": "Learn how to configure Nx to only use dependencies defined in package.json instead of detecting dependencies from source code analysis.",
     "docsPath": "/docs/guides/tips-n-tricks/analyze-source-files",
     "contentHash": "6469d8b0305afe4353b433665c8de496d55c32a2999d3c74da27b8da75e251d5",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:27.197Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:43.965Z"
   },
   "src/content/docs/guides/Tips-n-Tricks/include-all-packagejson.mdoc": {
     "pylonId": "b5dba488-40f5-469c-968c-4524cafd9991",
     "slug": "include-all-packagejson",
-    "url": "",
+    "url": "https://help.nx.app/articles/8209554868-Include-All-package.json-Files-as-Projects",
     "title": "Include All package.json Files as Projects",
     "description": "Learn how to configure Nx to include all package.json files as projects in your workspace graph, not just those referenced in workspaces configuration.",
     "docsPath": "/docs/guides/tips-n-tricks/include-all-packagejson",
     "contentHash": "26a5b9d705fab4e6081c76535a31156c95272008a466499a6c8e1600f8f03bee",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:31.383Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:48.178Z"
   },
   "src/content/docs/guides/Tips-n-Tricks/yarn-pnp.mdoc": {
     "pylonId": "77bf4172-4822-4df2-b836-7724016d3f85",
     "slug": "yarn-pnp",
-    "url": "",
+    "url": "https://help.nx.app/articles/9991771374-Using-Yarn-Plug'n'Play-with-Nx",
     "title": "Using Yarn Plug'n'Play with Nx",
     "description": "Learn how to configure and use Yarn Plug'n'Play (PnP) in your Nx workspace to improve installation speed, reduce disk usage, and enforce dependency constraints.",
     "docsPath": "/docs/guides/tips-n-tricks/yarn-pnp",
     "contentHash": "ee6119b930089cec49d07bf76b66a6dea1ac014ccea29f5a28f9ac55c9c85f3e",
-    "published": false,
-    "lastSyncedAt": "2026-07-08T20:30:35.535Z"
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:39:52.340Z"
+  },
+  "src/content/docs/troubleshooting/troubleshoot-nx-install-issues.mdoc": {
+    "pylonId": "39175acc-9330-4960-9616-e61582078810",
+    "slug": "troubleshoot-nx-install-issues",
+    "url": "https://help.nx.app/articles/7622623416-Troubleshoot-Nx-Installations",
+    "title": "Troubleshoot Nx Installations",
+    "description": "Learn how to resolve common Nx installation issues, including native module problems, platform compatibility, and Node.js architecture mismatches.",
+    "docsPath": "/docs/troubleshooting/troubleshoot-nx-install-issues",
+    "contentHash": "7d5a03a538b44a3564b38e5e4724207d60e6f4b0d25a00e802691bd103f1ad64",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:40:05.065Z"
+  },
+  "src/content/docs/guides/Tips-n-Tricks/identify-dependencies-between-folders.mdoc": {
+    "pylonId": "6351f208-bf8b-482c-8b0b-0ef6f6639e75",
+    "slug": "identify-dependencies-between-folders",
+    "url": "https://help.nx.app/articles/9938625422-Identify-Dependencies-Between-Folders",
+    "title": "Identify Dependencies Between Folders",
+    "description": "Learn how to analyze and visualize dependencies between folders in your Nx workspace to help identify which code should be extracted into separate libraries.",
+    "docsPath": "/docs/guides/tips-n-tricks/identify-dependencies-between-folders",
+    "contentHash": "10aa47560653d4945159f813520ea77750963261f0ff0df8d902b734cd670959",
+    "published": true,
+    "lastSyncedAt": "2026-07-08T20:40:13.512Z"
   }
 }
