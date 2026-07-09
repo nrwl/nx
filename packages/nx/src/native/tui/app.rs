@@ -3397,6 +3397,15 @@ impl App {
         if let Some(pty) = state.get_pty_instance(item_id) {
             terminal_pane_data.can_be_interactive =
                 allow_interactive && in_progress && pty.can_be_interactive();
+            // A different task now occupies this pane: its search matches were
+            // computed against the previous scrollback, so drop the session.
+            let content_changed = terminal_pane_data
+                .pty
+                .as_ref()
+                .is_none_or(|current| !Arc::ptr_eq(current, &pty));
+            if content_changed {
+                terminal_pane_data.search = None;
+            }
             terminal_pane_data.pty = Some(pty.clone());
 
             // Resize PTY to match terminal pane dimensions (async to avoid blocking render)
