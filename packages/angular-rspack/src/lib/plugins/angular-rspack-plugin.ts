@@ -351,9 +351,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       // failure diagnostics still run since they usually carry the root
       // cause.
       try {
-        if (!this.#_options.skipTypeChecking && !this.#initializationError) {
+        if (!this.#initializationError) {
           const { errors, warnings } = await (this.#diagnosticsPromise ??
-            this.#angularCompilation.diagnoseFiles(DiagnosticModes.All));
+            this.#angularCompilation.diagnoseFiles(this.#diagnosticModes()));
           for (const error of errors ?? []) {
             compilation.errors.push({
               name: PLUGIN_NAME,
@@ -641,6 +641,14 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
   }
 
+  // Skipping type checking skips only the semantic pass; option and
+  // syntactic diagnostics still surface configuration and parse errors.
+  #diagnosticModes(): DiagnosticModes {
+    return this.#_options.skipTypeChecking
+      ? ((DiagnosticModes.All & ~DiagnosticModes.Semantic) as DiagnosticModes)
+      : DiagnosticModes.All;
+  }
+
   private async buildAndAnalyze() {
     this.#diagnosticsPromise = undefined;
     if (this.#initializationError) {
@@ -659,19 +667,17 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     }
     this.#mergeStylesheetMetafileInputs();
 
-    // Start type checking now so it overlaps with bundling; with the
+    // Start diagnostics now so they overlap with bundling; with the
     // worker-based compilation it runs off the main thread and the emit hook
     // only waits for what is left. Diagnostics still run after an emit
     // failure since they usually carry the root cause.
-    if (!this.#_options.skipTypeChecking) {
-      const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
-        DiagnosticModes.All
-      );
-      // Failed builds skip the emit hook that reports the result; don't
-      // leave the rejection unhandled.
-      diagnosticsPromise.catch(() => {});
-      this.#diagnosticsPromise = diagnosticsPromise;
-    }
+    const diagnosticsPromise = this.#angularCompilation.diagnoseFiles(
+      this.#diagnosticModes()
+    );
+    // Failed builds skip the emit hook that reports the result; don't
+    // leave the rejection unhandled.
+    diagnosticsPromise.catch(() => {});
+    this.#diagnosticsPromise = diagnosticsPromise;
   }
 
   // Fold this build's stylesheet bundling results into the persistent

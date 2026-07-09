@@ -30,7 +30,7 @@ const {
 vi.mock('@nx/angular-rspack-compiler', () => ({
   buildAndAnalyze: buildAndAnalyzeMock,
   createJavascriptTransformerCache: createJavascriptTransformerCacheMock,
-  DiagnosticModes: { All: 7 },
+  DiagnosticModes: { All: 7, Semantic: 4 },
   disposeComponentStylesheetBundler: disposeComponentStylesheetBundlerMock,
   JavaScriptTransformer: class {
     close = transformerCloseMock;
@@ -342,6 +342,30 @@ describe('AngularRspackPlugin', () => {
     const laterCompilation = createFakeCompilation(compiler);
     fireSyncTaps(compiler.hooks.thisCompilation, laterCompilation);
     expect(laterCompilation.warnings).toHaveLength(0);
+  });
+
+  it('should run only option and syntactic diagnostics when type checking is skipped', async () => {
+    const diagnoseFiles = vi.fn().mockResolvedValue({});
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = createFakeCompiler();
+    const plugin = new AngularRspackPlugin({
+      ...options,
+      skipTypeChecking: true,
+    } as never);
+    plugin.apply(compiler as never);
+
+    await runBuildStart(compiler);
+
+    // DiagnosticModes.All & ~DiagnosticModes.Semantic === 7 & ~4 === 3
+    expect(diagnoseFiles).toHaveBeenCalledWith(3);
+
+    // the diagnostics result is still consumed on emit without erroring
+    const compilation = createFakeCompilation(compiler);
+    await fireAsyncTaps(compiler.hooks.emit, compilation);
+    expect(compilation.errors).toHaveLength(0);
   });
 
   it('should not throw from afterDone when the run failed before producing stats', async () => {
