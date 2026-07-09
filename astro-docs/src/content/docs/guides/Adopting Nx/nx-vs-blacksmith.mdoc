@@ -18,7 +18,7 @@ Blacksmith is a drop-in replacement for GitHub Actions runners. It moves your jo
 
 ## Quick takeaway
 
-Blacksmith and Nx Cloud work on different layers. Blacksmith is a runner provider: swap the `runs-on` label and every job runs on a faster machine. Nx Cloud is a task-distribution orchestrator: it reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines. Blacksmith runners are standard GitHub Actions runners, so an Nx workspace can run its CI on Blacksmith with Nx Cloud on top, cheaper minutes and fewer of them. Blacksmith's edge is a simpler billing model. Nx Cloud's is eliminating work no machine speed can recover.
+Blacksmith and Nx Cloud work on different layers. Blacksmith is a runner provider: swap the `runs-on` label and every job runs on a faster machine. Nx Cloud is a task-distribution orchestrator: it reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines. Blacksmith runners are standard GitHub Actions runners, so an Nx workspace can run its CI on Blacksmith with Nx Cloud on top, cheaper minutes and fewer of them. Blacksmith makes each machine faster. Nx makes fewer machines necessary at all, the larger lever in a monorepo.
 
 | Topic                                                             | Nx Cloud                                                  | Blacksmith                                            |
 | ----------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
@@ -63,13 +63,13 @@ Blacksmith bills per minute, monthly, with a free tier and no annual commitment:
 
 ## Who should pick which
 
-Nx Cloud fits when any of these apply:
+Nx fits when any of these apply:
 
 - Most tasks on most PRs are unaffected or already cached and you want to skip them.
 - CI time calls for dynamic distribution, e2e splitting, or flaky-task handling.
 - You want a task cache shared across CI and developer machines, plus task-level analytics.
 
-Blacksmith fits when any of these apply:
+Blacksmith alone is enough only when:
 
 - Your pipelines lean on Docker builds that benefit from layer caching.
 - The bottleneck is raw machine speed on a repository small enough to run everything each push.

@@ -18,7 +18,7 @@ Turborepo is a task runner for JavaScript and TypeScript monorepos, maintained b
 
 ## Quick takeaway
 
-Both tools cover the same basics: task scheduling, local and remote caching, and affected detection. On top of those, Nx adds task sandboxing, code generation, polyglot support, release management, and a CI platform (Nx Cloud) with distribution, flaky-task handling, and self-healing. Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite. The sections below walk from onboarding through those advanced capabilities.
+Both tools are easy to set up and get started, and both cover the same basics: task scheduling, local and remote caching, and affected detection. On top of those, Nx adds task sandboxing, code generation, polyglot support, release management, and a CI platform (Nx Cloud) with distribution, flaky-task handling, and self-healing. Adoption isn't the trade-off it sounds like: Nx works with your existing scripts and is adopted incrementally, so a Turborepo workspace can move over without a rewrite. The sections below walk from onboarding through those advanced capabilities.
 
 {% aside type="note" title="Benchmarks" %}
 All benchmarks on this page use the same [pnpm workspace](https://github.com/meeroslav/pnpm-workspace-baseline) migrated with both tools.
@@ -438,7 +438,7 @@ Nx fits when any of these apply:
 - You want code generation, automated migrations, or self-healing and flaky-task handling on CI.
 - You want editor integration and an interactive project graph.
 
-Turborepo fits when any of these apply:
+Turborepo is enough only when:
 
 - Your workspace is JS/TS-only and you want a focused task runner with caching.
 - Remote caching and `--affected` cover your CI needs, without distribution or self-healing.

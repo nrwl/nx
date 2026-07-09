@@ -66,13 +66,13 @@ Depot provides job and machine-level analytics: CPU and memory per job, step tim
 
 ## Who should pick which
 
-Nx Cloud fits when any of these apply:
+Nx fits when any of these apply:
 
 - Most tasks on most PRs are redundant and you want to skip them, not run them faster.
 - CI time calls for task distribution, e2e splitting, or flaky-task handling.
 - You want a task cache shared across CI and developer machines with access control.
 
-Depot fits when any of these apply:
+Depot alone is enough only when:
 
 - Your pipelines are dominated by container builds that benefit from layer caching.
 - The bottleneck is raw machine speed on a repository small enough to run everything each push.
