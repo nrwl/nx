@@ -11,7 +11,8 @@ vi.mock('../utils', () => ({
       _tsconfig: string,
       existingOptions: Record<string, unknown>
     ) => ({
-      options: existingOptions,
+      // Explicit overrides still win; existingOptions never carries module.
+      options: { module: 99, ...existingOptions },
       rootNames: ['/root/src/main.ts'],
     }),
   }),
@@ -107,7 +108,7 @@ describe('setupCompilation', () => {
         _tsconfig: string,
         existingOptions: Record<string, unknown>
       ) => ({
-        options: { ...existingOptions, target: 9 },
+        options: { ...existingOptions, target: 9, module: 99 },
         rootNames: ['/root/src/main.ts'],
       }),
     } as never);
@@ -148,5 +149,165 @@ describe('setupCompilation', () => {
     expect(setupWarnings).toEqual([
       "TypeScript compiler option 'target' is set to 'ES2022'.",
     ]);
+  });
+
+  it('should force partial compilation mode to full and warn', async () => {
+    vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+      readConfiguration: (
+        _tsconfig: string,
+        existingOptions: Record<string, unknown>
+      ) => ({
+        options: {
+          ...existingOptions,
+          target: 9,
+          module: 99,
+          compilationMode: 'partial',
+        },
+        rootNames: ['/root/src/main.ts'],
+      }),
+    } as never);
+
+    const { compilerOptions, setupWarnings } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+
+    expect(compilerOptions.compilationMode).toBe('full');
+    expect(setupWarnings).toEqual([
+      expect.stringContaining('partial compilation mode is not supported'),
+    ]);
+  });
+
+  it('should not change a full compilation mode', async () => {
+    vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+      readConfiguration: (
+        _tsconfig: string,
+        existingOptions: Record<string, unknown>
+      ) => ({
+        options: {
+          ...existingOptions,
+          target: 9,
+          module: 99,
+          compilationMode: 'full',
+        },
+        rootNames: ['/root/src/main.ts'],
+      }),
+    } as never);
+
+    const { compilerOptions, setupWarnings } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+
+    expect(compilerOptions.compilationMode).toBe('full');
+    expect(setupWarnings).toEqual([]);
+  });
+
+  it.each([
+    [undefined, 7, true],
+    [1 /* CommonJS */, 7, true],
+    [4 /* System */, 7, true],
+    [5 /* ES2015 */, 5, false],
+    [99 /* ESNext */, 99, false],
+    [200 /* Preserve */, 200, false],
+  ])(
+    'should force unsupported module values to ES2022 (module: %s)',
+    async (module, expectedModule, warned) => {
+      vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+        readConfiguration: (
+          _tsconfig: string,
+          existingOptions: Record<string, unknown>
+        ) => ({
+          options: { ...existingOptions, target: 9, module },
+          rootNames: ['/root/src/main.ts'],
+        }),
+      } as never);
+
+      const { compilerOptions, setupWarnings } = await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options
+      );
+
+      expect(compilerOptions.module).toBe(expectedModule);
+      if (warned) {
+        expect(setupWarnings).toContainEqual(
+          expect.stringContaining(
+            "'module' values 'CommonJS', 'UMD', 'System' and 'AMD' are not supported"
+          )
+        );
+      } else {
+        expect(setupWarnings).toEqual([]);
+      }
+    }
+  );
+
+  it.each([
+    { moduleResolution: 100 /* Bundler */ },
+    { module: 200 /* Preserve */ },
+  ])(
+    'should sync the custom conditions to the bundler with %o',
+    async (caseOpts) => {
+      vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+        readConfiguration: (
+          _tsconfig: string,
+          existingOptions: Record<string, unknown>
+        ) => ({
+          options: {
+            ...existingOptions,
+            target: 9,
+            module: 99,
+            customConditions: ['from-tsconfig'],
+            ...caseOpts,
+          },
+          rootNames: ['/root/src/main.ts'],
+        }),
+      } as never);
+
+      const { compilerOptions } = await setupCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        { ...options, customConditions: ['es2020', 'es2015'] }
+      );
+
+      expect(compilerOptions.customConditions).toEqual(['es2020', 'es2015']);
+    }
+  );
+
+  it('should keep the tsconfig custom conditions without bundler-style resolution', async () => {
+    vi.mocked(loadCompilerCli).mockResolvedValueOnce({
+      readConfiguration: (
+        _tsconfig: string,
+        existingOptions: Record<string, unknown>
+      ) => ({
+        options: {
+          ...existingOptions,
+          target: 9,
+          module: 100 /* Node16 */,
+          moduleResolution: 3 /* Node16 */,
+          customConditions: ['from-tsconfig'],
+        },
+        rootNames: ['/root/src/main.ts'],
+      }),
+    } as never);
+
+    const { compilerOptions } = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      { ...options, customConditions: ['es2020'] }
+    );
+
+    expect(compilerOptions.customConditions).toEqual(['from-tsconfig']);
+  });
+
+  it('should force the preserveSymlinks option over the tsconfig value', async () => {
+    const enabled = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      { ...options, preserveSymlinks: true }
+    );
+    expect(enabled.compilerOptions.preserveSymlinks).toBe(true);
+
+    const disabled = await setupCompilation(
+      { source: { tsconfigPath: '/root/tsconfig.json' } },
+      options
+    );
+    expect(disabled.compilerOptions.preserveSymlinks).toBeUndefined();
   });
 });

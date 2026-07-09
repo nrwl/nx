@@ -149,7 +149,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     compiler.hooks.beforeRun.tapAsync(
       PLUGIN_NAME,
       async (compiler, callback) => {
-        await this.setupCompilation(root, compiler.options.resolve.tsConfig);
+        await this.setupCompilation(root, compiler.options.resolve);
 
         compiler.hooks.beforeCompile.tapAsync(
           PLUGIN_NAME,
@@ -210,7 +210,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
               }
               await this.setupCompilation(
                 root,
-                compiler.options.resolve.tsConfig,
+                compiler.options.resolve,
                 changedFiles.size > 0 ? changedFiles : undefined,
                 true
               );
@@ -579,12 +579,13 @@ export class AngularRspackPlugin implements RspackPluginInstance {
 
   private async setupCompilation(
     root: string,
-    tsConfig: RspackOptionsNormalized['resolve']['tsConfig'],
+    resolve: RspackOptionsNormalized['resolve'],
     modifiedFiles?: Set<string>,
     watch = false
   ) {
     this.#initializationError = undefined;
     this.#emitError = undefined;
+    const tsConfig = resolve.tsConfig;
     const tsconfigPath = tsConfig
       ? typeof tsConfig === 'string'
         ? tsConfig
@@ -610,6 +611,10 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           sass: this.#_options.stylePreprocessorOptions?.sass,
           watch,
           sourceMap: this.#_options.sourceMap.scripts,
+          preserveSymlinks: this.#_options.preserveSymlinks,
+          // '...' splices rspack's default conditions back in; the rest are
+          // the bundler's custom conditions the program must match.
+          customConditions: resolve.conditionNames?.filter((c) => c !== '...'),
         },
         this.#sourceFileCache,
         this.#angularCompilation,
