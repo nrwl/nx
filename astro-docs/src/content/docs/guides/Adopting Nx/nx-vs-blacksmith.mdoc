@@ -43,10 +43,10 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-Blacksmith is a one-line change to a normal GitHub Actions workflow: swap `runs-on: ubuntu-latest` for `runs-on: blacksmith-4vcpu-ubuntu-2404`. That gives you a faster machine, not a way to spread work across several. Parallelizing is still on you, through GitHub Actions matrix jobs with static shard counts, one job (and matrix) per check, rebalanced by hand as the suite grows. The shard count is fixed before the run, so a slow shard can't hand work to an idle one.
+Blacksmith is a one-line change to a normal GitHub Actions workflow: swap `runs-on: ubuntu-latest` for `runs-on: blacksmith-4vcpu-ubuntu-2404`. That gives you a faster machine, not a way to spread work across several. Parallelizing is still on you, through GitHub Actions matrix jobs with static shard counts, one job (and matrix) per check, rebalanced by hand as the suite grows. Each job is a fresh, isolated runner, so every check repeats the checkout and dependency install, and the shard count is fixed before the run, so a slow shard can't hand work to an idle one.
 
 {% tabs %}
-{% tabitem label="Blacksmith (matrix sharding)" %}
+{% tabitem label="Blacksmith" %}
 
 ```yaml
 # .github/workflows/ci.yml
@@ -81,7 +81,7 @@ jobs:
 ```
 
 {% /tabitem %}
-{% tabitem label="Nx (Nx Agents)" %}
+{% tabitem label="Nx" %}
 
 ```yaml
 # .github/workflows/ci.yml
