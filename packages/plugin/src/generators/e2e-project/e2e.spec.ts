@@ -253,8 +253,23 @@ describe('NxPlugin e2e-project Generator', () => {
       ? 'my-plugin-e2e/vitest.config.ts'
       : 'my-plugin-e2e/vitest.config.mts';
     const vitestConfig = tree.read(vitestConfigPath, 'utf-8');
-    expect(vitestConfig).toContain('globalSetup');
-    expect(vitestConfig).toContain('globalTeardown');
+    expect(vitestConfig).toContain(
+      "globalSetup: '../tools/scripts/vitest-global-setup.ts'"
+    );
+    // vitest has no globalTeardown option; teardown is exported from the
+    // globalSetup file instead
+    expect(vitestConfig).not.toContain('globalTeardown');
+
+    const globalSetup = tree.read(
+      'tools/scripts/vitest-global-setup.ts',
+      'utf-8'
+    );
+    expect(globalSetup).toContain(
+      "export { default as setup } from './start-local-registry'"
+    );
+    expect(globalSetup).toContain(
+      "export { default as teardown } from './stop-local-registry'"
+    );
   });
 
   it('should setup the eslint builder', async () => {

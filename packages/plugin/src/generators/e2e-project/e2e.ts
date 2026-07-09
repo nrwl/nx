@@ -241,10 +241,29 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     coverageProvider: 'none',
   } satisfies Partial<VitestGeneratorSchema>);
 
-  const { startLocalRegistryPath, stopLocalRegistryPath } =
-    addLocalRegistryScripts(host);
+  addLocalRegistryScripts(host);
 
-  // Add globalSetup and globalTeardown to vitest config
+  // Vitest has no `globalTeardown` option. Its `globalSetup` file must export
+  // both `setup` and `teardown`, so wire the local registry scripts through a
+  // wrapper module. Without the teardown, the verdaccio process started in
+  // setup outlives the test run.
+  const vitestGlobalSetupPath = 'tools/scripts/vitest-global-setup.ts';
+  if (!host.exists(vitestGlobalSetupPath)) {
+    host.write(
+      vitestGlobalSetupPath,
+      `/**
+ * This script adapts the local registry scripts to vitest's globalSetup
+ * lifecycle: vitest calls the exported setup and teardown functions around
+ * the test run.
+ */
+
+export { default as setup } from './start-local-registry';
+export { default as teardown } from './stop-local-registry';
+`
+    );
+  }
+
+  // Add globalSetup to vitest config
   // Check for both .mts and .ts extensions (mts is checked first as it's the default created by @nx/vitest)
   const vitestConfigExtensions = ['mts', 'ts'];
   let vitestConfigPath: string | undefined;
@@ -264,14 +283,10 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     let vitestConfig = host.read(vitestConfigPath, 'utf-8');
     const globalSetupPath = join(
       offsetFromRoot(options.projectRoot),
-      startLocalRegistryPath
-    );
-    const globalTeardownPath = join(
-      offsetFromRoot(options.projectRoot),
-      stopLocalRegistryPath
+      vitestGlobalSetupPath
     );
 
-    // Insert globalSetup and globalTeardown in the test config
+    // Insert globalSetup in the test config
     // Look for 'test: {' and insert our properties right after the opening brace
     const testConfigRegex = /(test:\s*\{\s*)/;
     const match = testConfigRegex.exec(vitestConfig);
@@ -284,13 +299,13 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
 
       vitestConfig = vitestConfig.replace(
         testConfigRegex,
-        `$1\n${indent}globalSetup: '${globalSetupPath}',\n${indent}globalTeardown: '${globalTeardownPath}',`
+        `$1\n${indent}globalSetup: '${globalSetupPath}',`
       );
       host.write(vitestConfigPath, vitestConfig);
     } else {
       // If we can't find the test config block, log a warning
       throw new Error(
-        `Could not find test configuration block in ${vitestConfigPath}. Please manually add globalSetup and globalTeardown properties.`
+        `Could not find test configuration block in ${vitestConfigPath}. Please manually add the globalSetup property.`
       );
     }
   } else {
