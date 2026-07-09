@@ -6,4 +6,12 @@ sidebar:
 pagefind: false
 ---
 
-{% sidebar_group_cards group="Knowledge Base/Comparisons" /%}
+{% cards cols=2 %}
+{% card title="Nx vs Turborepo" description="Task running, caching, distributed CI, and the platform around them" url="/docs/guides/adopting-nx/nx-vs-turborepo" /%}
+{% card title="Nx vs Vite+" description="The Vite toolchain plus remote caching, affected detection, and CI" url="/docs/guides/adopting-nx/nx-vs-vite-plus" /%}
+{% card title="Nx vs Bazel" description="Incremental adoption versus a full build-system migration" url="/docs/guides/adopting-nx/nx-vs-bazel" /%}
+{% card title="Nx vs Depot" description="Faster runners versus a task-graph platform that removes work" url="/docs/guides/adopting-nx/nx-vs-depot" /%}
+{% card title="Nx vs Blacksmith" description="Faster machines versus distribution, caching, and flaky handling" url="/docs/guides/adopting-nx/nx-vs-blacksmith" /%}
+{% card title="Nx vs Develocity" description="JVM build acceleration versus the whole monorepo in one graph" url="/docs/guides/adopting-nx/nx-vs-develocity" /%}
+{% card title="Nx vs Buildkite" description="A CI platform versus a task-graph layer on any CI" url="/docs/guides/adopting-nx/nx-vs-buildkite" /%}
+{% /cards %}

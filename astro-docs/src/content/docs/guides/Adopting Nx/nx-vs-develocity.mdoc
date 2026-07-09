@@ -28,17 +28,17 @@ For a polyglot repository the choice is deep on one language or wide across all 
 | Topic                                         | Nx Cloud                                                    | Develocity                                                |
 | --------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
 | [Scope](#scope)                               | One graph across JS/TS, JVM, .NET, and more                 | Gradle, Maven, Bazel, sbt (npm observed, not accelerated) |
-| [Build caching](#build-caching)               | Every cacheable task in the workspace                       | Gradle, Maven, and Bazel builds                           |
+| [Build caching](#build-caching)               | Every cacheable task in the workspace                       | Gradle, Maven, Bazel, and sbt builds                      |
 | [Test selection](#test-selection)             | Deterministic `nx affected` at project level, all languages | ML-based Predictive Test Selection, Gradle and Maven only |
 | [Distribution](#distribution)                 | Any task type across dynamically balanced agents            | JVM test executions on JUnit Platform                     |
 | [E2E splitting](#e2e-splitting)               | Atomizer splits Playwright/Cypress suites per file          | Not available                                             |
-| [Flaky tests](#flaky-tests)                   | Detection and isolated re-runs                              | Detection, retries, quarantine, and org-wide trends       |
+| [Flaky tests](#flaky-tests)                   | Detection and isolated re-runs                              | Detection, retries, and org-wide trends                   |
 | [AI integration](#ai-integration)             | Self-healing CI proposes and verifies fixes                 | MCP servers and failure grouping provide context          |
 | [Adoption and pricing](#adoption-and-pricing) | Self-serve, public pricing, free tier, single-tenant option | Per-committer enterprise contracts, mature on-prem story  |
 
 ## Scope
 
-The Develocity compatibility matrix draws the boundary: Build Scan, caching, test distribution, and Predictive Test Selection are available for Gradle and Maven, with scans and caching for Bazel and scans for sbt. Its npm agent captures Build Scans, test insights, and failure analytics for JS builds, but the compatibility matrix lists no build caching, distribution, or test selection for npm. There is no repository-level project graph. Agents wrap individual build invocations.
+The Develocity compatibility matrix draws the boundary: Build Scan, caching, test distribution, and Predictive Test Selection are available for Gradle and Maven, with scans and caching for Bazel and sbt. Its npm agent captures Build Scans, test insights, and failure analytics for JS builds, but the compatibility matrix lists no build caching, distribution, or test selection for npm. There is no repository-level project graph. Agents wrap individual build invocations.
 
 Nx starts from the repository. The [`@nx/gradle`](/docs/technologies/java/gradle/introduction) plugin puts Gradle projects in the same graph as your JS/TS projects, alongside plugins for Maven, .NET, and community plugins for Python, Rust, and Go. Every Nx Cloud feature below applies to that whole graph.
 
@@ -66,7 +66,7 @@ Develocity has no support for JS e2e runners. [Atomizer](/docs/features/ci-featu
 
 ## Flaky tests
 
-Develocity's flaky test management runs deep: detection across Gradle, Maven, Bazel, and npm builds, retry integration, a quarantine workflow, and org-wide flakiness trends.
+Develocity's flaky test management runs deep: detection across Gradle, Maven, Bazel, and npm builds, retry integration, and org-wide flakiness trends.
 
 Nx Cloud [detects flaky tasks](/docs/features/ci-features/flaky-tasks) from execution history and re-runs them in isolation automatically, covering every task type, so a flaky Playwright spec is handled the same way as a flaky JUnit class.
 
