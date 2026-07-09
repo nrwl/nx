@@ -127,11 +127,8 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
   });
 
   it('skips a projects filter without throwing when resolved with no project context', () => {
-    // Reproduces the crash hit by generators that read target defaults without
-    // a project (e.g. `@nx/vite`'s `getViteE2EWebServerInfo` reading a default
-    // port), which the `@nx/react-native`/`@nx/expo` app generators reach via
-    // `addE2e`. A `projects`-filtered entry cannot be evaluated with no project,
-    // so it is skipped rather than dereferencing an undefined project node.
+    // Regression: generators read target defaults with no project context, e.g.
+    // getViteE2EWebServerInfo (reached by the RN/Expo app generators via addE2e).
     const targetDefaults = {
       test: [
         { cache: true },
@@ -150,8 +147,6 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
   });
 
   it('returns null (does not throw) for a target whose only entry is projects-filtered, with no project context', () => {
-    // The exact `getViteE2EWebServerInfo` shape: `readTargetDefaultsForTarget('dev', ...)`
-    // with no opts against a key that only has a projects-filtered entry.
     const targetDefaults = {
       dev: [{ filter: { projects: ['app'] }, options: { port: 5000 } }],
     };
