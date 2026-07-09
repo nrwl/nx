@@ -43,9 +43,62 @@ Blacksmith transparently accelerates the `actions/cache` API and offers sticky d
 
 ## Distribution
 
-On Blacksmith, parallelism is your GitHub Actions matrix: one job per check, fixed runner sizes chosen per job, and manual test sharding that you rebalance by hand as the repository grows. A slow shard idles the rest of the fleet until it finishes. In one customer evaluation on the same monorepo, that Blacksmith setup, a matrix per check, fixed runner sizes, required-check wiring, and manual shards with a merge job, ran roughly 620 lines of workflow configuration. The equivalent Nx Agents setup was about 290 lines, and dropped shard rebalancing entirely.
+Blacksmith is a one-line change to a normal GitHub Actions workflow: swap `runs-on: ubuntu-latest` for `runs-on: blacksmith-4vcpu-ubuntu-2404`. That gives you a faster machine, not a way to spread work across several. Parallelizing is still on you, through GitHub Actions matrix jobs with static shard counts, one job (and matrix) per check, rebalanced by hand as the suite grows. The shard count is fixed before the run, so a slow shard can't hand work to an idle one.
 
-[Nx Agents](/docs/features/ci-features/distribute-task-execution) don't shard upfront. Tasks are slotted onto machines continuously as agents free up, balanced from historical timing data, with assignment rules for CPU- or memory-heavy outliers. The configuration is task-level: you declare what to distribute rather than maintaining a per-machine task map, and there is nothing to rebalance as the workspace grows.
+{% tabs %}
+{% tabitem label="Blacksmith (matrix sharding)" %}
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  lint:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx eslint .
+  test:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx jest
+  build:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npm run build
+  e2e:
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    strategy:
+      matrix:
+        shard: [1, 2, 3, 4] # shard count fixed before the run, rebalanced by hand
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx playwright test --shard=${{ matrix.shard }}/4
+```
+
+{% /tabitem %}
+{% tabitem label="Nx (Nx Agents)" %}
+
+```yaml
+# .github/workflows/ci.yml
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci
+      - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"
+      - run: npx nx run-many -t lint test build e2e
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+[Nx Agents](/docs/features/ci-features/distribute-task-execution) assign tasks to machines as they free up, balanced from historical timing data. There is no matrix and no shard count to maintain: one `nx run-many` covers every check, and `--distribute-on` scales agents up or down as the workspace grows, so a slow task never idles the rest of the fleet.
 
 ## Test splitting and flaky tests
 
