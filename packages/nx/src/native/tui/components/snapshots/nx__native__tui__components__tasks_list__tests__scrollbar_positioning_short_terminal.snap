@@ -7,7 +7,7 @@ expression: terminal.backend()
 "                                                                               ↑"
 "                                                                               █"
 "> ·    app10:test                                              ...        ...  █"
-"  ·    app11:build                                             ...        ...  ║"
+"  ·    app11:build                                             ...        ...  █"
 "  ·    app12:lint                                              ...        ...  ║"
 "  ·    app13:test                                              ...        ...  ║"
 "  ·    app14:build                                             ...        ...  ║"

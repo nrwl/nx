@@ -2269,15 +2269,19 @@ impl TasksList {
             if safe_scrollbar_area.width > 0 && safe_scrollbar_area.height > 0 {
                 // Drive the scrollbar from scroll offset so the thumb accurately
                 // reflects which portion of the list is currently in view.
-                // Clamp inputs to keep the (content, viewport, position) triple
-                // consistent even during resizes or transitional frames.
-                let content_len = scroll_metrics.total_entries.max(1);
-                let viewport_len = scroll_metrics.viewport_height.clamp(1, content_len);
-                let max_pos = content_len.saturating_sub(viewport_len);
+                // ratatui positions the thumb over 0..=content_length, so
+                // content_length must be the number of scroll positions
+                // (total - viewport), not the total entry count — otherwise the
+                // thumb never reaches the track bottom at max scroll. This
+                // matches the terminal pane's scrollbar convention. Clamp to
+                // keep the triple consistent during resizes / transitional frames.
+                let total_entries = scroll_metrics.total_entries.max(1);
+                let viewport_len = scroll_metrics.viewport_height.clamp(1, total_entries);
+                let max_pos = total_entries.saturating_sub(viewport_len);
                 let pos = scroll_metrics.scroll_offset.min(max_pos);
 
                 let mut scrollbar_state = ScrollbarState::default()
-                    .content_length(content_len)
+                    .content_length(max_pos)
                     .viewport_content_length(viewport_len)
                     .position(pos);
 

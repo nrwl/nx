@@ -7,7 +7,7 @@ expression: terminal.backend()
 " │                                                                             ↑"
 " │·    Waiting for task...                                                     █"
 " │·    Waiting for task...                                                     █"
-" └                                                                             ║"
+" └                                                                             █"
 "> ·    app10:test                                              ...        ...  ║"
 "  ·    app1:test                                               ...        ...  ║"
 "  ·    app2:test                                               ...        ...  ║"
