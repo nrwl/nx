@@ -46,11 +46,8 @@ const DURATION_NOT_YET_KNOWN: &str = "...";
 const DEFAULT_MAX_PARALLEL: usize = 0;
 
 // Constants for layout calculation
-const COLLAPSED_HELP_WIDTH: u16 = 19; // "quit: q help: ?"
-const FULL_HELP_WIDTH: u16 = 86; // Full help text width
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between Cloud and Help
-const SCROLLBAR_WIDTH: u16 = 3; // Width for scrollbar area (1 scrollbar + 2 padding)
 // Rows consumed by the table header area: top_margin(1) + header content(1) + spacing row(1)
 const TABLE_HEADER_OVERHEAD_ROWS: u16 = 3;
 // Rows before the scrollbar track starts: top_margin(1) + header content(1)
@@ -2804,6 +2801,13 @@ impl Component for TasksList {
         // either counts as "has cloud content" for laying out the bottom bar.
         let has_cloud_message = self.cloud_message.is_some() || self.cloud_link.is_some();
 
+        // Measure the help text as it will actually render (the post-run help
+        // includes the perf report hint) so reservations match reality.
+        let collapsed_help_width =
+            HelpText::new(true, false, false, self.perf_report_available).width();
+        let full_help_width =
+            HelpText::new(false, false, false, self.perf_report_available).width();
+
         // --- 2. Determine Bottom Layout Mode ---
         enum BottomLayoutMode {
             SingleLine { help_collapsed: bool }, // Cloud + Help
@@ -2821,17 +2825,15 @@ impl Component for TasksList {
             } else if let Some(message) = &self.cloud_message {
                 if message.contains("https://") {
                     let url_start_pos = message.find("https://").unwrap_or(message.len());
-                    let prefix = &message[0..url_start_pos];
                     let url = &message[url_start_pos..];
-                    let full_message_width = (prefix.len() + url.len()) as u16;
-                    let url_width = url.len() as u16;
+                    let full_message_width = Span::raw(message.as_str()).width() as u16;
+                    let url_width = Span::raw(url).width() as u16;
 
                     // Check if we'll need to fall back to URL-only rendering
                     // We need to account for the help text that will be on the same line
                     let available_for_cloud = area
                         .width
-                        .saturating_sub(SCROLLBAR_WIDTH)
-                        .saturating_sub(COLLAPSED_HELP_WIDTH)
+                        .saturating_sub(collapsed_help_width)
                         .saturating_sub(MIN_BOTTOM_SPACING);
 
                     if full_message_width <= available_for_cloud {
@@ -2841,16 +2843,15 @@ impl Component for TasksList {
                         url_width
                     }
                 } else {
-                    message.len() as u16
+                    Span::raw(message.as_str()).width() as u16
                 }
             } else {
                 0
             };
 
-            let required_width_full_help =
-                SCROLLBAR_WIDTH + cloud_text_width + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
+            let required_width_full_help = cloud_text_width + full_help_width + MIN_BOTTOM_SPACING;
             let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + cloud_text_width + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
+                cloud_text_width + collapsed_help_width + MIN_BOTTOM_SPACING;
 
             if required_width_full_help <= area.width {
                 layout_mode = BottomLayoutMode::SingleLine {
@@ -2867,9 +2868,8 @@ impl Component for TasksList {
             }
         } else {
             // No Cloud message is present
-            let required_width_full_help = SCROLLBAR_WIDTH + FULL_HELP_WIDTH + MIN_BOTTOM_SPACING;
-            let required_width_collapsed_help =
-                SCROLLBAR_WIDTH + COLLAPSED_HELP_WIDTH + MIN_BOTTOM_SPACING;
+            let required_width_full_help = full_help_width + MIN_BOTTOM_SPACING;
+            let required_width_collapsed_help = collapsed_help_width + MIN_BOTTOM_SPACING;
 
             if required_width_full_help <= area.width {
                 layout_mode = BottomLayoutMode::NoCloud {
@@ -2902,9 +2902,9 @@ impl Component for TasksList {
 
         let needs_filter_separator = matches!(layout_mode, BottomLayoutMode::TwoLine {..} | BottomLayoutMode::NoCloud {..} if has_cloud_message || !final_help_collapsed);
         let final_help_width = if final_help_collapsed {
-            COLLAPSED_HELP_WIDTH
+            collapsed_help_width
         } else {
-            FULL_HELP_WIDTH
+            full_help_width
         };
 
         if filter_is_active {
@@ -4203,6 +4203,86 @@ mod tests {
 
         render_to_test_backend(&mut terminal, &mut tasks_list);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    /// Render the full buffer to a row-major string for content assertions.
+    fn buffer_to_string(terminal: &Terminal<TestBackend>) -> String {
+        let buffer = terminal.backend().buffer().clone();
+        (0..buffer.area.height)
+            .map(|y| {
+                (0..buffer.area.width)
+                    .map(|x| buffer[(x, y)].symbol().to_string())
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
+    fn create_completed_tasks_list_with_cloud_message(message: &str) -> TasksList {
+        let (mut tasks_list, test_tasks) = create_test_tasks_list();
+        for task in &test_tasks {
+            tasks_list
+                .update(Action::UpdateTaskStatus(
+                    task.id.clone(),
+                    TaskStatus::Success,
+                ))
+                .unwrap();
+        }
+        tasks_list
+            .update(Action::UpdateCloudMessage(message.to_string()))
+            .ok();
+        tasks_list
+    }
+
+    #[test]
+    fn cloud_message_keeps_prefix_when_it_fits_with_collapsed_help() {
+        // 59-col message + 16-col collapsed help + 4-col gap = exactly 79 columns.
+        let message = "View logs and run details at https://nx.app/runs/KnGk4A47qk";
+        let mut tasks_list = create_completed_tasks_list_with_cloud_message(message);
+        let mut terminal = create_test_terminal(79, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        assert!(
+            buffer_to_string(&terminal).contains(message),
+            "the full message fits next to the collapsed help, so the prefix must not be dropped"
+        );
+    }
+
+    #[test]
+    fn full_help_expands_when_it_fits_next_to_cloud_message() {
+        // 59-col message + 84-col full help + 4-col gap = exactly 147 columns.
+        let message = "View logs and run details at https://nx.app/runs/KnGk4A47qk";
+        let mut tasks_list = create_completed_tasks_list_with_cloud_message(message);
+        let mut terminal = create_test_terminal(147, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        let rendered = buffer_to_string(&terminal);
+        assert!(
+            rendered.contains(message),
+            "the full message fits, so it must render"
+        );
+        assert!(
+            rendered.contains("navigate:"),
+            "the full help fits next to the message, so it must not collapse"
+        );
+    }
+
+    #[test]
+    fn perf_report_hint_is_not_clipped_next_to_cloud_message() {
+        // 59-col message + 100-col post-run full help + 4-col gap = exactly 163 columns.
+        let message = "View logs and run details at https://nx.app/runs/KnGk4A47qk";
+        let mut tasks_list = create_completed_tasks_list_with_cloud_message(message);
+        tasks_list.set_perf_report_available(true);
+        let mut terminal = create_test_terminal(163, 15);
+
+        render_to_test_backend(&mut terminal, &mut tasks_list);
+
+        assert!(
+            buffer_to_string(&terminal).contains("perf report: p"),
+            "the post-run help includes the perf report hint and fits, so it must not be clipped"
+        );
     }
 
     #[test]
