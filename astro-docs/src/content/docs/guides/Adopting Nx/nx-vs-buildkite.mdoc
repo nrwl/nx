@@ -18,7 +18,12 @@ Buildkite is a CI/CD platform with a hosted control plane and agents that run on
 
 ## Quick takeaway
 
-Buildkite and Nx Cloud aren't alternatives. They sit at different layers. Buildkite replaces your CI platform: you move pipelines onto it, and its hybrid model keeps source code on agents you operate. Nx Cloud replaces nothing, adding task-graph intelligence, caching, affected detection, and distribution, to whatever CI you run. They overlap only on monorepo awareness, test splitting, and how work spreads across machines, and Buildkite itself ships an [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/), a sign the two are already used together.
+Buildkite and Nx aren't alternatives. They sit at different layers:
+
+- **Buildkite replaces your CI platform.** You move pipelines onto it, and its hybrid model keeps source code on agents you operate.
+- **Nx replaces nothing.** It adds task-graph intelligence, caching, affected detection, and distribution, to whatever CI you already run.
+
+They overlap only on monorepo awareness, test splitting, and how work spreads across machines, and Buildkite itself ships an [`nx-set-shas` plugin](https://buildkite.com/resources/plugins/buildkite-plugins/nx-set-shas-buildkite-plugin/), a sign Buildkite users adopt Nx.
 
 | Topic                                                             | Nx Cloud                                            | Buildkite                                                     |
 | ----------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------- |

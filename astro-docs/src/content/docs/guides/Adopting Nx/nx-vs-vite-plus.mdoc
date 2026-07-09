@@ -18,7 +18,12 @@ Nx is a build system that orchestrates the tools you already use. Plugins config
 
 ## Quick takeaway
 
-The two overlap on task running, local caching, and package filtering. They differ on non-local runs, like CI: a cache shared across teammates and machines, task distribution, and cross-language support. There, Vite+ is either roadmap or absent, while Nx has run these in production for years. Because the [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugin runs the Vite toolchain rather than replacing it, choosing Nx doesn't mean giving up Vite or Vitest. Nx fits a small workspace as well as a large one, and it's the platform that holds up as the monorepo scales.
+Nx and Vite+ share the basics: task running, local caching, and package filtering. They differ on non-local runs, like CI:
+
+- **Vite+ is roadmap or absent there.** A shared cache, task distribution, and cross-language support are missing or unshipped.
+- **Nx has run these in production for years.** Remote caching, Nx Agents distribution, and affected detection across languages.
+
+Because the [`@nx/vite`](/docs/technologies/build-tools/vite/introduction) plugin runs the Vite toolchain rather than replacing it, choosing Nx keeps Vite and Vitest. Nx fits a small workspace as well as a large one, and holds up as the monorepo scales.
 
 {% aside type="note" title="Vite+ is in beta" %}
 Vite+ reached beta in July 2026 and is evolving quickly. The capabilities below reflect the [Vite+ beta announcement](https://voidzero.dev/posts/announcing-vite-plus-beta) and its published roadmap.

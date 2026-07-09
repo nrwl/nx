@@ -18,7 +18,10 @@ Bazel is the open-source version of Google's internal build system, built for he
 
 ## Quick takeaway
 
-Bazel is strong at hermetic caching, remote execution, and reproducibility, and a small number of massive, heavily polyglot organizations need that depth. For nearly everyone else the cost outweighs the payoff, and it lands up front: Bazel's benefits arrive only after the migration and hermeticity work are done, while you can try Nx in an afternoon on your existing codebase with caching and affected detection working from the start. Bazel takes weeks to adopt, longer across many teams, and ongoing upkeep to run, which Aspect, maintainer of Bazel's JavaScript rulesets, estimates at [0.75 to 1 full-time build engineer](https://blog.aspect.build/estimating-bazel-cicd) on an ongoing basis. Nx delivers the same CI wins, caching, affected detection, and distribution, on your existing scripts with incremental adoption, and it scales to large monorepos without a dedicated build team. It also carries a tooling layer, generators, migrations, release, and AI-assisted CI, that Bazel has no native answer for.
+Bazel is strong at hermetic caching, remote execution, and reproducibility, and a small number of massive, heavily polyglot organizations need that depth. For nearly everyone else the cost outweighs the payoff, and it lands up front:
+
+- **Bazel pays off only after the work is done.** `BUILD` files, hermeticity, and a migration measured in weeks (longer across teams), plus ongoing upkeep that Aspect, maintainer of Bazel's JavaScript rulesets, estimates at [0.75 to 1 full-time build engineer](https://blog.aspect.build/estimating-bazel-cicd).
+- **Nx delivers the same CI wins from day one.** Caching, affected detection, and distribution on your existing scripts, adopted incrementally, scaling to large monorepos without a dedicated build team, plus generators, migrations, release, and AI-assisted CI that Bazel has no native answer for.
 
 | Topic                                         | Nx                                                       | Bazel                                                         |
 | --------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------- |

@@ -18,7 +18,12 @@ Depot sells faster CI compute: GitHub Actions runners on newer CPUs, accelerated
 
 ## Quick takeaway
 
-Depot and Nx Cloud aren't the same kind of product. Depot makes the machine faster, better CPUs, colocated caches, quick container builds, behind a one-line runner swap. Nx Cloud sits above the machine and decides what runs: it prunes unaffected tasks, replays cached results across CI and developer laptops, and distributes the rest. Depot Cache doesn't even support Nx, and for a monorepo raw machine speed matters far less than the work Nx removes before it runs.
+Depot and Nx aren't the same kind of product:
+
+- **Depot makes the machine faster.** Better CPUs, colocated caches, and quick container builds, behind a one-line runner swap.
+- **Nx sits above the machine and decides what runs.** It prunes unaffected tasks, replays cached results across CI and developer laptops, and distributes the rest.
+
+Depot Cache doesn't even support Nx, and for a monorepo raw machine speed matters far less than the work Nx removes before it runs.
 
 | Topic                                                             | Nx Cloud                                                 | Depot                                                     |
 | ----------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
