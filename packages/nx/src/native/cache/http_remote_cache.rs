@@ -183,9 +183,24 @@ impl HttpRemoteCache {
         cache_directory: String,
         hash: String,
     ) -> anyhow::Result<CachedResult> {
-        let content = response.bytes().await.unwrap();
+        let content = response
+            .bytes()
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to read remote cache response body: {}", e))?;
         trace!("Downloaded {} bytes from remote cache", content.len());
-        let tar = flate2::read::GzDecoder::new(content.as_ref());
+        Self::extract_tarball(content.as_ref(), &cache_directory, &hash)
+    }
+
+    /// Extract a gzipped cache tarball into `<cache_directory>/<hash>`.
+    ///
+    /// Uses `tar`'s `unpack_in` so a malicious cache server can't escape
+    /// `output_dir` via `..`, absolute paths, or symlinks.
+    fn extract_tarball(
+        content: &[u8],
+        cache_directory: &str,
+        hash: &str,
+    ) -> anyhow::Result<CachedResult> {
+        let tar = flate2::read::GzDecoder::new(content);
         let mut archive = Archive::new(tar);
         let entries = archive
             .entries() // Get the entries in the archive
@@ -195,7 +210,9 @@ impl HttpRemoteCache {
         let mut terminal_output: Option<String> = None;
         let mut size: i64 = 0;
 
-        let output_dir = Path::new(&cache_directory).join(&hash);
+        let output_dir = Path::new(cache_directory).join(hash);
+        // `unpack_in` canonicalizes `output_dir`, so it must exist beforehand.
+        fs::create_dir_all(&output_dir)?;
 
         // Extract the archive to the specified cache directory
         for entry in entries {
@@ -204,12 +221,18 @@ impl HttpRemoteCache {
 
             let entry_path = entry
                 .path()
-                .map(|p| p.to_string_lossy().into_owned())
-                .unwrap();
+                .map_err(|e| anyhow::anyhow!("Invalid entry path in cache artifact: {}", e))?
+                .to_string_lossy()
+                .into_owned();
 
             if entry_path == "code" {
                 let code_file_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
-                code = Some(i16::from_be_bytes([code_file_bytes[0], code_file_bytes[1]]));
+                // The exit code is stored as a 4-byte big-endian integer (see `store`).
+                let code_bytes: [u8; 4] = code_file_bytes
+                    .as_slice()
+                    .try_into()
+                    .map_err(|_| anyhow::anyhow!("Invalid exit code in cache artifact"))?;
+                code = Some(u32::from_be_bytes(code_bytes) as i16);
                 trace!("Retrieved exit code from cache: {}", code.unwrap());
             } else if entry_path == "terminalOutput" {
                 let terminal_output_bytes = entry.bytes().collect::<Result<Vec<u8>, _>>()?;
@@ -223,29 +246,263 @@ impl HttpRemoteCache {
                     terminal_output_size
                 );
             } else {
-                let path_on_disk = output_dir.join(entry_path);
-                trace!("Extracting entry to {}", path_on_disk.display());
-                fs::create_dir_all(path_on_disk.parent().expect("This will have a parent, we just joined it above so there is at least one dir."))?;
-                // Ensure the directory exists before extracting
-                match entry.unpack(&path_on_disk) {
-                    Err(e) => {
-                        return Err(anyhow::anyhow!("Failed to unpack entry: {}", e));
-                    }
-                    Ok(f) => match f {
-                        tar::Unpacked::File(f) => size += f.metadata()?.len() as i64,
-                        _ => (),
-                    },
+                trace!(
+                    "Extracting entry {} into {}",
+                    entry_path,
+                    output_dir.display()
+                );
+                let is_file = entry.header().entry_type().is_file();
+                let entry_size = entry.size();
+                // Reject entries `unpack_in` skips (`..`) or refuses (symlink escape).
+                let unpacked = entry
+                    .unpack_in(&output_dir)
+                    .map_err(|e| anyhow::anyhow!("Failed to unpack entry: {}", e))?;
+                if !unpacked {
+                    return Err(anyhow::anyhow!(
+                        "Refusing to extract cache entry with unsafe path: {}",
+                        entry_path
+                    ));
+                }
+                if is_file {
+                    size += entry_size as i64;
                 }
             }
         }
 
         trace!("Extracted tarball to {}", output_dir.display());
 
+        let code = code.ok_or_else(|| anyhow::anyhow!("Exit code not found in cache artifact"))?;
         Ok(CachedResult {
             terminal_output,
-            code: code.expect("Exit code not found in cache"),
+            code,
             outputs_path: output_dir.to_string_lossy().into_owned(),
             size: Some(size),
         })
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use assert_fs::TempDir;
+    use flate2::Compression;
+    use flate2::write::GzEncoder;
+    use tar::{Builder, EntryType, Header};
+
+    /// Forge a tar entry, writing `name` straight into the header to bypass the
+    /// `tar` Builder's `..`/absolute-path validation, like a hostile server.
+    fn raw_entry(name: &str, ty: EntryType, link: Option<&str>, data: &[u8]) -> (Header, Vec<u8>) {
+        let mut header = Header::new_ustar();
+        header.set_size(data.len() as u64);
+        header.set_entry_type(ty);
+        header.set_mode(0o644);
+        header.set_mtime(0);
+        if let Some(target) = link {
+            header.set_link_name(target).unwrap();
+        }
+        let name_bytes = name.as_bytes();
+        header.as_mut_bytes()[..name_bytes.len()].copy_from_slice(name_bytes);
+        header.set_cksum();
+        (header, data.to_vec())
+    }
+
+    fn code_entry(code: u32) -> (Header, Vec<u8>) {
+        raw_entry("code", EntryType::Regular, None, &code.to_be_bytes())
+    }
+
+    fn terminal_output_entry(output: &str) -> (Header, Vec<u8>) {
+        raw_entry(
+            "terminalOutput",
+            EntryType::Regular,
+            None,
+            output.as_bytes(),
+        )
+    }
+
+    fn build_tar_gz(entries: Vec<(Header, Vec<u8>)>) -> Vec<u8> {
+        let mut builder = Builder::new(GzEncoder::new(Vec::new(), Compression::default()));
+        for (header, data) in &entries {
+            builder.append(header, data.as_slice()).unwrap();
+        }
+        builder.into_inner().unwrap().finish().unwrap()
+    }
+
+    #[test]
+    fn extract_rejects_parent_dir_traversal() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        // `../../escape.txt` from <cache>/123 resolves to <temp>/escape.txt.
+        let tar = build_tar_gz(vec![raw_entry(
+            "../../escape.txt",
+            EntryType::Regular,
+            None,
+            b"PWNED",
+        )]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(result.is_err(), "a `..` entry must be rejected");
+        assert!(
+            !temp.join("escape.txt").exists(),
+            "extraction must not write outside the cache directory"
+        );
+    }
+
+    #[test]
+    fn extract_contains_absolute_paths() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        let abs_target = temp.join("outside").join("pwned.txt");
+        let tar = build_tar_gz(vec![
+            raw_entry(
+                abs_target.to_str().unwrap(),
+                EntryType::Regular,
+                None,
+                b"PWNED",
+            ),
+            code_entry(0),
+            terminal_output_entry("done"),
+        ]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        // Absolute paths are stripped to relative, so extraction is contained, not rejected.
+        assert!(
+            result.is_ok(),
+            "absolute paths should be contained, not error: {:?}",
+            result.err()
+        );
+        assert!(
+            !abs_target.exists(),
+            "an absolute entry must not escape the cache directory"
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn extract_rejects_symlink_escape() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        let outside = temp.join("outside");
+        std::fs::create_dir_all(&outside).unwrap();
+
+        // `evil` -> <temp>/outside, then `evil/pwned.txt` would escape if followed.
+        let tar = build_tar_gz(vec![
+            raw_entry(
+                "evil",
+                EntryType::Symlink,
+                Some(outside.to_str().unwrap()),
+                b"",
+            ),
+            raw_entry("evil/pwned.txt", EntryType::Regular, None, b"PWNED"),
+        ]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(
+            result.is_err(),
+            "writing through a symlink must be rejected"
+        );
+        assert!(
+            !outside.join("pwned.txt").exists(),
+            "extraction must not write through a symlink out of the cache directory"
+        );
+    }
+
+    #[test]
+    fn extract_unpacks_legitimate_tarball() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        let tar = build_tar_gz(vec![
+            raw_entry("dist/main.js", EntryType::Regular, None, b"console.log(1)"),
+            code_entry(0),
+            terminal_output_entry("build complete"),
+        ]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123")
+            .expect("legitimate tarball should extract");
+
+        assert_eq!(result.code, 0);
+        assert_eq!(result.terminal_output.as_deref(), Some("build complete"));
+        let extracted = cache_dir.join("123").join("dist").join("main.js");
+        assert!(extracted.exists(), "expected extracted output file");
+        assert_eq!(
+            std::fs::read_to_string(&extracted).unwrap(),
+            "console.log(1)"
+        );
+        assert_eq!(
+            result.size,
+            Some(("build complete".len() + "console.log(1)".len()) as i64)
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn extract_rejects_hardlink_escape() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        // A file outside the cache dir the hardlink entry tries to reach.
+        let outside = temp.join("outside.txt");
+        std::fs::write(&outside, b"secret").unwrap();
+
+        // A hard link entry whose target points outside output_dir.
+        let tar = build_tar_gz(vec![raw_entry(
+            "evil",
+            EntryType::Link,
+            Some(outside.to_str().unwrap()),
+            b"",
+        )]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(
+            result.is_err(),
+            "a hardlink escaping the cache dir must be rejected"
+        );
+    }
+
+    #[test]
+    fn extract_rejects_short_code_entry() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        let tar = build_tar_gz(vec![raw_entry("code", EntryType::Regular, None, b"\0")]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(
+            result.is_err(),
+            "a short code entry must be rejected, not panic"
+        );
+    }
+
+    #[test]
+    fn extract_rejects_missing_code_entry() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        let tar = build_tar_gz(vec![terminal_output_entry("done")]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123");
+
+        assert!(
+            result.is_err(),
+            "a missing code entry must be rejected, not panic"
+        );
+    }
+
+    #[test]
+    fn extract_reads_full_exit_code() {
+        let temp = TempDir::new().unwrap();
+        let cache_dir = temp.join("cache");
+        // The code is stored as a 4-byte big-endian int; the reader must consume
+        // all 4 bytes rather than truncating a nonzero code to 0.
+        let tar = build_tar_gz(vec![code_entry(1)]);
+
+        let result = HttpRemoteCache::extract_tarball(&tar, cache_dir.to_str().unwrap(), "123")
+            .expect("a valid code entry should extract");
+
+        assert_eq!(
+            result.code, 1,
+            "exit code must round-trip, not truncate to 0"
+        );
     }
 }
