@@ -345,7 +345,7 @@ If you are using GitLab, you can specify CODEOWNERS [sections](https://docs.gitl
 To give the whole repository a fallback owner, use a file wildcard (`files: ["*"]`), not a project wildcard (`projects: ["*"]`). The two behave differently:
 
 - `projects: ["*"]` matches every project and expands to one CODEOWNERS entry per project root. It's verbose, and it only covers files that live inside a project. Files outside every project root — a top-level `package.json`, workspace config, or other loose files at the repository root — get no owner, so this isn't a true repo-wide catch-all.
-- `files: ["*"]` emits a single `* @owner` rule that matches every file in the repository. This is the repo-wide default owner. List it first and let the more specific patterns below it win, because CODEOWNERS applies the last matching rule for a given file.
+- `files: ["*"]` matches all files in the repository and emits a single entry in CODEOWNERS, `* @owner`. You can use this pattern as a repo-wide default owner. List it first and let the more specific patterns below it override since CODEOWNERS applies the last matching rule for a given file.
 
 {% aside type="note" title="Order matters" %}
 CODEOWNERS resolves a file to the **last** pattern that matches it. Put the `files: ["*"]` catch-all at the top of your `patterns` array so the specific rules that follow override it.
