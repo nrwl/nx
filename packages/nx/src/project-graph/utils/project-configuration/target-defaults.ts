@@ -504,6 +504,11 @@ function entryFilterMatches(
   if (!filter) return true;
 
   if (filter.projects) {
+    // No project context: a `projects` filter can't match, and passing the
+    // absent node to `findMatchingProjects` would dereference undefined.
+    if (!ctx.projectName || !ctx.projectNode) {
+      return false;
+    }
     const matched = findMatchingProjects([...filter.projects], {
       [ctx.projectName]: ctx.projectNode,
     });
