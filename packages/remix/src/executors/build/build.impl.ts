@@ -98,8 +98,8 @@ export default async function buildExecutor(
 
     updatePackageJson(packageJson, context);
     // pnpm re-resolves local-path manifest specifiers on a non-frozen install,
-    // so make them deploy-root-relative before the manifest is written and the
-    // lockfile copies them.
+    // so relocate them to their shipped location before the manifest is written
+    // and the lockfile copies them.
     if (options.generateLockfile && packageManager === 'pnpm') {
       rewritePrunedLocalPathSpecifiers(
         packageJson,
