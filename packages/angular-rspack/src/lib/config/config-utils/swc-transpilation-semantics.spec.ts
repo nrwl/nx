@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import * as ts from 'typescript';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { getSwcTranspilationRules } from './swc-transpilation';
 
 // Anchored on the package directory (the Nx vitest plugin runs tests with
 // the project root as cwd) instead of the module URL so the file typechecks
@@ -29,7 +30,8 @@ const nodeRequire = createRequire(join(packageDir, 'package.json'));
  * would use, asserting both produce the same runtime behavior. This pins the
  * semantics the swc rule must preserve for the raw TypeScript the Angular
  * compilation emits: class field assignment vs definition, legacy and
- * standard (TC39) decorators, and decorator metadata.
+ * standard (TC39) decorators, decorator metadata, and JSX lowering for
+ * `.tsx` sources.
  */
 describe('swc transpilation semantics', () => {
   let dir: string;
@@ -45,23 +47,26 @@ describe('swc transpilation semantics', () => {
 
   function writeCase(
     source: string,
-    tsconfigCompilerOptions: Record<string, unknown>
+    tsconfigCompilerOptions: Record<string, unknown>,
+    ext = 'ts'
   ) {
     const caseDir = join(dir, `case-${caseId++}`);
     mkdirSync(caseDir, { recursive: true });
-    writeFileSync(join(caseDir, 'index.ts'), source);
+    const entry = join(caseDir, `index.${ext}`);
+    writeFileSync(entry, source);
     const tsconfigPath = join(caseDir, 'tsconfig.json');
     writeFileSync(
       tsconfigPath,
       JSON.stringify({ compilerOptions: tsconfigCompilerOptions, files: [] })
     );
-    return { caseDir, tsconfigPath };
+    return { caseDir, tsconfigPath, entry };
   }
 
   async function buildWithSwcRule(
     caseDir: string,
     transform: SwcTranspilationTransform,
-    rspackInstance: typeof rspack = rspack
+    rspackInstance: typeof rspack = rspack,
+    entry: string = join(caseDir, 'index.ts')
   ) {
     const outDir = join(caseDir, `out-${caseId++}`);
     await new Promise<void>((res, rej) => {
@@ -69,29 +74,14 @@ describe('swc transpilation semantics', () => {
         {
           mode: 'none',
           context: caseDir,
-          entry: join(caseDir, 'index.ts'),
+          entry,
           output: { path: outDir, filename: 'bundle.js' },
           devtool: false,
-          resolve: { extensions: ['.ts'] },
+          // '.js' resolves the bundled jsx runtime the automatic-runtime case
+          // pulls in; the explicit list overrides rspack's default extensions.
+          resolve: { extensions: ['.ts', '.tsx', '.js'] },
           module: {
-            rules: [
-              {
-                test: /\.ts$/,
-                use: [
-                  {
-                    // Mirrors the rule in browser-config.ts/server-config.ts.
-                    loader: 'builtin:swc-loader',
-                    options: {
-                      jsc: {
-                        parser: { syntax: 'typescript', decorators: true },
-                        transform,
-                        target: 'es2022',
-                      },
-                    },
-                  },
-                ],
-              },
-            ],
+            rules: getSwcTranspilationRules(transform),
           },
         },
         (err, stats) => {
@@ -113,11 +103,14 @@ describe('swc transpilation semantics', () => {
     compilerOptions: ts.CompilerOptions
   ) {
     return ts.transpileModule(source, {
+      // The `.tsx` name only changes how `<` parses; no existing fixture uses
+      // an angle-bracket cast, so it is safe to set unconditionally.
+      fileName: 'index.tsx',
       compilerOptions: { module: ts.ModuleKind.CommonJS, ...compilerOptions },
     }).outputText;
   }
 
-  function execute(code: string): unknown[] {
+  function execute(code: string, requireFn = nodeRequire): unknown[] {
     const observations: unknown[] = [];
     const globals = globalThis as { __record__?: (v: unknown) => void };
     globals.__record__ = (v) => observations.push(v);
@@ -136,7 +129,7 @@ describe('swc transpilation semantics', () => {
     try {
       const moduleExports = {};
       new Function('require', 'module', 'exports', code)(
-        nodeRequire,
+        requireFn,
         { exports: moduleExports },
         moduleExports
       );
@@ -356,5 +349,103 @@ describe('swc transpilation semantics', () => {
     ).toEqual(
       new Set(tsObservations.filter((o) => (o as unknown[])[0] === 'dec'))
     );
+  });
+
+  it('should match TypeScript classic JSX lowering for .tsx sources', async () => {
+    const jsxFixture = `
+      const record = (globalThis as any).__record__;
+      function h(tag: any, props: unknown, ...children: unknown[]) {
+        record(['h', typeof tag === 'function' ? tag.name : tag, props, children]);
+        return { tag };
+      }
+      function F() {}
+      export const el = <div id={'a'}>hi<span>x</span></div>;
+      export const frag = <>{el}</>;
+    `;
+    const { caseDir, tsconfigPath, entry } = writeCase(
+      jsxFixture,
+      {
+        target: 'ES2022',
+        jsx: 'react',
+        jsxFactory: 'h',
+        jsxFragmentFactory: 'F',
+      },
+      'tsx'
+    );
+
+    // These fixtures carry no decorators, so the revision does not affect the
+    // JSX output; '2022-03' keeps the default rspack v1 swc from rejecting the
+    // '2023-11' decorator config it does not implement.
+    const swcObservations = execute(
+      await buildWithSwcRule(
+        caseDir,
+        resolveSwcTranspilationTransform(tsconfigPath, '2022-03'),
+        rspack,
+        entry
+      )
+    );
+    const tsObservations = execute(
+      transpileWithTypeScript(jsxFixture, {
+        target: ts.ScriptTarget.ES2022,
+        jsx: ts.JsxEmit.React,
+        jsxFactory: 'h',
+        jsxFragmentFactory: 'F',
+      })
+    );
+
+    expect(swcObservations).toEqual(tsObservations);
+    expect(swcObservations.length).toBeGreaterThan(0);
+  });
+
+  it('should match TypeScript automatic-runtime JSX lowering for .tsx sources', async () => {
+    const jsxFixture = `
+      const record = (globalThis as any).__record__;
+      export const el = <div id={'a'}>hi<span>x</span></div>;
+      record(['el', (el as any).type ?? '?']);
+    `;
+    const { caseDir, tsconfigPath, entry } = writeCase(
+      jsxFixture,
+      { target: 'ES2022', jsx: 'react-jsx', jsxImportSource: 'myjsx' },
+      'tsx'
+    );
+
+    // Recording runtime resolved from the case dir: rspack bundles it into
+    // the swc output, and the TypeScript ground truth requires it at runtime.
+    const runtimeDir = join(caseDir, 'node_modules', 'myjsx');
+    mkdirSync(runtimeDir, { recursive: true });
+    writeFileSync(
+      join(runtimeDir, 'package.json'),
+      JSON.stringify({ name: 'myjsx', version: '1.0.0' })
+    );
+    writeFileSync(
+      join(runtimeDir, 'jsx-runtime.js'),
+      `const record = (...a) => globalThis.__record__(...a);
+exports.jsx = (t, p, k) => { record(['jsx', (t && t.name) || t, p, k]); return { type: t }; };
+exports.jsxs = (t, p, k) => { record(['jsxs', (t && t.name) || t, p, k]); return { type: t }; };
+exports.Fragment = Symbol.for('frag');
+`
+    );
+
+    // No decorators here either; '2022-03' avoids the default rspack v1 swc
+    // panic on the '2023-11' revision without changing the JSX output.
+    const swcObservations = execute(
+      await buildWithSwcRule(
+        caseDir,
+        resolveSwcTranspilationTransform(tsconfigPath, '2022-03'),
+        rspack,
+        entry
+      )
+    );
+    const tsObservations = execute(
+      transpileWithTypeScript(jsxFixture, {
+        target: ts.ScriptTarget.ES2022,
+        jsx: ts.JsxEmit.ReactJSX,
+        jsxImportSource: 'myjsx',
+      }),
+      createRequire(join(caseDir, 'x.js'))
+    );
+
+    expect(swcObservations).toEqual(tsObservations);
+    expect(swcObservations.length).toBeGreaterThan(0);
   });
 });

@@ -39,6 +39,18 @@ export interface SwcTranspilationTransform {
   decoratorMetadata: boolean;
   useDefineForClassFields: boolean;
   verbatimModuleSyntax: boolean;
+  /**
+   * JSX lowering for `.tsx` sources, read from the tsconfig the way esbuild
+   * does: the automatic runtime for 'react-jsx'/'react-jsxdev', the classic
+   * transform otherwise ('preserve' included; esbuild lowers it too).
+   */
+  react: {
+    runtime: 'automatic' | 'classic';
+    development: boolean;
+    pragma?: string;
+    pragmaFrag?: string;
+    importSource?: string;
+  };
 }
 
 export function resolveSwcTranspilationTransform(
@@ -75,5 +87,25 @@ export function resolveSwcTranspilationTransform(
     // contradicting the program options it forces; we follow the program.
     useDefineForClassFields: compilerOptions.useDefineForClassFields ?? true,
     verbatimModuleSyntax: !!compilerOptions.verbatimModuleSyntax,
+    react: resolveJsxTransform(compilerOptions),
+  };
+}
+
+// swc's factory defaults (React.createElement, React.Fragment, 'react')
+// match esbuild's, so the options are only set when the tsconfig sets them.
+function resolveJsxTransform(
+  compilerOptions: ts.CompilerOptions
+): SwcTranspilationTransform['react'] {
+  const { jsx, jsxFactory, jsxFragmentFactory, jsxImportSource } =
+    compilerOptions;
+  return {
+    runtime:
+      jsx === ts.JsxEmit.ReactJSX || jsx === ts.JsxEmit.ReactJSXDev
+        ? 'automatic'
+        : 'classic',
+    development: jsx === ts.JsxEmit.ReactJSXDev,
+    ...(jsxFactory ? { pragma: jsxFactory } : {}),
+    ...(jsxFragmentFactory ? { pragmaFrag: jsxFragmentFactory } : {}),
+    ...(jsxImportSource ? { importSource: jsxImportSource } : {}),
   };
 }

@@ -1,7 +1,4 @@
-import {
-  TS_ALL_EXT_REGEX,
-  type SwcTranspilationTransform,
-} from '@nx/angular-rspack-compiler';
+import type { SwcTranspilationTransform } from '@nx/angular-rspack-compiler';
 import { type Configuration, ContextReplacementPlugin } from '@rspack/core';
 import { resolve } from 'path';
 import type {
@@ -14,6 +11,7 @@ import { PrerenderPlugin } from '../../plugins/prerender-plugin';
 import { isPackageInstalled } from '../../utils/misc-helpers';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getOptimization } from './optimization-config';
+import { getSwcTranspilationRules } from './swc-transpilation';
 import { isServeMode } from '../../utils/rspack-serve-env';
 
 export async function getServerConfig(
@@ -61,28 +59,7 @@ export async function getServerConfig(
     module: {
       ...defaultConfig.module,
       rules: [
-        {
-          test: TS_ALL_EXT_REGEX,
-          use: [
-            {
-              loader: 'builtin:swc-loader',
-              options: {
-                jsc: {
-                  parser: {
-                    syntax: 'typescript',
-                    // Angular's fast emit path can leave decorators in the
-                    // output; parse them regardless of which semantics the
-                    // transform applies.
-                    decorators: true,
-                  },
-                  // Transpile with the semantics the type program assumed.
-                  transform: swcTranspilationTransform,
-                  target: 'es2022',
-                },
-              },
-            },
-          ],
-        },
+        ...getSwcTranspilationRules(swcTranspilationTransform),
         {
           // eslint-disable-next-line @nx/enforce-module-boundaries
           loader: require.resolve(

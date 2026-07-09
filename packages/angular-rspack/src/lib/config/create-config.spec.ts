@@ -153,6 +153,55 @@ describe('createConfig', () => {
     }
   });
 
+  it('should split the TS transpilation rules by extension for JSX support', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-swc-jsx-'));
+    try {
+      await writeFile(
+        join(root, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: { target: 'ES2022', jsx: 'react-jsx' },
+          files: [],
+        })
+      );
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        tsConfig: join(root, 'tsconfig.json'),
+      });
+
+      const swcRules = (configs[0].module?.rules ?? []).filter(
+        (rule) =>
+          typeof rule === 'object' &&
+          rule !== null &&
+          (
+            rule as { use?: Array<{ loader?: string }> }
+          ).use?.[0]?.loader?.includes('swc-loader')
+      ) as unknown as Array<{
+        use: Array<{
+          options: {
+            jsc: {
+              parser: { tsx?: boolean };
+              transform?: { react?: { runtime?: string } };
+            };
+          };
+        }>;
+      }>;
+
+      expect(swcRules).toHaveLength(2);
+      expect(swcRules[0].use[0].options.jsc.parser.tsx).toBe(false);
+      expect(swcRules[1].use[0].options.jsc.parser.tsx).toBe(true);
+      expect(swcRules[1].use[0].options.jsc.transform?.react).toMatchObject({
+        runtime: 'automatic',
+      });
+      // The tsconfig is parsed once; both rules share the same transform.
+      expect(swcRules[0].use[0].options.jsc.transform).toBe(
+        swcRules[1].use[0].options.jsc.transform
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
   it('should share the license inputs between the browser and server configs', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     try {

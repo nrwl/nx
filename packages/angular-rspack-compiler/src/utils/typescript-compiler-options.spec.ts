@@ -48,6 +48,7 @@ describe('applyEs2022TargetDefaults', () => {
 
 describe('resolveSwcTranspilationTransform', () => {
   let dir: string;
+  let jsxCaseId = 0;
 
   const writeTsConfig = (
     name: string,
@@ -86,6 +87,7 @@ describe('resolveSwcTranspilationTransform', () => {
       decoratorMetadata: false,
       useDefineForClassFields: true,
       verbatimModuleSyntax: false,
+      react: { runtime: 'classic', development: false },
     });
   });
 
@@ -161,6 +163,35 @@ describe('resolveSwcTranspilationTransform', () => {
     });
   });
 
+  it.each([
+    [{}, { runtime: 'classic', development: false }],
+    [{ jsx: 'react' }, { runtime: 'classic', development: false }],
+    [{ jsx: 'preserve' }, { runtime: 'classic', development: false }],
+    [{ jsx: 'react-native' }, { runtime: 'classic', development: false }],
+    [{ jsx: 'react-jsx' }, { runtime: 'automatic', development: false }],
+    [{ jsx: 'react-jsxdev' }, { runtime: 'automatic', development: true }],
+    [
+      { jsx: 'react', jsxFactory: 'h', jsxFragmentFactory: 'F' },
+      { runtime: 'classic', development: false, pragma: 'h', pragmaFrag: 'F' },
+    ],
+    [
+      { jsx: 'react-jsx', jsxImportSource: 'preact' },
+      { runtime: 'automatic', development: false, importSource: 'preact' },
+    ],
+  ])(
+    'should derive the JSX transform from %o like esbuild',
+    (jsxOptions, expected) => {
+      const path = writeTsConfig(`jsx-${jsxCaseId++}.json`, {
+        target: 'ES2022',
+        ...jsxOptions,
+      });
+
+      expect(resolveSwcTranspilationTransform(path, '2023-11').react).toEqual(
+        expected
+      );
+    }
+  );
+
   it('should resolve options through an extends chain', () => {
     realFs.mkdirSync(join(dir, 'nested'), { recursive: true });
     realFs.writeFileSync(
@@ -188,6 +219,7 @@ describe('resolveSwcTranspilationTransform', () => {
         decoratorMetadata: false,
         useDefineForClassFields: false,
         verbatimModuleSyntax: false,
+        react: { runtime: 'classic', development: false },
       });
     }
   });
