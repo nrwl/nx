@@ -148,14 +148,17 @@ export function getPruneTargets(
   ];
   if (packageManager === 'pnpm') {
     // On pnpm 11+ the prune-lockfile executor also emits a settings-only
-    // pnpm-workspace.yaml, and a `pnpm patch` workspace also emits the referenced
-    // `.patch` files under `patches/`; declare both so a cache replay restores
-    // them and native build-script approvals or patches are not silently dropped.
+    // pnpm-workspace.yaml, a `pnpm patch` workspace emits the referenced `.patch`
+    // files under `patches/`, and any non-workspace local-path deps (`file:`
+    // tarballs/dirs, `link:` targets) ship under `local_path_modules/`; declare
+    // all three so a cache replay restores them and native build-script
+    // approvals, patches, or vendored dependencies are not silently dropped.
     // Declared for any pnpm since the generator can't know the pnpm major or
-    // whether the root declares such settings; Nx tolerates absent outputs.
+    // whether the workspace uses such settings; Nx tolerates absent outputs.
     pruneLockfileOutputs.push(
       `{workspaceRoot}/${joinPathFragments(outputPath, 'pnpm-workspace.yaml')}`,
-      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'patches')}`,
+      `{workspaceRoot}/${joinPathFragments(outputPath, 'local_path_modules')}`
     );
   }
   return {

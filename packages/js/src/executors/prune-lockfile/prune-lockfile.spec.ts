@@ -765,7 +765,8 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
       [`${PROJECT_ROOT}/package.json`]: JSON.stringify({
         name: 'app',
         version: '0.0.1',
-        // Project-relative; the executor rewrites it to link:vendor/linked.
+        // Project-relative; the executor rewrites it to
+        // link:local_path_modules/vendor/linked.
         dependencies: { 'linked-lib': 'link:../../vendor/linked' },
       }),
       'vendor/linked/package.json': JSON.stringify(linkedManifest),
@@ -803,8 +804,8 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
     '  .:',
     '    dependencies:',
     '      linked-lib:',
-    '        specifier: link:vendor/linked',
-    '        version: link:vendor/linked',
+    '        specifier: link:local_path_modules/vendor/linked',
+    '        version: link:local_path_modules/vendor/linked',
     '',
   ].join('\n');
 
@@ -815,7 +816,12 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
     await runExecutor();
 
     expect(
-      existsSync(join(tempFs.tempDir, 'dist/app/vendor/linked/index.js'))
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/local_path_modules/vendor/linked/index.js'
+        )
+      )
     ).toBe(true);
   });
 
@@ -856,7 +862,12 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
     ).toBe(lockfileLinkingVendor);
     // ...but its link: target tree is not shipped.
     expect(
-      existsSync(join(tempFs.tempDir, 'dist/app/vendor/linked/index.js'))
+      existsSync(
+        join(
+          tempFs.tempDir,
+          'dist/app/local_path_modules/vendor/linked/index.js'
+        )
+      )
     ).toBe(false);
   });
 });
