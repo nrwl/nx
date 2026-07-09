@@ -224,11 +224,13 @@ async function addVitest(host: Tree, options: NormalizedSchema) {
     addProjectConfiguration(host, options.projectName, projectConfiguration);
   }
 
-  // Ensure @nx/vitest is installed before using it
   ensurePackage('@nx/vitest', nxVersion);
-  const { configurationGenerator: vitestConfigurationGenerator } = await import(
-    '@nx/vitest/generators'
-  );
+  // Use `require` rather than a dynamic `import()`: `ensurePackage` makes the
+  // on-demand-installed package resolvable via CJS resolution only, so a true
+  // ESM dynamic import cannot see the temp install.
+  const {
+    configurationGenerator: vitestConfigurationGenerator,
+  }: typeof import('@nx/vitest/generators') = require('@nx/vitest/generators');
 
   const vitestTask = await vitestConfigurationGenerator(host, {
     project: options.projectName,
