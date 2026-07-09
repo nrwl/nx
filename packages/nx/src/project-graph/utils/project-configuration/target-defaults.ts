@@ -504,6 +504,15 @@ function entryFilterMatches(
   if (!filter) return true;
 
   if (filter.projects) {
+    // A `projects` filter can only be evaluated against a concrete project.
+    // When resolving target defaults with no project context (e.g. reading a
+    // default port via `readTargetDefaultsForTarget(target, targetDefaults)`
+    // with no `opts`), there is no project to test, so the filter cannot match
+    // — and passing the absent node to `findMatchingProjects` would dereference
+    // `undefined`. Treat it as a non-match instead of throwing.
+    if (!ctx.projectName || !ctx.projectNode) {
+      return false;
+    }
     const matched = findMatchingProjects([...filter.projects], {
       [ctx.projectName]: ctx.projectNode,
     });

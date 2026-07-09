@@ -126,6 +126,38 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
     expect(notMatched).toEqual({ cache: true });
   });
 
+  it('skips a projects filter without throwing when resolved with no project context', () => {
+    // Reproduces the crash hit by generators that read target defaults without
+    // a project (e.g. `@nx/vite`'s `getViteE2EWebServerInfo` reading a default
+    // port), which the `@nx/react-native`/`@nx/expo` app generators reach via
+    // `addE2e`. A `projects`-filtered entry cannot be evaluated with no project,
+    // so it is skipped rather than dereferencing an undefined project node.
+    const targetDefaults = {
+      test: [
+        { cache: true },
+        {
+          filter: { projects: ['tag:test-runner:vite'] },
+          inputs: ['vite.config.ts'],
+        },
+      ],
+    };
+    expect(() =>
+      readTargetDefaultsForTarget('test', targetDefaults)
+    ).not.toThrow();
+    expect(readTargetDefaultsForTarget('test', targetDefaults)).toEqual({
+      cache: true,
+    });
+  });
+
+  it('returns null (does not throw) for a target whose only entry is projects-filtered, with no project context', () => {
+    // The exact `getViteE2EWebServerInfo` shape: `readTargetDefaultsForTarget('dev', ...)`
+    // with no opts against a key that only has a projects-filtered entry.
+    const targetDefaults = {
+      dev: [{ filter: { projects: ['app'] }, options: { port: 5000 } }],
+    };
+    expect(readTargetDefaultsForTarget('dev', targetDefaults)).toBeNull();
+  });
+
   it('matches a filter.executor against the resolved executor', () => {
     const targetDefaults = {
       test: [
