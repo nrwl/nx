@@ -1,5 +1,5 @@
 use crate::native::tasks::hashers::{
-    ProjectFilePathsCache, collect_json_input_files, collect_project_file_paths_cached,
+    ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
     collect_workspace_file_paths, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
@@ -43,7 +43,7 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
         hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
-        let project_file_paths_cache = ProjectFilePathsCache::new();
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
         let pool = &hash_plans.pool;
         let results: Vec<(&String, Vec<String>)> = hash_plans
             .plans
@@ -58,7 +58,7 @@ impl HashPlanInspector {
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::ProjectFileSet(_, _) => {
                         let builder = self
-                            .resolve_instruction_inputs(instruction, &project_file_paths_cache)?;
+                            .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
                             .files
                             .into_iter()
@@ -92,7 +92,7 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
         hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
-        let project_file_paths_cache = ProjectFilePathsCache::new();
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
         let pool = &hash_plans.pool;
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
             .plans
@@ -103,7 +103,7 @@ impl HashPlanInspector {
                 let instruction_ref = pool.get(id);
                 let builder = self.resolve_instruction_inputs(
                     instruction_ref.value(),
-                    &project_file_paths_cache,
+                    &project_file_indices_cache,
                 )?;
                 Ok::<_, anyhow::Error>((task_id, builder))
             })
@@ -128,7 +128,7 @@ impl HashPlanInspector {
     fn resolve_instruction_inputs(
         &self,
         instruction: &HashInstruction,
-        project_file_paths_cache: &ProjectFilePathsCache,
+        project_file_indices_cache: &ProjectFileIndicesCache,
     ) -> anyhow::Result<HashInputsBuilder> {
         match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
@@ -144,10 +144,10 @@ impl HashPlanInspector {
                     project_name,
                     file_sets,
                     &self.project_file_map,
-                    project_file_paths_cache,
+                    project_file_indices_cache,
                 )?;
                 Ok(HashInputsBuilder {
-                    files: files.iter().cloned().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }

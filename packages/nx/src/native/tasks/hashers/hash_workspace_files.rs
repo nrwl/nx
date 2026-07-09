@@ -14,10 +14,12 @@ use tracing::{debug, debug_span, trace, warn};
 /// retaining it for the TaskHasher lifetime stays O(filesets), not O(files).
 pub(crate) type WorkspaceFileSetCache = OnceCache<String>;
 
-/// Compute-once cache for the matched file paths of a workspace fileset.
-/// Only populated when task inputs are collected; callers keep it
-/// per-invocation so the expanded paths are freed once that call returns.
-pub(crate) type WorkspaceFilePathsCache = OnceCache<Vec<String>>;
+/// Compute-once cache for the matched file *indices* of a workspace fileset,
+/// into `all_workspace_files`. Persistable: 4 bytes/file and references the
+/// immutable FileData snapshot, so it never goes stale — the same guarantee
+/// `WorkspaceFileSetCache` relies on. Paths are expanded from it per call and
+/// freed once handed to the input subscriber.
+pub(crate) type WorkspaceFileIndicesCache = OnceCache<Vec<u32>>;
 
 fn workspace_file_set_cache_key(workspace_file_sets: &[String]) -> String {
     let mut sorted_file_sets: Vec<&str> = workspace_file_sets.iter().map(String::as_str).collect();
@@ -127,14 +129,52 @@ pub fn collect_workspace_file_paths(
         .collect())
 }
 
+/// The matched file indices of a workspace fileset, into `all_workspace_files`,
+/// in the same workspace-file order `collect_workspace_file_paths` yields.
+pub fn collect_workspace_file_indices(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+) -> Result<Vec<u32>> {
+    let globs = globs_from_workspace_globs(workspace_file_sets);
+
+    if globs.is_empty() {
+        return Ok(vec![]);
+    }
+
+    let glob = build_glob_set(&globs)?;
+
+    Ok(all_workspace_files
+        .iter()
+        .enumerate()
+        .filter(|(_, file)| glob.is_match(&file.file))
+        .map(|(i, _)| i as u32)
+        .collect())
+}
+
+pub(crate) fn collect_workspace_file_indices_cached(
+    workspace_file_sets: &[String],
+    all_workspace_files: &[FileData],
+    cache: &WorkspaceFileIndicesCache,
+) -> Result<Arc<Vec<u32>>> {
+    cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
+        collect_workspace_file_indices(workspace_file_sets, all_workspace_files)
+    })
+}
+
+/// Expands the cached matched-file indices into owned paths. Only the compact
+/// indices persist in `cache`; the returned paths are transient and freed by
+/// the caller once handed to the input subscriber.
 pub(crate) fn collect_workspace_file_paths_cached(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
-    cache: &WorkspaceFilePathsCache,
-) -> Result<Arc<Vec<String>>> {
-    cache.get_or_try_init(workspace_file_set_cache_key(workspace_file_sets), || {
-        collect_workspace_file_paths(workspace_file_sets, all_workspace_files)
-    })
+    cache: &WorkspaceFileIndicesCache,
+) -> Result<Vec<String>> {
+    let indices =
+        collect_workspace_file_indices_cached(workspace_file_sets, all_workspace_files, cache)?;
+    Ok(indices
+        .iter()
+        .map(|&i| all_workspace_files[i as usize].file.clone())
+        .collect())
 }
 
 #[cfg(test)]
@@ -244,6 +284,42 @@ mod test {
     }
 
     #[test]
+    fn indices_expand_to_the_same_paths_as_direct_collection() {
+        let all_workspace_files = vec![
+            FileData {
+                file: ".gitignore".into(),
+                hash: "123".into(),
+            },
+            FileData {
+                file: "package.json".into(),
+                hash: "789".into(),
+            },
+            FileData {
+                file: "packages/project/project.json".into(),
+                hash: "abc".into(),
+            },
+        ];
+        let file_sets = &["{workspaceRoot}/**/*.json".to_string()];
+
+        let indices = collect_workspace_file_indices(file_sets, &all_workspace_files).unwrap();
+        // Positions of the two .json files within all_workspace_files.
+        assert_eq!(indices, vec![1, 2]);
+
+        let expanded: Vec<String> = indices
+            .iter()
+            .map(|&i| all_workspace_files[i as usize].file.clone())
+            .collect();
+        let direct = collect_workspace_file_paths(file_sets, &all_workspace_files).unwrap();
+        assert_eq!(expanded, direct);
+
+        // Empty globs collect no indices, matching collect_workspace_file_paths.
+        let empty =
+            collect_workspace_file_indices(&["packages/{package}".to_string()], &all_workspace_files)
+                .unwrap();
+        assert!(empty.is_empty());
+    }
+
+    #[test]
     fn should_cache_by_fileset_combo_regardless_of_order() {
         let first_file_sets = &[
             "{workspaceRoot}/**/*".to_string(),
@@ -273,21 +349,36 @@ mod test {
         assert_eq!(cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
 
-        let paths_cache = WorkspaceFilePathsCache::new();
-        let first = collect_workspace_file_paths_cached(
+        let indices_cache = WorkspaceFileIndicesCache::new();
+        let first = collect_workspace_file_indices_cached(
             first_file_sets,
             &all_workspace_files,
-            &paths_cache,
+            &indices_cache,
         )
         .unwrap();
-        let second = collect_workspace_file_paths_cached(
+        let second = collect_workspace_file_indices_cached(
             second_file_sets,
             &all_workspace_files,
-            &paths_cache,
+            &indices_cache,
         )
         .unwrap();
 
-        assert_eq!(paths_cache.len(), 1);
+        assert_eq!(indices_cache.len(), 1);
         assert!(Arc::ptr_eq(&first, &second));
+
+        // Paths expand identically regardless of which fileset ordering asks for them.
+        let paths_first = collect_workspace_file_paths_cached(
+            first_file_sets,
+            &all_workspace_files,
+            &indices_cache,
+        )
+        .unwrap();
+        let paths_second = collect_workspace_file_paths_cached(
+            second_file_sets,
+            &all_workspace_files,
+            &indices_cache,
+        )
+        .unwrap();
+        assert_eq!(paths_first, paths_second);
     }
 }

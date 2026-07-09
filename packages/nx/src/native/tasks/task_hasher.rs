@@ -16,8 +16,8 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFilePathsCache, ProjectFileSetCache,
-        WorkspaceFilePathsCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
         collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
         hash_project_config, hash_project_files_cached, hash_task_output,
         hash_tsconfig_selectively, hash_workspace_files_cached,
@@ -190,11 +190,15 @@ pub struct TaskHasher {
     options: Option<HasherOptions>,
     external_cache: Arc<DashMap<String, String>>,
     // Persisted across hash_plans() calls: they only fold the immutable FileData
-    // snapshot, so they never go stale. Hash-only: matched file lists are only
-    // expanded per-invocation when inputs are collected. (Live-disk/exec caches
-    // stay per-call, see below.)
+    // snapshot, so they never go stale. The set caches are hash-only; the indices
+    // caches hold the matched files' positions in that snapshot (4 bytes each, not
+    // the path strings) and are only populated when inputs are collected. Paths are
+    // expanded from the indices per call. (Live-disk/exec caches stay per-call, see
+    // below.)
     workspace_file_set_cache: WorkspaceFileSetCache,
     project_file_set_cache: ProjectFileSetCache,
+    workspace_file_indices_cache: WorkspaceFileIndicesCache,
+    project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
 }
@@ -228,6 +232,8 @@ impl TaskHasher {
             external_cache: Arc::new(DashMap::new()),
             workspace_file_set_cache: WorkspaceFileSetCache::new(),
             project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
         }
     }
@@ -274,10 +280,6 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
-        // Per-invocation and only populated when collecting inputs, so the
-        // expanded fileset file lists are freed once this call returns.
-        let project_file_paths_cache = ProjectFilePathsCache::new();
-        let workspace_file_paths_cache = WorkspaceFilePathsCache::new();
         // Deduplicates env-dependent hash values (Environment, Runtime)
         // across tasks; see intern_value. Other instruction types share
         // values through per-id slots instead.
@@ -377,8 +379,6 @@ impl TaskHasher {
                                 runtime_cache: &runtime_cache,
                                 project_file_set_cache: &self.project_file_set_cache,
                                 workspace_file_set_cache: &self.workspace_file_set_cache,
-                                project_file_paths_cache: &project_file_paths_cache,
-                                workspace_file_paths_cache: &workspace_file_paths_cache,
                                 json_file_set_cache: &json_file_set_cache,
                                 cwd: cwd_path,
                                 collect_inputs: should_collect_inputs,
@@ -466,8 +466,6 @@ impl TaskHasher {
             runtime_cache,
             project_file_set_cache,
             workspace_file_set_cache,
-            project_file_paths_cache,
-            workspace_file_paths_cache,
             json_file_set_cache,
             cwd,
             collect_inputs,
@@ -488,10 +486,10 @@ impl TaskHasher {
                     let files = collect_workspace_file_paths_cached(
                         workspace_file_set,
                         &self.all_workspace_files,
-                        workspace_file_paths_cache,
+                        &self.workspace_file_indices_cache,
                     )?;
                     HashInputsBuilder {
-                        files: files.iter().cloned().collect(),
+                        files: files.into_iter().collect(),
                         ..Default::default()
                     }
                 } else {
@@ -539,10 +537,10 @@ impl TaskHasher {
                         project_name,
                         file_sets,
                         &self.project_file_map,
-                        project_file_paths_cache,
+                        &self.project_file_indices_cache,
                     )?;
                     HashInputsBuilder {
-                        files: files.iter().cloned().collect(),
+                        files: files.into_iter().collect(),
                         ..Default::default()
                     }
                 } else {
@@ -709,8 +707,6 @@ struct HashInstructionArgs<'a> {
     runtime_cache: &'a DashMap<String, String>,
     project_file_set_cache: &'a ProjectFileSetCache,
     workspace_file_set_cache: &'a WorkspaceFileSetCache,
-    project_file_paths_cache: &'a ProjectFilePathsCache,
-    workspace_file_paths_cache: &'a WorkspaceFilePathsCache,
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
