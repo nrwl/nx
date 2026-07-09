@@ -91,6 +91,17 @@ describe('readTargetDefaultsForTarget (nested-array)', () => {
         })
       ).toEqual({ cache: false, inputs: ['jest.config.ts'] });
     });
+
+    it('preserves an unresolvable spread token when merging multiple matching entries', () => {
+      // The merged result is an intermediate that later merges onto the
+      // plugin-provided target — a `'...'` with no base among the matching
+      // entries must survive for that downstream merge.
+      expect(
+        readTargetDefaultsForTarget('test', {
+          test: [{ cache: true }, { inputs: ['...', 'extra'] }],
+        })
+      ).toEqual({ cache: true, inputs: ['...', 'extra'] });
+    });
   });
 
   it('matches a projects filter against the project node', () => {
