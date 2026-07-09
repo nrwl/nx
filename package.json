@@ -15,6 +15,7 @@
     "check-codeowners": "tsx ./scripts/check-codeowners.ts",
     "nx-release": "nx nx-release @nx/nx-source --parallel 8",
     "prepublishOnly": "node ./scripts/update-package-group.js",
+    "postinstall": "dotnet restore || echo 'needs dotnet restore'",
     "local-registry": "nx local-registry @nx/nx-source",
     "submit-plugin": "node ./scripts/submit-plugin.js",
     "prepare": "is-ci || husky",
