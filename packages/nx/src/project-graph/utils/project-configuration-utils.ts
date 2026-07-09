@@ -367,9 +367,7 @@ export function mergeCreateNodesResults(
       intermediateDefaultRootMap,
       project,
       defaultConfigurationSourceMaps,
-      sourceInfo,
-      false,
-      true
+      sourceInfo
     );
   };
 
