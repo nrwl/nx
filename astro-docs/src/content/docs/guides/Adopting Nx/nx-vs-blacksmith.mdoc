@@ -18,7 +18,12 @@ Blacksmith is a drop-in replacement for GitHub Actions runners. It moves your jo
 
 ## Quick takeaway
 
-Blacksmith and Nx Cloud work on different layers. Blacksmith is a runner provider: swap the `runs-on` label and every job runs on a faster machine. Nx Cloud is a task-distribution orchestrator: it reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines. Blacksmith gives a one-time raw-speed bump, and past that there is little more to squeeze. Nx keeps compounding: task distribution, flaky re-runs, and task-level caching, plus it drops the manual matrix and sharding that become the real maintenance cost once simple parallelism stops scaling.
+Blacksmith and Nx work on **different layers**:
+
+- **Blacksmith is a runner provider.** Swap the `runs-on` label and every job runs on a faster machine.
+- **Nx is a task-distribution orchestrator.** It reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines.
+
+Blacksmith gives a **one-time raw-speed bump**, and past that there is little more to squeeze. **Nx keeps compounding**: task distribution, flaky re-runs, and task-level caching, plus it drops the manual matrix and sharding that become the real maintenance cost once simple parallelism stops scaling.
 
 | Topic                                                             | Nx Cloud                                                  | Blacksmith                                            |
 | ----------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
