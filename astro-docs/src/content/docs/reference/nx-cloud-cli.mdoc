@@ -101,7 +101,7 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 
 ### `nx-cloud convert-to-nx-cloud-id`
 
-When logging into Nx Cloud with a [Personal Access Token](/docs/guides/nx-cloud/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
+When logging into Nx Cloud with a [Personal Access Token](https://help.nx.app/articles/6258671083-Nx-Cloud-and-Personal-Access-Tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
 
 **Usage:**
 
@@ -355,7 +355,7 @@ This command is the same as running `nx start-ci-run`.
 {% aside type="caution" title="Run start-ci-run before any other Nx command" %}
 Run `npx nx-cloud start-ci-run` (or the orchestrator job that runs it) before any other `nx` command, including across separate or downstream pipelines that share the same CI Pipeline Execution (CIPE).
 
-The first `nx` command that contacts Nx Cloud creates the CIPE and locks in its settings for the whole run, including the access token's scope, the distribution configuration, your [assignment rules](/docs/reference/nx-cloud/assignment-rules), and the stop-agents conditions. If another `nx` command reaches Nx Cloud first, the CIPE is created with default settings and your `start-ci-run` flags are ignored for that run. The result is assignment rules or stop conditions that appear to have no effect.
+The first `nx` command that contacts Nx Cloud creates the CIPE and locks in its settings for the whole run, including the access token's scope, the distribution configuration, your [assignment rules](https://help.nx.app/articles/7760788407-Assignment-Rules), and the stop-agents conditions. If another `nx` command reaches Nx Cloud first, the CIPE is created with default settings and your `start-ci-run` flags are ignored for that run. The result is assignment rules or stop conditions that appear to have no effect.
 {% /aside %}
 
 **Usage:**
@@ -374,18 +374,18 @@ If you accidentally run this command locally, remove all generated marker files 
 
 #### Options
 
-| Option                          | Type    | Description                                                                                                                                                                               | Default |
-| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| `--distribute-on`               | string  | Configure the number of agents, [launch templates](/docs/reference/nx-cloud/launch-templates) and [assignment rules](/docs/reference/nx-cloud/assignment-rules) for distributed execution |         |
-| `--assignment-rules`            | string  | Path to the [assignment rules configuration](/docs/reference/nx-cloud/assignment-rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                   |         |
-| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                                         | `false` |
-| `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                                       |         |
-| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands)                    | `true`  |
-| `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                        | `true`  |
-| `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                                        |         |
-| `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                                        |         |
-| `--auto-apply-fixes`            | string  | Comma-separated glob patterns for [self-healing](/docs/features/ci-features/self-healing-ci) tasks to auto-apply to PRs without manual review                                             |         |
-| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                                     |         |
+| Option                          | Type    | Description                                                                                                                                                                                                             | Default |
+| ------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
+| `--distribute-on`               | string  | Configure the number of agents, [launch templates](https://help.nx.app/articles/6332038806-Launch-Templates) and [assignment rules](https://help.nx.app/articles/7760788407-Assignment-Rules) for distributed execution |         |
+| `--assignment-rules`            | string  | Path to the [assignment rules configuration](https://help.nx.app/articles/7760788407-Assignment-Rules#using-assignment-rules-when-you-bring-your-own-compute) for manual distribution.                                  |         |
+| `--require-explicit-completion` | boolean | Disable automatic completion monitoring and require explicit `nx complete-ci-run`                                                                                                                                       | `false` |
+| `--stop-agents-after`           | string  | Comma-separated list of targets after which agents should terminate                                                                                                                                                     |         |
+| `--stop-agents-on-failure`      | boolean | Terminate all agents when a command fails. This flag does not interrupt the command itself. To cancel the command on failure use [nxBail](/docs/reference/nx-commands)                                                  | `true`  |
+| `--use-dte-by-default`          | boolean | Configure Nx to distribute all commands by default                                                                                                                                                                      | `true`  |
+| `--with-env-vars`               | string  | Comma-separated list of environment variables to pass to Nx Agents                                                                                                                                                      |         |
+| `--fix-tasks`                   | string  | Comma-separated glob patterns for tasks to enable [AI self-healing](/docs/features/ci-features/self-healing-ci). Supports negation with `!` prefix                                                                      |         |
+| `--auto-apply-fixes`            | string  | Comma-separated glob patterns for [self-healing](/docs/features/ci-features/self-healing-ci) tasks to auto-apply to PRs without manual review                                                                           |         |
+| `--force`                       | boolean | Bypass CI environment check. Run [`nx-cloud cleanup`](#nx-cloud-cleanup) if accidentally ran locally.                                                                                                                   |         |
 
 #### Detailed option usage
 
@@ -579,7 +579,7 @@ nx affected -t build --no-dte
 
 ### `nx-cloud start-agent`
 
-Starts an agent process when you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. To have Nx Cloud provision and manage the agents for you, see [Nx Agents](/docs/features/ci-features/distribute-task-execution).
+Starts an agent process when you [bring your own compute](https://help.nx.app/articles/7949434586-Bring-Your-Own-Compute). The agent waits for Nx Cloud to assign tasks that have been distributed by the main CI job via `start-ci-run`. To have Nx Cloud provision and manage the agents for you, see [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 
 This command is the same as running `nx start-agent`.
 
@@ -603,7 +603,7 @@ Use the `NX_AGENT_NAME` environment variable to assign a name to the agent for i
 NX_AGENT_NAME=agent-1 npx nx-cloud start-agent
 ```
 
-For complete examples across different CI providers, see the [bring your own compute guide](/docs/guides/nx-cloud/bring-your-own-compute).
+For complete examples across different CI providers, see the [bring your own compute guide](https://help.nx.app/articles/7949434586-Bring-Your-Own-Compute).
 
 ### `nx-cloud stop-all-agents`
 

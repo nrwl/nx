@@ -70,11 +70,11 @@ to = "/docs/features/ci-features/self-healing-ci"
 # DOC-513: Manual DTE guide renamed to Bring Your Own Compute
 [[redirects]]
 from = "/docs/guides/nx-cloud/manual-dte"
-to = "/docs/guides/nx-cloud/bring-your-own-compute"
+to = "https://help.nx.app/articles/7949434586-Bring-Your-Own-Compute"
 
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
-to = "/docs/extending-nx/create-preset"
+to = "https://help.nx.app/articles/4064741539-Create-a-Custom-Plugin-Preset"
 
 [[redirects]]
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
@@ -83,7 +83,7 @@ to = "/docs/guides/adopting-nx/adding-to-monorepo"
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
 from = "/docs/technologies/angular/migration/angular-multiple"
-to = "/docs/technologies/angular/migration/angular"
+to = "https://help.nx.app/articles/1184870434-Migrating-an-Angular-CLI-Project-to-Nx"
 
 [[redirects]]
 from = "/docs/getting-started/nx-cloud"
@@ -150,7 +150,7 @@ to = "/docs/knowledge-base/installation-and-updates"
 # https://github.com/nrwl/nx/issues/36053
 [[redirects]]
 from = "/docs/technologies/build-tools/vite/configure-vite"
-to = "/docs/technologies/build-tools/vite/guides/configure-vite"
+to = "https://help.nx.app/articles/6629391679-Configure-Vite-on-your-Nx-workspace"
 
 # DOC-544: Pre-2022 docs URL structure still receives heavy traffic (65k+ requests/30d) and 404s.
 [[redirects]]
@@ -181,6 +181,24 @@ force = true
 # BEGIN pylon-kb redirects (generated)
 # Managed by scripts/pylon/migrate-articles.ts — do not edit this block by hand.
 # Knowledge-base articles migrated to the Pylon KB (help.nx.app).
+[[redirects]]
+from = "/docs/concepts/buildable-and-publishable-libraries"
+to = "https://help.nx.app/articles/8192499884-Publishable-and-Buildable-Nx-Libraries"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/cache-security"
+to = "https://help.nx.app/articles/1306939439-Cache-Security"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/reduce-waste"
+to = "https://help.nx.app/articles/3805772287-Reduce-Wasted-Time-in-CI"
+status = 301
+force = true
+
 [[redirects]]
 from = "/docs/concepts/decisions/code-ownership"
 to = "https://help.nx.app/articles/6925823630-Code-Ownership"
@@ -224,14 +242,206 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/concepts/typescript-project-linking"
+to = "https://help.nx.app/articles/2813476514-TypeScript-Project-Linking"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/compose-executors"
+to = "https://help.nx.app/articles/6592931619-Compose-Executors"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/composing-generators"
+to = "https://help.nx.app/articles/6348367525-Composing-Generators"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/create-install-package"
+to = "https://help.nx.app/articles/6724298030-Creating-an-Install-Package"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/create-preset"
+to = "https://help.nx.app/articles/4064741539-Create-a-Custom-Plugin-Preset"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/create-sync-generator"
+to = "https://help.nx.app/articles/9625250055-Create-a-Sync-Generator"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/createnodes-compatibility"
+to = "https://help.nx.app/articles/4536838536-CreateNodes-API-Compatibility"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/creating-files"
+to = "https://help.nx.app/articles/4784845151-Creating-Files-with-a-Generator"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/intro"
+to = "https://help.nx.app/articles/6008762031-Extending-Nx-with-Plugins"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/local-executors"
+to = "https://help.nx.app/articles/7812719120-Write-a-Simple-Executor"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/local-generators"
+to = "https://help.nx.app/articles/1906028065-Local-Generators"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/migration-generators"
+to = "https://help.nx.app/articles/3584095127-Migration-Generators"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/modifying-files"
+to = "https://help.nx.app/articles/6121244602-Modifying-Files-with-a-Generator"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/organization-specific-plugin"
+to = "https://help.nx.app/articles/9285955944-Enforce-Organizational-Best-Practices-with-a-Local-Plugin"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/performant-project-graph-plugins"
+to = "https://help.nx.app/articles/5949393232-Write-a-Performant-Project-Graph-Plugin"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/project-graph-plugins"
+to = "https://help.nx.app/articles/7492821406-Extending-the-Project-Graph"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/publish-plugin"
+to = "https://help.nx.app/articles/2378448927-Publish-Your-Nx-Plugin"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/task-running-lifecycle"
+to = "https://help.nx.app/articles/8195979030-Hook-into-the-Task-Running-Lifecycle"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx/tooling-plugin"
+to = "https://help.nx.app/articles/2764320470-Integrate-a-New-Tool-with-a-Tooling-Plugin"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/features/maintain-typescript-monorepos"
+to = "https://help.nx.app/articles/5516860883-Maintain-TypeScript-Monorepos"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/installation/install-non-javascript"
+to = "https://help.nx.app/articles/5565447242-Install-Nx-in-a-Non-JavaScript-Repository"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/installation/update-global-installation"
 to = "https://help.nx.app/articles/9269507985-Update-Your-Global-Nx-Installation"
 status = 301
 force = true
 
 [[redirects]]
+from = "/docs/guides/nx-cloud/access-tokens"
+to = "https://help.nx.app/articles/9326606694-Nx-CLI-and-CI-Access-Tokens"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/bring-your-own-compute"
+to = "https://help.nx.app/articles/7949434586-Bring-Your-Own-Compute"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/nx-cloud/fix-sandbox-violations"
 to = "https://help.nx.app/articles/7916263977-Fix-sandbox-violations"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/personal-access-tokens"
+to = "https://help.nx.app/articles/6258671083-Nx-Cloud-and-Personal-Access-Tokens"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/setup-ci"
+to = "https://help.nx.app/articles/7289638153-Setting-Up-CI-for-Nx-Cloud"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration/github-app-permissions"
+to = "https://help.nx.app/articles/6820330279-GitHub-App-Permissions"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-cloud/use-bun"
+to = "https://help.nx.app/articles/5650240677-Set-Up-Bun-with-Mise-on-CI"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-generate-command"
+to = "https://help.nx.app/articles/3693213514-Nx-Console-Generate-Command"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-migrate-ui"
+to = "https://help.nx.app/articles/6981365089-Nx-Console-Migrate-UI"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-nx-cloud"
+to = "https://help.nx.app/articles/3201829975-Nx-Console-&-Nx-Cloud-Integration"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-project-details"
+to = "https://help.nx.app/articles/5638768040-Nx-Console-Project-Details-View"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console/console-run-command"
+to = "https://help.nx.app/articles/4901237987-Nx-Console-Run-Command"
 status = 301
 force = true
 
@@ -278,8 +488,86 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/guides/tasks--caching/change-cache-location"
+to = "https://help.nx.app/articles/6552906692-Change-Cache-Location"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/configure-inputs"
+to = "https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/configure-outputs"
+to = "https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/convert-to-inferred"
+to = "https://help.nx.app/articles/1831368518-Migrate-to-Inferred-Tasks-(Project-Crystal)"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/defining-task-pipeline"
+to = "https://help.nx.app/articles/4414010104-Defining-a-Task-Pipeline"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/pass-args-to-commands"
+to = "https://help.nx.app/articles/8262604083-Pass-Args-to-Commands"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/reduce-repetitive-configuration"
+to = "https://help.nx.app/articles/8021915772-Reduce-Repetitive-Configuration"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/root-level-scripts"
+to = "https://help.nx.app/articles/5357624864-Run-Root-Level-NPM-Scripts-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/run-commands-executor"
+to = "https://help.nx.app/articles/7637202269-Running-Custom-Commands"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/tasks--caching/run-tasks-in-parallel"
 to = "https://help.nx.app/articles/1272614753-Run-Tasks-in-Parallel"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/self-hosted-caching"
+to = "https://help.nx.app/articles/7361367904-Remote-Cache"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/skipping-cache"
+to = "https://help.nx.app/articles/2408630120-Skip-Task-Caching"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/terminal-ui"
+to = "https://help.nx.app/articles/3362224526-Terminal-UI"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching/workspace-watching"
+to = "https://help.nx.app/articles/8409515627-Workspace-Watching"
 status = 301
 force = true
 
@@ -292,6 +580,24 @@ force = true
 [[redirects]]
 from = "/docs/guides/tips-n-tricks/browser-support"
 to = "https://help.nx.app/articles/6610997292-Configuring-Browser-Support"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/bun-workspaces"
+to = "https://help.nx.app/articles/6357437254-Use-Bun-Workspaces-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/define-environment-variables"
+to = "https://help.nx.app/articles/2265533437-Define-Environment-Variables"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/feature-based-testing"
+to = "https://help.nx.app/articles/2606149073-Optimize-Testing-with-Feature-Based-Testing"
 status = 301
 force = true
 
@@ -314,14 +620,152 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/guides/tips-n-tricks/keep-nx-versions-in-sync"
+to = "https://help.nx.app/articles/8333240536-Keep-Nx-Versions-in-Sync"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/tips-n-tricks/migrate-nx-imports-to-devkit"
 to = "https://help.nx.app/articles/9559202270-Migrate-`nx`-imports-to-`@nx/devkit`"
 status = 301
 force = true
 
 [[redirects]]
+from = "/docs/guides/tips-n-tricks/npm-workspaces"
+to = "https://help.nx.app/articles/1580280393-Use-npm-Workspaces-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/pnpm-workspaces"
+to = "https://help.nx.app/articles/6600554263-Use-pnpm-Workspaces-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/standalone-to-monorepo"
+to = "https://help.nx.app/articles/6373878883-Convert-from-a-Standalone-Repository-to-a-Monorepo"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/tips-n-tricks/yarn-pnp"
 to = "https://help.nx.app/articles/9991771374-Using-Yarn-Plug'n'Play-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/yarn-workspaces"
+to = "https://help.nx.app/articles/2403990468-Use-Yarn-Workspaces-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/benchmarks/tsc-batch-mode"
+to = "https://help.nx.app/articles/9779266374-TSC-Batch-Mode"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/assignment-rules"
+to = "https://help.nx.app/articles/7760788407-Assignment-Rules"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/config"
+to = "https://help.nx.app/articles/2028520438-Configuring-the-Cloud-Runner"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/custom-images"
+to = "https://help.nx.app/articles/9364795975-Custom-images-for-Nx-Agents"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/custom-steps"
+to = "https://help.nx.app/articles/7326539562-Creating-Custom-Steps"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/launch-template-examples"
+to = "https://help.nx.app/articles/5937790961-Launch-Template-Examples"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/nx-cloud/launch-templates"
+to = "https://help.nx.app/articles/6332038806-Launch-Templates"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/create-config"
+to = "https://help.nx.app/articles/9115998905-createConfig---@nx/angular-rspack"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/create-server"
+to = "https://help.nx.app/articles/9821602291-createServer---@nx/angular-rspack/ssr"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/getting-started"
+to = "https://help.nx.app/articles/6871277668-Getting-Started---Angular-Rspack"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/handling-configurations"
+to = "https://help.nx.app/articles/2521075975-Handling-Configurations"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/internationalization"
+to = "https://help.nx.app/articles/4537185429-Build-time-Internationalization-(i18n)-with-Angular-Rspack"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides/migrate-from-webpack"
+to = "https://help.nx.app/articles/6858868776-Migrate-Angular-with-Webpack-to-Rspack"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/angular-nx-version-matrix"
+to = "https://help.nx.app/articles/5633189145-Nx-and-Angular-Versions"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/dynamic-module-federation-with-angular"
+to = "https://help.nx.app/articles/4897850536-Advanced-Angular-Micro-Frontends-with-Dynamic-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/module-federation-with-ssr"
+to = "https://help.nx.app/articles/4331818265-Module-Federation-with-Server-Side-Rendering"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/nx-and-angular"
+to = "https://help.nx.app/articles/5066271907-Nx-and-the-Angular-CLI"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides/nx-devkit-angular-devkit"
+to = "https://help.nx.app/articles/8231511846-Nx-Devkit-and-Angular-Devkit"
 status = 301
 force = true
 
@@ -344,6 +788,36 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/technologies/angular/migration/angular"
+to = "https://help.nx.app/articles/1184870434-Migrating-an-Angular-CLI-Project-to-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/guides/configure-vite"
+to = "https://help.nx.app/articles/6629391679-Configure-Vite-on-your-Nx-workspace"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/build-tools/webpack/guides/webpack-config-setup"
+to = "https://help.nx.app/articles/7391091846-Configure-Webpack-in-your-Nx-workspace"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/build-tools/webpack/guides/webpack-plugins"
+to = "https://help.nx.app/articles/1410223387-Webpack-plugins"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/dotnet/guides/incremental-builds"
+to = "https://help.nx.app/articles/1549865775-Incremental-Builds-for-.NET-Projects"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/technologies/dotnet/guides/migrate-from-nx-dotnet-core"
 to = "https://help.nx.app/articles/1261127913-Migrate-from-@nx-dotnet/core-to-@nx/dotnet"
 status = 301
@@ -356,8 +830,122 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/guides/enforce-module-boundaries"
+to = "https://help.nx.app/articles/4850972520-Enforce-Module-Boundaries-ESLint-Rule"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/custom-workspace-rules"
+to = "https://help.nx.app/articles/9043277991-Custom-Workspace-ESLint-Rules"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/eslint"
+to = "https://help.nx.app/articles/6341444854-Configuring-ESLint-with-TypeScript"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides/flat-config"
+to = "https://help.nx.app/articles/6287613091-Switching-to-ESLint's-Flat-Config-Format"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/faster-builds-with-module-federation"
+to = "https://help.nx.app/articles/9362622421-Faster-Builds-with-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/manage-library-versions-with-module-federation"
+to = "https://help.nx.app/articles/9226223138-Manage-Library-Versions-with-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/micro-frontend-architecture"
+to = "https://help.nx.app/articles/2489582197-Micro-Frontend-Architecture"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/module-federation-and-nx"
+to = "https://help.nx.app/articles/6324805262-Module-Federation-and-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts/nx-module-federation-technical-overview"
+to = "https://help.nx.app/articles/2845809735-Nx-Module-Federation-Technical-Overview"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/consumer-and-provider"
+to = "https://help.nx.app/articles/8935531277-Module-Federation-Consumer-and-Provider-(v23+)"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/create-a-host"
+to = "https://help.nx.app/articles/6709715987-Creating-a-Module-Federation-Host"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/create-a-remote"
+to = "https://help.nx.app/articles/8652840414-Creating-a-Module-Federation-Remote"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/federate-a-module"
+to = "https://help.nx.app/articles/9341552458-Federate-a-Module"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/nx-module-federation-dev-server-plugin"
+to = "https://help.nx.app/articles/5807914676-NxModuleFederationDevServerPlugin"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides/nx-module-federation-plugin"
+to = "https://help.nx.app/articles/1420431279-NxModuleFederationPlugin"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/technologies/module-federation/guides/using-tailwind-css-with-module-federation"
 to = "https://help.nx.app/articles/6908494841-Using-Tailwind-CSS-with-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/vite-module-federation"
+to = "https://help.nx.app/articles/7401882023-Vite-Module-Federation"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/application-proxies"
+to = "https://help.nx.app/articles/9015799121-Set-Up-Application-Proxies"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/bundling-node-projects"
+to = "https://help.nx.app/articles/9922838847-Bundling-Projects-for-Deployment"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides/deploying-node-projects"
+to = "https://help.nx.app/articles/3417326202-Pruning-Projects-for-Deployment"
 status = 301
 force = true
 
@@ -386,8 +974,32 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/technologies/react/guides/adding-assets-react"
+to = "https://help.nx.app/articles/3781531627-Adding-Images,-Fonts,-and-Files"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/technologies/react/guides/deploy-nextjs-to-vercel"
 to = "https://help.nx.app/articles/6342955867-Deploying-Next.js-Applications-to-Vercel"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/module-federation-with-ssr"
+to = "https://help.nx.app/articles/1984471943-Module-Federation-with-Server-Side-Rendering"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/react-compiler"
+to = "https://help.nx.app/articles/1109579086-React-Compiler-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides/react-router"
+to = "https://help.nx.app/articles/1643955056-React-Router-with-Nx"
 status = 301
 force = true
 
@@ -406,6 +1018,12 @@ force = true
 [[redirects]]
 from = "/docs/technologies/react/next/guides/next-config-setup"
 to = "https://help.nx.app/articles/5237042980-How-to-configure-Next.js-plugins"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides/cypress-component-testing"
+to = "https://help.nx.app/articles/5741695030-Cypress-Component-Testing"
 status = 301
 force = true
 
@@ -440,6 +1058,66 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/best-practices"
+to = "https://help.nx.app/articles/3517672030-Storybook-best-practices-for-making-the-most-out-of-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/configuring-storybook"
+to = "https://help.nx.app/articles/7569128773-How-Storybook-is-configured-on-your-Nx-workspace"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/custom-builder-configs"
+to = "https://help.nx.app/articles/6528499868-How-to-configure-Webpack-and-Vite-for-Storybook"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-for-all"
+to = "https://help.nx.app/articles/9053764549-Publishing-Storybook---One-main-Storybook-instance-for-all-projects"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-per-scope"
+to = "https://help.nx.app/articles/1282618935-Publishing-Storybook---One-Storybook-instance-per-scope"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/one-storybook-with-composition"
+to = "https://help.nx.app/articles/2805476054-Publishing-Storybook---One-main-Storybook-instance-using-Storybook-Composition"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-angular"
+to = "https://help.nx.app/articles/9961570133-Set-up-Storybook-for-Angular-Projects"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-react"
+to = "https://help.nx.app/articles/4639211676-Set-up-Storybook-for-React-Projects"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-composition-setup"
+to = "https://help.nx.app/articles/3389733033-Setting-up-Storybook-Composition-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/storybook-interaction-tests"
+to = "https://help.nx.app/articles/9792654574-Setting-up-Storybook-Interaction-Tests-with-Nx"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/upgrading-storybook"
 to = "https://help.nx.app/articles/3327263277-Upgrading-Storybook"
 status = 301
@@ -458,8 +1136,32 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/technologies/typescript/guides/compile-multiple-formats"
+to = "https://help.nx.app/articles/6111422140-Compile-TypeScript-Libraries-to-Multiple-Formats"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/define-secondary-entrypoints"
+to = "https://help.nx.app/articles/8320574300-Define-Secondary-Entry-Points-for-TypeScript-Packages"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/technologies/typescript/guides/enable-tsc-batch-mode"
 to = "https://help.nx.app/articles/9754133651-Enable-TypeScript-Batch-Mode"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/js-and-ts"
+to = "https://help.nx.app/articles/7830153366-JavaScript-and-TypeScript"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides/switch-to-workspaces-project-references"
+to = "https://help.nx.app/articles/1089479355-Switch-to-Workspaces-and-Project-References"
 status = 301
 force = true
 
@@ -494,6 +1196,12 @@ status = 301
 force = true
 
 [[redirects]]
+from = "/docs/troubleshooting/resolve-circular-dependencies"
+to = "https://help.nx.app/articles/1922417790-Resolve-Circular-Dependencies"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/troubleshooting/troubleshoot-cache-misses"
 to = "https://help.nx.app/articles/2042382281-Troubleshoot-Cache-Misses"
 status = 301
@@ -520,6 +1228,156 @@ force = true
 [[redirects]]
 from = "/docs/concepts/decisions"
 to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/troubleshooting"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/extending-nx"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-console"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/installation"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/tasks--caching"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/benchmarks"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/typescript/guides"
+to = "/docs/technologies/typescript/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/guides"
+to = "/docs/technologies/angular/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/migration"
+to = "/docs/technologies/angular/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/angular/angular-rspack/guides"
+to = "/docs/technologies/angular/angular-rspack/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/react/guides"
+to = "/docs/technologies/react/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/node/guides"
+to = "/docs/technologies/node/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/dotnet/guides"
+to = "/docs/technologies/dotnet/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/guides"
+to = "/docs/technologies/module-federation/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/module-federation/concepts"
+to = "/docs/technologies/module-federation/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/guides"
+to = "/docs/technologies/eslint/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/eslint/eslint-plugin/guides"
+to = "/docs/technologies/eslint/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/build-tools/vite/guides"
+to = "/docs/technologies/build-tools/vite/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/build-tools/webpack/guides"
+to = "/docs/technologies/build-tools/webpack/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/cypress/guides"
+to = "/docs/technologies/test-tools/cypress/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides"
+to = "/docs/technologies/test-tools/storybook/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/technologies/test-tools/storybook/guides/overview-vue"
+to = "/docs/technologies/test-tools/storybook/introduction"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling"
+to = "/docs/features/ci-features"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/benchmarks/caching"
+to = "/docs"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/reference/benchmarks/nx-agents"
+to = "/docs"
 status = 301
 force = true
 

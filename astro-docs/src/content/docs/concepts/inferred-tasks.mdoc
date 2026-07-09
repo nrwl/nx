@@ -35,8 +35,8 @@ Nx plugins infer the following properties by analyzing the tool configuration.
 
 - Command - How is the tool invoked
 - [Cacheability](/docs/concepts/how-caching-works) - Whether the task will be cached by Nx. When the Inputs have not changed the Outputs will be restored from the cache.
-- [Inputs](/docs/guides/tasks--caching/configure-inputs) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
-- [Outputs](/docs/guides/tasks--caching/configure-outputs) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
+- [Inputs](https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching) - Inputs are used by the task to produce Outputs. Inputs are used to determine when the Outputs of a task can be restored from the cache.
+- [Outputs](https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching) - Outputs are the results of a task. Outputs are restored from the cache when the Inputs are the same as a previous run.
 - [Task Dependencies](/docs/concepts/task-pipeline-configuration) - The list of other tasks which must be completed before running this task.
 
 ## Nx uses plugins to build the graph
@@ -336,10 +336,10 @@ The order of precedence for task configuration is:
 
 More details about how to override task configuration is available in these guides:
 
-- [Configure Inputs for Task Caching](/docs/guides/tasks--caching/configure-inputs)
-- [Configure Outputs for Task Caching](/docs/guides/tasks--caching/configure-outputs)
-- [Defining a Task Pipeline](/docs/guides/tasks--caching/defining-task-pipeline)
-- [Pass Arguments to Commands](/docs/guides/tasks--caching/pass-args-to-commands)
+- [Configure Inputs for Task Caching](https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching)
+- [Configure Outputs for Task Caching](https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching)
+- [Defining a Task Pipeline](https://help.nx.app/articles/4414010104-Defining-a-Task-Pipeline)
+- [Pass Arguments to Commands](https://help.nx.app/articles/8262604083-Pass-Args-to-Commands)
 
 ## Existing Nx workspaces
 
@@ -354,6 +354,6 @@ When `useInferencePlugins` is `false`:
 1. A newly generated project will have all targets defined with executors - not with inferred tasks.
 2. Running `nx add @nx/some-plugin` will not create a plugin entry for `@nx/some-plugin` in the `nx.json` file. (So that plugin will not create inferred tasks.)
 
-If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](/docs/guides/tasks--caching/convert-to-inferred).
+If you want to **migrate** your projects to use inferred tasks, follow the recipe for [migrating to inferred tasks](<https://help.nx.app/articles/1831368518-Migrate-to-Inferred-Tasks-(Project-Crystal)>).
 
 Even once a repository has fully embraced inferred tasks, `project.json` and executors will still be useful. The `project.json` file is needed to modify inferred task options and to define tasks that can not be inferred. Some executors perform tasks that can not be accomplished by running a tool directly from the command line (i.e. batch mode).

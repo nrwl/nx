@@ -277,10 +277,10 @@ For TypeScript workspaces, the recommended setup uses three levels of `tsconfig.
 }
 ```
 
-This setup gives editors and language servers accurate type information per-project, enables incremental builds (only recompile what changed), and creates clear boundaries between projects. For more details, see [maintain TypeScript monorepos](/docs/features/maintain-typescript-monorepos).
+This setup gives editors and language servers accurate type information per-project, enables incremental builds (only recompile what changed), and creates clear boundaries between projects. For more details, see [maintain TypeScript monorepos](https://help.nx.app/articles/5516860883-Maintain-TypeScript-Monorepos).
 
 {% aside type="note" title="Workspaces using tsconfig path aliases" %}
-Some workspaces use TypeScript `paths` in `tsconfig.base.json` to link projects. This works but is not recommended for new workspaces. Path aliases were not designed for project linking, and solution-style project references work better with editors and build tools. See the [migration guide](/docs/technologies/typescript/guides/switch-to-workspaces-project-references) to switch.
+Some workspaces use TypeScript `paths` in `tsconfig.base.json` to link projects. This works but is not recommended for new workspaces. Path aliases were not designed for project linking, and solution-style project references work better with editors and build tools. See the [migration guide](https://help.nx.app/articles/1089479355-Switch-to-Workspaces-and-Project-References) to switch.
 {% /aside %}
 
 ## Non-JavaScript workspaces

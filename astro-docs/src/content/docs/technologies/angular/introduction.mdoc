@@ -30,7 +30,7 @@ Nx does everything the Angular CLI does, and adds monorepo support, enforced mod
 | Distributed task execution on CI                                       | ❌          | ✅            |
 | Self-healing CI                                                        | ❌          | ✅            |
 
-For a detailed comparison and migration notes, see [Nx and the Angular CLI](/docs/technologies/angular/guides/nx-and-angular).
+For a detailed comparison and migration notes, see [Nx and the Angular CLI](https://help.nx.app/articles/5066271907-Nx-and-the-Angular-CLI).
 
 ## Requirements
 
@@ -42,14 +42,14 @@ The `@nx/angular` plugin supports the following package versions.
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
-For older Nx versions, see the full [Nx and Angular versions matrix](/docs/technologies/angular/guides/angular-nx-version-matrix).
+For older Nx versions, see the full [Nx and Angular versions matrix](https://help.nx.app/articles/5633189145-Nx-and-Angular-Versions).
 
 ## Setup
 
 ### Add to an existing workspace
 
 {% aside type="note" title="Keep Nx package versions in sync" %}
-Install the `@nx/angular` version that matches your `nx` version to avoid hard-to-debug errors. See [Keep Nx versions in sync](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Install the `@nx/angular` version that matches your `nx` version to avoid hard-to-debug errors. See [Keep Nx versions in sync](https://help.nx.app/articles/8333240536-Keep-Nx-Versions-in-Sync).
 Using `nx add` helps ensure the correct version is installed and configured.
 {% /aside %}
 
@@ -146,7 +146,7 @@ nx g @nx/angular:lib libs/my-lib --publishable --importPath=@my-org/my-lib
 
 ### Set up Module Federation
 
-Nx includes generators for scaffolding [Module Federation](/docs/technologies/module-federation/concepts/module-federation-and-nx) architectures with Angular. Generate a host application and its remotes in one command:
+Nx includes generators for scaffolding [Module Federation](https://help.nx.app/articles/6324805262-Module-Federation-and-Nx) architectures with Angular. Generate a host application and its remotes in one command:
 
 ```shell
 nx g @nx/angular:host apps/shell --remotes=products,checkout
@@ -162,7 +162,7 @@ nx g @nx/angular:remote apps/login --host=shell
 
 > See all options in the [Angular remote generators reference](/docs/technologies/angular/generators#remote).
 
-Pass `--dynamic` for [dynamic federation](/docs/technologies/angular/guides/dynamic-module-federation-with-angular) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](/docs/technologies/angular/guides/module-federation-with-ssr).
+Pass `--dynamic` for [dynamic federation](https://help.nx.app/articles/4897850536-Advanced-Angular-Micro-Frontends-with-Dynamic-Module-Federation) (remotes resolved at runtime) or `--ssr` for [server-side rendering with Module Federation](https://help.nx.app/articles/4331818265-Module-Federation-with-Server-Side-Rendering).
 
 ## Structure your Angular monorepo
 
@@ -191,8 +191,8 @@ For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 {% cardgrid %}
 {% linkcard title="Set up CI with Nx Cloud" description="Remote caching, Nx Agents, and self-healing CI." href="/docs/getting-started/setup-ci" /%}
 {% linkcard title="Learn Nx Tutorial" description="Build a monorepo step-by-step with Nx." href="/docs/getting-started/tutorials/crafting-your-workspace" /%}
-{% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="/docs/technologies/angular/migration/angular" /%}
-{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="/docs/technologies/angular/guides/dynamic-module-federation-with-angular" /%}
+{% linkcard title="Migrate from Angular CLI" description="Move an existing Angular CLI project into Nx." href="https://help.nx.app/articles/1184870434-Migrating-an-Angular-CLI-Project-to-Nx" /%}
+{% linkcard title="Dynamic Module Federation" description="Load Angular remotes at runtime with dynamic federation." href="https://help.nx.app/articles/4897850536-Advanced-Angular-Micro-Frontends-with-Dynamic-Module-Federation" /%}
 {% linkcard title="Tailwind CSS with Angular" description="Add Tailwind CSS to Angular apps and libraries." href="https://help.nx.app/articles/6227648006-Using-Tailwind-CSS-with-Angular" /%}
 {% linkcard title="Angular Generators Reference" description="All @nx/angular generators." href="/docs/technologies/angular/generators" /%}
 {% linkcard title="Angular Executors Reference" description="All @nx/angular executors." href="/docs/technologies/angular/executors" /%}

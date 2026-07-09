@@ -10,7 +10,7 @@ Nx plugins help developers use a tool or framework with Nx. They allow the plugi
 
 For example, plugins can accomplish the following:
 
-- [Configure Nx cache settings](/docs/concepts/inferred-tasks) for a tool. The [`@nx/webpack`](/docs/technologies/build-tools/webpack/introduction) plugin can automatically configure the [inputs](/docs/guides/tasks--caching/configure-inputs) and [outputs](/docs/guides/tasks--caching/configure-outputs) for a `build` task based on the settings in the `webpack.config.js` file it uses.
+- [Configure Nx cache settings](/docs/concepts/inferred-tasks) for a tool. The [`@nx/webpack`](/docs/technologies/build-tools/webpack/introduction) plugin can automatically configure the [inputs](https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching) and [outputs](https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching) for a `build` task based on the settings in the `webpack.config.js` file it uses.
 - [Update tooling configuration](/docs/features/automate-updating-dependencies) when upgrading the tool version. When Storybook 7 introduced a [new format](https://storybook.js.org/blog/storybook-csf3-is-here) for their configuration files, anyone using the [`@nx/storybook`](/docs/technologies/test-tools/storybook/introduction) plugin could automatically apply those changes to their repository when upgrading.
 - [Set up a tool](/docs/features/generate-code) for the first time. With the [`@nx/playwright`](/docs/technologies/test-tools/playwright/introduction) plugin installed, you can use the `@nx/playwright:configuration` code generator to set up Playwright tests in an existing project.
 - [Run a tool in an advanced way](/docs/concepts/executors-and-configurations). The [`@nx/js`](/docs/technologies/typescript/introduction) plugin's [`@nx/js:tsc` executor](/docs/technologies/typescript/executors#tsc) combines the Nx understanding of your repository with Typescript's native batch mode feature to make your builds [even more performant](https://help.nx.app/articles/9754133651-Enable-TypeScript-Batch-Mode).
@@ -29,4 +29,4 @@ Try the [Reducing Configuration Boilerplate](/docs/getting-started/tutorials/red
 {% /aside %}
 
 {% linkcard title="Official and Community Plugins" href="/docs/plugin-registry" description="Browse the plugin registry to discover plugins created by the Nx core team and the community" /%}
-{% linkcard title="Build Your Own Plugin" href="/docs/extending-nx/organization-specific-plugin" description="Build your own plugin to use internally or share with the community" /%}
+{% linkcard title="Build Your Own Plugin" href="https://help.nx.app/articles/9285955944-Enforce-Organizational-Best-Practices-with-a-Local-Plugin" description="Build your own plugin to use internally or share with the community" /%}

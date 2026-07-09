@@ -38,6 +38,9 @@ interface MigrationEntry {
   collectionId: string;
   publish: boolean;
   weight?: number;
+  /** Overrides the default slug (source file basename) — needed when two
+   * articles share a basename, e.g. angular/react module-federation-with-ssr. */
+  slug?: string;
 }
 
 interface MigrationList {
@@ -252,7 +255,7 @@ async function main(): Promise<void> {
     const sourcePath = path.join(ASTRO_DOCS_ROOT, entry.sourcePath);
     const converted = convertArticle(sourcePath);
     const hash = contentHash(converted);
-    const slug = path.basename(entry.sourcePath, '.mdoc');
+    const slug = entry.slug ?? path.basename(entry.sourcePath, '.mdoc');
 
     let mapped = mapping[entry.sourcePath];
     if (!mapped && existingBySlug.has(slug)) {

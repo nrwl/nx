@@ -76,7 +76,7 @@ Once feedback and context switching are handled, compress the compute side.
 
 **Cache hit rate is low**
 
-- Ensure tasks are cacheable and deterministic. Define `outputs` and configure `inputs`/`namedInputs` correctly. See: [Configure Inputs](/docs/guides/tasks--caching/configure-inputs), [Configure Outputs](/docs/guides/tasks--caching/configure-outputs), [Inputs Reference](/docs/reference/inputs)
+- Ensure tasks are cacheable and deterministic. Define `outputs` and configure `inputs`/`namedInputs` correctly. See: [Configure Inputs](https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching), [Configure Outputs](https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching), [Inputs Reference](/docs/reference/inputs)
 - Standardize Node/PNPM versions across dev and CI; avoid environment variables that unintentionally affect inputs.
 - Use [Remote caching (Nx Replay)](/docs/features/ci-features/remote-cache) to share results between CI and dev machines.
 
@@ -84,7 +84,7 @@ Once feedback and context switching are handled, compress the compute side.
 
 - Increase or right-size distributed capacity and parallelism with [Nx Agents](/docs/features/ci-features/distribute-task-execution).
 - Use [Dynamic Agents](/docs/features/ci-features/dynamic-agents) to scale based on PR size.
-- Remove unnecessary serialization (global locks, [overly strict `dependsOn`](/docs/guides/tasks--caching/defining-task-pipeline)).
+- Remove unnecessary serialization (global locks, [overly strict `dependsOn`](https://help.nx.app/articles/4414010104-Defining-a-Task-Pipeline)).
 
 **E2E suites take too long**
 

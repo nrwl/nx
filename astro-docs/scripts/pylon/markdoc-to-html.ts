@@ -6,11 +6,17 @@
  * error — extend the table or exclude the article.
  */
 import Markdoc, { Tag, type Config, type Node } from '@markdoc/markdoc';
+import GithubSlugger from 'github-slugger';
 import yaml from 'js-yaml';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { NX_DEV_ORIGIN, docsPathForSource } from './config';
+import {
+  CONTENT_DOCS_ROOT,
+  DOCS_BASE_PATH,
+  NX_DEV_ORIGIN,
+  docsPathForSource,
+} from './config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -33,15 +39,27 @@ export const IMAGE_PLACEHOLDER_PREFIX = 'pylon-image:';
 const ALLOW_IFRAMES = true;
 
 // Interactive {% graph %} components can't survive migration; each affected
-// article needs a pre-captured static screenshot registered here (keyed by
-// docs route). Capture with Playwright against a local preview.
-const GRAPH_SCREENSHOTS: Record<string, string> = {
-  '/docs/guides/tips-n-tricks/identify-dependencies-between-folders': path.join(
-    __dirname,
-    'assets',
-    'identify-dependencies-graph.png'
-  ),
+// article needs pre-captured static screenshots registered here (keyed by
+// docs route, one entry per {% graph %} tag in document order). Capture with
+// Playwright against a local preview (see capture-graph-screenshots.ts).
+const GRAPH_SCREENSHOTS: Record<string, string[]> = {
+  '/docs/guides/tips-n-tricks/identify-dependencies-between-folders': [
+    path.join(__dirname, 'assets', 'identify-dependencies-graph.png'),
+  ],
 };
+
+function registerGraphScreenshots(docsPath: string, count: number): void {
+  const slug = docsPath.split('/').pop()!;
+  GRAPH_SCREENSHOTS[docsPath] = Array.from({ length: count }, (_, i) =>
+    path.join(__dirname, 'assets', `${slug}-graph-${i + 1}.png`)
+  );
+}
+registerGraphScreenshots('/docs/guides/tips-n-tricks/feature-based-testing', 1);
+registerGraphScreenshots('/docs/concepts/ci-concepts/reduce-waste', 7);
+registerGraphScreenshots('/docs/guides/tasks--caching/configure-inputs', 1);
+registerGraphScreenshots('/docs/guides/tasks--caching/workspace-watching', 1);
+registerGraphScreenshots('/docs/features/maintain-typescript-monorepos', 2);
+registerGraphScreenshots('/docs/technologies/angular/guides/nx-and-angular', 1);
 
 const ASIDE_LABELS: Record<string, string> = {
   note: 'ℹ️ Note',
@@ -65,6 +83,9 @@ function asideTransform(node: Node, config: Config): Tag {
 }
 
 function buildTagConfig(articleDocsPath: string): Config {
+  // {% graph %} tags consume screenshots from GRAPH_SCREENSHOTS in document
+  // order; Markdoc transforms depth-first so this matches source order.
+  let graphIndex = 0;
   return {
     tags: {
       aside: { transform: asideTransform },
@@ -135,7 +156,119 @@ function buildTagConfig(articleDocsPath: string): Config {
           return text ? new Tag('em', {}, [`(${text})`]) : null;
         },
       },
+      // Interactive Project Details View; children are a fenced JSON config
+      // block which renders as a plain code block, prefixed with a note.
+      project_details: {
+        transform(node, config) {
+          const title = String(node.attributes.title ?? 'Project Details');
+          return new Tag('div', {}, [
+            new Tag('p', {}, [new Tag('strong', {}, [title])]),
+            ...node.transformChildren(config),
+            new Tag('p', {}, [
+              new Tag('em', {}, [
+                'Static snapshot of the interactive Project Details view. Run ',
+              ]),
+              new Tag('code', {}, ['nx show project <project-name>']),
+              new Tag('em', {}, [
+                ' in your own workspace for the interactive version.',
+              ]),
+            ]),
+          ]);
+        },
+      },
+      // Filesystem-driven card grid on section landing pages; converted to a
+      // static list of links, snapshotted at migration time.
+      index_page_cards: {
+        selfClosing: true,
+        transform(node) {
+          const items = indexPageCardLinks(String(node.attributes.path ?? ''));
+          return new Tag(
+            'ul',
+            {},
+            items.map(
+              (item) =>
+                new Tag('li', {}, [
+                  new Tag('a', { href: item.href }, [item.title]),
+                  item.description ? ` — ${item.description}` : '',
+                ])
+            )
+          );
+        },
+      },
+      course_video: {
+        selfClosing: true,
+        transform(node) {
+          const attrs = node.attributes;
+          const src = String(attrs.src ?? '');
+          const embed = src
+            .replace('https://youtu.be/', 'https://www.youtube.com/embed/')
+            .replace('/watch?v=', '/embed/');
+          const courseTitle = String(attrs.courseTitle ?? 'Video course');
+          const courseUrl = String(attrs.courseUrl ?? '');
+          return new Tag('div', {}, [
+            new Tag('iframe', {
+              src: embed,
+              title: courseTitle,
+              width: '560',
+              height: '315',
+              frameborder: '0',
+              allowfullscreen: '',
+            }),
+            new Tag('p', {}, [
+              'Part of the course: ',
+              new Tag(
+                'a',
+                { href: absolutizeHref(courseUrl, articleDocsPath) },
+                [courseTitle]
+              ),
+            ]),
+          ]);
+        },
+      },
+      call_to_action: {
+        selfClosing: true,
+        transform(node) {
+          const attrs = node.attributes;
+          const title = String(attrs.title ?? '');
+          const description = attrs.description
+            ? ` — ${attrs.description}`
+            : '';
+          return new Tag('p', {}, [
+            new Tag('a', { href: absolutizeHref(attrs.url, articleDocsPath) }, [
+              new Tag('strong', {}, [title]),
+            ]),
+            String(description),
+          ]);
+        },
+      },
+      card: {
+        selfClosing: true,
+        transform(node) {
+          const attrs = node.attributes;
+          const title = String(attrs.title ?? '');
+          const description = attrs.description
+            ? ` — ${attrs.description}`
+            : '';
+          return new Tag('p', {}, [
+            new Tag('a', { href: absolutizeHref(attrs.url, articleDocsPath) }, [
+              new Tag('strong', {}, [title]),
+            ]),
+            String(description),
+          ]);
+        },
+      },
       github_repository: {
+        selfClosing: true,
+        transform(node) {
+          const url = String(node.attributes.url ?? '');
+          return new Tag('p', {}, [
+            new Tag('a', { href: url }, [`Example repository: ${url}`]),
+          ]);
+        },
+      },
+      // Hyphenated alias; appears in commented-out markup but the tokenizer
+      // still parses it as a tag.
+      'github-repository': {
         selfClosing: true,
         transform(node) {
           const url = String(node.attributes.url ?? '');
@@ -166,10 +299,11 @@ function buildTagConfig(articleDocsPath: string): Config {
       },
       graph: {
         transform(node) {
-          const shot = GRAPH_SCREENSHOTS[articleDocsPath];
+          const shots = GRAPH_SCREENSHOTS[articleDocsPath];
+          const shot = shots?.[graphIndex++];
           if (!shot) {
             throw new Error(
-              `{% graph %} in ${articleDocsPath} has no screenshot registered in GRAPH_SCREENSHOTS`
+              `{% graph %} #${graphIndex} in ${articleDocsPath} has no screenshot registered in GRAPH_SCREENSHOTS`
             );
           }
           // Children (the inline graph JSON) are intentionally dropped.
@@ -234,6 +368,45 @@ function buildTagConfig(articleDocsPath: string): Config {
   };
 }
 
+/**
+ * Static snapshot of what {% index_page_cards path="..." %} renders: direct
+ * child pages of a section. Only static .mdoc children are enumerated —
+ * dynamically generated pages (plugin API docs) are not included.
+ */
+function indexPageCardLinks(
+  routePath: string
+): Array<{ href: string; title: string; description: string }> {
+  // Resolve the route path to the on-disk directory (dir names use display
+  // case, e.g. "Nx Cloud" -> nx-cloud).
+  let dir = CONTENT_DOCS_ROOT;
+  for (const segment of routePath.split('/').filter(Boolean)) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    const match = entries.find(
+      (e) => e.isDirectory() && new GithubSlugger().slug(e.name) === segment
+    );
+    if (!match) {
+      throw new Error(
+        `index_page_cards: cannot resolve "${routePath}" (segment "${segment}") under ${dir}`
+      );
+    }
+    dir = path.join(dir, match.name);
+  }
+  const items: Array<{ href: string; title: string; description: string }> = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.mdoc')) continue;
+    if (entry.name === 'index.mdoc') continue;
+    const source = fs.readFileSync(path.join(dir, entry.name), 'utf-8');
+    const { frontmatter } = splitFrontmatter(source);
+    const slug = new GithubSlugger().slug(entry.name.replace(/\.mdoc$/, ''));
+    items.push({
+      href: `${NX_DEV_ORIGIN}${DOCS_BASE_PATH}/${routePath}/${slug}`,
+      title: String(frontmatter.title ?? entry.name),
+      description: String(frontmatter.description ?? ''),
+    });
+  }
+  return items.sort((a, b) => a.title.localeCompare(b.title));
+}
+
 function absolutizeHref(href: unknown, articleDocsPath: string): string {
   const raw = String(href ?? '');
   if (/^(https?:)?\/\//.test(raw) || raw.startsWith('mailto:')) return raw;
@@ -277,12 +450,13 @@ export function convertArticle(sourcePath: string): ConvertedArticle {
   }
 
   const images: string[] = [];
+  let graphCount = 0;
   for (const node of ast.walk()) {
     if (node.type === 'tag' && node.tag === 'graph') {
-      const shot = GRAPH_SCREENSHOTS[docsPath];
+      const shot = GRAPH_SCREENSHOTS[docsPath]?.[graphCount++];
       if (!shot || !fs.existsSync(shot)) {
         throw new Error(
-          `${sourcePath}: {% graph %} needs a screenshot registered in GRAPH_SCREENSHOTS`
+          `${sourcePath}: {% graph %} #${graphCount} needs a screenshot registered in GRAPH_SCREENSHOTS (missing: ${shot ?? 'no entry'})`
         );
       }
       images.push(shot);

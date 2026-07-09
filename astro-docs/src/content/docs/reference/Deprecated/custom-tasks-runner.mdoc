@@ -7,7 +7,7 @@ weight: .1
 filter: 'type:References'
 ---
 
-The Custom Task Runners API was created many years ago and has not been supported for several years. It was developed before we introduced a formal method for extending Nx through [plugins](/docs/extending-nx/intro). The API potentially allows modifications to the lifecycle of the Nx command execution, which breaks important invariants that Nx depends on. The new API leverages the plugins API for better performance and functionality.
+The Custom Task Runners API was created many years ago and has not been supported for several years. It was developed before we introduced a formal method for extending Nx through [plugins](https://help.nx.app/articles/6008762031-Extending-Nx-with-Plugins). The API potentially allows modifications to the lifecycle of the Nx command execution, which breaks important invariants that Nx depends on. The new API leverages the plugins API for better performance and functionality.
 
 This page guides you on how to migrate off the now deprecated Custom Task Runner API for both:
 
@@ -17,11 +17,11 @@ This page guides you on how to migrate off the now deprecated Custom Task Runner
 ## Remote cache
 
 There are several ways to set up remote caching with Nx.
-[Read more about remote cache options](/docs/guides/tasks--caching/self-hosted-caching).
+[Read more about remote cache options](https://help.nx.app/articles/7361367904-Remote-Cache).
 
 ## The preTasksExecution and postTasksExecution hooks
 
-Starting with Nx 20.4, a dedicated plugin-based API has been introduced that allows you to safely hook into the task running lifecycle. This new approach provides pre and post execution hooks without compromising Nx internal operations. For comprehensive documentation on this feature, see [Hook into the Task Running Lifecycle](/docs/extending-nx/task-running-lifecycle).
+Starting with Nx 20.4, a dedicated plugin-based API has been introduced that allows you to safely hook into the task running lifecycle. This new approach provides pre and post execution hooks without compromising Nx internal operations. For comprehensive documentation on this feature, see [Hook into the Task Running Lifecycle](https://help.nx.app/articles/8195979030-Hook-into-the-Task-Running-Lifecycle).
 
 Let's look into some concrete examples of how you can migrate from the previous custom task runners to this new API.
 

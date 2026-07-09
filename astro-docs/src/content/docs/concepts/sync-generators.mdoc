@@ -95,11 +95,11 @@ The above command opens up the project details view, and the registered sync gen
 
 Task sync generators can be thought of like the `dependsOn` property, but for generators instead of task dependencies.
 
-To [register a generator](/docs/extending-nx/create-sync-generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
+To [register a generator](https://help.nx.app/articles/9625250055-Create-a-Sync-Generator) as a sync generator for a particular task, add the generator to the `syncGenerators` property of the task configuration.
 
 ## Global sync generators
 
-Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](/docs/extending-nx/create-sync-generator) in the `nx.json` file with the `sync.globalGenerators` property.
+Global sync generators are not associated with a particular task and are executed only when the `nx sync` or `nx sync:check` command is explicitly run. They are [registered](https://help.nx.app/articles/9625250055-Create-a-Sync-Generator) in the `nx.json` file with the `sync.globalGenerators` property.
 
 ## Sync the project graph and the file system
 

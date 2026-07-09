@@ -214,7 +214,7 @@ A cache is only valuable if you can trust it. Turborepo has no task sandboxing. 
 
 Nx provides [task sandboxing](/docs/features/ci-features/sandboxing) that monitors filesystem access during execution and flags any reads or writes outside declared `inputs` and `outputs`. Undeclared dependencies are surfaced automatically rather than discovered through debugging production incidents.
 
-This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) demonstrated that build systems without cache isolation are vulnerable to cache poisoning, where any contributor with PR access can inject compromised artifacts into production. Nx Cloud prevents this through branch-scoped cache isolation. For more details, see [cache security](/docs/concepts/ci-concepts/cache-security).
+This matters for security too. [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) demonstrated that build systems without cache isolation are vulnerable to cache poisoning, where any contributor with PR access can inject compromised artifacts into production. Nx Cloud prevents this through branch-scoped cache isolation. For more details, see [cache security](https://help.nx.app/articles/1306939439-Cache-Security).
 
 Task sandboxing is an architectural difference, not a configuration problem. There's no workaround on the Turborepo side.
 
@@ -224,7 +224,7 @@ Both tools offer code generation, but the depth differs significantly.
 
 Turborepo provides `turbo gen`, a thin wrapper around [Plop.js](https://plopjs.com/). It can scaffold new workspaces and create files from Handlebars templates, but it's limited to template-based file creation and simple string append/prepend operations. There's no AST-level code modification, no awareness of the project graph, and no migration/codemod system.
 
-Nx generators are built on top of [Nx Devkit](/docs/extending-nx/intro), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
+Nx generators are built on top of [Nx Devkit](https://help.nx.app/articles/6008762031-Extending-Nx-with-Plugins), a full programmatic API for workspace manipulation. Generators can read and modify the project graph, perform AST-level TypeScript transforms, and compose with other generators. You can create [local workspace generators](/docs/features/generate-code#creating-custom-generators) that encode your team's specific patterns.
 
 The real value isn't raw scaffolding, AI can do that too. It's deterministic, convention-aware generation. **AI agents can invoke your generators to produce code matching your patterns from the start.** This is faster and more token-efficient than generating everything from scratch.
 
@@ -389,7 +389,7 @@ For step-by-step migration instructions, including configuration mapping and com
 
 ### Terminal UI
 
-Nx ships with a full [terminal UI](/docs/guides/tasks--caching/terminal-ui) that adapts to what you're running.
+Nx ships with a full [terminal UI](https://help.nx.app/articles/3362224526-Terminal-UI) that adapts to what you're running.
 For multi-task runs, it shows a task overview with filtering, pinning, and layout switching.
 For a single task with no dependencies, it drops into a simplified view with the output front and center.
 Colors, order, and indentation from your underlying tools are preserved.

@@ -30,7 +30,7 @@ The `@nx/playwright` plugin supports the following package versions.
 ### Installation
 
 {% aside type="note" title="Keep Nx Package Versions In Sync" %}
-Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](/docs/guides/tips-n-tricks/keep-nx-versions-in-sync).
+Make sure to install the `@nx/playwright` version that matches the version of `nx` in your repository. If the version numbers get out of sync, you can encounter some difficult to debug errors. You can [fix Nx version mismatches with this recipe](https://help.nx.app/articles/8333240536-Keep-Nx-Versions-in-Sync).
 {% /aside %}
 
 In any Nx workspace, you can install `@nx/playwright` by running the following command:
@@ -205,7 +205,7 @@ export default defineConfig({
 });
 ```
 
-In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](/docs/guides/tips-n-tricks/define-environment-variables) or optionally via setting them per the environment they are needed in such as `CI`
+In order to set different `baseURL` values for different environments you can pass them via the [environment variables and nx configurations](https://help.nx.app/articles/2265533437-Define-Environment-Variables) or optionally via setting them per the environment they are needed in such as `CI`
 
 ```ts frame="none"
 import { defineConfig } from '@playwright/test';

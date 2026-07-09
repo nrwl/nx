@@ -1,10 +1,110 @@
 {
-  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Entries are the scored migrate-set (support-style, niche, error-driven content); already-migrated articles whose source .mdoc was deleted are removed from this list but stay in src/content/pylon-kb.json, which drives redirects. Kept in docs (broad/evergreen/onboarding): all package-manager workspace guides, keep-nx-versions-in-sync, define-environment-variables, feature-based-testing, advanced-update, standalone-to-monorepo, resolve-circular-dependencies, advanced-update. Borderline resolved 2026-07-08: troubleshoot-nx-install-issues and identify-dependencies-between-folders migrate (graph replaced by static screenshot). Litmus flips migrated 2026-07-08: include-assets-in-build, browser-support, performance-profiling, nx-sandbox-unix-sockets. Batch 2 ratified 2026-07-08 (29 articles, litmus applied across all remaining docs); held back to keep doc clusters intact: angular-rspack trio (handling-configurations, internationalization, migrate-from-webpack), one-storybook publishing trio, change-cache-location + skipping-cache. Sections moved at user request 2026-07-09: concepts/decisions (7 articles; the section index page redirects to the KB collection via extraRedirects) and the 'Creating releases' sidebar group (5 nx-release guides).",
+  "$comment": "Editorial input for scripts/pylon/migrate-articles.ts. sourcePath is relative to astro-docs/. collectionId is the target Pylon collection (currently the 'Nx Knowledge Base' collection). Set weight to override PYLON_DEFAULT_SEARCH_WEIGHT for a single article. extraRedirects covers section index pages when a whole section moves. Entries are the scored migrate-set (support-style, niche, error-driven content); already-migrated articles whose source .mdoc was deleted are removed from this list but stay in src/content/pylon-kb.json, which drives redirects. Kept in docs (broad/evergreen/onboarding): all package-manager workspace guides, keep-nx-versions-in-sync, define-environment-variables, feature-based-testing, advanced-update, standalone-to-monorepo, resolve-circular-dependencies, advanced-update. Borderline resolved 2026-07-08: troubleshoot-nx-install-issues and identify-dependencies-between-folders migrate (graph replaced by static screenshot). Litmus flips migrated 2026-07-08: include-assets-in-build, browser-support, performance-profiling, nx-sandbox-unix-sockets. Batch 2 ratified 2026-07-08 (29 articles, litmus applied across all remaining docs); held back to keep doc clusters intact: angular-rspack trio (handling-configurations, internationalization, migrate-from-webpack), one-storybook publishing trio, change-cache-location + skipping-cache. Sections moved at user request 2026-07-09: concepts/decisions (7 articles; the section index page redirects to the KB collection via extraRedirects) and the 'Creating releases' sidebar group (5 nx-release guides). Full Knowledge Base sidebar tab migrated 2026-07-09 (119 articles) at user request; 4 extremely-low-traffic pages deleted instead (see scripts/pylon/migration-audit.md); the KB tab was removed from sidebar.mts and emptied section hubs redirect via extraRedirects.",
   "articles": [],
   "extraRedirects": [
     {
       "from": "/docs/concepts/decisions",
       "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/troubleshooting",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/extending-nx",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/guides/nx-console",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/guides/installation",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/guides/tasks--caching",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/reference/benchmarks",
+      "to": "https://help.nx.app/collections/9576949210-nx-knowledge-base"
+    },
+    {
+      "from": "/docs/technologies/typescript/guides",
+      "to": "/docs/technologies/typescript/introduction"
+    },
+    {
+      "from": "/docs/technologies/angular/guides",
+      "to": "/docs/technologies/angular/introduction"
+    },
+    {
+      "from": "/docs/technologies/angular/migration",
+      "to": "/docs/technologies/angular/introduction"
+    },
+    {
+      "from": "/docs/technologies/angular/angular-rspack/guides",
+      "to": "/docs/technologies/angular/angular-rspack/introduction"
+    },
+    {
+      "from": "/docs/technologies/react/guides",
+      "to": "/docs/technologies/react/introduction"
+    },
+    {
+      "from": "/docs/technologies/node/guides",
+      "to": "/docs/technologies/node/introduction"
+    },
+    {
+      "from": "/docs/technologies/dotnet/guides",
+      "to": "/docs/technologies/dotnet/introduction"
+    },
+    {
+      "from": "/docs/technologies/module-federation/guides",
+      "to": "/docs/technologies/module-federation/introduction"
+    },
+    {
+      "from": "/docs/technologies/module-federation/concepts",
+      "to": "/docs/technologies/module-federation/introduction"
+    },
+    {
+      "from": "/docs/technologies/eslint/guides",
+      "to": "/docs/technologies/eslint/introduction"
+    },
+    {
+      "from": "/docs/technologies/eslint/eslint-plugin/guides",
+      "to": "/docs/technologies/eslint/introduction"
+    },
+    {
+      "from": "/docs/technologies/build-tools/vite/guides",
+      "to": "/docs/technologies/build-tools/vite/introduction"
+    },
+    {
+      "from": "/docs/technologies/build-tools/webpack/guides",
+      "to": "/docs/technologies/build-tools/webpack/introduction"
+    },
+    {
+      "from": "/docs/technologies/test-tools/cypress/guides",
+      "to": "/docs/technologies/test-tools/cypress/introduction"
+    },
+    {
+      "from": "/docs/technologies/test-tools/storybook/guides",
+      "to": "/docs/technologies/test-tools/storybook/introduction"
+    },
+    {
+      "from": "/docs/technologies/test-tools/storybook/guides/overview-vue",
+      "to": "/docs/technologies/test-tools/storybook/introduction"
+    },
+    {
+      "from": "/docs/concepts/ci-concepts/heartbeat-and-manual-shutdown-handling",
+      "to": "/docs/features/ci-features"
+    },
+    {
+      "from": "/docs/reference/benchmarks/caching",
+      "to": "/docs"
+    },
+    {
+      "from": "/docs/reference/benchmarks/nx-agents",
+      "to": "/docs"
     }
   ]
 }

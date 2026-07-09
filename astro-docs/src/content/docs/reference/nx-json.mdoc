@@ -109,7 +109,7 @@ Nx plugins improve the experience of using different tools with Nx. One key feat
 
 Every plugin behaves differently, so consult the plugin's own documentation for information about what it does. You can browse the [plugin registry](/docs/plugin-registry) for available plugins.
 
-To learn about creating your own plugin read about [extending Nx](/docs/extending-nx/intro).
+To learn about creating your own plugin read about [extending Nx](https://help.nx.app/articles/6008762031-Extending-Nx-with-Plugins).
 
 ```json
 // nx.json
@@ -298,7 +298,7 @@ In this case Nx will use the right `production` input for each project.
 
 {% cardgrid %}
 {% linkcard title="Inputs and Named Inputs Reference" description="Learn about all the possible settings for `inputs` and `namedInputs`" href="/docs/reference/inputs" /%}
-{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="/docs/guides/tasks--caching/configure-inputs" /%}
+{% linkcard title="Configure Inputs for Task Caching" description="This recipes walks you through a few examples of how to configure `inputs` and `namedInputs`" href="https://help.nx.app/articles/5713413478-Configure-Inputs-for-Task-Caching" /%}
 {% /cardgrid %}
 
 ### Task pipelines
@@ -375,7 +375,7 @@ When defining any options or configurations inside of a target default, you may 
 Both keys above match a `build` target that uses `@nx/js:tsc`. However, only the most specific defaults, the executor-keyed defaults, will apply. The name-keyed defaults will not apply so specify the full config on the executor key.
 
 {% cardgrid %}
-{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="/docs/guides/tasks--caching/configure-outputs" /%}
+{% linkcard title="Configure Outputs for Task Caching" description="This recipe walks you through how to set outputs" href="https://help.nx.app/articles/5879184197-Configure-Outputs-for-Task-Caching" /%}
 {% /cardgrid %}
 
 ### Cache
@@ -476,7 +476,7 @@ Or use the `projects` filter — which accepts the same patterns as the `--proje
 If multiple targets with the same name run different commands (or use different executors), do not set options in `targetDefaults`. Different commands would accept different options, and the target defaults will apply to all targets with the same name regardless of the command they run. If you were to provide options in `targetDefaults` for them, the commands that don't expect those options could throw an error.
 {% /aside %}
 
-For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](/docs/guides/tasks--caching/pass-args-to-commands).
+For more details on how to pass args to the underlying command see the [Pass Args to Commands recipe](https://help.nx.app/articles/8262604083-Pass-Args-to-Commands).
 
 ### Task atomizer configuration
 
@@ -1081,7 +1081,7 @@ Regardless of the `maxCacheSize` setting, Nx will remove cache entries that have
 
 ## TUI
 
-The `tui` property in `nx.json` configures the [Terminal UI](/docs/guides/tasks--caching/terminal-ui). It allows you to enable or disable the TUI and configure its behavior.
+The `tui` property in `nx.json` configures the [Terminal UI](https://help.nx.app/articles/3362224526-Terminal-UI). It allows you to enable or disable the TUI and configure its behavior.
 
 ```json
 // nx.json
