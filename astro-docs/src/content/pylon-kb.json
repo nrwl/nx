@@ -482,5 +482,137 @@
     "contentHash": "9f0f9a2a9cfe5511c952769a6eabd369405e86d706cc461c75ba274b92ab0bd6",
     "published": true,
     "lastSyncedAt": "2026-07-08T21:05:20.906Z"
+  },
+  "src/content/docs/concepts/Decisions/why-monorepos.mdoc": {
+    "pylonId": "4ed64de2-9a19-431a-96cd-ab6403fb09d3",
+    "slug": "why-monorepos",
+    "url": "https://help.nx.app/articles/6401787714-Monorepos",
+    "title": "Monorepos",
+    "description": "Understand the benefits of monorepos including shared code, atomic changes, developer mobility, and consistent dependencies across your organization.",
+    "docsPath": "/docs/concepts/decisions/why-monorepos",
+    "contentHash": "893093389f431827605a22f5ebbea2f198b5faf15ae1687ee49c9b99bb3ba412",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:38.431Z"
+  },
+  "src/content/docs/concepts/Decisions/overview.mdoc": {
+    "pylonId": "ab069012-a7ae-48b7-9628-3aa533647f05",
+    "slug": "overview",
+    "url": "https://help.nx.app/articles/8584477334-Monorepo-vs-Polyrepo:-How-to-Choose",
+    "title": "Monorepo vs Polyrepo: How to Choose",
+    "description": "Monorepo vs polyrepo comes down to how your teams agree to manage code, dependencies, ownership, and CI, not just technical limits.",
+    "docsPath": "/docs/concepts/decisions/overview",
+    "contentHash": "e9e3a845b521241590b47af93c656c54218a41052ac88821fb506c7eee3325ad",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:42.687Z"
+  },
+  "src/content/docs/concepts/Decisions/dependency-management.mdoc": {
+    "pylonId": "0617a942-72ff-4ce4-85e2-5ce0e20e9cb2",
+    "slug": "dependency-management",
+    "url": "https://help.nx.app/articles/5029445312-Dependency-Management-Strategies",
+    "title": "Dependency Management Strategies",
+    "description": "Compare independently maintained dependencies versus single version policy approaches for monorepos, with guidance on choosing the right strategy for your team.",
+    "docsPath": "/docs/concepts/decisions/dependency-management",
+    "contentHash": "45ae865ccb459cbfab473ceed725efc1ba6e6f6baf32008e4b170762f92ae9bc",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:46.935Z"
+  },
+  "src/content/docs/concepts/Decisions/folder-structure.mdoc": {
+    "pylonId": "ffde65b8-12b4-4e84-9f52-c601ebb88b97",
+    "slug": "folder-structure",
+    "url": "https://help.nx.app/articles/2322714014-Folder-Structure",
+    "title": "Folder Structure",
+    "description": "Learn about organizing your Nx monorepo with effective folder structures, and how to easily move or remove projects as your organization evolves.",
+    "docsPath": "/docs/concepts/decisions/folder-structure",
+    "contentHash": "c9c269721e52b1028ff741e3d14b79eabc12d147281f0621a64c5045a01ccf45",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:51.225Z"
+  },
+  "src/content/docs/concepts/Decisions/project-size.mdoc": {
+    "pylonId": "bbfcaad4-5abb-4880-a608-6184e0a28192",
+    "slug": "project-size",
+    "url": "https://help.nx.app/articles/4673957945-Project-Size",
+    "title": "Project Size",
+    "description": "Understand the trade-offs of project granularity in Nx, including benefits like faster commands, clearer boundaries, and improved developer experience.",
+    "docsPath": "/docs/concepts/decisions/project-size",
+    "contentHash": "2af1fb2791983bafe487cbab9539667cbc2e159b02882c36ca05485827ac2404",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:55.598Z"
+  },
+  "src/content/docs/concepts/Decisions/code-ownership.mdoc": {
+    "pylonId": "99be177d-8eb7-4d1a-ae5f-9eb2217e2cc8",
+    "slug": "code-ownership",
+    "url": "https://help.nx.app/articles/6925823630-Code-Ownership",
+    "title": "Code Ownership",
+    "description": "Learn about code ownership challenges in monorepos and how Nx helps manage shared code with tools like CODEOWNERS and module boundary rules.",
+    "docsPath": "/docs/concepts/decisions/code-ownership",
+    "contentHash": "c8750da951f87ea074a2be1c4da38797ac4820d335beb327868908599450acb9",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:48:59.887Z"
+  },
+  "src/content/docs/concepts/Decisions/project-dependency-rules.mdoc": {
+    "pylonId": "c361badf-91a9-47fc-ba5f-ce5b4c329a7c",
+    "slug": "project-dependency-rules",
+    "url": "https://help.nx.app/articles/4314838792-Project-Dependency-Rules",
+    "title": "Project Dependency Rules",
+    "description": "Learn how to organize your Nx workspace with library types like feature, UI, data-access, and utility libraries, and enforce dependency rules between them.",
+    "docsPath": "/docs/concepts/decisions/project-dependency-rules",
+    "contentHash": "9a90555e674510554ae9c50d151b75810320bfa87d00d627ab8593f27e5e0937",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:49:04.181Z"
+  },
+  "src/content/docs/guides/Nx Release/release-npm-packages.mdoc": {
+    "pylonId": "886f7422-5677-4e1c-a188-8755932156a3",
+    "slug": "release-npm-packages",
+    "url": "https://help.nx.app/articles/4683479916-Release-TypeScript/JavaScript-Packages-to-NPM",
+    "title": "Release TypeScript/JavaScript Packages to NPM",
+    "description": "Learn how to use Nx Release to version, generate changelogs, and publish TypeScript/JavaScript packages to NPM in your monorepo.",
+    "docsPath": "/docs/guides/nx-release/release-npm-packages",
+    "contentHash": "6bc328c2c037dd8758ff98681580c5fad3d27826c4c4269b7fd89d2852140938",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:53:54.807Z"
+  },
+  "src/content/docs/guides/Nx Release/publish-rust-crates.mdoc": {
+    "pylonId": "e8b4f74b-d484-4efb-be96-d5a0d7dcb19a",
+    "slug": "publish-rust-crates",
+    "url": "https://help.nx.app/articles/3409535118-Using-Nx-Release-with-Rust",
+    "title": "Using Nx Release with Rust",
+    "description": "Learn how to version Rust libraries, generate changelogs, and publish Rust crates in a monorepo using Nx Release with a step-by-step guide.",
+    "docsPath": "/docs/guides/nx-release/publish-rust-crates",
+    "contentHash": "a0ac20848a95324aa9c13f35e7eeeac88d4a597150d734cc0f77755d4b820eef",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:53:59.044Z"
+  },
+  "src/content/docs/guides/Nx Release/release-docker-images.mdoc": {
+    "pylonId": "946fbbcb-0ba6-4f24-a058-3fc1e51dfa24",
+    "slug": "release-docker-images",
+    "url": "https://help.nx.app/articles/6782010070-Release-Docker-Images",
+    "title": "Release Docker Images",
+    "description": "Learn how to use Nx Release to version and publish Docker images from your monorepo with calendar-based versioning.",
+    "docsPath": "/docs/guides/nx-release/release-docker-images",
+    "contentHash": "07b8f0704e7d8c17ff3ed4cdbd1c5f32b3a66978c7d8abfefe063a6f8ab00a88",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:54:03.360Z"
+  },
+  "src/content/docs/guides/Nx Release/automate-github-releases.mdoc": {
+    "pylonId": "dd4a7551-8858-4328-80ae-2cdcd8715efc",
+    "slug": "automate-github-releases",
+    "url": "https://help.nx.app/articles/5520989755-Automate-GitHub-Releases",
+    "title": "Automate GitHub Releases",
+    "description": "Learn how to configure Nx Release to automatically create GitHub releases with changelogs generated from your conventional commits, for both workspace and project-level releases.",
+    "docsPath": "/docs/guides/nx-release/automate-github-releases",
+    "contentHash": "1a598f5065c9f0faed76fbaa2f9454db7ffa2892a49f681bb8f92ff84d7c2a78",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:54:07.601Z"
+  },
+  "src/content/docs/guides/Nx Release/automate-gitlab-releases.mdoc": {
+    "pylonId": "3637c3a8-462c-45d3-8e0e-f41324474450",
+    "slug": "automate-gitlab-releases",
+    "url": "https://help.nx.app/articles/2719658433-Automate-GitLab-Releases",
+    "title": "Automate GitLab Releases",
+    "description": "Learn how to configure Nx Release to automatically create GitLab releases with changelogs generated from your conventional commits, for both workspace and project-level releases.",
+    "docsPath": "/docs/guides/nx-release/automate-gitlab-releases",
+    "contentHash": "2a8bc57b72329f7f7e2bc73c8e14627fc16cc4695d7bbd1af479ac2dc5093eff",
+    "published": true,
+    "lastSyncedAt": "2026-07-09T15:54:12.011Z"
   }
 }

@@ -182,6 +182,48 @@ force = true
 # Managed by scripts/pylon/migrate-articles.ts — do not edit this block by hand.
 # Knowledge-base articles migrated to the Pylon KB (help.nx.app).
 [[redirects]]
+from = "/docs/concepts/decisions/code-ownership"
+to = "https://help.nx.app/articles/6925823630-Code-Ownership"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/dependency-management"
+to = "https://help.nx.app/articles/5029445312-Dependency-Management-Strategies"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/folder-structure"
+to = "https://help.nx.app/articles/2322714014-Folder-Structure"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/overview"
+to = "https://help.nx.app/articles/8584477334-Monorepo-vs-Polyrepo:-How-to-Choose"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/project-dependency-rules"
+to = "https://help.nx.app/articles/4314838792-Project-Dependency-Rules"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/project-size"
+to = "https://help.nx.app/articles/4673957945-Project-Size"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions/why-monorepos"
+to = "https://help.nx.app/articles/6401787714-Monorepos"
+status = 301
+force = true
+
+[[redirects]]
 from = "/docs/guides/installation/update-global-installation"
 to = "https://help.nx.app/articles/9269507985-Update-Your-Global-Nx-Installation"
 status = 301
@@ -202,6 +244,36 @@ force = true
 [[redirects]]
 from = "/docs/guides/nx-console/console-troubleshooting"
 to = "https://help.nx.app/articles/2815571239-Troubleshoot-Nx-Console-Issues"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-release/automate-github-releases"
+to = "https://help.nx.app/articles/5520989755-Automate-GitHub-Releases"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-release/automate-gitlab-releases"
+to = "https://help.nx.app/articles/2719658433-Automate-GitLab-Releases"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-release/publish-rust-crates"
+to = "https://help.nx.app/articles/3409535118-Using-Nx-Release-with-Rust"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-release/release-docker-images"
+to = "https://help.nx.app/articles/6782010070-Release-Docker-Images"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/guides/nx-release/release-npm-packages"
+to = "https://help.nx.app/articles/4683479916-Release-TypeScript/JavaScript-Packages-to-NPM"
 status = 301
 force = true
 
@@ -442,6 +514,12 @@ force = true
 [[redirects]]
 from = "/docs/troubleshooting/unknown-local-cache"
 to = "https://help.nx.app/articles/3588128879-Unknown-Local-Cache-Error"
+status = 301
+force = true
+
+[[redirects]]
+from = "/docs/concepts/decisions"
+to = "https://help.nx.app/collections/9576949210-nx-knowledge-base"
 status = 301
 force = true
 

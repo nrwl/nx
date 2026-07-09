@@ -620,32 +620,6 @@ const knowledgeBaseGroups: SidebarItems = [
         ],
       },
       {
-        label: 'Creating releases',
-        collapsed: true,
-        items: [
-          {
-            label: 'Release NPM packages',
-            link: 'guides/nx-release/release-npm-packages',
-          },
-          {
-            label: 'Release Rust crates',
-            link: 'guides/nx-release/publish-rust-crates',
-          },
-          {
-            label: 'Release Docker images',
-            link: 'guides/nx-release/release-docker-images',
-          },
-          {
-            label: 'Automate GitHub releases',
-            link: 'guides/nx-release/automate-github-releases',
-          },
-          {
-            label: 'Automate GitLab releases',
-            link: 'guides/nx-release/automate-gitlab-releases',
-          },
-        ],
-      },
-      {
         label: 'Nx Console',
         collapsed: true,
         items: [
@@ -678,40 +652,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'Nx Console migration assistance',
             link: 'guides/nx-console/console-migrate-ui',
-          },
-        ],
-      },
-      {
-        label: 'Organizational decisions',
-        collapsed: true,
-        items: [
-          {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
-          },
-          {
-            label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
-          },
-          {
-            label: 'Dependency management',
-            link: 'concepts/decisions/dependency-management',
-          },
-          {
-            label: 'Folder structure',
-            link: 'concepts/decisions/folder-structure',
-          },
-          {
-            label: 'Project size',
-            link: 'concepts/decisions/project-size',
-          },
-          {
-            label: 'Code ownership',
-            link: 'concepts/decisions/code-ownership',
-          },
-          {
-            label: 'Project dependency rules',
-            link: 'concepts/decisions/project-dependency-rules',
           },
         ],
       },

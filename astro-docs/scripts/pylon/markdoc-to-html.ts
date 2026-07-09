@@ -128,6 +128,13 @@ function buildTagConfig(articleDocsPath: string): Config {
           return null;
         },
       },
+      badge: {
+        selfClosing: true,
+        transform(node) {
+          const text = String(node.attributes.text ?? '');
+          return text ? new Tag('em', {}, [`(${text})`]) : null;
+        },
+      },
       github_repository: {
         selfClosing: true,
         transform(node) {
