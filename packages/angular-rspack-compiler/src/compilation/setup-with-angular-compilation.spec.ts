@@ -149,13 +149,14 @@ describe('setupCompilationWithAngularCompilation', () => {
     }
   );
 
-  it('should fill transpilation gate options the compilation does not marshal back', async () => {
+  it('should compute the transpilation gate from the options the compilation reports, not the local ones', async () => {
     vi.mocked(setupCompilation).mockResolvedValueOnce({
       rootNames: ['/root/src/main.ts'],
+      // Gate-relevant local values that differ from what the compilation
+      // reports; they must not leak into the gate.
       compilerOptions: {
-        isolatedModules: true,
-        experimentalDecorators: true,
-        target: 9,
+        isolatedModules: false,
+        sourceMap: true,
       },
       componentStylesheetBundler: {},
     } as never);
@@ -315,9 +316,10 @@ describe('setupCompilationWithAngularCompilation', () => {
     expect(compilerOptions.tsBuildInfoFile).toBeUndefined();
   });
 
-  // The default tsconfig (isolated modules, legacy decorators, ES2022) with
-  // sourcemaps off takes the fast path; anything the swc rule can't
-  // replicate falls back to TypeScript transpilation.
+  // The flag must mirror the emit's own gate (isolated modules and no
+  // sourcemaps emit raw Angular-transformed TypeScript); tsconfig semantics
+  // like decorators or class fields are the swc rule's concern and must not
+  // flip the classification of what the compilation emitted.
   const fastPathOptions = {
     isolatedModules: true,
     experimentalDecorators: true,
@@ -326,15 +328,17 @@ describe('setupCompilationWithAngularCompilation', () => {
   it.each([
     [fastPathOptions, false],
     [{}, true],
+    [{ isolatedModules: false }, true],
     [{ ...fastPathOptions, sourceMap: true }, true],
     [{ ...fastPathOptions, inlineSourceMap: true }, true],
-    [{ ...fastPathOptions, experimentalDecorators: false }, true],
-    [{ ...fastPathOptions, emitDecoratorMetadata: true }, true],
-    [{ ...fastPathOptions, useDefineForClassFields: false }, true],
-    [{ ...fastPathOptions, verbatimModuleSyntax: true }, true],
-    [{ ...fastPathOptions, importsNotUsedAsValues: 1 }, true],
-    [{ ...fastPathOptions, target: undefined }, true],
-    [{ ...fastPathOptions, target: 4 }, true],
+    [{ ...fastPathOptions, experimentalDecorators: false }, false],
+    [{ ...fastPathOptions, emitDecoratorMetadata: true }, false],
+    [{ ...fastPathOptions, useDefineForClassFields: false }, false],
+    [{ ...fastPathOptions, verbatimModuleSyntax: true }, false],
+    // Module federation apps set target ES2020; the emit still produces raw
+    // TypeScript, so the loaders must not hand it to the JS transformer.
+    [{ ...fastPathOptions, target: 7 }, false],
+    [{ ...fastPathOptions, target: undefined }, false],
   ])(
     'should compute useTypeScriptTranspilation from the initialized compiler options %o',
     async (initializedCompilerOptions, expected) => {

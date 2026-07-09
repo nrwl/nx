@@ -2,6 +2,7 @@ import { RsbuildConfig } from '@rsbuild/core';
 import * as ts from 'typescript';
 import { InlineStyleLanguage, FileReplacement, type Sass } from '../models';
 import { loadCompilerCli } from '../utils';
+import { applyEs2022TargetDefaults } from '../utils/typescript-compiler-options';
 import { assertSupportedAngularRspackCompilerVersions } from '../utils/assert-supported-versions';
 import {
   ComponentStylesheetBundler,
@@ -61,7 +62,9 @@ let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
  * Reads the project's TypeScript configuration with the Angular compiler
  * defaults applied and creates (or reuses) the shared component stylesheet
  * bundler. TypeScript sourcemaps are emitted inline and only when
- * `options.sourceMap` is enabled.
+ * `options.sourceMap` is enabled. Targets below ES2022 are raised (see
+ * `applyEs2022TargetDefaults`) with a warning in the returned
+ * `setupWarnings`.
  */
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
@@ -74,13 +77,14 @@ export async function setupCompilation(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
-      // Inline sourcemaps only when script sourcemaps are requested, matching
-      // the esbuild application builder (keeps Angular's fast emit path).
+      // Sourcemaps must be inline to survive the loader chain, and emitting
+      // them forgoes Angular's fast raw-TS emit path, so only emit them when
+      // script sourcemaps are requested.
       inlineSources: !!options.sourceMap,
       inlineSourceMap: !!options.sourceMap,
       sourceMap: undefined,
       // Composite emit is unsupported and conflicts with the incremental
-      // state handling; force off like @angular/build.
+      // state handling; force it off.
       composite: false,
       ...(options.useTsProjectReferences
         ? {
@@ -94,6 +98,26 @@ export async function setupCompilation(
   );
 
   const compilerOptions = tsCompilerOptions;
+
+  const setupWarnings: string[] = [];
+  const hasExplicitUseDefineForClassFields =
+    compilerOptions.useDefineForClassFields !== undefined;
+  if (applyEs2022TargetDefaults(compilerOptions)) {
+    setupWarnings.push(
+      hasExplicitUseDefineForClassFields
+        ? "TypeScript compiler option 'target' is set to 'ES2022'."
+        : "TypeScript compiler options 'target' and 'useDefineForClassFields' are set to 'ES2022' and 'false' respectively."
+    );
+  }
+  if (
+    compilerOptions.isolatedModules &&
+    compilerOptions.emitDecoratorMetadata
+  ) {
+    setupWarnings.push(
+      "TypeScript compiler option 'isolatedModules' may prevent the 'emitDecoratorMetadata' option from emitting all metadata. " +
+        "The 'emitDecoratorMetadata' option is not required by Angular and can be removed if not explicitly required by the project."
+    );
+  }
 
   const searchDirectories = await generateSearchDirectories([options.root]);
   const postcssConfiguration =
@@ -146,6 +170,7 @@ export async function setupCompilation(
     rootNames,
     compilerOptions,
     componentStylesheetBundler: COMPONENT_STYLESHEET_BUNDLER,
+    setupWarnings,
   };
 }
 

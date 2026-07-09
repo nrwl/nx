@@ -28,11 +28,15 @@ export async function setupCompilationWithAngularCompilation(
   angularCompilation?: AngularCompilation,
   modifiedFiles?: Set<string>
 ) {
-  const { rootNames, compilerOptions, componentStylesheetBundler } =
-    await setupCompilation(config, options);
+  const {
+    rootNames,
+    compilerOptions,
+    componentStylesheetBundler,
+    setupWarnings,
+  } = await setupCompilation(config, options);
 
   // Persist the TypeScript incremental state to the cache directory when one
-  // is available, matching the esbuild application builder's gating.
+  // is available so later cold builds resume from it.
   if (
     sourceFileCache?.persistentCachePath &&
     compilerOptions.incremental !== false
@@ -91,8 +95,8 @@ export async function setupCompilationWithAngularCompilation(
     }
 
     if (result.metafile) {
-      // Inline styles share the containing file; disambiguate like
-      // `@angular/build` does so entries stay unique per stylesheet.
+      // Inline styles share the containing file; disambiguate with the
+      // class name and order so entries stay unique per stylesheet.
       let source = stylesheetFile ?? containingFile;
       if (!stylesheetFile) {
         source += `?class=${className}&order=${order}`;
@@ -144,30 +148,16 @@ export async function setupCompilationWithAngularCompilation(
     }
   }
 
-  // The worker-based compilation only marshals a subset of the initialized
-  // compiler options back; fill the gaps from the options handed to the
-  // compilation, which are what it actually used.
-  const effectiveCompilerOptions = {
-    ...compilerOptions,
-    ...initializedCompilerOptions,
-  };
-
-  // Mirrors @angular/build: with isolated modules and no sourcemaps, Angular
-  // emits transformed TypeScript and leaves transpilation to the bundler.
-  // Unlike esbuild, the swc rule transpiling that output doesn't read the
-  // project's tsconfig; it assumes the default tsconfig semantics (legacy
-  // decorators without metadata, ES2022 targets, default class-field and
-  // import-elision behavior). Other configs use TypeScript transpilation.
+  // Only the AOT emit branches between TypeScript transpilation and raw
+  // Angular-transformed TypeScript, on this exact expression over the
+  // program's options (JIT always transpiles). The loaders classify the
+  // emitted cache entries with this flag, so it must never diverge from the
+  // emit's gate. The worker-based initialize reports only the four options
+  // the gate reads; any other option would be undefined here.
   const useTypeScriptTranspilation =
-    !effectiveCompilerOptions.isolatedModules ||
-    !!effectiveCompilerOptions.sourceMap ||
-    !!effectiveCompilerOptions.inlineSourceMap ||
-    !effectiveCompilerOptions.experimentalDecorators ||
-    !!effectiveCompilerOptions.emitDecoratorMetadata ||
-    effectiveCompilerOptions.useDefineForClassFields === false ||
-    !!effectiveCompilerOptions.verbatimModuleSyntax ||
-    !!effectiveCompilerOptions.importsNotUsedAsValues ||
-    (effectiveCompilerOptions.target ?? 0) < 9; /* ts.ScriptTarget.ES2022 */
+    !initializedCompilerOptions?.isolatedModules ||
+    !!initializedCompilerOptions?.sourceMap ||
+    !!initializedCompilerOptions?.inlineSourceMap;
 
   return {
     angularCompilation,
@@ -175,5 +165,6 @@ export async function setupCompilationWithAngularCompilation(
     collectedStylesheetMetafileInputs,
     useTypeScriptTranspilation,
     resourceDependencies,
+    setupWarnings,
   };
 }

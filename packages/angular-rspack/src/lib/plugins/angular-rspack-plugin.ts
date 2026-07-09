@@ -55,8 +55,9 @@ type ResolvedJavascriptTransformer = Parameters<typeof buildAndAnalyze>[2];
 function getPersistentCachePath(
   options: NormalizedAngularRspackPluginOptions
 ): string | undefined {
-  // Same default gating as @angular/build's cache options: disk caching is
-  // skipped in CI and in web containers.
+  // Skip disk caching in CI, where fresh checkouts never reuse it, and in
+  // web containers, where it brings no benefit, costs browser memory, and
+  // the lmdb-backed transformer cache is unsupported.
   const ci = process.env['CI'];
   if (ci === '1' || ci?.toLowerCase() === 'true') {
     return undefined;
@@ -108,6 +109,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
   #diagnosticsPromise?: ReturnType<AngularCompilation['diagnoseFiles']>;
   #initializationError: string | undefined;
   #emitError: string | undefined;
+  #setupWarnings: string[] = [];
 
   constructor(
     options: NormalizedAngularRspackPluginOptions,
@@ -228,14 +230,21 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
-      // Surface a failed Angular compilation as a build error (like
-      // @angular/build) instead of an exception that stalls the hooks chain.
-      // Watch builds recover on the next rebuild's re-init.
+      // Surface a failed Angular compilation as a build error instead of an
+      // exception that stalls the hooks chain. Watch builds recover on the
+      // next rebuild's re-init.
       const angularCompilationError =
         this.#initializationError ?? this.#emitError;
       if (angularCompilationError) {
         addError(compilation, angularCompilationError);
       }
+
+      // Setup warnings describe the one-time compilation setup; report them
+      // on the build that produced them and keep rebuilds quiet.
+      for (const setupWarning of this.#setupWarnings) {
+        addWarning(compilation, setupWarning);
+      }
+      this.#setupWarnings = [];
 
       // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
       compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
@@ -337,7 +346,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       // there is no (or only stale) compilation state to diagnose and the
       // failure is already reported as a compilation error. After an emit
       // failure diagnostics still run since they usually carry the root
-      // cause, matching @angular/build's application builder.
+      // cause.
       try {
         if (!this.#_options.skipTypeChecking && !this.#initializationError) {
           const { errors, warnings } = await (this.#diagnosticsPromise ??
@@ -578,6 +587,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         ? tsConfig
         : tsConfig.configFile
       : this.#_options.tsConfig;
+    const isInitialSetup = this.#angularCompilation === undefined;
     try {
       const result = await setupCompilationWithAngularCompilation(
         {
@@ -609,6 +619,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       this.#useTypeScriptTranspilation =
         result.useTypeScriptTranspilation ?? true;
       this.#resourceDependencies = result.resourceDependencies;
+      if (isInitialSetup) {
+        this.#setupWarnings = result.setupWarnings ?? [];
+      }
     } catch (error) {
       this.#initializationError = `Angular compilation initialization failed.\n${formatError(
         error
