@@ -54,11 +54,20 @@ export async function setupCompilationWithAngularCompilation(
   // 0/false runs the Angular compilation in a worker thread, so type
   // checking overlaps with the bundling work.
   const parallelTs = process.env['NG_BUILD_PARALLEL_TS'];
-  angularCompilation ??= await createAngularCompilation(
-    !options.aot,
-    !options.hasServer,
-    parallelTs !== '0' && parallelTs?.toLowerCase() !== 'false'
-  );
+  let createdAngularCompilation = false;
+  if (!angularCompilation) {
+    try {
+      angularCompilation = await createAngularCompilation(
+        !options.aot,
+        !options.hasServer,
+        parallelTs !== '0' && parallelTs?.toLowerCase() !== 'false'
+      );
+    } catch (error) {
+      attachSetupWarnings(error, setupWarnings);
+      throw error;
+    }
+    createdAngularCompilation = true;
+  }
 
   // Drop the bundler's cached results for changed files so dependent
   // stylesheets get rebuilt; there's nothing to invalidate on the first build.
@@ -112,26 +121,43 @@ export async function setupCompilationWithAngularCompilation(
     return result.contents;
   };
 
-  // Initialization errors are intentionally not caught here: callers must
-  // surface them as build errors instead of continuing with a compilation
-  // that was never initialized.
+  // Initialization errors are rethrown for callers to surface as build
+  // errors instead of continuing with a compilation that was never
+  // initialized.
+  let initializationResult;
+  try {
+    initializationResult = await angularCompilation.initialize(
+      config.source?.tsconfigPath ?? options.tsConfig,
+      {
+        sourceFileCache,
+        fileReplacements,
+        modifiedFiles,
+        transformStylesheet: wrappedTransformStylesheet,
+        processWebWorker(workerFile: string) {
+          return workerFile;
+        },
+      },
+      () => compilerOptions
+    );
+  } catch (error) {
+    // A worker-based compilation spawns its worker thread on construction;
+    // close one created here or every failing setup would leak a worker.
+    // A caller-provided compilation stays alive for the caller to reuse.
+    if (createdAngularCompilation) {
+      try {
+        await angularCompilation.close?.();
+      } catch {
+        // The initialization error is the one worth surfacing.
+      }
+    }
+    attachSetupWarnings(error, setupWarnings);
+    throw error;
+  }
   const {
     compilerOptions: initializedCompilerOptions,
     referencedFiles,
     componentResourcesDependencies,
-  } = await angularCompilation.initialize(
-    config.source?.tsconfigPath ?? options.tsConfig,
-    {
-      sourceFileCache,
-      fileReplacements,
-      modifiedFiles,
-      transformStylesheet: wrappedTransformStylesheet,
-      processWebWorker(workerFile: string) {
-        return workerFile;
-      },
-    },
-    () => compilerOptions
-  );
+  } = initializationResult;
   if (sourceFileCache) {
     sourceFileCache.referencedFiles = referencedFiles;
   }
@@ -167,4 +193,12 @@ export async function setupCompilationWithAngularCompilation(
     resourceDependencies,
     setupWarnings,
   };
+}
+
+// Callers report initialization failures as build errors; hand them the
+// setup warnings so they are not lost with the failed build.
+function attachSetupWarnings(error: unknown, setupWarnings: string[]): void {
+  if (error && typeof error === 'object') {
+    (error as { setupWarnings?: string[] }).setupWarnings = setupWarnings;
+  }
 }

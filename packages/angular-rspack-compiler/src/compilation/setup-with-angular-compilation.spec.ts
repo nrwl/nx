@@ -60,6 +60,63 @@ describe('setupCompilationWithAngularCompilation', () => {
     ).rejects.toThrow('TS version not supported');
   });
 
+  it('should close a compilation created here when initialization fails', async () => {
+    const closeMock = vi.fn();
+    createAngularCompilationMock.mockResolvedValueOnce({
+      initialize: vi.fn().mockRejectedValue(new Error('init failed')),
+      close: closeMock,
+    });
+
+    await expect(
+      setupCompilationWithAngularCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options
+      )
+    ).rejects.toThrow('init failed');
+
+    expect(closeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not close a caller-provided compilation when initialization fails', async () => {
+    const close = vi.fn();
+    const angularCompilation = {
+      initialize: vi.fn().mockRejectedValue(new Error('init failed')),
+      close,
+    } as unknown as AngularCompilation;
+
+    await expect(
+      setupCompilationWithAngularCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options,
+        undefined,
+        angularCompilation
+      )
+    ).rejects.toThrow('init failed');
+
+    expect(close).not.toHaveBeenCalled();
+  });
+
+  it('should attach the setup warnings to initialization errors', async () => {
+    vi.mocked(setupCompilation).mockResolvedValueOnce({
+      rootNames: ['/root/src/main.ts'],
+      compilerOptions: {},
+      componentStylesheetBundler: {},
+      setupWarnings: ['target raised'],
+    } as unknown as Awaited<ReturnType<typeof setupCompilation>>);
+    const angularCompilation = {
+      initialize: vi.fn().mockRejectedValue(new Error('init failed')),
+    } as unknown as AngularCompilation;
+
+    await expect(
+      setupCompilationWithAngularCompilation(
+        { source: { tsconfigPath: '/root/tsconfig.json' } },
+        options,
+        undefined,
+        angularCompilation
+      )
+    ).rejects.toMatchObject({ setupWarnings: ['target raised'] });
+  });
+
   it('should set referenced files on the source file cache', async () => {
     const angularCompilation = {
       initialize: vi

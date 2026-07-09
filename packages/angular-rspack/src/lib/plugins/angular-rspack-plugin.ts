@@ -239,12 +239,15 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         addError(compilation, angularCompilationError);
       }
 
-      // Setup warnings describe the one-time compilation setup; report them
-      // on the build that produced them and keep rebuilds quiet.
+      // Setup warnings describe the one-time compilation setup; repeat them
+      // while initialization keeps failing so they also land with the first
+      // successful build, then keep rebuilds quiet.
       for (const setupWarning of this.#setupWarnings) {
         addWarning(compilation, setupWarning);
       }
-      this.#setupWarnings = [];
+      if (!this.#initializationError) {
+        this.#setupWarnings = [];
+      }
 
       // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
       compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
@@ -623,6 +626,10 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         this.#setupWarnings = result.setupWarnings ?? [];
       }
     } catch (error) {
+      if (isInitialSetup) {
+        this.#setupWarnings =
+          (error as { setupWarnings?: string[] } | null)?.setupWarnings ?? [];
+      }
       this.#initializationError = `Angular compilation initialization failed.\n${formatError(
         error
       )}`;

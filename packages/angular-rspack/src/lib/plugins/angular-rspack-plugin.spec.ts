@@ -307,6 +307,43 @@ describe('AngularRspackPlugin', () => {
     expect(state.angularCompilationFailed).toBe(false);
   });
 
+  it('should keep reporting setup warnings while initialization fails and clear them after success', async () => {
+    const setupError = Object.assign(new Error('transient failure'), {
+      setupWarnings: ['target raised'],
+    });
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },
+      collectedStylesheetAssets: [],
+      collectedStylesheetMetafileInputs: [],
+      useTypeScriptTranspilation: true,
+      setupWarnings: ['target raised'],
+    });
+    setupCompilationMock.mockRejectedValueOnce(setupError);
+    const compiler = applyPlugin();
+
+    // initial build fails to initialize; the setup warnings ride along on
+    // the failure and land on this build alongside the error
+    await runBuildStart(compiler);
+    const failedCompilation = createFakeCompilation(compiler);
+    fireSyncTaps(compiler.hooks.thisCompilation, failedCompilation);
+    expect(failedCompilation.warnings).toHaveLength(1);
+    expect(failedCompilation.warnings[0].message).toContain('target raised');
+
+    // the successful rebuild reports the warnings again (isInitialSetup is
+    // still true since no compilation was ever assigned)
+    await fireAsyncTaps(compiler.hooks.watchRun, compiler);
+    await fireAsyncTaps(compiler.hooks.beforeCompile, {});
+    const recoveredCompilation = createFakeCompilation(compiler);
+    fireSyncTaps(compiler.hooks.thisCompilation, recoveredCompilation);
+    expect(recoveredCompilation.warnings).toHaveLength(1);
+    expect(recoveredCompilation.warnings[0].message).toContain('target raised');
+
+    // and clears them so later rebuilds stay quiet
+    const laterCompilation = createFakeCompilation(compiler);
+    fireSyncTaps(compiler.hooks.thisCompilation, laterCompilation);
+    expect(laterCompilation.warnings).toHaveLength(0);
+  });
+
   it('should not throw from afterDone when the run failed before producing stats', async () => {
     const compiler = applyPlugin();
 
