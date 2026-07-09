@@ -19,6 +19,7 @@ import { readJsonFile } from './fileutils';
 import { logger } from './logger';
 import {
   buildTargetFromScript,
+  containShippedLocalFilePaths,
   emitPrunedPnpmInstallAssets,
   getDependencyVersionFromPackageJson,
   getPrunedPnpmInstallSettingsYaml,
@@ -2461,8 +2462,117 @@ describe('getPrunedPnpmLocalPathArtifacts', () => {
     expect(warn).toHaveBeenCalledWith(expect.stringContaining('symbolic link'));
   });
 
+  it('ships a contained directory at its shipped path, reading from the source', () => {
+    // The pruned lockfile records the target relocated under local_path_modules;
+    // it ships there while the bytes come from the original workspace location.
+    mkdirSync(join(tempDir, 'vendor/dir'), { recursive: true });
+    writeFileSync(join(tempDir, 'vendor/dir/index.js'), 'module.exports={}');
+
+    const lockfile = [
+      "lockfileVersion: '9.0'",
+      '',
+      'packages:',
+      '',
+      '  dir-dep@file:local_path_modules/vendor/dir:',
+      '    resolution: {directory: local_path_modules/vendor/dir, type: directory}',
+      '',
+    ].join('\n');
+
+    expect(getPrunedPnpmLocalPathArtifacts(tempDir, lockfile)).toEqual([
+      {
+        path: 'local_path_modules/vendor/dir/index.js',
+        sourcePath: join(tempDir, 'vendor/dir/index.js'),
+      },
+    ]);
+  });
+
   it('returns [] when there is no pruned lockfile content', () => {
     expect(getPrunedPnpmLocalPathArtifacts(tempDir)).toEqual([]);
+  });
+});
+
+describe('containShippedLocalFilePaths', () => {
+  it('relocates vendored file: keys, resolutions, and refs; leaves others', () => {
+    const lockfile = {
+      importers: {
+        '.': {
+          specifiers: { vendored: 'file:../vendor/dir', lodash: '^4.17.21' },
+          dependencies: {
+            vendored: 'file:vendor/dir',
+            lodash: '4.17.21',
+            wsmod: 'file:workspace_modules/wsmod',
+          },
+        },
+      },
+      packages: {
+        'vendored@file:vendor/dir': {
+          resolution: { directory: 'vendor/dir', type: 'directory' },
+        },
+        'tarball@file:vendor/pkg.tgz': {
+          resolution: { tarball: 'file:vendor/pkg.tgz' },
+        },
+        'lodash@4.17.21': { resolution: { integrity: 'sha512-x' } },
+        'wsmod@file:workspace_modules/wsmod': {
+          resolution: {
+            directory: 'workspace_modules/wsmod',
+            type: 'directory',
+          },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(lockfile);
+
+    // Vendored file: keys/resolutions relocate; workspace-module and npm entries
+    // are left untouched.
+    expect(Object.keys(lockfile.packages).sort()).toEqual([
+      'lodash@4.17.21',
+      'tarball@file:local_path_modules/vendor/pkg.tgz',
+      'vendored@file:local_path_modules/vendor/dir',
+      'wsmod@file:workspace_modules/wsmod',
+    ]);
+    expect(
+      (lockfile.packages as any)['vendored@file:local_path_modules/vendor/dir']
+        .resolution.directory
+    ).toBe('local_path_modules/vendor/dir');
+    expect(
+      (lockfile.packages as any)[
+        'tarball@file:local_path_modules/vendor/pkg.tgz'
+      ].resolution.tarball
+    ).toBe('file:local_path_modules/vendor/pkg.tgz');
+    // Importer refs: vendored file: contained; workspace-module and npm untouched;
+    // the specifier is left for the manifest to own.
+    expect(lockfile.importers['.'].dependencies).toEqual({
+      vendored: 'file:local_path_modules/vendor/dir',
+      lodash: '4.17.21',
+      wsmod: 'file:workspace_modules/wsmod',
+    });
+    expect(lockfile.importers['.'].specifiers.vendored).toBe(
+      'file:../vendor/dir'
+    );
+  });
+
+  it('leaves an already-contained or escaping path untouched', () => {
+    const lockfile = {
+      packages: {
+        'a@file:local_path_modules/vendor/a': {
+          resolution: {
+            directory: 'local_path_modules/vendor/a',
+            type: 'directory',
+          },
+        },
+        'b@file:../outside': {
+          resolution: { directory: '../outside', type: 'directory' },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(lockfile);
+
+    expect(Object.keys(lockfile.packages).sort()).toEqual([
+      'a@file:local_path_modules/vendor/a',
+      'b@file:../outside',
+    ]);
   });
 });
 
@@ -2478,7 +2588,7 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
     jest.restoreAllMocks();
   });
 
-  it('rewrites a file: directory specifier to be workspace-root-relative', () => {
+  it('rewrites a file: directory specifier to its shipped location', () => {
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2487,10 +2597,12 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
 
     rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
 
-    expect(packageJson.dependencies.vendored).toBe('file:apps/api/vendor/pkg');
+    expect(packageJson.dependencies.vendored).toBe(
+      'file:local_path_modules/apps/api/vendor/pkg'
+    );
   });
 
-  it('rewrites a link: specifier to be workspace-root-relative', () => {
+  it('rewrites a link: specifier to its shipped location', () => {
     const packageJson: PackageJson = {
       name: 'api',
       version: '0.0.1',
@@ -2499,7 +2611,9 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
 
     rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
 
-    expect(packageJson.dependencies.shared).toBe('link:apps/shared');
+    expect(packageJson.dependencies.shared).toBe(
+      'link:local_path_modules/apps/shared'
+    );
   });
 
   it('resolves the path from a nested project root', () => {
@@ -2516,7 +2630,9 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
       new Set()
     );
 
-    expect(packageJson.dependencies.lib).toBe('link:apps/lib');
+    expect(packageJson.dependencies.lib).toBe(
+      'link:local_path_modules/apps/lib'
+    );
   });
 
   it('moves a file:/link: peer dependency into dependencies and drops its meta', () => {
@@ -2529,7 +2645,9 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
 
     rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
 
-    expect(packageJson.dependencies).toEqual({ shared: 'link:apps/shared' });
+    expect(packageJson.dependencies).toEqual({
+      shared: 'link:local_path_modules/apps/shared',
+    });
     expect(packageJson.peerDependencies.shared).toBeUndefined();
     expect(packageJson.peerDependenciesMeta.shared).toBeUndefined();
   });
@@ -2647,7 +2765,9 @@ describe('rewritePrunedLocalPathSpecifiers', () => {
 
     rewritePrunedLocalPathSpecifiers(packageJson, 'apps/api', WS, new Set());
 
-    expect(packageJson.dependencies.shared).toBe('link:apps/shared');
+    expect(packageJson.dependencies.shared).toBe(
+      'link:local_path_modules/apps/shared'
+    );
   });
 });
 

@@ -334,9 +334,9 @@ describe('copyWorkspaceModules', () => {
     await runExecutor();
 
     // pnpm reads a non-importer manifest link: spec relative to the install
-    // root, so the module-relative source ref lands deploy-root-relative.
+    // root, so the module-relative source ref lands at the shipped location.
     expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
-      'vendored-thing': 'link:vendor/thing',
+      'vendored-thing': 'link:local_path_modules/vendor/thing',
     });
   });
 
@@ -365,10 +365,10 @@ describe('copyWorkspaceModules', () => {
     await runExecutor();
 
     // Unlike link:, pnpm reads a non-importer manifest file: spec relative to
-    // the package dir, so it rebases onto the copied module directory
-    // (3 segments up for a scoped module).
+    // the package dir, so it rebases the shipped location onto the copied module
+    // directory (3 segments up for a scoped module).
     expect(readCopiedManifest('@scope/liba').dependencies).toEqual({
-      'vendored-thing': 'file:../../../vendor/thing',
+      'vendored-thing': 'file:../../../local_path_modules/vendor/thing',
     });
   });
 
@@ -399,7 +399,7 @@ describe('copyWorkspaceModules', () => {
 
     const manifest = readCopiedManifest('@scope/liba');
     expect(manifest.dependencies).toEqual({
-      'vendored-thing': 'link:vendor/thing',
+      'vendored-thing': 'link:local_path_modules/vendor/thing',
     });
     expect(manifest.peerDependencies).toBeUndefined();
     expect(manifest.peerDependenciesMeta).toBeUndefined();

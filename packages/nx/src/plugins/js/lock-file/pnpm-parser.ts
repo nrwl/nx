@@ -28,8 +28,10 @@ import { hashArray } from '../../../hasher/file-hasher';
 import { CreateDependenciesContext } from '../../../project-graph/plugins';
 import { getCatalogManager } from '../../../utils/catalog';
 import {
+  containShippedLocalFilePaths,
   normalizePrunedPatchPath,
   relocatePrunedLocalPathSpec,
+  uncontainLocalPath,
 } from '../../../utils/package-json';
 import {
   findLocalPathNode,
@@ -728,9 +730,10 @@ export function stringifyPnpmLockfile(
           resolved[depName] = `file:workspace_modules/${depName}`;
         } else if (ref.startsWith('link:')) {
           // pnpm reads a snapshot link: ref relative to the lockfile dir, so
-          // rebase the importer-relative ref onto the deploy root (file: refs
-          // are already lockfile-dir-relative and stay; an unshippable target
-          // keeps its ref, matching the copied manifest).
+          // rebase the importer-relative ref onto the deploy root, relocated to
+          // its shipped location (file: refs are lockfile-dir-relative and get
+          // contained by containShippedLocalFilePaths below; an unshippable
+          // target keeps its ref, matching the copied manifest).
           const relocation = relocatePrunedLocalPathSpec(ref, importerPath, '');
           resolved[depName] = relocation?.spec ?? ref;
         } else {
@@ -743,9 +746,10 @@ export function stringifyPnpmLockfile(
     // Peers pnpm left out of the importer (autoInstallPeers off) still ship as
     // real dependencies, matching the copied manifest that moves every
     // peer-declared workspace module or local path into dependencies. A
-    // local-path peer gets the same lockfile-dir-relative snapshot edge pnpm
-    // records when it auto-installs the peer; an unshippable target keeps its
-    // spec, matching the copied manifest (copy-workspace-modules already warned).
+    // local-path peer gets the snapshot edge pnpm records when it auto-installs
+    // the peer, relocated to its shipped location; an unshippable target keeps
+    // its spec, matching the copied manifest (copy-workspace-modules already
+    // warned).
     const { workspaceSiblings, localPathPeers } =
       getManifestPeers(importerPath);
     if (workspaceSiblings.length > 0 || localPathPeers.length > 0) {
@@ -786,7 +790,11 @@ export function stringifyPnpmLockfile(
     }
     let isFile = false;
     try {
-      isFile = statSync(join(workspaceRoot, wsRelativePath)).isFile();
+      // wsRelativePath is already relocated under LOCAL_PATH_MODULES_DIR (the
+      // relocated ref); read the source from its original workspace location.
+      isFile = statSync(
+        join(workspaceRoot, uncontainLocalPath(wsRelativePath))
+      ).isFile();
     } catch {
       // Missing target: emit the directory shape; the install surfaces the
       // missing path either way.
@@ -810,6 +818,11 @@ export function stringifyPnpmLockfile(
       ...localPathPeerPackages,
     }),
   };
+
+  // Relocate vendored file: refs (keys, resolutions, snapshot/importer refs) to
+  // their shipped location under LOCAL_PATH_MODULES_DIR; link: refs and the
+  // manifest are already relocated upstream.
+  containShippedLocalFilePaths(output);
 
   stripStandaloneLockfileConfig(output);
 
@@ -1214,8 +1227,9 @@ function mapRootSnapshot(
             depType === 'peerDependencies' ? 'dependencies' : depType;
           if (!node) {
             if (version.startsWith('link:')) {
-              // A link: needs no packages: entry; emit the manifest value (made
-              // workspace-root-relative by the pre-lockfile rewrite) directly.
+              // A link: needs no packages: entry; emit the manifest value
+              // (relocated to its shipped location by the pre-lockfile rewrite)
+              // directly.
               snapshot.specifiers[packageName] = version;
               snapshot[section] = snapshot[section] || {};
               snapshot[section][packageName] = version;

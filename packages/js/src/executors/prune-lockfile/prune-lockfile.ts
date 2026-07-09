@@ -50,7 +50,7 @@ export default async function pruneLockfileExecutor(
     );
   } else {
     // pnpm re-resolves local-path manifest specifiers on a non-frozen install,
-    // so make them deploy-root-relative before the lockfile copies them.
+    // so relocate them to their shipped location before the lockfile copies them.
     if (packageManager === 'pnpm') {
       const { project } = parseTargetString(schema.buildTarget, context);
       const projectRoot = context.projectGraph.nodes[project].data.root;

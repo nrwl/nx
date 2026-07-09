@@ -178,8 +178,8 @@ export async function* viteBuildExecutor(
 
       const packageManager = detectPackageManager(context.root);
       // pnpm re-resolves local-path manifest specifiers on a non-frozen
-      // install, so make them deploy-root-relative before the manifest is
-      // written and the lockfile copies them.
+      // install, so relocate them to their shipped location before the manifest
+      // is written and the lockfile copies them.
       if (packageManager === 'pnpm') {
         rewritePrunedLocalPathSpecifiers(
           builtPackageJson,

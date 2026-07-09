@@ -3843,17 +3843,19 @@ importers:
       );
 
       // mylib's directory package carries the edges pnpm records with
-      // autoInstallPeers on: lockfile-dir-relative file:/link: refs.
+      // autoInstallPeers on: file:/link: refs relocated to the shipped location.
       expect(result).toMatch(
-        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?linked-peer: link:vendor\/linked-peer/
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?linked-peer: link:local_path_modules\/vendor\/linked-peer/
       );
       expect(result).toMatch(
-        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?dir-peer: file:vendor\/dir-peer/
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?dir-peer: file:local_path_modules\/vendor\/dir-peer/
       );
       // The file: peer gets a synthesized directory package entry...
-      expect(result).toContain('dir-peer@file:vendor/dir-peer:');
       expect(result).toContain(
-        'resolution: {directory: vendor/dir-peer, type: directory}'
+        'dir-peer@file:local_path_modules/vendor/dir-peer:'
+      );
+      expect(result).toContain(
+        'resolution: {directory: local_path_modules/vendor/dir-peer, type: directory}'
       );
       // ...while a link: ref needs no package entry.
       expect(result).not.toContain('linked-peer@');
@@ -3911,13 +3913,13 @@ importers:
       );
 
       expect(result).toMatch(
-        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?tarball-peer: file:vendor\/tarball-peer-1\.0\.0\.tgz/
+        /mylib@file:workspace_modules\/mylib:[\s\S]*?dependencies:[\s\S]*?tarball-peer: file:local_path_modules\/vendor\/tarball-peer-1\.0\.0\.tgz/
       );
       expect(result).toContain(
-        'tarball-peer@file:vendor/tarball-peer-1.0.0.tgz:'
+        'tarball-peer@file:local_path_modules/vendor/tarball-peer-1.0.0.tgz:'
       );
       expect(result).toContain(
-        'resolution: {tarball: file:vendor/tarball-peer-1.0.0.tgz}'
+        'resolution: {tarball: file:local_path_modules/vendor/tarball-peer-1.0.0.tgz}'
       );
     });
 
@@ -4136,20 +4138,21 @@ snapshots:
         '/virtual'
       );
 
-      // The tarball keeps its single, name-prefixed package key...
+      // The tarball keeps its single, name-prefixed package key, relocated to the
+      // shipped location...
       expect(result).toContain(
-        `vendored-lib@file:vendor/vendored-lib-1.0.0.tgz:`
+        `vendored-lib@file:local_path_modules/vendor/vendored-lib-1.0.0.tgz:`
       );
       // ...and never the spurious, name-stripped duplicate key a v9 tarball used
       // to emit from findOriginalKeys.
       expect(result).not.toMatch(
-        /^\s+file:vendor\/vendored-lib-1\.0\.0\.tgz:\s*$/m
+        /^\s+file:local_path_modules\/vendor\/vendored-lib-1\.0\.0\.tgz:\s*$/m
       );
       // The root importer keeps the manifest's app-relative specifier (matching
-      // package.json for pnpm's frozen check) with the lockfile's workspace-root
-      // -relative version (used to resolve the shipped tarball).
+      // package.json for pnpm's frozen check) with the version relocated to the
+      // shipped tarball location (used to resolve it).
       expect(result).toMatch(
-        /vendored-lib:\s+specifier: file:\.\.\/\.\.\/vendor\/vendored-lib-1\.0\.0\.tgz\s+version: file:vendor\/vendored-lib-1\.0\.0\.tgz/
+        /vendored-lib:\s+specifier: file:\.\.\/\.\.\/vendor\/vendored-lib-1\.0\.0\.tgz\s+version: file:local_path_modules\/vendor\/vendored-lib-1\.0\.0\.tgz/
       );
       // The normal npm dependency is unaffected.
       expect(result).toContain('lodash@4.17.21:');
@@ -4264,10 +4267,10 @@ snapshots: {}`;
         '/root'
       );
 
-      // The importer-relative ref (libs/lib-a + ../../vendor/thing) lands as
-      // the deploy-root-relative target pnpm resolves from the lockfile dir.
+      // The importer-relative ref (libs/lib-a + ../../vendor/thing) lands as the
+      // shipped location pnpm resolves from the lockfile dir.
       expect(result).toMatch(
-        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:vendor\/thing/
+        /'@myorg\/lib-a@file:workspace_modules\/@myorg\/lib-a':\s+dependencies:\s+vendored-thing: link:local_path_modules\/vendor\/thing/
       );
     });
 
@@ -4438,7 +4441,10 @@ snapshots: {}`;
         getPrunedPnpmLocalPathArtifacts('/root', result)
           .map((a) => a.path)
           .sort()
-      ).toEqual(['vendor/thing/index.js', 'vendor/thing/package.json']);
+      ).toEqual([
+        'local_path_modules/vendor/thing/index.js',
+        'local_path_modules/vendor/thing/package.json',
+      ]);
     });
   });
 

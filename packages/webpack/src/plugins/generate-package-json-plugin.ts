@@ -112,8 +112,8 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
               );
           } else {
             // pnpm re-resolves local-path manifest specifiers on a non-frozen
-            // install, so make them deploy-root-relative before the lockfile
-            // copies them.
+            // install, so relocate them to their shipped location before the
+            // lockfile copies them.
             if (packageManager === 'pnpm') {
               rewritePrunedLocalPathSpecifiers(
                 packageJson,

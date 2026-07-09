@@ -854,14 +854,16 @@ describe('updatePackageJson', () => {
     const distPackageJson = JSON.parse(
       vol.readFileSync('dist/libs/lib1/package.json', 'utf-8').toString()
     );
-    // The written manifest must carry the deploy-root-relative spec: the pruned
+    // The written manifest must carry the shipped-location spec: the pruned
     // lockfile importer copies it, and pnpm re-resolves it on a non-frozen install.
-    expect(distPackageJson.dependencies.vendored).toBe('link:vendor/thing');
+    expect(distPackageJson.dependencies.vendored).toBe(
+      'link:local_path_modules/vendor/thing'
+    );
     // The link: closure is validated against the final rewritten manifest.
     expect(mockValidatePrunedLinkClosure).toHaveBeenCalledWith(
       expect.objectContaining({
         dependencies: expect.objectContaining({
-          vendored: 'link:vendor/thing',
+          vendored: 'link:local_path_modules/vendor/thing',
         }),
       }),
       '/root',
