@@ -54,19 +54,19 @@ jobs:
   lint:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npx eslint .
   test:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npx jest
   build:
     runs-on: blacksmith-4vcpu-ubuntu-2404
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npm run build
   e2e:
@@ -75,7 +75,7 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4] # shard count fixed before the run, rebalanced by hand
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npx playwright test --shard=${{ matrix.shard }}/4
 ```
@@ -89,7 +89,7 @@ jobs:
   ci:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: npm ci
       - run: npx nx-cloud start-ci-run --distribute-on="8 linux-medium-js"
       - run: npx nx run-many -t lint test build e2e
