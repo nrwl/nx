@@ -6,7 +6,7 @@ sidebar:
   label: Nx vs Buildkite
 ---
 
-Buildkite is a CI platform you migrate to. Nx is a task-graph layer that runs on any CI, Buildkite included, adding caching, affected detection, and distribution without a migration.
+Buildkite is a CI platform you migrate to. Nx is a task-graph layer that runs on any CI, Buildkite included, adding caching, affected detection, and distribution without switching CI providers.
 
 ## What is Nx?
 
@@ -38,7 +38,7 @@ They overlap only on monorepo awareness, test splitting, and how work spreads ac
 
 Buildkite's hybrid architecture is its defining strength: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
 
-Nx Cloud requires no migration. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
+Nx requires no platform switch. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
 
 ## Remote caching
 
@@ -72,7 +72,7 @@ Nx Cloud ships the finished loop: [self-healing CI](/docs/features/ci-features/s
 
 Nx fits when any of these apply:
 
-- You want to keep your current CI provider and optimize a monorepo without a migration.
+- You want to optimize a monorepo without switching CI providers.
 - You need build-graph-aware distribution, remote task caching, or affected detection.
 - You want e2e splitting, flaky-task handling, or self-healing CI.
 
@@ -82,7 +82,7 @@ Buildkite is the right call only when:
 - Code must stay on your own infrastructure at very high job concurrency.
 - You want a single platform spanning pipelines, test analytics, and package registries.
 
-Nx layers onto whatever CI you already run with no migration, so you get graph-aware caching and distribution without adopting a new platform.
+Nx layers onto whatever CI you already run, so you get graph-aware caching and distribution without adopting a new platform.
 
 ## Resources
 
