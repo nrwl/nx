@@ -18,7 +18,7 @@ Blacksmith is a drop-in replacement for GitHub Actions runners. It moves your jo
 
 ## Quick takeaway
 
-Blacksmith and Nx Cloud work on different layers. Blacksmith is a runner provider: swap the `runs-on` label and every job runs on a faster machine. Nx Cloud is a task-distribution orchestrator: it reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines. Blacksmith runners are standard GitHub Actions runners, so an Nx workspace can run its CI on Blacksmith with Nx Cloud on top, cheaper minutes and fewer of them. Blacksmith makes each machine faster. Nx makes fewer machines necessary at all, the larger lever in a monorepo.
+Blacksmith and Nx Cloud work on different layers. Blacksmith is a runner provider: swap the `runs-on` label and every job runs on a faster machine. Nx Cloud is a task-distribution orchestrator: it reads your project graph to skip unaffected tasks, replay cached results, and spread the rest across machines. Blacksmith runners are standard GitHub Actions runners, so an Nx workspace can run its CI on Blacksmith with Nx Cloud on top, cheaper minutes and fewer of them. Blacksmith gives a one-time raw-speed bump, and past that there is little more to squeeze. Nx keeps compounding: task distribution, flaky re-runs, and task-level caching, plus it drops the manual matrix and sharding that become the real maintenance cost once simple parallelism stops scaling.
 
 | Topic                                                             | Nx Cloud                                                  | Blacksmith                                            |
 | ----------------------------------------------------------------- | --------------------------------------------------------- | ----------------------------------------------------- |
@@ -37,9 +37,9 @@ Blacksmith runs whatever your workflow matrix declares, on every push, whether o
 
 ## Remote caching
 
-Blacksmith transparently accelerates the `actions/cache` API and offers sticky disks, persistent volumes remounted between jobs, for dependencies and Docker layers. Both operate at the job and disk level: they make restoring state faster, but a task that already ran with identical inputs still reruns. Because `actions/cache` is keyed by a string you choose, cache integrity depends on key hygiene: an entry poisoned under a reused key can be restored into a trusted build, the class of supply-chain risk behind [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP).
+Blacksmith transparently accelerates the `actions/cache` API and offers sticky disks, persistent volumes remounted between jobs, for dependencies and Docker layers. This caching is coarse and manual: you declare which paths to store under a key you compute yourself (`path: node_modules`, `key: ${{ hashFiles(...) }}`), so it restores files by key match rather than understanding a task's inputs and outputs. It speeds up restoring state, but a task that already ran with identical inputs still reruns. And because the key is a string you choose, cache integrity depends on key hygiene: an entry poisoned under a reused key can be restored into a trusted build, the class of supply-chain risk behind [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP).
 
-[Nx Replay](/docs/features/ci-features/remote-cache) caches at the task level. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/concepts/ci-concepts/cache-security) that close that path.
+[Nx Replay](/docs/features/ci-features/remote-cache) caches at the task level and derives the cache key from each task's actual inputs, so there are no paths or keys to maintain. A build or test computed once, on CI or on a developer laptop, replays everywhere else with its terminal output and artifacts, with [access-controlled, branch-isolated writes](/docs/concepts/ci-concepts/cache-security) that close that path.
 
 ## Distribution
 
