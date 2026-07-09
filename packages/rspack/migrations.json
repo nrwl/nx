@@ -137,11 +137,11 @@
     "22.2.0-module-federation-node": {
       "version": "22.2.0-beta.0",
       "requires": {
-        "@module-federation/node": "<2.7.21"
+        "@module-federation/node": "<2.7.46"
       },
       "packages": {
         "@module-federation/node": {
-          "version": "^2.7.21",
+          "version": "^2.7.46",
           "alwaysAddToPackageJson": false
         }
       }
