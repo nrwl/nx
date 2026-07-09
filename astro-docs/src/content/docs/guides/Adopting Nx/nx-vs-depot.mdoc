@@ -1,12 +1,12 @@
 ---
 title: Nx vs Depot
-description: Depot makes every CI minute faster and cheaper with better runners and colocated caches. Nx removes minutes entirely with affected detection, remote task caching, and distributed execution. They solve different layers, and they compose.
+description: Depot makes every CI minute faster and cheaper with better runners and colocated caches. Nx removes minutes entirely with affected detection, remote task caching, and distributed execution. They solve different layers, and only one of them removes work.
 filter: 'type:Guides'
 sidebar:
   label: Nx vs Depot
 ---
 
-Depot makes every CI minute faster. Nx makes fewer minutes run at all, by caching, pruning, and distributing work across your task graph. They solve different layers, and they compose.
+Depot makes every CI minute faster. Nx makes fewer minutes run at all, by caching, pruning, and distributing work across your task graph. They solve different layers, and only one of them removes work.
 
 ## What is Nx?
 
@@ -18,7 +18,7 @@ Depot sells faster CI compute: GitHub Actions runners on newer CPUs, accelerated
 
 ## Quick takeaway
 
-Depot and Nx Cloud aren't the same kind of product. Depot makes the machine faster, better CPUs, colocated caches, quick container builds, behind a one-line runner swap. Nx Cloud sits above the machine and decides what runs: it prunes unaffected tasks, replays cached results across CI and developer laptops, and distributes the rest. Depot Cache doesn't support Nx, but the runners do, so an Nx workspace can run on Depot machines with Nx Cloud on top: cheaper minutes and fewer of them.
+Depot and Nx Cloud aren't the same kind of product. Depot makes the machine faster, better CPUs, colocated caches, quick container builds, behind a one-line runner swap. Nx Cloud sits above the machine and decides what runs: it prunes unaffected tasks, replays cached results across CI and developer laptops, and distributes the rest. Depot Cache doesn't even support Nx, and for a monorepo raw machine speed matters far less than the work Nx removes before it runs.
 
 | Topic                                                             | Nx Cloud                                                 | Depot                                                     |
 | ----------------------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
@@ -78,7 +78,7 @@ Depot alone is enough only when:
 - The bottleneck is raw machine speed on a repository small enough to run everything each push.
 - You want a runner swap with almost no setup.
 
-Nx Cloud runs on any provider, so the two stack: run Nx Cloud on Depot runners for both savings. If container builds are your bottleneck, Nx Cloud also offers [Docker layer caching](/docs/features/ci-features/docker-layer-caching) as an add-on.
+Nx runs on your existing CI with no migration, and if container builds are your bottleneck it also offers [Docker layer caching](/docs/features/ci-features/docker-layer-caching) as an add-on.
 
 ## Resources
 
