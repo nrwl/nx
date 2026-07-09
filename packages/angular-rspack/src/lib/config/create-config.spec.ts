@@ -49,30 +49,108 @@ describe('createConfig', () => {
     ]);
   });
 
-  it('should compile legacy decorators in the TS transpilation rule', async () => {
-    const configs = await _createConfig(configBase);
+  it('should derive the TS transpilation rule semantics from the tsconfig', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-swc-'));
+    try {
+      await writeFile(
+        join(root, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            experimentalDecorators: true,
+            emitDecoratorMetadata: true,
+            target: 'ES2022',
+          },
+          files: [],
+        })
+      );
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        tsConfig: join(root, 'tsconfig.json'),
+      });
 
-    const tsRule = configs[0].module?.rules?.find(
-      (rule) =>
-        typeof rule === 'object' &&
-        rule !== null &&
-        (
-          rule as { use?: Array<{ loader?: string }> }
-        ).use?.[0]?.loader?.includes('swc-loader')
-    ) as unknown as {
-      use: Array<{
-        options: {
-          jsc: {
-            parser: { decorators?: boolean };
-            transform?: { legacyDecorator?: boolean };
+      const tsRule = configs[0].module?.rules?.find(
+        (rule) =>
+          typeof rule === 'object' &&
+          rule !== null &&
+          (
+            rule as { use?: Array<{ loader?: string }> }
+          ).use?.[0]?.loader?.includes('swc-loader')
+      ) as unknown as {
+        use: Array<{
+          options: {
+            jsc: {
+              parser: { decorators?: boolean };
+              transform?: {
+                legacyDecorator?: boolean;
+                decoratorMetadata?: boolean;
+                useDefineForClassFields?: boolean;
+              };
+            };
           };
-        };
-      }>;
-    };
+        }>;
+      };
 
-    expect(tsRule).toBeDefined();
-    expect(tsRule.use[0].options.jsc.parser.decorators).toBe(true);
-    expect(tsRule.use[0].options.jsc.transform?.legacyDecorator).toBe(true);
+      expect(tsRule).toBeDefined();
+      expect(tsRule.use[0].options.jsc.parser.decorators).toBe(true);
+      expect(tsRule.use[0].options.jsc.transform).toMatchObject({
+        legacyDecorator: true,
+        decoratorMetadata: true,
+        useDefineForClassFields: true,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  });
+
+  it('should derive the TS transpilation rule semantics from an overridden tsconfig', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-swc-override-'));
+    try {
+      await writeFile(
+        join(root, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            experimentalDecorators: true,
+            target: 'ES2022',
+          },
+          files: [],
+        })
+      );
+      await writeFile(
+        join(root, 'tsconfig.custom.json'),
+        JSON.stringify({
+          compilerOptions: { target: 'ES2022' },
+          files: [],
+        })
+      );
+      const configs = await _createConfig(
+        { ...configBase, root, tsConfig: join(root, 'tsconfig.json') },
+        { resolve: { tsConfig: join(root, 'tsconfig.custom.json') } }
+      );
+
+      const tsRule = configs[0].module?.rules?.find(
+        (rule) =>
+          typeof rule === 'object' &&
+          rule !== null &&
+          (
+            rule as { use?: Array<{ loader?: string }> }
+          ).use?.[0]?.loader?.includes('swc-loader')
+      ) as unknown as {
+        use: Array<{
+          options: { jsc: { transform?: { legacyDecorator?: boolean } } };
+        }>;
+      };
+
+      expect(tsRule).toBeDefined();
+      // The override tsconfig omits experimentalDecorators, so the rule uses
+      // standard decorator semantics even though options.tsConfig enables the
+      // legacy ones.
+      expect(tsRule.use[0].options.jsc.transform).toMatchObject({
+        legacyDecorator: false,
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('should share the license inputs between the browser and server configs', async () => {

@@ -9,6 +9,7 @@ import {
 import { getCommonConfig } from './config-utils/common-config';
 import { getServerConfig } from './config-utils/server-config';
 import { getBrowserConfig } from './config-utils/browser-config';
+import { getSwcTranspilationTransform } from './config-utils/swc-transpilation';
 import {
   handleConfigurations,
   parseConfigurationMode,
@@ -68,6 +69,15 @@ export async function _createConfig(
     hashFormat
   );
 
+  // Overrides may point module resolution at a different tsconfig; derive
+  // the swc rule semantics from the one the bundler will actually use.
+  const overrideTsConfig = rspackConfigOverrides?.resolve?.tsConfig;
+  const swcTranspilationTransform = getSwcTranspilationTransform(
+    typeof overrideTsConfig === 'string'
+      ? overrideTsConfig
+      : (overrideTsConfig?.configFile ?? normalizedOptions.tsConfig)
+  );
+
   // The browser and server compilers write the licenses file to the same
   // location; sharing the collected inputs makes each emit the union.
   const sharedLicenseInputs: SharedLicenseInputs | undefined =
@@ -79,6 +89,7 @@ export async function _createConfig(
       normalizedOptions,
       i18n,
       defaultConfig,
+      swcTranspilationTransform,
       sharedLicenseInputs
     );
     const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
@@ -90,6 +101,7 @@ export async function _createConfig(
     i18n,
     hashFormat,
     defaultConfig,
+    swcTranspilationTransform,
     sharedLicenseInputs
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});

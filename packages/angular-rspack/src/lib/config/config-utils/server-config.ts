@@ -1,4 +1,7 @@
-import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
+import {
+  TS_ALL_EXT_REGEX,
+  type SwcTranspilationTransform,
+} from '@nx/angular-rspack-compiler';
 import { type Configuration, ContextReplacementPlugin } from '@rspack/core';
 import { resolve } from 'path';
 import type {
@@ -17,6 +20,7 @@ export async function getServerConfig(
   normalizedOptions: NormalizedAngularRspackPluginOptions,
   i18n: I18nOptions,
   defaultConfig: Configuration,
+  swcTranspilationTransform: SwcTranspilationTransform,
   sharedLicenseInputs?: SharedLicenseInputs
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
@@ -67,13 +71,12 @@ export async function getServerConfig(
                   parser: {
                     syntax: 'typescript',
                     // Angular's fast emit path can leave decorators in the
-                    // output; compile them with the legacy semantics the
-                    // default tsconfig (experimentalDecorators) implies.
+                    // output; parse them regardless of which semantics the
+                    // transform applies.
                     decorators: true,
                   },
-                  transform: {
-                    legacyDecorator: true,
-                  },
+                  // Transpile with the semantics the type program assumed.
+                  transform: swcTranspilationTransform,
                   target: 'es2022',
                 },
               },

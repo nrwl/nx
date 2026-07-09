@@ -1,3 +1,4 @@
+import { dirname } from 'node:path';
 import * as ts from 'typescript';
 
 /**
@@ -19,4 +20,60 @@ export function applyEs2022TargetDefaults(
     return true;
   }
   return false;
+}
+
+/**
+ * The `jsc.transform` options for the swc rule that transpiles TypeScript
+ * emitted by the Angular compilation (and raw sources), derived from the
+ * project's tsconfig so the output keeps the semantics the type program
+ * assumed.
+ */
+export interface SwcTranspilationTransform {
+  legacyDecorator: boolean;
+  /**
+   * The revision applied for standard (TC39) decorators
+   * (`legacyDecorator: false`); swc's default revision predates the
+   * semantics TypeScript implements.
+   */
+  decoratorVersion?: '2022-03' | '2023-11';
+  decoratorMetadata: boolean;
+  useDefineForClassFields: boolean;
+  verbatimModuleSyntax: boolean;
+}
+
+export function resolveSwcTranspilationTransform(
+  tsconfigPath: string,
+  standardDecoratorVersion: '2022-03' | '2023-11'
+): SwcTranspilationTransform {
+  // Read errors are reported in-band and deliberately ignored: a missing or
+  // malformed tsconfig recovers to the forced defaults here, and the build
+  // still fails through rspack's own resolution of the same tsconfig path.
+  const configFile = ts.readConfigFile(tsconfigPath, ts.sys.readFile);
+  const compilerOptions: ts.CompilerOptions = {
+    ...ts.parseJsonConfigFileContent(
+      configFile.config,
+      ts.sys,
+      dirname(tsconfigPath)
+    ).options,
+  };
+
+  applyEs2022TargetDefaults(compilerOptions);
+
+  const legacyDecorator = !!compilerOptions.experimentalDecorators;
+
+  return {
+    legacyDecorator,
+    ...(legacyDecorator ? {} : { decoratorVersion: standardDecoratorVersion }),
+    // Design-type metadata comes from the type checker; swc emits what the
+    // annotations alone provide, which is as much as a per-file transpiler
+    // can honor.
+    decoratorMetadata:
+      legacyDecorator && !!compilerOptions.emitDecoratorMetadata,
+    // With the target raised to ES2022 the forced default is false; an
+    // ES2022+ tsconfig without the option gets TypeScript's default. For a
+    // target-less tsconfig esbuild instead uses its own default of true,
+    // contradicting the program options it forces; we follow the program.
+    useDefineForClassFields: compilerOptions.useDefineForClassFields ?? true,
+    verbatimModuleSyntax: !!compilerOptions.verbatimModuleSyntax,
+  };
 }
