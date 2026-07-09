@@ -272,7 +272,7 @@ pub struct TasksList {
     // and running batch groups, in start order. Excludes tasks nested in a batch
     // (the batch group represents them).
     in_progress_entries: Vec<SelectionEntry>,
-    needs_sort: bool,            // Deferred sort flag - sort once per render frame
+    needs_sort: bool, // Deferred sort flag - sort once per render frame
 }
 
 impl TasksList {
