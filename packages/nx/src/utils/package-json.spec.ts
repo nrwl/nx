@@ -358,6 +358,34 @@ describe('readTargetsFromPackageJson', () => {
     `);
   });
 
+  it('should preserve unresolved spread tokens when extending script based targets', () => {
+    // https://github.com/nrwl/nx/issues/36235 — the script-derived target has
+    // no `inputs`, so the `'...'` cannot resolve here. It must survive into
+    // the plugin result so the graph pipeline can expand it against
+    // targetDefaults / specified plugin values.
+    const result = readTargetsFromPackageJson(
+      {
+        name: 'my-other-app',
+        version: '',
+        scripts: {
+          build: 'echo 1',
+        },
+        nx: {
+          targets: {
+            build: {
+              inputs: ['...', '{projectRoot}/package.json'],
+            },
+          },
+        },
+      },
+      {},
+      workspaceRoot,
+      '/root',
+      packageManagerCommand
+    );
+    expect(result.build.inputs).toEqual(['...', '{projectRoot}/package.json']);
+  });
+
   it('should override scripts if provided an executor', () => {
     const result = readTargetsFromPackageJson(
       {

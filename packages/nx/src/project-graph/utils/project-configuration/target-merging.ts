@@ -372,6 +372,10 @@ function mergeConfigurations<T extends Object>(
  * @param projectConfigSourceMap The source map to be filled with metadata about where each property came from
  * @param sourceInformation The metadata about where the new target was defined
  * @param targetIdentifier The identifier for the target to merge, used for source map
+ * @param deferSpreadsWithoutBase Whether a `'...'` spread with no base value is preserved
+ * for a later merge layer to resolve (default), or expanded against the empty base and
+ * dropped. Pass `false` only for a final merge whose result is consumed directly rather
+ * than merged onto a lower-priority base.
  * @returns A merged target configuration
  */
 export function mergeTargetConfigurations(
@@ -380,7 +384,7 @@ export function mergeTargetConfigurations(
   projectConfigSourceMap?: Record<string, SourceInformation>,
   sourceInformation?: SourceInformation,
   targetIdentifier?: string,
-  deferSpreadsWithoutBase?: boolean
+  deferSpreadsWithoutBase: boolean = true
 ): TargetConfiguration {
   const {
     configurations: defaultConfigurations,
