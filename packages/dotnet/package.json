@@ -59,7 +59,7 @@
     "memfs": "^4.9.2",
     "nx": "workspace:*",
     "ts-jest": "catalog:jest",
-    "typescript": "catalog:typescript"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "publishConfig": {
     "access": "public"

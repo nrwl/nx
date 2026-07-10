@@ -1,12 +1,12 @@
 import { offsetFromRoot, Tree, workspaceRoot } from '@nx/devkit';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import type { Node, SyntaxKind } from 'typescript';
+import type { Node, ParsedCommandLine, SyntaxKind } from 'typescript';
 import { ensureTypescript } from './typescript';
 
 let tsModule: typeof import('typescript');
 
-export function readTsConfig(tsConfigPath: string) {
+export function readTsConfig(tsConfigPath: string): ParsedCommandLine {
   if (!tsModule) {
     tsModule = ensureTypescript();
   }
