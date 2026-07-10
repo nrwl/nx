@@ -174,6 +174,7 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
 
   afterEach(() => {
     delete global.NX_GRAPH_CREATION;
+    delete process.env['WEBPACK_SERVE'];
     jest.resetModules();
   });
 
@@ -207,9 +208,7 @@ describe('apply-base-config ts-checker rootDir (TS6059 prevention)', () => {
     }));
     // The TS solution setup only type-checks during serve, so force serve mode
     // to make the plugin be installed at all.
-    jest.doMock('../../utils/is-serve-mode', () => ({
-      isServeMode: () => true,
-    }));
+    process.env['WEBPACK_SERVE'] = 'true';
 
     const { applyBaseConfig } = await import('./apply-base-config');
     applyBaseConfig({ ...baseOptions }, {});
