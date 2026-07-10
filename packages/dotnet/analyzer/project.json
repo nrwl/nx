@@ -9,7 +9,11 @@
     "run": {
       "executor": "nx:noop"
     },
+    "build:dotnet": {
+      "inputs": ["...", "{workspaceRoot}/Directory.Build.props"]
+    },
     "publish": {
+      "inputs": ["...", "{workspaceRoot}/Directory.Build.props"],
       "outputs": ["{projectRoot}/bin/Release/publish", "{projectRoot}/obj"]
     }
   }
