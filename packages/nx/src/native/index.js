@@ -1,5 +1,6 @@
 const { join, basename } = require('path');
 const {
+  chmodSync,
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -120,13 +121,37 @@ Module._load = function (request, parent, isMain) {
       }
     }
     if (!existsSync(nativeFileCacheLocation)) {
-      mkdirSync(nativeFileCacheLocation, { recursive: true });
+      try {
+        mkdirSync(nativeFileCacheLocation, { recursive: true });
+      } catch {
+        // The cache root is not writable — e.g. a sandbox that has no write
+        // allowance for NX_TMP_DIR (yet). The cache only exists to avoid
+        // file-locking and noexec issues; loading the binding in place is
+        // strictly better than failing to load it at all.
+        return originalLoad.apply(this, [nativeLocation, parent, isMain]);
+      }
+      if (!process.env.NX_NATIVE_FILE_CACHE_DIRECTORY) {
+        // The shared NX_TMP_DIR root may have just been created by the mkdir
+        // above. Like /tmp itself it is shared between users, so it needs to
+        // be sticky + world-writable for other users to create their own
+        // cache/socket dirs under it. chmod only succeeds for the user that
+        // created the dir, hence best-effort.
+        try {
+          chmodSync(require('../utils/nx-tmp-dir').NX_TMP_DIR, 0o1777);
+        } catch {}
+      }
     }
 
     // Retry copying up to 3 times, validating after each copy
     for (let attempt = 1; attempt <= MAX_COPY_RETRIES; attempt++) {
       // First copy to a unique location for each process
-      copyFileSync(nativeLocation, tmpTmpFile);
+      try {
+        copyFileSync(nativeLocation, tmpTmpFile);
+      } catch {
+        // Permission errors won't heal on retry — use the load-in-place
+        // fallback below.
+        break;
+      }
 
       // Validate the copy - check file size matches expected
       const copiedFileStats = statsOrNull(tmpTmpFile);

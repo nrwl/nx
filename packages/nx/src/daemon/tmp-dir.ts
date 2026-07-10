@@ -4,10 +4,11 @@
  * and where we create the actual unix socket/named pipe for the daemon.
  */
 import { chmodSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { platform, tmpdir } from 'node:os';
+import { platform } from 'node:os';
 import { join } from 'path';
 import { workspaceDataDirectory } from '../utils/cache-directory';
 import { createHash } from 'crypto';
+import { NX_TMP_DIR, NX_TMP_DIR_POSIX } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 
 export const DAEMON_DIR_FOR_CURRENT_WORKSPACE = join(
@@ -47,26 +48,15 @@ export function isDaemonDisabled() {
 }
 
 /**
- * Parent directory of the socket root. Sandbox configurations should grant
- * read/write access to this directory. A fixed /tmp path is used instead of
- * os.tmpdir() because tmpdir() honors $TMPDIR, which is per-user on macOS and
- * rewritten per-session by sandboxes — a literal path stays identical across
- * machines and contexts, so it can live in committed, shared config files.
- */
-export const NX_SOCKET_DIR_PARENT_POSIX = '/tmp/.nx';
-
-/**
  * All Nx sockets (daemon, forked processes, plugin workers) live under this
  * single stable root so that sandboxed environments (e.g. AI agent sandboxes)
- * can allow unix socket access with one predictable rule. Windows named pipes
- * are not subject to filesystem sandboxing, so the OS temp dir is fine there.
+ * can allow unix socket access with one predictable rule. See NX_TMP_DIR for
+ * why a fixed /tmp path is used on POSIX. Windows named pipes are not subject
+ * to filesystem sandboxing, so the OS temp dir is fine there.
  */
-export const NX_SOCKET_ROOT_POSIX = join(NX_SOCKET_DIR_PARENT_POSIX, 'sockets');
+export const NX_SOCKET_ROOT_POSIX = join(NX_TMP_DIR_POSIX, 'sockets');
 
-export const NX_SOCKET_ROOT =
-  platform() === 'win32'
-    ? join(tmpdir(), '.nx', 'sockets')
-    : NX_SOCKET_ROOT_POSIX;
+export const NX_SOCKET_ROOT = join(NX_TMP_DIR, 'sockets');
 
 export function getNxSocketRoot(): string {
   return (
@@ -107,7 +97,7 @@ export function getSocketDir(alreadyUnique = false) {
       // them. chmod only succeeds for the user that created the dirs, hence
       // best-effort.
       try {
-        chmodSync(NX_SOCKET_DIR_PARENT_POSIX, 0o1777);
+        chmodSync(NX_TMP_DIR_POSIX, 0o1777);
         chmodSync(NX_SOCKET_ROOT_POSIX, 0o1777);
       } catch {}
     }

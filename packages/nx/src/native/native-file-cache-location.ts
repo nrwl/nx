@@ -1,6 +1,7 @@
-import { tmpdir, userInfo } from 'os';
+import { userInfo } from 'os';
 import { join } from 'path';
 import { createHash } from 'crypto';
+import { NX_TMP_DIR } from '../utils/nx-tmp-dir';
 import { workspaceRoot } from '../utils/workspace-root';
 import { nxVersion } from '../utils/versions';
 
@@ -16,9 +17,15 @@ export function getNativeFileCacheLocation() {
       // if there's no user, we only use the workspace root for the hash and move on
     }
 
+    // The cache lives under the fixed NX_TMP_DIR root rather than os.tmpdir():
+    // tmpdir() honors $TMPDIR, which the daemon's environment does not include
+    // (see daemon-environment.ts), and sandboxes (e.g. AI agent sandboxes)
+    // allowlist the fixed /tmp/.nx root via `nx configure-ai-agents` — a
+    // tmpdir()-based location would be unwritable there and the native binding
+    // would fail to load.
     return join(
-      tmpdir(),
-      `nx-native-file-cache-${hash.digest('hex').substring(0, 7)}`
+      NX_TMP_DIR,
+      `native-file-cache-${hash.digest('hex').substring(0, 7)}`
     );
   }
 }
