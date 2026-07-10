@@ -139,6 +139,18 @@
           "alwaysAddToPackageJson": false
         }
       }
+    },
+    "23.1.0-swc-cli": {
+      "version": "23.1.0-rc.3",
+      "requires": {
+        "@swc/cli": ">=0.8.0 <0.8.1"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.8.1",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }
