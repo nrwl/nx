@@ -30,6 +30,13 @@ export async function getServerConfig(
   const isDevServer = isServeMode();
   const { root } = normalizedOptions;
 
+  const angularSSRInstalled = isPackageInstalled(root, '@angular/ssr');
+  if (normalizedOptions.outputMode && !angularSSRInstalled) {
+    throw new Error(
+      'The "outputMode" option requires the "@angular/ssr" package to be installed.'
+    );
+  }
+
   return {
     ...defaultConfig,
     dependencies: ['browser'],
@@ -75,7 +82,7 @@ export async function getServerConfig(
             resolve(root, (normalizedOptions.ssr as { entry: string }).entry),
           ],
           options: {
-            angularSSRInstalled: isPackageInstalled(root, '@angular/ssr'),
+            angularSSRInstalled,
             isZoneJsInstalled: isPackageInstalled(root, 'zone.js'),
           },
         },
