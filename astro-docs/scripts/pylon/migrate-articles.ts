@@ -300,6 +300,9 @@ async function main(): Promise<void> {
         // Only ever publish, never unpublish: an article published via the
         // Pylon UI must not be taken down by a stale publish:false flag.
         ...(wantPublished ? { is_published: true } : {}),
+        // Direct-link only: keep migrated articles out of the KB portal
+        // listing and help.nx.app's sitemap so Google doesn't index them.
+        is_unlisted: true,
       });
       patched++;
       const finalUrl = updated.url || mapped.url;
@@ -333,6 +336,9 @@ async function main(): Promise<void> {
         slug,
         collection_id: entry.collectionId,
         is_published: wantPublished,
+        // Direct-link only: keep migrated articles out of the KB portal
+        // listing and help.nx.app's sitemap so Google doesn't index them.
+        is_unlisted: true,
       });
       posted++;
       console.log(

@@ -26,6 +26,16 @@ unpublished in Pylon.
   0 errors. Site builds green: `validate-links` passes, search index holds 615 pages
   (442 site + 173 KB records), llms.txt lists 174 KB links.
 
+### Update 2026-07-10: all migrated articles are unlisted
+
+Every article tracked in `pylon-kb.json` is set to `is_unlisted: true` in Pylon —
+reachable by direct link only: removed from the KB portal navigation, collection pages,
+and help.nx.app's sitemap.xml. Direct URLs still return 200, and the nx.dev search
+federation is unaffected (it filters on published + public visibility, not unlisted).
+The migrate script now asserts `is_unlisted: true` on every create and update, so future
+batches inherit this. Note: unlisting does not add a `noindex` meta tag; the 301s from
+nx.dev remain in place per Caleb's call (2026-07-10).
+
 ## 1. mdoc tag → Pylon HTML conversions
 
 Pylon articles are `body_html`; its sanitizer preserves iframes, `<details>`, tables and
