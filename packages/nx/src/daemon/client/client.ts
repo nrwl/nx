@@ -125,10 +125,10 @@ import {
 import {
   DAEMON_DIR_FOR_CURRENT_WORKSPACE,
   DAEMON_OUTPUT_LOG_FILE,
-  getNxSocketRoot,
   isDaemonDisabled,
   removeSocketDir,
 } from '../tmp-dir';
+import { sandboxSocketHint } from '../sandbox-socket-hint';
 import {
   DaemonSocketMessenger,
   VersionMismatchError,
@@ -1437,28 +1437,6 @@ function isDocker() {
 
 function nxJsonIsNotPresent() {
   return !hasNxJson(workspaceRoot);
-}
-
-/**
- * Guidance for socket access being blocked by a sandbox. When an AI agent is
- * driving nx the message is written for the agent to act on directly; for
- * humans it is a brief pointer since sandboxing is a less likely cause.
- */
-function sandboxSocketHint(): string[] {
-  if (isAiAgent()) {
-    return [
-      `Your sandbox is likely blocking unix socket access. Nx creates its sockets under ${getNxSocketRoot()}.`,
-      'To fix this, do one of the following:',
-      '  - Run `nx configure-ai-agents` to write the required sandbox allowances for supported agents.',
-      `  - Configure your sandbox to allow unix socket connections to ${getNxSocketRoot()} and read/write access to its parent directory.`,
-      '  - Set NX_SOCKET_DIR to a directory your sandbox allows.',
-      'See https://nx.dev/docs/troubleshooting/nx-sandbox-unix-sockets for details.',
-    ];
-  }
-  return [
-    `If Nx is running inside a sandboxed environment, allow unix socket access to ${getNxSocketRoot()} or set NX_SOCKET_DIR to an accessible directory.`,
-    'See https://nx.dev/docs/troubleshooting/nx-sandbox-unix-sockets for details.',
-  ];
 }
 
 function daemonProcessException(message: string) {

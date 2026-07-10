@@ -18,6 +18,7 @@ import { unlinkSync } from 'fs';
 import { createServer } from 'net';
 import { startAnalytics } from '../../../analytics';
 import { applyDaemonEnvFromClient } from '../../../daemon/client/daemon-environment';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import '../../../utils/perf-logging';
 
 type Environment = Pick<
@@ -168,10 +169,21 @@ const server = createServer((socket) => {
   });
 });
 
-server.listen(socketPath);
-logger.verbose(
-  `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
-);
+server.on('error', (err) => {
+  // Without this handler the worker dies silently and the host only ever
+  // sees "exited before the connection was established" — surface the real
+  // failure (commonly a sandbox denying the unix socket bind).
+  console.error(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) failed to listen on ${socketPath}: ${err.message}`
+  );
+  console.error(sandboxSocketHint().join('\n'));
+  process.exit(1);
+});
+server.listen(socketPath, () => {
+  logger.verbose(
+    `[plugin-worker] "${expectedPluginName}" (pid: ${process.pid}) listening on ${socketPath}`
+  );
+});
 
 async function withErrorHandling(
   cb: () => void | Promise<void>
@@ -215,16 +227,31 @@ function setErrorTimeout(
   };
 }
 
-const exitHandler = (exitCode: number) => () => {
+const cleanup = () => {
   server.close();
   try {
     unlinkSync(socketPath);
   } catch (e) {}
-  process.exit(exitCode);
 };
 
-const events = ['SIGINT', 'SIGTERM', 'SIGQUIT', 'exit'];
+const events = ['SIGINT', 'SIGTERM', 'SIGQUIT'];
 
-events.forEach((event) => process.once(event, exitHandler(0)));
-process.once('uncaughtException', exitHandler(1));
-process.once('unhandledRejection', exitHandler(1));
+events.forEach((event) =>
+  process.once(event, () => {
+    cleanup();
+    process.exit(0);
+  })
+);
+// The 'exit' handler must only clean up — calling process.exit() inside it
+// would override the real exit code (e.g. a crash would be reported as 0,
+// hiding the failure from the plugin host).
+process.once('exit', cleanup);
+const fatalHandler = (error: unknown) => {
+  // Registering an 'uncaughtException' handler suppresses Node's default
+  // error reporting, so log the error explicitly before exiting.
+  console.error(error);
+  cleanup();
+  process.exit(1);
+};
+process.once('uncaughtException', fatalHandler);
+process.once('unhandledRejection', fatalHandler);

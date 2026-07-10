@@ -6,7 +6,9 @@ import path = require('path');
 import type { PluginConfiguration } from '../../../config/nx-json';
 import type { ProjectGraph } from '../../../config/project-graph';
 import { serverLogger } from '../../../daemon/logger';
+import { sandboxSocketHint } from '../../../daemon/sandbox-socket-hint';
 import { getPluginOsSocketPath } from '../../../daemon/socket-utils';
+import { isAiAgent } from '../../../native';
 import {
   consumeMessagesFromSocket,
   parseMessage,
@@ -621,7 +623,12 @@ async function connectToWorker(
   worker.once('exit', (code) => {
     if (!abortController.signal.aborted) {
       earlyExitError = new Error(
-        `Plugin worker for "${name}" exited with code ${code} before the connection was established.`
+        [
+          `Plugin worker for "${name}" exited with code ${code} before the connection was established.`,
+          // The worker's own stderr may be lost with the process; when an
+          // agent is driving nx, name the likely cause and the fix directly.
+          ...(isAiAgent() ? sandboxSocketHint() : []),
+        ].join('\n')
       );
       abortController.abort();
     }
