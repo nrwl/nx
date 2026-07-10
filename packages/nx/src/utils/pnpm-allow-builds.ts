@@ -1,34 +1,38 @@
+import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { join } from 'path';
 import { Document, parseDocument, YAMLMap } from 'yaml';
 import { gte } from 'semver';
 import type { Tree } from '../generators/tree';
-import { readJson } from '../generators/utils/json';
 import { getPackageManagerVersion } from './package-manager';
+import { readJsonFile } from './fileutils';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
 /**
  * Records `allowBuilds` decisions in pnpm-workspace.yaml for build-script
- * dependencies a generator is about to add. pnpm 11+ refuses to install a
+ * dependencies that are about to be installed. pnpm 11+ refuses to install a
  * dependency whose build scripts are neither allowed nor denied, so the
- * generator that introduces such a dependency records the decision up front.
+ * generator or command that introduces such a dependency records the
+ * decision up front.
  *
  * Comment-preserving. Existing entries are never overwritten, so user
  * decisions always win. No-op for non-pnpm workspaces and pnpm < 11 (which
  * warns instead of erroring and does not read `allowBuilds`).
  */
 export function acknowledgePnpmBuildScripts(
-  tree: Tree,
+  treeOrRoot: Tree | string,
   entries: Record<string, boolean>
 ): void {
-  if (!tree.exists(PNPM_WORKSPACE_FILE)) {
+  const host = createHost(treeOrRoot);
+  if (!host.exists(PNPM_WORKSPACE_FILE)) {
     return;
   }
-  const pnpmVersion = getPnpmVersion(tree);
+  const pnpmVersion = getPnpmVersion(host);
   if (!pnpmVersion || !gte(pnpmVersion, '11.0.0')) {
     return;
   }
 
-  const parsed = parseDocument(tree.read(PNPM_WORKSPACE_FILE, 'utf-8'));
+  const parsed = parseDocument(host.read(PNPM_WORKSPACE_FILE));
   // A present root that isn't a mapping is malformed for pnpm; leave it alone
   // rather than replacing the user's content with just the allowBuilds key.
   if (parsed.contents != null && !(parsed.contents instanceof YAMLMap)) {
@@ -45,15 +49,42 @@ export function acknowledgePnpmBuildScripts(
     }
   }
   if (changed) {
-    tree.write(PNPM_WORKSPACE_FILE, doc.toString());
+    host.write(PNPM_WORKSPACE_FILE, doc.toString());
   }
 }
 
-function getPnpmVersion(tree: Tree): string | null {
-  // The tree's packageManager field wins: during workspace creation the
+interface Host {
+  root: string;
+  exists(path: string): boolean;
+  read(path: string): string;
+  write(path: string, content: string): void;
+  readJson(path: string): any;
+}
+
+function createHost(treeOrRoot: Tree | string): Host {
+  if (typeof treeOrRoot === 'string') {
+    return {
+      root: treeOrRoot,
+      exists: (p) => existsSync(join(treeOrRoot, p)),
+      read: (p) => readFileSync(join(treeOrRoot, p), 'utf-8'),
+      write: (p, c) => writeFileSync(join(treeOrRoot, p), c),
+      readJson: (p) => readJsonFile(join(treeOrRoot, p)),
+    };
+  }
+  return {
+    root: treeOrRoot.root,
+    exists: (p) => treeOrRoot.exists(p),
+    read: (p) => treeOrRoot.read(p, 'utf-8'),
+    write: (p, c) => treeOrRoot.write(p, c),
+    readJson: (p) => JSON.parse(treeOrRoot.read(p, 'utf-8')),
+  };
+}
+
+function getPnpmVersion(host: Host): string | null {
+  // The host's packageManager field wins: during workspace creation the
   // in-flight package.json only exists in the tree, not on disk.
-  if (tree.exists('package.json')) {
-    const { packageManager } = readJson(tree, 'package.json');
+  if (host.exists('package.json')) {
+    const { packageManager } = host.readJson('package.json');
     if (
       typeof packageManager === 'string' &&
       packageManager.startsWith('pnpm@')
@@ -62,7 +93,7 @@ function getPnpmVersion(tree: Tree): string | null {
     }
   }
   try {
-    return getPackageManagerVersion('pnpm', tree.root);
+    return getPackageManagerVersion('pnpm', host.root);
   } catch {
     // The version cannot be probed (e.g. pnpm is not on PATH). Leave the
     // workspace file untouched; pnpm's own install error remains actionable.

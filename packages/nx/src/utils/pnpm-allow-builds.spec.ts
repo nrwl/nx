@@ -1,3 +1,6 @@
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { createTree } from '../generators/testing-utils/create-tree';
 import type { Tree } from '../generators/tree';
 import { acknowledgePnpmBuildScripts } from './pnpm-allow-builds';
@@ -91,5 +94,29 @@ describe('acknowledgePnpmBuildScripts', () => {
     acknowledgePnpmBuildScripts(tree, { 'unrs-resolver': false });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should accept a filesystem root instead of a tree', () => {
+    const root = mkdtempSync(join(tmpdir(), 'nx-allow-builds-'));
+    try {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({ name: 'proj', packageManager: 'pnpm@11.2.2' })
+      );
+      writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - "*"\n');
+
+      acknowledgePnpmBuildScripts(root, { nx: true });
+
+      expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "packages:
+          - "*"
+        allowBuilds:
+          nx: true
+        "
+      `);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });

@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import { join } from 'path';
+import { gte } from 'semver';
 
 import {
   NxJsonConfiguration,
@@ -14,9 +15,12 @@ import {
 import { output } from '../../../utils/output';
 import { PackageJson } from '../../../utils/package-json';
 import {
+  detectPackageManager,
   getPackageManagerCommand,
+  getPackageManagerVersion,
   PackageManagerCommands,
 } from '../../../utils/package-manager';
+import { acknowledgePnpmBuildScripts } from '../../../utils/pnpm-allow-builds';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -262,6 +266,9 @@ export function addDepsToPackageJson(
     }
   }
   writeJsonFile(path, json);
+  // nx has a postinstall script, which pnpm 11+ refuses to install
+  // unacknowledged.
+  acknowledgePnpmBuildScripts(repoRoot, { nx: true });
 }
 
 export function updateGitIgnore(root: string) {
@@ -300,8 +307,21 @@ export function runInstall(
   repoRoot: string,
   pmc: PackageManagerCommands = getPackageManagerCommand()
 ) {
+  let command = pmc.install;
+  // Plugins added during init can pull build-script deps whose allowBuilds
+  // entries are only recorded by their init generators after this install;
+  // warn and skip for this one install, like pnpm 10 did.
+  if (detectPackageManager(repoRoot) === 'pnpm') {
+    try {
+      if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
+        command += ' --config.strictDepBuilds=false';
+      }
+    } catch {
+      // The version cannot be probed; run the install unmodified.
+    }
+  }
   try {
-    execSync(pmc.install, {
+    execSync(command, {
       stdio: ['ignore', 'ignore', 'pipe'],
       encoding: 'utf8',
       cwd: repoRoot,
