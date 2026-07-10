@@ -11,10 +11,13 @@ import {
   readNxJson,
   readProjectConfiguration,
   runTasksInSerial,
+  type TargetConfiguration,
+  type TargetDefaults,
   Tree,
   updateJson,
   updateNxJson,
 } from '@nx/devkit';
+import { upsertTargetDefault } from '@nx/devkit/internal';
 import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   getProjectType,
@@ -244,14 +247,13 @@ getTestBed().initTestEnvironment(
   if (isTsSolutionSetup) {
     // in the TS solution setup, the test target depends on the build outputs
     // so we need to setup the task pipeline accordingly
-    const nxJson = readNxJson(tree);
+    const nxJson = readNxJson(tree) ?? {};
     const testTarget = schema.testTarget ?? 'test';
-    nxJson.targetDefaults ??= {};
-    nxJson.targetDefaults[testTarget] ??= {};
-    nxJson.targetDefaults[testTarget].dependsOn ??= [];
-    nxJson.targetDefaults[testTarget].dependsOn = Array.from(
-      new Set([...nxJson.targetDefaults[testTarget].dependsOn, '^build'])
+    const existing = findTestDefault(nxJson.targetDefaults, testTarget);
+    const dependsOn = Array.from(
+      new Set([...(existing?.dependsOn ?? []), '^build'])
     );
+    upsertTargetDefault(tree, nxJson, { target: testTarget, dependsOn });
     updateNxJson(tree, nxJson);
   }
 
@@ -295,6 +297,18 @@ getTestBed().initTestEnvironment(
   return runTasksInSerial(...tasks);
 }
 
+function addTypeIfMissing(json: any, type: string): void {
+  if (json.compilerOptions?.types?.includes(type)) {
+    return;
+  }
+  if (json.compilerOptions?.types) {
+    json.compilerOptions.types.push(type);
+  } else {
+    json.compilerOptions ??= {};
+    json.compilerOptions.types = [type];
+  }
+}
+
 function updateTsConfig(
   tree: Tree,
   options: VitestGeneratorSchema,
@@ -308,14 +322,10 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.spec.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        // vite/client is correct for anything vitest runs through vite;
+        // guarded so it's a no-op when react/vue already set it.
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
 
         if (setupFile) {
           json.files = [...(json.files ?? []), setupFile];
@@ -345,14 +355,8 @@ function updateTsConfig(
       tree,
       joinPathFragments(projectRoot, 'tsconfig.json'),
       (json) => {
-        if (!json.compilerOptions?.types?.includes('vitest')) {
-          if (json.compilerOptions?.types) {
-            json.compilerOptions.types.push('vitest');
-          } else {
-            json.compilerOptions ??= {};
-            json.compilerOptions.types = ['vitest'];
-          }
-        }
+        addTypeIfMissing(json, 'vitest');
+        addTypeIfMissing(json, 'vite/client');
         return json;
       }
     );
@@ -522,6 +526,21 @@ function findBuildTarget(project: {
   }
 
   return project.targets?.build ?? null;
+}
+
+function findTestDefault(
+  td: TargetDefaults | undefined,
+  target: string
+): Partial<TargetConfiguration> | undefined {
+  const value = td?.[target];
+  if (value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _f, ...rest } = found;
+    return rest;
+  }
+  return value;
 }
 
 export default configurationGenerator;

@@ -1,0 +1,105 @@
+---
+title: Use Yarn Workspaces with Nx
+description: Set up a Yarn workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.
+filter: 'type:Guides'
+---
+
+A Yarn workspace lets you manage multiple packages in a single repository. Adding Nx to a Yarn workspace gives you cached tasks, affected-only builds, and faster CI, while Yarn keeps managing installs. Set up a Yarn workspace first, then add Nx.
+
+{% aside type="note" title="Looking for Yarn PnP?" %}
+This recipe covers Yarn's workspaces feature. If you use Yarn's Plug'n'Play install mode, see [Using Yarn PnP with Nx](/docs/guides/tips-n-tricks/yarn-pnp).
+{% /aside %}
+
+## Set up a Yarn workspace
+
+A Yarn workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files:
+
+```jsonc
+// package.json
+{
+  "name": "my-workspace",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+}
+```
+
+A common layout separates applications from shared packages:
+
+{% filetree %}
+
+- my-workspace/
+  - apps/
+    - web/
+      - package.json
+  - packages/
+    - shared-ui/
+      - package.json
+  - package.json
+
+{% /filetree %}
+
+To depend on another package in the workspace, reference it with the `workspace:` protocol so Yarn resolves it to the local package:
+
+```jsonc
+// apps/web/package.json
+{
+  "name": "web",
+  "dependencies": {
+    "react": "^19.0.0",
+    "@my-workspace/shared-ui": "workspace:*",
+  },
+}
+```
+
+Run `yarn install` once at the root to install every package's dependencies and link the internal ones.
+
+## Add Nx in one command
+
+Nx layers task running and caching on top of your existing Yarn workspace. Yarn still installs and resolves packages. Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
+
+```shell
+npx nx@latest init
+```
+
+Your existing `package.json` scripts keep working. Nx infers a project for each `package.json` in your workspace and runs its scripts with caching, with no `project.json` or extra configuration required.
+
+## Run tasks before and after Nx
+
+Before Nx, Yarn runs a script across packages, but it runs every task every time and has no notion of which packages a change affects:
+
+```shell
+yarn workspaces foreach --all run build   # every workspace
+yarn workspace web run build              # a single workspace
+```
+
+After `nx init`, run the same scripts through Nx:
+
+```shell
+nx run-many -t build   # every project
+nx build web           # a single project
+nx affected -t build   # only projects touched by your changes
+```
+
+The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
+
+## How task caching works
+
+`nx init` writes an `nx.json` with `targetDefaults` that control which targets are cached:
+
+```jsonc
+// nx.json
+{
+  "targetDefaults": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+    },
+  },
+}
+```
+
+`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
+
+In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks.
+
+For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).

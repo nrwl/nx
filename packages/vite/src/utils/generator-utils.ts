@@ -214,7 +214,6 @@ export function editTsConfig(
       config.compilerOptions = {
         jsx: 'react-jsx',
         allowJs: false,
-        esModuleInterop: false,
         allowSyntheticDefaultImports: true,
         strict: true,
       };

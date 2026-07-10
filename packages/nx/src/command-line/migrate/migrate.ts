@@ -100,7 +100,11 @@ import {
   ensurePackageHasProvenance,
   getNxPackageGroup,
 } from '../../utils/provenance';
-import { type CatalogManager, getCatalogManager } from '../../utils/catalog';
+import {
+  type CatalogManager,
+  getCatalogManager,
+  resolveCatalogSpecifiers,
+} from '../../utils/catalog';
 import {
   classifyMigrateFetchFallback,
   hasMigrateRunStarted,
@@ -409,15 +413,30 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+          const updateEntries = Object.entries(packageUpdate.packages);
+          // Validate all up front so invalid metadata fails fast, before any
+          // resolution does I/O.
+          for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            filteredUpdates[name] = update;
-            this.packageUpdates[name] = update;
-          });
+          }
+          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
+          // append to minimumReleaseAgeExclude, so a serial loop avoids
+          // overlapping prompts and keeps packageUpdates ordering stable.
+          for (const [name, update] of updateEntries) {
+            const resolvedUpdate = {
+              ...update,
+              version: await this.resolveVersionForCascade(
+                name,
+                update.version
+              ),
+            };
+            filteredUpdates[name] = resolvedUpdate;
+            this.packageUpdates[name] = resolvedUpdate;
+          }
         }
       }
 
@@ -427,6 +446,19 @@ export class Migrator {
         )
       );
     }
+  }
+
+  private async resolveVersionForCascade(
+    packageName: string,
+    version: string
+  ): Promise<string> {
+    // Already a fully-qualified semver (incl. prereleases) - nothing to resolve.
+    if (valid(version)) {
+      return version;
+    }
+    // Otherwise resolve the spec (range/tag) through the min-release-age policy,
+    // which also honors any configured minimumReleaseAgeExclude entries.
+    return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
@@ -2202,7 +2234,8 @@ function readNxVersion(packageJson: PackageJson, root: string) {
   );
 }
 
-async function generateMigrationsJsonAndUpdatePackageJson(
+// Exported for testing the optional-include orchestration seam (see NXC-4590).
+export async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: GenerateMigrations,
   fetch?: MigratorOptions['fetch']
@@ -2291,9 +2324,10 @@ async function generateMigrationsJsonAndUpdatePackageJson(
     // the user already has. Drop those before writing; nx migrate is
     // forward-only, never a downgrade.
     phase = 'package_updates';
+    // Resolve catalog: specifiers first so the filter compares real versions.
     const writableUpdates = filterDowngradedUpdates(
       packageUpdates,
-      originalPackageJson,
+      resolveCatalogSpecifiers(originalPackageJson),
       installedPackageVersions
     );
 
@@ -2303,11 +2337,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       writableUpdates
     );
 
+    // Under `--include=optional` the target's own entry is filtered out of
+    // `packageUpdates` (it's a required package), so resolve the version
+    // defensively. Also reused by the completion analytics below.
+    const resolvedTargetVersion =
+      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+
     const promptMigrationFiles = writePromptMigrationFiles(
       root,
       migrations,
       promptContents ?? {},
-      packageUpdates[walkedTargetPackage].version
+      resolvedTargetVersion
     );
 
     if (migrations.length > 0) {
@@ -2324,8 +2364,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
-    const resolvedTargetVersion =
-      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
     // The param expressions below evaluate before the report function is
     // entered; `safeReport` keeps them inside the analytics boundary so a
     // param-building throw can't surface here and convert an already

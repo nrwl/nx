@@ -113,9 +113,10 @@ function buildScopeRules(mode: AgenticPromptMode): string {
   return [
     `<scope_rules>`,
     `- Apply only the changes the migration prompt asks for.`,
-    `- Do not refactor, reformat, or update dependencies beyond what the migration prompt directs.`,
+    `- Do not refactor or update dependencies beyond what the migration prompt directs, and do not reformat files you did not change.`,
+    `- After applying your changes and before writing the handoff, format the files you created or modified so they match the workspace's style. If the workspace uses Prettier, run \`nx format:write\`, which formats your uncommitted changes; if it has no formatter configured, skip this.`,
     `- Do not modify files outside the workspace root.`,
-    `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx run-many\`, generators, etc.). Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
+    `- Do not run other \`nx\` commands that mutate workspace state (\`nx migrate\`, \`nx reset\`, \`nx run-many\`, generators, etc.), except \`nx format:write\` to format the files you changed. Read-only inspection (\`nx show\`, \`nx graph --file\`, reading files) is fine.`,
     `- If the migration instructions are unclear, internally inconsistent, or conflict with the current workspace state, ask the user for direction (see the handoff contract). Do not guess.`,
     `</scope_rules>`,
   ].join('\n');

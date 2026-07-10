@@ -712,6 +712,97 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
+    /// Extract the plain text covered by a selection expressed in absolute
+    /// content-row + column coordinates (both ends inclusive).
+    ///
+    /// The selection arrives in *visual* (wrapped) row coordinates — the basis
+    /// `content_coords_at`, the overlay, and `get_total_content_rows()` share.
+    /// The buffer is read once as unwrapped logical lines with
+    /// `Screen::all_contents` (scrollback included, no scrolling). Each visual
+    /// endpoint is translated to a character offset inside its logical line by
+    /// counting how many visual rows the preceding lines occupy, then the
+    /// unwrapped lines are sliced directly between the two offsets. This yields
+    /// unwrapped text without ever materializing the wrapped rows, and a
+    /// newline appears only at real line breaks. Trailing whitespace is trimmed
+    /// per line.
+    pub fn selected_text(&self, start: (usize, usize), end: (usize, usize)) -> String {
+        let (start_row, start_col) = start;
+        let (end_row, end_col) = end;
+
+        let (contents, cols) = {
+            let parser = self.parser.read();
+            let screen = parser.screen();
+            let (_, cols) = screen.size();
+            (screen.all_contents(), cols as usize)
+        };
+        if cols == 0 {
+            return String::new();
+        }
+        let logical: Vec<&str> = contents.lines().collect();
+
+        // Translate an absolute visual row to a position in the unwrapped lines:
+        // the logical line it falls on, plus the character offset where that
+        // visual sub-row begins (`sub_row * cols`, since the terminal hard-wraps
+        // at the column count). `None` once the row is past the wrapped content
+        // (the viewport's trailing empty rows, trimmed from `all_contents`).
+        let locate = |visual_row: usize| -> Option<(usize, usize)> {
+            let mut consumed = 0usize;
+            for (index, line) in logical.iter().enumerate() {
+                let height = wrap_logical_line(line, cols);
+                if visual_row < consumed + height {
+                    return Some((index, (visual_row - consumed) * cols));
+                }
+                consumed += height;
+            }
+            None
+        };
+
+        // A selection that starts past the content selects nothing.
+        let Some((start_line, start_base)) = locate(start_row) else {
+            return String::new();
+        };
+        let start_offset = start_base + start_col;
+        // An end dragged into the empty rows below the content selects through
+        // the end of the last logical line.
+        let (end_line, end_offset) = match locate(end_row) {
+            Some((line, base)) => (line, base + end_col + 1),
+            None => {
+                let last = logical.len().saturating_sub(1);
+                (
+                    last,
+                    logical.get(last).map_or(0, |line| line.chars().count()),
+                )
+            }
+        };
+        if end_line < start_line {
+            return String::new();
+        }
+
+        let mut lines: Vec<String> = Vec::new();
+        for (offset, line) in logical[start_line..=end_line].iter().enumerate() {
+            let line_index = start_line + offset;
+            let chars: Vec<char> = line.chars().collect();
+            let len = chars.len();
+            let (from, to) = if start_line == end_line {
+                (start_offset.min(len), end_offset.min(len))
+            } else if line_index == start_line {
+                (start_offset.min(len), len)
+            } else if line_index == end_line {
+                (0, end_offset.min(len))
+            } else {
+                (0, len)
+            };
+            let slice: String = chars[from..to.max(from)].iter().collect();
+            lines.push(slice.trim_end().to_string());
+        }
+        // Drop blank lines dragged past the end of the content so the copy
+        // doesn't gain trailing newlines.
+        while lines.last().is_some_and(|line| line.is_empty()) {
+            lines.pop();
+        }
+        lines.join("\n")
+    }
+
     /// Checks if the process is likely in interactive/raw mode
     /// Uses both alternate screen detection and cursor movement patterns
     pub fn handles_arrow_keys(&self) -> bool {
@@ -853,6 +944,80 @@ mod tests {
             pty.handles_arrow_keys(),
             "Should detect cursor hide as interactive"
         );
+    }
+
+    #[test]
+    fn test_selected_text_single_and_multi_row() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"line one\r\nline two\r\nline three\r\n");
+
+        // Single row, partial columns.
+        assert_eq!(pty.selected_text((0, 0), (0, 3)), "line");
+        // Whole second row (trailing whitespace trimmed).
+        assert_eq!(pty.selected_text((1, 0), (1, 20)), "line two");
+        // Spanning two rows: tail of row 0 + head of row 1.
+        assert_eq!(pty.selected_text((0, 5), (1, 3)), "one\nline");
+    }
+
+    #[test]
+    fn test_selected_text_out_of_range_is_empty() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"hello\r\n");
+        // A start row past the content yields nothing rather than panicking.
+        assert_eq!(pty.selected_text((9999, 0), (9999, 5)), "");
+    }
+
+    #[test]
+    fn test_selected_text_joins_wrapped_rows_unwrapped() {
+        let pty = PtyInstance::non_interactive();
+        // 100 chars at 80 cols wraps onto two visual rows (0: 80, 1: 20).
+        let long = "a".repeat(100);
+        pty.process_output(format!("{long}\r\n").as_bytes());
+
+        // Selecting across both visual rows yields the original unwrapped line
+        // with no newline injected at the wrap point.
+        assert_eq!(pty.selected_text((0, 0), (1, 19)), long);
+        assert!(!pty.selected_text((0, 0), (1, 19)).contains('\n'));
+    }
+
+    #[test]
+    fn test_selected_text_partial_span_across_wrap_boundary() {
+        let pty = PtyInstance::non_interactive();
+        // A 100-char line of repeating digits so each column maps to a known
+        // character: index i holds the digit (i % 10).
+        let line: String = (0..100)
+            .map(|i| char::from(b'0' + (i % 10) as u8))
+            .collect();
+        pty.process_output(format!("{line}\r\n").as_bytes());
+
+        // Select from visual row 0 col 75 through visual row 1 col 4. The wrap
+        // is at column 80, so this is character offsets 75..=84 of the unwrapped
+        // line — the slice must cross the wrap point with the right columns.
+        assert_eq!(pty.selected_text((0, 75), (1, 4)), "5678901234");
+    }
+
+    #[test]
+    fn test_selected_text_trailing_empty_rows_dont_shift_columns() {
+        let pty = PtyInstance::non_interactive();
+        pty.process_output(b"alpha\r\nbravo\r\n");
+
+        // Dragging the selection end down into the empty rows below the content
+        // must not pull the end column up onto "bravo" (the previous bug, where
+        // the trimmed re-wrapped array clamped end_row and truncated the line).
+        assert_eq!(pty.selected_text((0, 0), (5, 3)), "alpha\nbravo");
+    }
+
+    #[test]
+    fn test_selected_text_includes_scrollback_rows() {
+        let pty = PtyInstance::non_interactive();
+        // 24-row viewport: writing 30 lines pushes the first 6 into scrollback.
+        for i in 0..30 {
+            pty.process_output(format!("line {i}\r\n").as_bytes());
+        }
+        // Absolute row 0 is the oldest scrollback row, lining up with the
+        // coordinates `content_coords_at` produces.
+        assert_eq!(pty.selected_text((0, 0), (0, 5)), "line 0");
+        assert_eq!(pty.selected_text((2, 0), (2, 5)), "line 2");
     }
 
     #[test]

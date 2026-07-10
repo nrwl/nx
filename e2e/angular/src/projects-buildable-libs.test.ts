@@ -131,23 +131,23 @@ describe('Angular Projects - Buildable Libraries', () => {
 
     // update the nx.json
     updateJson('nx.json', (config) => {
+      const inputs =
+        config.namedInputs && 'production' in config.namedInputs
+          ? ['production', '^production']
+          : ['default', '^default'];
+      const defaults: Record<string, unknown> = {
+        cache: true,
+        dependsOn: ['^build'],
+        inputs,
+      };
+      const targets = [
+        '@nx/angular:webpack-browser',
+        '@nx/angular:browser-esbuild',
+      ];
       config.targetDefaults ??= {};
-      config.targetDefaults['@nx/angular:webpack-browser'] ??= {
-        cache: true,
-        dependsOn: [`^build`],
-        inputs:
-          config.namedInputs && 'production' in config.namedInputs
-            ? ['production', '^production']
-            : ['default', '^default'],
-      };
-      config.targetDefaults['@nx/angular:browser-esbuild'] ??= {
-        cache: true,
-        dependsOn: [`^build`],
-        inputs:
-          config.namedInputs && 'production' in config.namedInputs
-            ? ['production', '^production']
-            : ['default', '^default'],
-      };
+      for (const target of targets) {
+        config.targetDefaults[target] ??= defaults;
+      }
       return config;
     });
 

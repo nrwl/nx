@@ -4,10 +4,6 @@ jest.mock('../utils/ci/is-ci', () => ({
   isCI: jest.fn(() => false),
 }));
 
-jest.mock('../utils/git/git', () => ({
-  isGitAvailable: jest.fn(() => true),
-}));
-
 jest.mock('../utils/ai/ai-output', () => ({
   isAiAgent: jest.fn(() => false),
   detectAiAgentName: jest.fn(() => null),

@@ -5,7 +5,7 @@
     { "glob": "**/files/**/.gitkeep" },
     { "glob": "src/**/schema.json" },
     { "glob": "src/**/schema.d.ts" },
-    { "glob": "src/migrations/**/*.md" },
+    { "glob": "src/**/*.md" },
     "LICENSE"
   ]
 }

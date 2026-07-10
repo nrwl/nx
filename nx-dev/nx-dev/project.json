@@ -28,7 +28,7 @@
         { "env": "NEXT_PUBLIC_NO_INDEX" }
       ],
       "outputs": ["{workspaceRoot}/nx-dev/nx-dev/public/sitemap*.xml"],
-      "command": "pnpm next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
+      "command": "next-sitemap --config ./next-sitemap.config.js && node ./scripts/patch-sitemap-index.mjs",
       "options": {
         "cwd": "nx-dev/nx-dev"
       }

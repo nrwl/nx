@@ -253,7 +253,8 @@
         "typecheck": true,
         "build": {
           "targetName": "build-base"
-        }
+        },
+        "compiler": "tsgo"
       }
     },
     {
@@ -261,7 +262,8 @@
       "include": ["e2e/**/*", "nx-dev/ui-fence/**/*"],
       "options": {
         "typecheck": true,
-        "build": false
+        "build": false,
+        "compiler": "tsgo"
       }
     },
     {

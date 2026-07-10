@@ -1143,4 +1143,43 @@ describe('app', () => {
       });
     });
   });
+
+  describe('--rootProject base compiler options', () => {
+    it('should inline "bundler" moduleResolution into the root tsconfig.json when typescript is not declared', async () => {
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
+      });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // default tree has no declared typescript -> assumes the >=6 default
+      expect(compilerOptions.moduleResolution).toBe('bundler');
+      expect(compilerOptions.strict).toBe(false);
+      // module and target come from the inlined base options
+      expect(compilerOptions.module).toBe('esnext');
+      expect(compilerOptions.target).toBe('es2015');
+      // esModuleInterop is an explicit override on top of the base options
+      expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+
+    it('should inline "node10" moduleResolution into the root tsconfig.json when typescript is pinned below 6', async () => {
+      updateJson(tree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+
+      await applicationGenerator(tree, {
+        name: 'my-node-app',
+        directory: '.',
+        addPlugin: true,
+      });
+
+      const { compilerOptions } = readJson(tree, 'tsconfig.json');
+      // typescript <6 is declared -> node-family moduleResolution
+      expect(compilerOptions.moduleResolution).toBe('node10');
+      expect(compilerOptions.strict).toBe(false);
+      expect(compilerOptions.esModuleInterop).toBe(true);
+    });
+  });
 });

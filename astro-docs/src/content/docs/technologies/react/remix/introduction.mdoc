@@ -1,6 +1,6 @@
 ---
-title: Remix Plugin for Nx
-description: Create and manage Remix applications in your Nx workspace with inferred build, dev, start, and typecheck tasks, plus generators for apps, libraries, routes, loaders, and actions.
+title: Nx with Remix
+description: Nx scales your Remix monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [remix, react]
 sidebar:
   label: 'Introduction'
@@ -9,7 +9,7 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications).
+The Remix plugin for Nx, `@nx/remix`, helps you build and scale a Remix monorepo. It automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications).
 
 You don't need the plugin to use Remix with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, route scaffolding, and simplified configuration.
 
@@ -228,26 +228,11 @@ nx show project my-app
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI considerations
+## Set up CI for your Remix monorepo
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test typecheck lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
-Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
-
-### Remote caching
-
-Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

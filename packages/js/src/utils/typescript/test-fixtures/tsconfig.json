@@ -6,6 +6,8 @@
     "noEmit": true,
     "incremental": false,
     "module": "esnext",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "noUncheckedSideEffectImports": false
   }
 }

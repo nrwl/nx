@@ -42,7 +42,7 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
+      "command": "tsx ./scripts/nx-release.ts"
     },
     "start-docker-registry": {
       "continuous": true,

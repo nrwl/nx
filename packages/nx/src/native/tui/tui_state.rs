@@ -16,7 +16,7 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchInfo, BatchStatus, RunMode};
+use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, RunMode};
 use super::pty::PtyInstance;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
@@ -83,6 +83,14 @@ pub struct TuiState {
 
     // === Cloud Message ===
     cloud_message: Option<String>,
+    /// Structured Nx Cloud link (display label, href URL), shown as a clickable
+    /// label in place of the raw cloud message when set.
+    cloud_link: Option<(String, String)>,
+
+    // === Performance Report ===
+    /// Stored here (not on the per-instance popup) so it survives mode switches;
+    /// both apps re-hydrate their popup from this on construction.
+    exit_summary: Option<PerformanceSummaryPayload>,
 
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
@@ -149,6 +157,8 @@ impl TuiState {
             is_forced_shutdown: false,
             user_has_interacted: false,
             cloud_message: None,
+            cloud_link: None,
+            exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
@@ -443,14 +453,30 @@ impl TuiState {
 
     // === User Interaction Methods ===
 
-    /// Mark that the user has interacted with the TUI
+    /// Mark that the user has interacted with the TUI.
+    ///
+    /// Also cancels any pending auto-exit countdown: that countdown only applies
+    /// while the user is idle, so any interaction keeps the TUI running. The explicit
+    /// quit handlers (q / Ctrl-C) re-schedule a quit when the user actually confirms,
+    /// so this can't strand a deliberate quit.
     pub fn mark_user_interacted(&mut self) {
         self.user_has_interacted = true;
+        self.quit_at = None;
     }
 
     /// Check if the user has interacted with the TUI
     pub fn has_user_interacted(&self) -> bool {
         self.user_has_interacted
+    }
+
+    // === Performance Report Methods ===
+
+    pub fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        self.exit_summary = Some(summary);
+    }
+
+    pub fn exit_summary(&self) -> Option<PerformanceSummaryPayload> {
+        self.exit_summary.clone()
     }
 
     // === Forced Shutdown Methods ===
@@ -475,6 +501,16 @@ impl TuiState {
     /// Get the cloud message (if any)
     pub fn get_cloud_message(&self) -> Option<&str> {
         self.cloud_message.as_deref()
+    }
+
+    /// Set the structured cloud link (display label, href URL).
+    pub fn set_cloud_link(&mut self, link: Option<(String, String)>) {
+        self.cloud_link = link;
+    }
+
+    /// Get the structured cloud link (if any).
+    pub fn get_cloud_link(&self) -> Option<&(String, String)> {
+        self.cloud_link.as_ref()
     }
 
     // === UI State Methods (for mode switching persistence) ===
@@ -875,6 +911,21 @@ mod tests {
 
         // Now true
         assert!(state.has_user_interacted());
+    }
+
+    #[test]
+    fn test_interaction_cancels_pending_auto_exit() {
+        let mut state = create_test_state();
+
+        // An auto-exit countdown is pending.
+        state.schedule_quit(Duration::from_secs(3));
+        assert!(state.quit_at.is_some());
+
+        // Interacting keeps the TUI running: the pending quit is cleared, not just
+        // "not yet reached".
+        state.mark_user_interacted();
+        assert!(state.quit_at.is_none());
+        assert!(!state.should_quit());
     }
 
     // === Forced Shutdown Tests ===

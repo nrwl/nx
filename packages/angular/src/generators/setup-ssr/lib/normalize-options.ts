@@ -1,11 +1,9 @@
-import { promptWhenInteractive } from '@nx/devkit/internal';
 import {
   joinPathFragments,
   readProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
 import { isNgStandaloneApp } from '../../../utils/nx-devkit/ast-utils';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedGeneratorOptions, Schema } from '../schema';
 
 export async function normalizeOptions(
@@ -17,27 +15,6 @@ export async function normalizeOptions(
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@angular/build:application' ||
     targets.build.executor === '@nx/angular:application';
-
-  if (options.serverRouting === undefined && isUsingApplicationBuilder) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
-    if (angularMajorVersion === 19) {
-      options.serverRouting = await promptWhenInteractive<{
-        serverRouting: boolean;
-      }>(
-        {
-          type: 'confirm',
-          name: 'serverRouting',
-          message:
-            'Would you like to use the Server Routing and App Engine APIs (Developer Preview) for this server application?',
-          initial: false,
-        },
-        { serverRouting: false }
-      ).then(({ serverRouting }) => serverRouting);
-    } else {
-      options.serverRouting = true;
-    }
-  }
 
   const isStandaloneApp = isNgStandaloneApp(tree, options.project);
 
@@ -52,7 +29,6 @@ export async function normalizeOptions(
     skipFormat: options.skipFormat ?? false,
     standalone: options.standalone ?? isStandaloneApp,
     hydration: options.hydration ?? true,
-    serverRouting: options.serverRouting,
     isUsingApplicationBuilder,
     buildTargetTsConfigPath:
       targets.build.options?.tsConfig ??

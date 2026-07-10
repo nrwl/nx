@@ -3,7 +3,7 @@ use crate::native::tasks::types::{Task, TaskResult};
 use super::{
     app::Focus,
     components::{task_selection_manager::SelectionEntry, tasks_list::TaskStatus},
-    lifecycle::{BatchInfo, TuiMode},
+    lifecycle::{BatchInfo, BatchStatus, TuiMode},
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -33,17 +33,23 @@ pub enum Action {
     UpdateTaskStatus(String, TaskStatus),
     SetTaskTiming(String, i64, i64),
     UpdateCloudMessage(String),
+    /// Set a structured Nx Cloud link to render as a clickable label (display
+    /// label, href URL). Distinct from `UpdateCloudMessage` so the displayed
+    /// text and the opened URL can differ (e.g. "View in Nx Cloud").
+    UpdateCloudLink(String, String),
     UpdateFocus(Focus),
     StartCommand(Option<u32>),
     StartTasks(Vec<Task>),
     EndTasks(Vec<TaskResult>),
     ToggleDebugMode,
+    ToggleMouseCapture,
     SendConsoleMessage(String),
     ConsoleMessengerAvailable(bool),
     EndCommand,
     ShowHint(String),
     SwitchMode(TuiMode),
     StartBatch(String, BatchInfo),
+    EndBatch(String, BatchStatus),
     ExpandBatch(String),
     CollapseBatch(String),
 }

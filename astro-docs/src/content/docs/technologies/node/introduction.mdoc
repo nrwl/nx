@@ -1,13 +1,13 @@
 ---
-title: Node.js Plugin for Nx
-description: Learn how to use the @nx/node plugin to create and manage Node.js applications and libraries in your Nx workspace, including setup, building, and testing.
+title: Nx with Node.js
+description: Nx scales your Node.js monorepo with caching, distributed task execution, and affected-only builds.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Node Plugin contains generators and executors to manage Node applications within an Nx workspace. It provides:
+The Node Plugin contains generators and executors to manage Node applications within an Nx workspace, making it the foundation for running a Node.js monorepo. It provides:
 
 ## Requirements
 
@@ -149,3 +149,9 @@ For additional information on Node.js debugging, see the [Node.js debugging gett
 
 - [Using Cypress](/docs/technologies/test-tools/cypress/introduction)
 - [Using Jest](/docs/technologies/test-tools/jest/introduction)
+
+## Set up CI for your Node.js monorepo
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

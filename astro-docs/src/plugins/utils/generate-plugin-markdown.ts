@@ -72,11 +72,15 @@ export function generatePackageUpdateItem(name: string, item: any): string {
 
 export function getMigrationsMarkdown(
   pluginName: string,
-  items: Map<string, PluginMigrationItem>
+  items: Map<string, PluginMigrationItem>,
+  introPath?: string
 ): string {
   const packageName = `@nx/${pluginName}`;
 
   let markdown = ``;
+  if (introPath) {
+    markdown += `For an overview of the plugin and setup instructions, see the [${packageName} introduction](${introPath}).\n\n`;
+  }
   if (items.size === 0) {
     markdown += `No migrations found for \`${packageName}\`.
 Nx only retains migrations for the last 2 major versions of Nx.
@@ -162,7 +166,8 @@ Below is a complete reference for all available migrations.
 
 export function getGeneratorsMarkdown(
   pluginName: string,
-  items: Map<string, PluginItem>
+  items: Map<string, PluginItem>,
+  introPath?: string
 ): string {
   const packageName = `@nx/${pluginName}`;
 
@@ -170,6 +175,10 @@ export function getGeneratorsMarkdown(
 The ${packageName} plugin provides various generators to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available generators and their options.
 `;
+
+  if (introPath) {
+    markdown += `\nFor an overview of the plugin and setup instructions, see the [${packageName} introduction](${introPath}).\n`;
+  }
 
   // Sort items alphabetically
   const sortedItems = Array.from(items.entries()).sort(([a], [b]) =>
@@ -293,7 +302,8 @@ nx generate ${packageName}:<generator> --help
 
 export function getExecutorsMarkdown(
   pluginName: string,
-  items: Map<string, any>
+  items: Map<string, any>,
+  introPath?: string
 ): string {
   const packageName = `@nx/${pluginName}`;
 
@@ -301,6 +311,10 @@ export function getExecutorsMarkdown(
   The ${packageName} plugin provides various executors to help you create and configure ${pluginName} projects within your Nx workspace.
 Below is a complete reference for all available executors and their options.
 `;
+
+  if (introPath) {
+    markdown += `\nFor an overview of the plugin and setup instructions, see the [${packageName} introduction](${introPath}).\n`;
+  }
 
   // Sort items alphabetically
   const sortedItems = Array.from(items.entries()).sort(([a], [b]) =>

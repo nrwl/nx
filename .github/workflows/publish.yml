@@ -636,7 +636,7 @@ jobs:
       - name: (Stable Release Only) Trigger Docs Release
         # Publish docs only on a full release
         if: ${{ !github.event.release.prerelease && github.event_name == 'release' }}
-        run: npx ts-node -P ./scripts/tsconfig.scripts.json  ./scripts/release-docs.ts
+        run: npx tsx ./scripts/release-docs.ts
 
       - name: (PR Release Only) Create comment for successful PR release
         if: success() && github.event.inputs.pr

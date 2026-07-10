@@ -29,7 +29,11 @@ async function createOrchestrator(
   );
   const taskResultsLifecycle = new TaskResultsLifeCycle();
   const compositedLifeCycle: LifeCycle = new CompositeLifeCycle([
-    ...constructLifeCycles(invokeRunnerTerminalLifecycle),
+    ...constructLifeCycles(
+      invokeRunnerTerminalLifecycle,
+      fullTaskGraph,
+      nxJson
+    ),
     taskResultsLifecycle,
     lifeCycle,
   ]);

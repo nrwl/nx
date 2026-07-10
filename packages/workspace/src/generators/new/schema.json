@@ -109,6 +109,12 @@
     "useProjectJson": {
       "type": "boolean",
       "description": "Use a `project.json` configuration file instead of inlining the Nx configuration in the `package.json` file."
+    },
+    "skipEmptyDirCheck": {
+      "type": "boolean",
+      "description": "Skip the check that the target directory is empty. Used internally by create-nx-workspace when scaffolding into the current directory.",
+      "default": false,
+      "x-priority": "internal"
     }
   },
   "additionalProperties": true

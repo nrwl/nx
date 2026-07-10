@@ -1,5 +1,7 @@
+import type { CompilerOptions } from 'typescript';
 import { JsxEmit, ModuleKind, ScriptTarget } from 'typescript';
 import {
+  getTranspiler,
   getTsNodeCompilerOptions,
   isCjsSyntaxError,
   isNativeTypeStripError,
@@ -7,7 +9,13 @@ import {
   isTsEsmNamedExportLinkageError,
   isTsEsmSyntaxError,
   NODENEXT_ESM_RESOLVER_SOURCE,
+  nodeNextEsmResolveHook,
 } from './register';
+
+// Avoid a real swc registration side effect when exercising getTranspiler.
+jest.mock('@swc-node/register/register', () => ({
+  register: () => () => {},
+}));
 
 describe('getTsNodeCompilerOptions', () => {
   it('should replace enum value with enum key for module', () => {
@@ -99,6 +107,40 @@ describe('isNativeStripPreferred', () => {
     process.env.NX_PREFER_TS_NODE = 'true';
     delete process.env.NX_PREFER_NODE_STRIP_TYPES;
     expect(loadIsNativeStripPreferred()).toBe(false);
+  });
+});
+
+describe('getTranspiler', () => {
+  // TS6 requires the suppression flag to avoid hard-erroring on deprecated options.
+  it('sets ignoreDeprecations to "6.0" on TypeScript >= 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '6.0',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toEqual('6.0');
+    });
+    jest.unmock('typescript');
+  });
+
+  // TS5 rejects the '6.0' value (TS5103) so the option must stay absent.
+  it('leaves ignoreDeprecations unset on TypeScript < 6', () => {
+    jest.isolateModules(() => {
+      jest.doMock('typescript', () => ({
+        ...jest.requireActual('typescript'),
+        versionMajorMinor: '5.9',
+      }));
+      const { getTranspiler: fresh } =
+        require('./register') as typeof import('./register');
+      const opts: CompilerOptions = {};
+      fresh(opts);
+      expect(opts.ignoreDeprecations).toBeUndefined();
+    });
+    jest.unmock('typescript');
   });
 });
 
@@ -382,5 +424,52 @@ describe('NodeNext ESM resolve hook (NODENEXT_ESM_RESOLVER_SOURCE)', () => {
     await expect(
       resolve('./nodes.js', { parentURL: TS_PARENT }, nextResolve)
     ).rejects.toBe(boom);
+  });
+});
+
+// The rewrite logic is exhaustively covered above against the shipped source;
+// these cases only verify the synchronous transcription used by
+// `module.registerHooks()` - `nextResolve` returns/throws synchronously here
+// rather than resolving/rejecting a promise.
+describe('NodeNext ESM resolve hook (nodeNextEsmResolveHook, sync)', () => {
+  const TS_PARENT = 'file:///ws/src/index.ts';
+
+  function makeNextResolve(existing: string[]) {
+    const set = new Set(existing);
+    const nextResolve = (specifier: string) => {
+      if (set.has(specifier)) return { url: `file:///resolved/${specifier}` };
+      throw Object.assign(new Error(`Cannot find module '${specifier}'`), {
+        code: 'ERR_MODULE_NOT_FOUND',
+      });
+    };
+    return nextResolve;
+  }
+
+  it('returns the .ts fallback when the .js specifier is missing', () => {
+    const result = nodeNextEsmResolveHook(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      makeNextResolve(['./nodes.ts'])
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.ts');
+  });
+
+  it('returns the real .js without a fallback attempt when it resolves', () => {
+    const result = nodeNextEsmResolveHook(
+      './nodes.js',
+      { parentURL: TS_PARENT },
+      makeNextResolve(['./nodes.js'])
+    );
+    expect(result.url).toBe('file:///resolved/./nodes.js');
+  });
+
+  it('rethrows synchronously when no fallback resolves', () => {
+    expect(() =>
+      nodeNextEsmResolveHook(
+        './nodes.js',
+        { parentURL: TS_PARENT },
+        makeNextResolve([])
+      )
+    ).toThrow(expect.objectContaining({ code: 'ERR_MODULE_NOT_FOUND' }));
   });
 });

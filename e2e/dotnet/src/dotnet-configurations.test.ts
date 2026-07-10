@@ -13,7 +13,6 @@ import {
   createDotNetProject,
   addProjectReference,
 } from './utils/create-dotnet-project';
-import { check } from 'yargs';
 
 describe('.NET Plugin - Configuration Behavior', () => {
   beforeAll(() => {

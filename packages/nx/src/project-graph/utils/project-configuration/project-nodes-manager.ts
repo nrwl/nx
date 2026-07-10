@@ -13,7 +13,10 @@ import {
 import { validateProject } from './target-normalization';
 import { ProjectNameInNodePropsManager } from './name-substitution-manager';
 import type { ConfigurationSourceMaps, SourceInformation } from './source-maps';
-import { targetSourceMapKey } from './source-maps';
+import {
+  recordTargetIdentitySourceMapInfo,
+  targetSourceMapKey,
+} from './source-maps';
 
 import { minimatch } from 'minimatch';
 import { isGlobPattern } from '../../../utils/globs';
@@ -28,7 +31,9 @@ export function mergeProjectConfigurationIntoRootMap(
   // This function is used when reading project configuration
   // in generators, where we don't want to do this.
   skipTargetNormalization?: boolean,
-  deferSpreadsWithoutBase?: boolean
+  // Preserve `'...'` spreads that have no base value (default) so a later
+  // merge layer can resolve them; pass `false` only for a final merge.
+  deferSpreadsWithoutBase: boolean = true
 ): {
   nameChanged: boolean;
 } {
@@ -171,7 +176,15 @@ export function mergeProjectConfigurationIntoRootMap(
       const target = project.targets?.[targetName];
 
       if (sourceMap) {
-        sourceMap[targetSourceMapKey(targetName)] = sourceInformation;
+        // A target default stamping fields onto an existing target must not
+        // steal provenance for the target's existence; real plugins still win
+        // last. Field-level attribution is handled inside
+        // `mergeTargetConfigurations`.
+        recordTargetIdentitySourceMapInfo(
+          sourceMap,
+          targetSourceMapKey(targetName),
+          sourceInformation
+        );
       }
 
       const normalizedTarget = skipTargetNormalization
@@ -308,11 +321,15 @@ export class ProjectNodesManager {
   ): void {
     const previousName = this.rootMap[project.root]?.name;
 
+    // This is a final apply — dangling `'...'` spreads must resolve (expand
+    // against the empty base) so they never leak into the project graph.
     mergeProjectConfigurationIntoRootMap(
       this.rootMap,
       project,
       configurationSourceMaps,
-      sourceInformation
+      sourceInformation,
+      undefined,
+      false
     );
 
     const merged = this.rootMap[project.root];

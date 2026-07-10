@@ -8,8 +8,6 @@
     "types": ["node"],
     "target": "ES2020",
     "composite": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
     "noImplicitAny": false,
     "importHelpers": true,
     "noUnusedLocals": false,
