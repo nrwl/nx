@@ -231,6 +231,45 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should share one Angular compilation between the browser and server configs', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+
+      expect(configs).toHaveLength(2);
+      const [browserPlugin, serverPlugin] = configs.map((config) =>
+        config.plugins?.find(
+          (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+        )
+      );
+      expect(browserPlugin['sharedAngularPlugin']).toBeDefined();
+      expect(browserPlugin['sharedAngularPlugin']).toBe(
+        serverPlugin['sharedAngularPlugin']
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
+  it('should not create a shared Angular compilation for a browser-only build', async () => {
+    const configs = await _createConfig(configBase);
+
+    expect(configs).toHaveLength(1);
+    const browserPlugin = configs[0].plugins?.find(
+      (plugin) => plugin?.constructor.name === 'NgRspackPlugin'
+    );
+    expect(browserPlugin['sharedAngularPlugin']).toBeUndefined();
+  }, 10000);
+
   describe('createConfig', () => {
     const runCreateConfig = () => {
       return createConfig(

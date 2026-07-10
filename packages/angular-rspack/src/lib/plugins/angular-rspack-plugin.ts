@@ -249,20 +249,6 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         this.#setupWarnings = [];
       }
 
-      // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
-      compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
-        if (!watchRunInitialized && compilation.errors.length > 0) {
-          const stats = compilation.getStats();
-          const compilationError = statsErrorsToString(
-            stats.toJson(),
-            getStatsOptions(this.#_options.verbose)
-          );
-          callback(new Error(compilationError));
-        } else {
-          callback();
-        }
-      });
-
       compilation.hooks.processAssets.tap(
         {
           name: PLUGIN_NAME,
@@ -437,28 +423,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     });
 
-    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
-      // Despite the typings, stats is undefined when the run fails before
-      // producing stats (e.g. the afterSeal hook above fails the seal for a
-      // build with errors). Rspack reports that failure itself.
-      if (!stats) {
-        return;
-      }
-
-      // Get stats options - merge defaults with user's config if provided
-      const configStats = compiler.options.stats;
-      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
-      const statsOptions =
-        typeof configStats === 'object' && configStats !== null
-          ? { ...defaultStatsOptions, ...configStats }
-          : defaultStatsOptions;
-
-      rspackStatsLogger(stats, statsOptions);
-      // Don't forcibly exit the process with errors when in watch mode
-      if (!watchRunInitialized && stats.hasErrors()) {
-        process.exit(1);
-      }
-    });
+    this.#applyBuildResultReporting(compiler, () => watchRunInitialized);
 
     // Dispose the shared component stylesheet bundler after a one-shot build so
     // its esbuild service (a child process and sockets, with @angular/build >=
@@ -502,35 +467,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
       }
     );
 
-    compiler.hooks.normalModuleFactory.tap(
-      PLUGIN_NAME,
-      (normalModuleFactory) => {
-        normalModuleFactory.hooks.beforeResolve.tap(PLUGIN_NAME, (data) => {
-          if (data.request.startsWith('angular:jit:')) {
-            const path = data.request.split(';')[1];
-            data.request = `${normalize(
-              resolve(dirname(data.contextInfo.issuer), path)
-            )}?raw`;
-          }
-        });
-      }
-    );
+    this.#applyJitResourceResolution(compiler);
 
-    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
-      (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
-        javascriptTransformer: this
-          .#javascriptTransformer as unknown as JavaScriptTransformer,
-        typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
-        babelFileCache: this.#sourceFileCache.babelFileCache,
-        useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
-        angularCompilationFailed:
-          this.#initializationError !== undefined ||
-          this.#emitError !== undefined,
-        stylesheetMetafileInputs: this.#stylesheetMetafileInputs,
-        resourceDependencies: this.#resourceDependencies,
-        i18n: this.#i18n,
-      });
-    });
+    this.#exposeLoaderState(compiler);
 
     if (this.#_options.serviceWorker) {
       compiler.hooks.done.tapAsync(
@@ -575,6 +514,125 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         }
       );
     }
+  }
+
+  /**
+   * Wires a compiler to consume this plugin instance's compilation state
+   * without running an Angular compilation of its own. The server compiler
+   * of an SSR build runs after the browser compiler
+   * (`dependencies: ['browser']`), whose program already includes the server
+   * entry points, so its loaders read the emitted files straight from this
+   * instance's caches.
+   */
+  applyToDependentCompiler(compiler: Compiler) {
+    let watchRunInitialized = false;
+    let currentWatchingModifiedFiles = new Set<string>();
+    // Keeps modified files watched across rebuilds (same invariant as the
+    // matching tap in apply()).
+    compiler.hooks.compilation.tap(PLUGIN_NAME + '_fileDeps', (compilation) => {
+      currentWatchingModifiedFiles.forEach((file) => {
+        compilation.fileDependencies.add(file);
+      });
+    });
+    compiler.hooks.watchRun.tap(PLUGIN_NAME, (watchRunCompiler) => {
+      watchRunInitialized = true;
+      currentWatchingModifiedFiles = new Set(
+        watchRunCompiler.watching?.compiler?.modifiedFiles
+      );
+    });
+
+    // Surface a failed Angular compilation on this compiler too; its loaders
+    // emit empty modules in that case.
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      const angularCompilationError =
+        this.#initializationError ?? this.#emitError;
+      if (angularCompilationError) {
+        addError(compilation, angularCompilationError);
+      }
+    });
+
+    this.#applyBuildResultReporting(compiler, () => watchRunInitialized);
+
+    this.#applyJitResourceResolution(compiler);
+
+    this.#exposeLoaderState(compiler);
+  }
+
+  // Fails the seal of an errored one-shot build and logs the compiler's
+  // stats; watch builds stay alive and recover on the next rebuild.
+  #applyBuildResultReporting(compiler: Compiler, isWatchRun: () => boolean) {
+    compiler.hooks.thisCompilation.tap(PLUGIN_NAME, (compilation) => {
+      // Handle errors thrown by loaders that prevent sealing (but ignore for watch mode)
+      compilation.hooks.afterSeal.tapAsync(PLUGIN_NAME, (callback) => {
+        if (!isWatchRun() && compilation.errors.length > 0) {
+          const stats = compilation.getStats();
+          const compilationError = statsErrorsToString(
+            stats.toJson(),
+            getStatsOptions(this.#_options.verbose)
+          );
+          callback(new Error(compilationError));
+        } else {
+          callback();
+        }
+      });
+    });
+
+    compiler.hooks.afterDone.tap(PLUGIN_NAME, (stats) => {
+      // Despite the typings, stats is undefined when the run fails before
+      // producing stats (e.g. the afterSeal hook above fails the seal for a
+      // build with errors). Rspack reports that failure itself.
+      if (!stats) {
+        return;
+      }
+
+      // Get stats options - merge defaults with user's config if provided
+      const configStats = compiler.options.stats;
+      const defaultStatsOptions = getStatsOptions(this.#_options.verbose);
+      const statsOptions =
+        typeof configStats === 'object' && configStats !== null
+          ? { ...defaultStatsOptions, ...configStats }
+          : defaultStatsOptions;
+
+      rspackStatsLogger(stats, statsOptions);
+      // Don't forcibly exit the process with errors when in watch mode
+      if (!isWatchRun() && stats.hasErrors()) {
+        process.exit(1);
+      }
+    });
+  }
+
+  #applyJitResourceResolution(compiler: Compiler) {
+    compiler.hooks.normalModuleFactory.tap(
+      PLUGIN_NAME,
+      (normalModuleFactory) => {
+        normalModuleFactory.hooks.beforeResolve.tap(PLUGIN_NAME, (data) => {
+          if (data.request.startsWith('angular:jit:')) {
+            const path = data.request.split(';')[1];
+            data.request = `${normalize(
+              resolve(dirname(data.contextInfo.issuer), path)
+            )}?raw`;
+          }
+        });
+      }
+    );
+  }
+
+  #exposeLoaderState(compiler: Compiler) {
+    compiler.hooks.compilation.tap(PLUGIN_NAME, (compilation) => {
+      (compilation as NgRspackCompilation)[NG_RSPACK_SYMBOL_NAME] = () => ({
+        javascriptTransformer: this
+          .#javascriptTransformer as unknown as JavaScriptTransformer,
+        typescriptFileCache: this.#sourceFileCache.typeScriptFileCache,
+        babelFileCache: this.#sourceFileCache.babelFileCache,
+        useTypeScriptTranspilation: this.#useTypeScriptTranspilation,
+        angularCompilationFailed:
+          this.#initializationError !== undefined ||
+          this.#emitError !== undefined,
+        stylesheetMetafileInputs: this.#stylesheetMetafileInputs,
+        resourceDependencies: this.#resourceDependencies,
+        i18n: this.#i18n,
+      });
+    });
   }
 
   private async setupCompilation(

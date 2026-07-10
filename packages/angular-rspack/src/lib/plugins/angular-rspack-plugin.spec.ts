@@ -595,6 +595,128 @@ describe('AngularRspackPlugin', () => {
     expect(state.resourceDependencies).toBe(resourceDependencies);
   });
 
+  describe('applyToDependentCompiler', () => {
+    function applyToBothCompilers() {
+      const ownerCompiler = createFakeCompiler();
+      const dependentCompiler = createFakeCompiler();
+      const plugin = new AngularRspackPlugin(options);
+      plugin.apply(ownerCompiler as never);
+      plugin.applyToDependentCompiler(dependentCompiler as never);
+      return { ownerCompiler, dependentCompiler };
+    }
+
+    async function fireAfterSeal(
+      compilation: ReturnType<typeof createFakeCompilation>
+    ) {
+      return await new Promise<Error | undefined>((resolve) => {
+        compilation.hooks.afterSeal.taps[0].fn((error?: Error) =>
+          resolve(error)
+        );
+      });
+    }
+
+    it('should expose the owning compilation state without compiling again', async () => {
+      const { ownerCompiler, dependentCompiler } = applyToBothCompilers();
+
+      await runBuildStart(ownerCompiler);
+
+      // the dependent compiler registers no compilation-driving hooks
+      await fireAsyncTaps(dependentCompiler.hooks.beforeRun, dependentCompiler);
+      await fireAsyncTaps(dependentCompiler.hooks.beforeCompile, {});
+      expect(setupCompilationMock).toHaveBeenCalledTimes(1);
+      expect(buildAndAnalyzeMock).toHaveBeenCalledTimes(1);
+
+      // its loaders read straight from the owning compiler's caches
+      const ownerCompilation = createFakeCompilation(ownerCompiler);
+      fireSyncTaps(ownerCompiler.hooks.compilation, ownerCompilation);
+      const dependentCompilation = createFakeCompilation(dependentCompiler);
+      fireSyncTaps(dependentCompiler.hooks.compilation, dependentCompilation);
+      const ownerState = (ownerCompilation as unknown as NgRspackCompilation)[
+        NG_RSPACK_SYMBOL_NAME
+      ]();
+      const dependentState = (
+        dependentCompilation as unknown as NgRspackCompilation
+      )[NG_RSPACK_SYMBOL_NAME]();
+      expect(dependentState.typescriptFileCache).toBe(
+        ownerState.typescriptFileCache
+      );
+      expect(dependentState.javascriptTransformer).toBe(
+        ownerState.javascriptTransformer
+      );
+    });
+
+    it('should surface an Angular compilation failure on the dependent compilation', async () => {
+      setupCompilationMock.mockRejectedValue(new Error('NgtscProgram failed'));
+      const { ownerCompiler, dependentCompiler } = applyToBothCompilers();
+
+      await runBuildStart(ownerCompiler);
+
+      const compilation = createFakeCompilation(dependentCompiler);
+      fireSyncTaps(dependentCompiler.hooks.thisCompilation, compilation);
+      expect(compilation.errors).toHaveLength(1);
+      expect(compilation.errors[0].message).toContain(
+        'Angular compilation initialization failed.'
+      );
+
+      fireSyncTaps(dependentCompiler.hooks.compilation, compilation);
+      const state = (compilation as unknown as NgRspackCompilation)[
+        NG_RSPACK_SYMBOL_NAME
+      ]();
+      expect(state.angularCompilationFailed).toBe(true);
+    });
+
+    it('should fail the seal of an errored one-shot dependent build', async () => {
+      const { dependentCompiler } = applyToBothCompilers();
+
+      const compilation = createFakeCompilation(dependentCompiler);
+      compilation.errors.push(new Error('loader failed'));
+      (compilation as unknown as { getStats: () => unknown }).getStats =
+        () => ({
+          toJson: () => ({ errors: [{ message: 'loader failed' }] }),
+        });
+      fireSyncTaps(dependentCompiler.hooks.thisCompilation, compilation);
+
+      const sealError = await fireAfterSeal(compilation);
+      expect(sealError).toBeInstanceOf(Error);
+      expect(sealError?.message).toContain('loader failed');
+    });
+
+    it('should not fail the seal of an errored watch rebuild', async () => {
+      const { dependentCompiler } = applyToBothCompilers();
+      fireSyncTaps(dependentCompiler.hooks.watchRun, dependentCompiler);
+
+      const compilation = createFakeCompilation(dependentCompiler);
+      compilation.errors.push(new Error('loader failed'));
+      fireSyncTaps(dependentCompiler.hooks.thisCompilation, compilation);
+
+      const sealError = await fireAfterSeal(compilation);
+      expect(sealError).toBeUndefined();
+    });
+
+    it('should not throw from afterDone when the run failed before producing stats', () => {
+      const { dependentCompiler } = applyToBothCompilers();
+
+      expect(() =>
+        fireSyncTaps(dependentCompiler.hooks.afterDone, undefined)
+      ).not.toThrow();
+    });
+
+    it('should keep watch-modified files tracked as dependencies of the dependent compiler', () => {
+      const { dependentCompiler } = applyToBothCompilers();
+
+      (dependentCompiler as { watching?: unknown }).watching = {
+        compiler: { modifiedFiles: new Set(['/root/src/app/app.ts']) },
+      };
+      fireSyncTaps(dependentCompiler.hooks.watchRun, dependentCompiler);
+
+      const compilation = createFakeCompilation(dependentCompiler);
+      fireSyncTaps(dependentCompiler.hooks.compilation, compilation);
+      expect(compilation.fileDependencies.add).toHaveBeenCalledWith(
+        '/root/src/app/app.ts'
+      );
+    });
+  });
+
   it('should drop stylesheet metafile inputs for modified files, including inline-style entries', async () => {
     setupCompilationMock.mockResolvedValueOnce({
       angularCompilation: { diagnoseFiles: vi.fn().mockResolvedValue({}) },

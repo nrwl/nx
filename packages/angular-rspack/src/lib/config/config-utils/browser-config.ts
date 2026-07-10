@@ -8,6 +8,7 @@ import type {
   NormalizedAngularRspackPluginOptions,
 } from '../../models';
 import { NgRspackPlugin } from '../../plugins/ng-rspack';
+import type { AngularRspackPlugin } from '../../plugins/angular-rspack-plugin';
 import type { SharedLicenseInputs } from '../../plugins/extract-licenses-plugin';
 import { getDevServerConfig } from './dev-server-config-utils';
 import { getPolyfillsEntry, toRspackEntries } from './entry-points';
@@ -22,7 +23,8 @@ export async function getBrowserConfig(
   hashFormat: HashFormat,
   defaultConfig: Configuration,
   swcTranspilationTransform: SwcTranspilationTransform,
-  sharedLicenseInputs?: SharedLicenseInputs
+  sharedLicenseInputs?: SharedLicenseInputs,
+  sharedAngularPlugin?: AngularRspackPlugin
 ): Promise<Configuration> {
   const isDevServer = isServeMode();
   const isProduction = process.env['NODE_ENV'] === 'production';
@@ -99,6 +101,7 @@ export async function getBrowserConfig(
         i18nOptions: i18n,
         platform: 'browser',
         sharedLicenseInputs,
+        sharedAngularPlugin,
       }),
     ],
   };

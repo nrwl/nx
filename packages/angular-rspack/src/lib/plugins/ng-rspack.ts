@@ -29,6 +29,7 @@ export class NgRspackPlugin implements RspackPluginInstance {
   readonly isPlatformServer: boolean;
   readonly i18n: I18nOptions;
   private readonly sharedLicenseInputs: SharedLicenseInputs | undefined;
+  private readonly sharedAngularPlugin: AngularRspackPlugin | undefined;
 
   constructor(
     pluginOptions: NormalizedAngularRspackPluginOptions,
@@ -41,12 +42,21 @@ export class NgRspackPlugin implements RspackPluginInstance {
        * overwriting each other's licenses file.
        */
       sharedLicenseInputs?: SharedLicenseInputs;
+      /**
+       * Angular compilation shared across the compilers of an SSR build: the
+       * browser compiler owns it (its program includes the server entry
+       * points) and the server compiler consumes its output instead of
+       * running a second compilation. When absent, each compiler runs its
+       * own compilation.
+       */
+      sharedAngularPlugin?: AngularRspackPlugin;
     }
   ) {
     this.pluginOptions = pluginOptions;
     this.i18n = extraOptions.i18nOptions;
     this.isPlatformServer = extraOptions.platform === 'server';
     this.sharedLicenseInputs = extraOptions.sharedLicenseInputs;
+    this.sharedAngularPlugin = extraOptions.sharedAngularPlugin;
   }
 
   apply(compiler: Compiler) {
@@ -131,7 +141,15 @@ export class NgRspackPlugin implements RspackPluginInstance {
       new I18nInlinePlugin(this.pluginOptions, this.i18n).apply(compiler);
     }
     new RxjsEsmResolutionPlugin().apply(compiler);
-    new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
+    if (this.sharedAngularPlugin) {
+      if (this.isPlatformServer) {
+        this.sharedAngularPlugin.applyToDependentCompiler(compiler);
+      } else {
+        this.sharedAngularPlugin.apply(compiler);
+      }
+    } else {
+      new AngularRspackPlugin(this.pluginOptions, this.i18n).apply(compiler);
+    }
     if (!this.isPlatformServer && this.pluginOptions.index) {
       new IndexHtmlPlugin({
         indexPath: this.pluginOptions.index.input,

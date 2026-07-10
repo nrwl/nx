@@ -17,6 +17,7 @@ import {
 import { assertSupportedRspackCoreVersion } from '../utils/assert-supported-rspack-version';
 import { isServeMode } from '../utils/rspack-serve-env';
 import type { SharedLicenseInputs } from '../plugins/extract-licenses-plugin';
+import { AngularRspackPlugin } from '../plugins/angular-rspack-plugin';
 
 export async function createConfig(
   defaultOptions: {
@@ -83,6 +84,14 @@ export async function _createConfig(
   const sharedLicenseInputs: SharedLicenseInputs | undefined =
     normalizedOptions.hasServer ? new Map() : undefined;
 
+  // An SSR build's compilers also share one Angular compilation: the browser
+  // program already includes the server entry points, so the server compiler
+  // consumes the browser compilation's output instead of running a second
+  // compilation of the same program.
+  const sharedAngularPlugin = normalizedOptions.hasServer
+    ? new AngularRspackPlugin(normalizedOptions, i18n)
+    : undefined;
+
   const configs: Configuration[] = [];
   if (normalizedOptions.hasServer) {
     const serverConfig: Configuration = await getServerConfig(
@@ -90,7 +99,8 @@ export async function _createConfig(
       i18n,
       defaultConfig,
       swcTranspilationTransform,
-      sharedLicenseInputs
+      sharedLicenseInputs,
+      sharedAngularPlugin
     );
     const mergedConfig = rspackMerge(serverConfig, rspackConfigOverrides ?? {});
     configs.push(mergedConfig);
@@ -102,7 +112,8 @@ export async function _createConfig(
     hashFormat,
     defaultConfig,
     swcTranspilationTransform,
-    sharedLicenseInputs
+    sharedLicenseInputs,
+    sharedAngularPlugin
   );
   const mergedConfig = rspackMerge(browserConfig, rspackConfigOverrides ?? {});
   configs.unshift(mergedConfig);
