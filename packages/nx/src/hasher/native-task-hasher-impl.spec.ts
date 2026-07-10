@@ -313,6 +313,64 @@ describe('native task hasher', () => {
     }
   });
 
+  it('should collect the same inputs when hashing again on the same hasher', async () => {
+    const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
+      'libs/parent': 'parent',
+    });
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      workspaceFiles.fileMap.projectFileMap
+    );
+    builder.addNode({
+      name: 'parent',
+      type: 'lib',
+      data: {
+        root: 'libs/parent',
+        targets: {
+          build: { executor: 'nx:run-commands', inputs: ['default'] },
+        },
+      },
+    });
+    const projectGraph = builder.getUpdatedProjectGraph();
+    const taskGraph = createTaskGraph(
+      projectGraph,
+      {},
+      ['parent'],
+      ['build'],
+      undefined,
+      {}
+    );
+    const hasher = new NativeTaskHasherImpl(
+      tempFs.tempDir,
+      nxJson,
+      projectGraph,
+      workspaceFiles.rustReferences,
+      { selectivelyHashTsConfig: false }
+    );
+    const tasks = [taskGraph.tasks['parent:build']];
+    const perTaskEnvs = { 'parent:build': {} };
+
+    // The matched-file indices caches persist on the hasher across calls;
+    // the second call expands paths from them instead of re-globbing.
+    const first = await hasher.hashTasks(
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      undefined,
+      true
+    );
+    const second = await hasher.hashTasks(
+      tasks,
+      taskGraph,
+      perTaskEnvs,
+      undefined,
+      true
+    );
+
+    expect(first[0].inputs.files).not.toHaveLength(0);
+    expect(sortHashInputs(second)).toEqual(sortHashInputs(first));
+  });
+
   it('should hash tasks where the project has dependencies', async () => {
     const workspaceFiles = await retrieveWorkspaceFiles(tempFs.tempDir, {
       'libs/parent': 'parent',

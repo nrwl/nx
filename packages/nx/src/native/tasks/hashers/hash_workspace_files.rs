@@ -16,8 +16,8 @@ pub(crate) type WorkspaceFileSetCache = OnceCache<String>;
 
 /// Compute-once cache for the matched file *indices* of a workspace fileset,
 /// into `all_workspace_files`. Persistable: 4 bytes/file and references the
-/// immutable FileData snapshot, so it never goes stale — the same guarantee
-/// `WorkspaceFileSetCache` relies on. Paths are expanded from it per call and
+/// immutable FileData snapshot, so it never goes stale (the same guarantee
+/// `WorkspaceFileSetCache` relies on). Paths are expanded from it per call and
 /// freed once handed to the input subscriber.
 pub(crate) type WorkspaceFileIndicesCache = OnceCache<Vec<u32>>;
 
@@ -131,7 +131,7 @@ pub fn collect_workspace_file_paths(
 
 /// The matched file indices of a workspace fileset, into `all_workspace_files`,
 /// in the same workspace-file order `collect_workspace_file_paths` yields.
-pub fn collect_workspace_file_indices(
+fn collect_workspace_file_indices(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
 ) -> Result<Vec<u32>> {
@@ -151,7 +151,7 @@ pub fn collect_workspace_file_indices(
         .collect())
 }
 
-pub(crate) fn collect_workspace_file_indices_cached(
+fn collect_workspace_file_indices_cached(
     workspace_file_sets: &[String],
     all_workspace_files: &[FileData],
     cache: &WorkspaceFileIndicesCache,
@@ -313,9 +313,11 @@ mod test {
         assert_eq!(expanded, direct);
 
         // Empty globs collect no indices, matching collect_workspace_file_paths.
-        let empty =
-            collect_workspace_file_indices(&["packages/{package}".to_string()], &all_workspace_files)
-                .unwrap();
+        let empty = collect_workspace_file_indices(
+            &["packages/{package}".to_string()],
+            &all_workspace_files,
+        )
+        .unwrap();
         assert!(empty.is_empty());
     }
 

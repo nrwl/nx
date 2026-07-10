@@ -14,8 +14,8 @@ pub(crate) type ProjectFileSetCache = OnceCache<String>;
 
 /// Compute-once cache for the matched file *indices* of a project fileset,
 /// into that project's `project_file_map` vec. Persistable: 4 bytes/file and
-/// references the immutable FileData snapshot, so it never goes stale — the
-/// same guarantee `ProjectFileSetCache` relies on. Paths are expanded from it
+/// references the immutable FileData snapshot, so it never goes stale (the
+/// same guarantee `ProjectFileSetCache` relies on). Paths are expanded from it
 /// per call and freed once handed to the input subscriber.
 pub(crate) type ProjectFileIndicesCache = OnceCache<Vec<u32>>;
 
@@ -80,7 +80,7 @@ pub fn collect_project_file_paths(
 
 /// The matched file indices of a project fileset, into `project_file_map[project_name]`,
 /// in the same project-file-map order `collect_project_file_paths` yields.
-pub fn collect_project_file_indices(
+fn collect_project_file_indices(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
@@ -99,7 +99,7 @@ pub fn collect_project_file_indices(
     )
 }
 
-pub(crate) fn collect_project_file_indices_cached(
+fn collect_project_file_indices_cached(
     project_name: &str,
     file_sets: &[String],
     project_file_map: &HashMap<String, Vec<FileData>>,
