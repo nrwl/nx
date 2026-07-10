@@ -5,7 +5,7 @@ import {
   DefinePlugin,
   RspackPluginInstance,
 } from '@rspack/core';
-import { posix, relative, resolve } from 'node:path';
+import { posix, relative, resolve, sep } from 'node:path';
 import { getEntryPoints } from '../config/config-utils/entry-points';
 import type {
   I18nOptions,
@@ -88,6 +88,31 @@ export class NgRspackPlugin implements RspackPluginInstance {
                 new compiler.rspack.sources.RawSource('{"type": "commonjs"}\n')
               );
             }
+          }
+        );
+      });
+    } else {
+      // Deployment tooling reads this at the output root of every build; the
+      // PrerenderPlugin overwrites it with the rendered routes after emit.
+      compiler.hooks.thisCompilation.tap('NgRspackPlugin', (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: 'NgRspackPlugin',
+            stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+          },
+          () => {
+            compilation.emitAsset(
+              posix.join(
+                ...relative(
+                  this.pluginOptions.outputPath.browser,
+                  this.pluginOptions.outputPath.base
+                ).split(sep),
+                'prerendered-routes.json'
+              ),
+              new compiler.rspack.sources.RawSource(
+                JSON.stringify({ routes: {} }, null, 2)
+              )
+            );
           }
         );
       });
