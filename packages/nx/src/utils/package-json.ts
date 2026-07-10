@@ -384,9 +384,25 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+
+  // Omit peer dependencies from the temp install. `ensurePackage` puts the
+  // workspace's `node_modules` on `NODE_PATH`, so a loaded package resolves its
+  // peers from the workspace instead of pulling its own (possibly incompatible)
+  // copies into the temp dir.
+  const omitPeerDependenciesFlag =
+    packageManager === 'npm' || packageManager === 'bun'
+      ? '--omit=peer'
+      : packageManager === 'pnpm'
+        ? '--config.auto-install-peers=false'
+        : '';
+  const installCommand = [
+    pmCommands.addDev,
+    `${pkg}@${requiredVersion}`,
+    omitPeerDependenciesFlag,
+    pmCommands.ignoreScriptsFlag,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const execOptions = {
     cwd: tempDir,
