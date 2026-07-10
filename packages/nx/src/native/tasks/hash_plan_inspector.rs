@@ -1,6 +1,6 @@
 use crate::native::tasks::hashers::{
-    ProjectFileSetCache, collect_json_input_files, hash_project_files_with_inputs_cached,
-    hash_workspace_files_with_inputs, resolve_task_output_files,
+    ProjectFileIndicesCache, collect_json_input_files, collect_project_file_paths_cached,
+    collect_workspace_file_paths, resolve_task_output_files,
 };
 use crate::native::tasks::task_hasher::{HashInputs, HashInputsBuilder};
 use crate::native::tasks::types::{HashInstruction, HashPlans};
@@ -43,7 +43,7 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
         hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, Vec<String>>> {
-        let project_file_set_cache = ProjectFileSetCache::new();
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
         let pool = &hash_plans.pool;
         let results: Vec<(&String, Vec<String>)> = hash_plans
             .plans
@@ -57,8 +57,8 @@ impl HashPlanInspector {
                     // File-set instructions: resolve to actual file paths
                     HashInstruction::WorkspaceFileSet(_)
                     | HashInstruction::ProjectFileSet(_, _) => {
-                        let builder =
-                            self.resolve_instruction_inputs(instruction, &project_file_set_cache)?;
+                        let builder = self
+                            .resolve_instruction_inputs(instruction, &project_file_indices_cache)?;
                         builder
                             .files
                             .into_iter()
@@ -92,7 +92,7 @@ impl HashPlanInspector {
         #[napi(ts_arg_type = "ExternalObject<Record<string, Array<HashInstruction>>>")]
         hash_plans: &External<HashPlans>,
     ) -> anyhow::Result<HashMap<String, HashInputs>> {
-        let project_file_set_cache = ProjectFileSetCache::new();
+        let project_file_indices_cache = ProjectFileIndicesCache::new();
         let pool = &hash_plans.pool;
         let results: Vec<(&String, HashInputsBuilder)> = hash_plans
             .plans
@@ -101,8 +101,10 @@ impl HashPlanInspector {
             .par_bridge()
             .map(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
-                let builder = self
-                    .resolve_instruction_inputs(instruction_ref.value(), &project_file_set_cache)?;
+                let builder = self.resolve_instruction_inputs(
+                    instruction_ref.value(),
+                    &project_file_indices_cache,
+                )?;
                 Ok::<_, anyhow::Error>((task_id, builder))
             })
             .collect::<anyhow::Result<_>>()?;
@@ -126,28 +128,26 @@ impl HashPlanInspector {
     fn resolve_instruction_inputs(
         &self,
         instruction: &HashInstruction,
-        project_file_set_cache: &ProjectFileSetCache,
+        project_file_indices_cache: &ProjectFileIndicesCache,
     ) -> anyhow::Result<HashInputsBuilder> {
         match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let result = hash_workspace_files_with_inputs(
-                    workspace_file_set,
-                    &self.all_workspace_files,
-                )?;
+                let files =
+                    collect_workspace_file_paths(workspace_file_set, &self.all_workspace_files)?;
                 Ok(HashInputsBuilder {
-                    files: result.files.into_iter().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let result = hash_project_files_with_inputs_cached(
+                let files = collect_project_file_paths_cached(
                     project_name,
                     file_sets,
                     &self.project_file_map,
-                    project_file_set_cache,
+                    project_file_indices_cache,
                 )?;
                 Ok(HashInputsBuilder {
-                    files: result.files.iter().cloned().collect(),
+                    files: files.into_iter().collect(),
                     ..Default::default()
                 })
             }
