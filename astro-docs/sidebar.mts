@@ -560,6 +560,25 @@ const technologiesGroups: SidebarItems = [
       },
     ],
   },
+  {
+    label: 'Comparisons',
+    collapsed: true,
+    items: [
+      { label: 'Nx vs Turborepo', link: 'guides/adopting-nx/nx-vs-turborepo' },
+      { label: 'Nx vs Vite+', link: 'guides/adopting-nx/nx-vs-vite-plus' },
+      { label: 'Nx vs Bazel', link: 'guides/adopting-nx/nx-vs-bazel' },
+      { label: 'Nx vs Depot', link: 'guides/adopting-nx/nx-vs-depot' },
+      {
+        label: 'Nx vs Blacksmith',
+        link: 'guides/adopting-nx/nx-vs-blacksmith',
+      },
+      {
+        label: 'Nx vs Develocity',
+        link: 'guides/adopting-nx/nx-vs-develocity',
+      },
+      { label: 'Nx vs Buildkite', link: 'guides/adopting-nx/nx-vs-buildkite' },
+    ],
+  },
 ];
 
 const knowledgeBaseGroups: SidebarItems = [
@@ -994,40 +1013,6 @@ const knowledgeBaseGroups: SidebarItems = [
           {
             label: 'TSC batch mode',
             link: 'reference/benchmarks/tsc-batch-mode',
-          },
-        ],
-      },
-      {
-        label: 'Comparisons',
-        collapsed: true,
-        items: [
-          {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
-          },
-          {
-            label: 'Nx vs Vite+',
-            link: 'guides/adopting-nx/nx-vs-vite-plus',
-          },
-          {
-            label: 'Nx vs Bazel',
-            link: 'guides/adopting-nx/nx-vs-bazel',
-          },
-          {
-            label: 'Nx vs Depot',
-            link: 'guides/adopting-nx/nx-vs-depot',
-          },
-          {
-            label: 'Nx vs Blacksmith',
-            link: 'guides/adopting-nx/nx-vs-blacksmith',
-          },
-          {
-            label: 'Nx vs Develocity',
-            link: 'guides/adopting-nx/nx-vs-develocity',
-          },
-          {
-            label: 'Nx vs Buildkite',
-            link: 'guides/adopting-nx/nx-vs-buildkite',
           },
         ],
       },
