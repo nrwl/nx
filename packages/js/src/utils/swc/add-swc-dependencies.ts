@@ -1,5 +1,9 @@
-import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
-import { acknowledgePnpmBuildScripts } from '@nx/devkit/internal';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  Tree,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import {
   swcCliVersion,
   swcCoreVersion,
@@ -29,7 +33,11 @@ export function getSwcDependencies(): {
 export function addSwcDependencies(tree: Tree) {
   const { dependencies, devDependencies } = getSwcDependencies();
 
-  acknowledgePnpmBuildScripts(tree, swcAllowBuilds);
+  acknowledgeBuildScripts(
+    tree,
+    detectPackageManager(tree.root),
+    swcAllowBuilds
+  );
   return addDependenciesToPackageJson(
     tree,
     dependencies,
@@ -40,7 +48,11 @@ export function addSwcDependencies(tree: Tree) {
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {
-  acknowledgePnpmBuildScripts(tree, swcAllowBuilds);
+  acknowledgeBuildScripts(
+    tree,
+    detectPackageManager(tree.root),
+    swcAllowBuilds
+  );
   return addDependenciesToPackageJson(
     tree,
     {},

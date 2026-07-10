@@ -1,6 +1,10 @@
 import type { GeneratorCallback, Tree } from '@nx/devkit';
-import { addDependenciesToPackageJson, joinPathFragments } from '@nx/devkit';
-import { acknowledgePnpmBuildScripts } from '@nx/devkit/internal';
+import {
+  addDependenciesToPackageJson,
+  detectPackageManager,
+  joinPathFragments,
+} from '@nx/devkit';
+import { acknowledgeBuildScripts } from '@nx/devkit/internal';
 import { tsLibVersion, versions } from './versions';
 
 export function ensureDependencies(
@@ -13,7 +17,9 @@ export function ensureDependencies(
 
   const pkgVersions = versions(tree);
   // @nestjs/core's postinstall only prints a funding message, so skip it.
-  acknowledgePnpmBuildScripts(tree, { '@nestjs/core': false });
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    '@nestjs/core': false,
+  });
   return addDependenciesToPackageJson(
     tree,
     {

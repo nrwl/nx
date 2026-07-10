@@ -20,7 +20,7 @@ import {
   getPackageManagerVersion,
   PackageManagerCommands,
 } from '../../../utils/package-manager';
-import { acknowledgePnpmBuildScripts } from '../../../utils/pnpm-allow-builds';
+import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-scripts';
 import { joinPathFragments } from '../../../utils/path';
 import { nxVersion } from '../../../utils/versions';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
@@ -268,7 +268,9 @@ export function addDepsToPackageJson(
   writeJsonFile(path, json);
   // nx has a postinstall script, which pnpm 11+ refuses to install
   // unacknowledged.
-  acknowledgePnpmBuildScripts(repoRoot, { nx: true });
+  acknowledgeBuildScripts(repoRoot, detectPackageManager(repoRoot), {
+    nx: true,
+  });
 }
 
 export function updateGitIgnore(root: string) {

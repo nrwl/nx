@@ -3,9 +3,9 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 import { createTree } from '../generators/testing-utils/create-tree';
 import type { Tree } from '../generators/tree';
-import { acknowledgePnpmBuildScripts } from './pnpm-allow-builds';
+import { acknowledgeBuildScripts } from './acknowledge-build-scripts';
 
-describe('acknowledgePnpmBuildScripts', () => {
+describe('acknowledgeBuildScripts', () => {
   let tree: Tree;
 
   beforeEach(() => {
@@ -22,7 +22,7 @@ describe('acknowledgePnpmBuildScripts', () => {
       'autoInstallPeers: true\nallowBuilds:\n  nx: true\n'
     );
 
-    acknowledgePnpmBuildScripts(tree, { 'unrs-resolver': false });
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
       "autoInstallPeers: true
@@ -36,7 +36,7 @@ describe('acknowledgePnpmBuildScripts', () => {
   it('should create the allowBuilds map when missing', () => {
     tree.write('pnpm-workspace.yaml', 'packages:\n  - "packages/*"\n');
 
-    acknowledgePnpmBuildScripts(tree, { cypress: true });
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
       "packages:
@@ -53,7 +53,7 @@ describe('acknowledgePnpmBuildScripts', () => {
       '# team notes\nallowBuilds:\n  # user explicitly allowed this\n  unrs-resolver: true\n'
     );
 
-    acknowledgePnpmBuildScripts(tree, {
+    acknowledgeBuildScripts(tree, 'pnpm', {
       'unrs-resolver': false,
       esbuild: false,
     });
@@ -68,8 +68,19 @@ describe('acknowledgePnpmBuildScripts', () => {
     `);
   });
 
-  it('should be a no-op for non-pnpm workspaces', () => {
-    acknowledgePnpmBuildScripts(tree, { cypress: true });
+  it('should be a no-op for package managers other than pnpm', () => {
+    const original = 'packages:\n  - "packages/*"\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'npm', { cypress: true });
+    acknowledgeBuildScripts(tree, 'yarn', { cypress: true });
+    acknowledgeBuildScripts(tree, 'bun', { cypress: true });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should be a no-op when there is no pnpm-workspace.yaml', () => {
+    acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
 
     expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
   });
@@ -82,7 +93,7 @@ describe('acknowledgePnpmBuildScripts', () => {
     const original = 'onlyBuiltDependencies:\n  - nx\n';
     tree.write('pnpm-workspace.yaml', original);
 
-    acknowledgePnpmBuildScripts(tree, { 'unrs-resolver': false });
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
   });
@@ -91,7 +102,7 @@ describe('acknowledgePnpmBuildScripts', () => {
     const original = '- just\n- a\n- list\n';
     tree.write('pnpm-workspace.yaml', original);
 
-    acknowledgePnpmBuildScripts(tree, { 'unrs-resolver': false });
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
   });
@@ -105,7 +116,7 @@ describe('acknowledgePnpmBuildScripts', () => {
       );
       writeFileSync(join(root, 'pnpm-workspace.yaml'), 'packages:\n  - "*"\n');
 
-      acknowledgePnpmBuildScripts(root, { nx: true });
+      acknowledgeBuildScripts(root, 'pnpm', { nx: true });
 
       expect(readFileSync(join(root, 'pnpm-workspace.yaml'), 'utf-8'))
         .toMatchInlineSnapshot(`

@@ -3,23 +3,41 @@ import { join } from 'path';
 import { Document, parseDocument, YAMLMap } from 'yaml';
 import { gte } from 'semver';
 import type { Tree } from '../generators/tree';
+import type { PackageManager } from './package-manager';
 import { getPackageManagerVersion } from './package-manager';
 import { readJsonFile } from './fileutils';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
 
 /**
- * Records `allowBuilds` decisions in pnpm-workspace.yaml for build-script
- * dependencies that are about to be installed. pnpm 11+ refuses to install a
- * dependency whose build scripts are neither allowed nor denied, so the
- * generator or command that introduces such a dependency records the
- * decision up front.
+ * Records build-script decisions for dependencies that are about to be
+ * installed, in whatever form the given package manager understands.
+ *
+ * Only pnpm needs this today: pnpm 11+ refuses to install a dependency whose
+ * build scripts are neither allowed nor denied, so the generator or command
+ * that introduces such a dependency records the decision up front. Other
+ * package managers run build scripts unconditionally, so this is a no-op for
+ * them.
+ */
+export function acknowledgeBuildScripts(
+  treeOrRoot: Tree | string,
+  packageManager: PackageManager,
+  entries: Record<string, boolean>
+): void {
+  if (packageManager !== 'pnpm') {
+    return;
+  }
+  acknowledgePnpmBuildScripts(treeOrRoot, entries);
+}
+
+/**
+ * Records `allowBuilds` decisions in pnpm-workspace.yaml.
  *
  * Comment-preserving. Existing entries are never overwritten, so user
- * decisions always win. No-op for non-pnpm workspaces and pnpm < 11 (which
- * warns instead of erroring and does not read `allowBuilds`).
+ * decisions always win. No-op for pnpm < 11, which warns instead of erroring
+ * and does not read `allowBuilds`.
  */
-export function acknowledgePnpmBuildScripts(
+function acknowledgePnpmBuildScripts(
   treeOrRoot: Tree | string,
   entries: Record<string, boolean>
 ): void {

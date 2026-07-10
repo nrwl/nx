@@ -1,11 +1,12 @@
 import {
-  acknowledgePnpmBuildScripts,
+  acknowledgeBuildScripts,
   addPlugin as _addPlugin,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   ProjectGraph,
@@ -72,7 +73,9 @@ function updateDependencies(tree: Tree, options: Schema) {
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
     // cypress's postinstall downloads its binary; without it cypress cannot run.
-    acknowledgePnpmBuildScripts(tree, { cypress: true });
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
   }
 
   tasks.push(

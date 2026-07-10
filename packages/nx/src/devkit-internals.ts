@@ -69,4 +69,4 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
-export { acknowledgePnpmBuildScripts } from './utils/pnpm-allow-builds';
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';

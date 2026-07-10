@@ -10,7 +10,7 @@ export {
   SchemaResolutionError,
   resolvePrompt,
   PromptResolutionError,
-  acknowledgePnpmBuildScripts,
+  acknowledgeBuildScripts,
 } from 'nx/src/devkit-internals';
 
 // Generators
