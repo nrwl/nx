@@ -47,6 +47,13 @@ interface ServerBundleExports {
 
   /** Standalone application bootstrapping function. */
   default?: (() => Promise<ApplicationRef>) | Type<unknown>;
+
+  /**
+   * The main.server bootstrapping function re-exported by the
+   * platform-server-exports loader. Server entries written for the
+   * `@angular/ssr` application engine APIs export no default of their own.
+   */
+  ɵmainServerBootstrap?: () => Promise<ApplicationRef>;
 }
 
 /**
@@ -81,8 +88,10 @@ async function render({
     AppServerModule,
     renderModule,
     renderApplication,
-    default: bootstrapAppFn,
+    default: defaultExport,
+    ɵmainServerBootstrap,
   } = require(serverBundlePath) as ServerBundleExports;
+  const bootstrapAppFn = defaultExport ?? ɵmainServerBootstrap;
 
   assert(
     ɵSERVER_CONTEXT,
