@@ -1,5 +1,5 @@
 import * as fs from 'fs';
-import { type Compiler, sources, type WebpackPluginInstance } from 'webpack';
+import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
   createLockFile,
   createPackageJson,
@@ -45,6 +45,8 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
   }
 
   apply(compiler: Compiler): void {
+    const { sources } = require('webpack') as typeof import('webpack');
+
     compiler.hooks.thisCompilation.tap(pluginName, (compilation) => {
       compilation.hooks.processAssets.tap(
         {
