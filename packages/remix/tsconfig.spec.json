@@ -5,7 +5,8 @@
     "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
     "resolveJsonModule": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.test.ts",
