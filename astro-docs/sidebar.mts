@@ -1096,22 +1096,22 @@ const knowledgeBaseGroups: SidebarItems = [
         items: [
           {
             label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
+            link: 'guides/comparisons/nx-vs-turborepo',
           },
-          { label: 'Nx vs Vite+', link: 'guides/adopting-nx/nx-vs-vite-plus' },
-          { label: 'Nx vs Bazel', link: 'guides/adopting-nx/nx-vs-bazel' },
-          { label: 'Nx vs Depot', link: 'guides/adopting-nx/nx-vs-depot' },
+          { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
+          { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
+          { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },
           {
             label: 'Nx vs Blacksmith',
-            link: 'guides/adopting-nx/nx-vs-blacksmith',
+            link: 'guides/comparisons/nx-vs-blacksmith',
           },
           {
             label: 'Nx vs Develocity',
-            link: 'guides/adopting-nx/nx-vs-develocity',
+            link: 'guides/comparisons/nx-vs-develocity',
           },
           {
             label: 'Nx vs Buildkite',
-            link: 'guides/adopting-nx/nx-vs-buildkite',
+            link: 'guides/comparisons/nx-vs-buildkite',
           },
         ],
       },
