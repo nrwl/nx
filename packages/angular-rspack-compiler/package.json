@@ -48,7 +48,7 @@
     "semver": "catalog:",
     "ts-morph": "catalog:typescript",
     "tslib": "catalog:typescript",
-    "typescript": "catalog:typescript"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "devDependencies": {
     "jsonc-eslint-parser": "^2.4.0",

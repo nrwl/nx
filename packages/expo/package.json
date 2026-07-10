@@ -87,7 +87,8 @@
     }
   },
   "devDependencies": {
-    "nx": "workspace:*"
+    "nx": "workspace:*",
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "optionalDependencies": {
     "@nx/detox": "workspace:*",

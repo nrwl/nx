@@ -80,7 +80,7 @@
     "@nx/js": "workspace:*",
     "semver": "catalog:",
     "tslib": "catalog:typescript",
-    "typescript": "catalog:typescript"
+    "typescript": "npm:@typescript/typescript6@^6.0.2"
   },
   "devDependencies": {
     "nx": "workspace:*"
