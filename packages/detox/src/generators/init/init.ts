@@ -1,4 +1,4 @@
-import { addPlugin } from '@nx/devkit/internal';
+import { acknowledgePnpmBuildScripts, addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -71,6 +71,8 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree, schema: Schema) {
+  // detox's postinstall builds its framework cache; without it detox cannot run.
+  acknowledgePnpmBuildScripts(host, { detox: true });
   return addDependenciesToPackageJson(
     host,
     {},

@@ -1,10 +1,15 @@
 import { addDependenciesToPackageJson, Tree } from '@nx/devkit';
+import { acknowledgePnpmBuildScripts } from '@nx/devkit/internal';
 import {
   swcCliVersion,
   swcCoreVersion,
   swcHelpersVersion,
   swcNodeVersion,
 } from '../versions';
+
+// @swc/core's postinstall only compiles a fallback for platforms without
+// prebuilt binaries, so skip it.
+const swcAllowBuilds = { '@swc/core': false };
 
 export function getSwcDependencies(): {
   dependencies: Record<string, string>;
@@ -24,6 +29,7 @@ export function getSwcDependencies(): {
 export function addSwcDependencies(tree: Tree) {
   const { dependencies, devDependencies } = getSwcDependencies();
 
+  acknowledgePnpmBuildScripts(tree, swcAllowBuilds);
   return addDependenciesToPackageJson(
     tree,
     dependencies,
@@ -34,6 +40,7 @@ export function addSwcDependencies(tree: Tree) {
 }
 
 export function addSwcRegisterDependencies(tree: Tree) {
+  acknowledgePnpmBuildScripts(tree, swcAllowBuilds);
   return addDependenciesToPackageJson(
     tree,
     {},

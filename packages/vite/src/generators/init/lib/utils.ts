@@ -6,6 +6,7 @@ import {
   Tree,
   updateJson,
 } from '@nx/devkit';
+import { acknowledgePnpmBuildScripts } from '@nx/devkit/internal';
 import { esbuildVersion } from '@nx/js/internal';
 import { intersects } from 'semver';
 import {
@@ -79,6 +80,9 @@ export async function checkDependenciesInstalled(
             ? viteV5Version
             : viteVersion;
 
+  // vite pulls in esbuild, whose install script only validates the prebuilt
+  // binary shipped via optional dependencies, so skip it.
+  acknowledgePnpmBuildScripts(host, { esbuild: false });
   return addDependenciesToPackageJson(
     host,
     {},

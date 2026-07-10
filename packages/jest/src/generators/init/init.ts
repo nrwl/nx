@@ -1,4 +1,5 @@
 import {
+  acknowledgePnpmBuildScripts,
   addPlugin,
   findTargetDefault,
   upsertTargetDefault,
@@ -97,6 +98,10 @@ function createJestDefaultPatch(
 
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
+
+  // jest 30 pulls in unrs-resolver; its build scripts only compile a fallback
+  // for platforms without prebuilt binaries, so skip them.
+  acknowledgePnpmBuildScripts(tree, { 'unrs-resolver': false });
 
   return addDependenciesToPackageJson(
     tree,

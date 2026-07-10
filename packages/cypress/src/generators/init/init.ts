@@ -1,4 +1,5 @@
 import {
+  acknowledgePnpmBuildScripts,
   addPlugin as _addPlugin,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
@@ -70,6 +71,8 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
+    // cypress's postinstall downloads its binary; without it cypress cannot run.
+    acknowledgePnpmBuildScripts(tree, { cypress: true });
   }
 
   tasks.push(
