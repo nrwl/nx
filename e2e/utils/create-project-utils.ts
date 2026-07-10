@@ -9,6 +9,7 @@ import {
   updateJson,
 } from './file-utils';
 import {
+  detectPackageManager,
   e2eCwd,
   getLatestLernaVersion,
   getPublishedVersion,
@@ -130,16 +131,6 @@ export function newProject({
         updateFile('.npmrc', 'prefer-frozen-lockfile=false');
       }
 
-      // e2e tests pnpm-add plugins with build-script deps without running a
-      // generator first, so pnpm 11's strict build gate would fail those
-      // installs; fall back to pnpm 10's warn-and-skip behavior.
-      if (packageManager === 'pnpm') {
-        updateFile(
-          'pnpm-workspace.yaml',
-          (content) => `${content.trimEnd()}\nstrictDepBuilds: false\n`
-        );
-      }
-
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
         console.warn(
@@ -186,12 +177,17 @@ export function newProject({
       // pnpm creates sym links to the pnpm store,
       // we need to run the install again after copying the temp folder
       try {
-        execSync(getPackageManagerCommand().install, {
-          cwd: projectDirectory,
-          stdio: 'pipe',
-          env: { CI: 'true', ...process.env },
-          encoding: 'utf-8',
-        });
+        execSync(
+          `${getPackageManagerCommand().install}${pnpmLaxBuildsFlag(
+            projectDirectory
+          )}`,
+          {
+            cwd: projectDirectory,
+            stdio: 'pipe',
+            env: { CI: 'true', ...process.env },
+            encoding: 'utf-8',
+          }
+        );
       } catch (e) {
         console.log('newProject() - reinstall pnpm dependencies failed');
         console.error('Full error:', e);
@@ -471,6 +467,17 @@ export function runCreatePlugin(
   }
 }
 
+/**
+ * e2e tests install packages without running a generator first, so pnpm 11's
+ * strict build gate would fail those installs; warn and skip like pnpm 10.
+ * Generator-driven installs within tests remain strict.
+ */
+function pnpmLaxBuildsFlag(cwd: string): string {
+  return detectPackageManager(cwd) === 'pnpm'
+    ? ' --config.strictDepBuilds=false'
+    : '';
+}
+
 export function packageInstall(
   pkg: string,
   projName?: string,
@@ -486,7 +493,7 @@ export function packageInstall(
 
   const command = `${
     mode === 'dev' ? pm.addDev : pm.addProd
-  } ${pkgsWithVersions}`;
+  } ${pkgsWithVersions}${pnpmLaxBuildsFlag(cwd)}`;
 
   try {
     const install = execSync(command, {
@@ -603,9 +610,6 @@ export function newLernaWorkspace({
         'pnpm-workspace.yaml',
         dump({
           packages: ['packages/*'],
-          // installing nx without acknowledging its build scripts would fail
-          // under pnpm 11's strict build gate; warn and skip like pnpm 10
-          strictDepBuilds: false,
         })
       );
       updateFile(
@@ -664,7 +668,7 @@ export function newLernaWorkspace({
           : packageManager === 'yarn'
             ? ' -W'
             : ''
-      }`,
+      }${pnpmLaxBuildsFlag(tmpProjPath())}`,
       {
         cwd: tmpProjPath(),
         stdio: isVerbose() ? 'inherit' : 'pipe',
@@ -688,7 +692,7 @@ export function newLernaWorkspace({
       });
     }
 
-    execSync(pm.install, {
+    execSync(`${pm.install}${pnpmLaxBuildsFlag(tmpProjPath())}`, {
       cwd: tmpProjPath(),
       stdio: isVerbose() ? 'inherit' : 'pipe',
       env: { CI: 'true', ...process.env },
