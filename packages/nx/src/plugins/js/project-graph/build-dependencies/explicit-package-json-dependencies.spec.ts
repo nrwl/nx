@@ -380,4 +380,103 @@ describe('explicit package json dependencies', () => {
       ])
     );
   });
+
+  it('should add dependencies from the root package.json of a project rooted at "."', async () => {
+    const rootTempFs = new TempFs('explicit-package-json-root');
+    const rootProjectsConfigurations = {
+      projects: {
+        'root-package': { root: '.', name: 'root-package' },
+        'child-package': {
+          root: 'packages/child-package',
+          name: 'child-package',
+        },
+      },
+    };
+
+    await rootTempFs.createFiles({
+      './nx.json': JSON.stringify({}),
+      './tsconfig.base.json': JSON.stringify({}),
+      './package.json': JSON.stringify({
+        name: 'root-package',
+        dependencies: { 'child-package': 'file:packages/child-package' },
+      }),
+      './packages/child-package/package.json': JSON.stringify({
+        name: 'child-package',
+        version: '1.0.0',
+      }),
+    });
+
+    const rootProjects = {
+      'root-package': {
+        name: 'root-package',
+        type: 'lib',
+        data: {
+          root: '.',
+          metadata: {
+            js: {
+              packageName: 'root-package',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+      'child-package': {
+        name: 'child-package',
+        type: 'lib',
+        data: {
+          root: 'packages/child-package',
+          metadata: {
+            js: {
+              packageName: 'child-package',
+              packageExports: undefined,
+              isInPackageManagerWorkspaces: true,
+            },
+          },
+        },
+      },
+    };
+
+    const rootFileMap = createFileMap(
+      rootProjectsConfigurations as any,
+      await getAllFileDataInContext(rootTempFs.tempDir)
+    ).fileMap;
+
+    const builder = new ProjectGraphBuilder(
+      undefined,
+      rootFileMap.projectFileMap
+    );
+    Object.values(rootProjects).forEach((p) => {
+      builder.addNode(p as any);
+    });
+
+    const rootCtx = {
+      fileMap: rootFileMap,
+      externalNodes: builder.getUpdatedProjectGraph().externalNodes,
+      projects: rootProjectsConfigurations.projects,
+      nxJsonConfiguration: {},
+      filesToProcess: rootFileMap,
+      workspaceRoot: rootTempFs.tempDir,
+    } as any;
+
+    const targetProjectLocator = new TargetProjectLocator(
+      rootProjects as any,
+      rootCtx.externalNodes,
+      new Map()
+    );
+
+    const res = buildExplicitPackageJsonDependencies(
+      rootCtx,
+      targetProjectLocator
+    );
+
+    expect(res).toContainEqual({
+      source: 'root-package',
+      target: 'child-package',
+      sourceFile: 'package.json',
+      type: 'static',
+    });
+
+    rootTempFs.cleanup();
+  });
 });
