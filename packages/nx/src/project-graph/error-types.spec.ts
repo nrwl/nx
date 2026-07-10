@@ -147,4 +147,48 @@ describe('formatAggregateCreateNodesError', () => {
                at foo (file.js:1:1)"
     `);
   });
+
+  it('should format non-Error values thrown by plugins', () => {
+    const error = new AggregateCreateNodesError(
+      [
+        ['libs/a/project.json', 'plain string failure' as unknown as Error],
+        ['libs/b/project.json', { code: 'ELOAD' } as unknown as Error],
+      ],
+      []
+    );
+
+    formatAggregateCreateNodesError(error, '@nx/jest');
+
+    expect(error.message).toMatchInlineSnapshot(`
+      "2 errors occurred while processing files for the @nx/jest plugin.
+        - libs/a/project.json:
+            plain string failure
+        - libs/b/project.json:
+            {"code":"ELOAD"}"
+    `);
+  });
+
+  it('should format errors deserialized from a plugin worker without a stack', () => {
+    const error = new AggregateCreateNodesError(
+      [
+        [
+          'libs/mylib/project.json',
+          { message: 'worker failure' } as unknown as Error,
+        ],
+      ],
+      []
+    );
+
+    formatAggregateCreateNodesError(error, '@nx/jest');
+
+    expect(error.message).toMatchInlineSnapshot(`
+      "An error occurred while processing files for the @nx/jest plugin.
+        - libs/mylib/project.json:
+            worker failure"
+    `);
+    expect(error.stack).toMatchInlineSnapshot(`
+      " - libs/mylib/project.json:
+           worker failure"
+    `);
+  });
 });
