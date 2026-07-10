@@ -260,6 +260,57 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should wire the server entry loader with the engine manifest inputs', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+      // The engine wiring is only set up when @angular/ssr is installed.
+      const ssrPackageDir = join(root, 'node_modules', '@angular', 'ssr');
+      await mkdir(ssrPackageDir, { recursive: true });
+      await writeFile(
+        join(ssrPackageDir, 'package.json'),
+        JSON.stringify({
+          name: '@angular/ssr',
+          version: '0.0.0',
+          main: 'index.js',
+        })
+      );
+      await writeFile(join(ssrPackageDir, 'index.js'), '');
+
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+        baseHref: '/app/',
+        security: { allowedHosts: ['example.com'] },
+      });
+
+      expect(configs).toHaveLength(2);
+      const serverExportsRule = configs[1].module?.rules?.find(
+        (rule) =>
+          typeof rule === 'object' &&
+          rule !== null &&
+          'loader' in rule &&
+          typeof rule.loader === 'string' &&
+          rule.loader.includes('platform-server-exports')
+      ) as { options: Record<string, unknown> } | undefined;
+
+      expect(serverExportsRule).toBeDefined();
+      expect(serverExportsRule.options.engineWiring).toMatchObject({
+        mainServerEntry: join(root, 'src', 'main.server.ts'),
+        baseHref: '/app/',
+        browserOutputRelativePath: join('..', 'browser'),
+        indexOutputName: 'index.html',
+        allowedHosts: ['example.com'],
+      });
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should reject an output mode when @angular/ssr is not installed', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     try {
