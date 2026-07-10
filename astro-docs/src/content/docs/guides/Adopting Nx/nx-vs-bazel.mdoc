@@ -20,7 +20,7 @@ Bazel is the open-source version of Google's internal build system, built for he
 
 Bazel is strong at hermetic caching, remote execution, and reproducibility, and a small number of massive, heavily polyglot organizations need that depth. For nearly everyone else the cost outweighs the payoff, and it lands up front:
 
-- **Bazel pays off only after the work is done.** `BUILD` files, hermeticity, and a migration measured in weeks (longer across teams), plus ongoing upkeep that Aspect, maintainer of Bazel's JavaScript rulesets, estimates at [0.75 to 1 full-time build engineer](https://blog.aspect.build/estimating-bazel-cicd).
+- **Bazel pays off only after the work is done.** `BUILD` files, hermeticity, and a migration measured in weeks (longer across teams), plus ongoing upkeep that Aspect, maintainer of Bazel's JavaScript rulesets, estimates at [0.75 to 1 full-time build engineer](https://aspect.build/blog/estimating-bazel-cicd).
 - **Nx delivers the same CI wins from day one.** Caching, affected detection, and distribution on your existing scripts, adopted incrementally, scaling to large monorepos without a dedicated build team, plus generators, migrations, release, and AI-assisted CI that Bazel has no native answer for.
 
 | Topic                                         | Nx                                                       | Bazel                                                         |
@@ -54,7 +54,7 @@ Bazel's remote execution ships individual actions to worker fleets over the open
 
 ## JavaScript ecosystem
 
-Bazel's JavaScript story depends on `rules_js` and `rules_ts`, actively maintained but by a single seed-stage vendor (Aspect), after Google stopped supporting the original `rules_nodejs`. The rules require pnpm with hoisting disabled, put `node_modules` inside `bazel-out`, and have no first-party Vitest ruleset, and dev servers run through wrapper tooling. Google's own Angular team shipped Bazel support in the CLI and then [retracted it](https://dev.to/bazel/angular-bazel-leaving-angular-labs-51ja), concluding most Angular applications don't have the problem Bazel solves.
+Bazel's JavaScript story depends on `rules_js` and `rules_ts`, actively maintained but by a single small vendor (Aspect), after Google stopped supporting the original `rules_nodejs`. The rules require pnpm with hoisting disabled, put `node_modules` inside `bazel-out`, and have no first-party Vitest ruleset, and dev servers run through wrapper tooling. Google's own Angular team shipped Bazel support in the CLI and then [retracted it](https://dev.to/bazel/angular-bazel-leaving-angular-labs-51ja), concluding most Angular applications don't have the problem Bazel solves.
 
 Nx grew up in the JS ecosystem: first-party plugins for Vite, Jest, Vitest, Next.js, Playwright, Storybook, and the rest, with dev servers, HMR, and framework upgrades handled through [automated migrations](/docs/features/automate-updating-dependencies).
 

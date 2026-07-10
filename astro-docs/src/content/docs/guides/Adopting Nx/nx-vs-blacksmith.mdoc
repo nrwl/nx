@@ -98,7 +98,7 @@ jobs:
 
 ## Test splitting and flaky tests
 
-Blacksmith has no test splitting and no flaky-test handling. Its test analytics only report failing tests in PR comments, which neither shortens a slow suite nor stops a flake from failing the build.
+Blacksmith has no test splitting and no automated flaky-test detection or re-running. Its test analytics only report failing tests in PR comments, which neither shortens a slow suite nor stops a flake from failing the build.
 
 Nx Cloud acts on what it detects. [Atomizer](/docs/features/ci-features/split-e2e-tasks) splits e2e suites into per-file tasks that distribute across agents, [flaky task detection](/docs/features/ci-features/flaky-tasks) retries nondeterministic tasks in isolation instead of failing the pipeline, and [self-healing CI](/docs/features/ci-features/self-healing-ci) proposes verified fixes for real failures.
 

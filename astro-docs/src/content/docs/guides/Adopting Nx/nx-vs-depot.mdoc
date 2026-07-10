@@ -49,7 +49,7 @@ Depot Cache is a remote cache backend for Turborepo, Bazel, Gradle, sccache, and
 
 ## Cache security
 
-Depot Cache scopes entries by repository but does not enforce isolation between branches. Its docs leave cache-key hygiene to you. That is the attack surface [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) describes: without enforced isolation, anyone who can open a PR can potentially poison artifacts that later ship from a protected branch.
+Depot's GitHub Actions cache integration scopes entries by repository but not by branch, and its docs leave cache-key hygiene to you. That is the surface [CVE-2025-36852](https://www.cve.org/CVERecord?id=CVE-2025-36852) (CREEP) describes: without branch isolation, anyone who can open a PR can potentially poison artifacts that later ship from a protected branch. Depot's build-tool cache backend scopes by org and project token instead.
 
 Nx Cloud enforces branch-scoped cache isolation so PR-produced artifacts can't be written into a trusted scope. See [cache security](/docs/concepts/ci-concepts/cache-security) for the model.
 

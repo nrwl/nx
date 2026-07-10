@@ -28,7 +28,7 @@ They overlap only on monorepo awareness, test splitting, and how work spreads ac
 | Topic                                                             | Nx Cloud                                            | Buildkite                                                     |
 | ----------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------- |
 | [Model](#model)                                                   | Task-graph layer on your existing CI                | CI platform with hybrid control plane + your agents           |
-| [Remote caching](#remote-caching)                                 | Nx Replay, content-addressed, shared with local dev | None, hosted-agent cache volumes are best-effort local disks  |
+| [Remote caching](#remote-caching)                                 | Nx Replay, content-addressed, shared with local dev | No task-result cache, dependency caches via plugins           |
 | [Affected detection](#affected-detection)                         | Transitive, from the project graph                  | `monorepo-diff` plugin, folder-path matching                  |
 | [Distribution](#distribution)                                     | Task-level Nx Agents, dynamically balanced          | Job-level `parallelism`, declared manually                    |
 | [Test splitting and flaky tests](#test-splitting-and-flaky-tests) | Atomizer per-file tasks, task-level flaky re-runs   | Test Engine: per-test splitting and quarantine via collectors |
@@ -36,13 +36,13 @@ They overlap only on monorepo awareness, test splitting, and how work spreads ac
 
 ## Model
 
-Buildkite's hybrid architecture is its defining strength: the SaaS control plane schedules work, but source code, secrets, and deploy credentials stay on agents you operate. It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
+Buildkite's hybrid architecture is its defining strength: the SaaS control plane schedules work, while source code, secrets, and deploy credentials stay on the self-hosted agents you run (Buildkite also offers hosted agents). It scales to extremes, with Buildkite's largest customers running at very high agent concurrency. The cost is that Buildkite is a migration: pipelines get rewritten in its YAML, and the platform becomes your CI.
 
 Nx requires no platform switch. It plugs into GitHub Actions, GitLab, Jenkins, Buildkite, or any other provider, and its intelligence comes from the Nx task graph rather than the pipeline definition. On Nx Enterprise, [Nx Agents can run on your own compute](/docs/guides/nx-cloud/bring-your-own-compute), preserving the code-stays-on-your-infrastructure property.
 
 ## Remote caching
 
-Buildkite has no remote build cache product. Hosted-agent cache volumes are pipeline-scoped local NVMe disks that Buildkite documents as best-effort, with no content addressing, no cross-pipeline sharing, and no availability on self-hosted agents. A task that ran on one agent reruns everywhere else.
+Buildkite has no task-result cache. Dependency caches can be shared across pipelines with the community cache plugin (S3 or GCS), and hosted-agent cache volumes offer best-effort local disk, but neither replays a computed task, so a task that ran on one agent reruns everywhere else.
 
 [Nx Replay](/docs/features/ci-features/remote-cache) is a content-addressed task cache shared across every CI machine and every developer laptop, with [branch-scoped isolation against cache poisoning](/docs/concepts/ci-concepts/cache-security).
 
