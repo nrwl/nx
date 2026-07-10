@@ -104,6 +104,11 @@ jobs:
           ITER="${ITER:-60}"
           crashes=0
           kept_cores=0
+          hb_windows=0
+
+          # Production parity: the crashing step always runs inside a CIPE
+          # started at the top of the job.
+          npx nx-cloud@next start-ci-run || true
 
           for i in $(seq 1 "$ITER"); do
             # Re-open the heartbeat spawn window: without this, iteration 1's
@@ -123,6 +128,10 @@ jobs:
             pids+=($!); names+=(lockfiles)
             node_modules/.bin/nx sync:check > /tmp/iter-sync.log 2>&1 &
             pids+=($!); names+=(sync)
+            node_modules/.bin/nx record -- echo "iter-$i-a" > /tmp/iter-reca.log 2>&1 &
+            pids+=($!); names+=(reca)
+            node_modules/.bin/nx record -- echo "iter-$i-b" > /tmp/iter-recb.log 2>&1 &
+            pids+=($!); names+=(recb)
 
             iter_crash=0
             for idx in "${!pids[@]}"; do
@@ -140,10 +149,17 @@ jobs:
             if compgen -G '/tmp/cores/core.*' > /dev/null 2>&1; then
               ls /tmp/cores/core.* 2>/dev/null | grep -qv '\.gz$' && iter_crash=1
             fi
-            if grep -laiE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log > /dev/null 2>&1; then
+            # Case-sensitive: the branch's own lowercase commit title
+            # ("...sigsegv ab hunt...") echoes into Nx Cloud metadata in every
+            # log, so -i produced 100% false positives on the first run.
+            if grep -laE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log > /dev/null 2>&1; then
               iter_crash=1
               echo "::warning::iter $i: segfault text found in logs"
-              grep -aiE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log | head -5 || true
+              grep -aE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log | head -5 || true
+            fi
+            # Probe: confirm the heartbeat spawn window was actually exercised.
+            if grep -laq 'heartbeat background process' /tmp/iter-*.log 2>/dev/null; then
+              hb_windows=$((hb_windows+1))
             fi
 
             if [ "$iter_crash" = 1 ]; then
@@ -169,8 +185,10 @@ jobs:
             echo "## Leg ${{ matrix.leg }} (node $NODE_VERSION, NX_COMPILE_CACHE=$NX_COMPILE_CACHE)"
             echo ""
             echo "**$crashes / $ITER iterations had signal deaths**"
+            echo ""
+            echo "Heartbeat spawn window exercised in $hb_windows / $ITER iterations"
           } >> "$GITHUB_STEP_SUMMARY"
-          echo "RESULT leg=${{ matrix.leg }}: $crashes/$ITER iterations had signal deaths"
+          echo "RESULT leg=${{ matrix.leg }}: $crashes/$ITER iterations had signal deaths (heartbeat window in $hb_windows)"
 
       - name: Upload crash evidence
         if: always()
