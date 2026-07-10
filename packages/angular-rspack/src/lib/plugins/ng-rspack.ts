@@ -72,6 +72,26 @@ export class NgRspackPlugin implements RspackPluginInstance {
         new AngularSsrDevServer(this.pluginOptions).apply(compiler);
       }
     }
+    if (this.isPlatformServer) {
+      // The server bundle is CommonJS; the marker keeps Node loading it as
+      // such under a `"type": "module"` workspace package.json.
+      compiler.hooks.thisCompilation.tap('NgRspackPlugin', (compilation) => {
+        compilation.hooks.processAssets.tap(
+          {
+            name: 'NgRspackPlugin',
+            stage: compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONS,
+          },
+          () => {
+            if (!compilation.getAsset('package.json')) {
+              compilation.emitAsset(
+                'package.json',
+                new compiler.rspack.sources.RawSource('{"type": "commonjs"}\n')
+              );
+            }
+          }
+        );
+      });
+    }
     if (!isDevServer && this.pluginOptions.progress) {
       new ProgressPlugin(this.isPlatformServer ? 'server' : 'browser').apply(
         compiler
