@@ -260,6 +260,29 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should reject an output mode when @angular/ssr is not installed', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      await expect(
+        _createConfig({
+          ...configBase,
+          root,
+          server: './src/main.server.ts',
+          ssr: { entry: './src/server.ts' },
+          outputMode: 'server',
+        })
+      ).rejects.toThrow(
+        'The "outputMode" option requires the "@angular/ssr" package to be installed.'
+      );
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should define a runtime import.meta.url for the server bundle', async () => {
     const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
     try {
