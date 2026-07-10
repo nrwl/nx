@@ -1,5 +1,9 @@
 import type { SwcTranspilationTransform } from '@nx/angular-rspack-compiler';
-import { type Configuration, ContextReplacementPlugin } from '@rspack/core';
+import {
+  type Configuration,
+  ContextReplacementPlugin,
+  DefinePlugin,
+} from '@rspack/core';
 import { resolve } from 'path';
 import type {
   I18nOptions,
@@ -82,6 +86,11 @@ export async function getServerConfig(
       ...(defaultConfig.plugins ?? []),
       // Fixes Critical dependency: the request of a dependency is an expression
       new ContextReplacementPlugin(/@?hapi|express[\\/]/),
+      // rspack inlines `import.meta.url` as the source file's URL, breaking
+      // the `isMainModule` listen gate; point it at the emitted bundle.
+      new DefinePlugin({
+        'import.meta.url': "require('node:url').pathToFileURL(__filename).href",
+      }),
       new NgRspackPlugin(normalizedOptions, {
         i18nOptions: i18n,
         platform: 'server',

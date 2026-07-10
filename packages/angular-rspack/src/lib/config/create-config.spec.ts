@@ -260,6 +260,35 @@ describe('createConfig', () => {
     }
   }, 10000);
 
+  it('should define a runtime import.meta.url for the server bundle', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'create-config-ssr-'));
+    try {
+      await mkdir(join(root, 'src'), { recursive: true });
+      await writeFile(join(root, 'src', 'main.server.ts'), '');
+      await writeFile(join(root, 'src', 'server.ts'), '');
+
+      const configs = await _createConfig({
+        ...configBase,
+        root,
+        server: './src/main.server.ts',
+        ssr: { entry: './src/server.ts' },
+      });
+
+      const findImportMetaUrlDefine = (config: (typeof configs)[0]) =>
+        config.plugins?.find(
+          (plugin) =>
+            plugin?.constructor.name === 'DefinePlugin' &&
+            'import.meta.url' in
+              ((plugin as unknown as { _args: Record<string, string>[] })
+                ._args[0] ?? {})
+        );
+      expect(findImportMetaUrlDefine(configs[1])).toBeDefined();
+      expect(findImportMetaUrlDefine(configs[0])).toBeUndefined();
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
+  }, 10000);
+
   it('should not create a shared Angular compilation for a browser-only build', async () => {
     const configs = await _createConfig(configBase);
 
