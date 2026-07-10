@@ -130,6 +130,16 @@ export function newProject({
         updateFile('.npmrc', 'prefer-frozen-lockfile=false');
       }
 
+      // e2e tests pnpm-add plugins with build-script deps without running a
+      // generator first, so pnpm 11's strict build gate would fail those
+      // installs; fall back to pnpm 10's warn-and-skip behavior.
+      if (packageManager === 'pnpm') {
+        updateFile(
+          'pnpm-workspace.yaml',
+          (content) => `${content.trimEnd()}\nstrictDepBuilds: false\n`
+        );
+      }
+
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {
         console.warn(
@@ -593,6 +603,9 @@ export function newLernaWorkspace({
         'pnpm-workspace.yaml',
         dump({
           packages: ['packages/*'],
+          // installing nx without acknowledging its build scripts would fail
+          // under pnpm 11's strict build gate; warn and skip like pnpm 10
+          strictDepBuilds: false,
         })
       );
       updateFile(
