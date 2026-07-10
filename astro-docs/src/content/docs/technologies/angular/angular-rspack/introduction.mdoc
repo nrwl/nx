@@ -52,8 +52,10 @@ Please note that Angular Rspack support is still experimental and is not yet con
 
 The following are known limitations and missing features of Angular Rspack:
 
-- Server Routing is not supported - still experimental in Angular currently.
-- App Engine APIs are not supported - still experimental in Angular currently.
+- The `static` output mode (build-time prerendering of the full application) is not supported.
+- Server routes marked for build-time prerendering (`RenderMode.Prerender`) are rendered at request time instead.
+- Automatic content security policy generation (`security.autoCsp`) is not supported.
+- Locale inlining (`localize`) cannot be combined with the `outputMode` option.
 
 If you have any other missing features or limitations, please [let us know](https://github.com/nrwl/angular-rspack/issues/new).
 
