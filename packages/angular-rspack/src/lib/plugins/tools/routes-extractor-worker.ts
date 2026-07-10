@@ -27,6 +27,13 @@ interface ServerBundleExports {
   /** Standalone application bootstrapping function. */
   default?: (() => Promise<ApplicationRef>) | Type<unknown>;
 
+  /**
+   * The main.server bootstrapping function re-exported by the
+   * platform-server-exports loader. Server entries written for the
+   * `@angular/ssr` application engine APIs export no default of their own.
+   */
+  ɵmainServerBootstrap?: () => Promise<ApplicationRef>;
+
   /** Method to extract routes from the router config. */
   ɵgetRoutesFromAngularRouterConfig: typeof ɵgetRoutesFromAngularRouterConfig;
 }
@@ -41,12 +48,14 @@ async function extract(): Promise<string[]> {
     AppServerModule,
     ɵgetRoutesFromAngularRouterConfig: getRoutesFromAngularRouterConfig,
     default: bootstrapAppFn,
+    ɵmainServerBootstrap,
   } = require(serverBundlePath) as ServerBundleExports;
 
   const browserIndexInputPath = path.join(outputPath, indexFile);
   const document = await fs.promises.readFile(browserIndexInputPath, 'utf8');
 
-  const bootstrapAppFnOrModule = bootstrapAppFn || AppServerModule;
+  const bootstrapAppFnOrModule =
+    bootstrapAppFn || ɵmainServerBootstrap || AppServerModule;
   assert(
     bootstrapAppFnOrModule,
     `The file "${serverBundlePath}" does not have a default export for an AppServerModule or a bootstrapping function.`
