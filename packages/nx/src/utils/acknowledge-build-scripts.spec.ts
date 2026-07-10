@@ -79,10 +79,14 @@ describe('acknowledgeBuildScripts', () => {
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
   });
 
-  it('should be a no-op when there is no pnpm-workspace.yaml', () => {
+  it('should create pnpm-workspace.yaml when it does not exist', () => {
     acknowledgeBuildScripts(tree, 'pnpm', { cypress: true });
 
-    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        cypress: true
+      "
+    `);
   });
 
   it('should be a no-op for pnpm < 11', () => {

@@ -31,7 +31,8 @@ export function acknowledgeBuildScripts(
 }
 
 /**
- * Records `allowBuilds` decisions in pnpm-workspace.yaml.
+ * Records `allowBuilds` decisions in pnpm-workspace.yaml, creating the file
+ * when missing (mirroring `pnpm approve-builds` in single-package repos).
  *
  * Comment-preserving. Existing entries are never overwritten, so user
  * decisions always win. No-op for pnpm < 11, which warns instead of erroring
@@ -42,22 +43,20 @@ function acknowledgePnpmBuildScripts(
   entries: Record<string, boolean>
 ): void {
   const host = createHost(treeOrRoot);
-  if (!host.exists(PNPM_WORKSPACE_FILE)) {
-    return;
-  }
   const pnpmVersion = getPnpmVersion(host);
   if (!pnpmVersion || !gte(pnpmVersion, '11.0.0')) {
     return;
   }
 
-  const parsed = parseDocument(host.read(PNPM_WORKSPACE_FILE));
+  const parsed = parseDocument(
+    host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
+  );
   // A present root that isn't a mapping is malformed for pnpm; leave it alone
   // rather than replacing the user's content with just the allowBuilds key.
   if (parsed.contents != null && !(parsed.contents instanceof YAMLMap)) {
     return;
   }
-  const doc =
-    parsed.contents instanceof YAMLMap ? parsed : new Document(new YAMLMap());
+  const doc = parsed.contents instanceof YAMLMap ? parsed : new Document({});
 
   let changed = false;
   for (const [pkg, allowed] of Object.entries(entries)) {
