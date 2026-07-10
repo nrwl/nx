@@ -8,6 +8,15 @@
     },
     "test": {
       "executor": "nx:noop"
+    },
+    "build:dotnet": {
+      "inputs": ["...", "{workspaceRoot}/Directory.Build.props"]
+    },
+    "build:dotnet:release": {
+      "inputs": ["...", "{workspaceRoot}/Directory.Build.props"]
+    },
+    "test-native": {
+      "inputs": ["...", "{workspaceRoot}/Directory.Build.props"]
     }
   }
 }
