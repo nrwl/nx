@@ -18,6 +18,7 @@ import {
   detectPackageManager,
   getPackageManagerCommand,
   getPackageManagerVersion,
+  PackageManager,
   PackageManagerCommands,
 } from '../../../utils/package-manager';
 import { acknowledgeBuildScripts } from '../../../utils/acknowledge-build-scripts';
@@ -254,7 +255,8 @@ export function createNxJsonFromTurboJson(
 
 export function addDepsToPackageJson(
   repoRoot: string,
-  additionalPackages?: string[]
+  additionalPackages?: string[],
+  packageManager: PackageManager = detectPackageManager(repoRoot)
 ) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
@@ -268,9 +270,7 @@ export function addDepsToPackageJson(
   writeJsonFile(path, json);
   // nx has a postinstall script, which pnpm 11+ refuses to install
   // unacknowledged.
-  acknowledgeBuildScripts(repoRoot, detectPackageManager(repoRoot), {
-    nx: true,
-  });
+  acknowledgeBuildScripts(repoRoot, packageManager, { nx: true });
 }
 
 export function updateGitIgnore(root: string) {
@@ -307,13 +307,14 @@ export function updateGitIgnore(root: string) {
 
 export function runInstall(
   repoRoot: string,
-  pmc: PackageManagerCommands = getPackageManagerCommand()
+  packageManager: PackageManager = detectPackageManager(repoRoot),
+  pmc: PackageManagerCommands = getPackageManagerCommand(packageManager)
 ) {
   let command = pmc.install;
   // Plugins added during init can pull build-script deps whose allowBuilds
   // entries are only recorded by their init generators after this install;
   // warn and skip for this one install, like pnpm 10 did.
-  if (detectPackageManager(repoRoot) === 'pnpm') {
+  if (packageManager === 'pnpm') {
     try {
       if (gte(getPackageManagerVersion('pnpm', repoRoot), '11.0.0')) {
         command += ' --config.strictDepBuilds=false';

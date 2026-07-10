@@ -3,7 +3,10 @@ import { join } from 'path';
 import { InitArgs } from '../init-v1';
 import { readJsonFile } from '../../../utils/fileutils';
 import { output } from '../../../utils/output';
-import { getPackageManagerCommand } from '../../../utils/package-manager';
+import {
+  detectPackageManager,
+  getPackageManagerCommand,
+} from '../../../utils/package-manager';
 import {
   addDepsToPackageJson,
   createNxJsonFile,
@@ -89,10 +92,11 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
 
   createNxJsonFile(repoRoot, [], cacheableOperations, scriptOutputs);
 
-  const pmc = getPackageManagerCommand();
+  const packageManager = detectPackageManager(repoRoot);
+  const pmc = getPackageManagerCommand(packageManager);
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot);
+  addDepsToPackageJson(repoRoot, undefined, packageManager);
   if (options.legacy) {
     markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
   } else {
@@ -101,7 +105,7 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
 
   output.log({ title: '📦 Installing dependencies' });
 
-  runInstall(repoRoot, pmc);
+  runInstall(repoRoot, packageManager, pmc);
 
   if (nxCloudChoice === 'yes') {
     output.log({ title: '🛠️ Setting up Nx Cloud' });

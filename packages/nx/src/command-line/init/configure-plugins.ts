@@ -1,6 +1,7 @@
 import { bold } from 'picocolors';
 
 import {
+  detectPackageManager,
   getPackageManagerCommand,
   PackageManagerCommands,
 } from '../../utils/package-manager';
@@ -32,8 +33,9 @@ export function installPluginPackages(
     return;
   }
   if (existsSync(join(repoRoot, 'package.json'))) {
-    addDepsToPackageJson(repoRoot, plugins);
-    runInstall(repoRoot, pmc);
+    const packageManager = detectPackageManager(repoRoot);
+    addDepsToPackageJson(repoRoot, plugins, packageManager);
+    runInstall(repoRoot, packageManager, pmc);
   } else {
     const nxJson = readNxJson(repoRoot);
     nxJson.installation.plugins ??= {};
