@@ -1,0 +1,183 @@
+name: SIGSEGV AB Hunt
+
+# Diagnostic workflow for the intermittent SIGSEGV kills of nx clients in
+# main-linux (see e.g. run 29103579727). Reproduces the crash conditions
+# (concurrent cloud-recording nx clients, cold shared V8 compile cache,
+# heartbeat spawn window) in a loop, across three legs:
+#   - node 26.3.0                      (current CI default; expected to crash)
+#   - node 24.11.0                     (pre-Jun-3 pin; expected clean)
+#   - node 26.3.0 + NX_COMPILE_CACHE=false (isolates the compile cache)
+# Captures core dumps and prints gdb backtraces so the first crash yields a
+# native stack. Report-only: legs always end green; read the step summary.
+
+on:
+  push:
+    branches:
+      - ci-segv-ab
+  workflow_dispatch:
+    inputs:
+      iterations:
+        description: Loop count per leg
+        default: '60'
+
+env:
+  NX_CLOUD_ACCESS_TOKEN: ${{ secrets.NX_CLOUD_ACCESS_TOKEN }}
+  NX_CLOUD_ENABLE_METRICS_COLLECTION: 'true'
+  PNPM_HOME: ~/.pnpm
+  COREPACK_DEFAULT_TO_LATEST: '0'
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - leg: node26
+            node-version: 26.3.0
+            nx-compile-cache: 'true'
+          - leg: node24
+            node-version: 24.11.0
+            nx-compile-cache: 'true'
+          - leg: node26-no-compile-cache
+            node-version: 26.3.0
+            nx-compile-cache: 'false'
+    env:
+      NODE_VERSION: ${{ matrix.node-version }}
+      NX_COMPILE_CACHE: ${{ matrix.nx-compile-cache }}
+      NX_DAEMON: 'true'
+      NX_PERF_LOGGING: 'false'
+      NX_NATIVE_LOGGING: 'false'
+      NX_CI_EXECUTION_ENV: 'linux'
+      NX_CLOUD_NO_TIMEOUTS: 'true'
+      NX_CLOUD_VERBOSE_LOGGING: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Fetch Master
+        run: git fetch origin master:master
+
+      - name: Set SHAs
+        uses: nrwl/nx-set-shas@310288c04d90696f9f1bc27c5e3caea6642b53d4 # v5.0.0
+        with:
+          main-branch-name: 'master'
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable corepack and install pnpm
+        run: |
+          corepack enable
+          corepack prepare --activate
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install project dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Crash hunt loop
+        run: |
+          set -uo pipefail
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          # Runner default pipes cores to apport, which discards them.
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+          ulimit -c unlimited
+          command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+
+          ITER='${{ inputs.iterations }}'
+          ITER="${ITER:-60}"
+          crashes=0
+          kept_cores=0
+
+          for i in $(seq 1 "$ITER"); do
+            # Re-open the heartbeat spawn window: without this, iteration 1's
+            # heartbeat process survives and later iterations skip the spawn
+            # path where the crash lands. Ephemeral runner, targeted pattern.
+            pkill -f 'heartbeat/background-process' 2>/dev/null || true
+            rm -rf /tmp/run-group-* 2>/dev/null || true
+            # Cold shared compile cache each iteration = the racy write window.
+            rm -rf /tmp/node-compile-cache 2>/dev/null || true
+
+            # Direct bin invocation (not `pnpm nx`): pnpm collapses a child's
+            # signal death into exit 1, which would hide 128+SIGSEGV from wait.
+            pids=(); names=()
+            node_modules/.bin/nx run-many -t check-imports check-lock-files check-codeowners --parallel=1 --no-dte > /tmp/iter-runmany.log 2>&1 &
+            pids+=($!); names+=(runmany)
+            node_modules/.bin/nx run-many -t check-lock-files --parallel=1 --no-dte > /tmp/iter-lockfiles.log 2>&1 &
+            pids+=($!); names+=(lockfiles)
+            node_modules/.bin/nx sync:check > /tmp/iter-sync.log 2>&1 &
+            pids+=($!); names+=(sync)
+
+            iter_crash=0
+            for idx in "${!pids[@]}"; do
+              ec=0; wait "${pids[$idx]}" || ec=$?
+              if [ "$ec" -ge 128 ]; then
+                iter_crash=1
+                sig=$((ec - 128))
+                echo "::warning::iter $i: ${names[$idx]} died with signal $sig (exit $ec)"
+                echo "===== iter $i ${names[$idx]} log tail ====="
+                tail -50 "/tmp/iter-${names[$idx]}.log" || true
+              fi
+            done
+            # A core from ANY process (client, daemon, heartbeat child) or
+            # segfault text in a log also counts as a crash.
+            if compgen -G '/tmp/cores/core.*' > /dev/null 2>&1; then
+              ls /tmp/cores/core.* 2>/dev/null | grep -qv '\.gz$' && iter_crash=1
+            fi
+            if grep -laiE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log > /dev/null 2>&1; then
+              iter_crash=1
+              echo "::warning::iter $i: segfault text found in logs"
+              grep -aiE 'SIGSEGV|Segmentation fault' /tmp/iter-*.log | head -5 || true
+            fi
+
+            if [ "$iter_crash" = 1 ]; then
+              crashes=$((crashes+1))
+              sudo dmesg 2>/dev/null | grep -iE 'segv|segfault' | tail -5 || true
+              for core in /tmp/cores/core.*; do
+                [ -e "$core" ] || continue
+                case "$core" in *.gz) continue ;; esac
+                echo "===== backtrace for $core ====="
+                gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
+                  "$(command -v node)" "$core" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
+                if [ "$kept_cores" -lt 2 ]; then
+                  gzip -f "$core" && kept_cores=$((kept_cores+1)) || true
+                else
+                  rm -f "$core"
+                fi
+              done
+            fi
+            echo "iter $i/$ITER done (crashes so far: $crashes)"
+          done
+
+          {
+            echo "## Leg ${{ matrix.leg }} (node $NODE_VERSION, NX_COMPILE_CACHE=$NX_COMPILE_CACHE)"
+            echo ""
+            echo "**$crashes / $ITER iterations had signal deaths**"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "RESULT leg=${{ matrix.leg }}: $crashes/$ITER iterations had signal deaths"
+
+      - name: Upload crash evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crash-evidence-${{ matrix.leg }}
+          path: |
+            /tmp/backtraces.txt
+            /tmp/cores/*.gz
+          if-no-files-found: ignore
