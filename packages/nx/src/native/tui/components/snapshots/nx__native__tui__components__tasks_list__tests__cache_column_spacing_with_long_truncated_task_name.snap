@@ -16,4 +16,4 @@ expression: terminal.backend()
 "                                                                                          "
 "                                                                                          "
 "                                                                                          "
-"                                                                          quit: q  help: ?"
+"      quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"

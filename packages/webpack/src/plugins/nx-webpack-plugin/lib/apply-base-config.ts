@@ -1,10 +1,7 @@
 import * as path from 'path';
 import { ExecutorContext } from 'nx/src/config/misc-interfaces';
-import { LicenseWebpackPlugin } from 'license-webpack-plugin';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
-import {
+import type {
   Configuration,
-  ProgressPlugin,
   WebpackOptionsNormalized,
   WebpackPluginInstance,
 } from 'webpack';
@@ -17,8 +14,6 @@ import { NxTsconfigPathsWebpackPlugin } from '../../nx-typescript-webpack-plugin
 import { getTerserEcmaVersion } from './get-terser-ecma-version';
 import { createLoaderFromCompiler } from './compiler-loaders';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-app-webpack-plugin-options';
-import TerserPlugin = require('terser-webpack-plugin');
-import nodeExternals = require('webpack-node-externals');
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getNonBuildableLibs } from './utils';
 
@@ -67,6 +62,9 @@ function applyNxIndependentConfig(
   options: NormalizedNxAppWebpackPluginOptions,
   config: Partial<WebpackOptionsNormalized | Configuration>
 ): void {
+  const TerserPlugin =
+    require('terser-webpack-plugin') as typeof import('terser-webpack-plugin');
+
   const hashFormat = getOutputHashFormat(options.outputHashing as string);
   config.context = path.join(options.root, options.projectRoot);
   config.target ??= options.target;
@@ -251,6 +249,14 @@ function applyNxDependentConfig(
   config: Partial<WebpackOptionsNormalized | Configuration>,
   { useNormalizedEntry }: { useNormalizedEntry?: boolean } = {}
 ): void {
+  const { ProgressPlugin } = require('webpack') as typeof import('webpack');
+  const { LicenseWebpackPlugin } =
+    require('license-webpack-plugin') as typeof import('license-webpack-plugin');
+  const CopyWebpackPlugin =
+    require('copy-webpack-plugin') as typeof import('copy-webpack-plugin');
+  const nodeExternals =
+    require('webpack-node-externals') as typeof import('webpack-node-externals');
+
   const tsConfig = options.tsConfig ?? getRootTsConfigPath();
   const plugins: WebpackPluginInstance[] = [];
 

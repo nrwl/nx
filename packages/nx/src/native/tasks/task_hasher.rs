@@ -8,7 +8,7 @@ use crate::native::{
     hasher::hash,
     project_graph::{types::ProjectGraph, utils::create_project_root_mappings},
     tasks::types::{HashInstruction, HashPlans},
-    types::NapiDashMap,
+    types::{NapiDashMap, SharedStr},
 };
 use crate::native::{
     project_graph::utils::ProjectRootMappings,
@@ -16,10 +16,11 @@ use crate::native::{
 };
 use crate::native::{
     tasks::hashers::{
-        CachedTaskOutput, JsonHashResult, ProjectFileSetCache, WorkspaceFileSetCache,
-        hash_all_externals, hash_external, hash_json_files, hash_project_config,
-        hash_project_files_with_inputs_cached, hash_task_output, hash_tsconfig_selectively,
-        hash_workspace_files_with_inputs_cached,
+        CachedTaskOutput, JsonHashResult, ProjectFileIndicesCache, ProjectFileSetCache,
+        WorkspaceFileIndicesCache, WorkspaceFileSetCache, collect_project_file_paths_cached,
+        collect_workspace_file_paths_cached, hash_all_externals, hash_external, hash_json_files,
+        hash_project_config, hash_project_files_cached, hash_task_output,
+        hash_tsconfig_selectively, hash_workspace_files_cached,
     },
     types::FileData,
     workspace::types::ProjectFiles,
@@ -130,7 +131,11 @@ impl From<HashInputsBuilder> for HashInputs {
 #[derive(Debug)]
 pub struct HashDetails {
     pub value: String,
-    pub details: HashMap<String, String>,
+    // Keys and values are shared Arcs: the same instruction key and hash
+    // value appear in the details of every task that depends on the input,
+    // so per-map owned strings would duplicate them once per task.
+    #[napi(ts_type = "Record<string, string>")]
+    pub details: HashMap<SharedStr, SharedStr>,
     /// Structured inputs used for hashing (file patterns, env vars, etc.)
     pub inputs: HashInputs,
 }
@@ -138,6 +143,39 @@ pub struct HashDetails {
 #[napi(object)]
 pub struct HasherOptions {
     pub selectively_hash_ts_config: bool,
+}
+
+/// Return type of `hash_plans`. Converts like the wrapped map, but shares one
+/// JS string per unique details value for the duration of the conversion.
+/// napi sets map keys as object property names, so they do not flow through
+/// `SharedStr::to_napi_value`; without this cache, each repeated hash value
+/// would materialize as a separate JS string while converting the result.
+pub struct TaskHashes(pub NapiDashMap<String, HashDetails>);
+
+impl ToNapiValue for TaskHashes {
+    unsafe fn to_napi_value(env: sys::napi_env, val: Self) -> napi::Result<sys::napi_value> {
+        let _guard = SharedStr::install_handle_cache();
+        unsafe { NapiDashMap::to_napi_value(env, val.0) }
+    }
+}
+
+/// Returns the shared Arc for `value`, allocating it on first sight. Only
+/// Environment and Runtime values flow through here: they depend on the
+/// task's env, so they cannot live in the shared per-id slots, but tasks
+/// whose envs agree still produce identical strings; interning keeps one
+/// allocation per unique value.
+fn intern_value(interner: &DashMap<String, Arc<str>>, value: String) -> Arc<str> {
+    if let Some(existing) = interner.get(&value) {
+        return existing.clone();
+    }
+    match interner.entry(value) {
+        dashmap::mapref::entry::Entry::Occupied(existing) => existing.get().clone(),
+        dashmap::mapref::entry::Entry::Vacant(vacant) => {
+            let shared: Arc<str> = Arc::from(vacant.key().as_str());
+            vacant.insert(shared.clone());
+            shared
+        }
+    }
 }
 
 #[napi]
@@ -152,9 +190,15 @@ pub struct TaskHasher {
     options: Option<HasherOptions>,
     external_cache: Arc<DashMap<String, String>>,
     // Persisted across hash_plans() calls: they only fold the immutable FileData
-    // snapshot, so they never go stale. (Live-disk/exec caches stay per-call — see below.)
+    // snapshot, so they never go stale. The set caches are hash-only; the indices
+    // caches hold the matched files' positions in that snapshot (4 bytes each, not
+    // the path strings) and are only populated when inputs are collected. Paths are
+    // expanded from the indices per call. (Live-disk/exec caches stay per-call, see
+    // below.)
     workspace_file_set_cache: WorkspaceFileSetCache,
     project_file_set_cache: ProjectFileSetCache,
+    workspace_file_indices_cache: WorkspaceFileIndicesCache,
+    project_file_indices_cache: ProjectFileIndicesCache,
     // Fold over all externals; identical for every task, so computed once.
     all_externals_hash: OnceCell<String>,
 }
@@ -188,6 +232,8 @@ impl TaskHasher {
             external_cache: Arc::new(DashMap::new()),
             workspace_file_set_cache: WorkspaceFileSetCache::new(),
             project_file_set_cache: ProjectFileSetCache::new(),
+            workspace_file_indices_cache: WorkspaceFileIndicesCache::new(),
+            project_file_indices_cache: ProjectFileIndicesCache::new(),
             all_externals_hash: OnceCell::new(),
         }
     }
@@ -206,7 +252,7 @@ impl TaskHasher {
         per_task_envs: HashMap<String, HashMap<String, String>>,
         cwd: String,
         collect_task_inputs: Option<bool>,
-    ) -> anyhow::Result<NapiDashMap<String, HashDetails>> {
+    ) -> anyhow::Result<TaskHashes> {
         for task_id in hash_plans.plans.keys() {
             if !per_task_envs.contains_key(task_id) {
                 anyhow::bail!("hash_plans: missing env entry for task {}", task_id);
@@ -225,7 +271,7 @@ impl TaskHasher {
         cwd: String,
         collect_task_inputs: Option<bool>,
         resolve_env: F,
-    ) -> anyhow::Result<NapiDashMap<String, HashDetails>>
+    ) -> anyhow::Result<TaskHashes>
     where
         F: Fn(&str) -> &'a HashMap<String, String> + Sync,
     {
@@ -234,6 +280,10 @@ impl TaskHasher {
         let task_output_cache = DashMap::new();
         let runtime_cache: DashMap<String, String> = DashMap::new();
         let json_file_set_cache: DashMap<String, JsonHashResult> = DashMap::new();
+        // Deduplicates env-dependent hash values (Environment, Runtime)
+        // across tasks; see intern_value. Other instruction types share
+        // values through per-id slots instead.
+        let value_interner: DashMap<String, Arc<str>> = DashMap::new();
         let should_collect_inputs = collect_task_inputs.unwrap_or(false);
 
         let function_start = std::time::Instant::now();
@@ -270,6 +320,19 @@ impl TaskHasher {
         let cwd_path = std::path::Path::new(&cwd);
 
         let pool = &hash_plans.pool;
+        // Id-indexed snapshots so the hot loop reads a plain Vec instead of
+        // taking a DashMap shard lock per (task, instruction) entry. Every
+        // instruction except Environment and Runtime (whose values depend on
+        // the task's env) hashes to the same value for every task within an
+        // invocation, so its value lives in a per-id slot: a filled OnceCell
+        // is an atomic load, and it lets the loop skip hash_instruction
+        // entirely when inputs are not collected.
+        let instruction_keys: Vec<SharedStr> = (0..pool.len() as u32)
+            .map(|id| SharedStr::from(pool.key(id)))
+            .collect();
+        let value_slots: Vec<OnceCell<SharedStr>> = std::iter::repeat_with(OnceCell::new)
+            .take(pool.len())
+            .collect();
         hash_plans
             .plans
             .iter()
@@ -277,24 +340,62 @@ impl TaskHasher {
             .par_bridge()
             .try_for_each(|(task_id, id)| {
                 let instruction_ref = pool.get(id);
-                let (instruction_key, hash_value, inputs) = self.hash_instruction(
-                    task_id,
-                    instruction_ref.value(),
-                    HashInstructionArgs {
-                        js_env: resolve_env(task_id),
-                        ts_config_hash: &ts_config_hash,
-                        project_root_mappings: &project_root_mappings,
-                        sorted_externals: &sorted_externals,
-                        selectively_hash_tsconfig,
-                        task_output_cache: &task_output_cache,
-                        runtime_cache: &runtime_cache,
-                        project_file_set_cache: &self.project_file_set_cache,
-                        workspace_file_set_cache: &self.workspace_file_set_cache,
-                        json_file_set_cache: &json_file_set_cache,
-                        cwd: cwd_path,
-                        collect_inputs: should_collect_inputs,
-                    },
-                )?;
+                // Env-dependent values cannot be shared across tasks. The
+                // match is exhaustive so a new instruction type must be
+                // classified here before it can ride the shared slots.
+                let slot = match instruction_ref.value() {
+                    HashInstruction::Environment(_) | HashInstruction::Runtime(_) => None,
+                    HashInstruction::WorkspaceFileSet(_)
+                    | HashInstruction::Cwd(_)
+                    | HashInstruction::ProjectFileSet(_, _)
+                    | HashInstruction::ProjectConfiguration(_)
+                    | HashInstruction::TsConfiguration(_)
+                    | HashInstruction::TaskOutput(_, _)
+                    | HashInstruction::External(_)
+                    | HashInstruction::AllExternalDependencies
+                    | HashInstruction::JsonFileSet(_) => Some(&value_slots[id as usize]),
+                };
+
+                let cached = if should_collect_inputs {
+                    // Inputs are per task, so every entry must run
+                    // hash_instruction to produce them.
+                    None
+                } else {
+                    slot.and_then(|s| s.get()).cloned()
+                };
+                let value = match cached {
+                    Some(value) => value,
+                    None => {
+                        let (hash_value, inputs) = self.hash_instruction(
+                            task_id,
+                            instruction_ref.value(),
+                            HashInstructionArgs {
+                                js_env: resolve_env(task_id),
+                                ts_config_hash: &ts_config_hash,
+                                project_root_mappings: &project_root_mappings,
+                                sorted_externals: &sorted_externals,
+                                selectively_hash_tsconfig,
+                                task_output_cache: &task_output_cache,
+                                runtime_cache: &runtime_cache,
+                                project_file_set_cache: &self.project_file_set_cache,
+                                workspace_file_set_cache: &self.workspace_file_set_cache,
+                                json_file_set_cache: &json_file_set_cache,
+                                cwd: cwd_path,
+                                collect_inputs: should_collect_inputs,
+                            },
+                        )?;
+
+                        // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
+                        if let Some(ref accum) = inputs_accum {
+                            accum.entry(task_id.to_string()).or_default().extend(inputs);
+                        }
+
+                        match slot {
+                            Some(slot) => slot.get_or_init(|| SharedStr::from(hash_value)).clone(),
+                            None => intern_value(&value_interner, hash_value).into(),
+                        }
+                    }
+                };
 
                 // Accumulate hash details
                 let mut entry = hashes
@@ -304,12 +405,9 @@ impl TaskHasher {
                         details: HashMap::new(),
                         inputs: HashInputs::default(),
                     });
-                entry.details.insert(instruction_key, hash_value);
-
-                // Accumulate inputs using HashSet for O(1) deduplication (only when collecting)
-                if let Some(ref accum) = inputs_accum {
-                    accum.entry(task_id.to_string()).or_default().extend(inputs);
-                }
+                entry
+                    .details
+                    .insert(instruction_keys[id as usize].clone(), value);
 
                 Ok::<(), anyhow::Error>(())
             })?;
@@ -351,7 +449,7 @@ impl TaskHasher {
             assemble_duration
         );
 
-        Ok(hashes)
+        Ok(TaskHashes(hashes))
     }
 
     fn hash_instruction(
@@ -372,27 +470,32 @@ impl TaskHasher {
             cwd,
             collect_inputs,
         }: HashInstructionArgs,
-    ) -> anyhow::Result<(String, String, HashInputsBuilder)> {
+    ) -> anyhow::Result<(String, HashInputsBuilder)> {
         let now = std::time::Instant::now();
         let span = trace_span!("hashing", task_id).entered();
         let empty = HashInputsBuilder::default();
         let (hash, inputs) = match instruction {
             HashInstruction::WorkspaceFileSet(workspace_file_set) => {
-                let cached_entry = hash_workspace_files_with_inputs_cached(
+                let hashed = hash_workspace_files_cached(
                     workspace_file_set,
                     &self.all_workspace_files,
                     workspace_file_set_cache,
                 )?;
                 trace!(parent: &span, "hash_workspace_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
+                    let files = collect_workspace_file_paths_cached(
+                        workspace_file_set,
+                        &self.all_workspace_files,
+                        &self.workspace_file_indices_cache,
+                    )?;
                     HashInputsBuilder {
-                        files: cached_entry.files.iter().cloned().collect(),
+                        files: files.into_iter().collect(),
                         ..Default::default()
                     }
                 } else {
                     empty
                 };
-                (cached_entry.hash.clone(), inputs)
+                ((*hashed).clone(), inputs)
             }
             HashInstruction::Runtime(runtime) => {
                 let hashed_runtime =
@@ -422,7 +525,7 @@ impl TaskHasher {
                 (hashed_cwd, empty)
             }
             HashInstruction::ProjectFileSet(project_name, file_sets) => {
-                let cached_entry = hash_project_files_with_inputs_cached(
+                let hashed = hash_project_files_cached(
                     project_name,
                     file_sets,
                     &self.project_file_map,
@@ -430,14 +533,20 @@ impl TaskHasher {
                 )?;
                 trace!(parent: &span, "hash_project_files: {:?}", now.elapsed());
                 let inputs = if collect_inputs {
+                    let files = collect_project_file_paths_cached(
+                        project_name,
+                        file_sets,
+                        &self.project_file_map,
+                        &self.project_file_indices_cache,
+                    )?;
                     HashInputsBuilder {
-                        files: cached_entry.files.iter().cloned().collect(),
+                        files: files.into_iter().collect(),
                         ..Default::default()
                     }
                 } else {
                     empty
                 };
-                (cached_entry.hash.clone(), inputs)
+                ((*hashed).clone(), inputs)
             }
             HashInstruction::ProjectConfiguration(project_name) => {
                 let hashed_project_config =
@@ -584,7 +693,7 @@ impl TaskHasher {
                 (cached_entry.hash, inputs)
             }
         };
-        Ok((instruction.to_string(), hash, inputs))
+        Ok((hash, inputs))
     }
 }
 
@@ -601,4 +710,23 @@ struct HashInstructionArgs<'a> {
     json_file_set_cache: &'a DashMap<String, JsonHashResult>,
     cwd: &'a std::path::Path,
     collect_inputs: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn intern_value_shares_one_allocation_per_unique_value() {
+        let interner: DashMap<String, Arc<str>> = DashMap::new();
+
+        let first = intern_value(&interner, "12345".to_string());
+        let second = intern_value(&interner, "12345".to_string());
+        let other = intern_value(&interner, "67890".to_string());
+
+        assert_eq!(&*first, "12345");
+        assert!(Arc::ptr_eq(&first, &second));
+        assert!(!Arc::ptr_eq(&first, &other));
+        assert_eq!(interner.len(), 2);
+    }
 }
