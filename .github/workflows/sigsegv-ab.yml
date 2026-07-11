@@ -100,6 +100,16 @@ jobs:
           ulimit -c unlimited
           command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
 
+          # Rounds 1-2 (idle box) produced 0 crashes in 180 exercised
+          # heartbeat windows. Production crashes happen while the full
+          # affected build/test/e2e wave loads the runner, so recreate that
+          # pressure: CPU contention + memory pressure force frequent V8 GC,
+          # which is where latent heap corruption actually manifests.
+          command -v stress-ng >/dev/null || sudo apt-get install -y -q stress-ng
+          stress-ng --cpu 2 --vm 2 --vm-bytes 40% --quiet &
+          STRESS_PID=$!
+          trap 'kill $STRESS_PID 2>/dev/null || true' EXIT
+
           ITER='${{ inputs.iterations }}'
           ITER="${ITER:-60}"
           crashes=0
