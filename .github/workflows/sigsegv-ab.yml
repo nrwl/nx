@@ -27,6 +27,55 @@ env:
   COREPACK_DEFAULT_TO_LATEST: '0'
 
 jobs:
+  # Proves the capture pipeline in ci.yml's "Collect segfault cores" end to
+  # end: a real node process is SIGSEGV'd on purpose under the identical
+  # core_pattern/ulimit setup, and the job FAILS unless a core appears and
+  # gdb yields usable frames. Runs on every push; the expensive hunt legs
+  # only run on manual dispatch.
+  canary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NODE_VERSION: 26.3.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Setup dev tools with mise
+        uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3
+
+      - name: Enable core dumps exactly like the ci.yml catcher
+        run: |
+          sudo mkdir -p /tmp/cores && sudo chmod 777 /tmp/cores
+          sudo sysctl -w kernel.core_pattern='/tmp/cores/core.%e.%p'
+
+      - name: Crash a real node process on purpose
+        run: |
+          ulimit -c unlimited
+          ec=0
+          node -e 'process.kill(process.pid, "SIGSEGV")' || ec=$?
+          echo "node exited with $ec (expect 139)"
+          ls -la /tmp/cores/
+
+      - name: Validate a core was captured and gdb yields frames
+        run: |
+          shopt -s nullglob
+          cores=(/tmp/cores/core.*)
+          if [ ${#cores[@]} -eq 0 ]; then
+            echo '::error::CANARY FAILED: no core dump captured'
+            exit 1
+          fi
+          command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+          gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
+            "$(command -v node)" "${cores[0]}" 2>&1 | tee /tmp/bt.txt
+          frames=$(grep -c '^#' /tmp/bt.txt || true)
+          echo "backtrace frames: $frames"
+          if [ "$frames" -lt 3 ]; then
+            echo '::error::CANARY FAILED: gdb produced fewer than 3 frames'
+            exit 1
+          fi
+          echo "Canary OK: core captured, $frames frames resolved" >> "$GITHUB_STEP_SUMMARY"
+
   hunt:
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -111,7 +160,9 @@ jobs:
           trap 'kill $STRESS_PID 2>/dev/null || true' EXIT
 
           ITER='${{ inputs.iterations }}'
-          ITER="${ITER:-60}"
+          # Cache-busted iterations execute tasks for real (~2-3 min each
+          # instead of ~25s replays), so the push-triggered default is lower.
+          ITER="${ITER:-20}"
           crashes=0
           kept_cores=0
           hb_windows=0
@@ -128,6 +179,10 @@ jobs:
             rm -rf /tmp/run-group-* 2>/dev/null || true
             # Cold shared compile cache each iteration = the racy write window.
             rm -rf /tmp/node-compile-cache 2>/dev/null || true
+            # Bust the nx cache (nx.json sharedGlobals includes this env var)
+            # so every iteration EXECUTES tasks — real fork/exec churn, cache
+            # writes, and terminal-output uploads — instead of cache replays.
+            export NX_AB_SALT="salt-$i"
 
             # Direct bin invocation (not `pnpm nx`): pnpm collapses a child's
             # signal death into exit 1, which would hide 128+SIGSEGV from wait.
