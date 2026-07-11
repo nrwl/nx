@@ -626,19 +626,19 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
-            label: 'Use npm workspaces with Nx',
+            label: 'npm workspaces',
             link: 'guides/tips-n-tricks/npm-workspaces',
           },
           {
-            label: 'Use pnpm workspaces with Nx',
+            label: 'pnpm workspaces',
             link: 'guides/tips-n-tricks/pnpm-workspaces',
           },
           {
-            label: 'Use Yarn workspaces with Nx',
+            label: 'Yarn workspaces',
             link: 'guides/tips-n-tricks/yarn-workspaces',
           },
           {
-            label: 'Use Bun workspaces with Nx',
+            label: 'Bun workspaces',
             link: 'guides/tips-n-tricks/bun-workspaces',
           },
           {
@@ -1098,6 +1098,7 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Nx vs Turborepo',
             link: 'guides/comparisons/nx-vs-turborepo',
           },
+          { label: 'Nx vs Lerna', link: 'guides/comparisons/nx-vs-lerna' },
           { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
           { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
           { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },

@@ -1,18 +1,22 @@
 ---
-title: Use Yarn Workspaces with Nx
-description: Set up a Yarn workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.
+title: 'Yarn Workspaces Tutorial: Setup, Commands, and Best Practices'
+description: 'Learn Yarn workspaces: setup, linking packages, running scripts with yarn workspaces foreach, hoisting behavior, and best practices for growing monorepos.'
 filter: 'type:Guides'
 ---
 
-A Yarn workspace lets you manage multiple packages in a single repository. Adding Nx to a Yarn workspace gives you cached tasks, affected-only builds, and faster CI, while Yarn keeps managing installs. Set up a Yarn workspace first, then add Nx.
+Yarn workspaces let a single repository hold multiple packages that are developed together. You declare them in the root `package.json` `workspaces` field, and `yarn install` resolves the whole project at once, hoisting shared dependencies to the root and linking workspace packages to each other.
+
+For the full configuration reference, see the [Yarn workspaces documentation](https://yarnpkg.com/features/workspaces).
 
 {% aside type="note" title="Looking for Yarn PnP?" %}
-This recipe covers Yarn's workspaces feature. If you use Yarn's Plug'n'Play install mode, see [Using Yarn PnP with Nx](/docs/guides/tips-n-tricks/yarn-pnp).
+This guide covers the workspaces feature. If you use the Plug'n'Play install mode, see the [Yarn PnP guide](/docs/guides/tips-n-tricks/yarn-pnp).
 {% /aside %}
 
-## Set up a Yarn workspace
+## Set up Yarn workspaces
 
-A Yarn workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files:
+### 1. Declare workspaces in package.json
+
+A Yarn workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files. Mark the root `private` so it can't be published:
 
 ```jsonc
 // package.json
@@ -23,7 +27,9 @@ A Yarn workspace is a repository whose root `package.json` has a `workspaces` fi
 }
 ```
 
-A common layout separates applications from shared packages:
+### 2. Create the workspace packages
+
+Every directory matched by those globs that contains a `package.json` becomes a workspace. A common layout separates applications from shared packages:
 
 {% filetree %}
 
@@ -38,7 +44,9 @@ A common layout separates applications from shared packages:
 
 {% /filetree %}
 
-To depend on another package in the workspace, reference it with the `workspace:` protocol so Yarn resolves it to the local package:
+### 3. Link workspaces with the workspace: protocol
+
+To depend on another workspace, reference it with the `workspace:` protocol (Yarn 2 and later) so Yarn always resolves it to the local package. On publish, Yarn replaces `workspace:*` with the package's exact version:
 
 ```jsonc
 // apps/web/package.json
@@ -51,55 +59,69 @@ To depend on another package in the workspace, reference it with the `workspace:
 }
 ```
 
+On Yarn 1 (Classic) there's no `workspace:` protocol, so reference the package by a version range that matches the local version, as npm workspaces do.
+
 Run `yarn install` once at the root to install every package's dependencies and link the internal ones.
 
-## Add Nx in one command
+## Run scripts with yarn workspaces foreach
 
-Nx layers task running and caching on top of your existing Yarn workspace. Yarn still installs and resolves packages. Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
+`yarn workspaces foreach` runs a command across workspaces. The `-A` (`--all`) flag selects every workspace, `-p` runs in parallel, and `-t` orders execution topologically so dependencies build first:
+
+```shell
+yarn workspaces foreach -A run build    # every workspace
+yarn workspaces foreach -Apt run build  # parallel, dependencies first
+yarn workspace web run build            # a single workspace
+```
+
+Yarn 4 ships `foreach` out of the box. On Yarn 3, add it first with `yarn plugin import workspace-tools`. On Yarn 1 (Classic), the equivalent is `yarn workspaces run build`.
+
+## Do Yarn workspaces hoist dependencies?
+
+Yes. With the default node-modules linker, Yarn hoists shared dependencies to the root `node_modules`, so each version is installed once and packages resolve it by walking up the directory tree. Only conflicting versions get nested inside an individual workspace's `node_modules` folder.
+
+Hoisting means a workspace can import a dependency it never declared, which breaks the moment that package is published or moved. Declare every import in the workspace's own `package.json`. To restrict hoisting, set `nmHoistingLimits` in `.yarnrc.yml` (Yarn 2+). Yarn 1 used the `nohoist` field instead. Yarn PnP sidesteps hoisting entirely by resolving imports from a lockfile-driven map instead of `node_modules`.
+
+## Enforce dependency rules with constraints
+
+Yarn [constraints](https://yarnpkg.com/features/constraints) check rules across every workspace's `package.json`, like requiring one version of `react` everywhere or a `license` field on every package. In Yarn 4, define them in `yarn.config.cjs` and run `yarn constraints` to check the repository, or `yarn constraints --fix` to apply fixes.
+
+Constraints catch version drift at install time rather than at review time, which matters once dozens of `package.json` files change independently.
+
+## Compare workspace commands across package managers
+
+All four package managers cover the same core workflows with different flags, and pnpm has the most capable built-in filtering:
+
+| Task                            | pnpm                          | npm                                       | Yarn                                   | Bun                            |
+| ------------------------------- | ----------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------ |
+| Install all packages            | `pnpm install`                | `npm install`                             | `yarn install`                         | `bun install`                  |
+| Add a dependency to one package | `pnpm --filter web add axios` | `npm install axios -w web`                | `yarn workspace web add axios`         | `cd apps/web && bun add axios` |
+| Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
+| Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
+
+## Frequently asked questions
+
+### Do Yarn workspaces work with Yarn 1 (Classic)?
+
+Yes, workspaces originated in Yarn 1 and remain supported there, but the commands differ: `yarn workspaces run build` instead of `foreach`, `nohoist` instead of `nmHoistingLimits`, and no `workspace:` protocol or constraints.
+
+### Does the workspace: protocol work with Yarn?
+
+Yes, on Yarn 2 and later. `workspace:*` always resolves to the local workspace and is replaced with the exact version on publish, while `workspace:^` publishes a caret range.
+
+### What's the difference between yarn workspace and yarn workspaces foreach?
+
+`yarn workspace <name> <command>` runs one command in one workspace. `yarn workspaces foreach` iterates over many workspaces and adds ordering flags like `-t` for topological order and `-p` for parallelism.
+
+## Do Yarn workspaces replace a monorepo tool?
+
+No. Yarn workspaces install and link packages, `foreach -t` orders scripts, and `--since` selects workspaces changed since a git ref, but nothing is cached and that change detection compares files, not task inputs, so CI still reruns tasks a change couldn't have affected.
+
+When that becomes the bottleneck, add Nx on top without changing how Yarn works:
 
 ```shell
 npx nx@latest init
 ```
 
-Your existing `package.json` scripts keep working. Nx infers a project for each `package.json` in your workspace and runs its scripts with caching, with no `project.json` or extra configuration required.
+Your existing `package.json` scripts keep working and Yarn keeps managing installs. Nx runs the same scripts with [caching](/docs/features/cache-task-results) and [affected detection](/docs/features/ci-features/affected). For the full walkthrough, see [Adding Nx to an existing monorepo](/docs/guides/adopting-nx/adding-to-monorepo) and [CI setup](/docs/getting-started/setup-ci).
 
-## Run tasks before and after Nx
-
-Before Nx, Yarn runs a script across packages, but it runs every task every time and has no notion of which packages a change affects:
-
-```shell
-yarn workspaces foreach --all run build   # every workspace
-yarn workspace web run build              # a single workspace
-```
-
-After `nx init`, run the same scripts through Nx:
-
-```shell
-nx run-many -t build   # every project
-nx build web           # a single project
-nx affected -t build   # only projects touched by your changes
-```
-
-The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
-
-## How task caching works
-
-`nx init` writes an `nx.json` with `targetDefaults` that control which targets are cached:
-
-```jsonc
-// nx.json
-{
-  "targetDefaults": {
-    "build": {
-      "cache": true,
-      "dependsOn": ["^build"],
-    },
-  },
-}
-```
-
-`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
-
-In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks.
-
-For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
+Working with a different package manager? See [pnpm workspaces](/docs/guides/tips-n-tricks/pnpm-workspaces), [npm workspaces](/docs/guides/tips-n-tricks/npm-workspaces), or [Bun workspaces](/docs/guides/tips-n-tricks/bun-workspaces). New to monorepos? Start with [what a monorepo is and why teams use one](/docs/concepts/decisions/why-monorepos).

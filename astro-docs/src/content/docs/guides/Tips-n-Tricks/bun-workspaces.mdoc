@@ -1,14 +1,18 @@
 ---
-title: Use Bun Workspaces with Nx
-description: Set up a Bun workspace and add Nx in one command to get cached tasks, affected-only builds, and faster CI, with your existing package.json scripts working out of the box.
+title: 'Bun Workspaces Tutorial: Setup, Commands, and Best Practices'
+description: 'Learn Bun workspaces: setup, linking packages with workspace:*, running scripts with --filter, and best practices for fast monorepos.'
 filter: 'type:Guides'
 ---
 
-A Bun workspace lets you manage multiple packages in a single repository. Adding Nx to a Bun workspace gives you cached tasks, affected-only builds, and faster CI, while Bun keeps managing installs. Set up a Bun workspace first, then add Nx.
+Bun workspaces let you manage multiple packages in one repository using the same `workspaces` field npm and Yarn read. `bun install` resolves every package in a single pass, dedupes shared dependencies to the root `node_modules`, and links local packages declared with the `workspace:` protocol.
+
+For the full configuration reference, see the [Bun workspaces documentation](https://bun.com/docs/install/workspaces).
 
 ## Set up a Bun workspace
 
-A Bun workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files:
+### 1. List packages in the workspaces field
+
+A Bun workspace is a repository whose root `package.json` has a `workspaces` field listing the directories that hold `package.json` files. Bun supports full glob syntax here, including negative patterns like `!**/excluded/**`:
 
 ```jsonc
 // package.json
@@ -19,7 +23,9 @@ A Bun workspace is a repository whose root `package.json` has a `workspaces` fie
 }
 ```
 
-A common layout separates applications from shared packages:
+### 2. Add the packages
+
+Every directory matched by those globs that contains a `package.json` becomes a workspace package. A common layout separates applications from shared packages:
 
 {% filetree %}
 
@@ -34,7 +40,9 @@ A common layout separates applications from shared packages:
 
 {% /filetree %}
 
-To depend on another package in the workspace, reference it with the `workspace:` protocol so Bun resolves it to the local package:
+### 3. Link local packages with workspace:\*
+
+To depend on another package in the workspace, reference it with the `workspace:` protocol so Bun resolves it to the local package. Bun supports `workspace:*`, `workspace:^`, and `workspace:~`, and replaces them with real semver versions on publish:
 
 ```jsonc
 // apps/web/package.json
@@ -49,53 +57,63 @@ To depend on another package in the workspace, reference it with the `workspace:
 
 Run `bun install` once at the root to install every package's dependencies and link the internal ones.
 
-## Add Nx in one command
+## Install every package with one bun install
 
-Nx layers task running and caching on top of your existing Bun workspace. Bun still installs and resolves packages. Nx makes your tasks cacheable and your CI affected-aware. Add it with one command, which works on any npm, Yarn, pnpm, or Bun workspace:
+A single `bun install` at the root installs and dedupes dependencies for all workspaces, so shared packages exist once in the root `node_modules`. Install speed is the headline Bun feature: per the Bun team's benchmarks, `bun install` runs up to 28x faster than `npm install`, which makes full reinstalls in CI and fresh clones noticeably cheaper in a workspace with many packages.
+
+## Target packages with --filter
+
+The `--filter` flag narrows both installs and script runs to matching packages. For `bun run`, place `--filter` before the script name:
+
+```shell
+bun run --filter '*' build        # run build in every package
+bun run --filter web build        # run build in a single package
+bun install --filter 'pkg-*'      # install deps only for matching packages
+```
+
+Filters accept globs and compose: pass `--filter` multiple times, and prefix a pattern with `!` to exclude it, as in `bun install --filter 'pkg-*' --filter '!pkg-c'`.
+
+## How mature are Bun workspaces?
+
+Bun workspaces are the newest of the four implementations. Setup, linking, the `workspace:` protocol, and `--filter` cover the everyday workflows, but there's no filtering by dependency relationship or by what changed in git, which the pnpm `--filter` flag offers. Bun workspaces also have less production mileage overall, and some ecosystem tools expect an npm, Yarn, or pnpm lockfile rather than the Bun lockfile.
+
+If your workspace leans on publishing workflows or unusual install hooks, test those paths before migrating and check the [Bun issue tracker](https://github.com/oven-sh/bun/issues) for open workspace issues.
+
+## Compare workspace commands across package managers
+
+All four package managers cover the same core workflows with different flags, and pnpm has the most capable built-in filtering:
+
+| Task                            | pnpm                          | npm                                       | Yarn                                   | Bun                            |
+| ------------------------------- | ----------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------ |
+| Install all packages            | `pnpm install`                | `npm install`                             | `yarn install`                         | `bun install`                  |
+| Add a dependency to one package | `pnpm --filter web add axios` | `npm install axios -w web`                | `yarn workspace web add axios`         | `cd apps/web && bun add axios` |
+| Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
+| Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
+
+## Frequently asked questions
+
+### Does Bun support the workspace: protocol?
+
+Yes. `workspace:*`, `workspace:^`, and `workspace:~` all resolve to the local package during development, and Bun rewrites them to concrete semver versions when the package is published.
+
+### Can I move an npm or Yarn workspace to Bun?
+
+Usually, yes. Bun reads the same root `workspaces` field, so running `bun install` in an existing npm or Yarn workspace produces a working install with a Bun lockfile. Verify any tooling that parses your old lockfile before deleting it.
+
+### Should I use Bun workspaces for a large monorepo?
+
+Installing and linking hold up well as package count grows, so workspace size itself isn't the limiting factor. The real limits are the missing dependency-aware filtering and the thinner ecosystem support for the Bun lockfile, so weigh those against the install speed before committing a large workspace to Bun.
+
+## Do Bun workspaces replace a monorepo tool?
+
+No. Bun workspaces make installs fast and link local packages, but they don't cache task results or detect which projects a commit affects, so CI reruns every task on every push no matter how fast the install was.
+
+When that becomes the bottleneck, add Nx on top without changing how Bun works:
 
 ```shell
 npx nx@latest init
 ```
 
-Your existing `package.json` scripts keep working. Nx infers a project for each `package.json` in your workspace and runs its scripts with caching, with no `project.json` or extra configuration required.
+Your existing `package.json` scripts keep working and Bun keeps managing installs. Nx runs the same scripts with [caching](/docs/features/cache-task-results) and [affected detection](/docs/features/ci-features/affected). For the full walkthrough, see [Adding Nx to an existing monorepo](/docs/guides/adopting-nx/adding-to-monorepo) and [CI setup](/docs/getting-started/setup-ci).
 
-## Run tasks before and after Nx
-
-Before Nx, Bun runs a script across packages, but it runs every task every time and has no notion of which packages a change affects. Place `--filter` before the script:
-
-```shell
-bun run --filter '*' build   # every package
-bun run --filter web build   # a single package
-```
-
-After `nx init`, run the same scripts through Nx:
-
-```shell
-nx run-many -t build   # every project
-nx build web           # a single project
-nx affected -t build   # only projects touched by your changes
-```
-
-The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
-
-## How task caching works
-
-`nx init` writes an `nx.json` with `targetDefaults` that control which targets are cached:
-
-```jsonc
-// nx.json
-{
-  "targetDefaults": {
-    "build": {
-      "cache": true,
-      "dependsOn": ["^build"],
-    },
-  },
-}
-```
-
-`cache: true` makes a target cacheable: Nx hashes each project's inputs (source files, dependencies, and config) and restores its outputs from the cache when nothing has changed. `dependsOn: ["^build"]` builds a project's dependencies first. Nothing is cached unless you opt in, so you stay in control.
-
-In CI, turn on [remote caching](/docs/features/ci-features/remote-cache) and [task distribution](/docs/features/ci-features/distribute-task-execution) to share the cache across machines and parallelize tasks.
-
-For a deeper walkthrough, see [Adding Nx to an NPM/Yarn/PNPM Workspace](/docs/guides/adopting-nx/adding-to-monorepo).
+Working with a different package manager? See [pnpm workspaces](/docs/guides/tips-n-tricks/pnpm-workspaces), [npm workspaces](/docs/guides/tips-n-tricks/npm-workspaces), or [Yarn workspaces](/docs/guides/tips-n-tricks/yarn-workspaces). New to monorepos? Start with [what a monorepo is and why teams use one](/docs/concepts/decisions/why-monorepos).

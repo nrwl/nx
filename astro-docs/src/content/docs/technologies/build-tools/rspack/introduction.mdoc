@@ -1,21 +1,34 @@
 ---
 title: Nx with Rspack
-description: Use Rspack with Nx to build and cache projects across your monorepo, with affected-only builds and distributed CI.
+description: Rspack is a Rust-based bundler with a webpack-compatible API. Learn how to use Rspack in an Nx monorepo with caching, affected builds, and fast CI.
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for Rspack contains executors, generators, and utilities for managing Rspack projects in an Nx Workspace. It helps you run, cache, and scale builds across an Rspack monorepo, with executors and generators that wire each project into the workspace.
+Rspack is a Rust-based JavaScript bundler with a webpack-compatible API, built as a drop-in replacement for webpack with much faster builds.
+Teams with existing webpack configurations get that speedup without rewriting their setup.
+The `@nx/rspack` plugin adds caching, affected builds, and task inference so Rspack scales across a monorepo.
+
+## What is Rspack?
+
+[Rspack](https://rspack.rs) is a bundler written in Rust that implements the webpack API.
+Per the Rspack team's [benchmarks](https://github.com/rstackjs/build-tools-performance) (as of Rspack 2), it builds and serves projects several times faster than webpack.
+In a monorepo those savings compound, and Nx layers caching and affected-only builds on top so unchanged projects don't build at all.
+
+### Is Rspack a drop-in replacement for webpack?
+
+Mostly - existing loaders and the majority of webpack plugins run unchanged, so many configurations migrate with few or no edits.
+Plugins that depend on webpack internals may not work, so test complex setups when you migrate.
 
 ## Requirements
 
-The `@nx/rspack` plugin supports the following package versions.
+The `@nx/rspack` plugin supports Rspack 1 and 2 (as of Nx v23).
 
 | Package        | Supported Versions     | Default Installed |
 | -------------- | ---------------------- | ----------------- |
-| `@rspack/core` | `^1.0.0` \|\| `^2.0.0` | `2.0.3`           |
+| `@rspack/core` | `^1.0.0` \|\| `^2.0.0` | `2.0.4`           |
 
 [Nx generators](/docs/features/generate-code) install the latest supported version automatically when scaffolding new projects. When `@rspack/core` is already installed in your workspace, generators detect the installed version and keep it in place rather than overwriting it.
 
@@ -87,12 +100,17 @@ nx g @nx/react:app my-app --bundler=rspack
 
 ### Modify an existing React project to use Rspack
 
-You can use the `@nx/rspack:configuration` generator to change your React to use Rspack. This generator will modify your project's configuration to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
+You can use the `@nx/rspack:configuration` generator to change your React project to use Rspack. This generator will modify your project's configuration to use Rspack, and it will also install all the necessary dependencies, including the `@nx/rspack` plugin.
 
 You can read more about this generator on the [`@nx/rspack:configuration`](/docs/technologies/build-tools/rspack/generators#configuration) generator page.
 
-## Set up CI for your Rspack monorepo
+## Why use Rspack in a monorepo?
 
-In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+Rspack speeds up each build, and Nx cuts down how many builds run.
+In a monorepo with many Rspack projects:
+
+- [Caching](/docs/features/cache-task-results) skips builds whose inputs haven't changed, locally and in CI.
+- [`nx affected`](/docs/features/ci-features/affected) rebuilds and retests only the projects a change touches.
+- Because the API is webpack-compatible, you can migrate webpack projects to Rspack one at a time instead of converting every configuration in the repo at once.
 
 For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).

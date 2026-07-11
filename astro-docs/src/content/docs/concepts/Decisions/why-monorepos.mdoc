@@ -1,51 +1,115 @@
 ---
-title: Monorepos
-description: Understand the benefits of monorepos including shared code, atomic changes, developer mobility, and consistent dependencies across your organization.
+title: 'What is a Monorepo?'
+description: 'A monorepo is a single repository containing multiple projects. Learn the benefits, how it differs from a monolith, and why AI agents work better in one.'
 filter: 'type:Concepts'
 ---
 
-A monorepo is a single git repository that holds the source code for multiple applications and libraries, along with the tooling for them.
+A **monorepo** is a single repository containing multiple distinct projects, with well-defined relationships between them.
+The projects can be applications, libraries, or tools, and they can use the same stack or different ones.
+A monorepo is not a monolith: each project inside it stays separate and can be built, tested, and deployed on its own.
+
+The "well-defined relationships" part matters.
+Anyone can put many projects in one repository, but without knowing how those projects depend on each other, you have code collocation, not a monorepo.
+Whether one repository or many is right for your organization is a separate decision, covered in [Monorepo vs polyrepo](/docs/concepts/decisions/overview).
 
 ## What are the benefits of a monorepo?
 
-- **Shared code and visibility** - [Keeps your code DRY across your entire organization.](/docs/concepts/decisions/code-ownership) Reuse validation code, UI components, and types across the codebase. Reuse code between the backend, the frontend, and utility libraries.
+A monorepo gives you four things that are hard to get with separate repositories: shared code that every project can reuse, atomic changes across projects in a single commit, developer mobility between teams because every project builds and tests the same way, and a single set of third-party dependency versions.
 
-- **Atomic changes** - Change a server API and modify the downstream applications that consume that API in the same commit. You can change a button component in a shared library and the applications that use that component in the same commit. A monorepo saves the pain of trying to coordinate commits across multiple repositories.
+- **Shared code and visibility** - Reuse validation logic, UI components, and types across your entire organization, including between the backend and the frontend. Every project can see what already exists instead of rebuilding it.
 
-- **Developer mobility** - Get a consistent way of building and testing applications written using different tools and technologies. Developers can confidently contribute to other teams' applications and verify that their changes are safe.
+- **Atomic changes** - Change a server API and every application that consumes it in the same commit. There's no coordinating a chain of pull requests across repositories, and no window where consumers are broken.
 
-- **Single set of dependencies** - [Use a single version of all third-party dependencies](/docs/concepts/decisions/dependency-management), reducing inconsistencies between applications. Less actively developed applications are still kept up-to-date with the latest version of a framework, library, or build tool.
+- **Developer mobility** - Build and test every project the same way, regardless of the tools it uses. Developers can contribute to another team's application and verify their changes are safe without learning a new setup.
 
-## Why not just code collocation?
+- **Single set of dependencies** - [Keep every project on the same version of each third-party dependency](/docs/concepts/decisions/dependency-management). Less actively developed applications still get framework and tooling updates instead of falling years behind.
 
-A naive implementation of a monorepo is code collocation, where you combine all the code from multiple repositories into the same repo. Many large companies that use monorepos don't "simply" put all the code in one place. **That's not enough**. Without adequate tooling to coordinate everything, problems arise with simply collocating code.
+## Is a monorepo the same as a monolith?
 
-- **Running unnecessary tests** - All tests in the entire repository run to ensure nothing breaks from a given change. Even code in projects that are unrelated to the actual change.
+No. A monolith is a single application that ships as one deployable unit.
+A monorepo is a version-control strategy: one repository holding many projects that are built, tested, and deployed independently.
+Teams often adopt a monorepo specifically to break a monolith into smaller projects while keeping all the code in one place.
 
-- **No code boundaries** - Bugs and inconsistencies are added by a developer from another team changing code in your project. Or worse, another team uses code that you only intended for private use in their application. Now another project code depends on it, keeping you from making changes that may break their application.
+## Monorepo examples
 
-- **Inconsistent tooling** - Each project uses its own set of commands for running tests, building, serving, linting, deploying, and so forth. Inconsistency creates mental overhead remembering which commands to use from project to project.
+Some of the largest codebases in the world are monorepos:
 
-Tools like Lerna and Yarn Workspaces help optimize the installation of node modules, but they **do not** enable Monorepo-style development. In other words, they solve an orthogonal problem and can even be used in combination with Nx. Read more on it [here](https://blog.nrwl.io/why-you-should-switch-from-lerna-to-nx-463bcaf6821).
+- **Google** keeps most of its code in one repository, described in the 2016 ACM paper "Why Google Stores Billions of Lines of Code in a Single Repository."
+- **Meta** develops its main products in a monorepo and built the Sapling version control system to keep it fast at that scale.
+- **Microsoft** hosts the Windows codebase in one of the largest Git repositories in existence and built dedicated tooling (VFS for Git, later Scalar) to keep cloning and fetching it practical.
 
-## Nx + code collocation = monorepo
+You don't need to be at that scale to benefit: shared code, atomic changes, and one set of dependencies apply just as well to a repository with five projects.
 
-Nx provides tools to give you the benefits of a monorepo without the drawbacks of simple code collocation.
+## Why isn't code collocation enough?
 
-### Scaling your monorepo with Nx
+Moving all your code into one repository without adding any tooling gives you code collocation, not a monorepo.
+Without a dependency graph, CI must run every test on every change, nothing stops teams from depending on each other's internals, and each project keeps its own commands.
+What turns collocation into a monorepo is tooling that addresses all three problems.
 
-- **Consistent Command Execution** - Executors allow for consistent commands to test, serve, build, and lint each project using various tools.
+Each of these problems gets worse as the repository grows:
 
-- **Consistent Code Generation** - Generators allow you to customize and standardize organizational conventions and structure, removing the need to perform the same manual setup tasks repetitively.
+- **Running unnecessary tests** - CI runs every test in the repository on every change to make sure nothing breaks, including tests for projects the change can't possibly affect.
 
-- **Affected Commands** - [Nx affected commands](/docs/reference/nx-commands#nx-affected) analyze your source code, the context of the changes, and only runs tasks on the affected projects impacted by the source code changes.
+- **No code boundaries** - Any team can change or depend on any code, including code you intended to keep private. Once another project depends on your internals, you can't change them without breaking that project.
 
-- **Remote Caching** - Nx provides local caching and support for remote caching of command executions. With remote caching, when someone on your team runs a command, everyone else gets access to those artifacts to speed up their command executions, bringing them down from minutes to seconds. Nx helps you scale your development to massive applications and libraries even more with distributed task execution and incremental builds.
+- **Inconsistent tooling** - Each project keeps its own commands for testing, building, serving, and linting. Every project switch means relearning how to run things.
 
-### Scaling your organization with Nx
+Package manager workspaces solve a different problem: they install and link local packages so projects can import each other.
+They don't build a task graph, cache results, or detect which projects a change affects, which is what keeps CI and local development fast as the repository grows.
+Lerna adds versioning and publishing on top, and modern Lerna delegates task running to Nx - see [Nx vs Lerna](/docs/guides/comparisons/nx-vs-lerna).
+For the wider tool landscape, see [monorepo.tools](https://monorepo.tools).
 
-- **Controlled Code Sharing** - While sharing code becomes much easier to share, there should also be constraints of when and how code should be depended on. Libraries are defined with specific enforced APIs. Rules should be put in place to define which libraries can depend on each other. Also, even though everyone has access to the repo does not mean that anyone should change any project. Projects should have owners such that changes to that project requires their approval. This can be defined using a `CODEOWNERS` file.
+## When is a monorepo the wrong choice?
 
-- **Consistent Code Generation** - Generators allow you to automate code creation and modification tasks. Instead of writing a 7 steps guide in a readme file, you can create a generator to prompt the developer for inputs and modify the code directly. Nrwl provides plugins containing useful executors and generators for many popular tools. Also, Nx workspaces are extended further through a growing number of community-provided plugins.
+A monorepo is the wrong choice when your organization won't invest in the tooling it requires, when the repository outgrows what your version control setup can handle, or when strict access control means some engineers must not see parts of the codebase.
 
-- **Accurate Architecture Diagram** - Most architecture diagrams become obsolete in an instant. And every diagram becomes out of date as soon as the code changes. Because Nx understands your code, it generates an up-to-date and accurate diagram of how projects depend on each other. The Nx project dependencies are also pluggable to extend to other programming languages and ecosystems.
+- **Version control scale** - Git slows down when a repository reaches millions of files or a very large history. Google and Meta built custom version control infrastructure to cope. Most organizations never hit this limit, but if you do, it's expensive.
+
+- **Forced tooling investment** - Without task caching and affected detection, a monorepo makes CI slower, not faster, because every pipeline runs everything. If your organization won't adopt a build system that understands the project graph, separate repositories will serve you better.
+
+- **Access control** - Cloning a Git repository means cloning all of it. If contractors or acquisitions must only see part of the codebase, separate repositories enforce that more directly than partial clones or read-restriction workarounds.
+
+- **No agreement on shared standards** - Teams in a monorepo need to agree on dependency policy, code review, and CI ownership. If they can't, splitting into multiple repositories is the honest answer.
+
+## Why do AI coding agents work better in monorepos?
+
+AI coding agents work better in monorepos because one repository gives them the full dependency graph and the ability to make atomic changes.
+The agent can see every consumer of the code it's changing, so it can update an API and all of its callers in a single change instead of guessing what lives in other repositories.
+
+A monorepo also gives agents guardrails.
+Module boundary rules keep agent-written code inside your architecture, and generators produce consistent scaffolding instead of whatever structure the model improvises.
+When CI fails, an agent with access to the whole repository can propose a fix that spans every affected project.
+
+To learn how Nx gives agents this context and these guardrails, see [Enhance your AI coding agent](/docs/features/enhance-ai).
+To configure your Nx workspace for AI agents, see [AI setup](/docs/getting-started/ai-setup).
+
+## How Nx makes a monorepo scale
+
+Nx adds the tooling layer that turns collocated code into a monorepo:
+
+- **Affected detection** - [Run tasks only for the projects impacted by a change](/docs/features/ci-features/affected) instead of rebuilding and retesting everything on every commit.
+
+- **Caching** - [Cache task results](/docs/features/cache-task-results) locally and remotely, so no one on your team or in CI rebuilds something that has already been built.
+
+- **Module boundaries** - [Enforce which projects can depend on which](/docs/features/enforce-module-boundaries), so private code stays private and your architecture survives contact with deadlines.
+
+- **Code generation** - [Generate projects and components](/docs/features/generate-code) that follow your organization's conventions instead of documenting a seven-step setup in a `README`.
+
+- **Nx Cloud** - Distribute tasks across machines in CI, [detect and re-run flaky tasks](/docs/features/ci-features/flaky-tasks), fix failing tasks with [self-healing CI](/docs/features/ci-features/self-healing-ci), and run AI agents in [isolated sandboxes](/docs/features/ci-features/sandboxing).
+
+## Frequently asked questions
+
+### Is a monorepo the same as a monolith?
+
+No. A monolith is one application deployed as a single unit, while a monorepo is one repository that typically holds many independently deployed applications and libraries.
+
+### What companies use monorepos?
+
+Google, Meta, and Microsoft all develop major products in monorepos, and Google keeps most of its company-wide code in a single repository.
+Plenty of small teams use monorepos too, since the benefits don't depend on codebase size.
+
+### Do I need special tooling for a monorepo?
+
+You need two layers: package linking and a build system.
+Workspaces from [pnpm](/docs/guides/tips-n-tricks/pnpm-workspaces), [npm](/docs/guides/tips-n-tricks/npm-workspaces), [Yarn](/docs/guides/tips-n-tricks/yarn-workspaces), or [Bun](/docs/guides/tips-n-tricks/bun-workspaces) let projects import each other.
+A build system like Nx adds the task graph, caching, and affected detection that keep the repository fast as it grows.
