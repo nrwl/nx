@@ -127,8 +127,8 @@ impl FileLock {
 mod test {
     use super::*;
 
-    use assert_fs::prelude::*;
     use assert_fs::TempDir;
+    use assert_fs::prelude::*;
 
     fn lock_path(tmp_dir: &TempDir, name: &str) -> String {
         let lock_file = tmp_dir.child(name);
