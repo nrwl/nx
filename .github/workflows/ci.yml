@@ -138,8 +138,13 @@ jobs:
           kept=0
           for c in "${cores[@]}"; do
             echo "===== backtrace for $c ====="
+            # `command -v node` resolves to the mise shim; symbolizing a core
+            # against the wrong executable yields garbage frames. Read the
+            # crashed process's real executable path from the core itself.
+            exe=$(file -b "$c" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+            [ -x "$exe" ] || exe=$(mise which node 2>/dev/null || command -v node)
             gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
-              "$(command -v node)" "$c" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
+              "$exe" "$c" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
             if [ "$kept" -lt 3 ]; then
               gzip -f "$c" && kept=$((kept+1)) || true
             else
