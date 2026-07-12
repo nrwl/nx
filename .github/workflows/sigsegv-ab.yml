@@ -66,15 +66,28 @@ jobs:
             exit 1
           fi
           command -v gdb >/dev/null || { sudo apt-get update -q && sudo apt-get install -y -q gdb; }
+          # `command -v node` resolves to the mise SHIM (a Rust binary), and
+          # symbolizing against the wrong executable yields garbage frames —
+          # the first canary run proved it. Read the real executable path
+          # from the core itself.
+          exe=$(file -b "${cores[0]}" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+          [ -x "$exe" ] || exe=$(mise which node 2>/dev/null || command -v node)
+          echo "symbolizing against: $exe"
           gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
-            "$(command -v node)" "${cores[0]}" 2>&1 | tee /tmp/bt.txt
+            "$exe" "${cores[0]}" 2>&1 | tee /tmp/bt.txt
           frames=$(grep -c '^#' /tmp/bt.txt || true)
           echo "backtrace frames: $frames"
           if [ "$frames" -lt 3 ]; then
             echo '::error::CANARY FAILED: gdb produced fewer than 3 frames'
             exit 1
           fi
-          echo "Canary OK: core captured, $frames frames resolved" >> "$GITHUB_STEP_SUMMARY"
+          # A raise()-induced SIGSEGV with the CORRECT executable must
+          # resolve real symbols (libc raise/pthread_kill or node/v8/libuv).
+          if ! grep -qE 'raise|pthread_kill|node::|v8::|uv_' /tmp/bt.txt; then
+            echo '::error::CANARY FAILED: no recognizable symbols — wrong executable?'
+            exit 1
+          fi
+          echo "Canary OK: core captured, $frames frames, symbols resolve against $exe" >> "$GITHUB_STEP_SUMMARY"
 
   hunt:
     runs-on: ubuntu-latest
@@ -234,8 +247,10 @@ jobs:
                 [ -e "$core" ] || continue
                 case "$core" in *.gz) continue ;; esac
                 echo "===== backtrace for $core ====="
+                exe=$(file -b "$core" | sed -n "s/.*execfn: '\([^']*\)'.*/\1/p")
+                [ -x "$exe" ] || exe=$(mise which node 2>/dev/null || command -v node)
                 gdb -q -batch -ex 'set pagination off' -ex bt -ex 'info threads' \
-                  "$(command -v node)" "$core" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
+                  "$exe" "$core" 2>&1 | head -150 | tee -a /tmp/backtraces.txt
                 if [ "$kept_cores" -lt 2 ]; then
                   gzip -f "$core" && kept_cores=$((kept_cores+1)) || true
                 else
