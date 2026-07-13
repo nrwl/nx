@@ -128,18 +128,6 @@ For a complete walkthrough of this plugin setup, see
 A worked reference workspace covering Vite, Rsbuild, and Rspack lives in the
 [mf-examples repository](https://github.com/nrwl/mf-examples).
 
-## How does Module Federation compare to other composition approaches?
-
-Of these three approaches, only Module Federation combines independent deploys with shared
-dependencies - build-time packages give up the deploys, and iframes trade the sharing for the
-strongest isolation.
-
-| Approach            | Independent deploys                      | Shared dependencies                | Runtime cost                                               |
-| ------------------- | ---------------------------------------- | ---------------------------------- | ---------------------------------------------------------- |
-| Module Federation   | Yes, each app ships on its own timeline  | Yes, singletons load once          | Network requests for remote entries at load time           |
-| Build-time packages | No, consumers rebuild to pick up changes | Yes, deduplicated at build time    | None beyond normal bundle size                             |
-| Iframes             | Yes, each frame is a separate page       | No, every frame loads its own copy | A full document per frame and manual cross-frame messaging |
-
 ## Why build micro frontends in a monorepo?
 
 A monorepo removes two of the biggest micro frontend pains: shared dependency drift and cross-app
