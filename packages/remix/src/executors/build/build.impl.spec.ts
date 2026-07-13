@@ -1,16 +1,13 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { detectPackageManager, readJsonFile, writeJsonFile } from '@nx/devkit';
 import {
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
   getLockFileName,
-  getWorkspacePackagesFromGraph,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { fork } from 'child_process';
-import { statSync } from 'fs-extra';
+import { statSync, writeFileSync } from 'fs-extra';
 
 import buildExecutor from './build.impl';
 import type { RemixBuildSchema } from './schema';
@@ -41,12 +38,9 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('@nx/js', () => ({
   ...jest.requireActual('@nx/js'),
-  createLockFile: jest.fn(),
   createPackageJson: jest.fn(),
+  createPrunedLockfile: jest.fn(),
   getLockFileName: jest.fn(() => 'pnpm-lock.yaml'),
-  getWorkspacePackagesFromGraph: jest.fn(() => new Map()),
-  rewritePrunedLocalPathSpecifiers: jest.fn(),
-  validatePrunedLocalPathClosure: jest.fn(),
   writePrunedPnpmInstallSettings: jest.fn(),
 }));
 
@@ -100,39 +94,37 @@ describe('remix build executor lockfile wiring', () => {
     jest.clearAllMocks();
     manifest = { name: 'my-app', version: '1.0.0' };
     (createPackageJson as jest.Mock).mockReturnValue(manifest);
-    (createLockFile as jest.Mock).mockReturnValue('pruned-lock');
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'pruned-lock',
+      pruned: true,
+    });
     (getLockFileName as jest.Mock).mockReturnValue('pnpm-lock.yaml');
-    (getWorkspacePackagesFromGraph as jest.Mock).mockReturnValue(new Map());
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
     (readJsonFile as jest.Mock).mockReturnValue({});
     (statSync as jest.Mock).mockReturnValue({ isDirectory: () => true });
     (fork as jest.Mock).mockImplementation(() => createFakeChildProcess());
   });
 
-  it('rewrites local-path specifiers before the manifest and lockfile are written for pnpm', async () => {
+  it('creates the pruned pnpm lockfile before the manifest is written', async () => {
     const result = await buildExecutor(options, context);
 
     expect(result).toEqual({ success: true });
-    expect(rewritePrunedLocalPathSpecifiers).toHaveBeenCalledWith(
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
       manifest,
+      context.projectGraph,
       'apps/my-app',
       '/root',
-      new Set()
+      'pnpm'
     );
-    // The lockfile importer and the written manifest copy specifiers, so the
-    // rewrite must run before both.
-    const rewriteOrder = (rewritePrunedLocalPathSpecifiers as jest.Mock).mock
-      .invocationCallOrder[0];
-    expect(rewriteOrder).toBeLessThan(
-      (writeJsonFile as jest.Mock).mock.invocationCallOrder[0]
-    );
-    expect(rewriteOrder).toBeLessThan(
-      (createLockFile as jest.Mock).mock.invocationCallOrder[0]
-    );
-    expect(validatePrunedLocalPathClosure).toHaveBeenCalledWith(
-      manifest,
-      '/root',
-      'pruned-lock'
+    // createPrunedLockfile relocates the manifest's local-path specifiers, so
+    // the manifest must be written after it.
+    expect(
+      (createPrunedLockfile as jest.Mock).mock.invocationCallOrder[0]
+    ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
+    expect(writeFileSync).toHaveBeenCalledWith(
+      'apps/my-app/pnpm-lock.yaml',
+      'pruned-lock',
+      { encoding: 'utf-8' }
     );
     expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
       'apps/my-app',
@@ -142,17 +134,19 @@ describe('remix build executor lockfile wiring', () => {
     );
   });
 
-  it('skips the link: validation and ships the root-lockfile fallback settings', async () => {
-    (createLockFile as jest.Mock).mockImplementation(
-      (_pkg, _graph, _pm, opts) => {
-        opts?.onPruneFallback?.(new Error('prune failed'));
-        return 'root-lock';
-      }
-    );
+  it('ships the root-lockfile fallback without its local-path artifacts', async () => {
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'root-lock',
+      pruned: false,
+    });
 
     await buildExecutor(options, context);
 
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
+    expect(writeFileSync).toHaveBeenCalledWith(
+      'apps/my-app/pnpm-lock.yaml',
+      'root-lock',
+      { encoding: 'utf-8' }
+    );
     expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
       'apps/my-app',
       '/root',
@@ -161,14 +155,28 @@ describe('remix build executor lockfile wiring', () => {
     );
   });
 
-  it('leaves the manifest untouched for a non-pnpm package manager', async () => {
+  it('writes no pnpm install settings for a non-pnpm package manager', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('npm');
     (getLockFileName as jest.Mock).mockReturnValue('package-lock.json');
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'npm-lock',
+      pruned: true,
+    });
 
     await buildExecutor(options, context);
 
-    expect(rewritePrunedLocalPathSpecifiers).not.toHaveBeenCalled();
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
+      manifest,
+      context.projectGraph,
+      'apps/my-app',
+      '/root',
+      'npm'
+    );
+    expect(writeFileSync).toHaveBeenCalledWith(
+      'apps/my-app/package-lock.json',
+      'npm-lock',
+      { encoding: 'utf-8' }
+    );
     expect(writePrunedPnpmInstallSettings).not.toHaveBeenCalled();
   });
 });
