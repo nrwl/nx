@@ -8,16 +8,12 @@ filter: 'type:Guides'
 
 {% llm_copy_prompt title="Let an AI agent migrate it for you" %}
 
-Migrate this Nx workspace from .eslintrc to ESLint flat config and leave lint passing.
+Migrate this Nx workspace from .eslintrc to ESLint flat config, following the instructions on the page below.
 
-1. Run `nx g @nx/eslint:convert-to-flat-config`. It mechanically converts the JSON and YAML eslintrc files, the base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
-2. Read `node_modules/@nx/eslint/src/migrations/update-23-1-0/convert-to-flat-config.md` and follow it to finish the parts that need judgment: JS-based eslintrc files, `FlatCompat` shims worth converting to native flat config, and rule fallout from preset changes.
-3. typescript-eslint v8 removed rules that configs may still reference:
-   - Apply the 1:1 renames listed in `node_modules/@nx/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts` to any flat config that references a removed extension rule.
-   - For `@typescript-eslint/ban-types`, follow `node_modules/@nx/eslint/src/migrations/update-23-1-0/migrate-ban-types-rule.md`.
-   - If those files don't exist, your `@nx/eslint` version predates them - handle removed rules from lint errors instead.
-4. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
-5. Run `nx run-many -t <lint-target>` and fix any failures until every project passes.
+1. Run `nx g @nx/eslint:convert-to-flat-config`. Convert any JS-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`) by hand using the page's migration steps.
+2. Handle rules removed in typescript-eslint v8 as the page describes: drop the removed formatting rules, apply the two 1:1 renames, and split `@typescript-eslint/ban-types` into its successors.
+3. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
+4. Run `nx run-many -t <lint-target>` and fix any failures until every project passes.
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
@@ -50,6 +46,8 @@ nx g @nx/eslint:convert-to-flat-config
 
 The generator walks all projects, converts each `.eslintrc.json` to flat config, converts the
 base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
+It does not convert JavaScript-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`), so
+convert those by hand using the steps below.
 New Nx workspaces generate flat config by default, and the
 [@nx/eslint:lint executor](/docs/technologies/eslint/executors#lint) runs it without extra
 configuration.
@@ -125,6 +123,32 @@ every legacy option to its flat config equivalent.
 Delete the `.eslintrc.*` files once `npx eslint .` runs clean with the new config.
 Move `.eslintignore` patterns into an `ignores` entry - flat config doesn't read
 `.eslintignore`, and ESLint 10 removed support for it entirely.
+
+## Handle rules removed in typescript-eslint v8
+
+typescript-eslint v8 removed several rules, and a flat config that references a removed rule
+fails to load.
+Before editing, confirm your workspace is on typescript-eslint v8 or later (check
+`typescript-eslint` or `@typescript-eslint/eslint-plugin` in `package.json`) - on v7 the rules
+still exist.
+
+- **Formatting rules are gone** - `@typescript-eslint/indent`, `quotes`, `semi`, `brace-style`,
+  `comma-dangle`, `comma-spacing`, `key-spacing`, `keyword-spacing`, `member-delimiter-style`,
+  `no-extra-parens`, `no-extra-semi`, `object-curly-spacing`,
+  `padding-line-between-statements`, `space-before-blocks`, `space-before-function-paren`,
+  `space-infix-ops`, `type-annotation-spacing`, and the other spacing rules were dropped.
+  Remove them from your configs, or adopt [ESLint Stylistic](https://eslint.style) if you want
+  lint-enforced formatting.
+- **Two rules were renamed** - replace `@typescript-eslint/no-throw-literal` with
+  `@typescript-eslint/only-throw-error`, and `@typescript-eslint/no-useless-template-literals`
+  with `@typescript-eslint/no-unnecessary-template-expression`, keeping your options.
+- **`@typescript-eslint/ban-types` split into three rules** -
+  `@typescript-eslint/no-empty-object-type` (the `{}` type),
+  `@typescript-eslint/no-unsafe-function-type` (the `Function` type), and
+  `@typescript-eslint/no-wrapper-object-types` (`String`, `Number`, `Boolean`, and the other
+  wrappers).
+  If the old entry was just an error level, set all three to that level.
+  If it customized `types`, translate each banned type to whichever successor rule covers it.
 
 ## Migrate a Next.js project to flat config
 
