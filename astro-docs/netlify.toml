@@ -82,6 +82,11 @@ to = "/docs/features/ci-features/github-integration"
 from = "/docs/concepts/decisions/overview"
 to = "/docs/concepts/decisions/monorepo-vs-polyrepo"
 
+# DOC-549: why-monorepos renamed to what-is-a-monorepo
+[[redirects]]
+from = "/docs/concepts/decisions/why-monorepos"
+to = "/docs/concepts/decisions/what-is-a-monorepo"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"

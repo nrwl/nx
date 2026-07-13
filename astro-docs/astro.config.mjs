@@ -48,6 +48,8 @@ export default defineConfig({
       '/docs/features/ci-features/github-integration',
     '/concepts/decisions/overview':
       '/docs/concepts/decisions/monorepo-vs-polyrepo',
+    '/concepts/decisions/why-monorepos':
+      '/docs/concepts/decisions/what-is-a-monorepo',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':

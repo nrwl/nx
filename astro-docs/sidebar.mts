@@ -754,8 +754,8 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
+            label: 'What is a monorepo',
+            link: 'concepts/decisions/what-is-a-monorepo',
           },
           {
             label: 'Monorepo or polyrepo',
