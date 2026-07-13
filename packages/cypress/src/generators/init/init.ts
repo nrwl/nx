@@ -72,9 +72,11 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
-    // cypress's postinstall downloads its binary; without it cypress cannot run.
+    // Nx never enables build scripts on the user's behalf. cypress's
+    // postinstall downloads its binary, so cypress prompts the user to run
+    // `pnpm approve-builds cypress` (or `cypress install`) on first use.
     acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
-      cypress: true,
+      cypress: false,
     });
   }
 

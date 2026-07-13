@@ -60,7 +60,10 @@ function acknowledgePnpmBuildScripts(
 
   let changed = false;
   for (const [pkg, allowed] of Object.entries(entries)) {
-    if (!doc.hasIn(['allowBuilds', pkg])) {
+    // Only a real boolean is a user decision. pnpm's non-strict installs stub
+    // undecided packages with a placeholder string ("set this to true or
+    // false"), which would fail the next strict install if left in place.
+    if (typeof doc.getIn(['allowBuilds', pkg]) !== 'boolean') {
       doc.setIn(['allowBuilds', pkg], allowed);
       changed = true;
     }

@@ -72,9 +72,11 @@ export async function detoxInitGeneratorInternal(host: Tree, schema: Schema) {
 }
 
 export function updateDependencies(host: Tree, schema: Schema) {
-  // detox's postinstall builds its framework cache; without it detox cannot run.
+  // Nx never enables build scripts on the user's behalf. detox's postinstall
+  // builds its framework cache; the user can run `pnpm approve-builds detox`
+  // (or `detox build-framework-cache`) to enable it.
   acknowledgeBuildScripts(host, detectPackageManager(host.root), {
-    detox: true,
+    detox: false,
   });
   return addDependenciesToPackageJson(
     host,

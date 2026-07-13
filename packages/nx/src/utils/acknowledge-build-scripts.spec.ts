@@ -68,6 +68,22 @@ describe('acknowledgeBuildScripts', () => {
     `);
   });
 
+  it('should replace the placeholder stubs pnpm writes during non-strict installs', () => {
+    tree.write(
+      'pnpm-workspace.yaml',
+      'allowBuilds:\n  unrs-resolver: set this to true or false\n  cypress: set this to true or false\n'
+    );
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        unrs-resolver: false
+        cypress: set this to true or false
+      "
+    `);
+  });
+
   it('should be a no-op for package managers other than pnpm', () => {
     const original = 'packages:\n  - "packages/*"\n';
     tree.write('pnpm-workspace.yaml', original);
