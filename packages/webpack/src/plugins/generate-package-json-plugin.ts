@@ -1,16 +1,13 @@
 import * as fs from 'fs';
 import type { Compiler, WebpackPluginInstance } from 'webpack';
 import {
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
   emitPrunedPnpmInstallAssets,
   getHelperDependenciesFromProjectGraph,
   getLockFileName,
-  getWorkspacePackagesFromGraph,
   HelperDependency,
   readTsConfig,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
 } from '@nx/js';
 import {
   detectPackageManager,
@@ -111,51 +108,18 @@ export class GeneratePackageJsonPlugin implements WebpackPluginInstance {
                 'Bun lockfile generation is not supported. Only package.json will be generated.'
               );
           } else {
-            // pnpm re-resolves local-path manifest specifiers on a non-frozen
-            // install, so relocate them to their shipped location before the
-            // lockfile copies them.
-            if (packageManager === 'pnpm') {
-              rewritePrunedLocalPathSpecifiers(
-                packageJson,
-                this.options.projectGraph.nodes[this.options.projectName].data
-                  .root,
-                this.options.root,
-                new Set(
-                  getWorkspacePackagesFromGraph(
-                    this.options.projectGraph
-                  ).keys()
-                )
-              );
-            }
-            // `pruned` flips off when createLockFile falls back to the root
-            // lockfile, whose importer describes the whole workspace: skip the
-            // link: closure validation and local-path shipping for it.
-            let pruned = true;
-            const lockFileContent = createLockFile(
+            const { lockFileContent, pruned } = createPrunedLockfile(
               packageJson,
               this.options.projectGraph,
-              packageManager,
-              {
-                onPruneFallback: () => {
-                  pruned = false;
-                },
-              }
+              this.options.projectGraph.nodes[this.options.projectName].data
+                .root,
+              this.options.root,
+              packageManager
             );
-            if (packageManager === 'pnpm' && pruned) {
-              validatePrunedLocalPathClosure(
-                packageJson,
-                this.options.root,
-                lockFileContent
-              );
-            }
             compilation.emitAsset(
               getLockFileName(packageManager),
               new sources.RawSource(lockFileContent)
             );
-            // pnpm 11 reads build-script approvals, supportedArchitectures, and
-            // patchedDependencies only from pnpm-workspace.yaml, so emit them
-            // beside the lockfile; pnpm <=10 takes patchedDependencies from the
-            // package.json emitted below.
             if (packageManager === 'pnpm') {
               emitPrunedPnpmInstallAssets(
                 this.options.root,

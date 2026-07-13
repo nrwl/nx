@@ -17,12 +17,13 @@ export { setupPrettierGenerator } from './generators/setup-prettier/generator';
 export { setupVerdaccio } from './generators/setup-verdaccio/generator';
 export { isValidVariable } from './utils/is-valid-variable';
 
-export { createLockFile, getLockFileName } from '@nx/devkit/internal';
+export {
+  createLockFile,
+  createPrunedLockfile,
+  getLockFileName,
+} from '@nx/devkit/internal';
 export { createPackageJson } from '@nx/devkit/internal';
-export { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 export {
   emitPrunedPnpmInstallAssets,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/devkit/internal';

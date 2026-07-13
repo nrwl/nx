@@ -1,6 +1,5 @@
-import { createLockFile, getLockFileName } from '@nx/devkit/internal';
+import { createPrunedLockfile, getLockFileName } from '@nx/devkit/internal';
 import { createPackageJson } from '@nx/devkit/internal';
-import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 
 import {
   detectPackageManager,
@@ -21,9 +20,7 @@ import { existsSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, parse, relative } from 'path';
 import { fileExists } from '@nx/devkit/internal';
 import type { PackageJson } from '@nx/devkit/internal';
-import { rewritePrunedLocalPathSpecifiers } from '@nx/devkit/internal';
 import { stripPrunedLockfilePnpmConfig } from '@nx/devkit/internal';
-import { validatePrunedLocalPathClosure } from '@nx/devkit/internal';
 import { writePrunedPnpmInstallSettings } from '@nx/devkit/internal';
 import { readFileMapCache } from '@nx/devkit/internal';
 
@@ -127,15 +124,14 @@ export function updatePackageJson(
   packageJson = getUpdatedPackageJsonContent(packageJson, options);
 
   const packageManager = detectPackageManager(context.root);
-  // pnpm re-resolves local-path manifest specifiers on a non-frozen install, so
-  // relocate them to their shipped location before the manifest is written and
-  // the lockfile copies them.
-  if (options.generateLockfile && packageManager === 'pnpm') {
-    rewritePrunedLocalPathSpecifiers(
+  let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+  if (options.generateLockfile && packageManager !== 'bun') {
+    prunedLockfile = createPrunedLockfile(
       packageJson,
+      context.projectGraph,
       options.projectRoot,
       context.root,
-      new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+      packageManager
     );
   }
 
@@ -148,38 +144,19 @@ export function updatePackageJson(
         `Bun lockfile generation is unsupported. Remove "generateLockfile" option or set it to false.`
       );
     } else {
-      // `pruned` flips off when createLockFile falls back to the root
-      // lockfile, whose importer describes the whole workspace: skip the
-      // link: closure validation and local-path shipping for it.
-      let pruned = true;
-      const lockFile = createLockFile(
-        packageJson,
-        context.projectGraph,
-        packageManager,
-        {
-          onPruneFallback: () => {
-            pruned = false;
-          },
-        }
-      );
-      if (packageManager === 'pnpm' && pruned) {
-        validatePrunedLocalPathClosure(packageJson, context.root, lockFile);
-      }
       writeFileSync(
         `${options.outputPath}/${getLockFileName(packageManager)}`,
-        lockFile,
+        prunedLockfile.lockFileContent,
         {
           encoding: 'utf-8',
         }
       );
-      // pnpm 11 reads build-script approvals and supportedArchitectures only
-      // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
       if (packageManager === 'pnpm') {
         writePrunedPnpmInstallSettings(
           options.outputPath,
           context.root,
-          lockFile,
-          { includeLocalPathArtifacts: pruned }
+          prunedLockfile.lockFileContent,
+          { includeLocalPathArtifacts: prunedLockfile.pruned }
         );
       }
     }
