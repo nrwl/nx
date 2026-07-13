@@ -1,12 +1,10 @@
 import type { ExecutorContext, ProjectGraph } from '@nx/devkit';
 import { detectPackageManager } from '@nx/devkit';
 import {
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
   emitPrunedPnpmInstallAssets,
   getLockFileName,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
 } from '@nx/js';
 import { GeneratePackageJsonPlugin } from './generate-package-json-plugin';
 
@@ -17,21 +15,22 @@ jest.mock('@nx/devkit', () => ({
 
 jest.mock('@nx/js', () => ({
   ...jest.requireActual('@nx/js'),
-  createLockFile: jest.fn(),
   createPackageJson: jest.fn(),
+  createPrunedLockfile: jest.fn(),
   emitPrunedPnpmInstallAssets: jest.fn(),
   getHelperDependenciesFromProjectGraph: jest.fn(() => []),
   getLockFileName: jest.fn(() => 'pnpm-lock.yaml'),
-  getWorkspacePackagesFromGraph: jest.fn(() => new Map()),
   readTsConfig: jest.fn(() => ({ options: {} })),
-  rewritePrunedLocalPathSpecifiers: jest.fn(),
-  validatePrunedLocalPathClosure: jest.fn(),
 }));
 
 // Fake source wrapper so the plugin's `new sources.RawSource(...)` calls have
 // something to construct without pulling in the real webpack sources module.
 class FakeRawSource {
   constructor(private readonly content: string) {}
+
+  source(): string {
+    return this.content;
+  }
 }
 
 describe('GeneratePackageJsonPlugin', () => {
@@ -60,7 +59,10 @@ describe('GeneratePackageJsonPlugin', () => {
     jest.clearAllMocks();
     packageJson = { name: 'my-app', version: '1.0.0' };
     (createPackageJson as jest.Mock).mockReturnValue(packageJson);
-    (createLockFile as jest.Mock).mockReturnValue('pruned-lock');
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'pruned-lock',
+      pruned: true,
+    });
     (getLockFileName as jest.Mock).mockReturnValue('pnpm-lock.yaml');
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
   });
@@ -102,26 +104,28 @@ describe('GeneratePackageJsonPlugin', () => {
     return emitAsset;
   }
 
-  it('rewrites local-path specifiers and validates the link: closure for a pruned pnpm lockfile', async () => {
-    await runPlugin();
+  it('creates the pruned pnpm lockfile and ships the pruned install assets', async () => {
+    const emitAsset = await runPlugin();
 
-    expect(rewritePrunedLocalPathSpecifiers).toHaveBeenCalledWith(
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
       packageJson,
+      projectGraph,
       'apps/my-app',
       '/root',
-      new Set()
+      'pnpm'
     );
-    // The lockfile importer copies manifest specifiers, so the rewrite must
-    // run before createLockFile.
+    const lockfileEmit = emitAsset.mock.calls.find(
+      ([name]) => name === 'pnpm-lock.yaml'
+    );
+    expect(lockfileEmit[1].source()).toBe('pruned-lock');
+    // createPrunedLockfile relocates the manifest's local-path specifiers, so
+    // the manifest must be emitted after it.
+    const packageJsonEmitIndex = emitAsset.mock.calls.findIndex(
+      ([name]) => name === 'package.json'
+    );
     expect(
-      (rewritePrunedLocalPathSpecifiers as jest.Mock).mock
-        .invocationCallOrder[0]
-    ).toBeLessThan((createLockFile as jest.Mock).mock.invocationCallOrder[0]);
-    expect(validatePrunedLocalPathClosure).toHaveBeenCalledWith(
-      packageJson,
-      '/root',
-      'pruned-lock'
-    );
+      (createPrunedLockfile as jest.Mock).mock.invocationCallOrder[0]
+    ).toBeLessThan(emitAsset.mock.invocationCallOrder[packageJsonEmitIndex]);
     expect(emitPrunedPnpmInstallAssets).toHaveBeenCalledWith(
       '/root',
       'pruned-lock',
@@ -131,17 +135,14 @@ describe('GeneratePackageJsonPlugin', () => {
     );
   });
 
-  it('skips the link: validation and local-path shipping on the root-lockfile fallback', async () => {
-    (createLockFile as jest.Mock).mockImplementation(
-      (_pkg, _graph, _pm, opts) => {
-        opts?.onPruneFallback?.(new Error('prune failed'));
-        return 'root-lock';
-      }
-    );
+  it('skips the local-path shipping on the root-lockfile fallback', async () => {
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'root-lock',
+      pruned: false,
+    });
 
     await runPlugin();
 
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
     expect(emitPrunedPnpmInstallAssets).toHaveBeenCalledWith(
       '/root',
       'root-lock',
@@ -151,14 +152,27 @@ describe('GeneratePackageJsonPlugin', () => {
     );
   });
 
-  it('leaves the manifest untouched for a non-pnpm package manager', async () => {
+  it('emits no pnpm install assets for a non-pnpm package manager', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('npm');
     (getLockFileName as jest.Mock).mockReturnValue('package-lock.json');
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'npm-lock',
+      pruned: true,
+    });
 
-    await runPlugin();
+    const emitAsset = await runPlugin();
 
-    expect(rewritePrunedLocalPathSpecifiers).not.toHaveBeenCalled();
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
+      packageJson,
+      projectGraph,
+      'apps/my-app',
+      '/root',
+      'npm'
+    );
+    const lockfileEmit = emitAsset.mock.calls.find(
+      ([name]) => name === 'package-lock.json'
+    );
+    expect(lockfileEmit[1].source()).toBe('npm-lock');
     expect(emitPrunedPnpmInstallAssets).not.toHaveBeenCalled();
   });
 });
