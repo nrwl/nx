@@ -73,6 +73,9 @@ Nx can still be useful with this organizational structure.
 Tooling and maintenance tasks can be centralized through shared [Nx plugins](/docs/concepts/nx-plugins) that each repository can opt-in to using.
 Since creating repositories is a frequent occurrence in this scenario, Nx [generators](/docs/features/generate-code) can be used to quickly scaffold out the repository with reasonable tooling defaults.
 
+Polyrepos also fragment the context AI agents work with.
+[Polygraph](https://trypolygraph.com/) addresses this by letting one agent session work across multiple repositories together, with shared context and coordinated changes across all of them.
+
 ### Multiple monorepos
 
 Somewhere between the single monorepo and the full polyrepo solutions exists the multiple monorepo setup.
