@@ -1,5 +1,5 @@
 ---
-title: 'pnpm Workspaces Tutorial: Setup, Commands, and Best Practices'
+title: 'pnpm Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn pnpm workspaces: pnpm-workspace.yaml setup, the workspace: protocol, running scripts with --filter, catalogs, and best practices that scale.'
 filter: 'type:Guides'
 ---
@@ -101,36 +101,6 @@ catalog:
 ```
 
 Upgrading React across the whole repository is now a one-line change, and version bumps stop producing merge conflicts in every `package.json`.
-
-## Share environment variables across packages
-
-Package scripts run with the package directory as the working directory, so tools that load `.env` from the current directory won't see a `.env` file at the repository root. Two common fixes:
-
-- Load the root file explicitly with [dotenv-cli](https://www.npmjs.com/package/dotenv-cli) in the script:
-
-  ```jsonc
-  // apps/web/package.json
-  {
-    "scripts": {
-      "dev": "dotenv -e ../../.env -- vite dev",
-    },
-  }
-  ```
-
-- Point dotenv at the root file from code: `config({ path: resolve(__dirname, '../../.env') })`.
-
-Keep the root `.env` out of git and commit a `.env.example` documenting the variables each package expects.
-
-## Compare workspace commands across package managers
-
-All four package managers cover the same core workflows with different flags, and pnpm has the most capable built-in filtering:
-
-| Task                            | pnpm                          | npm                                       | Yarn                                   | Bun                            |
-| ------------------------------- | ----------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------ |
-| Install all packages            | `pnpm install`                | `npm install`                             | `yarn install`                         | `bun install`                  |
-| Add a dependency to one package | `pnpm --filter web add axios` | `npm install axios -w web`                | `yarn workspace web add axios`         | `cd apps/web && bun add axios` |
-| Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
-| Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
 ## Do pnpm workspaces replace a monorepo tool?
 

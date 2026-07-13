@@ -1,5 +1,5 @@
 ---
-title: 'npm Workspaces Tutorial: Setup, Commands, and Best Practices'
+title: 'npm Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn npm workspaces: the workspaces field, installing and linking local packages, running scripts with --workspace flags, and best practices that scale.'
 filter: 'type:Guides'
 ---
@@ -80,17 +80,6 @@ Running everything is fine while the repository is small. The cost grows linearl
 npm installs workspace dependencies into the root `node_modules` wherever versions allow, so shared dependencies exist once. When two packages need conflicting versions, the extra version is nested inside the individual package's `node_modules`. Run `npm dedupe` to flatten duplicates that accumulate over time.
 
 Hoisting has a downside: any package can import any hoisted dependency, including ones it never declared. These phantom dependencies break when a package is extracted from the workspace or the hoisting layout shifts. Declare everything a package imports in its own `package.json`.
-
-## Compare workspace commands across package managers
-
-All four package managers cover the same core workflows with different flags, and pnpm has the most capable built-in filtering:
-
-| Task                            | pnpm                          | npm                                       | Yarn                                   | Bun                            |
-| ------------------------------- | ----------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------ |
-| Install all packages            | `pnpm install`                | `npm install`                             | `yarn install`                         | `bun install`                  |
-| Add a dependency to one package | `pnpm --filter web add axios` | `npm install axios -w web`                | `yarn workspace web add axios`         | `cd apps/web && bun add axios` |
-| Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
-| Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
 ## Do npm workspaces replace a monorepo tool?
 

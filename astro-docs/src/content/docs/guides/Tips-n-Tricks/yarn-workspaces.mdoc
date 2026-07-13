@@ -1,5 +1,5 @@
 ---
-title: 'Yarn Workspaces Tutorial: Setup, Commands, and Best Practices'
+title: 'Yarn Workspaces: Setup, Commands, and Best Practices'
 description: 'Learn Yarn workspaces: setup, linking packages, running scripts with yarn workspaces foreach, hoisting behavior, and best practices for growing monorepos.'
 filter: 'type:Guides'
 ---
@@ -86,17 +86,6 @@ Hoisting means a workspace can import a dependency it never declared, which brea
 Yarn [constraints](https://yarnpkg.com/features/constraints) check rules across every workspace's `package.json`, like requiring one version of `react` everywhere or a `license` field on every package. In Yarn 4, define them in `yarn.config.cjs` and run `yarn constraints` to check the repository, or `yarn constraints --fix` to apply fixes.
 
 Constraints catch version drift at install time rather than at review time, which matters once dozens of `package.json` files change independently.
-
-## Compare workspace commands across package managers
-
-All four package managers cover the same core workflows with different flags, and pnpm has the most capable built-in filtering:
-
-| Task                            | pnpm                          | npm                                       | Yarn                                   | Bun                            |
-| ------------------------------- | ----------------------------- | ----------------------------------------- | -------------------------------------- | ------------------------------ |
-| Install all packages            | `pnpm install`                | `npm install`                             | `yarn install`                         | `bun install`                  |
-| Add a dependency to one package | `pnpm --filter web add axios` | `npm install axios -w web`                | `yarn workspace web add axios`         | `cd apps/web && bun add axios` |
-| Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
-| Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
 ## Do Yarn workspaces replace a monorepo tool?
 
