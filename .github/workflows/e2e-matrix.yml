@@ -343,6 +343,8 @@ jobs:
           npm_config_registry: http://localhost:4872
           # pnpm 11 reads pnpm_config_* env vars instead of npm_config_*
           pnpm_config_registry: http://localhost:4872
+          # pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
+          pnpm_config_minimum_release_age: '0'
           YARN_REGISTRY: http://localhost:4872
           CI: true
 
@@ -370,6 +372,8 @@ jobs:
           npm_config_registry: http://localhost:4872
           # pnpm 11 reads pnpm_config_* env vars instead of npm_config_*
           pnpm_config_registry: http://localhost:4872
+          # pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
+          pnpm_config_minimum_release_age: '0'
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true

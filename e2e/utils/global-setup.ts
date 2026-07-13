@@ -64,6 +64,9 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     process.env.pnpm_config_registry = registry;
     process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // pnpm 11's minimumReleaseAge policy rejects packages published < 24h
+    // ago; everything e2e installs was just published to the local registry.
+    process.env.pnpm_config_minimum_release_age = '0';
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;

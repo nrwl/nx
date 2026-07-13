@@ -28,6 +28,8 @@ async function populateLocalRegistryStorage() {
   // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*
   process.env.pnpm_config_registry = registry;
   process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] = authToken;
+  // pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
+  process.env.pnpm_config_minimum_release_age = '0';
 
   // bun
   process.env.BUN_CONFIG_REGISTRY = registry;
