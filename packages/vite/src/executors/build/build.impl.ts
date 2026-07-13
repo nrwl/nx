@@ -19,12 +19,9 @@ import { ViteBuildExecutorOptions } from './schema';
 import schema from './schema.json';
 import {
   copyAssets,
-  createLockFile,
   createPackageJson,
+  createPrunedLockfile,
   getLockFileName,
-  getWorkspacePackagesFromGraph,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from '@nx/js';
 import { existsSync, writeFileSync } from 'fs';
@@ -177,15 +174,14 @@ export async function* viteBuildExecutor(
       builtPackageJson.type ??= 'module';
 
       const packageManager = detectPackageManager(context.root);
-      // pnpm re-resolves local-path manifest specifiers on a non-frozen
-      // install, so relocate them to their shipped location before the manifest
-      // is written and the lockfile copies them.
-      if (packageManager === 'pnpm') {
-        rewritePrunedLocalPathSpecifiers(
+      let prunedLockfile: ReturnType<typeof createPrunedLockfile> | undefined;
+      if (packageManager !== 'bun') {
+        prunedLockfile = createPrunedLockfile(
           builtPackageJson,
+          context.projectGraph,
           projectRoot,
           context.root,
-          new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
+          packageManager
         );
       }
       writeJsonFile(
@@ -198,42 +194,19 @@ export async function* viteBuildExecutor(
           'Bun lockfile generation is not supported. The generated package.json will not include a lockfile. Run "bun install" in the output directory after deployment if needed.'
         );
       } else {
-        // `pruned` flips off when createLockFile falls back to the root
-        // lockfile, whose importer describes the whole workspace: skip the
-        // link: closure validation and local-path shipping for it.
-        let pruned = true;
-        const lockFile = createLockFile(
-          builtPackageJson,
-          context.projectGraph,
-          packageManager,
-          {
-            onPruneFallback: () => {
-              pruned = false;
-            },
-          }
-        );
-        if (packageManager === 'pnpm' && pruned) {
-          validatePrunedLocalPathClosure(
-            builtPackageJson,
-            context.root,
-            lockFile
-          );
-        }
         writeFileSync(
           `${outDirRelativeToWorkspaceRoot}/${getLockFileName(packageManager)}`,
-          lockFile,
+          prunedLockfile.lockFileContent,
           {
             encoding: 'utf-8',
           }
         );
-        // pnpm 11 reads build-script approvals and supportedArchitectures only
-        // from pnpm-workspace.yaml, so re-emit them beside the generated lockfile.
         if (packageManager === 'pnpm') {
           writePrunedPnpmInstallSettings(
             outDirRelativeToWorkspaceRoot,
             context.root,
-            lockFile,
-            { includeLocalPathArtifacts: pruned }
+            prunedLockfile.lockFileContent,
+            { includeLocalPathArtifacts: prunedLockfile.pruned }
           );
         }
       }

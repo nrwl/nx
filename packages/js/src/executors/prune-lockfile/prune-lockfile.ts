@@ -14,15 +14,13 @@ import { interpolate } from 'nx/src/tasks-runner/utils';
 import {
   type PackageJson,
   type PackageJsonDependencySection,
-  rewritePrunedLocalPathSpecifiers,
   stripPrunedLockfilePnpmConfig,
-  validatePrunedLocalPathClosure,
   writePrunedPnpmInstallSettings,
 } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import {
   getLockFileName,
-  createLockFile,
+  createPrunedLockfile,
 } from 'nx/src/plugins/js/lock-file/lock-file';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
@@ -49,32 +47,21 @@ export default async function pruneLockfileExecutor(
       JSON.stringify(packageJson, null, 2)
     );
   } else {
-    // pnpm re-resolves local-path manifest specifiers on a non-frozen install,
-    // so relocate them to their shipped location before the lockfile copies them.
-    if (packageManager === 'pnpm') {
-      const { project } = parseTargetString(schema.buildTarget, context);
-      const projectRoot = context.projectGraph.nodes[project].data.root;
-      rewritePrunedLocalPathSpecifiers(
-        packageJson,
-        projectRoot,
-        workspaceRoot,
-        new Set(getWorkspacePackagesFromGraph(context.projectGraph).keys())
-      );
-    }
-    const { lockfileName, lockFile, pruned } = createPrunedLockfile(
+    const { project } = parseTargetString(schema.buildTarget, context);
+    const projectRoot = context.projectGraph.nodes[project].data.root;
+    const { lockFileContent, pruned } = createPrunedLockfile(
       packageJson,
       context.projectGraph,
+      projectRoot,
+      workspaceRoot,
       packageManager
     );
-    // A shipped link: target has no packed closure, so fail fast if one requires
-    // a dependency that won't resolve from the deploy root (see the validator).
-    // Skip on the root-lockfile fallback: its importer describes the whole
-    // workspace, not this app, so validating it would fail the fail-open path.
-    if (packageManager === 'pnpm' && pruned) {
-      validatePrunedLocalPathClosure(packageJson, workspaceRoot, lockFile);
-    }
-    const lockfileOutputPath = join(outputDirectory, lockfileName);
-    writeFileSync(lockfileOutputPath, lockFile);
+    rewriteWorkspaceModuleSpecifiers(packageJson, context.projectGraph);
+    const lockfileOutputPath = join(
+      outputDirectory,
+      getLockFileName(packageManager)
+    );
+    writeFileSync(lockfileOutputPath, lockFileContent);
     // The pruned lockfile bakes pnpm config into its snapshots, so strip the
     // manifest's pnpm config to avoid ERR_PNPM_LOCKFILE_CONFIG_MISMATCH.
     stripPrunedLockfilePnpmConfig(packageJson);
@@ -82,14 +69,13 @@ export default async function pruneLockfileExecutor(
       join(outputDirectory, 'package.json'),
       JSON.stringify(packageJson, null, 2)
     );
-    // pnpm 11 reads build-script approvals and supportedArchitectures only from
-    // pnpm-workspace.yaml, so re-emit them there for the standalone output.
-    // Local-path artifacts ship only for an actually pruned lockfile; the
-    // fallback root lockfile references the whole workspace's sources.
     if (packageManager === 'pnpm') {
-      writePrunedPnpmInstallSettings(outputDirectory, workspaceRoot, lockFile, {
-        includeLocalPathArtifacts: pruned,
-      });
+      writePrunedPnpmInstallSettings(
+        outputDirectory,
+        workspaceRoot,
+        lockFileContent,
+        { includeLocalPathArtifacts: pruned }
+      );
     }
     logger.log(`Lockfile pruned: ${lockfileOutputPath}`);
   }
@@ -99,30 +85,20 @@ export default async function pruneLockfileExecutor(
   };
 }
 
-function createPrunedLockfile(
+// Point every workspace-module dependency at its copied directory so the
+// standalone output installs them as pnpm `file:` directory dependencies.
+// pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
+// workspace module is moved into dependencies instead (an optional peer
+// becomes required, which is moot since the module is always copied in). Gate
+// strictly on graph membership: a `file:`/`link:` spec to a non-workspace
+// local path (e.g. a vendored tarball) is left alone, since
+// copy-workspace-modules only ever copies actual workspace projects.
+function rewriteWorkspaceModuleSpecifiers(
   packageJson: PackageJson,
-  graph: ProjectGraph,
-  packageManager: ReturnType<typeof detectPackageManager>
+  graph: ProjectGraph
 ) {
-  const lockfileName = getLockFileName(packageManager);
-  // `pruned` flips off when createLockFile falls back to the root lockfile.
-  let pruned = true;
-  const lockFile = createLockFile(packageJson, graph, packageManager, {
-    onPruneFallback: () => {
-      pruned = false;
-    },
-  });
-
   const workspacePackages = getWorkspacePackagesFromGraph(graph);
 
-  // Point every workspace-module dependency at its copied directory so the
-  // standalone output installs them as pnpm `file:` directory dependencies.
-  // pnpm rejects a `file:` spec under peerDependencies, so a peer-declared
-  // workspace module is moved into dependencies instead (an optional peer
-  // becomes required, which is moot since the module is always copied in). Gate
-  // strictly on graph membership: a `file:`/`link:` spec to a non-workspace
-  // local path (e.g. a vendored tarball) is left alone, since
-  // copy-workspace-modules only ever copies actual workspace projects.
   for (const section of WORKSPACE_MODULE_INSTALL_SECTIONS) {
     const deps = packageJson[section];
     if (!deps) {
@@ -157,12 +133,6 @@ function createPrunedLockfile(
   ) {
     delete packageJson.peerDependenciesMeta;
   }
-
-  return {
-    lockfileName,
-    lockFile,
-    pruned,
-  };
 }
 
 /**

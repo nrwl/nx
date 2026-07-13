@@ -7,7 +7,7 @@ import { type PackageJson } from 'nx/src/utils/package-json';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { createLockFile } from 'nx/src/plugins/js/lock-file/lock-file';
+import { createPrunedLockfile } from 'nx/src/plugins/js/lock-file/lock-file';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';
@@ -31,7 +31,10 @@ jest.mock('@nx/devkit/internal', () => ({
 jest.mock('nx/src/plugins/js/lock-file/lock-file', () => ({
   ...jest.requireActual('nx/src/plugins/js/lock-file/lock-file'),
   getLockFileName: jest.fn(() => 'package-lock.json'),
-  createLockFile: jest.fn(() => '{}'),
+  createPrunedLockfile: jest.fn(() => ({
+    lockFileContent: '{}',
+    pruned: true,
+  })),
 }));
 jest.mock('nx/src/plugins/js/utils/get-workspace-packages-from-graph', () => ({
   ...jest.requireActual(
@@ -694,15 +697,16 @@ describe('pruneLockfileExecutor - pnpm 11 install settings', () => {
     );
     // allowBuilds is scoped to packages the pruned lockfile installs, so the
     // approved package must appear in it for the approval to carry through.
-    (createLockFile as jest.Mock).mockReturnValueOnce(
-      [
+    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
+      lockFileContent: [
         "lockfileVersion: '9.0'",
         'packages:',
         '  esbuild@0.21.5:',
         '    resolution: {integrity: sha512-abc}',
         '',
-      ].join('\n')
-    );
+      ].join('\n'),
+      pruned: true,
+    });
 
     await runExecutor();
 
@@ -811,7 +815,10 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
 
   it('ships the link: target tree of an actually pruned lockfile', async () => {
     setupPnpmWorkspace({ name: 'linked-lib', version: '1.0.0' });
-    (createLockFile as jest.Mock).mockReturnValueOnce(lockfileLinkingVendor);
+    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
+      lockFileContent: lockfileLinkingVendor,
+      pruned: true,
+    });
 
     await runExecutor();
 
@@ -825,34 +832,19 @@ describe('pruneLockfileExecutor - link: targets and the root lockfile fallback',
     ).toBe(true);
   });
 
-  it('fails the build when a linked package requires a dep the app does not install', async () => {
-    setupPnpmWorkspace({
-      name: 'linked-lib',
-      version: '1.0.0',
-      dependencies: { 'missing-dep': '^1.0.0' },
-    });
-    (createLockFile as jest.Mock).mockReturnValueOnce(lockfileLinkingVendor);
-
-    await expect(runExecutor()).rejects.toThrow(
-      /linked package linked-lib requires missing-dep/
-    );
-  });
-
-  it('skips link-closure validation and local-path shipping on the root lockfile fallback', async () => {
+  it('skips local-path shipping on the root lockfile fallback', async () => {
     // The fallback content describes the whole workspace, not the pruned app:
-    // validating it would fail the designed fail-open path, and shipping its
-    // link: targets would copy unrelated source trees into the output.
+    // shipping its link: targets would copy unrelated source trees into the
+    // output.
     setupPnpmWorkspace({
       name: 'linked-lib',
       version: '1.0.0',
       dependencies: { 'missing-dep': '^1.0.0' },
     });
-    (createLockFile as jest.Mock).mockImplementationOnce(
-      (_packageJson, _graph, _packageManager, options) => {
-        options?.onPruneFallback?.(new Error('pruning failed'));
-        return lockfileLinkingVendor;
-      }
-    );
+    (createPrunedLockfile as jest.Mock).mockReturnValueOnce({
+      lockFileContent: lockfileLinkingVendor,
+      pruned: false,
+    });
 
     await expect(runExecutor()).resolves.toEqual({ success: true });
 

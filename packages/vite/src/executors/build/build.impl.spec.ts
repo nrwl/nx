@@ -1,11 +1,7 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { detectPackageManager, writeJsonFile } from '@nx/devkit';
-import {
-  createLockFile,
-  rewritePrunedLocalPathSpecifiers,
-  validatePrunedLocalPathClosure,
-  writePrunedPnpmInstallSettings,
-} from '@nx/js';
+import { createPrunedLockfile, writePrunedPnpmInstallSettings } from '@nx/js';
+import { writeFileSync } from 'fs';
 import { viteBuildExecutor } from './build.impl';
 import { ViteBuildExecutorOptions } from './schema';
 
@@ -38,12 +34,12 @@ jest.mock('@nx/js/internal', () => ({
 jest.mock('@nx/js', () => ({
   ...jest.requireActual('@nx/js'),
   copyAssets: jest.fn(),
-  createLockFile: jest.fn(() => 'pruned-lock'),
   createPackageJson: jest.fn(() => manifest),
+  createPrunedLockfile: jest.fn(() => ({
+    lockFileContent: 'pruned-lock',
+    pruned: true,
+  })),
   getLockFileName: jest.fn(() => 'pnpm-lock.yaml'),
-  getWorkspacePackagesFromGraph: jest.fn(() => new Map()),
-  rewritePrunedLocalPathSpecifiers: jest.fn(),
-  validatePrunedLocalPathClosure: jest.fn(),
   writePrunedPnpmInstallSettings: jest.fn(),
 }));
 
@@ -97,6 +93,10 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     manifest = { name: 'my-app', version: '1.0.0' };
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'pruned-lock',
+      pruned: true,
+    });
   });
 
   async function runExecutor() {
@@ -105,31 +105,27 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     }
   }
 
-  it('rewrites local-path specifiers and validates the link: closure for pnpm', async () => {
+  it('creates the pruned pnpm lockfile before the manifest is written', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
 
     await runExecutor();
 
-    expect(rewritePrunedLocalPathSpecifiers).toHaveBeenCalledWith(
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
       manifest,
+      context.projectGraph,
       'apps/my-app',
       '/root',
-      new Set()
+      'pnpm'
     );
-    // pnpm re-resolves local-path specifiers on install, so the rewrite must
-    // land before the manifest and lockfile are written.
-    const rewriteOrder = (rewritePrunedLocalPathSpecifiers as jest.Mock).mock
-      .invocationCallOrder[0];
-    expect(rewriteOrder).toBeLessThan(
-      (writeJsonFile as jest.Mock).mock.invocationCallOrder[0]
-    );
-    expect(rewriteOrder).toBeLessThan(
-      (createLockFile as jest.Mock).mock.invocationCallOrder[0]
-    );
-    expect(validatePrunedLocalPathClosure).toHaveBeenCalledWith(
-      manifest,
-      '/root',
-      'pruned-lock'
+    // createPrunedLockfile relocates the manifest's local-path specifiers, so
+    // the manifest must be written after it.
+    expect(
+      (createPrunedLockfile as jest.Mock).mock.invocationCallOrder[0]
+    ).toBeLessThan((writeJsonFile as jest.Mock).mock.invocationCallOrder[0]);
+    expect(writeFileSync).toHaveBeenCalledWith(
+      expect.stringContaining('pnpm-lock.yaml'),
+      'pruned-lock',
+      { encoding: 'utf-8' }
     );
     expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
       expect.any(String),
@@ -139,18 +135,15 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     );
   });
 
-  it('skips the link: validation on the root-lockfile fallback', async () => {
+  it('ships the root-lockfile fallback without its local-path artifacts', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('pnpm');
-    (createLockFile as jest.Mock).mockImplementation(
-      (_manifest, _graph, _pm, opts) => {
-        opts?.onPruneFallback?.(new Error('prune failed'));
-        return 'root-lock';
-      }
-    );
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'root-lock',
+      pruned: false,
+    });
 
     await runExecutor();
 
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
     expect(writePrunedPnpmInstallSettings).toHaveBeenCalledWith(
       expect.any(String),
       '/root',
@@ -159,13 +152,22 @@ describe('viteBuildExecutor - lockfile generation wiring', () => {
     );
   });
 
-  it('leaves the manifest untouched for npm', async () => {
+  it('writes no pnpm install settings for npm', async () => {
     (detectPackageManager as jest.Mock).mockReturnValue('npm');
+    (createPrunedLockfile as jest.Mock).mockReturnValue({
+      lockFileContent: 'npm-lock',
+      pruned: true,
+    });
 
     await runExecutor();
 
-    expect(rewritePrunedLocalPathSpecifiers).not.toHaveBeenCalled();
-    expect(validatePrunedLocalPathClosure).not.toHaveBeenCalled();
+    expect(createPrunedLockfile).toHaveBeenCalledWith(
+      manifest,
+      context.projectGraph,
+      'apps/my-app',
+      '/root',
+      'npm'
+    );
     expect(writePrunedPnpmInstallSettings).not.toHaveBeenCalled();
   });
 });
