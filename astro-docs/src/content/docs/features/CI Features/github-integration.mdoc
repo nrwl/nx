@@ -85,8 +85,13 @@ Affected pruning skips projects that didn't change.
 [Remote caching](/docs/features/ci-features/remote-cache) goes further by reusing results for
 tasks whose inputs are identical to an earlier run, whether that run happened in CI or on a
 teammate's machine.
-Connect your workspace by running `npx nx connect`, or follow the
-[Nx Cloud getting started guide](/docs/getting-started/nx-cloud).
+Connect your workspace by running this command:
+
+```shell
+npx nx connect
+```
+
+Or follow the [Nx Cloud getting started guide](/docs/getting-started/nx-cloud).
 
 Once connected, one extra line
 [distributes tasks across multiple machines](/docs/features/ci-features/distribute-task-execution),
