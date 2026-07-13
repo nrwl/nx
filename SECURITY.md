@@ -38,6 +38,10 @@ Bounties are not paid out for OSS findings.
 
 ### Process
 
+**Important:** All attached reports MUST be in a plaintext format. You can attach text/markdown files (.txt or .md with no embedded images). 
+We are no longer accepting PDF or other document formats. If you need to attach images, you can do so to the initial email. We do not guarantee
+any response reminding submitters of this requirement and emails sent with these attached files may be rejected without response.
+
 You should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message.
 
 Nx follows the principle of Coordinated Vulnerability Disclosure.
