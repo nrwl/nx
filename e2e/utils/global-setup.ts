@@ -67,6 +67,13 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // pnpm 11's minimumReleaseAge policy rejects packages published < 24h
     // ago; everything e2e installs was just published to the local registry.
     process.env.pnpm_config_minimum_release_age = '0';
+    // e2e installs plugin packages directly (no generator records allowBuilds
+    // decisions for their transitive deps), and pnpm 11 re-checks the whole
+    // workspace strictly on every implicit deps check (`pnpm exec nx ...`),
+    // so restore pnpm 10's warn-and-skip for the whole harness and skip the
+    // implicit install-before-run entirely.
+    process.env.pnpm_config_strict_dep_builds = 'false';
+    process.env.pnpm_config_verify_deps_before_run = 'false';
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;

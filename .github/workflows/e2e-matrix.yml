@@ -345,6 +345,10 @@ jobs:
           pnpm_config_registry: http://localhost:4872
           # pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
           pnpm_config_minimum_release_age: '0'
+          # e2e installs plugins directly, leaving their transitive build scripts
+          # undecided; keep pnpm 10's warn-and-skip and skip implicit dep checks
+          pnpm_config_strict_dep_builds: 'false'
+          pnpm_config_verify_deps_before_run: 'false'
           YARN_REGISTRY: http://localhost:4872
           CI: true
 
@@ -374,6 +378,10 @@ jobs:
           pnpm_config_registry: http://localhost:4872
           # pnpm 11's minimumReleaseAge policy rejects packages published < 24h ago
           pnpm_config_minimum_release_age: '0'
+          # e2e installs plugins directly, leaving their transitive build scripts
+          # undecided; keep pnpm 10's warn-and-skip and skip implicit dep checks
+          pnpm_config_strict_dep_builds: 'false'
+          pnpm_config_verify_deps_before_run: 'false'
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true
