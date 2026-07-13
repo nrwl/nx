@@ -92,20 +92,6 @@ All four package managers cover the same core workflows with different flags, an
 | Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
 | Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
-## Frequently asked questions
-
-### Which npm version supports workspaces?
-
-npm 7 and later, which ships with Node.js 15 and above. Every currently supported Node.js version includes an npm with workspaces support.
-
-### Does npm support the workspace: protocol?
-
-No. npm links local packages by matching the name and version range in `dependencies`, so use `*` or a range that matches the local version. `workspace:` entries in a `package.json` cause npm installs to fail.
-
-### Can one workspace depend on another?
-
-Yes. Add the other workspace to `dependencies` by its package name, and npm symlinks the local folder instead of downloading from the registry. Imports resolve to the local source, so changes show up without publishing.
-
 ## Do npm workspaces replace a monorepo tool?
 
 No. npm workspaces install and link packages, but they don't order tasks by dependency, cache results, or detect which projects a commit affects, so CI reruns every task on every push. Workspaces solve linking, and a build tool solves orchestration once task times grow.

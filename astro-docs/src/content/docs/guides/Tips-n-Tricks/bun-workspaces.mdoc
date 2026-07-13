@@ -90,20 +90,6 @@ All four package managers cover the same core workflows with different flags, an
 | Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
 | Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
-## Frequently asked questions
-
-### Does Bun support the workspace: protocol?
-
-Yes. `workspace:*`, `workspace:^`, and `workspace:~` all resolve to the local package during development, and Bun rewrites them to concrete semver versions when the package is published.
-
-### Can I move an npm or Yarn workspace to Bun?
-
-Usually, yes. Bun reads the same root `workspaces` field, so running `bun install` in an existing npm or Yarn workspace produces a working install with a Bun lockfile. Verify any tooling that parses your old lockfile before deleting it.
-
-### Should I use Bun workspaces for a large monorepo?
-
-Installing and linking hold up well as package count grows, so workspace size itself isn't the limiting factor. The real limits are the missing dependency-aware filtering and the thinner ecosystem support for the Bun lockfile, so weigh those against the install speed before committing a large workspace to Bun.
-
 ## Do Bun workspaces replace a monorepo tool?
 
 No. Bun workspaces make installs fast and link local packages, but they don't cache task results or detect which projects a commit affects, so CI reruns every task on every push no matter how fast the install was.

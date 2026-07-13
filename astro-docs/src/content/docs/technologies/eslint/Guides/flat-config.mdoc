@@ -313,22 +313,3 @@ module.exports = {
 
 {% /tabitem %}
 {% /tabs %}
-
-## Frequently asked questions
-
-### Can I keep using .eslintrc?
-
-Only if you stay on ESLint 9, which still supports the legacy system when you set the
-`ESLINT_USE_FLAT_CONFIG=false` environment variable.
-ESLint 10 ignores that variable and no longer reads `.eslintrc.*` or `.eslintignore` files.
-
-### How do I use next/core-web-vitals with flat config?
-
-Import `eslint-config-next/core-web-vitals` and spread it into your `eslint.config.mjs` array.
-Don't wrap it in `FlatCompat`, which throws `TypeError: Converting circular structure to JSON`.
-
-### Is flat config required in ESLint 10?
-
-Yes.
-ESLint 10 (2026) removed the eslintrc system entirely, including eslintrc-specific CLI flags
-like `--no-eslintrc` and `--rulesdir`.

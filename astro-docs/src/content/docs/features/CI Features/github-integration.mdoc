@@ -1,5 +1,5 @@
 ---
-title: GitHub Actions CI for Monorepos with Nx
+title: GitHub Actions integration
 description: 'Speed up GitHub Actions for your monorepo with Nx: run only affected projects, share a remote cache, and add PR insights and self-healing CI with Nx Cloud.'
 sidebar:
   order: 18
@@ -14,9 +14,12 @@ machines.
 
 ## How does Nx speed up GitHub Actions?
 
-Nx speeds up GitHub Actions in three layers: `nx affected` runs lint, test, and build only for
-projects impacted by a pull request, Nx Cloud restores results that were already computed from a
-remote cache, and Nx Agents distribute what's left across multiple machines.
+Nx speeds up GitHub Actions in three layers:
+
+- `nx affected` runs lint, test, and build only for projects impacted by a pull request.
+- Nx Cloud restores results that were already computed from a remote cache.
+- Nx Agents distribute what's left across multiple machines.
+
 Affected runs work without an Nx Cloud account, so you can adopt each layer separately.
 
 ## Run Nx on GitHub Actions

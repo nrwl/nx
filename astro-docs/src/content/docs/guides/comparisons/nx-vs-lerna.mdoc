@@ -111,22 +111,3 @@ directly:
 
 For the full setup walkthrough, see
 [Adding Nx to an npm/Yarn/pnpm workspace](/docs/guides/adopting-nx/adding-to-monorepo).
-
-## Frequently asked questions
-
-### Is Lerna dead?
-
-No. The Nx team took over stewardship of Lerna in May 2022 and continues to release it, with
-Lerna 9 as the current major version.
-
-### Can Lerna and Nx be used together?
-
-Yes, they already work together: modern Lerna uses Nx as its task runner. You can configure caching
-in `nx.json` and connect a Lerna workspace to Nx Cloud without changing your publishing workflow.
-
-### Should I migrate from Lerna to Nx?
-
-If the Lerna versioning and publishing workflow serves you well, there's no urgency, since your task
-running is already powered by Nx. Migrate when you want one tool for the whole lifecycle:
-`nx release` replaces `lerna version` and `lerna publish`, and you gain affected detection,
-plugins, and generators.

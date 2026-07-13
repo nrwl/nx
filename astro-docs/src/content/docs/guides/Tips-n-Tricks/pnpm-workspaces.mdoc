@@ -132,20 +132,6 @@ All four package managers cover the same core workflows with different flags, an
 | Run a script in every package   | `pnpm -r run build`           | `npm run build --workspaces --if-present` | `yarn workspaces foreach -A run build` | `bun run --filter '*' build`   |
 | Run a script in one package     | `pnpm --filter web run build` | `npm run build --workspace=web`           | `yarn workspace web run build`         | `bun run --filter web build`   |
 
-## Frequently asked questions
-
-### What does workspace:\* mean?
-
-`workspace:*` tells pnpm to always use the local copy of a package from the workspace, never a registry version. When you publish, pnpm replaces it with the package's exact current version. Use `workspace:^` instead if the published range should be a caret range.
-
-### How are pnpm workspaces different from npm workspaces?
-
-pnpm creates a strict `node_modules` where each package can only import dependencies it declares, while npm hoists dependencies to the root wherever versions allow. pnpm also adds git-aware `--filter` selection, the `workspace:` protocol, and catalogs, none of which npm workspaces include.
-
-### Can I use pnpm workspaces without a monorepo tool?
-
-Yes. Workspaces alone handle installing, linking, and running scripts, which is enough for a handful of packages.
-
 ## Do pnpm workspaces replace a monorepo tool?
 
 No. pnpm workspaces handle installing and linking packages, and that's where they stop. There's no task graph and no caching, and git-based `--filter` compares changed files rather than task inputs, so CI still reruns tasks a change couldn't have affected.
