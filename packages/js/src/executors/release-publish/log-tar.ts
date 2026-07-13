@@ -16,7 +16,8 @@ export const logTar = (tarball, opts = {}) => {
     const columnData = columnify(
       tarball.files
         .map((f) => {
-          const bytes = formatBytes(f.size, false);
+          const bytes =
+            typeof f.size === 'number' ? formatBytes(f.size, false) : '';
           return /^node_modules\//.test(f.path)
             ? null
             : { path: f.path, size: `${bytes}` };
