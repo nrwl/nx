@@ -6,6 +6,22 @@ sidebar:
 filter: 'type:Guides'
 ---
 
+{% llm_copy_prompt title="Let an AI agent migrate it for you" %}
+
+Migrate this Nx workspace from .eslintrc to ESLint flat config and leave lint passing.
+
+1. Run `nx g @nx/eslint:convert-to-flat-config`. It mechanically converts the JSON and YAML eslintrc files, the base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
+2. Read `node_modules/@nx/eslint/src/migrations/update-23-1-0/convert-to-flat-config.md` and follow it to finish the parts that need judgment: JS-based eslintrc files, `FlatCompat` shims worth converting to native flat config, and rule fallout from preset changes.
+3. typescript-eslint v8 removed rules that configs may still reference:
+   - Apply the 1:1 renames listed in `node_modules/@nx/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts` to any flat config that references a removed extension rule.
+   - For `@typescript-eslint/ban-types`, follow `node_modules/@nx/eslint/src/migrations/update-23-1-0/migrate-ban-types-rule.md`.
+   - If those files don't exist, your `@nx/eslint` version predates them - handle removed rules from lint errors instead.
+4. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
+5. Run `nx run-many -t <lint-target>` and fix any failures until every project passes.
+
+Page: {pageUrl}
+{% /llm_copy_prompt %}
+
 ESLint flat config replaces `.eslintrc` with an `eslint.config.mjs` file that exports an
 array of config objects.
 Flat config has been the default since ESLint 9, and ESLint 10 no longer reads
@@ -31,21 +47,6 @@ converts every project's ESLint configuration in one pass:
 ```shell
 nx g @nx/eslint:convert-to-flat-config
 ```
-
-{% llm_copy_prompt title="Let an AI agent migrate it for you" %}
-Migrate this Nx workspace from .eslintrc to ESLint flat config and leave lint passing.
-
-1. Run `nx g @nx/eslint:convert-to-flat-config`. It mechanically converts the JSON and YAML eslintrc files, the base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
-2. Read `node_modules/@nx/eslint/src/migrations/update-23-1-0/convert-to-flat-config.md` and follow it to finish the parts that need judgment: JS-based eslintrc files, `FlatCompat` shims worth converting to native flat config, and rule fallout from preset changes.
-3. typescript-eslint v8 removed rules that configs may still reference:
-   - Apply the 1:1 renames listed in `node_modules/@nx/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts` to any flat config that references a removed extension rule.
-   - For `@typescript-eslint/ban-types`, follow `node_modules/@nx/eslint/src/migrations/update-23-1-0/migrate-ban-types-rule.md`.
-   - If those files don't exist, your `@nx/eslint` version predates them - handle removed rules from lint errors instead.
-4. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
-5. Run `nx run-many -t <lint-target>` and fix any failures until every project passes.
-
-Page: {pageUrl}
-{% /llm_copy_prompt %}
 
 The generator walks all projects, converts each `.eslintrc.json` to flat config, converts the
 base config at the workspace root, and folds `.eslintignore` files into `ignores` entries.
