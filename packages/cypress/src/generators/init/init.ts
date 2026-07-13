@@ -73,8 +73,9 @@ function updateDependencies(tree: Tree, options: Schema) {
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
     // Nx never enables build scripts on the user's behalf. cypress's
-    // postinstall downloads its binary, so cypress prompts the user to run
-    // `pnpm approve-builds cypress` (or `cypress install`) on first use.
+    // postinstall downloads its binary; on first use cypress tells the user
+    // to run `cypress install` (works regardless of allowBuilds), or they can
+    // flip this entry to true and `pnpm rebuild cypress`.
     acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
       cypress: false,
     });
