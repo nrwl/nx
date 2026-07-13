@@ -784,7 +784,7 @@ impl InlineApp {
 
                     // Call insert_before on the dereferenced Terminal
                     // This only works with inline viewport
-                    if let Ok(()) = tui.insert_before(height, |buf| {
+                    match tui.insert_before(height, |buf| {
                         // Convert batched scrollback lines to owned ratatui Lines
                         let lines: Vec<Line<'static>> =
                             batch.iter().map(|line| Line::from(line.clone())).collect();
@@ -797,18 +797,21 @@ impl InlineApp {
                         use ratatui::widgets::Widget;
                         paragraph.render(buf.area, buf);
                     }) {
-                        // Track total lines inserted for cleanup on exit
-                        self.total_inserted_lines += height as u32;
+                        Ok(()) => {
+                            // Track total lines inserted for cleanup on exit
+                            self.total_inserted_lines += height as u32;
 
-                        tracing::trace!(
-                            "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
-                            lines_to_render,
-                            current_scrollback_lines
-                        );
-                    } else {
-                        tracing::error!(
-                            "insert_before failed - method may not exist on this terminal type"
-                        );
+                            tracing::trace!(
+                                "render_scrollback_above_tui: Rendered {} lines (total scrollback: {})",
+                                lines_to_render,
+                                current_scrollback_lines
+                            );
+                        }
+                        Err(e) => {
+                            tracing::error!(
+                                "Failed to insert scrollback above the inline viewport: {e}"
+                            );
+                        }
                     }
                 }
             }
