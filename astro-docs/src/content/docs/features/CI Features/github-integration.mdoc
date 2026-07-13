@@ -111,8 +111,8 @@ Run `start-ci-run` as early as possible, after checkout but before dependencies 
   if: always()
 ```
 
-Distributed tasks run in [isolated sandboxes](/docs/features/ci-features/sandboxing), and you can
-track per-agent CPU and memory with
+You can also enable [task sandboxing](/docs/features/ci-features/sandboxing) to run each
+distributed task in an isolated sandbox, and track per-agent CPU and memory with
 [resource usage](/docs/features/ci-features/resource-usage) to right-size your agents.
 
 ## What the Nx Cloud GitHub App adds to your PRs
