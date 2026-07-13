@@ -402,6 +402,27 @@ describe('AngularRspackPlugin', () => {
     expect(close).toHaveBeenCalled();
   });
 
+  it('should still close the Angular compilation and the stylesheet bundler when an earlier shutdown close fails', async () => {
+    transformerCloseMock.mockRejectedValue(
+      new Error('worker pool destroy failed')
+    );
+    const close = vi.fn();
+    setupCompilationMock.mockResolvedValue({
+      angularCompilation: {
+        diagnoseFiles: vi.fn().mockResolvedValue({}),
+        close,
+      },
+      collectedStylesheetAssets: [],
+    });
+    const compiler = applyPlugin();
+    await runBuildStart(compiler);
+
+    await fireAsyncTaps(compiler.hooks.shutdown);
+
+    expect(close).toHaveBeenCalled();
+    expect(disposeComponentStylesheetBundlerMock).toHaveBeenCalled();
+  });
+
   it('should start diagnostics with the build and reuse the result on emit', async () => {
     const diagnoseFiles = vi
       .fn()

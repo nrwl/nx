@@ -448,21 +448,29 @@ export class AngularRspackPlugin implements RspackPluginInstance {
     );
 
     // Failed builds skip the done hook, so release the esbuild service here
-    // too. The transformer closes only on shutdown: a per-build close would
-    // tear down its worker pool on every watch rebuild. Both are idempotent.
+    // too; disposing the bundler again after a one-shot build is a no-op.
+    // The transformer closes only on shutdown: a per-build close would tear
+    // down its worker pool on every watch rebuild.
     compiler.hooks.shutdown.tapAsync(
       `${PLUGIN_NAME}_cleanup`,
       async (callback) => {
-        try {
-          await this.#javascriptTransformer.close();
-          await this.#javascriptTransformerCache?.close();
-          // Terminates the worker of a worker-based compilation, which would
-          // otherwise keep the process alive.
-          await this.#angularCompilation?.close?.();
-          await disposeComponentStylesheetBundler();
-        } catch {
-          // Best-effort cleanup that must never fail the compiler teardown.
-        }
+        // Isolated per close so a failing one cannot skip the rest and leak
+        // their resources (an unterminated compilation worker keeps the
+        // process alive). Kept sequential: the transformer writes results
+        // through the cache store, so its worker pool closes first.
+        const closeSafely = async (close: () => unknown) => {
+          try {
+            await close();
+          } catch {
+            // Best-effort cleanup that must never fail the compiler teardown.
+          }
+        };
+        await closeSafely(() => this.#javascriptTransformer.close());
+        await closeSafely(() => this.#javascriptTransformerCache?.close());
+        // Terminates the worker of a worker-based compilation, which would
+        // otherwise keep the process alive.
+        await closeSafely(() => this.#angularCompilation?.close?.());
+        await closeSafely(() => disposeComponentStylesheetBundler());
         callback();
       }
     );
