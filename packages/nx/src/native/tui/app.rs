@@ -22,7 +22,7 @@ use tui_logger::{LevelFilter, TuiLoggerSmartWidget, TuiWidgetEvent, TuiWidgetSta
 
 use crate::native::tui::tui::Tui;
 use crate::native::{
-    pseudo_terminal::pseudo_terminal::{ParserArc, WriterArc},
+    pseudo_terminal::pseudo_terminal::PtyHandles,
     tasks::types::{Task, TaskResult},
 };
 
@@ -830,14 +830,13 @@ impl App {
     }
 
     // A pseudo-terminal running task will provide the parser and writer directly
-    pub fn register_running_interactive_task(
-        &mut self,
-        task_id: String,
-        parser_and_writer: &(ParserArc, WriterArc),
-    ) {
+    pub fn register_running_interactive_task(&mut self, task_id: String, pty_handles: &PtyHandles) {
         debug!("Registering interactive task: {}", task_id);
-        let pty =
-            PtyInstance::interactive(parser_and_writer.0.clone(), parser_and_writer.1.clone());
+        let pty = PtyInstance::interactive(
+            pty_handles.0.clone(),
+            pty_handles.1.clone(),
+            pty_handles.2.clone(),
+        );
         self.register_running_task(task_id, pty);
     }
 

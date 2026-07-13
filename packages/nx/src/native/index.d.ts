@@ -17,6 +17,10 @@ interface WriterArc {
   readonly __brand: unique symbol;
 }
 
+interface MasterArc {
+  readonly __brand: unique symbol;
+}
+
 interface HashInstruction {
   readonly __brand: unique symbol;
 }
@@ -36,7 +40,7 @@ export declare class AppLifeCycle {
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
   endCommand(summary?: PerformanceSummaryPayload | undefined | null): void
   __init(doneCallback: (() => unknown)): void
-  registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
+  registerRunningTask(taskId: string, ptyHandles: ExternalObject<[ParserArc, WriterArc, MasterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
   appendTaskOutput(taskId: string, output: string, isPtyOutput: boolean): void
   setTaskStatus(taskId: string, status: TaskStatus): void
@@ -56,7 +60,7 @@ export declare class AppLifeCycle {
 }
 
 export declare class ChildProcess {
-  getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
+  getPtyHandles(): ExternalObject<[ParserArc, WriterArc, MasterArc]>
   getPid(): number
   kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
