@@ -1,6 +1,7 @@
 import {
   addDependenciesToPackageJson,
   getProjects,
+  joinPathFragments,
   readNxJson,
   type TargetConfiguration,
   type Tree,
@@ -71,23 +72,35 @@ export default async function addOptionalWebpackPackages(tree: Tree) {
       needsModuleFederation ||= moduleFederationExecutors.has(target.executor);
       needsRspack ||= target.executor?.startsWith('@nx/rspack:') ?? false;
     }
+
+    // Remotes get a plain dev-server (no Module Federation executor) but still
+    // generate a module-federation.config that requires @nx/module-federation
+    // at build time, so detect them by that config file too. This covers
+    // remotes whose host lives in a different workspace.
+    needsModuleFederation ||=
+      tree.exists(
+        joinPathFragments(project.root, 'module-federation.config.ts')
+      ) ||
+      tree.exists(
+        joinPathFragments(project.root, 'module-federation.config.js')
+      );
   }
 
   const nxJson = readNxJson(tree);
 
-  // targetDefaults are keyed by target name or executor; a project's empty
-  // target can inherit its executor from a default, so scan them too.
+  // targetDefaults are keyed by target name or executor, and a default can set
+  // an executor that an empty project target inherits, so scan the keys and any
+  // executor on the default (both the object and array forms).
   for (const [targetOrExecutor, config] of Object.entries(
     nxJson?.targetDefaults ?? {}
   )) {
-    // The array value form doesn't carry an inheritable executor.
-    if (Array.isArray(config)) {
-      continue;
-    }
-    for (const executor of [targetOrExecutor, config.executor]) {
-      if (executor == null) {
-        continue;
+    const executors = [targetOrExecutor];
+    for (const entry of Array.isArray(config) ? config : [config]) {
+      if (entry.executor != null) {
+        executors.push(entry.executor);
       }
+    }
+    for (const executor of executors) {
       needsWebpack ||= webpackExecutors.has(executor);
       needsModuleFederation ||= moduleFederationExecutors.has(executor);
       needsRspack ||= executor.startsWith('@nx/rspack:');

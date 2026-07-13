@@ -16,8 +16,7 @@ export async function normalizeOptions(
     targets.build.executor === '@angular/build:application' ||
     targets.build.executor === '@nx/angular:application';
   const isUsingWebpackBuilder =
-    !isUsingApplicationBuilder &&
-    !targets.build.executor.startsWith('@angular-devkit/build-angular:');
+    targets.build.executor === '@nx/angular:webpack-browser';
 
   const isStandaloneApp = isNgStandaloneApp(tree, options.project);
 

@@ -130,6 +130,38 @@ describe('add-optional-webpack-packages migration', () => {
     expect(getDevDependencies()['webpack-merge']).toBe(webpackMergeVersion);
   });
 
+  it('should add webpack packages for a target inheriting a webpack executor from an array-form targetDefault', async () => {
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        build: [{ executor: '@nx/angular:webpack-browser' }],
+      },
+    }));
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: { build: {} },
+    });
+
+    await migration(tree);
+
+    expect(getDevDependencies()['@nx/webpack']).toBe(nxVersion);
+    expect(getDevDependencies()['webpack-merge']).toBe(webpackMergeVersion);
+  });
+
+  it('should add webpack packages for an executor-keyed array-form targetDefault', async () => {
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        '@nx/angular:webpack-browser': [{ cache: true }],
+      },
+    }));
+
+    await migration(tree);
+
+    expect(getDevDependencies()['@nx/webpack']).toBe(nxVersion);
+    expect(getDevDependencies()['webpack-merge']).toBe(webpackMergeVersion);
+  });
+
   test.each([
     '@nx/angular:module-federation-dev-server',
     '@nx/angular:module-federation-dev-ssr',
@@ -144,6 +176,28 @@ describe('add-optional-webpack-packages migration', () => {
       await migration(tree);
 
       expect(getDevDependencies()['@nx/module-federation']).toBe(nxVersion);
+    }
+  );
+
+  test.each(['module-federation.config.ts', 'module-federation.config.js'])(
+    'should add @nx/module-federation for a remote with a "%s" file and no host executor',
+    async (configFile) => {
+      addProjectConfiguration(tree, 'remote1', {
+        root: 'apps/remote1',
+        targets: {
+          build: { executor: '@nx/angular:webpack-browser', options: {} },
+          serve: {
+            executor: '@nx/angular:dev-server',
+            options: { buildTarget: 'remote1:build' },
+          },
+        },
+      });
+      tree.write(`apps/remote1/${configFile}`, 'export default {};');
+
+      await migration(tree);
+
+      expect(getDevDependencies()['@nx/module-federation']).toBe(nxVersion);
+      expect(getDevDependencies()['@nx/webpack']).toBe(nxVersion);
     }
   );
 
