@@ -10,10 +10,10 @@ filter: 'type:Guides'
 
 Migrate this Nx workspace from .eslintrc to ESLint flat config, following the instructions on the page below.
 
-1. Run `nx g @nx/eslint:convert-to-flat-config`. Convert any JS-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`) by hand using the page's migration steps.
-2. Handle rules removed in typescript-eslint v8 as the page describes: drop the removed formatting rules, apply the two 1:1 renames, and split `@typescript-eslint/ban-types` into its successors.
+1. Run `nx g @nx/eslint:convert-to-flat-config`. Convert any JS-based eslintrc files (`.eslintrc.js`, `.eslintrc.cjs`) yourself using the page's migration steps.
+2. Handle rules removed in typescript-eslint v8 and the ESLint v9 runtime changes as the page describes: drop removed formatting rules, apply the renames and the ban-types split, update plugins that crash, and fix removed formatters and CLI flags.
 3. Find the lint target: check `nx.json` plugins for `@nx/eslint/plugin` and its `targetName` (default `lint`), and check `project.json` / `package.json` files for explicit lint targets.
-4. Run `nx run-many -t <lint-target>` and fix any failures until every project passes.
+4. Run `nx reset`, then `nx run-many -t <lint-target>` and fix failures until every project passes. Disable newly preset-enabled rules you never configured instead of editing source to satisfy them, and never weaken a rule the workspace configured explicitly.
 
 Page: {pageUrl}
 {% /llm_copy_prompt %}
@@ -34,7 +34,7 @@ It makes three changes to the legacy format:
 - Explicit `import` statements replace implicit string-based loading of plugins and parsers.
 - Config objects scoped by `files` patterns replace nested `overrides`.
 
-## Automate the migration with Nx
+## Automate file conversion
 
 In an Nx workspace, the
 [@nx/eslint:convert-to-flat-config generator](/docs/technologies/eslint/generators#convert-to-flat-config)
@@ -54,8 +54,9 @@ configuration.
 
 The generator aims to produce a flat config that behaves exactly like your original JSON
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.
-You can convert those sections to native flat config by hand afterwards, following the ESLint
-migration guide.
+You can convert those sections to native flat config afterwards, by hand or with AI assistance
+(recommended): convert when the plugin documents a flat preset (typescript-eslint,
+`eslint-plugin-react`), and keep the shim for shared configs that don't ship one.
 
 ## How do I migrate to flat config?
 
@@ -149,6 +150,18 @@ still exist.
   wrappers).
   If the old entry was just an error level, set all three to that level.
   If it customized `types`, translate each banned type to whichever successor rule covers it.
+
+## What else changes in ESLint v9?
+
+Flat config is only part of the v9 upgrade. These runtime changes surface during the same migration:
+
+- **Preset defaults shifted** - The ESLint v9 and typescript-eslint v8 recommended sets enable rules they didn't before, so a previously passing workspace can newly fail. Disable a newly reported rule you never configured, with a short comment, instead of editing source files to satisfy it.
+- **A crash is not a finding** - Errors like `TypeError: context.getAncestors is not a function` or `Could not find "<rule>" in plugin` mean an installed plugin predates ESLint v9. Update the plugin and prefer its flat entry point (for example `eslint-plugin-cypress/flat`) instead of disabling its rules.
+- **Some output formatters were removed** - `stylish`, `html`, `json`, and `json-with-metadata` remain built in. For a removed one like `junit`, install the community package (`eslint-formatter-junit`) and reference it by package name in the lint target's `format` option.
+- **Removed CLI flags** - `--rulesdir`, `--ext`, and `--resolve-plugins-relative-to` are gone, along with the matching `@nx/eslint:lint` options. Move file targeting into `files` and `ignores` in the config.
+- **Local rule API moved to `SourceCode`** - If the workspace authors its own rules, `context.getScope()` becomes `sourceCode.getScope(node)` (and similar for `getAncestors`, `getDeclaredVariables`, `getText`, and `parserServices`), and a rule that accepts options must declare `meta.schema`.
+
+After the migration, run `nx reset` so renamed configs are re-detected, then confirm `nx run-many -t lint` passes across the workspace.
 
 ## Migrate a Next.js project to flat config
 
