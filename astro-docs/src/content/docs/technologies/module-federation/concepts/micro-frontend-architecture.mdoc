@@ -159,9 +159,8 @@ As the number of applications grows, distribute those CI runs with
 
 ## Micro frontends with Angular
 
-As of Nx v23, Nx no longer supports Module Federation for Angular, and the `@nx/angular` `host`
-and `remote` generators are deprecated.
-The supported path for Angular micro frontends is
+As of Nx v23, the `@nx/angular` `host` and `remote` generators are deprecated.
+For Angular micro frontends, look to
 [`@angular-architects/native-federation`](https://www.npmjs.com/package/@angular-architects/native-federation),
 which implements the same runtime composition model on top of the Angular CLI build.
 Nx still runs, caches, and orchestrates the Angular apps as regular projects in the workspace.
