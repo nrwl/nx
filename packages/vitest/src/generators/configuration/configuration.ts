@@ -34,7 +34,7 @@ import initGenerator from '../init/init';
 import { VitestGeneratorSchema } from './schema';
 import { detectUiFramework } from '../../utils/detect-ui-framework';
 import { getInstalledViteMajorVersion } from '../../utils/version-utils';
-import { versions } from '../../utils/versions';
+import { getInstalledVitestMajorVersion, versions } from '../../utils/versions';
 import { assertSupportedVitestVersion } from '../../utils/assert-supported-vitest-version';
 import { clean, coerce, major } from 'semver';
 
@@ -274,20 +274,55 @@ getTestBed().initTestEnvironment(
     tasks.push(installDependenciesTask);
   }
 
-  // Setup workspace config file (https://vitest.dev/guide/workspace.html)
-  if (
-    !isRootProject &&
-    !tree.exists(`vitest.workspace.ts`) &&
-    !tree.exists(`vitest.workspace.js`) &&
-    !tree.exists(`vitest.workspace.json`) &&
-    !tree.exists(`vitest.projects.ts`) &&
-    !tree.exists(`vitest.projects.js`) &&
-    !tree.exists(`vitest.projects.json`)
-  ) {
-    tree.write(
-      'vitest.workspace.ts',
-      `export default ['**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'];`
-    );
+  // Setup the root config aggregating the project configs. Vitest 4 removed
+  // workspace files in favor of inlining the projects into a root vitest.config
+  // via `test.projects` (https://vitest.dev/guide/migration.html#workspace-is-replaced-with-projects).
+  // Emit that shape for vitest 4+ and when the installed version can't be
+  // detected (new installs resolve to v4); vitest 3 keeps the workspace file.
+  if (!isRootProject) {
+    const projectGlobs = `'**/vite.config.{mjs,js,ts,mts}', '**/vitest.config.{mjs,js,ts,mts}'`;
+    const vitestMajorVersion = getInstalledVitestMajorVersion(tree);
+
+    if (vitestMajorVersion === null || vitestMajorVersion >= 4) {
+      const hasRootConfig =
+        ['ts', 'mts', 'mjs', 'js', 'cjs', 'cts'].some(
+          (ext) =>
+            tree.exists(`vitest.config.${ext}`) ||
+            tree.exists(`vite.config.${ext}`)
+        ) ||
+        ['ts', 'js', 'json'].some(
+          (ext) =>
+            tree.exists(`vitest.workspace.${ext}`) ||
+            tree.exists(`vitest.projects.${ext}`)
+        );
+
+      if (!hasRootConfig) {
+        // Exclude this root config from its own `**/vitest.config.*` glob.
+        // Otherwise vitest resolves it as an extra project that, having no
+        // `include`, re-runs every test via the default glob without its
+        // project config (environment, setupFiles).
+        tree.write(
+          'vitest.config.ts',
+          `import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    projects: [${projectGlobs}, '!vitest.config.ts'],
+  },
+});
+`
+        );
+      }
+    } else if (
+      !tree.exists(`vitest.workspace.ts`) &&
+      !tree.exists(`vitest.workspace.js`) &&
+      !tree.exists(`vitest.workspace.json`) &&
+      !tree.exists(`vitest.projects.ts`) &&
+      !tree.exists(`vitest.projects.js`) &&
+      !tree.exists(`vitest.projects.json`)
+    ) {
+      tree.write('vitest.workspace.ts', `export default [${projectGlobs}];`);
+    }
   }
 
   if (!schema.skipFormat) {
