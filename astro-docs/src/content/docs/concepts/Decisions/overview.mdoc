@@ -79,8 +79,8 @@ Polyrepos also fragment the context AI agents work with.
 ### Multiple monorepos
 
 Somewhere between the single monorepo and the full polyrepo solutions exists the multiple monorepo setup.
-Typically when there are disagreements about organizational decisions, there are two or three factions that form.
-These factions can naturally be allocated to separate monorepos that have been configured in a way that best suits the teams that will be working in them.
+The split usually follows a real boundary: an internal codebase next to a public open source one, product lines in different domains that share no code, or groups of teams that answer the organizational questions above differently.
+Each monorepo is configured in the way that best suits the teams working in it.
 
 Compared to a single monorepo, this setup adds overhead: multiple CI pipelines and repeated tooling maintenance.
 In exchange, each team works in a repository optimized for how they work.
