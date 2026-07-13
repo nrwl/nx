@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { WebpackPluginInstance } from 'webpack';
+import type { WebpackPluginInstance } from 'webpack';
 
 import { getOutputHashFormat } from '../../../utils/hash-format';
 import { ScriptsWebpackPlugin } from '../../../utils/webpack/plugins/scripts-webpack-plugin';

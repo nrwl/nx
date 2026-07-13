@@ -232,7 +232,7 @@ export async function connectExistingRepoToNxCloudPrompt(
   key: MessageKey = 'setupNxCloud',
   recordCompletion = true
 ): Promise<MessageOptionKey> {
-  const res = await nxCloudPrompt(key, utmMediumForCommand(command));
+  const res = await nxCloudPrompt(key, utmContentForCommand(command));
   // TODO: once legacy init-v1 (the NX_ADD_PLUGINS=false / useInferencePlugins:false path) is
   // removed, drop this recordStat and the recordCompletion flag entirely - init-v2 records its
   // own complete, and view-logs should record its own stat, so this shared helper won't record.
@@ -261,7 +261,7 @@ export async function connectExistingRepoToNxCloudPrompt(
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt(
     'setupNxCloud',
-    utmMediumForCommand(command)
+    utmContentForCommand(command)
   );
   let useCloud = false;
   if (setNxCloud === 'yes') {
@@ -292,7 +292,7 @@ export async function connectToNxCloudWithPrompt(command: string) {
   });
 }
 
-function utmMediumForCommand(command: string): string {
+function utmContentForCommand(command: string): string {
   switch (command) {
     case 'migrate':
       return 'nx-migrate';
@@ -305,7 +305,7 @@ function utmMediumForCommand(command: string): string {
 
 async function nxCloudPrompt(
   key: MessageKey,
-  utmMedium: string
+  utmContent: string
 ): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
@@ -318,7 +318,7 @@ async function nxCloudPrompt(
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
     promptConfig.footer = () =>
-      pc.dim(`${footer} ${nxCloudHyperlink(utmMedium)}`);
+      pc.dim(`${footer} ${nxCloudHyperlink(utmContent)}`);
   }
   if (hint) {
     promptConfig.hint = () => pc.dim(hint);

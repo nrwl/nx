@@ -16,9 +16,9 @@ use crate::native::tui::lifecycle::{Link as SummaryLink, PerformanceSummaryPaylo
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration, pluralize};
 
-use super::Component;
 use super::link::{Link, LinkRegistry};
 use super::nx_paragraph::{NxLine, NxParagraph, NxSpan, NxText};
+use super::{Component, ModalPopup};
 
 /// Convert a styled line into an `NxLine`, turning any occurrence of a known
 /// link phrase into a clickable [`Link`]. Replaces the old buffer-scanning OSC 8
@@ -230,12 +230,16 @@ impl CountdownPopup {
 
     /// The bordered popup box drawn last frame, if visible.
     pub fn last_area(&self) -> Option<Rect> {
-        self.last_area
+        if self.visible { self.last_area } else { None }
     }
 
     /// The inner text area drawn last frame, if visible.
     pub fn content_area(&self) -> Option<Rect> {
-        self.content_area
+        if self.visible {
+            self.content_area
+        } else {
+            None
+        }
     }
 
     pub fn start_countdown(&mut self, duration_secs: u64) {
@@ -389,8 +393,9 @@ impl CountdownPopup {
                 format!("{time_remaining}"),
                 Style::default().fg(THEME.info),
             ));
-            spans.push(Span::styled("...  ", Style::default().fg(THEME.primary_fg)));
+            spans.push(Span::styled("...", Style::default().fg(THEME.primary_fg)));
         }
+        spans.push(Span::raw("  "));
         spans
     }
 
@@ -628,6 +633,20 @@ impl CountdownPopup {
     }
 }
 
+impl ModalPopup for CountdownPopup {
+    fn is_visible(&self) -> bool {
+        CountdownPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        CountdownPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        CountdownPopup::content_area(self)
+    }
+}
+
 impl Component for CountdownPopup {
     fn draw(&mut self, f: &mut Frame<'_>, rect: Rect) -> Result<()> {
         if self.visible {
@@ -668,7 +687,7 @@ mod tests {
     // render and hyperlink exactly these.
     const CACHE_PHRASE: &str =
         "Drastically reduce your run duration by sharing a cache across your team and CI";
-    const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm=performance-report";
+    const CACHE_HREF: &str = "https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache";
 
     fn summary_with(recommendations: Vec<String>) -> PerformanceSummaryPayload {
         PerformanceSummaryPayload {

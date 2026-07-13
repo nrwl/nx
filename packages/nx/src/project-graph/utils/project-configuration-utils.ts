@@ -9,7 +9,7 @@ import {
 } from './project-configuration/project-nodes-manager';
 import { validateAndNormalizeProjectRootMap } from './project-configuration/target-normalization';
 
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { performance } from 'perf_hooks';
 
 import { DelayedSpinner } from '../../utils/delayed-spinner';
@@ -367,9 +367,7 @@ export function mergeCreateNodesResults(
       intermediateDefaultRootMap,
       project,
       defaultConfigurationSourceMaps,
-      sourceInfo,
-      false,
-      true
+      sourceInfo
     );
   };
 
@@ -526,36 +524,9 @@ export function mergeCreateNodesResults(
 }
 
 /**
- * Fast matcher for patterns without negations - uses short-circuit evaluation.
- */
-function matchesSimplePatterns(file: string, patterns: string[]): boolean {
-  return patterns.some((pattern) => minimatch(file, pattern, { dot: true }));
-}
-
-/**
- * Full matcher for patterns with negations - processes all patterns sequentially.
- * Patterns starting with '!' are negation patterns that remove files from the match set.
- * Patterns are processed in order, with later patterns overriding earlier ones.
- */
-function matchesNegationPatterns(file: string, patterns: string[]): boolean {
-  // If first pattern is negation, start by matching everything
-  let isMatch = patterns[0].startsWith('!');
-
-  for (const pattern of patterns) {
-    const isNegation = pattern.startsWith('!');
-    const actualPattern = isNegation ? pattern.substring(1) : pattern;
-
-    if (minimatch(file, actualPattern, { dot: true })) {
-      // Last matching pattern wins
-      isMatch = !isNegation;
-    }
-  }
-
-  return isMatch;
-}
-
-/**
- * Creates a matcher function for the given patterns.
+ * Creates a matcher function for the given patterns. Globs are compiled once
+ * here so matching a file list only runs the pre-parsed regex per file, instead
+ * of recompiling every pattern on each call.
  * @param patterns Array of glob patterns (can include negation patterns starting with '!')
  * @param emptyValue Value to return when patterns array is empty
  * @returns A function that checks if a file matches the patterns
@@ -570,9 +541,32 @@ function createMatcher(
 
   const hasNegationPattern = patterns.some((p) => p.startsWith('!'));
 
-  return hasNegationPattern
-    ? (file: string) => matchesNegationPatterns(file, patterns)
-    : (file: string) => matchesSimplePatterns(file, patterns);
+  if (hasNegationPattern) {
+    // Patterns are processed in order, with later matches overriding earlier
+    // ones; a leading negation starts from "matches everything".
+    const compiled = patterns.map((pattern) => {
+      const isNegation = pattern.startsWith('!');
+      return {
+        isNegation,
+        matcher: new Minimatch(isNegation ? pattern.substring(1) : pattern, {
+          dot: true,
+        }),
+      };
+    });
+    const initialMatch = patterns[0].startsWith('!');
+    return (file: string) => {
+      let isMatch = initialMatch;
+      for (const { isNegation, matcher } of compiled) {
+        if (matcher.match(file)) {
+          isMatch = !isNegation;
+        }
+      }
+      return isMatch;
+    };
+  }
+
+  const compiled = patterns.map((p) => new Minimatch(p, { dot: true }));
+  return (file: string) => compiled.some((m) => m.match(file));
 }
 
 export function findMatchingConfigFiles(

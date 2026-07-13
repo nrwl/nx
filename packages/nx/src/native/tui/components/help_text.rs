@@ -30,8 +30,65 @@ impl HelpText {
         }
     }
 
-    pub fn set_collapsed_mode(&mut self, collapsed: bool) {
-        self.collapsed_mode = collapsed;
+    /// Width in terminal columns of the rendered help line. Derived from the
+    /// same spans that render, so layout reservations can't drift from the
+    /// actual content.
+    pub fn width(&self) -> u16 {
+        self.line().width() as u16
+    }
+
+    fn line(&self) -> Line<'static> {
+        let base_style = if self.is_dimmed {
+            Style::default().add_modifier(Modifier::DIM)
+        } else {
+            Style::default()
+        };
+        let key_style = base_style.fg(THEME.info);
+        let label_style = base_style.fg(THEME.secondary_fg);
+
+        if self.collapsed_mode {
+            // Show minimal hint
+            return Line::from(vec![
+                Span::styled("quit: ", label_style),
+                Span::styled("q", key_style),
+                Span::styled("  ", label_style),
+                Span::styled("help: ", label_style),
+                Span::styled("?", key_style),
+            ]);
+        }
+
+        // Show full shortcuts
+        let mut shortcuts = vec![
+            Span::styled("quit: ", label_style),
+            Span::styled("q", key_style),
+            Span::styled("  ", label_style),
+            Span::styled("help: ", label_style),
+            Span::styled("?", key_style),
+            Span::styled("  ", label_style),
+            Span::styled("navigate: ", label_style),
+            Span::styled("↑ ↓", key_style),
+            Span::styled("  ", label_style),
+            Span::styled("filter: ", label_style),
+            Span::styled("/", key_style),
+            Span::styled("  ", label_style),
+            Span::styled("pin output: ", label_style),
+            Span::styled("", label_style),
+            Span::styled("1", key_style),
+            Span::styled(" or ", label_style),
+            Span::styled("2", key_style),
+            Span::styled("  ", label_style),
+            Span::styled("show output: ", label_style),
+            Span::styled("<enter>", key_style),
+        ];
+
+        // Only advertise the performance report once it exists (run finished).
+        if self.show_perf_report {
+            shortcuts.push(Span::styled("  ", label_style));
+            shortcuts.push(Span::styled("perf report: ", label_style));
+            shortcuts.push(Span::styled("p", key_style));
+        }
+
+        Line::from(shortcuts)
     }
 
     pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
@@ -52,67 +109,14 @@ impl HelpText {
             height: area.height.min(f.area().height.saturating_sub(area.y)),
         };
 
-        let base_style = if self.is_dimmed {
-            Style::default().add_modifier(Modifier::DIM)
+        let alignment = if self.collapsed_mode && self.align_left {
+            Alignment::Left
         } else {
-            Style::default()
+            Alignment::Right
         };
-        let key_style = base_style.fg(THEME.info);
-        let label_style = base_style.fg(THEME.secondary_fg);
-
-        if self.collapsed_mode {
-            // Show minimal hint
-            let hint = vec![
-                Span::styled("quit: ", label_style),
-                Span::styled("q", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("help: ", label_style),
-                Span::styled("?", key_style),
-            ];
-            f.render_widget(
-                NxParagraph::new(Line::from(hint)).alignment(if self.align_left {
-                    Alignment::Left
-                } else {
-                    Alignment::Right
-                }),
-                safe_area,
-            );
-        } else {
-            // Show full shortcuts
-            let mut shortcuts = vec![
-                Span::styled("quit: ", label_style),
-                Span::styled("q", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("help: ", label_style),
-                Span::styled("?", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("navigate: ", label_style),
-                Span::styled("↑ ↓", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("filter: ", label_style),
-                Span::styled("/", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("pin output: ", label_style),
-                Span::styled("", label_style),
-                Span::styled("1", key_style),
-                Span::styled(" or ", label_style),
-                Span::styled("2", key_style),
-                Span::styled("  ", label_style),
-                Span::styled("show output: ", label_style),
-                Span::styled("<enter>", key_style),
-            ];
-
-            // Only advertise the performance report once it exists (run finished).
-            if self.show_perf_report {
-                shortcuts.push(Span::styled("  ", label_style));
-                shortcuts.push(Span::styled("perf report: ", label_style));
-                shortcuts.push(Span::styled("p", key_style));
-            }
-
-            f.render_widget(
-                NxParagraph::new(Line::from(shortcuts)).alignment(Alignment::Right),
-                safe_area,
-            );
-        }
+        f.render_widget(
+            NxParagraph::new(self.line()).alignment(alignment),
+            safe_area,
+        );
     }
 }

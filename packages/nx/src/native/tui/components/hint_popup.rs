@@ -12,7 +12,7 @@ use std::time::{Duration, Instant};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
-use super::Component;
+use super::{Component, ModalPopup};
 
 /// Default duration before the hint popup auto-dismisses
 const AUTO_DISMISS_DURATION: Duration = Duration::from_secs(2);
@@ -50,12 +50,16 @@ impl HintPopup {
 
     /// The bordered popup box drawn last frame, if visible.
     pub fn last_area(&self) -> Option<Rect> {
-        self.last_area
+        if self.visible { self.last_area } else { None }
     }
 
     /// The inner text area drawn last frame, if visible.
     pub fn content_area(&self) -> Option<Rect> {
-        self.content_area
+        if self.visible {
+            self.content_area
+        } else {
+            None
+        }
     }
 
     /// Shows the popup with the given message
@@ -161,6 +165,20 @@ impl HintPopup {
 impl Default for HintPopup {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl ModalPopup for HintPopup {
+    fn is_visible(&self) -> bool {
+        HintPopup::is_visible(self)
+    }
+
+    fn last_area(&self) -> Option<Rect> {
+        HintPopup::last_area(self)
+    }
+
+    fn content_area(&self) -> Option<Rect> {
+        HintPopup::content_area(self)
     }
 }
 

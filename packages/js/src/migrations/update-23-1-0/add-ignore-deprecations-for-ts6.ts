@@ -1,71 +1,97 @@
-import {
-  formatFiles,
-  logger,
-  type Tree,
-  visitNotIgnoredFiles,
-} from '@nx/devkit';
-import { basename } from 'node:path';
-import {
-  applyEdits,
-  modify,
-  parseTree,
-  findNodeAtLocation,
-  getNodeValue,
-} from 'jsonc-parser';
+import { formatFiles, globAsync, logger, type Tree } from '@nx/devkit';
+import { basename, dirname } from 'node:path';
+import { applyEdits, getNodeValue, modify, parseTree } from 'jsonc-parser';
+import type * as ts from 'typescript';
+import { ensureTypescript } from '../../utils/typescript/ensure-typescript';
 
 const FORMATTING_OPTIONS = {
   formattingOptions: { keepLines: true, insertSpaces: true, tabSize: 2 },
 };
 
+let tsModule: typeof import('typescript');
+
 type CompilerOptions = Record<string, unknown>;
 
 /**
- * Two independent passes over every tsconfig*.json in the workspace:
+ * Runs on TypeScript 6 workspaces (gated by `requires` in migrations.json) in
+ * two passes over every `tsconfig*.json`.
  *
- * 1. ignoreDeprecations pass - adds `ignoreDeprecations: "6.0"` to any
- *    compilerOptions (or ts-node.compilerOptions) block that directly carries a
- *    TS6 hard-deprecated option value (moduleResolution node/node10/classic,
- *    baseUrl, target es5, esModuleInterop false, outFile, module
- *    amd/umd/system/none, alwaysStrict false, allowSyntheticDefaultImports
- *    false, downlevelIteration set to any value).
+ * Pass 1 writes what pass 2's `extends` resolution reads back:
+ *  - Default-preserving pins: on every chain root (no `extends`) that is not a
+ *    pure solution container (`files: []` with no `include`), pin the TS6
+ *    defaults that changed in a breaking way, but only where the root leaves
+ *    them unset:
+ *      - `strict: false`. TS6 treats an absent `strict` as true, TS5 as false.
+ *      - `noUncheckedSideEffectImports: false`. TS6 defaults it true, turning a
+ *        bare side-effect import of an asset without an ambient declaration
+ *        (`import './styles.css'`) into a hard TS2882; a semantic diagnostic,
+ *        not a deprecation, so `ignoreDeprecations` cannot silence it.
+ *      - `types: ["*"]`. TS6 loads no @types when `types` is unset (TS5 loaded
+ *        all); the wildcard restores that so a config relying on it (ts-node
+ *        type-checking jest.config.ts) keeps finding @types/node.
+ *      - `esModuleInterop: false`. TS6 flips the default false->true, changing
+ *        `import * as x from '<cjs>'` call semantics at runtime; false preserves
+ *        the pre-TS6 behavior. It is itself deprecated (removed in TS7), so pass
+ *        2 silences it, deferring the interop change to the eventual TS7 work.
+ *  - Config-load flag: set `ignoreDeprecations: "6.0"` on every file named
+ *    exactly `tsconfig.json`, the name jest/ts-node auto-resolve (walking up
+ *    from the file they compile, such as jest.config.ts). ts-node injects a
+ *    `target: es5` when the config leaves it unset, and es5 is a TS6-deprecated
+ *    value (TS5107); the flag (which ts-node passes through) keeps that load
+ *    silent. Set unconditionally, since any `tsconfig.json` is a potential
+ *    loader target, and inert when nothing is deprecated. It cannot silence a
+ *    module/moduleResolution mismatch (TS5110) when ts-node's forced
+ *    `module: commonjs` meets an inherited `nodenext` resolution.
  *
- * 2. default-preserving pass - for every chain root (no "extends" key), pins
- *    the TS6 compiler-option defaults that changed in a way that breaks existing
- *    workspaces back to their pre-TS6 value, but only when the root does not set
- *    them explicitly:
- *      - "strict": false - TS6 treats an absent "strict" as true; TS5 as false.
- *      - "noUncheckedSideEffectImports": false - TS6 defaults it to true, which
- *        turns a bare side-effect import of an asset lacking an ambient
- *        declaration (e.g. `import './styles.css'`) into a hard TS2882 error; it
- *        is a semantic diagnostic, not a deprecation, so `ignoreDeprecations`
- *        cannot silence it.
- *      - "types": ["*"]. TS6 loads no @types packages when `types` is unset,
- *        whereas TS5 loaded them all; the "*" wildcard restores that default so
- *        a config relying on it (e.g. ts-node type-checking jest.config.ts)
- *        keeps finding @types/node.
- *    Files with "extends" inherit from their chain root and are left untouched.
- *    Pure solution-style containers (root has `"files": []` and no "include")
- *    select no source files, so pinning there is noise and they are skipped.
- *
- * Only runs on TS6 workspaces (gated by `requires` in migrations.json), because
- * `ignoreDeprecations: "6.0"` is itself a hard error (TS5103) on TS 5.x.
+ * Pass 2 silences the remaining hard-deprecated values. For each config,
+ * TypeScript resolves its `extends`-merged compiler options; when they carry a
+ * value TS6 hard-deprecates (see `hasDeprecatedOption`) and their effective
+ * `ignoreDeprecations` is not already `"6.0"`, add the flag. Because the check
+ * runs on the merged options, it covers a value the config inherits from a base
+ * this migration never edits, respects an inherited `"6.0"` (no redundant flag),
+ * and upgrades a stale local `"5.0"` that overrides one. The
+ * `ts-node.compilerOptions` overlay, which `tsc` does not merge, is checked on
+ * its own.
  */
 export default async function (tree: Tree) {
-  let deprecationCount = 0;
+  tsModule ??= ensureTypescript();
+  const ts = tsModule;
+  // Tree-backed host so TypeScript resolves `extends` against pass 1's pending
+  // writes; the `readDirectory` no-op skips the source-file scan, since only the
+  // merged compiler options matter here, not the file list.
+  const parseHost: ts.ParseConfigHost = {
+    ...ts.sys,
+    readFile: (filePath) => tree.read(filePath, 'utf-8') ?? undefined,
+    readDirectory: () => [],
+  };
+
+  const tsconfigPaths = await globAsync(tree, ['**/tsconfig*.json']);
+
+  // Pass 1: pins and config-load flags, so pass 2's inheritance check sees them.
   let defaultsPinCount = 0;
-  visitNotIgnoredFiles(tree, '.', (filePath) => {
-    const name = basename(filePath);
-    if (!name.startsWith('tsconfig') || !name.endsWith('.json')) {
-      return;
-    }
-    if (addIgnoreDeprecations(tree, filePath)) {
+  let configLoadCount = 0;
+  for (const tsconfigPath of tsconfigPaths) {
+    const { pinned, flagged } = applyDefaultsAndConfigLoadFlag(
+      tree,
+      tsconfigPath
+    );
+    if (pinned) defaultsPinCount += 1;
+    if (flagged) configLoadCount += 1;
+  }
+
+  // Pass 2: silence a deprecated value the config carries or inherits.
+  let deprecationCount = 0;
+  for (const tsconfigPath of tsconfigPaths) {
+    if (silenceDeprecations(tree, ts, parseHost, tsconfigPath)) {
       deprecationCount += 1;
     }
-    if (pinPreTs6Defaults(tree, filePath)) {
-      defaultsPinCount += 1;
-    }
-  });
+  }
 
+  if (configLoadCount > 0) {
+    logger.info(
+      `Ensured "ignoreDeprecations": "6.0" on ${configLoadCount} "tsconfig.json" file(s) so config loaders (jest/ts-node) keep working on TypeScript 6.`
+    );
+  }
   if (deprecationCount > 0) {
     logger.info(
       `Added "ignoreDeprecations": "6.0" to ${deprecationCount} tsconfig file(s) carrying TS6-deprecated options.`
@@ -73,190 +99,248 @@ export default async function (tree: Tree) {
   }
   if (defaultsPinCount > 0) {
     logger.info(
-      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports", "types") on ${defaultsPinCount} tsconfig chain root(s) to preserve existing behavior.`
+      `Pinned pre-TS6 compiler option defaults ("strict", "noUncheckedSideEffectImports", "types", "esModuleInterop") on ${defaultsPinCount} tsconfig chain root(s).`
     );
   }
 
   await formatFiles(tree);
 }
 
-function addIgnoreDeprecations(tree: Tree, tsconfigPath: string): boolean {
-  const original = tree.read(tsconfigPath, 'utf-8');
-  if (!original) {
-    return false;
-  }
-
-  // Each entry targets a distinct compilerOptions block within the same file.
-  const blocks: string[][] = [
-    ['compilerOptions'],
-    ['ts-node', 'compilerOptions'],
-  ];
-
-  let contents = original;
-  let changed = false;
-  for (const blockPath of blocks) {
-    // Re-parse each iteration: a prior edit shifts offsets in `contents`.
-    const root = parseTree(contents);
-    const blockNode = root && findNodeAtLocation(root, blockPath);
-    if (!blockNode || blockNode.type !== 'object') {
-      continue;
-    }
-    const compilerOptions = getNodeValue(blockNode) as CompilerOptions;
-    if (!hasDeprecatedValue(compilerOptions)) {
-      continue;
-    }
-    // An existing non-"6.0" value (e.g. "5.0") does NOT silence 6.0-class
-    // deprecations, so upgrade it; only "6.0" is already correct.
-    if (compilerOptions.ignoreDeprecations === '6.0') {
-      continue;
-    }
-
-    const edits = modify(
-      contents,
-      [...blockPath, 'ignoreDeprecations'],
-      '6.0',
-      FORMATTING_OPTIONS
-    );
-    contents = applyEdits(contents, edits);
-    changed = true;
-  }
-
-  if (changed) {
-    tree.write(tsconfigPath, contents);
-  }
-
-  return changed;
-}
-
-// Values that compile silently on TS 5.8 but are hard deprecation errors
-// (TS5101/TS5107) on TS 6.0 - derived by differential 5.8-vs-6.0 probing.
-function hasDeprecatedValue(compilerOptions: CompilerOptions): boolean {
-  const moduleResolution = asLowerString(compilerOptions.moduleResolution);
-  if (
-    moduleResolution === 'node' ||
-    moduleResolution === 'node10' ||
-    moduleResolution === 'classic'
-  ) {
-    return true;
-  }
-
-  // `baseUrl`/`outFile` only deprecate when set to a real value; `null`/unset
-  // is inert on TS6.
-  if (compilerOptions.baseUrl != null) {
-    return true;
-  }
-
-  if (asLowerString(compilerOptions.target) === 'es5') {
-    return true;
-  }
-
-  if (compilerOptions.esModuleInterop === false) {
-    return true;
-  }
-
-  if (compilerOptions.outFile != null) {
-    return true;
-  }
-
-  const moduleValue = asLowerString(compilerOptions.module);
-  if (
-    moduleValue === 'amd' ||
-    moduleValue === 'umd' ||
-    moduleValue === 'system' ||
-    moduleValue === 'none'
-  ) {
-    return true;
-  }
-
-  // Only the explicit `false` value triggers TS5107 for these two flags.
-  if (compilerOptions.alwaysStrict === false) {
-    return true;
-  }
-  if (compilerOptions.allowSyntheticDefaultImports === false) {
-    return true;
-  }
-
-  // A real boolean triggers TS5101; `null`/unset is inert. `!= null` also flags
-  // non-boolean JSON, but that only adds a harmless no-op `ignoreDeprecations`.
-  if (compilerOptions.downlevelIteration != null) {
-    return true;
-  }
-
-  return false;
-}
-
-// TS6 compiler-option defaults that changed in a way that breaks existing
-// workspaces. We pin each back to its pre-TS6 value on chain roots that don't
-// set it, so existing workspaces keep building without adopting a legit TS6
-// setup.
+// The pre-TS6 default values pinned on chain roots that leave them unset; pass 1
+// above explains why each one changed in a breaking way.
 const DEFAULT_PRESERVING_PINS: ReadonlyArray<[string, boolean | string[]]> = [
   ['strict', false],
   ['noUncheckedSideEffectImports', false],
-  // TS6 loads no @types when `types` is unset (TS5 loaded all); "*" restores it.
   ['types', ['*']],
+  ['esModuleInterop', false],
 ];
 
-function pinPreTs6Defaults(tree: Tree, tsconfigPath: string): boolean {
+// Pass 1 for one file: pin pre-TS6 defaults on a chain root and set the
+// config-load flag on a `tsconfig.json`, combined into a single write.
+function applyDefaultsAndConfigLoadFlag(
+  tree: Tree,
+  tsconfigPath: string
+): { pinned: boolean; flagged: boolean } {
+  const original = tree.read(tsconfigPath, 'utf-8');
+  if (!original) {
+    return { pinned: false, flagged: false };
+  }
+  const root = parseTree(original);
+  if (!root || root.type !== 'object') {
+    return { pinned: false, flagged: false };
+  }
+  const own = getNodeValue(root) as Record<string, unknown>;
+
+  const compilerOptions = own.compilerOptions;
+  // A present-but-non-object compilerOptions can't receive keys; leave the file
+  // alone so modify() doesn't throw and abort the whole migration.
+  if (compilerOptions !== undefined && !isObject(compilerOptions)) {
+    return { pinned: false, flagged: false };
+  }
+  const options = (compilerOptions ?? {}) as CompilerOptions;
+
+  let contents = original;
+  let pinned = false;
+  let flagged = false;
+
+  // Only chain roots; a file with "extends" inherits the defaults. Skip pure
+  // solution containers ("files": [] and no "include"): they select no sources.
+  const isSolutionContainer =
+    Array.isArray(own.files) && own.files.length === 0 && !('include' in own);
+  if (own.extends === undefined && !isSolutionContainer) {
+    for (const [key, value] of DEFAULT_PRESERVING_PINS) {
+      if (key in options) continue; // An explicit value means the user opted in.
+      contents = applyEdits(
+        contents,
+        modify(contents, ['compilerOptions', key], value, FORMATTING_OPTIONS)
+      );
+      pinned = true;
+    }
+  }
+
+  if (
+    basename(tsconfigPath) === 'tsconfig.json' &&
+    options.ignoreDeprecations !== '6.0'
+  ) {
+    contents = applyEdits(
+      contents,
+      modify(
+        contents,
+        ['compilerOptions', 'ignoreDeprecations'],
+        '6.0',
+        FORMATTING_OPTIONS
+      )
+    );
+    flagged = true;
+  }
+
+  if (pinned || flagged) {
+    tree.write(tsconfigPath, contents);
+  }
+  return { pinned, flagged };
+}
+
+// Pass 2 for one file: silence a deprecated value it carries or inherits, in the
+// main block and the ts-node overlay, combined into a single write.
+function silenceDeprecations(
+  tree: Tree,
+  ts: typeof import('typescript'),
+  parseHost: ts.ParseConfigHost,
+  tsconfigPath: string
+): boolean {
   const original = tree.read(tsconfigPath, 'utf-8');
   if (!original) {
     return false;
   }
-
   const root = parseTree(original);
   if (!root || root.type !== 'object') {
     return false;
   }
+  const own = getNodeValue(root) as Record<string, unknown>;
 
-  const rootValue = getNodeValue(root) as Record<string, unknown>;
+  const mainBlock = own.compilerOptions;
+  const mainIsObject = isObject(mainBlock);
+  const mainFlag = mainIsObject
+    ? (mainBlock as CompilerOptions).ignoreDeprecations
+    : undefined;
 
-  // Only touch chain roots - files with "extends" inherit from their ancestor.
-  if ('extends' in rootValue) {
+  const tsNodeBlock = isObject(own['ts-node'])
+    ? (own['ts-node'] as Record<string, unknown>).compilerOptions
+    : undefined;
+  const tsNodeIsObject = isObject(tsNodeBlock);
+  const tsNodeFlag = tsNodeIsObject
+    ? (tsNodeBlock as CompilerOptions).ignoreDeprecations
+    : undefined;
+
+  // No own options and no `extends` to inherit through, and no overlay to check:
+  // nothing can be deprecated here, so skip without parsing.
+  if (!mainIsObject && own.extends === undefined && !tsNodeIsObject) {
+    return false;
+  }
+  // Main is already silenced and there is no overlay: nothing to do, skip the
+  // parse entirely (the common case for a config-load-flagged `tsconfig.json`).
+  if (mainFlag === '6.0' && !tsNodeIsObject) {
     return false;
   }
 
-  // Skip pure solution-style containers: root has "files": [] and no "include".
-  // They select no source files, so pinning defaults there is noise.
-  const filesNode = findNodeAtLocation(root, ['files']);
-  const hasEmptyFiles =
-    filesNode?.type === 'array' && filesNode.children?.length === 0;
-  if (hasEmptyFiles && !('include' in rootValue)) {
-    return false;
-  }
-
-  const compilerOptionsNode = findNodeAtLocation(root, ['compilerOptions']);
-  // A present-but-non-object compilerOptions can't receive pinned keys; bailing
-  // avoids modify() throwing and aborting the whole migration.
-  if (compilerOptionsNode && compilerOptionsNode.type !== 'object') {
-    return false;
-  }
-  const compilerOptions = compilerOptionsNode
-    ? (getNodeValue(compilerOptionsNode) as CompilerOptions)
-    : {};
+  // The `extends`-merged main options, normalized by TypeScript. Passing the
+  // config object (not the path) keeps TypeScript from re-reading this file; it
+  // reads only the ancestors.
+  const mainOptions = ts.parseJsonConfigFileContent(
+    { extends: own.extends, compilerOptions: mainIsObject ? mainBlock : {} },
+    parseHost,
+    dirname(tsconfigPath)
+  ).options;
+  const mainDeprecated = hasDeprecatedOption(ts, mainOptions);
 
   let contents = original;
   let changed = false;
-  for (const [key, value] of DEFAULT_PRESERVING_PINS) {
-    // An explicit value means the user opted in; leave it.
-    if (key in compilerOptions) {
-      continue;
-    }
-    const edits = modify(
+
+  // Main block: silence a deprecated value it carries or inherits, unless an
+  // effective "6.0" (own or inherited) already covers it. A stale local "5.0"
+  // that overrides an inherited "6.0" shows through the merge and is upgraded.
+  // An absent block is created; a present-but-non-object one is left alone so
+  // modify() neither corrupts it nor throws.
+  const mainWritable = mainBlock === undefined || mainIsObject;
+  if (
+    mainWritable &&
+    mainFlag !== '6.0' &&
+    mainDeprecated &&
+    mainOptions.ignoreDeprecations !== '6.0'
+  ) {
+    contents = applyEdits(
       contents,
-      ['compilerOptions', key],
-      value,
-      FORMATTING_OPTIONS
+      modify(
+        contents,
+        ['compilerOptions', 'ignoreDeprecations'],
+        '6.0',
+        FORMATTING_OPTIONS
+      )
     );
-    contents = applyEdits(contents, edits);
     changed = true;
+  }
+
+  // ts-node overlay: `tsc` does not merge it, so check it directly. ts-node
+  // overlays the resolved main options at runtime; a "6.0" the main block just
+  // received does not reliably reach the overlay across ts-node versions, so
+  // silence it on its own whenever it or the resolved main carries a deprecated
+  // value.
+  if (tsNodeIsObject && tsNodeFlag !== '6.0') {
+    const overlayOptions = ts.parseJsonConfigFileContent(
+      { compilerOptions: tsNodeBlock },
+      parseHost,
+      dirname(tsconfigPath)
+    ).options;
+    if (hasDeprecatedOption(ts, overlayOptions) || mainDeprecated) {
+      contents = applyEdits(
+        contents,
+        modify(
+          contents,
+          ['ts-node', 'compilerOptions', 'ignoreDeprecations'],
+          '6.0',
+          FORMATTING_OPTIONS
+        )
+      );
+      changed = true;
+    }
   }
 
   if (changed) {
     tree.write(tsconfigPath, contents);
   }
-
   return changed;
 }
 
-function asLowerString(value: unknown): string | undefined {
-  return typeof value === 'string' ? value.toLowerCase() : undefined;
+// Whether TypeScript-parsed, `extends`-merged compiler options carry a value
+// that compiles silently on TS 5.8 but is a hard deprecation error (TS5101/
+// TS5107) on TS 6.0, derived by differential 5.8-vs-6.0 probing. Options are
+// read from the normalized enums TypeScript produces; an unset option stays
+// undefined (TypeScript does not fill in the module-derived `moduleResolution`
+// default here), so an implied resolution is not misread as deprecated.
+function hasDeprecatedOption(
+  ts: typeof import('typescript'),
+  options: ts.CompilerOptions
+): boolean {
+  const moduleResolution = options.moduleResolution;
+  if (
+    moduleResolution === ts.ModuleResolutionKind.Node10 ||
+    moduleResolution === ts.ModuleResolutionKind.Classic
+  ) {
+    return true;
+  }
+  if (options.baseUrl != null) {
+    return true;
+  }
+  if (options.target === ts.ScriptTarget.ES5) {
+    return true;
+  }
+  if (options.esModuleInterop === false) {
+    return true;
+  }
+  if (options.outFile != null) {
+    return true;
+  }
+  const module = options.module;
+  if (
+    module === ts.ModuleKind.AMD ||
+    module === ts.ModuleKind.UMD ||
+    module === ts.ModuleKind.System ||
+    module === ts.ModuleKind.None
+  ) {
+    return true;
+  }
+  if (options.alwaysStrict === false) {
+    return true;
+  }
+  if (options.allowSyntheticDefaultImports === false) {
+    return true;
+  }
+  if (options.downlevelIteration != null) {
+    return true;
+  }
+  return false;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
