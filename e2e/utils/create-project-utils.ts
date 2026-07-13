@@ -88,6 +88,32 @@ export function openInEditor(projectDirectory: string = tmpProjPath()) {
  * Sets up a new project in the temporary project path
  * for the currently selected CLI.
  */
+/**
+ * PROTOTYPE: locate a pre-built base workspace template for the given package
+ * manager, produced by the `populate-e2e-base-workspace` task and restored via Nx
+ * cache on each agent. Returns null when absent (newProject then builds it the
+ * original way), when disabled, or for non-default presets. Existence of the dir is
+ * the package-manager gate — only npm is pre-built today.
+ */
+function sharedBaseWorkspacePath(
+  packageManager: string,
+  preset: string
+): string | null {
+  if (process.env.NX_E2E_SKIP_SHARED_BASE === 'true' || preset !== 'apps') {
+    return null;
+  }
+  const candidate = join(
+    __dirname,
+    '..',
+    '..',
+    'dist',
+    'local-registry',
+    'proj-backup',
+    packageManager
+  );
+  return directoryExists(candidate) ? candidate : null;
+}
+
 export function newProject({
   name = uniq('proj'),
   packageManager = getSelectedPackageManager(),
@@ -113,10 +139,23 @@ export function newProject({
       const createNxWorkspaceStart = performance.mark(
         'create-nx-workspace:start'
       );
-      runCreateWorkspace(projScope, {
-        preset,
-        packageManager,
-      });
+      // PROTOTYPE: if the populate-e2e-base-workspace task pre-built a base template
+      // (restored via Nx cache on each agent), seed from it instead of running the
+      // ~40s create-nx-workspace. Falls back to the original build when absent.
+      const sharedBase = sharedBaseWorkspacePath(packageManager, preset);
+      if (sharedBase) {
+        ensureDirSync(e2eCwd);
+        copySync(sharedBase, `${e2eCwd}/${projScope}`);
+        // runCreateWorkspace (the else branch) sets the module-level projName as a
+        // side effect that downstream helpers (packageInstall ->
+        // getPackageManagerCommand) rely on; mirror it when seeding from the template.
+        projName = projScope;
+      } else {
+        runCreateWorkspace(projScope, {
+          preset,
+          packageManager,
+        });
+      }
       const createNxWorkspaceEnd = performance.mark('create-nx-workspace:end');
       createNxWorkspaceMeasure = performance.measure(
         'create-nx-workspace',
