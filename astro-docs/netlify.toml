@@ -72,6 +72,11 @@ to = "/docs/features/ci-features/self-healing-ci"
 from = "/docs/guides/nx-cloud/manual-dte"
 to = "/docs/guides/nx-cloud/bring-your-own-compute"
 
+# DOC-549: GitHub source control guide merged into the GitHub Actions integration page
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration/github"
+to = "/docs/features/ci-features/github-integration"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"

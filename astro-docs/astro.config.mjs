@@ -44,6 +44,8 @@ export default defineConfig({
   redirects: {
     '/knowledge-base/installation':
       '/docs/knowledge-base/installation-and-updates',
+    '/guides/nx-cloud/source-control-integration/github':
+      '/docs/features/ci-features/github-integration',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':

@@ -115,9 +115,11 @@ You can also enable [task sandboxing](/docs/features/ci-features/sandboxing) to 
 distributed task in an isolated sandbox, and track per-agent CPU and memory with
 [resource usage](/docs/features/ci-features/resource-usage) to right-size your agents.
 
-## What the Nx Cloud GitHub App adds to your PRs
+## What Nx adds to your GitHub PRs
 
 With the Nx Cloud GitHub App installed, every pull request gets:
+
+![Nx Cloud bot comment on a GitHub PR showing each command with its status, duration, and a link to its logs](../../../../assets/features/ci-features/github-pr-comment.webp)
 
 - A comment with the live status of each task in the run, updated as tasks complete, so you see
   which check failed without waiting for the whole workflow to finish.
@@ -126,14 +128,9 @@ With the Nx Cloud GitHub App installed, every pull request gets:
   already computed with Nx Replay instead of recomputing them.
 - Proposed fixes from [self-healing CI](/docs/features/ci-features/self-healing-ci) when a task
   fails, which you can review and apply directly from the PR.
-- Detections and retries of [flaky tasks](/docs/features/ci-features/flaky-tasks) surfaced in
-  the PR comment.
 
 ## Connect your repository
 
 {% call_to_action title="Get started with Nx Cloud" url="https://cloud.nx.app/get-started/" icon="nxcloud" description="Connect your repository to Nx Cloud" %}
 Get started with Nx Cloud
 {% /call_to_action %}
-
-For app installation details, see the
-[Nx Cloud GitHub App guide](/docs/guides/nx-cloud/source-control-integration/github).
