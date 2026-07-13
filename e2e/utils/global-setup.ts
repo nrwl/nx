@@ -59,6 +59,11 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // Use environment variable instead of npm config command to avoid polluting other tests
     process.env[`npm_config_//${listenAddress}:${port}/:_authToken`] =
       authToken;
+    // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and they
+    // take precedence over any registry a stray process wrote to ~/.npmrc.
+    process.env.pnpm_config_registry = registry;
+    process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
+      authToken;
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;
@@ -83,6 +88,7 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     global.e2eTeardown = () => {
       // Clean up environment variable instead of npm config command
       delete process.env[`npm_config_//${listenAddress}:${port}/:_authToken`];
+      delete process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`];
     };
 
     /**
