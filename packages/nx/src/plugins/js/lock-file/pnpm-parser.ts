@@ -1221,8 +1221,9 @@ function mapRootSnapshot(
               : findNodeMatchingVersion(graph, packageName, version));
           // A file:/link: local-path dependency records its path relative to the
           // declaring package here but relative to the workspace root in the
-          // lockfile, so match it to its sole external node by name instead of
-          // by the (mismatched) path (see findLocalPathNode).
+          // lockfile, so match it to its external node by name instead of by
+          // the (mismatched) path (findLocalPathNode throws when two
+          // local-path packages share a name).
           if (!node && isLocalPathSpecifier(version)) {
             node = findLocalPathNode(graph, packageName);
           }

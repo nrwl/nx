@@ -112,10 +112,12 @@ function normalizeDependencies(
       // A file:/link: local-path dependency (e.g. a vendored tarball) records its
       // path relative to the declaring package in the manifest but relative to
       // the workspace root in the lockfile, so the two specifiers never match by
-      // string. There is exactly one external node per such package, so match it
-      // by name once the version-based lookups above fail.
+      // string. Match by name instead once the version-based lookups above fail
+      // (pnpm-only, matching the rest of the local-path handling;
+      // findLocalPathNode throws when the name is ambiguous).
       const localPathNode =
         !node &&
+        packageManager === 'pnpm' &&
         !workspacePackages.has(packageName) &&
         isLocalPathSpecifier(resolvedVersionRange)
           ? findLocalPathNode(graph, packageName)
@@ -157,17 +159,29 @@ export function isLocalPathSpecifier(versionExpr: string): boolean {
 /**
  * The external node for a `file:`/`link:` local-path dependency, matched by
  * package name (its path-based version cannot be matched by string across the
- * manifest/lockfile boundary; see `isLocalPathSpecifier`).
+ * manifest/lockfile boundary; see `isLocalPathSpecifier`). Two local-path
+ * packages sharing a name cannot be told apart by it, so that throws rather
+ * than risking a match to the wrong one.
  */
 export function findLocalPathNode(
   graph: ProjectGraph,
   packageName: string
 ): ProjectGraphExternalNode | undefined {
-  return Object.values(graph.externalNodes).find(
+  const matches = Object.values(graph.externalNodes).filter(
     (node) =>
       node.data.packageName === packageName &&
       isLocalPathSpecifier(node.data.version)
   );
+  if (matches.length > 1) {
+    throw new Error(
+      `Pruned lock file creation failed. Multiple local-path packages named "${packageName}" were found in the lock file (${matches
+        .map((node) => node.data.version)
+        .join(
+          ', '
+        )}), so the manifest's "${packageName}" dependency cannot be matched to one of them. Rename the packages so their names are unique.`
+    );
+  }
+  return matches[0];
 }
 
 export function findNodeMatchingVersion(
