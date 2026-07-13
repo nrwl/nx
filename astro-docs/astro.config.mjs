@@ -46,6 +46,8 @@ export default defineConfig({
       '/docs/knowledge-base/installation-and-updates',
     '/guides/nx-cloud/source-control-integration/github':
       '/docs/features/ci-features/github-integration',
+    '/concepts/decisions/overview':
+      '/docs/concepts/decisions/monorepo-vs-polyrepo',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':

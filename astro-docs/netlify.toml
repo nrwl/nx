@@ -77,6 +77,11 @@ to = "/docs/guides/nx-cloud/bring-your-own-compute"
 from = "/docs/guides/nx-cloud/source-control-integration/github"
 to = "/docs/features/ci-features/github-integration"
 
+# DOC-549: decisions overview renamed to monorepo-vs-polyrepo
+[[redirects]]
+from = "/docs/concepts/decisions/overview"
+to = "/docs/concepts/decisions/monorepo-vs-polyrepo"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"

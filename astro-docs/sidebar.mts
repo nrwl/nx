@@ -759,7 +759,7 @@ const knowledgeBaseGroups: SidebarItems = [
           },
           {
             label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
+            link: 'concepts/decisions/monorepo-vs-polyrepo',
           },
           {
             label: 'Dependency management',
