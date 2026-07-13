@@ -19,6 +19,7 @@ import { readJsonFile } from './fileutils';
 import { logger } from './logger';
 import {
   buildTargetFromScript,
+  containLocalPath,
   containShippedLocalFilePaths,
   emitPrunedPnpmInstallAssets,
   getDependencyVersionFromPackageJson,
@@ -2613,6 +2614,32 @@ describe('containShippedLocalFilePaths', () => {
       'a@file:local_path_modules/vendor/a',
       'b@file:../outside',
     ]);
+  });
+
+  it('normalizes backslash separators in a directory resolution before containing', () => {
+    const lockfile = {
+      packages: {
+        'a@file:vendor/a': {
+          resolution: { directory: 'vendor\\a', type: 'directory' },
+        },
+      },
+    };
+
+    containShippedLocalFilePaths(lockfile);
+
+    expect(
+      (lockfile.packages as any)['a@file:local_path_modules/vendor/a']
+        .resolution.directory
+    ).toBe('local_path_modules/vendor/a');
+  });
+});
+
+describe('containLocalPath', () => {
+  it('contains a workspace-relative path and is idempotent for a contained one', () => {
+    expect(containLocalPath('vendor/a')).toBe('local_path_modules/vendor/a');
+    expect(containLocalPath('local_path_modules/vendor/a')).toBe(
+      'local_path_modules/vendor/a'
+    );
   });
 });
 

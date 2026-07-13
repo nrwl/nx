@@ -1334,8 +1334,15 @@ const WORKSPACE_MODULES_DIR = 'workspace_modules';
  */
 export const LOCAL_PATH_MODULES_DIR = 'local_path_modules';
 
-/** Relocates a workspace-relative local-path into the shipped output directory. */
+/**
+ * Relocates a workspace-relative local-path into the shipped output directory.
+ * Idempotent: an already-contained path is returned unchanged, so no caller
+ * can nest the directory by containing twice.
+ */
 export function containLocalPath(wsRelativePath: string): string {
+  if (wsRelativePath.startsWith(`${LOCAL_PATH_MODULES_DIR}/`)) {
+    return wsRelativePath;
+  }
   return `${LOCAL_PATH_MODULES_DIR}/${wsRelativePath}`;
 }
 
@@ -1358,7 +1365,6 @@ function containVendoredFilePath(wsRelativePath: string): string {
   if (
     wsRelativePath === '' ||
     wsRelativePath === '.' ||
-    wsRelativePath.startsWith(`${LOCAL_PATH_MODULES_DIR}/`) ||
     isUnderWorkspaceModules(wsRelativePath) ||
     localPathEscapesOutput(wsRelativePath)
   ) {
@@ -1415,7 +1421,12 @@ export function containShippedLocalFilePaths(lockfile: {
       | undefined;
     if (resolution && typeof resolution === 'object') {
       if (typeof resolution.directory === 'string') {
-        resolution.directory = containVendoredFilePath(resolution.directory);
+        // Normalize separators first, matching the artifact shipping side
+        // (getPrunedPnpmLocalPathArtifacts), so a backslash directory contains
+        // to the same posix path the artifacts ship to.
+        resolution.directory = containVendoredFilePath(
+          normalizePath(resolution.directory)
+        );
       }
       if (typeof resolution.tarball === 'string') {
         resolution.tarball = containFileSpec(resolution.tarball);
@@ -1483,11 +1494,10 @@ function isUnderWorkspaceModules(directory: string): boolean {
 
 /**
  * pnpm resolves every pruned-lockfile `link:` ref relative to the lockfile
- * directory: snapshot refs are read against it directly (verified on pnpm
- * 9/10/11), and the output's only importer is `.`, the lockfile directory
- * itself. Normalize the ref to a workspace-root-relative posix path. An
- * absolute target is returned as-is (join would rebase it) so the escape check
- * can reject it.
+ * directory: snapshot refs are read against it directly, and the output's only
+ * importer is `.`, the lockfile directory itself. Normalize the ref to a
+ * workspace-root-relative posix path. An absolute target is returned as-is
+ * (join would rebase it) so the escape check can reject it.
  */
 function resolveLinkTarget(linkRef: string): string {
   const refPath = linkRef.slice('link:'.length);
@@ -1725,7 +1735,7 @@ export function getPrunedPnpmLocalPathArtifacts(
  *   `autoInstallPeers` is off; pnpm never resolved its closure at source).
  * In both cases the target itself installs, `pnpm install --frozen-lockfile`
  * exits 0, and the target resolves its `require`s only from the deploy-root
- * node_modules, i.e. the app's direct dependencies (verified on pnpm 9.15.9).
+ * node_modules, i.e. the app's direct dependencies.
  * A required dep of the target that is not a direct (or optional) dependency of
  * the final app manifest would fail at runtime with MODULE_NOT_FOUND, so this
  * throws at build time with the remedy.
