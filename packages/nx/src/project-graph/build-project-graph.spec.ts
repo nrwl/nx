@@ -1,5 +1,10 @@
-import { getFileMap, hydrateFileMap } from './build-project-graph';
+import * as configuration from '../config/configuration';
 import type { NxWorkspaceFilesExternals } from '../native';
+import {
+  buildProjectGraphUsingProjectFileMap,
+  getFileMap,
+  hydrateFileMap,
+} from './build-project-graph';
 
 describe('hydrateFileMap', () => {
   const fileMap = {
@@ -28,5 +33,52 @@ describe('hydrateFileMap', () => {
   it('exposes allWorkspaceFiles on getFileMap so legacy destructuring callers see []', () => {
     hydrateFileMap(fileMap, rustReferences);
     expect((getFileMap() as any).allWorkspaceFiles).toEqual([]);
+  });
+});
+
+describe('strict project graph cycle validation', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('reports cycles introduced while building the complete project graph', async () => {
+    jest.spyOn(configuration, 'readNxJson').mockReturnValue({
+      strictProjectGraphCycles: true,
+    });
+
+    const result = buildProjectGraphUsingProjectFileMap(
+      {
+        app1: {
+          name: 'app1',
+          root: 'app1',
+          implicitDependencies: ['lib1'],
+        },
+        lib1: {
+          name: 'lib1',
+          root: 'lib1',
+          implicitDependencies: ['app1'],
+        },
+      },
+      {},
+      {
+        projectFileMap: { app1: [], lib1: [] },
+        nonProjectFiles: [],
+      },
+      {} as NxWorkspaceFilesExternals,
+      null,
+      [],
+      {}
+    );
+
+    await expect(result).rejects.toMatchObject({
+      errors: [
+        expect.objectContaining({
+          message: expect.stringContaining('app1 -> lib1 -> app1'),
+        }),
+      ],
+      partialProjectGraph: expect.objectContaining({
+        nodes: expect.objectContaining({ app1: expect.any(Object) }),
+      }),
+    });
   });
 });
