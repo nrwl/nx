@@ -34,6 +34,8 @@ describe('@nx/expo', () => {
     });
     appName = uniq('app');
     libName = uniq('lib');
+    // Uses `--e2eTestRunner=cypress`, whose fresh config @nx/cypress now
+    // generates via base-setup templating (no tsquery).
     runCLI(
       `generate @nx/expo:app ${appName} --no-interactive --unitTestRunner=jest --e2eTestRunner=cypress --linter=eslint`
     );
