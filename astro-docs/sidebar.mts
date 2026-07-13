@@ -965,7 +965,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tasks--caching/change-cache-location',
           },
           {
-            label: 'Self-hosted caching',
+            label: 'Self-hosted remote cache',
             link: 'guides/tasks--caching/self-hosted-caching',
           },
           {
