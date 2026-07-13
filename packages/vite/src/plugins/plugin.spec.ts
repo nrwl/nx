@@ -7,6 +7,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/internal';
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
     resolveConfig: jest.fn().mockResolvedValue({}),
+    loadConfigFromFile: jest.fn().mockResolvedValue({ config: {} }),
   }),
 }));
 
@@ -21,6 +22,10 @@ describe('@nx/vite/plugin', () => {
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
+    (loadViteDynamicImport as jest.Mock).mockResolvedValue({
+      resolveConfig: jest.fn().mockResolvedValue({}),
+      loadConfigFromFile: jest.fn().mockResolvedValue({ config: {} }),
+    });
   });
 
   describe('root project', () => {
@@ -114,6 +119,7 @@ describe('@nx/vite/plugin', () => {
             },
           },
         }),
+        loadConfigFromFile: jest.fn().mockResolvedValue({ config: {} }),
       });
 
       const nodes = await createNodesFunction(
@@ -401,6 +407,20 @@ describe('@nx/vite/plugin', () => {
               name: 'my-lib',
             },
           },
+          server: {
+            port: 5173,
+            host: 'localhost',
+          },
+        }),
+        loadConfigFromFile: jest.fn().mockResolvedValue({
+          config: {
+            build: {
+              lib: {
+                entry: 'index.ts',
+                name: 'my-lib',
+              },
+            },
+          },
         }),
       }),
         (context = {
@@ -433,19 +453,21 @@ describe('@nx/vite/plugin', () => {
     });
     it('should not exclude serve and preview targets when vite.config.ts is in library mode when user has defined a server config', async () => {
       const tempFs = new TempFs('test-exclude');
+      const userConfig = {
+        build: {
+          lib: {
+            entry: 'index.ts',
+            name: 'my-lib',
+          },
+        },
+        server: {
+          port: 3000,
+          host: 'localhost',
+        },
+      };
       ((loadViteDynamicImport as jest.Mock).mockResolvedValue({
-        resolveConfig: jest.fn().mockResolvedValue({
-          build: {
-            lib: {
-              entry: 'index.ts',
-              name: 'my-lib',
-            },
-          },
-          server: {
-            port: 3000,
-            host: 'localhost',
-          },
-        }),
+        resolveConfig: jest.fn().mockResolvedValue(userConfig),
+        loadConfigFromFile: jest.fn().mockResolvedValue({ config: userConfig }),
       }),
         (context = {
           nxJsonConfiguration: {
