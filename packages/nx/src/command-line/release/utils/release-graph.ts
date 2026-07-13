@@ -628,57 +628,119 @@ export class ReleaseGraph {
   ): Promise<void> {
     for (const [, releaseGroupNode] of this.groupGraph) {
       for (const projectName of releaseGroupNode.group.projects) {
-        const projectGraphNode = projectGraph.nodes[projectName];
-
         if (!this.allProjectsToProcess.has(projectName)) {
           continue;
         }
 
-        const versionActions = this.projectsToVersionActions.get(projectName)!;
-        const finalConfigForProject =
-          this.finalConfigsByProject.get(projectName)!;
-
-        let latestMatchingGitTag:
-          | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
-          | undefined;
-        const releaseTagPattern = releaseGroupNode.group.releaseTag.pattern;
-
-        if (finalConfigForProject.currentVersionResolver === 'git-tag') {
-          latestMatchingGitTag = await getLatestGitTagForPattern(
-            releaseTagPattern,
-            {
-              projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
-              releaseGroupName: releaseGroupNode.group.name,
-            },
-            this.resolveRepositoryTags.bind(this),
-            {
-              checkAllBranchesWhen:
-                releaseGroupNode.group.releaseTag.checkAllBranchesWhen,
-              preid: preid,
-              requireSemver: releaseGroupNode.group.releaseTag.requireSemver,
-              strictPreid: releaseGroupNode.group.releaseTag.strictPreid,
-            }
-          );
-          this.cachedLatestMatchingGitTag.set(
-            projectName,
-            latestMatchingGitTag
-          );
-        }
-
-        const currentVersion = await resolveCurrentVersion(
+        const currentVersion = await this.resolveCurrentVersionForProject(
           tree,
-          projectGraphNode,
+          projectGraph,
           releaseGroupNode.group,
-          versionActions,
-          this.projectLoggers.get(projectName)!,
-          this.currentVersionsPerFixedReleaseGroup,
-          finalConfigForProject,
-          releaseTagPattern,
-          latestMatchingGitTag
+          projectName,
+          preid
         );
         this.cachedCurrentVersions.set(projectName, currentVersion);
       }
     }
+  }
+
+  /**
+   * Resolve the current version of a single project via its configured
+   * `currentVersionResolver` (honoring `fallbackCurrentVersionResolver`),
+   * performing the git-tag lookup when applicable.
+   *
+   * Extracted from `resolveCurrentVersionsForProjects` so it can also be
+   * invoked on-demand for projects that are NOT part of `allProjectsToProcess`.
+   */
+  private async resolveCurrentVersionForProject(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    releaseGroup: ReleaseGroupWithName,
+    projectName: string,
+    preid: string
+  ): Promise<string | null> {
+    const projectGraphNode = projectGraph.nodes[projectName];
+    const versionActions = this.projectsToVersionActions.get(projectName)!;
+    const finalConfigForProject = this.finalConfigsByProject.get(projectName)!;
+
+    let latestMatchingGitTag:
+      | Awaited<ReturnType<typeof getLatestGitTagForPattern>>
+      | undefined;
+    const releaseTagPattern = releaseGroup.releaseTag.pattern;
+
+    if (finalConfigForProject.currentVersionResolver === 'git-tag') {
+      latestMatchingGitTag = await getLatestGitTagForPattern(
+        releaseTagPattern,
+        {
+          projectName: sanitizeProjectNameForGitTag(projectGraphNode.name),
+          releaseGroupName: releaseGroup.name,
+        },
+        this.resolveRepositoryTags.bind(this),
+        {
+          checkAllBranchesWhen: releaseGroup.releaseTag.checkAllBranchesWhen,
+          preid: preid,
+          requireSemver: releaseGroup.releaseTag.requireSemver,
+          strictPreid: releaseGroup.releaseTag.strictPreid,
+        }
+      );
+      this.cachedLatestMatchingGitTag.set(projectName, latestMatchingGitTag);
+    }
+
+    return resolveCurrentVersion(
+      tree,
+      projectGraphNode,
+      releaseGroup,
+      versionActions,
+      this.projectLoggers.get(projectName)!,
+      this.currentVersionsPerFixedReleaseGroup,
+      finalConfigForProject,
+      releaseTagPattern,
+      latestMatchingGitTag
+    );
+  }
+
+  /**
+   * Resolve (and cache) the current version of a project that is NOT part of
+   * `allProjectsToProcess`.
+   *
+   * Required for subset releases (e.g. `nx release version -p some-app`) where a
+   * released project depends on a NON-released local package via a local
+   * protocol such as `workspace:*`. When `preserveLocalDependencyProtocols` is
+   * false that protocol must be rewritten to a concrete version, but because the
+   * dependency is out of the process set its version was never resolved during
+   * `resolveCurrentVersionsForProjects`. Resolve it on-demand via its own
+   * configured `currentVersionResolver`, caching the result for reuse.
+   *
+   * Returns null if the project cannot be resolved (e.g. it is not configured
+   * for nx release), in which case callers should leave the local protocol
+   * untouched rather than write an invalid version.
+   */
+  async resolveCurrentVersionForOutOfSetProject(
+    tree: Tree,
+    projectGraph: ProjectGraph,
+    projectName: string,
+    preid: string
+  ): Promise<string | null> {
+    if (this.cachedCurrentVersions.has(projectName)) {
+      return this.cachedCurrentVersions.get(projectName)!;
+    }
+    const releaseGroup = this.projectToReleaseGroup.get(projectName);
+    if (
+      !releaseGroup ||
+      !this.projectsToVersionActions.has(projectName) ||
+      !this.finalConfigsByProject.has(projectName)
+    ) {
+      return null;
+    }
+    const currentVersion = await this.resolveCurrentVersionForProject(
+      tree,
+      projectGraph,
+      releaseGroup,
+      projectName,
+      preid
+    );
+    this.cachedCurrentVersions.set(projectName, currentVersion);
+    return currentVersion;
   }
 
   /**

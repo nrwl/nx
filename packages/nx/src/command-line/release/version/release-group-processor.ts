@@ -26,6 +26,41 @@ import {
 // Any semver version string such as "1.2.3" or "1.2.3-beta.1"
 type SemverVersion = string;
 
+// Local dependency protocols that reference another package in the same
+// workspace rather than a published registry version.
+const LOCAL_DEPENDENCY_PROTOCOLS = ['workspace:', 'file:'];
+
+function isLocalDependencyProtocol(specifier: string): boolean {
+  return LOCAL_DEPENDENCY_PROTOCOLS.some((protocol) =>
+    specifier.startsWith(protocol)
+  );
+}
+
+/**
+ * Convert a resolved concrete version into a range that mirrors the semver
+ * range semantics of the original local protocol specifier:
+ *  - `workspace:*` / `workspace:` (bare) / `file:...`  -> exact version
+ *  - `workspace:^` / `workspace:^x.y.z`                -> `^<version>`
+ *  - `workspace:~` / `workspace:~x.y.z`                -> `~<version>`
+ */
+function applyLocalProtocolPrefix(
+  currentSpecifier: string,
+  resolvedVersion: string
+): string {
+  if (currentSpecifier.startsWith('workspace:')) {
+    const range = currentSpecifier.slice('workspace:'.length);
+    if (range.startsWith('^')) {
+      return `^${resolvedVersion}`;
+    }
+    if (range.startsWith('~')) {
+      return `~${resolvedVersion}`;
+    }
+  }
+  // `workspace:*`, bare `workspace:`, and `file:` protocols resolve to the
+  // exact current version.
+  return resolvedVersion;
+}
+
 export const BUMP_TYPE_REASON_TEXT = {
   DEPENDENCY_WAS_BUMPED: ', because a dependency was bumped, ',
   USER_SPECIFIER: ', from the given specifier, ',
@@ -801,6 +836,19 @@ export class ReleaseGroupProcessor {
           const cleanNewVersion = newVersion.replace(/^[~^=]/, '');
           dependenciesToUpdate[dep.target] = `${finalPrefix}${cleanNewVersion}`;
         }
+      } else {
+        // The dependency is NOT part of this release (a subset release, e.g.
+        // releasing only a dependent project). Its version was never resolved
+        // into `cachedCurrentVersions`, so a local protocol reference (e.g.
+        // `workspace:*`) to it would otherwise be left unresolved in the
+        // manifest. When the manifest is configured to NOT preserve local
+        // protocols, resolve the dependency's current version on-demand and
+        // rewrite it to a concrete range.
+        await this.resolveOutOfSetLocalDependencyVersion(
+          versionActions,
+          dep.target,
+          dependenciesToUpdate
+        );
       }
     }
 
@@ -813,6 +861,67 @@ export class ReleaseGroupProcessor {
     for (const logMessage of logMessages) {
       projectLogger.buffer(logMessage);
     }
+  }
+
+  /**
+   * Handle a dependency that is NOT part of `allProjectsToProcess` during a
+   * subset release.
+   *
+   * If the dependency is referenced via a local protocol (`workspace:` /
+   * `file:`) and at least one manifest to update is configured with
+   * `preserveLocalDependencyProtocols: false`, resolve the dependency's current
+   * version on-demand (via its own configured `currentVersionResolver`, e.g.
+   * `git-tag`) and add a concrete range to `dependenciesToUpdate` so that the
+   * protocol gets rewritten by `updateProjectDependencies`. Manifests that DO
+   * preserve protocols are unaffected, because `updateProjectDependencies`
+   * keeps the protocol for those manifests regardless.
+   */
+  private async resolveOutOfSetLocalDependencyVersion(
+    versionActions: VersionActions,
+    dependencyProjectName: string,
+    dependenciesToUpdate: Record<string, string>
+  ): Promise<void> {
+    // Only relevant when at least one manifest should NOT preserve local
+    // protocols; otherwise leave the protocol untouched and avoid unnecessary
+    // (and potentially expensive, e.g. git-tag) current-version resolution.
+    const shouldRewriteLocalProtocol = versionActions.manifestsToUpdate.some(
+      (manifest) => !manifest.preserveLocalDependencyProtocols
+    );
+    if (!shouldRewriteLocalProtocol) {
+      return;
+    }
+
+    const { currentVersion: currentSpecifier } =
+      await versionActions.readCurrentVersionOfDependency(
+        this.tree,
+        this.projectGraph,
+        dependencyProjectName
+      );
+    // Not referenced in this project's manifest, or not a local protocol that
+    // we rewrite — leave it as-is (preserves existing behavior for out-of-set
+    // registry-versioned dependencies).
+    if (!currentSpecifier || !isLocalDependencyProtocol(currentSpecifier)) {
+      return;
+    }
+
+    const resolvedVersion =
+      await this.releaseGraph.resolveCurrentVersionForOutOfSetProject(
+        this.tree,
+        this.projectGraph,
+        dependencyProjectName,
+        this.options.preid ?? ''
+      );
+    // Could not resolve a concrete version (e.g. currentVersionResolver 'none'
+    // or the project is not configured for nx release) — safer to leave the
+    // protocol untouched than to write an invalid value.
+    if (!resolvedVersion) {
+      return;
+    }
+
+    dependenciesToUpdate[dependencyProjectName] = applyLocalProtocolPrefix(
+      currentSpecifier,
+      resolvedVersion
+    );
   }
 
   private async bumpVersionForProject(

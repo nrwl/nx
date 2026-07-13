@@ -2251,6 +2251,126 @@ Valid values are: "auto", "", "~", "^", "="`,
     });
   });
 
+  // Regression coverage for the subset-release bug: when releasing ONLY a
+  // dependent project, its local (workspace:/file:) dependencies on packages
+  // that are NOT part of the release set were left unresolved in the manifest
+  // (even with preserveLocalDependencyProtocols: false), because the
+  // out-of-set dependency never entered `dependenciesToUpdate`.
+  describe('out-of-set local dependencies on a subset release', () => {
+    it('should resolve and rewrite an out-of-set `workspace:` dependency to a concrete version when preserveLocalDependencyProtocols is false', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-a@1.0.0 [js]
+                -> depends on package-b(workspace:*)
+                -> depends on package-b(workspace:*) {peerDependencies}
+              - package-b@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          {
+            // Release ONLY package-a (the dependent). package-b is NOT released
+            // and is therefore not part of allProjectsToProcess.
+            projects: ['package-a'],
+          }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      const packageA = readJson(tree, 'package-a/package.json');
+      expect(packageA.version).toBe('1.0.1');
+      // The bug: these used to remain "workspace:*". They must resolve to
+      // package-b's concrete current version (2.5.0), resolved via package-b's
+      // own configured currentVersionResolver.
+      expect(packageA.dependencies['package-b']).toBe('2.5.0');
+      expect(packageA.peerDependencies['package-b']).toBe('2.5.0');
+
+      // package-b was not released, so its own version stays untouched.
+      expect(readJson(tree, 'package-b/package.json').version).toBe('2.5.0');
+    });
+
+    it('should preserve the semver range prefix when rewriting an out-of-set `workspace:^` dependency', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-c@1.0.0 [js]
+                -> depends on package-d(workspace:^)
+              - package-d@3.1.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: false,
+            },
+          },
+          undefined,
+          { projects: ['package-c'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // workspace:^ must become ^<resolved version>, not a bare version.
+      expect(
+        readJson(tree, 'package-c/package.json').dependencies['package-d']
+      ).toBe('^3.1.0');
+    });
+
+    it('should keep the local protocol untouched when preserveLocalDependencyProtocols is true', async () => {
+      const { nxReleaseConfig, projectGraph, filters } =
+        await createNxReleaseConfigAndPopulateWorkspace(
+          tree,
+          `
+            __default__ ({ "projectsRelationship": "independent" }):
+              - package-e@1.0.0 [js]
+                -> depends on package-f(workspace:*)
+              - package-f@2.5.0 [js]
+            `,
+          {
+            version: {
+              specifierSource: 'prompt',
+              currentVersionResolver: 'disk',
+              preserveLocalDependencyProtocols: true,
+            },
+          },
+          undefined,
+          { projects: ['package-e'] }
+        );
+
+      await releaseVersionGeneratorForTest(tree, {
+        nxReleaseConfig,
+        projectGraph,
+        filters,
+        userGivenSpecifier: 'patch' as SemverBumpType,
+      });
+
+      // preserve=true: the protocol must be kept as-is.
+      expect(
+        readJson(tree, 'package-e/package.json').dependencies['package-f']
+      ).toBe('workspace:*');
+    });
+  });
+
   it('should not double patch transitive dependents that are already direct dependents', async () => {
     const { nxReleaseConfig, projectGraph, filters } =
       await createNxReleaseConfigAndPopulateWorkspace(
