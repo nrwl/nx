@@ -17,7 +17,8 @@ export function extractInlineSourceMap(
   try {
     JSON.parse(map);
   } catch {
-    return [code, undefined];
+    // A malformed map is unusable; still strip its comment from the code.
+    return [code.slice(0, match.index), undefined];
   }
   return [code.slice(0, match.index), map];
 }
