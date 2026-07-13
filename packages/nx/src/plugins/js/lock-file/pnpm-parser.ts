@@ -40,6 +40,7 @@ import {
 } from './project-graph-pruning';
 import { join } from 'path';
 import { existsSync, readFileSync, statSync } from 'node:fs';
+import { logger } from '../../../utils/logger';
 import { getWorkspacePackagesFromGraph } from '../utils/get-workspace-packages-from-graph';
 import { satisfies, validRange } from 'semver';
 
@@ -640,7 +641,10 @@ export function stringifyPnpmLockfile(
           }
         }
       } catch {
-        // Unreadable/malformed manifest: fall back to the lockfile importer only.
+        // Fall back to the lockfile importer only.
+        logger.warn(
+          `Could not read ${manifestPath} while pruning the pnpm lockfile; a peer dependency it declares may be missing from the pruned lockfile.`
+        );
       }
     }
     manifestPeersCache.set(importerPath, peers);

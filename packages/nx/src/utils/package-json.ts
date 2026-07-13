@@ -835,9 +835,10 @@ export function getPrunedPnpmInstallSettingsYaml(
     // settings rather than dereferencing it below.
     rootSettings = readYamlFile(rootWorkspaceYaml) ?? {};
   } catch {
-    // Can't read the root settings (unreadable or malformed
-    // pnpm-workspace.yaml). Skip rather than guess. Worst case matches the prior
-    // behavior of carrying no install-time settings.
+    // Unreadable or malformed pnpm-workspace.yaml: skip rather than guess.
+    logger.warn(
+      'Could not read the workspace root pnpm-workspace.yaml; the pruned output will not declare pnpm install settings (build-script approvals, supportedArchitectures, patchedDependencies).'
+    );
     return null;
   }
   const settings: Record<string, unknown> = {};
@@ -885,6 +886,20 @@ function getPnpmMajor(workspaceRootPath: string): number | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * `getPnpmMajor` for the prune orchestrators: warns on an undeterminable
+ * version, since every version-gated install setting is skipped in that case.
+ */
+function getPnpmMajorOrWarn(workspaceRootPath: string): number | null {
+  const pnpmMajor = getPnpmMajor(workspaceRootPath);
+  if (pnpmMajor === null) {
+    logger.warn(
+      'Could not determine the pnpm version. The pruned output will not carry pnpm build-script approvals, supportedArchitectures, or patchedDependencies declarations; patch files still ship.'
+    );
+  }
+  return pnpmMajor;
 }
 
 /**
@@ -1024,17 +1039,24 @@ function readRootPatchedDependencies(
   workspaceRootPath: string
 ): Record<string, string> {
   const merged: Record<string, string> = {};
+  // pnpm <=10 reads patchedDependencies from the package.json `pnpm` field,
+  // pnpm 11 only from pnpm-workspace.yaml. When both declare the same key the
+  // pnpm-workspace.yaml value is the authoritative one on pnpm 11 (pnpm
+  // migrates the config there), so read package.json first and let the
+  // pnpm-workspace.yaml value win on conflict. Each source is read in its own
+  // try so a broken one does not discard the other's patches.
   try {
-    // pnpm <=10 reads patchedDependencies from the package.json `pnpm` field,
-    // pnpm 11 only from pnpm-workspace.yaml. When both declare the same key the
-    // pnpm-workspace.yaml value is the authoritative one on pnpm 11 (pnpm
-    // migrates the config there), so read package.json first and let the
-    // pnpm-workspace.yaml value win on conflict.
     const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
     if (existsSync(rootPackageJsonPath)) {
       const rootPackageJson = readJsonFile<PackageJson>(rootPackageJsonPath);
       Object.assign(merged, rootPackageJson.pnpm?.patchedDependencies ?? {});
     }
+  } catch {
+    logger.warn(
+      'Could not read patchedDependencies from the workspace root package.json; the pruned output will not carry the patches it declares.'
+    );
+  }
+  try {
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (existsSync(rootWorkspaceYaml)) {
       const yaml = readYamlFile<{
@@ -1043,8 +1065,9 @@ function readRootPatchedDependencies(
       Object.assign(merged, yaml?.patchedDependencies ?? {});
     }
   } catch {
-    // Unreadable or malformed root config: carry no patches rather than guess.
-    return {};
+    logger.warn(
+      'Could not read patchedDependencies from the workspace root pnpm-workspace.yaml; the pruned output will not carry the patches it declares.'
+    );
   }
   return merged;
 }
@@ -1074,29 +1097,38 @@ function readRootPnpmBuildSettings(
     'supportedArchitectures',
   ] as const;
   const merged: RootPnpmBuildSettings = {};
+  const sources: RootPnpmBuildSettings[] = [];
+  // Each source is read in its own try so a broken one does not discard the
+  // other's settings.
   try {
-    const sources: RootPnpmBuildSettings[] = [];
     const rootPackageJsonPath = join(workspaceRootPath, 'package.json');
     if (existsSync(rootPackageJsonPath)) {
       sources.push(readJsonFile<PackageJson>(rootPackageJsonPath).pnpm ?? {});
     }
+  } catch {
+    logger.warn(
+      'Could not read the pnpm build-script settings from the workspace root package.json; the pruned output will not carry the settings it declares.'
+    );
+  }
+  try {
     const rootWorkspaceYaml = join(workspaceRootPath, 'pnpm-workspace.yaml');
     if (existsSync(rootWorkspaceYaml)) {
       sources.push(
         readYamlFile<RootPnpmBuildSettings>(rootWorkspaceYaml) ?? {}
       );
     }
-    // Later source (pnpm-workspace.yaml) wins per field.
-    for (const source of sources) {
-      for (const field of fields) {
-        if (source[field] !== undefined) {
-          merged[field] = source[field] as any;
-        }
+  } catch {
+    logger.warn(
+      'Could not read the pnpm build-script settings from the workspace root pnpm-workspace.yaml; the pruned output will not carry the settings it declares.'
+    );
+  }
+  // Later source (pnpm-workspace.yaml) wins per field.
+  for (const source of sources) {
+    for (const field of fields) {
+      if (source[field] !== undefined) {
+        merged[field] = source[field] as any;
       }
     }
-  } catch {
-    // Unreadable or malformed root config: carry no settings rather than guess.
-    return {};
   }
   return merged;
 }
@@ -1765,14 +1797,17 @@ export function validatePrunedLocalPathClosure(
     if (!existsSync(manifestPath)) {
       continue;
     }
+    const descriptor = kind === 'link' ? 'linked package' : 'local package';
     let targetManifest: PackageJson;
     try {
       targetManifest = readJsonFile(manifestPath);
     } catch {
+      logger.warn(
+        `${descriptor} ${target} has an unreadable package.json at ${manifestPath}; its dependency closure was not validated for the standalone deploy.`
+      );
       continue;
     }
     const targetName = targetManifest.name || target;
-    const descriptor = kind === 'link' ? 'linked package' : 'local package';
 
     for (const dep of Object.keys(targetManifest.dependencies ?? {})) {
       if (rootInstalled.has(dep)) {
@@ -1970,7 +2005,7 @@ export function emitPrunedPnpmInstallAssets(
   options?: { includeLocalPathArtifacts?: boolean }
 ): void {
   const config: PrunedPnpmConfig = {
-    pnpmMajor: getPnpmMajor(workspaceRootPath),
+    pnpmMajor: getPnpmMajorOrWarn(workspaceRootPath),
     patchedDependencies: getPrunedPatchedDependencies(
       workspaceRootPath,
       prunedLockfileContent
@@ -2039,7 +2074,7 @@ export function writePrunedPnpmInstallSettings(
   const prunedLockfileContent =
     lockfileContent ?? readPrunedLockfile(outputDirectory);
   const config: PrunedPnpmConfig = {
-    pnpmMajor: getPnpmMajor(workspaceRootPath),
+    pnpmMajor: getPnpmMajorOrWarn(workspaceRootPath),
     patchedDependencies: getPrunedPatchedDependencies(
       workspaceRootPath,
       prunedLockfileContent

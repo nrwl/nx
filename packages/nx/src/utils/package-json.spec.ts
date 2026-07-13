@@ -1326,6 +1326,26 @@ describe('getPrunedPnpmInstallSettingsYaml', () => {
     });
   });
 
+  it('carries pnpm-workspace.yaml patchedDependencies when the root package.json is unreadable', () => {
+    mockPnpmVersion('11.2.2');
+    writeFileSync(join(tempDir, 'package.json'), '{ not json');
+    writeRootWorkspaceYaml(
+      'patchedDependencies:\n  is-number@7.0.0: patches/is-number@7.0.0.patch\n'
+    );
+
+    const yaml = getPrunedPnpmInstallSettingsYaml(
+      tempDir,
+      prunedLockfileWithPatches(['is-number@7.0.0'], ['is-number@7.0.0'])
+    );
+
+    const { load } = require('@zkochan/js-yaml');
+    expect(load(yaml)).toEqual({
+      patchedDependencies: {
+        'is-number@7.0.0': 'patches/is-number@7.0.0.patch',
+      },
+    });
+  });
+
   it('carries a name-only (unversioned) patch key scoped to the surviving package', () => {
     mockPnpmVersion('11.2.2');
     // A name-only key patches every version; the lockfile records it under the
@@ -2012,6 +2032,26 @@ describe('getPrunedPnpmPackageJsonBuildSettings', () => {
     writeRootWorkspaceYaml('packages:\n  - packages/*\n');
 
     expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toBeNull();
+  });
+
+  it('carries pnpm-workspace.yaml settings when the root package.json is unreadable', () => {
+    mockPnpmVersion('10.13.1');
+    writeFileSync(join(tempDir, 'package.json'), '{ not json');
+    writeRootWorkspaceYaml('onlyBuiltDependencies:\n  - esbuild\n');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['esbuild'],
+    });
+  });
+
+  it('carries root package.json settings when pnpm-workspace.yaml is unreadable', () => {
+    mockPnpmVersion('9.15.9');
+    writeRootPackageJson({ onlyBuiltDependencies: ['esbuild'] });
+    writeRootWorkspaceYaml('onlyBuiltDependencies: [unclosed');
+
+    expect(getPrunedPnpmPackageJsonBuildSettings(tempDir)).toEqual({
+      onlyBuiltDependencies: ['esbuild'],
+    });
   });
 
   it('fails open (null) when the pnpm version cannot be determined', () => {
