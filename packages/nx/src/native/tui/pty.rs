@@ -1,7 +1,8 @@
+use super::mouse_protocol::encode_mouse_event;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::strings::display_width;
 use super::utils::normalize_newlines;
-use crossterm::event::{KeyCode, KeyEvent};
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers, MouseEventKind};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::{
     io::{self, Write},
@@ -640,6 +641,45 @@ impl PtyInstance {
 
     pub fn get_dimensions(&self) -> (u16, u16) {
         *self.dimensions.read()
+    }
+
+    /// The mouse reporting mode and encoding the child app has requested via
+    /// DECSET (`?9`/`?1000`/`?1002`/`?1003` and `?1005`/`?1006`). `None` when
+    /// the parser is momentarily write-locked by the output thread.
+    pub fn mouse_protocol(
+        &self,
+    ) -> Option<(
+        vt100_ctt::MouseProtocolMode,
+        vt100_ctt::MouseProtocolEncoding,
+    )> {
+        let parser = self.parser.try_read()?;
+        let screen = parser.screen();
+        Some((
+            screen.mouse_protocol_mode(),
+            screen.mouse_protocol_encoding(),
+        ))
+    }
+
+    /// Forward a mouse event to the child app if it has requested mouse
+    /// reporting. `col`/`row` are 0-based cells relative to the child's
+    /// screen. Returns whether the event was written.
+    pub fn forward_mouse_event(
+        &mut self,
+        kind: MouseEventKind,
+        modifiers: KeyModifiers,
+        col: u16,
+        row: u16,
+    ) -> io::Result<bool> {
+        let Some((mode, encoding)) = self.mouse_protocol() else {
+            return Ok(false);
+        };
+        match encode_mouse_event(mode, encoding, kind, modifiers, col, row) {
+            Some(bytes) => {
+                self.write_input(&bytes)?;
+                Ok(true)
+            }
+            None => Ok(false),
+        }
     }
 
     pub fn handle_arrow_keys(&mut self, event: KeyEvent) {

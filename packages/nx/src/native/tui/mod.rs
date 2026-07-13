@@ -7,6 +7,7 @@ pub mod escape_sequences;
 pub mod graph_utils;
 pub mod inline_app;
 pub mod lifecycle;
+pub mod mouse_protocol;
 pub mod pty;
 pub mod scroll_momentum;
 pub mod status_icons;

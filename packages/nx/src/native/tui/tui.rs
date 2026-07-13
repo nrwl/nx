@@ -156,8 +156,18 @@ pub struct Tui {
 /// - `?1006h` — SGR extended coordinates, so columns/rows past 223 are reported
 ///   correctly and release events are distinguishable.
 const ENABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1000h\x1b[?1002h\x1b[?1006h";
-/// Disable sequence — the same modes reset, in reverse order.
-const DISABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+/// Disable sequence — the same modes reset, in reverse order. Also resets
+/// `?1003`, which is enabled on demand while an interactive pane's app
+/// requests any-motion tracking (see `enable_any_motion_capture`); resetting
+/// an unset mode is a no-op, so every teardown path can clear it blindly.
+const DISABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1003l\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+
+/// Any-motion ("all-event") tracking, enabled only while a focused interactive
+/// pane's app has itself requested `?1003` so its hover events can be
+/// forwarded. Kept out of the base capture set because it reports every mouse
+/// move, flooding the event loop when nothing needs the data.
+const ENABLE_ANY_MOTION_SEQ: &[u8] = b"\x1b[?1003h";
+const DISABLE_ANY_MOTION_SEQ: &[u8] = b"\x1b[?1003l";
 
 /// Enable mouse reporting on the terminal (stderr — the same stream the TUI
 /// renders to). Idempotent: re-enabling already-enabled modes is a no-op for
@@ -174,6 +184,18 @@ pub(crate) fn enable_mouse_capture() -> std::io::Result<()> {
 pub(crate) fn disable_mouse_capture() -> std::io::Result<()> {
     let mut stderr = std::io::stderr();
     stderr.write_all(DISABLE_MOUSE_CAPTURE_SEQ)?;
+    stderr.flush()
+}
+
+pub(crate) fn enable_any_motion_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(ENABLE_ANY_MOTION_SEQ)?;
+    stderr.flush()
+}
+
+pub(crate) fn disable_any_motion_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(DISABLE_ANY_MOTION_SEQ)?;
     stderr.flush()
 }
 
