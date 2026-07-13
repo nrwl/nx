@@ -11,8 +11,8 @@ import {
   swcNodeVersion,
 } from '../versions';
 
-// @swc/core's postinstall only compiles a fallback for platforms without
-// prebuilt binaries, so skip it.
+// @swc/core's postinstall only installs a wasm fallback for platforms not
+// covered by its prebuilt optional dependencies, so skip it.
 const swcAllowBuilds = { '@swc/core': false };
 
 export function getSwcDependencies(): {

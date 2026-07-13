@@ -170,14 +170,13 @@ describe('formatAggregateCreateNodesError', () => {
 
   it('should format errors deserialized from a plugin worker without a stack', () => {
     const error = new AggregateCreateNodesError(
-      [
-        [
-          'libs/mylib/project.json',
-          { message: 'worker failure' } as unknown as Error,
-        ],
-      ],
+      [['libs/mylib/project.json', new Error('placeholder')]],
       []
     );
+    // Worker errors are rehydrated as plain objects that never pass through
+    // the constructor's coercion, so inject the tuple after construction to
+    // exercise the formatter's stack fallback for real.
+    error.errors[0][1] = { message: 'worker failure' } as unknown as Error;
 
     formatAggregateCreateNodesError(error, '@nx/jest');
 

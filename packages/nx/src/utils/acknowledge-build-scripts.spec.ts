@@ -127,6 +127,17 @@ describe('acknowledgeBuildScripts', () => {
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
   });
 
+  it('should leave a pnpm-workspace.yaml with parse errors untouched', () => {
+    // Map-shaped but syntactically invalid (unclosed quote): the parsed root
+    // is still a YAMLMap, but stringifying a document with errors throws.
+    const original = 'packages:\n  - "apps/*\n';
+    tree.write('pnpm-workspace.yaml', original);
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
   it('should accept a filesystem root instead of a tree', () => {
     const root = mkdtempSync(join(tmpdir(), 'nx-allow-builds-'));
     try {

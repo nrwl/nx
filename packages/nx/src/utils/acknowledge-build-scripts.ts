@@ -51,9 +51,13 @@ function acknowledgePnpmBuildScripts(
   const parsed = parseDocument(
     host.exists(PNPM_WORKSPACE_FILE) ? host.read(PNPM_WORKSPACE_FILE) : ''
   );
-  // A present root that isn't a mapping is malformed for pnpm; leave it alone
-  // rather than replacing the user's content with just the allowBuilds key.
-  if (parsed.contents != null && !(parsed.contents instanceof YAMLMap)) {
+  // A file that doesn't parse cleanly or whose root isn't a mapping is
+  // malformed for pnpm; leave it alone rather than crashing or replacing the
+  // user's content. pnpm's own error on the file is the actionable signal.
+  if (
+    parsed.errors.length > 0 ||
+    (parsed.contents != null && !(parsed.contents instanceof YAMLMap))
+  ) {
     return;
   }
   const doc = parsed.contents instanceof YAMLMap ? parsed : new Document({});

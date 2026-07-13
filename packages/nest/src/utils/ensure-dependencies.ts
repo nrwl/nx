@@ -16,7 +16,9 @@ export function ensureDependencies(
     : 'package.json';
 
   const pkgVersions = versions(tree);
-  // @nestjs/core's postinstall only prints a funding message, so skip it.
+  // @nestjs/core releases up to 11.1.24 had an opencollective funding-message
+  // postinstall (removed in 11.1.25); deny it so locked installs of those
+  // versions don't trip pnpm 11's build gate.
   acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
     '@nestjs/core': false,
   });
