@@ -14,5 +14,6 @@ export interface Schema {
 
 export interface NormalizedGeneratorOptions extends Schema {
   isUsingApplicationBuilder: boolean;
+  isUsingWebpackBuilder: boolean;
   buildTargetTsConfigPath: string;
 }

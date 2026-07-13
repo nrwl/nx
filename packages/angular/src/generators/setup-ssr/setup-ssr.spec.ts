@@ -13,7 +13,9 @@ import {
   angularDevkitVersion,
   angularVersion,
   expressVersion,
+  nxVersion,
   typesExpressVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import { generateTestApplication } from '../utils/testing';
 import { setupSsr } from './setup-ssr';
@@ -525,6 +527,25 @@ describe('setupSSR', () => {
     expect(dependencies['@nguniversal/express-engine']).toBeUndefined();
     expect(devDependencies['@types/express']).toBe(typesExpressVersion);
     expect(devDependencies['@nguniversal/builders']).toBeUndefined();
+    expect(devDependencies['@nx/webpack']).toBeUndefined();
+    expect(devDependencies['webpack-merge']).toBeUndefined();
+  });
+
+  it('should install webpack dependencies when it creates a webpack server target', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    project.targets.build.executor = '@nx/angular:webpack-browser';
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    const { devDependencies } = readJson<PackageJson>(tree, 'package.json');
+    expect(devDependencies['@nx/webpack']).toBe(nxVersion);
+    expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
   });
 
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {

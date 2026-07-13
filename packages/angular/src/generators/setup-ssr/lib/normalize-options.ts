@@ -15,6 +15,9 @@ export async function normalizeOptions(
     targets.build.executor === '@angular-devkit/build-angular:application' ||
     targets.build.executor === '@angular/build:application' ||
     targets.build.executor === '@nx/angular:application';
+  const isUsingWebpackBuilder =
+    !isUsingApplicationBuilder &&
+    !targets.build.executor.startsWith('@angular-devkit/build-angular:');
 
   const isStandaloneApp = isNgStandaloneApp(tree, options.project);
 
@@ -30,6 +33,7 @@ export async function normalizeOptions(
     standalone: options.standalone ?? isStandaloneApp,
     hydration: options.hydration ?? true,
     isUsingApplicationBuilder,
+    isUsingWebpackBuilder,
     buildTargetTsConfigPath:
       targets.build.options?.tsConfig ??
       joinPathFragments(root, 'tsconfig.app.json'),
