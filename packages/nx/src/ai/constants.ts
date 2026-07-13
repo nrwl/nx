@@ -56,11 +56,16 @@ export const rulesRegex = new RegExp(
 export interface AgentRulesWrappedOptions {
   writeNxCloudRules: boolean;
   useH1?: boolean;
+  workspaceRoot?: string;
 }
 
 export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
-  const { writeNxCloudRules, useH1 = true } = options;
-  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
+  const { writeNxCloudRules, useH1 = true, workspaceRoot } = options;
+  const agentRulesString = getAgentRules({
+    nxCloud: writeNxCloudRules,
+    useH1,
+    workspaceRoot,
+  });
   return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 

@@ -43,6 +43,7 @@ import {
   SetupAiAgentsGeneratorSchema,
 } from './schema';
 import { handleImport } from '../../utils/handle-import';
+import { adaptSkillFilesToPackageManager } from './adapt-skill-files-to-package-manager';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];
@@ -354,6 +355,8 @@ export async function setupAiAgentsGeneratorImpl(
 
   await formatChangedFilesWithPrettierIfAvailable(tree);
 
+  adaptSkillFilesToPackageManager(tree, options.directory);
+
   // we use the check variable to determine if we should actually make changes or just report what would be changed
   return async (check: boolean = false) => {
     const messages: CLINoteMessageConfig[] = [];
@@ -429,6 +432,7 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: true,
+      workspaceRoot: tree.root,
     });
     tree.write(path, expectedRules);
     return;
@@ -447,6 +451,7 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: !hasExternalH1,
+      workspaceRoot: tree.root,
     });
     const contentOnly = (str: string) =>
       str
@@ -471,6 +476,7 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: !hasExistingH1,
+      workspaceRoot: tree.root,
     });
     tree.write(path, existing + '\n\n' + expectedRules);
   }
