@@ -14,9 +14,13 @@ Whether one repository or many is right for your organization is a separate deci
 
 ## What are the benefits of a monorepo?
 
-- **Shared code and visibility** - Reuse validation logic, UI components, and types across your entire organization, including between the backend and the frontend. Every project can see what already exists instead of rebuilding it.
+- **Shared code without publishing overhead** - Sharing a library is as simple as creating a folder: no versioned packages to publish and no waiting for consumers to upgrade. Reuse validation logic, UI components, and types across your entire organization, including between the backend and the frontend.
+
+- **Single source of truth** - Common code lives in one place, so every project sees what already exists instead of rebuilding it, and a bug is fixed once for every consumer.
 
 - **Atomic changes** - Change a server API and every application that consumes it in the same commit. There's no coordinating a chain of pull requests across repositories, and no window where consumers are broken.
+
+- **Enforceable conventions at scale** - Lint rules, code style, and dependency policy apply everywhere automatically, so consistency is the default instead of a per-repository chore.
 
 - **Developer mobility** - Build and test every project the same way, regardless of the tools it uses. Developers can contribute to another team's application and verify their changes are safe without learning a new setup.
 
@@ -57,7 +61,7 @@ Lerna adds versioning and publishing on top, and modern Lerna delegates task run
 
 AI coding agents get more from a monorepo than from scattered repositories:
 
-- **Full context** - Agents read the actual source of every project they touch and make atomic cross-project changes, instead of guessing against out-of-date API specs in other repositories.
+- **Full context** - Agents read the actual source of every project they touch and navigate directly between the frontend, backend, and libraries, instead of guessing against out-of-date API specs in other repositories.
 
 - **A queryable project graph** - Tooling exposes which projects exist, how they relate, and what tasks run, so agents don't burn tokens exploring the repository.
 
