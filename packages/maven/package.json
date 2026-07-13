@@ -50,7 +50,7 @@
   "license": "MIT",
   "dependencies": {
     "@nx/devkit": "workspace:*",
-    "@xmldom/xmldom": "^0.8.10",
+    "@xmldom/xmldom": "^0.8.13",
     "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },

@@ -28,6 +28,18 @@
           "alwaysAddToPackageJson": true
         }
       }
+    },
+    "23.2.0-rollup-security": {
+      "version": "23.2.0-beta.0",
+      "requires": {
+        "rollup": ">=4.0.0 <4.59.0"
+      },
+      "packages": {
+        "rollup": {
+          "version": "^4.59.0",
+          "alwaysAddToPackageJson": false
+        }
+      }
     }
   }
 }

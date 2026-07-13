@@ -31,7 +31,7 @@ export function updateDependencies(tree: Tree, schema: InitGeneratorSchema) {
   // Determine which vite version to install:
   // 1. Explicit viteVersion flag takes priority
   // 2. If vite is already installed, keep the matching major version
-  // 3. Otherwise, use the latest default (^8.0.0)
+  // 3. Otherwise, use the latest default (^8.0.5)
   const installedMajor =
     schema.viteVersion ?? getInstalledViteMajorVersion(tree);
   const viteVersionToUse =
