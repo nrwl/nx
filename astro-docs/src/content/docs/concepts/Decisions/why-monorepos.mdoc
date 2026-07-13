@@ -14,8 +14,6 @@ Whether one repository or many is right for your organization is a separate deci
 
 ## What are the benefits of a monorepo?
 
-A monorepo gives you four things that are hard to get with separate repositories: shared code that every project can reuse, atomic changes across projects in a single commit, developer mobility between teams because every project builds and tests the same way, and a single set of third-party dependency versions.
-
 - **Shared code and visibility** - Reuse validation logic, UI components, and types across your entire organization, including between the backend and the frontend. Every project can see what already exists instead of rebuilding it.
 
 - **Atomic changes** - Change a server API and every application that consumes it in the same commit. There's no coordinating a chain of pull requests across repositories, and no window where consumers are broken.
@@ -43,10 +41,7 @@ You don't need to be at that scale to benefit: shared code, atomic changes, and 
 ## Why isn't code collocation enough?
 
 Moving all your code into one repository without adding any tooling gives you code collocation, not a monorepo.
-Without a dependency graph, CI must run every test on every change, nothing stops teams from depending on each other's internals, and each project keeps its own commands.
-What turns collocation into a monorepo is tooling that addresses all three problems.
-
-Each of these problems gets worse as the repository grows:
+Collocation creates problems that get worse as the repository grows:
 
 - **Running unnecessary tests** - CI runs every test in the repository on every change to make sure nothing breaks, including tests for projects the change can't possibly affect.
 
@@ -60,8 +55,6 @@ Lerna adds versioning and publishing on top, and modern Lerna delegates task run
 For the wider tool landscape, see [monorepo.tools](https://monorepo.tools).
 
 ## When is a monorepo the wrong choice?
-
-A monorepo is the wrong choice when the repository outgrows what your version control setup can handle, when strict access control means some engineers must not see parts of the codebase, or when your organization refuses to run tooling that understands the project graph.
 
 - **Version control scale** - Git slows down when a repository reaches millions of files or a very large history. Google and Meta built custom version control infrastructure to cope. Most organizations never hit this limit, but if you do, it's expensive.
 

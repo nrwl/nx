@@ -14,14 +14,9 @@ upgrading.
 
 ## What is ESLint flat config?
 
-Flat config is a JavaScript-first configuration system.
-Plugins, parsers, and shareable configs are imported as modules instead of resolved from string
-names, and configuration lives in `eslint.config.mjs` (or `.js`/`.cjs`) files - in a monorepo,
-typically one per project plus a shared base config.
-It has been the default since ESLint 9 (2024), and ESLint 10 (2026) removed the legacy
-eslintrc system entirely.
-
-Flat config makes three changes to the legacy format:
+Flat config is a JavaScript-first configuration system that lives in `eslint.config.mjs` (or
+`.js`/`.cjs`) files - in a monorepo, typically one per project plus a shared base config.
+It makes three changes to the legacy format:
 
 - One file format replaces the JSON, YAML, and JS `.eslintrc` variants.
 - Explicit `import` statements replace implicit string-based loading of plugins and parsers.
@@ -29,9 +24,6 @@ Flat config makes three changes to the legacy format:
 
 ## How do I migrate to flat config?
 
-Move your configuration into `eslint.config.mjs`, convert environment and parser settings to
-`languageOptions`, turn each `overrides` entry into its own config object, and bridge any
-shareable configs that don't ship flat config yet with `FlatCompat`.
 The [ESLint migration guide](https://eslint.org/docs/latest/use/configure/migration-guide) maps
 every legacy option to its flat config equivalent.
 
