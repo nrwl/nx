@@ -565,6 +565,76 @@ describe('setupSSR', () => {
     expect(devDependencies['webpack-merge']).toBeUndefined();
   });
 
+  it('should resolve a webpack build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      bundler: 'webpack',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: {
+          ...json.targetDefaults?.build,
+          executor: '@nx/angular:webpack-browser',
+        },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    expect(readProjectConfiguration(tree, 'app1').targets.server.executor).toBe(
+      '@nx/angular:webpack-server'
+    );
+  });
+
+  it('should resolve the application build executor inherited from targetDefaults', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    const buildExecutor = project.targets.build.executor;
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        ...json.targetDefaults,
+        build: { ...json.targetDefaults?.build, executor: buildExecutor },
+      },
+    }));
+
+    await setupSsr(tree, { project: 'app1', skipFormat: true });
+
+    // application builder configures ssr on the build target rather than
+    // creating a separate server target
+    const build = readProjectConfiguration(tree, 'app1').targets.build;
+    expect(build.options.outputMode).toBe('server');
+    expect(build.options.ssr).toBeDefined();
+  });
+
+  it('should throw when the build target has no resolvable executor', async () => {
+    const tree = createTreeWithEmptyWorkspace();
+    await generateTestApplication(tree, {
+      directory: 'app1',
+      skipFormat: true,
+    });
+    const project = readProjectConfiguration(tree, 'app1');
+    delete project.targets.build.executor;
+    updateProjectConfiguration(tree, 'app1', project);
+
+    await expect(
+      setupSsr(tree, { project: 'app1', skipFormat: true })
+    ).rejects.toThrow(/does not specify an executor/);
+  });
+
   it('should not touch the package.json when run with `--skipPackageJson`', async () => {
     const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
