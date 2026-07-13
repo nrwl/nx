@@ -1098,7 +1098,6 @@ const knowledgeBaseGroups: SidebarItems = [
             label: 'Nx vs Turborepo',
             link: 'guides/comparisons/nx-vs-turborepo',
           },
-          { label: 'Nx vs Lerna', link: 'guides/comparisons/nx-vs-lerna' },
           { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
           { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
           { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },
