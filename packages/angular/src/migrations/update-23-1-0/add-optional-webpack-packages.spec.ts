@@ -73,6 +73,30 @@ describe('add-optional-webpack-packages migration', () => {
     expect(getDevDependencies()['webpack-merge']).toBe(webpackMergeVersion);
   });
 
+  it('should add webpack packages when dev-server points to a classic build inheriting its executor from targetDefaults', async () => {
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        build: { executor: '@angular-devkit/build-angular:browser' },
+      },
+    }));
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: {
+        build: {},
+        serve: {
+          executor: '@nx/angular:dev-server',
+          options: { buildTarget: 'app1:build' },
+        },
+      },
+    });
+
+    await migration(tree);
+
+    expect(getDevDependencies()['@nx/webpack']).toBe(nxVersion);
+    expect(getDevDependencies()['webpack-merge']).toBe(webpackMergeVersion);
+  });
+
   it('should add webpack packages when dev-server points to a webpack build via browserTarget', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
@@ -223,11 +247,11 @@ describe('add-optional-webpack-packages migration', () => {
     expect(getDevDependencies()['@nx/rspack']).toBe(nxVersion);
   });
 
-  it('should not add packages when a target uses @nx/angular-rspack', async () => {
+  it('should not add packages for a build executor that needs none', async () => {
     addProjectConfiguration(tree, 'app1', {
       root: 'apps/app1',
       targets: {
-        build: { executor: '@nx/angular-rspack:build', options: {} },
+        build: { executor: '@example/custom:build', options: {} },
       },
     });
 
@@ -245,6 +269,23 @@ describe('add-optional-webpack-packages migration', () => {
       targets: {
         build: { executor: '@nx/rspack:rspack', options: {} },
       },
+    });
+
+    await migration(tree);
+
+    expect(getDevDependencies()['@nx/rspack']).toBe(nxVersion);
+  });
+
+  it('should add @nx/rspack for a target inheriting an rspack executor from targetDefaults', async () => {
+    updateJson(tree, 'nx.json', (json) => ({
+      ...json,
+      targetDefaults: {
+        build: { executor: '@nx/rspack:rspack' },
+      },
+    }));
+    addProjectConfiguration(tree, 'app1', {
+      root: 'apps/app1',
+      targets: { build: {} },
     });
 
     await migration(tree);

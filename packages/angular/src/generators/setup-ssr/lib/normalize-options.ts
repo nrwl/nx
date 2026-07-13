@@ -13,9 +13,8 @@ export async function normalizeOptions(
   options: Schema
 ): Promise<NormalizedGeneratorOptions> {
   const { targets, root } = readProjectConfiguration(tree, options.project);
-  // readProjectConfiguration returns the raw config, so a build target that
-  // inherits its executor from an nx.json targetDefaults entry reads as
-  // undefined. Resolve it so the builder classification stays accurate.
+  // Resolve the executor via targetDefaults: readProjectConfiguration returns
+  // the raw config, so an inherited executor would otherwise read as undefined.
   const buildTargetExecutor =
     targets.build.executor ??
     readTargetDefaultsForTarget('build', readNxJson(tree)?.targetDefaults)

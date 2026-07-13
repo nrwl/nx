@@ -548,14 +548,14 @@ describe('setupSSR', () => {
     expect(devDependencies['webpack-merge']).toBe(webpackMergeVersion);
   });
 
-  it('should not install webpack dependencies for an rspack build target', async () => {
+  it('should not install webpack dependencies for a non-webpack build executor', async () => {
     const tree = createTreeWithEmptyWorkspace();
     await generateTestApplication(tree, {
       directory: 'app1',
       skipFormat: true,
     });
     const project = readProjectConfiguration(tree, 'app1');
-    project.targets.build.executor = '@nx/angular-rspack:build';
+    project.targets.build.executor = '@example/custom:build';
     updateProjectConfiguration(tree, 'app1', project);
 
     await setupSsr(tree, { project: 'app1', skipFormat: true });

@@ -2,10 +2,12 @@ import {
   addDependenciesToPackageJson,
   getProjects,
   joinPathFragments,
+  type NxJsonConfiguration,
   readNxJson,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
+import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 import { nxVersion, webpackMergeVersion } from '../../utils/versions';
 
 const webpackExecutors = new Set([
@@ -21,19 +23,31 @@ const moduleFederationExecutors = new Set([
   '@nx/angular:module-federation-dev-ssr',
 ]);
 
-function getTargetFromTargetString(
+function resolveBuildTargetExecutor(
   targetString: string,
-  projects: ReturnType<typeof getProjects>
-): TargetConfiguration | undefined {
+  projects: ReturnType<typeof getProjects>,
+  targetDefaults: NxJsonConfiguration['targetDefaults']
+): string | undefined {
   const [projectName, targetName] = targetString.split(':');
-  return targetName
+  const target = targetName
     ? projects.get(projectName)?.targets?.[targetName]
     : undefined;
+  if (target === undefined) {
+    return undefined;
+  }
+
+  // The referenced build target can inherit its executor from targetDefaults,
+  // which the raw project config does not merge, so resolve it before matching.
+  return (
+    target.executor ??
+    readTargetDefaultsForTarget(targetName, targetDefaults)?.executor
+  );
 }
 
 function usesWebpackDevServer(
   target: TargetConfiguration,
-  projects: ReturnType<typeof getProjects>
+  projects: ReturnType<typeof getProjects>,
+  targetDefaults: NxJsonConfiguration['targetDefaults']
 ): boolean {
   if (target.executor !== '@nx/angular:dev-server') {
     return false;
@@ -46,13 +60,13 @@ function usesWebpackDevServer(
         return false;
       }
 
-      const buildTargetConfiguration = getTargetFromTargetString(
+      const executor = resolveBuildTargetExecutor(
         buildTarget,
-        projects
+        projects,
+        targetDefaults
       );
       return (
-        buildTargetConfiguration !== undefined &&
-        webpackBuildTargetExecutors.has(buildTargetConfiguration.executor)
+        executor !== undefined && webpackBuildTargetExecutors.has(executor)
       );
     }
   );
@@ -60,6 +74,8 @@ function usesWebpackDevServer(
 
 export default async function addOptionalWebpackPackages(tree: Tree) {
   const projects = getProjects(tree);
+  const nxJson = readNxJson(tree);
+  const targetDefaults = nxJson?.targetDefaults;
   let needsWebpack = false;
   let needsModuleFederation = false;
   let needsRspack = false;
@@ -68,7 +84,7 @@ export default async function addOptionalWebpackPackages(tree: Tree) {
     for (const target of Object.values(project.targets ?? {})) {
       needsWebpack ||=
         webpackExecutors.has(target.executor) ||
-        usesWebpackDevServer(target, projects);
+        usesWebpackDevServer(target, projects, targetDefaults);
       needsModuleFederation ||= moduleFederationExecutors.has(target.executor);
       needsRspack ||= target.executor?.startsWith('@nx/rspack:') ?? false;
     }
@@ -86,13 +102,11 @@ export default async function addOptionalWebpackPackages(tree: Tree) {
       );
   }
 
-  const nxJson = readNxJson(tree);
-
   // targetDefaults are keyed by target name or executor, and a default can set
   // an executor that an empty project target inherits, so scan the keys and any
   // executor on the default (both the object and array forms).
   for (const [targetOrExecutor, config] of Object.entries(
-    nxJson?.targetDefaults ?? {}
+    targetDefaults ?? {}
   )) {
     const executors = [targetOrExecutor];
     for (const entry of Array.isArray(config) ? config : [config]) {
