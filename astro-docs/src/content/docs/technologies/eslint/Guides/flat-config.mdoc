@@ -54,6 +54,8 @@ configuration.
 
 The generator aims to produce a flat config that behaves exactly like your original JSON
 config, so depending on the complexity of the original it may wrap parts in `FlatCompat`.
+Review the converted configs before deleting anything: check that each override kept its
+`parser` - a dropped parser surfaces as `Parsing error: Unexpected token` on TypeScript files.
 You can convert those sections to native flat config afterwards, by hand or with AI assistance
 (recommended): convert when the plugin documents a flat preset (typescript-eslint,
 `eslint-plugin-react`), and keep the shim for shared configs that don't ship one.
@@ -123,7 +125,7 @@ every legacy option to its flat config equivalent.
    `import.meta.dirname` requires Node.js 20.11 or later.
    On older versions, derive the directory with `path.dirname(fileURLToPath(import.meta.url))`.
 
-Delete the `.eslintrc.*` files once `npx eslint .` runs clean with the new config.
+Delete the `.eslintrc.*` files once `npx eslint .` runs clean in each project with the new config.
 Move `.eslintignore` patterns into an `ignores` entry - flat config doesn't read
 `.eslintignore`, and ESLint 10 removed support for it entirely.
 
@@ -145,6 +147,9 @@ still exist.
 - **Two rules were renamed** - replace `@typescript-eslint/no-throw-literal` with
   `@typescript-eslint/only-throw-error`, and `@typescript-eslint/no-useless-template-literals`
   with `@typescript-eslint/no-unnecessary-template-expression`, keeping your options.
+  `only-throw-error` requires typed linting: the config block for TypeScript files must set
+  `parserOptions.projectService: true` (or `parserOptions.project`), or ESLint fails to load
+  the rule.
 - **`@typescript-eslint/ban-types` split into three rules** -
   `@typescript-eslint/no-empty-object-type` (the `{}` type),
   `@typescript-eslint/no-unsafe-function-type` (the `Function` type), and
