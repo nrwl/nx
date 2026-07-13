@@ -5,7 +5,8 @@
     "types": ["node"],
     "composite": true,
     "declaration": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "rootDir": "."
   },
   "references": [
     {

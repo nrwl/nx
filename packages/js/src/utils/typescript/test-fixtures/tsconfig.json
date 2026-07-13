@@ -8,6 +8,8 @@
     "module": "esnext",
     "moduleResolution": "node",
     "ignoreDeprecations": "6.0",
-    "noUncheckedSideEffectImports": false
+    "noUncheckedSideEffectImports": false,
+    "types": ["*"],
+    "esModuleInterop": false
   }
 }

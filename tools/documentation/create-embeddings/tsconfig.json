@@ -12,6 +12,7 @@
   ],
   "compilerOptions": {
     "esModuleInterop": true,
-    "target": "esnext"
+    "target": "esnext",
+    "ignoreDeprecations": "6.0"
   }
 }
