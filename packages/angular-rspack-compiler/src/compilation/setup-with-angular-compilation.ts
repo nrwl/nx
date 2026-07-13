@@ -178,8 +178,9 @@ export async function setupCompilationWithAngularCompilation(
   // Angular-transformed TypeScript, on this exact expression over the
   // program's options (JIT always transpiles). The loaders classify the
   // emitted cache entries with this flag, so it must never diverge from the
-  // emit's gate. The worker-based initialize reports only the four options
-  // the gate reads; any other option would be undefined here.
+  // emit's gate. The worker-based initialize reports only four options; the
+  // three the gate reads are among them, and any other option would be
+  // undefined here.
   const useTypeScriptTranspilation =
     !initializedCompilerOptions?.isolatedModules ||
     !!initializedCompilerOptions?.sourceMap ||

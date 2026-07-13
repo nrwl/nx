@@ -67,7 +67,9 @@ let COMPONENT_STYLESHEET_BUNDLER: ComponentStylesheetBundler | undefined =
  * `options.sourceMap` is enabled. Targets below ES2022 are raised (see
  * `applyEs2022TargetDefaults`), unsupported `module` values are set to
  * ES2022, and partial compilation mode is forced to full, each with a
- * warning in the returned `setupWarnings`.
+ * warning in the returned `setupWarnings`. Combining `isolatedModules` with
+ * `emitDecoratorMetadata` is also warned about, without forcing either
+ * option.
  */
 export async function setupCompilation(
   config: Pick<RsbuildConfig, 'mode' | 'source'>,
