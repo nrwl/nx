@@ -80,6 +80,11 @@ to = "/docs/extending-nx/create-preset"
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
 to = "/docs/guides/adopting-nx/adding-to-monorepo"
 
+# Turborepo comparison moved to Comparisons section (#36275)
+[[redirects]]
+from = "/docs/guides/adopting-nx/nx-vs-turborepo"
+to = "/docs/guides/comparisons/nx-vs-turborepo"
+
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
 from = "/docs/technologies/angular/migration/angular-multiple"
