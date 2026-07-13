@@ -11,16 +11,15 @@ With modern build tooling, the [technical challenges](/docs/concepts/decisions/w
 
 Monorepos optimize for atomic changes and shared tooling, while polyrepos optimize for team isolation.
 
-| Dimension           | Monorepo                                                  | Polyrepo                                             |
-| ------------------- | --------------------------------------------------------- | ---------------------------------------------------- |
-| Code sharing        | Import shared code directly from the same repository      | Publish shared code as versioned packages            |
-| Atomic changes      | One PR can update an API and every consumer               | Cross-project changes span multiple PRs and releases |
-| Release cadence     | Projects build together, artifacts deploy on any schedule | Independent by default, each repository on its own   |
-| CI cost             | One pipeline that needs tooling to run only what changed  | Many small pipelines, each maintained separately     |
-| Access control      | Everyone sees all code, with per-folder ownership rules   | Repository-level permissions per team                |
-| Dependency versions | A single version policy is practical to enforce           | Each repository drifts to its own versions           |
-| Tooling overhead    | Higher up-front investment in build tooling that scales   | Low per-repo setup, duplicated maintenance           |
-| Team autonomy       | Teams follow shared conventions                           | Each team picks its own workflow and tooling         |
+| Dimension           | Monorepo                                                  | Polyrepo                                                           |
+| ------------------- | --------------------------------------------------------- | ------------------------------------------------------------------ |
+| Code sharing        | Import shared code directly from the same repository      | Publish shared code as versioned packages                          |
+| Atomic changes      | One PR can update an API and every consumer               | Cross-project changes span multiple PRs and releases               |
+| Release cadence     | Projects build together, artifacts deploy on any schedule | Independent by default, each repository on its own                 |
+| CI cost             | One pipeline that needs tooling to run only what changed  | Many small pipelines, each maintained separately                   |
+| Access control      | Everyone sees all code, with per-folder ownership rules   | Repository-level permissions per team                              |
+| Dependency versions | A single version policy is enforceable, but optional      | A single policy can't be enforced, versions drift                  |
+| Team autonomy       | Teams follow shared conventions                           | Each team picks its own workflow, conventions, and release cadence |
 
 A monorepo doesn't force everything to release together.
 Projects build from the same commit, but each build artifact or Docker image carries its own tag, and teams control when a tag reaches production.
@@ -29,8 +28,7 @@ A polyrepo makes independent cadences the default because everything is already 
 
 ## When should you choose a polyrepo?
 
-Choose a polyrepo when strict repository-level access control is a hard requirement, when teams share little code and nothing should force them to move together, or when you can't invest in build tooling that keeps a large repository fast.
-Plain Git also slows down on very large repositories, a scale problem polyrepos sidestep by keeping each repository small.
+Choose a polyrepo when strict repository-level access control is a hard requirement, or when teams share little code and nothing should force them to move together.
 
 The cost is that sharing code becomes harder and every maintenance task, from dependency upgrades to CI changes, has to be repeated across all the repositories in the organization.
 

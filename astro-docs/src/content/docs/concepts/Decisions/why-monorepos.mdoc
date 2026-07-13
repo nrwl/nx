@@ -22,7 +22,7 @@ A monorepo gives you four things that are hard to get with separate repositories
 
 - **Developer mobility** - Build and test every project the same way, regardless of the tools it uses. Developers can contribute to another team's application and verify their changes are safe without learning a new setup.
 
-- **Single set of dependencies** - [Keep every project on the same version of each third-party dependency](/docs/concepts/decisions/dependency-management). Less actively developed applications still get framework and tooling updates instead of falling years behind.
+- **Single set of dependencies** - [Keep every project on the same version of each third-party dependency](/docs/concepts/decisions/dependency-management). The policy is optional, but a monorepo is the only place you can enforce it. Less actively developed applications still get framework and tooling updates instead of falling years behind.
 
 ## Is a monorepo the same as a monolith?
 
@@ -61,11 +61,11 @@ For the wider tool landscape, see [monorepo.tools](https://monorepo.tools).
 
 ## When is a monorepo the wrong choice?
 
-A monorepo is the wrong choice when your organization won't invest in the tooling it requires, when the repository outgrows what your version control setup can handle, or when strict access control means some engineers must not see parts of the codebase.
+A monorepo is the wrong choice when the repository outgrows what your version control setup can handle, when strict access control means some engineers must not see parts of the codebase, or when your organization refuses to run tooling that understands the project graph.
 
 - **Version control scale** - Git slows down when a repository reaches millions of files or a very large history. Google and Meta built custom version control infrastructure to cope. Most organizations never hit this limit, but if you do, it's expensive.
 
-- **Forced tooling investment** - Without task caching and affected detection, a monorepo makes CI slower, not faster, because every pipeline runs everything. If your organization won't adopt a build system that understands the project graph, separate repositories will serve you better.
+- **No graph-aware tooling** - Without task caching and affected detection, a monorepo makes CI slower, not faster, because every pipeline runs everything. The tooling itself is quick to adopt, but if your organization won't run a build system that understands the project graph, separate repositories will serve you better.
 
 - **Access control** - Cloning a Git repository means cloning all of it. If contractors or acquisitions must only see part of the codebase, separate repositories enforce that more directly than partial clones or read-restriction workarounds.
 
