@@ -4,6 +4,7 @@ import { readJsonFile, writeJsonFile } from '../../../../utils/fileutils';
 import { nxVersion } from '../../../../utils/versions';
 import { sortObjectByKeys } from '../../../../utils/object-sort';
 import { output } from '../../../../utils/output';
+import { detectPackageManager } from '../../../../utils/package-manager';
 import {
   getDependencyVersionFromPackageJson,
   type PackageJson,
@@ -118,9 +119,10 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
 }
 
 function installDependencies(): void {
-  addDepsToPackageJson(repoRoot);
+  const packageManager = detectPackageManager(repoRoot);
+  addDepsToPackageJson(repoRoot, undefined, packageManager);
   addPluginDependencies();
-  runInstall(repoRoot);
+  runInstall(repoRoot, packageManager);
 }
 
 function addPluginDependencies(): void {
