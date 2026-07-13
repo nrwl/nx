@@ -41,6 +41,7 @@ import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  confirmCommitsOnDefaultBranch,
   createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
@@ -4997,6 +4998,64 @@ describe('Migration', () => {
         });
         expect(result.effective).toBe(true);
         expect(result.warning).toBeUndefined();
+      });
+    });
+
+    describe('confirmCommitsOnDefaultBranch', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('proceeds without prompting when the branch cannot be resolved', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: null,
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when the default branch is unknown', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: null,
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when not on the default branch', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'feature/foo',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds when the user confirms on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: true });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
+      });
+
+      it('aborts when the user declines on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: false });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(false);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
       });
     });
 

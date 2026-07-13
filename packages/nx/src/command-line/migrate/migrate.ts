@@ -43,9 +43,11 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import {
+  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   isGitRepository,
 } from '../../utils/git-utils';
+import { getBaseRef } from '../../utils/command-line-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -2785,6 +2787,34 @@ export function resolveCreateCommits(args: {
 }
 
 /**
+ * Confirms before creating per-migration commits while the user sits on the
+ * repository's default branch, so migrations don't silently commit there (most
+ * relevant since `--agentic` enables commits by default). Only the default
+ * branch triggers a prompt; a detached HEAD, a different branch, or an
+ * unresolved default branch all proceed untouched. Callers gate this on
+ * commits being effective and prompting being possible, so non-interactive
+ * runs (CI, `--no-interactive`) never reach here.
+ */
+export async function confirmCommitsOnDefaultBranch(args: {
+  currentBranch: string | null;
+  defaultBranch: string | null;
+}): Promise<boolean> {
+  const { currentBranch, defaultBranch } = args;
+  if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
+    return true;
+  }
+  const { proceed } = await migratePrompt<{ proceed: boolean }>([
+    {
+      name: 'proceed',
+      type: 'confirm',
+      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+      initial: false,
+    },
+  ]);
+  return proceed;
+}
+
+/**
  * Resolves whether the framework-owned generic-validation agent step should run
  * after generator-only migrations.
  *
@@ -3470,6 +3500,26 @@ async function runMigrations(
   }
   if (createCommitsWarning) {
     output.warn({ title: createCommitsWarning });
+  }
+
+  if (effectiveCreateCommits && canPrompt(opts.interactive)) {
+    const currentBranch = getGitCurrentBranch(root);
+    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
+    // generator); compare against the local branch name.
+    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
+    const proceed = await confirmCommitsOnDefaultBranch({
+      currentBranch,
+      defaultBranch,
+    });
+    if (!proceed) {
+      output.log({
+        title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
+        bodyLines: [
+          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+        ],
+      });
+      return;
+    }
   }
 
   const shouldRunValidation = resolveShouldRunValidation({

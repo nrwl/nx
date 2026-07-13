@@ -357,6 +357,23 @@ export function isGitRepository(directory?: string): boolean {
   }
 }
 
+// Checked-out branch name, or null when there isn't one to act on: a detached
+// HEAD reports the literal "HEAD" (treated as no branch), and any git error
+// (not a repo, no commits yet) also yields null.
+export function getGitCurrentBranch(directory?: string): string | null {
+  try {
+    const branch = execSync('git rev-parse --abbrev-ref HEAD', {
+      encoding: 'utf8',
+      cwd: directory,
+      stdio: ['ignore', 'pipe', 'ignore'],
+      windowsHide: true,
+    }).trim();
+    return branch && branch !== 'HEAD' ? branch : null;
+  } catch {
+    return null;
+  }
+}
+
 // Sync companion to `GitRepository.hasUncommittedChanges` for callers that
 // can't drop into the async class (e.g. the migrate orchestrator, which
 // branches on this before spawning subprocesses synchronously).
