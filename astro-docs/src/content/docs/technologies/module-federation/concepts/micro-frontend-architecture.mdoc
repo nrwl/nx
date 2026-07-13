@@ -47,12 +47,12 @@ Avoid micro frontends in the following situations:
 Micro frontends buy team autonomy and independent releases, and they charge for it in runtime
 overhead and coordination complexity.
 
-| Benefit                                         | Tradeoff                                                                    |
-| ----------------------------------------------- | --------------------------------------------------------------------------- |
-| Each team deploys on its own cadence            | Releases are not atomic, so app versions can skew between deployments       |
-| Teams own their slice end to end                | Cross-team contracts move from compile-time checks to runtime agreements    |
-| Smaller per-team codebases and builds           | Shared dependencies duplicate in the bundle unless you federate them        |
-| A broken deploy is scoped to one micro frontend | Integration bugs only surface when specific app versions meet in production |
+| Benefit                                          | Tradeoff                                                                    |
+| ------------------------------------------------ | --------------------------------------------------------------------------- |
+| Each team deploys on its own cadence             | Releases are not atomic, so app versions can skew between deployments       |
+| Teams own their slice end to end                 | Cross-team contracts move from compile-time checks to runtime agreements    |
+| Each team builds and ships a smaller application | Shared dependencies duplicate in the bundle unless you federate them        |
+| A broken deploy is scoped to one micro frontend  | Integration bugs only surface when specific app versions meet in production |
 
 ## Micro frontends with Module Federation
 
