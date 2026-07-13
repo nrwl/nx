@@ -110,7 +110,7 @@ nx affected -t build   # only projects touched by your changes
 
 The first run executes your scripts. A second run with no changes is [restored from the cache](/docs/features/cache-task-results), and [`nx affected`](/docs/features/ci-features/affected) skips the projects your change does not touch.
 
-### Configure tasks with target defaults
+### Configure caching and dev servers
 
 `nx init` writes an `nx.json` with `targetDefaults` that control how targets behave:
 
