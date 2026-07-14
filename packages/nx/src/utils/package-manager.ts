@@ -207,8 +207,12 @@ export function getPackageManagerCommand(
         install: 'pnpm install --no-frozen-lockfile', // explicitly disable in case of CI
         ciInstall: 'pnpm install --frozen-lockfile',
         updateLockFile: 'pnpm install --lockfile-only',
-        add: isPnpmWorkspace ? 'pnpm add -w' : 'pnpm add',
-        addDev: isPnpmWorkspace ? 'pnpm add -Dw' : 'pnpm add -D',
+        add: isPnpmWorkspace
+          ? 'pnpm add -w --no-frozen-lockfile'
+          : 'pnpm add --no-frozen-lockfile',
+        addDev: isPnpmWorkspace
+          ? 'pnpm add -Dw --no-frozen-lockfile'
+          : 'pnpm add -D --no-frozen-lockfile',
         rm: 'pnpm rm',
         exec: modernPnpm ? 'pnpm exec' : 'pnpx',
         dlx: modernPnpm ? 'pnpm dlx' : 'pnpx',
