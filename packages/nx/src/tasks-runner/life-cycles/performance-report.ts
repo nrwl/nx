@@ -90,6 +90,8 @@ function recommendationLinks(recommendations: Recommendation[]): Link[] {
   );
 }
 
+/** Below this run duration (ms), the run is already fast — recommend nothing. */
+export const MIN_RECOMMENDATION_RUN_DURATION = 30_000;
 /** At/below this hit rate, recommend remote cache (if off); above it caching works. */
 const LOW_CACHE_HIT_RATE = 0.1;
 /** Below this (ms) overhead is noise, not worth a recommendation. */
@@ -137,6 +139,8 @@ interface RecommendationContext {
   cacheableCount: number;
   cacheSkipped: boolean;
   remoteCacheEnabled: boolean;
+  /** Opted out of Nx Cloud (`neverConnectToCloud` / NX_NO_CLOUD) — never recommend it. */
+  cloudOptedOut: boolean;
 }
 
 /** A single recommendation: the criteria under which it applies and the advice it yields. */
@@ -212,9 +216,11 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
   },
   {
     // Barely-used cache with no remote: set up Nx Cloud. Whole-phrase link; the payload
-    // string stays URL-less (the popup re-links the phrase).
+    // string stays URL-less (the popup re-links the phrase). Never pushed at a
+    // workspace that opted out of Nx Cloud.
     isApplicable: (c) =>
       !c.cacheSkipped &&
+      !c.cloudOptedOut &&
       c.cacheableCount > 0 &&
       !c.remoteCacheEnabled &&
       c.cacheHits / c.cacheableCount <= LOW_CACHE_HIT_RATE,
@@ -260,6 +266,10 @@ const RECOMMENDATIONS: RecommendationCandidate[] = [
  * the GitHub-summary Markdown, and the TUI payload.
  */
 export function buildRecommendations(s: PerformanceSummary): Recommendation[] {
+  // A fast run has nothing worth optimizing — stats only, no advice.
+  if (s.runDuration < MIN_RECOMMENDATION_RUN_DURATION) {
+    return [];
+  }
   const c: RecommendationContext = {
     recoverableByParallel: s.recoverableByParallel,
     recoverableByMachines: s.recoverableByMachines,
@@ -273,6 +283,7 @@ export function buildRecommendations(s: PerformanceSummary): Recommendation[] {
     cacheableCount: s.cacheableCount,
     cacheSkipped: s.cacheSkipped,
     remoteCacheEnabled: s.remoteCacheEnabled,
+    cloudOptedOut: s.cloudOptedOut,
   };
   return RECOMMENDATIONS.filter((r) => r.isApplicable(c)).map((r) =>
     r.build(c)
