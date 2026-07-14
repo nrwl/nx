@@ -36,7 +36,7 @@ The cost is that sharing code becomes harder and every maintenance task, from de
 
 AI agents can work across polyrepos, but an agent working in one repository can't see the consumers of the code it's changing, so cross-repository changes need extra coordination.
 Agents work best when they can see every project affected by a change, which a monorepo gives them by default.
-[Polygraph](https://trypolygraph.com/), from the Nx team, gives AI agents cross-repository context in polyrepo setups.
+[Meta-harnesses](https://metaharness.tools) like [Polygraph](https://trypolygraph.com/), from the Nx team, give AI agents cross-repository context in polyrepo setups.
 
 ## Organizational decisions
 
@@ -74,7 +74,7 @@ Tooling and maintenance tasks can be centralized through shared [Nx plugins](/do
 Since creating repositories is a frequent occurrence in this scenario, Nx [generators](/docs/features/generate-code) can be used to quickly scaffold out the repository with reasonable tooling defaults.
 
 Polyrepos also fragment the context AI agents work with.
-[Polygraph](https://trypolygraph.com/) addresses this by letting one agent session work across multiple repositories together, with shared context and coordinated changes across all of them.
+The Polygraph meta-harness addresses this by linking your repositories into a synthetic monorepo, so one agent session works across all of them with shared context and coordinated changes.
 
 ### Multiple monorepos
 
