@@ -18,11 +18,7 @@
         "{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties",
         "{workspaceRoot}/gradle.properties"
       ],
-      "dependsOn": [
-        "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry-e2e",
-        ":gradle-project-graph:gradle:publishToMavenLocal"
-      ]
+      "dependsOn": ["...", ":gradle-project-graph:gradle:publishToMavenLocal"]
     },
     "e2e-ci--**/**": {
       "inputs": [
@@ -32,11 +28,7 @@
         "{workspaceRoot}/gradle/wrapper/gradle-wrapper.properties",
         "{workspaceRoot}/gradle.properties"
       ],
-      "dependsOn": [
-        "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry-e2e",
-        ":gradle-project-graph:gradle:publishToMavenLocal"
-      ]
+      "dependsOn": ["...", ":gradle-project-graph:gradle:publishToMavenLocal"]
     }
   }
 }
