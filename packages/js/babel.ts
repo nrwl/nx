@@ -70,6 +70,17 @@ module.exports = function (api: any, options: NxWebBabelPresetOptions = {}) {
       options.decorators ?? { legacy: true },
     ],
     [require.resolve('@babel/plugin-transform-class-properties'), { loose }],
+    // class-properties runs babel's shared class-features plugin, which hard-errors
+    // on private methods and static blocks unless their transforms are loaded too.
+    // This bites when an ESM-only dep using that syntax is transformed (un-ignored
+    // via transformIgnorePatterns). private-property-in-object completes babel's
+    // loose-consistency trio so `loose` stays uniform across the class-features transforms.
+    [require.resolve('@babel/plugin-transform-private-methods'), { loose }],
+    [
+      require.resolve('@babel/plugin-transform-private-property-in-object'),
+      { loose },
+    ],
+    require.resolve('@babel/plugin-transform-class-static-block'),
   ].filter(Boolean);
 
   return {
