@@ -233,10 +233,8 @@ describe('nx release - custom npm registries', () => {
     runCLI(`generate setup-verdaccio`);
 
     const process = await runCommandUntil(
-      // location=none: this secondary registry must not touch the user-level npm
-      // config; every consumer passes --registry explicitly, and if this process
-      // is killed before its teardown runs, a mutated registry would leak to
-      // every later suite on the same machine (pnpm 11 resolves from ~/.npmrc).
+      // location=none so a killed process can't leak registry config into
+      // ~/.npmrc; every consumer passes --registry explicitly instead
       `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
     );
