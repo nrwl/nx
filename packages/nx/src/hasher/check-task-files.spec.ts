@@ -604,6 +604,16 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.matched).toEqual(['dist/libs/myproj/deep/file.js']);
     });
 
+    it('returns matched when nested inside an output directory whose name contains glob-like characters', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/@scope/pkg']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/@scope/pkg/index.js',
+      ]);
+      expect(result.matched).toEqual(['dist/libs/@scope/pkg/index.js']);
+      expect(result.unmatched).toEqual([]);
+    });
+
     it('returns matched for a glob pattern match', async () => {
       mockGetOutputs.mockReturnValue(['dist/**']);
 

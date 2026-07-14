@@ -109,10 +109,11 @@ where
 #[napi]
 /// Statically checks which `paths` would be captured by the given output
 /// `entries`, without touching the file system. Mirrors `expand_outputs`
-/// semantics: non-glob entries match themselves and anything nested under
-/// them, negated (`!`-prefixed) entries exclude matches from the whole entry
-/// set, and a non-empty list with only negated entries matches everything not
-/// excluded. An empty list matches nothing.
+/// semantics: entries match themselves and anything nested under them (so a
+/// directory entry captures its contents), negated (`!`-prefixed) entries
+/// exclude matches from the whole entry set, and a non-empty list with only
+/// negated entries matches everything not excluded. An empty list matches
+/// nothing.
 pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::Result<Vec<bool>> {
     if entries.is_empty() {
         return Ok(vec![false; paths.len()]);
@@ -126,12 +127,18 @@ pub fn match_output_paths(entries: Vec<String>, paths: Vec<String>) -> anyhow::R
                 None => ("", entry.as_str()),
             };
             let pattern = pattern.strip_suffix('/').unwrap_or(pattern);
-            if contains_glob_pattern(pattern) {
+            if pattern.ends_with("**") {
                 vec![format!("{negation}{pattern}")]
             } else {
-                // Non-glob entries are files or directories: match the entry
-                // itself and anything nested under it, like expand_outputs
-                // does when it includes an existing directory wholesale.
+                // Match the entry itself and anything nested under it, like
+                // expand_outputs does when it includes an existing directory
+                // wholesale. This cannot be gated on contains_glob_pattern:
+                // that predicate flags `@`, `+` and `,`, which are ordinary in
+                // directory names (scoped packages), and expand_outputs only
+                // gets away with it because it then stats the path. We have no
+                // filesystem here, so we emit the containment form for every
+                // entry — for a true glob (`dist/*.js/**`) it matches nothing
+                // real and is inert.
                 vec![
                     format!("{negation}{pattern}"),
                     format!("{negation}{pattern}/**"),
@@ -392,26 +399,64 @@ mod test {
         assert_eq!(result, vec![false]);
     }
 
-    #[test]
-    fn should_match_output_paths_consistently_with_expand_outputs() {
-        // Same fixture and entries as should_handle_multiple_outputs_with_negation:
-        // every path expand_outputs finds on disk must statically match, and the
-        // excluded cache subtree must not.
-        let temp = setup_fs();
-        let entries = vec![
-            "apps/web/.next".to_string(),
-            "!apps/web/.next/cache".to_string(),
-        ];
+    /// Asserts the property `match_output_paths` exists to uphold: every path
+    /// `expand_outputs` finds on disk must also match statically.
+    fn assert_static_matches_expansion(files: &[&str], entries: &[&str]) {
+        let temp = TempDir::new().unwrap();
+        for file in files {
+            temp.child(file).touch().unwrap();
+        }
+        let entries: Vec<String> = entries.iter().map(|e| e.to_string()).collect();
+
         let expanded = expand_outputs(temp.display().to_string(), entries.clone()).unwrap();
-        assert!(!expanded.is_empty());
+        assert!(
+            !expanded.is_empty(),
+            "fixture expanded to nothing for entries {:?} — the assertion below would be vacuous",
+            entries
+        );
 
         let matches = match_output_paths(entries.clone(), expanded.clone()).unwrap();
         assert!(
             matches.iter().all(|m| *m),
-            "every expanded output should statically match: {:?}",
-            expanded
+            "expand_outputs found {:?} for entries {:?}, but match_output_paths returned {:?}",
+            expanded,
+            entries,
+            matches
+        );
+    }
+
+    #[test]
+    fn should_match_output_paths_consistently_with_expand_outputs() {
+        // Plain directory output, with a negated subtree.
+        assert_static_matches_expansion(
+            &[
+                "apps/web/.next/cache/contents",
+                "apps/web/.next/static/contents",
+            ],
+            &["apps/web/.next", "!apps/web/.next/cache"],
         );
 
+        // Directory outputs whose *path* contains characters that
+        // contains_glob_pattern treats as glob syntax (`@` in a scoped package
+        // name, `+`, `,`). expand_outputs stats these and walks them as
+        // directories, so the static matcher must capture nested files too.
+        assert_static_matches_expansion(
+            &["dist/libs/@scope/pkg/index.js"],
+            &["dist/libs/@scope/pkg"],
+        );
+        assert_static_matches_expansion(&["dist/libs/a+b/index.js"], &["dist/libs/a+b"]);
+
+        // Genuine globs keep working.
+        assert_static_matches_expansion(&["multi/file.js", "multi/src.ts"], &["multi/*.{js,ts}"]);
+        assert_static_matches_expansion(&["dist/apps/web/main.js"], &["dist/apps/**"]);
+    }
+
+    #[test]
+    fn should_still_exclude_negated_subtrees_when_matching_output_paths() {
+        let entries = vec![
+            "apps/web/.next".to_string(),
+            "!apps/web/.next/cache".to_string(),
+        ];
         let excluded =
             match_output_paths(entries, vec!["apps/web/.next/cache/contents".to_string()]).unwrap();
         assert_eq!(excluded, vec![false]);
