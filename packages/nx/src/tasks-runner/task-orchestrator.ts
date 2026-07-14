@@ -423,6 +423,21 @@ export class TaskOrchestrator {
   }
 
   /**
+   * Identity used to detect recursive invocations. `task.id` alone
+   * (project:target:configuration) is not enough — a target that's legitimately
+   * invoked multiple times with different CLI overrides (e.g. the same target
+   * run once per item from a `run-commands` array) would otherwise collide and
+   * be misreported as a loop. Overrides are folded into the key so those don't
+   * false-positive, while a genuine self-invoking loop (identical id + overrides)
+   * is still caught.
+   */
+  private getTaskInvocationKey(task: Task): string {
+    return task.overrides && Object.keys(task.overrides).length > 0
+      ? `${task.id}:${JSON.stringify(task.overrides)}`
+      : task.id;
+  }
+
+  /**
    * Registers a task invocation and checks for loops across nested Nx processes.
    * Uses the task_invocations DB table keyed by root PID. registerTask() throws
    * on unique constraint violation when a parent Nx process already registered
@@ -430,10 +445,11 @@ export class TaskOrchestrator {
    */
   private detectTaskInvocationLoop(task: Task): void {
     if (!this.taskInvocationTracker) return;
-    if (this.registeredInvocations.has(task.id)) return;
+    const invocationKey = this.getTaskInvocationKey(task);
+    if (this.registeredInvocations.has(invocationKey)) return;
     try {
-      this.taskInvocationTracker.registerTask(process.pid, task.id);
-      this.registeredInvocations.add(task.id);
+      this.taskInvocationTracker.registerTask(process.pid, invocationKey);
+      this.registeredInvocations.add(invocationKey);
     } catch {
       // Unique constraint violation — task already invoked by an ancestor Nx process
       const chain = this.taskInvocationTracker.getInvocationChain();
@@ -1566,8 +1582,9 @@ export class TaskOrchestrator {
       if (this.completedTasks.has(task.id)) continue;
 
       this.completedTasks.set(task.id, status);
-      this.taskInvocationTracker?.unregisterTask(task.id);
-      this.registeredInvocations.delete(task.id);
+      const invocationKey = this.getTaskInvocationKey(task);
+      this.taskInvocationTracker?.unregisterTask(invocationKey);
+      this.registeredInvocations.delete(invocationKey);
 
       if (this.tuiEnabled) {
         this.options.lifeCycle.setTaskStatus(
