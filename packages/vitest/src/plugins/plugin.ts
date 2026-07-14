@@ -24,6 +24,7 @@ import { existsSync, readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { glob } from 'tinyglobby';
+import type { InlineConfig } from 'vitest/node';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
@@ -246,11 +247,7 @@ async function buildVitestTargets(
   // entirely so it does not register a project rooted at the workspace root (which
   // would, for example, make `nx format` treat the whole workspace as one project).
   const isWorkspaceRoot = projectRoot === '.';
-  // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
-  // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
-  const hasProjectsProperty = Array.isArray(
-    (viteBuildConfig as any)?.test?.projects
-  );
+  const hasProjectsProperty = Array.isArray(viteBuildConfig.test?.projects);
   if (isWorkspaceRoot && hasProjectsProperty) {
     return null;
   }
@@ -269,8 +266,7 @@ async function buildVitestTargets(
 
   // if file is vitest.config or vite.config has definition for test, create targets for test and/or atomized tests
   if (configFilePath.includes('vitest.config') || hasTest) {
-    const isTypecheckEnabled = !!(viteBuildConfig as any)?.test?.typecheck
-      ?.enabled;
+    const isTypecheckEnabled = !!viteBuildConfig.test?.typecheck?.enabled;
     targets[options.testTargetName] = await testTarget(
       namedInputs,
       testOutputs,
@@ -627,7 +623,7 @@ async function getTestPathsRelativeToProjectRoot(
   disableVitestRuntime: boolean
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
-  const test = viteBuildConfig?.test ?? {};
+  const test: InlineConfig = viteBuildConfig?.test ?? {};
 
   if (
     disableVitestRuntime &&
@@ -649,7 +645,7 @@ async function getTestPathsRelativeToProjectRoot(
  * reproducible with a glob via `configRequiresVitestRuntime`.
  */
 async function globTestPathsRelativeToProjectRoot(
-  test: Record<string, any>,
+  test: InlineConfig,
   fullProjectRoot: string
 ): Promise<string[]> {
   const { configDefaults } = await loadVitestConfigDynamicImport();
