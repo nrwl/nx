@@ -349,6 +349,9 @@ jobs:
           # undecided; keep pnpm 10's warn-and-skip and skip implicit dep checks
           pnpm_config_strict_dep_builds: 'false'
           pnpm_config_verify_deps_before_run: 'false'
+          # pnpm 11 ignores .npmrc prefer-frozen-lockfile; keep installs
+          # non-frozen so tests can edit package.json and re-install
+          pnpm_config_frozen_lockfile: 'false'
           YARN_REGISTRY: http://localhost:4872
           CI: true
 
@@ -382,6 +385,9 @@ jobs:
           # undecided; keep pnpm 10's warn-and-skip and skip implicit dep checks
           pnpm_config_strict_dep_builds: 'false'
           pnpm_config_verify_deps_before_run: 'false'
+          # pnpm 11 ignores .npmrc prefer-frozen-lockfile; keep installs
+          # non-frozen so tests can edit package.json and re-install
+          pnpm_config_frozen_lockfile: 'false'
           YARN_REGISTRY: http://localhost:4872
           DEVELOPER_DIR: '/Applications/Xcode.app/Contents/Developer'
           CI: true

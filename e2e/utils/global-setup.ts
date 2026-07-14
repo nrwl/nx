@@ -74,6 +74,11 @@ export default async function (globalConfig: Config.ConfigGlobals) {
     // implicit install-before-run entirely.
     process.env.pnpm_config_strict_dep_builds = 'false';
     process.env.pnpm_config_verify_deps_before_run = 'false';
+    // pnpm 11 no longer reads pnpm settings from .npmrc, so the workspace
+    // prefer-frozen-lockfile=false workaround stopped applying; without this,
+    // tests that edit a package.json and re-run `pnpm install` fail in CI
+    // where frozen-lockfile defaults to true.
+    process.env.pnpm_config_frozen_lockfile = 'false';
 
     // bun
     process.env.BUN_CONFIG_REGISTRY = registry;

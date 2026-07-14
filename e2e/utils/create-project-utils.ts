@@ -124,11 +124,20 @@ export function newProject({
         createNxWorkspaceEnd.name
       );
 
+      // npm strips protected config keys like _authToken from the env it
+      // passes to child processes (npx nx ...), so npm publish needs the
+      // token in a config file; the workspace .npmrc keeps it scoped to the
+      // test project instead of mutating user-level config.
+      const registryPort = process.env.NX_LOCAL_REGISTRY_PORT ?? '4873';
+      const npmrcLines = [
+        `//localhost:${registryPort}/:_authToken=secretVerdaccioToken`,
+      ];
       // Workaround: pnpm defaults to frozen-lockfile in CI, but e2e tests
       // dynamically add packages after workspace creation
       if (isCI && packageManager === 'pnpm') {
-        updateFile('.npmrc', 'prefer-frozen-lockfile=false');
+        npmrcLines.unshift('prefer-frozen-lockfile=false');
       }
+      updateFile('.npmrc', npmrcLines.join('\n'));
 
       let packagesToInstall: Array<NxPackage> = [];
       if (!packages) {

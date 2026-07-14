@@ -17,6 +17,7 @@ import {
   runCommandUntil,
   tmpProjPath,
   uniq,
+  updateFile,
   updateJson,
 } from '@nx/e2e-utils';
 import { execSync } from 'node:child_process';
@@ -320,6 +321,15 @@ describe('nx release', () => {
       // every later suite on the same machine (pnpm 11 resolves from ~/.npmrc).
       `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
+    );
+
+    // npm publish reads credentials from config files only (npx strips
+    // protected env keys like _authToken), so record a token for the custom
+    // registry in the workspace .npmrc.
+    updateFile(
+      '.npmrc',
+      (contents) =>
+        `${contents}\n//localhost:${verdaccioPort}/:_authToken=secretVerdaccioToken`
     );
 
     const versionOutput2 = runCLI(
