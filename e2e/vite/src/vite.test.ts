@@ -505,11 +505,50 @@ export default defineConfig({
       const vitePlugin = nxJson.plugins.find((p) => p.plugin === '@nx/vitest');
       expect(vitePlugin).toBeDefined();
       expect(vitePlugin.options.testTargetName).toEqual('test');
+      expect(vitePlugin.options.ciTargetName).toEqual('test-ci');
     });
 
     it('project.json should not contain test target', () => {
       const projectJson = readJson(`${reactVitest}/project.json`);
       expect(projectJson.targets.test).toBeUndefined();
+    });
+
+    it('should atomize the ci target identically with and without the vitest runtime', () => {
+      const collectAtomized = (details) =>
+        Object.keys(details.targets)
+          .filter((t) => t.startsWith('test-ci--'))
+          .sort()
+          .map((t) => ({ target: t, command: details.targets[t].command }));
+
+      // default path: spec files discovered via glob (runtime disabled)
+      const globDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      const parent = globDetails.targets['test-ci'];
+      expect(parent).toBeDefined();
+      expect(parent.executor).toEqual('nx:noop');
+      expect(parent.metadata.nonAtomizedTarget).toEqual('test');
+
+      const globAtomized = collectAtomized(globDetails);
+      expect(globAtomized.length).toBeGreaterThan(0);
+      for (const { target, command } of globAtomized) {
+        const relativePath = target.slice('test-ci--'.length);
+        expect(relativePath).toMatch(/\.spec\.tsx?$/);
+        expect(command).toEqual(`vitest run ${relativePath}`);
+      }
+
+      // force the vitest runtime to enumerate the specs; atomization must match
+      // the glob path exactly so the OOM-avoiding default preserves behavior
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.disableVitestRuntime = false;
+        return json;
+      });
+
+      const runtimeDetails = JSON.parse(
+        runCLI(`show project ${reactVitest} --json`)
+      );
+      expect(collectAtomized(runtimeDetails)).toEqual(globAtomized);
     });
   });
 });
