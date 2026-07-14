@@ -626,13 +626,15 @@ export function newLernaWorkspace({
         '@nx/devkit': nxVersion,
       };
       if (packageManager === 'pnpm') {
-        json.pnpm = {
-          ...json.pnpm,
-          overrides: {
-            ...json.pnpm?.overrides,
-            ...overrides,
-          },
-        };
+        // pnpm 11 no longer reads the "pnpm" field in package.json; overrides
+        // live in pnpm-workspace.yaml.
+        updateFile(
+          'pnpm-workspace.yaml',
+          dump({
+            packages: ['packages/*'],
+            overrides,
+          })
+        );
       } else if (packageManager === 'yarn') {
         json.resolutions = {
           ...json.resolutions,
