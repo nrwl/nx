@@ -42,6 +42,9 @@ export default [
             '@swc/core',
             'ts-loader',
             'ajv',
+            // Passed indirectly to minimizer-webpack-plugin's cssnanoMinify helper;
+            // the dependency check cannot detect this runtime usage statically.
+            'cssnano',
           ],
         },
       ],
