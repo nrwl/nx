@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Sets up an isolated worktree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and, when runnable locally, executes the repro on master vs PR), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), and the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Sets up an isolated worktree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and, when runnable locally, executes the repro on master vs PR), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), and the security-analyzer agent (hunts injection-class vulnerabilities — command injection, zip-slip, SSRF, credential leakage — across real trust boundaries), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh issue view *), Bash(gh auth status*), Bash(git -C *), Bash(git worktree *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -216,7 +216,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, security-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
 ## Step 5: Run the review toolkit
 
@@ -318,6 +318,33 @@ Capture the output as `$PERF_REPORT` and fold it into the review body as `### Pe
 - `PERFORMANCE_REGRESSION` — counts as a critical finding (slower commands for real workspaces, or unbounded memory growth).
 - `PERFORMANCE_CONCERN` — counts as an important finding, with the cheaper shape as the ask.
 - `PERFORMANCE_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+## Step 5a.3: Run the security-analyzer agent
+
+In parallel with Step 5, dispatch the `security-analyzer` agent — it answers "can untrusted data reach a dangerous sink through this change?" (command injection, zip-slip/path traversal, prototype pollution, SSRF, credential leakage):
+
+```
+Agent(
+  subagent_type="security-analyzer",
+  description="Analyze PR <NUMBER> for security vulnerabilities",
+  prompt="""
+Analyze PR <NUMBER> in nrwl/nx for injection-class vulnerabilities and data exposure.
+
+Inputs:
+- PR_NUMBER: <NUMBER>
+- WORKTREE_PATH: <WORKTREE_BASE>/pr-<NUMBER>
+- BASE_REF: <BASE_REF_NAME>
+
+Read .review-charter.md in the worktree first. Follow your standard workflow and return the structured report.
+"""
+)
+```
+
+Capture the output as `$SECURITY_REPORT` and fold it into the review body as `### Security analysis`, directly below `### Performance analysis`. Verdict influence (Step 7):
+
+- `SECURITY_VULNERABILITY` — counts as a critical finding (complete untrusted-source-to-sink chain in a default setup).
+- `SECURITY_CONCERN` — counts as an important finding, with the traced chain as the evidence.
+- `SECURITY_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
 
 ## Step 5a.5: Run the reproduce-verifier agent
 
