@@ -126,7 +126,7 @@ describe('show target outputs', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('should match file via expanded outputs when configured paths use globs', async () => {
+  it('should match a file against a glob output pattern', async () => {
     setGraph(
       new GraphBuilder()
         .addProjectConfiguration(
@@ -145,11 +145,6 @@ describe('show target outputs', () => {
         .build()
     );
 
-    setMockExpandedOutputs([
-      'apps/my-app/dist/main.js',
-      'apps/my-app/dist/vendor.js',
-    ]);
-
     await showTargetOutputsHandler({
       target: 'my-app:build',
       check: ['apps/my-app/dist/main.js'],
@@ -159,6 +154,44 @@ describe('show target outputs', () => {
     expect(logged).toContain('apps/my-app/dist/main.js');
     expect(logged).toContain('is an output');
     expect(process.exitCode).toBe(0);
+  });
+
+  it('should report expanded outputs contained under a checked directory', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                outputs: ['{projectRoot}/dist/*.js'],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    // No *resolved* pattern is prefixed by the checked directory, so the only
+    // way `contained` can be populated is from the expanded outputs on disk.
+    setMockExpandedOutputs([
+      'apps/my-app/dist/nested/a.js',
+      'apps/my-app/dist/nested/b.js',
+    ]);
+
+    await showTargetOutputsHandler({
+      target: 'my-app:build',
+      check: ['apps/my-app/dist/nested'],
+    });
+
+    const allLogged = (console.log as jest.Mock).mock.calls
+      .map((c) => c[0])
+      .join('\n');
+    expect(allLogged).toContain('directory containing');
+    expect(allLogged).toContain('2');
   });
 
   it('should not flag {options.*} outputs as unresolved when option is set', async () => {
