@@ -56,6 +56,18 @@ export function versions(tree: Tree): EslintVersions {
   return legacyRequested ? versionMap[9] : latestVersions;
 }
 
+// convert-to-flat-config runs only on eslintrc workspaces, which
+// `assertSupportedEslintVersion` pins at ESLint >= 9. Preserve the installed
+// major there: keep v9 on v9 (its plugins have no v10 release), never force
+// v10, and never downgrade a v10 workspace. Default to v9 when unresolved.
+export function getConvertToFlatConfigVersions(tree: Tree): EslintVersions {
+  const installedEslintVersion = getInstalledEslintVersion(tree);
+  const eslintMajorVersion = installedEslintVersion
+    ? major(installedEslintVersion)
+    : 9;
+  return eslintMajorVersion >= 10 ? latestVersions : versionMap[9];
+}
+
 export function getInstalledEslintVersion(tree?: Tree): string | null {
   if (!tree) {
     return getInstalledPackageVersion('eslint');
