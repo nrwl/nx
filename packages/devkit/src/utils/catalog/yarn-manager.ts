@@ -1,10 +1,7 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import { type Tree } from 'nx/src/devkit-exports';
 import { formatCatalogError, type CatalogManager } from './manager';
 import {
-  readCatalogConfigFromFs,
-  readCatalogConfigFromTree,
+  readCatalogDefinitions,
   updateCatalogVersionsInFile,
 } from './manager-utils';
 import type {
@@ -21,10 +18,7 @@ const YARNRC_FILENAME = '.yarnrc.yml';
 export class YarnCatalogManager implements CatalogManager {
   readonly name = 'yarn';
   readonly catalogProtocol = 'catalog:';
-  // Parsed definitions cached per root. A manager is created per operation
-  // (getCatalogManager news one up), so defs are read once per pass instead of
-  // once per catalog reference. Only the fs (string-root) branch is cached; the
-  // Tree branch stays live since the tree is mutable within a generator.
+  // Parsed fs-root definitions, cached per pass. See readCatalogDefinitions.
   private definitionsByRoot = new Map<string, CatalogDefinitions | null>();
 
   isCatalogReference(version: string): boolean {
@@ -51,22 +45,11 @@ export class YarnCatalogManager implements CatalogManager {
   }
 
   getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
-    if (typeof treeOrRoot === 'string') {
-      if (this.definitionsByRoot.has(treeOrRoot)) {
-        return this.definitionsByRoot.get(treeOrRoot);
-      }
-      const configPath = join(treeOrRoot, YARNRC_FILENAME);
-      const defs = existsSync(configPath)
-        ? readCatalogConfigFromFs(YARNRC_FILENAME, configPath)
-        : null;
-      this.definitionsByRoot.set(treeOrRoot, defs);
-      return defs;
-    } else {
-      if (!treeOrRoot.exists(YARNRC_FILENAME)) {
-        return null;
-      }
-      return readCatalogConfigFromTree(YARNRC_FILENAME, treeOrRoot);
-    }
+    return readCatalogDefinitions(
+      YARNRC_FILENAME,
+      treeOrRoot,
+      this.definitionsByRoot
+    );
   }
 
   resolveCatalogReference(
