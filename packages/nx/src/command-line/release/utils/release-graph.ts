@@ -711,9 +711,16 @@ export class ReleaseGraph {
    * `resolveCurrentVersionsForProjects`. Resolve it on-demand via its own
    * configured `currentVersionResolver`, caching the result for reuse.
    *
-   * Returns null if the project cannot be resolved (e.g. it is not configured
-   * for nx release), in which case callers should leave the local protocol
-   * untouched rather than write an invalid version.
+   * Returns null (it never throws) when the current version cannot be resolved,
+   * either because the project is not configured for nx release, or because the
+   * underlying `currentVersionResolver` failed - e.g. `git-tag` with no matching
+   * tag and no `fallbackCurrentVersionResolver`, a missing version on disk, or a
+   * registry error. In that case a warning is buffered to the dependency's
+   * `ProjectLogger` and callers should leave the local protocol untouched. This
+   * ensures a subset release is never hard-failed because of a project the user
+   * did not ask to release.
+   *
+   * @internal
    */
   async resolveCurrentVersionForOutOfSetProject(
     tree: Tree,
@@ -722,7 +729,8 @@ export class ReleaseGraph {
     preid: string
   ): Promise<string | null> {
     if (this.cachedCurrentVersions.has(projectName)) {
-      return this.cachedCurrentVersions.get(projectName)!;
+      // The cached value is legitimately `string | null`.
+      return this.cachedCurrentVersions.get(projectName) ?? null;
     }
     const releaseGroup = this.projectToReleaseGroup.get(projectName);
     if (
@@ -732,15 +740,30 @@ export class ReleaseGraph {
     ) {
       return null;
     }
-    const currentVersion = await this.resolveCurrentVersionForProject(
-      tree,
-      projectGraph,
-      releaseGroup,
-      projectName,
-      preid
-    );
-    this.cachedCurrentVersions.set(projectName, currentVersion);
-    return currentVersion;
+    try {
+      const currentVersion = await this.resolveCurrentVersionForProject(
+        tree,
+        projectGraph,
+        releaseGroup,
+        projectName,
+        preid
+      );
+      this.cachedCurrentVersions.set(projectName, currentVersion);
+      return currentVersion;
+    } catch (err) {
+      // The dependency is not part of this release, so a failure to resolve its
+      // current version must NOT fail the release. Warn, cache null (so the
+      // resolution is not re-attempted for every dependent of this project),
+      // and let the caller leave the local protocol untouched.
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      this.projectLoggers
+        .get(projectName)
+        ?.buffer(
+          `⚠️  Could not resolve the current version of "${projectName}", which is depended upon via a local protocol (e.g. "workspace:") but is not part of this release. Local protocol references to it will be left untouched. To rewrite them to a concrete version, make its current version resolvable - for example set "fallbackCurrentVersionResolver": "disk" or create a matching git tag. Underlying error: ${errorMessage}`
+        );
+      this.cachedCurrentVersions.set(projectName, null);
+      return null;
+    }
   }
 
   /**
