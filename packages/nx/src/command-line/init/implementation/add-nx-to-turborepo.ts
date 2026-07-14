@@ -61,7 +61,7 @@ export async function addNxToTurborepo(_options: Options) {
   const pmc = getPackageManagerCommand(packageManager);
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot, undefined, packageManager);
+  addDepsToPackageJson(repoRoot, packageManager);
 
   output.log({ title: '📦 Installing dependencies' });
 

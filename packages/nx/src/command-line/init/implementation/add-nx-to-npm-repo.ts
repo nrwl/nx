@@ -96,7 +96,7 @@ export async function addNxToNpmRepo(options: Options, guided: boolean = true) {
   const pmc = getPackageManagerCommand(packageManager);
 
   updateGitIgnore(repoRoot);
-  addDepsToPackageJson(repoRoot, undefined, packageManager);
+  addDepsToPackageJson(repoRoot, packageManager);
   if (options.legacy) {
     markRootPackageJsonAsNxProjectLegacy(repoRoot, cacheableOperations, pmc);
   } else {

@@ -34,7 +34,7 @@ export function installPluginPackages(
   }
   if (existsSync(join(repoRoot, 'package.json'))) {
     const packageManager = detectPackageManager(repoRoot);
-    addDepsToPackageJson(repoRoot, plugins, packageManager);
+    addDepsToPackageJson(repoRoot, packageManager, plugins);
     runInstall(repoRoot, packageManager, pmc);
   } else {
     const nxJson = readNxJson(repoRoot);

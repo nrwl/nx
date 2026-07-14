@@ -115,7 +115,7 @@ export async function addNxToMonorepo(
 
   updateGitIgnore(repoRoot);
   const packageManager = detectPackageManager(repoRoot);
-  addDepsToPackageJson(repoRoot, undefined, packageManager);
+  addDepsToPackageJson(repoRoot, packageManager);
 
   output.log({ title: '📦 Installing dependencies' });
   runInstall(repoRoot, packageManager);

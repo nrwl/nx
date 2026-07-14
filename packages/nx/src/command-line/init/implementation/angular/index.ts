@@ -120,7 +120,7 @@ async function collectCacheableOperations(options: Options): Promise<string[]> {
 
 function installDependencies(): void {
   const packageManager = detectPackageManager(repoRoot);
-  addDepsToPackageJson(repoRoot, undefined, packageManager);
+  addDepsToPackageJson(repoRoot, packageManager);
   addPluginDependencies();
   runInstall(repoRoot, packageManager);
 }

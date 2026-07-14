@@ -255,8 +255,8 @@ export function createNxJsonFromTurboJson(
 
 export function addDepsToPackageJson(
   repoRoot: string,
-  additionalPackages?: string[],
-  packageManager: PackageManager = detectPackageManager(repoRoot)
+  packageManager: PackageManager,
+  additionalPackages?: string[]
 ) {
   const path = joinPathFragments(repoRoot, `package.json`);
   const json = readJsonFile(path);
