@@ -141,10 +141,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
     `);
   });
 
@@ -208,10 +204,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
     `);
   });
 
@@ -270,10 +262,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
     `);
   });
 
@@ -337,10 +325,6 @@ describe('release publishable libraries in workspace with ts solution setup', ()
       Cache: 0/1 hit (0%)
       Critical path: {DURATION} (1 task)
       Recoverable time: {DURATION}
-      Recommendations:
-      - Drastically reduce your run duration by sharing a cache across your team and CI → https://nx.dev/ci/features/remote-cache?utm_source=nx-cli&utm_medium=cli&utm_campaign=performance-report&utm_content=remote-cache.
-      - Speed up or split the longest tasks on the critical path:
-      @proj/{project-name}:nx-release-publish    {DURATION}
     `);
   });
 });
