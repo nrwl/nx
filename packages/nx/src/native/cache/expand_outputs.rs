@@ -462,6 +462,30 @@ mod test {
         assert_eq!(excluded, vec![false]);
     }
 
+    /// The forward parity assertion (`assert_static_matches_expansion`) cannot
+    /// see a *false positive* — a path the static matcher claims but the runner
+    /// would never cache. Negated subtrees are where that hides: an exclusion
+    /// whose literal characters get mangled silently stops excluding anything.
+    #[test]
+    fn should_not_match_excluded_subtrees_of_dirs_with_glob_like_names() {
+        for (dir, excluded_child) in [
+            ("dist/libs/@scope/pkg", "dist/libs/@scope/pkg/.cache/x"),
+            ("dist/libs/a+b", "dist/libs/a+b/.cache/x"),
+        ] {
+            let entries = vec![dir.to_string(), format!("!{dir}/.cache")];
+            let kept = format!("{dir}/index.js");
+
+            let matches =
+                match_output_paths(entries, vec![kept.clone(), excluded_child.to_string()]).unwrap();
+
+            assert!(matches[0], "{kept} should still match");
+            assert!(
+                !matches[1],
+                "{excluded_child} is inside a negated subtree and must not be reported as an output"
+            );
+        }
+    }
+
     #[test]
     fn should_get_files_for_outputs_with_glob() {
         let temp = setup_fs();
