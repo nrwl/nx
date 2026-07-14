@@ -88,7 +88,7 @@ describe('installPackageToTmp', () => {
       .spyOn(pacakgeManager, 'getPackageManagerVersion')
       .mockReturnValue('9.0.0');
     jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
-      addDev: 'pnpm add -Dw --no-frozen-lockfile',
+      addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
     const execSyncSpy = jest
@@ -99,7 +99,7 @@ describe('installPackageToTmp', () => {
 
     expect(execSyncSpy).toHaveBeenCalledTimes(1);
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'pnpm add -Dw --no-frozen-lockfile nx@latest --config.auto-install-peers=false --ignore-scripts'
+      'pnpm add -Dw --config.frozen-lockfile=false nx@latest --config.auto-install-peers=false --ignore-scripts'
     );
 
     cleanup();
@@ -145,12 +145,12 @@ describe('installPackageToTmp', () => {
     // pnpm: peers are omitted by disabling auto-install
     execSyncSpy.mockClear();
     jest.spyOn(pacakgeManager, 'getPackageManagerCommand').mockReturnValue({
-      addDev: 'pnpm add -Dw --no-frozen-lockfile',
+      addDev: 'pnpm add -Dw --config.frozen-lockfile=false',
       ignoreScriptsFlag: '--ignore-scripts',
     } as any);
     installPackageToTmp('@nx/cypress', '1.0.0', 'pnpm');
     expect(execSyncSpy.mock.calls[0][0]).toBe(
-      'pnpm add -Dw --no-frozen-lockfile @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
+      'pnpm add -Dw --config.frozen-lockfile=false @nx/cypress@1.0.0 --config.auto-install-peers=false --ignore-scripts'
     );
 
     // yarn: Berry does not auto-install peers, so no flag is added
