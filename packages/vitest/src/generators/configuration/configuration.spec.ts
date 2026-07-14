@@ -102,4 +102,39 @@ describe('@nx/vitest:configuration', () => {
 
     expect(tree.read('vitest.config.ts', 'utf-8')).toBe('// user root config');
   });
+
+  it('should not create a root vitest.config.ts when a root vite.config.ts already exists', async () => {
+    setVitestVersion('~4.1.0');
+    tree.write('vite.config.ts', '// user root config');
+
+    await configurationGenerator(tree, {
+      project: 'mylib',
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      skipViteConfig: true,
+      skipPackageJson: true,
+      addPlugin: false,
+      skipFormat: true,
+    });
+
+    expect(tree.exists('vitest.config.ts')).toBe(false);
+    expect(tree.read('vite.config.ts', 'utf-8')).toBe('// user root config');
+  });
+
+  it('should default to the root vitest.config.ts shape when the vitest version cannot be detected', async () => {
+    // No vitest in package.json, so the version is undetectable; new installs
+    // resolve to vitest 4, so the root config uses the inlined projects shape.
+    await configurationGenerator(tree, {
+      project: 'mylib',
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      skipViteConfig: true,
+      skipPackageJson: true,
+      addPlugin: false,
+      skipFormat: true,
+    });
+
+    expect(tree.exists('vitest.workspace.ts')).toBe(false);
+    expect(tree.exists('vitest.config.ts')).toBe(true);
+  });
 });
