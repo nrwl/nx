@@ -30,6 +30,7 @@ overrides:
   # form-data@4.0.6 pulls hasown via two paths (direct + es-set-tostringtag);
   # pin to one version so expand-deps can flatten nx's published deps.
   hasown: '2.0.4'
+  '@xhmikosr/decompress': '10.2.1'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
