@@ -35,8 +35,8 @@ export function applyWebConfig(
   const { DefinePlugin, ids } = require('webpack') as typeof import('webpack');
   const { SubresourceIntegrityPlugin } =
     require('webpack-subresource-integrity') as typeof import('webpack-subresource-integrity');
-  const CssMinimizerPlugin =
-    require('css-minimizer-webpack-plugin') as typeof import('css-minimizer-webpack-plugin');
+  const MinimizerPlugin =
+    require('minimizer-webpack-plugin') as typeof import('minimizer-webpack-plugin');
   const MiniCssExtractPlugin =
     require('mini-css-extract-plugin') as typeof import('mini-css-extract-plugin');
 
@@ -79,8 +79,9 @@ export function applyWebConfig(
   const minimizer: WebpackPluginInstance[] = [new ids.HashedModuleIdsPlugin()];
   if (stylesOptimization) {
     minimizer.push(
-      new CssMinimizerPlugin({
+      new MinimizerPlugin({
         test: /\.(?:css|scss|sass|less)$/,
+        minify: MinimizerPlugin.cssnanoMinify,
       })
     );
   }
