@@ -96,12 +96,25 @@ function resolveIdentity(
     );
   }
 
-  const { defaultConfiguration } = targetConfig;
-  const effectiveConfiguration = configuration
-    ? projectHasTargetAndConfiguration(projectNode, target, configuration)
-      ? configuration
-      : defaultConfiguration
-    : defaultConfiguration;
+  // Substituting defaultConfiguration for a configuration that does not exist
+  // would answer confidently about a *different* task — and configurations
+  // routinely change `outputPath`, so the answer could be wrong in either
+  // direction. `nx run` errors here; so do we.
+  if (
+    configuration &&
+    !projectHasTargetAndConfiguration(projectNode, target, configuration)
+  ) {
+    const available = Object.keys(targetConfig.configurations ?? {});
+    throw new Error(
+      `Invalid taskId "${taskId}" — target "${target}" of project "${project}" has no configuration "${configuration}".` +
+        (available.length
+          ? ` Available configurations: ${available.join(', ')}.`
+          : ' It has no configurations.')
+    );
+  }
+
+  const effectiveConfiguration =
+    configuration ?? targetConfig.defaultConfiguration;
 
   const identity: TaskIdentity = {
     project,
@@ -302,28 +315,38 @@ function toWorkspaceRelativePath(candidatePath: string): string {
   return normalized.startsWith('./') ? normalized.slice(2) : normalized;
 }
 
+/**
+ * The task's hash inputs, or an error. A task missing from its own hash plan is
+ * a failure to *determine* the inputs — reporting every file as unmatched would
+ * tell a sandbox-violation consumer that all of them are illegal.
+ */
+function requireRawInputs(taskId: string, ctx: LoadedContext): HashInputs {
+  const raw = getRawInputs(taskId, ctx);
+  if (!raw) {
+    throw new Error(
+      `Could not determine the inputs of task "${taskId}" — it is not present in its own hash plan.`
+    );
+  }
+  return raw;
+}
+
 function classifyInput(
   taskId: string,
   candidate: InputCandidate,
+  raw: HashInputs,
   ctx: LoadedContext
 ): InputCategory | null {
-  const raw = getRawInputs(taskId, ctx);
-  if (raw) {
-    // `environment`, `runtime` and `external` hold names rather than paths, so
-    // they are matched against the value exactly as the caller supplied it.
-    if (raw.environment.includes(candidate.value)) return 'environment';
-    if (raw.runtime.includes(candidate.value)) return 'runtime';
-    if (raw.external.includes(candidate.value)) return 'external';
+  // `environment`, `runtime` and `external` hold names rather than paths, so
+  // they are matched against the value exactly as the caller supplied it.
+  if (raw.environment.includes(candidate.value)) return 'environment';
+  if (raw.runtime.includes(candidate.value)) return 'runtime';
+  if (raw.external.includes(candidate.value)) return 'external';
 
-    const path = toWorkspaceRelativePath(candidate.path);
-    if (raw.files.includes(path)) return 'files';
-    if (raw.depOutputs.includes(path)) return 'depOutputs';
-  }
-  return matchesDependentTaskOutputs(
-    taskId,
-    toWorkspaceRelativePath(candidate.path),
-    ctx
-  )
+  const path = toWorkspaceRelativePath(candidate.path);
+  if (raw.files.includes(path)) return 'files';
+  if (raw.depOutputs.includes(path)) return 'depOutputs';
+
+  return matchesDependentTaskOutputs(taskId, path, ctx)
     ? 'dependentTasksOutputFiles'
     : null;
 }
@@ -382,9 +405,11 @@ export async function checkFilesAreInputs(
   categories: Map<string, InputCategory>;
 }> {
   const ctx = await getContext();
-  // Validate taskId eagerly so callers always get an error for an unknown or
-  // malformed task, even when the file list is empty.
+  // Resolve the task and its hash plan eagerly, so an unknown task or an
+  // undeterminable plan errors even when the file list is empty — rather than
+  // being reported as "none of these files are inputs".
   resolveIdentity(taskId, ctx.projectGraph);
+  const raw = requireRawInputs(taskId, ctx);
 
   const matched: string[] = [];
   const unmatched: string[] = [];
@@ -393,7 +418,7 @@ export async function checkFilesAreInputs(
   for (const file of files) {
     const candidate =
       typeof file === 'string' ? { value: file, path: file } : file;
-    const category = classifyInput(taskId, candidate, ctx);
+    const category = classifyInput(taskId, candidate, raw, ctx);
     if (category) {
       matched.push(candidate.value);
       categories.set(candidate.value, category);
@@ -410,6 +435,11 @@ export async function checkFilesAreInputs(
  * Uses the same path-matching logic as the task runner (directory containment
  * + glob matching through the native `globset` engine), including negated
  * (`!`-prefixed) patterns acting as exclusions over the whole pattern set.
+ *
+ * Paths may be workspace-relative or absolute; absolute ones are relativized
+ * against the workspace root. An output pattern whose `{options.*}` token has no
+ * value resolves to nothing — exactly as the task runner drops it — so a file it
+ * would have covered is reported `unmatched`, like any other non-output.
  */
 export async function checkFilesAreOutputs(
   taskId: string,

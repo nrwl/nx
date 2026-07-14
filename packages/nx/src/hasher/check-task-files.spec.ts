@@ -801,6 +801,59 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
         checkFilesAreInputs('myproj:nosuchtarget', [])
       ).rejects.toThrow(/project "myproj" has no target "nosuchtarget"/);
     });
+
+    it('throws on an unknown configuration instead of answering for the default one', async () => {
+      mockCreateProjectGraphAsync.mockResolvedValue({
+        nodes: {
+          myproj: {
+            name: 'myproj',
+            type: 'lib',
+            data: {
+              root: 'libs/myproj',
+              targets: {
+                build: {
+                  executor: '@nx/js:tsc',
+                  outputs: ['dist/libs/myproj'],
+                  defaultConfiguration: 'development',
+                  configurations: { development: {}, production: {} },
+                },
+              },
+            },
+          },
+        },
+        dependencies: { myproj: [] },
+      } as unknown as ProjectGraph);
+
+      await expect(
+        checkFilesAreOutputs('myproj:build:prodction', [])
+      ).rejects.toThrow(
+        /has no configuration "prodction"\. Available configurations: development, production\./
+      );
+    });
+
+    it('throws when the task is absent from its own hash plan', async () => {
+      // The hasher produced no entry for this task: we cannot determine its
+      // inputs, which is different from "none of these files are inputs".
+      mockInspectTaskInputs.mockReturnValue({});
+
+      await expect(
+        checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts'])
+      ).rejects.toThrow(/not present in its own hash plan/);
+    });
+  });
+
+  it('treats an output with an unresolvable {options.*} token as no output', async () => {
+    // The task runner drops `{options.outputPath}` when the option has no
+    // value, so getOutputsForTargetAndConfiguration returns an empty list and
+    // the file is simply not an output — the same as any other unmatched path.
+    mockGetOutputs.mockReturnValue([]);
+
+    const result = await checkFilesAreOutputs('myproj:build', [
+      'dist/libs/myproj/index.js',
+    ]);
+
+    expect(result.matched).toEqual([]);
+    expect(result.unmatched).toEqual(['dist/libs/myproj/index.js']);
   });
 
   // ── Error propagation ────────────────────────────────────────────────────
