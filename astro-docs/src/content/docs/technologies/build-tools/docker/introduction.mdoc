@@ -8,6 +8,8 @@ weight: 2
 filter: 'type:References'
 ---
 
+[Docker](https://www.docker.com/) packages applications into portable container images. In a Docker monorepo, Nx builds, caches, and publishes those images alongside the rest of your projects.
+
 The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
 Using the `@nx/docker` [Inference Plugin](/docs/concepts/inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
 It will also provide a `nx-release-publish` target for publishing docker images to a registry.
