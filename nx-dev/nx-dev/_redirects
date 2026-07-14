@@ -950,7 +950,7 @@
 /extending-nx /docs/extending-nx 301
 /extending-nx/* /docs/extending-nx/:splat 301
 /features/enhance-AI /docs/features/enhance-ai 301
-/features/maintain-ts-monorepos /docs/features/maintain-typescript-monorepos 301
+/features/maintain-ts-monorepos /docs/technologies/typescript/introduction 301
 /features /docs/features 301
 /features/* /docs/features/:splat 301
 /nx-enterprise /docs/enterprise 301

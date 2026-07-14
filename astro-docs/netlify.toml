@@ -87,6 +87,11 @@ to = "/docs/concepts/decisions/monorepo-vs-polyrepo"
 from = "/docs/concepts/decisions/why-monorepos"
 to = "/docs/concepts/decisions/what-is-a-monorepo"
 
+# DOC-549: maintain-typescript-monorepos merged into the TypeScript introduction
+[[redirects]]
+from = "/docs/features/maintain-typescript-monorepos"
+to = "/docs/technologies/typescript/introduction"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"

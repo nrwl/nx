@@ -50,6 +50,8 @@ export default defineConfig({
       '/docs/concepts/decisions/monorepo-vs-polyrepo',
     '/concepts/decisions/why-monorepos':
       '/docs/concepts/decisions/what-is-a-monorepo',
+    '/features/maintain-typescript-monorepos':
+      '/docs/technologies/typescript/introduction',
     '/guides/nx-cloud/ci-resource-usage':
       '/docs/features/ci-features/resource-usage',
     '/reference/remote-cache-plugins':

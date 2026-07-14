@@ -1001,10 +1001,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
-          {
-            label: 'Maintain TypeScript monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and publishable libraries',
