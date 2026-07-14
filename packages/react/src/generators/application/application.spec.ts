@@ -116,33 +116,37 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         addPlugin: true,
+        // Let the generator format the tree so we assert on the same
+        // prettier-formatted config a user gets, not the raw intermediate the
+        // e2e generator writes with skipFormat.
+        skipFormat: false,
       });
 
-      // Spot-check the generated cypress config. Avoid inline snapshot here:
-      // the `webServerCommands` interpolate `packageCmd` at runtime (`npx`,
-      // `pnpm exec`, etc), which varies by detected package manager.
-      const cypressConfig = appTree.read(
-        'my-app-e2e/cypress.config.ts',
-        'utf-8'
-      );
+      // The web-server commands interpolate the detected package manager's exec
+      // command (`npx`, `pnpm exec`, ...), so normalize it to keep the snapshot
+      // package-manager agnostic.
+      const cypressConfig = appTree
+        .read('my-app-e2e/cypress.config.ts', 'utf-8')
+        .replaceAll(packageCmd, '<pm-exec>');
       expect(cypressConfig).toMatchInlineSnapshot(`
         "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
         const { defineConfig } = require('cypress');
         module.exports = defineConfig({
-            e2e: {
-                ...nxE2EPreset(__filename, {
-                    "cypressDir": "src",
-                    "bundler": "vite",
-                    "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
-                    },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
-                    "ciBaseUrl": "http://localhost:4300"
-                }),
-                baseUrl: 'http://localhost:4200'
-            }
-        });"
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: '<pm-exec> nx run my-app:dev',
+                production: '<pm-exec> nx run my-app:preview',
+              },
+              ciWebServerCommand: '<pm-exec> nx run my-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
       `);
     });
 

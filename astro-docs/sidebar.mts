@@ -318,10 +318,6 @@ const learnGroups: SidebarItems = [
             link: 'guides/adopting-nx/preserving-git-histories',
           },
           {
-            label: 'Nx vs Turborepo',
-            link: 'guides/adopting-nx/nx-vs-turborepo',
-          },
-          {
             label: 'Migrating from Turborepo',
             link: 'guides/adopting-nx/from-turborepo',
           },
@@ -1093,6 +1089,31 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'Vitest',
         collapsed: true,
         items: [...getTechnologyKBItems('vitest', 'test-tools')],
+      },
+      {
+        label: 'Comparisons',
+        collapsed: true,
+        items: [
+          {
+            label: 'Nx vs Turborepo',
+            link: 'guides/comparisons/nx-vs-turborepo',
+          },
+          { label: 'Nx vs Vite+', link: 'guides/comparisons/nx-vs-vite-plus' },
+          { label: 'Nx vs Bazel', link: 'guides/comparisons/nx-vs-bazel' },
+          { label: 'Nx vs Depot', link: 'guides/comparisons/nx-vs-depot' },
+          {
+            label: 'Nx vs Blacksmith',
+            link: 'guides/comparisons/nx-vs-blacksmith',
+          },
+          {
+            label: 'Nx vs Develocity',
+            link: 'guides/comparisons/nx-vs-develocity',
+          },
+          {
+            label: 'Nx vs Buildkite',
+            link: 'guides/comparisons/nx-vs-buildkite',
+          },
+        ],
       },
     ],
   },

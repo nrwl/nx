@@ -2,7 +2,7 @@ import { interpolateName } from 'loader-utils';
 import * as path from 'path';
 import { pathToFileURL } from 'url';
 import type { Declaration } from 'postcss';
-import { LoaderContext } from 'webpack';
+import type { LoaderContext } from 'webpack';
 
 function wrapUrl(url: string): string {
   let wrappedUrl;

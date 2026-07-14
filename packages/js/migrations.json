@@ -39,8 +39,8 @@
       "documentation": "./dist/src/migrations/update-23-1-0/add-ignore-deprecations-for-ts6.md"
     },
     "23-1-0-set-tsconfig-root-dir-for-ts6": {
-      "version": "23.1.0-beta.8",
-      "description": "Sets an explicit `rootDir` on project `tsconfig*.json` files that lack one, pinned to the source directory TypeScript 5 inferred implicitly, so programs whose input files span more than one directory (for example a spec tsconfig importing another project's source through a `paths` alias) keep compiling under TypeScript 6, which otherwise hard-fails with TS5011 or TS6059. The value is computed by the compiler, so emit layout is unchanged. Each config is written on its own; the migration never writes to a shared `extends` base, so a config never inherits a value computed for a sibling. Composite projects are not given an inferred `rootDir`, since it already defaulted to the tsconfig directory before TypeScript 6; a composite that extends a base receiving a pinned `rootDir` is itself pinned to its own directory to preserve that default.",
+      "version": "23.1.0-rc.2",
+      "description": "Sets an explicit `rootDir` on project `tsconfig*.json` files that lack one, pinned to the source directory TypeScript 5 inferred implicitly, so programs keep compiling and emitting the same layout under TypeScript 6, which otherwise hard-fails with TS5011 or TS6059 (for example a spec tsconfig importing another project's source through a `paths` alias). The pin is written even when the inferred directory already equals the tsconfig directory, because tools like ts-jest with `isolatedModules` compile a program per file and re-infer a deeper directory from that subset. The value is computed by the compiler, so emit layout is unchanged. Each config is written on its own; the migration never writes to a shared `extends` base, so a config never inherits a value computed for a sibling. Composite projects are pinned to their own directory: `rootDir` already defaults there under `tsc` so it is a no-op for a real composite build, but ts-jest strips `composite` for its per-file transpile and the explicit value is needed to avoid TS5011 there.",
       "requires": {
         "typescript": ">=6.0.0"
       },
@@ -136,6 +136,18 @@
       "packages": {
         "typescript": {
           "version": "~6.0.3",
+          "alwaysAddToPackageJson": false
+        }
+      }
+    },
+    "23.1.0-swc-cli": {
+      "version": "23.1.0-rc.3",
+      "requires": {
+        "@swc/cli": ">=0.8.0 <0.8.1"
+      },
+      "packages": {
+        "@swc/cli": {
+          "version": "~0.8.1",
           "alwaysAddToPackageJson": false
         }
       }

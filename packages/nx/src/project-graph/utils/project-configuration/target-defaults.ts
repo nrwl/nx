@@ -484,9 +484,9 @@ function mergeMatchingEntries(
   for (const entry of entries) {
     if (!entryFilterMatches(entry.filter, ctx)) continue;
     const config = stripFilter(entry);
-    // A lone matching entry is returned without merging so deferred `'...'`
-    // spread tokens survive for the downstream merge; only a second match
-    // triggers a merge, later entry winning.
+    // Later matches merge on top, earlier entry as base. Unresolvable `'...'`
+    // spreads are deferred by default so they survive for the downstream
+    // merge against the plugin-provided target.
     acc = acc === null ? config : mergeTargetConfigurations(config, acc);
   }
   return acc;
@@ -504,6 +504,11 @@ function entryFilterMatches(
   if (!filter) return true;
 
   if (filter.projects) {
+    // No project context: a `projects` filter can't match, and passing the
+    // absent node to `findMatchingProjects` would dereference undefined.
+    if (!ctx.projectName || !ctx.projectNode) {
+      return false;
+    }
     const matched = findMatchingProjects([...filter.projects], {
       [ctx.projectName]: ctx.projectNode,
     });

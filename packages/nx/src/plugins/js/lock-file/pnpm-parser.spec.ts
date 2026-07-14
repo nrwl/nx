@@ -1115,6 +1115,61 @@ describe('pnpm LockFile utility', () => {
     });
   });
 
+  describe('workspace-only lockfile (no packages block)', () => {
+    // pnpm omits the `packages:` block entirely when a project depends only on
+    // other workspace packages. Stringify must still write the workspace
+    // importer blocks instead of throwing on the missing block.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/b':
+        specifier: workspace:*
+        version: link:packages/b
+
+  packages/b: {}
+`;
+
+    it('should stringify without throwing and write the workspace importer', () => {
+      const graph: ProjectGraph = {
+        nodes: {
+          b: {
+            name: 'b',
+            type: 'lib',
+            data: {
+              root: 'packages/b',
+              metadata: { js: { packageName: '@myorg/b' } },
+            },
+          } as any,
+        },
+        dependencies: {},
+        externalNodes: {},
+      };
+      const packageJson = {
+        name: '@myorg/a',
+        version: '0.0.0',
+        dependencies: { '@myorg/b': 'workspace:*' },
+      } as any;
+
+      let result = '';
+      expect(() => {
+        result = stringifyPnpmLockfile(
+          graph,
+          lockFile,
+          packageJson,
+          '/virtual'
+        );
+      }).not.toThrow();
+      expect(result).toContain('workspace_modules/@myorg/b');
+    });
+  });
+
   describe('mixed keys', () => {
     let lockFile, lockFileHash;
 

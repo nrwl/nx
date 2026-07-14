@@ -106,7 +106,7 @@ function setThroughAliases(
   parent.set(targetPath[targetPath.length - 1], value);
 }
 
-export function readCatalogConfigFromFs(
+function readCatalogConfigFromFs(
   filename: string,
   fullPath: string
 ): CatalogDefinitions | null {
@@ -121,7 +121,7 @@ export function readCatalogConfigFromFs(
   }
 }
 
-export function readCatalogConfigFromTree(
+function readCatalogConfigFromTree(
   filename: string,
   tree: Tree
 ): CatalogDefinitions | null {
@@ -135,6 +135,33 @@ export function readCatalogConfigFromTree(
     });
     return null;
   }
+}
+
+// Managers are created per operation (getCatalogManager news one up), so the
+// fs (string-root) branch is cached to read the file once per pass instead of
+// once per catalog reference. The Tree branch stays live since the tree is
+// mutable within a generator.
+export function readCatalogDefinitions(
+  filename: string,
+  treeOrRoot: Tree | string,
+  cache: Map<string, CatalogDefinitions | null>
+): CatalogDefinitions | null {
+  if (typeof treeOrRoot === 'string') {
+    if (cache.has(treeOrRoot)) {
+      return cache.get(treeOrRoot);
+    }
+    const configPath = join(treeOrRoot, filename);
+    const defs = existsSync(configPath)
+      ? readCatalogConfigFromFs(filename, configPath)
+      : null;
+    cache.set(treeOrRoot, defs);
+    return defs;
+  }
+
+  if (!treeOrRoot.exists(filename)) {
+    return null;
+  }
+  return readCatalogConfigFromTree(filename, treeOrRoot);
 }
 
 export function updateCatalogVersionsInFile(

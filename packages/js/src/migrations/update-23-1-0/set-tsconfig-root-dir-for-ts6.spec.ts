@@ -153,7 +153,30 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/col/tsconfig.spec.json')).toBe('..');
   });
 
-  it('leaves a composite project untouched (its rootDir already defaults to its own directory)', async () => {
+  it('pins rootDir to "." when the inferred dir is the config directory (per-file compiles re-infer deeper)', async () => {
+    // Regression: ts-jest's `isolatedModules` compiles each test file as its
+    // own single-file program, so the common source directory collapses to
+    // that file's folder and TS6 fails with TS5011 unless rootDir is explicit.
+    // The declared include spans the config dir root (jest.config.ts), which
+    // used to classify this config as already-safe and skip the pin.
+    write('libs/own/project.json', { name: 'own', root: 'libs/own' });
+    write('libs/own/jest.config.ts', `export default {};\n`);
+    write('libs/own/src/deep/index.test.ts', `export const t = 1;\n`);
+    write('libs/own/tsconfig.spec.json', {
+      compilerOptions: {
+        outDir: 'out-tsc/jest',
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+      include: ['jest.config.ts', 'src/**/*.ts'],
+    });
+
+    await run();
+
+    expect(rootDirOf('libs/own/tsconfig.spec.json')).toBe('.');
+  });
+
+  it('pins a composite project to its own directory (not the file-derived dir)', async () => {
     write('libs/comp/project.json', { name: 'comp', root: 'libs/comp' });
     write('libs/comp/src/index.ts', `export const c = 5;\n`);
     write('libs/comp/tsconfig.lib.json', {
@@ -168,12 +191,42 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
 
     await run();
 
-    // Without the composite guard, the file-derived branch would pin "src" here,
-    // stripping the src/ prefix from the emit layout composite keeps by default.
-    expect(rootDirOf('libs/comp/tsconfig.lib.json')).toBeUndefined();
+    // Pinned to "." (the config dir), which matches composite's own default so a
+    // real composite build is unchanged — NOT the file-derived "src", which would
+    // strip the src/ prefix from the emit layout. The explicit value is what
+    // ts-jest (which strips composite for its per-file transpile) needs.
+    expect(rootDirOf('libs/comp/tsconfig.lib.json')).toBe('.');
   });
 
-  it('pins each non-composite writer and leaves the composite sibling and base untouched', async () => {
+  it('pins a composite spec config compiled by ts-jest (composite inherited from base)', async () => {
+    // Regression for the nx-console shape: `composite` comes from the base
+    // config, the spec config has an emit gate and includes jest.config.ts at
+    // its own root plus specs under src/lib. tsc treats it as composite (immune
+    // to TS5011 via the `!options.composite` guard), but ts-jest strips composite
+    // for its per-file transpile, so a single spec re-infers ./src/lib and hits
+    // TS5011 unless rootDir is explicit. Must be pinned to "." (config dir).
+    write('tsconfig.composite-base.json', {
+      compilerOptions: {
+        composite: true,
+        module: 'commonjs',
+        moduleResolution: 'node',
+      },
+    });
+    write('libs/svc/project.json', { name: 'svc', root: 'libs/svc' });
+    write('libs/svc/jest.config.ts', `export default {};\n`);
+    write('libs/svc/src/lib/thing.spec.ts', `export const t = 1;\n`);
+    write('libs/svc/tsconfig.spec.json', {
+      extends: '../../tsconfig.composite-base.json',
+      compilerOptions: { outDir: 'out-tsc/jest' },
+      include: ['jest.config.ts', 'src/**/*.ts'],
+    });
+
+    await run();
+
+    expect(rootDirOf('libs/svc/tsconfig.spec.json')).toBe('.');
+  });
+
+  it('pins the composite sibling to its own dir and each non-composite writer to the file-derived dir; leaves the solution base', async () => {
     write('libs/mix/project.json', { name: 'mix', root: 'libs/mix' });
     write('libs/mix/src/index.ts', `export const m = 6;\n`);
     write('libs/mix/src/index.spec.ts', `export const s = 7;\n`);
@@ -186,7 +239,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
         { path: './tsconfig.e2e.json' },
       ],
     });
-    // composite -> own-dir, must keep its own-directory default
+    // composite -> pinned to its own directory (".")
     write('libs/mix/tsconfig.lib.json', {
       extends: './tsconfig.json',
       compilerOptions: {
@@ -197,7 +250,7 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
       },
       include: ['src/**/*.ts'],
     });
-    // two non-composite writers
+    // two non-composite writers -> file-derived "src"
     write('libs/mix/tsconfig.spec.json', {
       extends: './tsconfig.json',
       compilerOptions: {
@@ -219,20 +272,21 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
 
     await run();
 
-    // composite keeps its own-directory default...
-    expect(rootDirOf('libs/mix/tsconfig.lib.json')).toBeUndefined();
-    // ...the solution-style base is never written, and each non-composite writer
-    // pins its own rootDir.
+    // composite -> its own directory (config dir), preserving its emit layout...
+    expect(rootDirOf('libs/mix/tsconfig.lib.json')).toBe('.');
+    // ...the solution-style base is never written (no input files)...
     expect(rootDirOf('libs/mix/tsconfig.json')).toBeUndefined();
+    // ...and each non-composite writer pins its file-derived directory.
     expect(rootDirOf('libs/mix/tsconfig.spec.json')).toBe('src');
     expect(rootDirOf('libs/mix/tsconfig.e2e.json')).toBe('src');
   });
 
-  it('shields an own-dir child from a rootDir pinned on its extends base', async () => {
+  it('pins an own-dir child to its own directory instead of inheriting the base pin', async () => {
     // libs/base/tsconfig.json both needs a rootDir (its src imports another
     // project, so its files span up to libs/) and is an extends base. Its child
-    // selects only a local file, so its own rootDir is its own directory; without
-    // a shield it would inherit the base's "..", shifting its emit layout.
+    // selects only a local file, so its own rootDir is its own directory;
+    // pinned to "." it cannot inherit the base's "..", which would shift its
+    // emit layout.
     write('libs/base/project.json', { name: 'base', root: 'libs/base' });
     write(
       'libs/base/src/index.ts',
@@ -256,11 +310,11 @@ describe('set-tsconfig-root-dir-for-ts6 migration', () => {
     expect(rootDirOf('libs/base/tsconfig.child.json')).toBe('.');
   });
 
-  it('shields a composite child from a rootDir pinned on its extends base', async () => {
-    // Same shape as above, but the child is composite. Its rootDir already
-    // defaults to its own directory, so it is never given a file-derived pin;
-    // yet once the base is pinned to "..", the composite would inherit that and
-    // shift its emit layout, so it is pinned to "." to keep the default.
+  it('pins a composite child to its own directory instead of inheriting the base pin', async () => {
+    // Same shape as above, but the child is composite. It is pinned to its own
+    // directory (".") — its default under tsc, and the value ts-jest needs — so
+    // it never inherits the ".." pinned on the base, which would shift its emit
+    // layout.
     write('libs/comp-base/project.json', {
       name: 'comp-base',
       root: 'libs/comp-base',

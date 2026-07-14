@@ -80,6 +80,11 @@ to = "/docs/extending-nx/create-preset"
 from = "/docs/guides/adopting-nx/adding-to-monorepos"
 to = "/docs/guides/adopting-nx/adding-to-monorepo"
 
+# Turborepo comparison moved to Comparisons section (#36275)
+[[redirects]]
+from = "/docs/guides/adopting-nx/nx-vs-turborepo"
+to = "/docs/guides/comparisons/nx-vs-turborepo"
+
 # Angular multiple workspace migration page removed (DOC-419)
 [[redirects]]
 from = "/docs/technologies/angular/migration/angular-multiple"
@@ -151,6 +156,11 @@ to = "/docs/knowledge-base/installation-and-updates"
 [[redirects]]
 from = "/docs/technologies/build-tools/vite/configure-vite"
 to = "/docs/technologies/build-tools/vite/guides/configure-vite"
+
+# DOC-544: Pre-2022 docs URL structure still receives heavy traffic (65k+ requests/30d) and 404s.
+[[redirects]]
+from = "/angular/plugins/*"
+to = "/docs/technologies/angular/introduction"
 
 # DOC-522: Polygraph is a standalone product, no longer part of Nx Cloud.
 # Reroute the Polygraph-specific docs pages to the standalone landing page.
