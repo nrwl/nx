@@ -1040,6 +1040,11 @@ impl InlineApp {
             .map(|s| s.id().to_string())
             .or_else(|| self.get_current_running_item());
 
+        // A task the user is watching can start out (or become) one that another
+        // Nx process is running - it will never get a pty here, so say so rather
+        // than sitting on "Waiting for tasks to start...".
+        let mut fallback_message = " Waiting for tasks to start... ";
+
         if let Some(ref current_task) = current_task {
             let state = self.core.state().lock();
             if let Some(pty) = state.get_pty_instance(current_task) {
@@ -1048,15 +1053,22 @@ impl InlineApp {
                 self.render_inline_task_output(f, area, &pty);
                 return;
             }
+            if state.is_running_in_another_process(current_task) {
+                fallback_message = " Running in another Nx process... ";
+            } else if matches!(
+                state.get_task_status(current_task),
+                Some(TaskStatus::InProgress)
+            ) {
+                fallback_message = " Waiting for task results... ";
+            }
         }
 
-        // Fallback: show a message indicating no task is running
         use crate::native::tui::theme::THEME;
         use ratatui::layout::Alignment;
         use ratatui::style::Style;
         use ratatui::widgets::{Block, Borders};
 
-        let message = NxParagraph::new(" Waiting for tasks to start... ")
+        let message = NxParagraph::new(fallback_message)
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
             .block(Block::default().borders(Borders::NONE));
@@ -1822,5 +1834,43 @@ mod integration_tests {
             state2.get_task_status("shared:build"),
             Some(TaskStatus::Success)
         );
+    }
+
+    fn render_main_content(app: &mut InlineApp) -> String {
+        use ratatui::{Terminal, backend::TestBackend};
+
+        let mut terminal = Terminal::new(TestBackend::new(60, 3)).unwrap();
+        terminal
+            .draw(|f| {
+                let area = f.area();
+                app.render_inline_main_content(f, area);
+            })
+            .unwrap();
+
+        terminal
+            .backend()
+            .buffer()
+            .content
+            .iter()
+            .map(|cell| cell.symbol())
+            .collect()
+    }
+
+    /// A task being watched inline can transition straight from pending to
+    /// running in another Nx process. It never gets a pty here, so the view has
+    /// to say that instead of waiting for output that will never arrive.
+    #[test]
+    fn test_inline_reports_task_running_in_another_process() {
+        let mut app = create_test_inline_app();
+        app.selected_item = Some(SelectionEntry::Task("app1:build".to_string()));
+
+        app.update_task_status("app1:build", TaskStatus::NotStarted);
+        assert!(render_main_content(&mut app).contains("Waiting for tasks to start"));
+
+        app.update_task_status("app1:build", TaskStatus::Shared);
+        assert!(render_main_content(&mut app).contains("Running in another Nx process"));
+
+        app.update_task_status("app1:build", TaskStatus::Stopped);
+        assert!(render_main_content(&mut app).contains("Running in another Nx process"));
     }
 }
