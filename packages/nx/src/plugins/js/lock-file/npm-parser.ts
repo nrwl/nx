@@ -257,6 +257,22 @@ function getDependencies(
   ctx: CreateDependenciesContext
 ): RawProjectGraphDependency[] {
   const dependencies: RawProjectGraphDependency[] = [];
+  // Memoizes semver `satisfies(version, range)` for this dependency walk. The
+  // same (version, range) pairs recur across many edges, so the range parse
+  // happens once per distinct pair instead of once per edge. Scoped to the walk
+  // (not module-global) so V8 collects it when dependency creation finishes
+  // rather than retaining it for the daemon's lifetime.
+  const versionSatisfiesCache = new Map<string, boolean>();
+  const cachedSatisfies = (version: string, range: string): boolean => {
+    const key = `${version}\n${range}`;
+    const cached = versionSatisfiesCache.get(key);
+    if (cached !== undefined) {
+      return cached;
+    }
+    const result = satisfies(version, range);
+    versionSatisfiesCache.set(key, result);
+    return result;
+  };
   if (data.lockfileVersion > 1) {
     Object.entries(data.packages).forEach(([path, snapshot]) => {
       // we are skipping workspaces packages
@@ -271,7 +287,13 @@ function getDependencies(
       ].forEach((section) => {
         if (section) {
           Object.entries(section).forEach(([name, versionRange]) => {
-            const target = findTarget(path, keyMap, name, versionRange);
+            const target = findTarget(
+              path,
+              keyMap,
+              name,
+              versionRange,
+              cachedSatisfies
+            );
             if (target) {
               const dep: RawProjectGraphDependency = {
                 source: sourceName,
@@ -292,7 +314,8 @@ function getDependencies(
         snapshot,
         dependencies,
         keyMap,
-        ctx
+        ctx,
+        cachedSatisfies
       );
     });
   }
@@ -304,6 +327,7 @@ function findTarget(
   keyMap: Map<string, ProjectGraphExternalNode>,
   targetName: string,
   versionRange: string,
+  cachedSatisfies: (version: string, range: string) => boolean,
   // When a package is found at a path but its version doesn't satisfy the
   // range (e.g. due to npm overrides), we keep it as a fallback. npm already
   // resolved this dependency to that location, so it is the correct target
@@ -326,12 +350,15 @@ function findTarget(
         child.data.version.indexOf('@', 5) + 1
       );
       const depVersion = versionRange.slice(versionRange.indexOf('@', 5) + 1);
-      if (nodeVersion === depVersion || satisfies(nodeVersion, depVersion)) {
+      if (
+        nodeVersion === depVersion ||
+        cachedSatisfies(nodeVersion, depVersion)
+      ) {
         return child;
       }
     } else if (
       child.data.version === versionRange ||
-      satisfies(child.data.version, versionRange)
+      cachedSatisfies(child.data.version, versionRange)
     ) {
       return child;
     }
@@ -344,11 +371,16 @@ function findTarget(
   if (!sourcePath) {
     return fallback;
   }
+  // Walk one level up the nesting chain by dropping the trailing
+  // `node_modules/<pkg>` segment. Slash-index arithmetic avoids the
+  // split/slice/join array allocation on every hop.
+  const lastNodeModules = sourcePath.lastIndexOf('node_modules/');
   return findTarget(
-    sourcePath.split('node_modules/').slice(0, -1).join('node_modules/'),
+    lastNodeModules === -1 ? '' : sourcePath.substring(0, lastNodeModules),
     keyMap,
     targetName,
     versionRange,
+    cachedSatisfies,
     fallback
   );
 }
@@ -358,12 +390,19 @@ function addV1NodeDependencies(
   snapshot: NpmDependencyV1,
   dependencies: RawProjectGraphDependency[],
   keyMap: Map<string, ProjectGraphExternalNode>,
-  ctx: CreateDependenciesContext
+  ctx: CreateDependenciesContext,
+  cachedSatisfies: (version: string, range: string) => boolean
 ) {
   if (keyMap.has(path) && snapshot.requires) {
     const source = keyMap.get(path).name;
     Object.entries(snapshot.requires).forEach(([name, versionRange]) => {
-      const target = findTarget(path, keyMap, name, versionRange);
+      const target = findTarget(
+        path,
+        keyMap,
+        name,
+        versionRange,
+        cachedSatisfies
+      );
       if (target) {
         const dep: RawProjectGraphDependency = {
           source: source,
@@ -383,7 +422,8 @@ function addV1NodeDependencies(
         depSnapshot,
         dependencies,
         keyMap,
-        ctx
+        ctx,
+        cachedSatisfies
       );
     });
   }
@@ -391,7 +431,13 @@ function addV1NodeDependencies(
   if (peerDependencies) {
     const node = keyMap.get(path);
     Object.entries(peerDependencies).forEach(([depName, depSpec]) => {
-      const target = findTarget(path, keyMap, depName, depSpec);
+      const target = findTarget(
+        path,
+        keyMap,
+        depName,
+        depSpec,
+        cachedSatisfies
+      );
       if (target) {
         const dep: RawProjectGraphDependency = {
           source: node.name,
