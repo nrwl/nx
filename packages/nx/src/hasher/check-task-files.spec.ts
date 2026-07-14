@@ -48,6 +48,7 @@ import { getInputs as mockedGetInputs } from './task-hasher';
 import {
   checkFilesAreInputs,
   checkFilesAreOutputs,
+  getTaskRawInputs,
   _resetContextForTesting,
 } from './check-task-files';
 
@@ -854,6 +855,22 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
 
     expect(result.matched).toEqual([]);
     expect(result.unmatched).toEqual(['dist/libs/myproj/index.js']);
+  });
+
+  describe('injected context', () => {
+    it('reuses a caller-supplied project graph instead of building a second one', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs([]),
+      });
+
+      await getTaskRawInputs('myproj:build', {
+        projectGraph: buildGraph(),
+        nxJson: {},
+      });
+
+      expect(mockCreateProjectGraphAsync).not.toHaveBeenCalled();
+      expect(mockInit).toHaveBeenCalledTimes(1);
+    });
   });
 
   // ── Error propagation ────────────────────────────────────────────────────

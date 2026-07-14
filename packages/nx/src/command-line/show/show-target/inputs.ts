@@ -36,7 +36,10 @@ export async function showTargetInputsHandler(
 
   const taskId = createTaskId(projectName, targetName, configuration);
 
-  const hashInputs = await getTaskRawInputs(taskId);
+  const hashInputs = await getTaskRawInputs(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
   if (!hashInputs) {
     throw new Error(`Could not find hash plan for task "${taskId}".`);
   }

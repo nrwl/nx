@@ -23,10 +23,14 @@ import {
 export async function showTargetOutputsHandler(
   args: ShowTargetOutputsOptions
 ): Promise<void> {
-  const { projectName, targetName, configuration } = await resolveTarget(args);
+  const t = await resolveTarget(args);
+  const { projectName, targetName, configuration } = t;
 
   const taskId = createTaskId(projectName, targetName, configuration);
-  const outputs = await getTaskOutputs(taskId);
+  const outputs = await getTaskOutputs(taskId, {
+    projectGraph: t.graph,
+    nxJson: t.nxJson,
+  });
 
   if (args.check !== undefined) {
     const results = await checkOutputs(taskId, args.check, outputs);

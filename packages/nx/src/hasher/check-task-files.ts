@@ -28,20 +28,30 @@ interface LoadedContext {
   inspector: HashPlanInspector;
 }
 
+/**
+ * A project graph the caller has already built. `nx show target` resolves one to
+ * find the target in the first place, and `createProjectGraphAsync` is not
+ * memoized, so without this the CLI would build the graph a second time.
+ */
+export interface TaskFileCheckSeed {
+  projectGraph: ProjectGraph;
+  nxJson: NxJsonConfiguration;
+}
+
 let cachedContext: Promise<LoadedContext> | null = null;
 
-function getContext(): Promise<LoadedContext> {
+function getContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
   // Only a fulfilled context is cached — caching a rejected promise would
   // poison the resolver for the rest of the process after one transient failure.
-  return (cachedContext ??= loadContext().catch((e) => {
+  return (cachedContext ??= loadContext(seed).catch((e) => {
     cachedContext = null;
     throw e;
   }));
 }
 
-async function loadContext(): Promise<LoadedContext> {
-  const projectGraph = await createProjectGraphAsync();
-  const nxJson = readNxJson(defaultWorkspaceRoot) ?? {};
+async function loadContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
+  const projectGraph = seed?.projectGraph ?? (await createProjectGraphAsync());
+  const nxJson = seed?.nxJson ?? readNxJson(defaultWorkspaceRoot) ?? {};
   const inspector = new HashPlanInspector(
     projectGraph,
     defaultWorkspaceRoot,
@@ -473,9 +483,10 @@ export async function checkFilesAreOutputs(
  * + external). Used internally by the `nx show target --inputs` renderer.
  */
 export async function getTaskRawInputs(
-  taskId: string
+  taskId: string,
+  seed?: TaskFileCheckSeed
 ): Promise<HashInputs | null> {
-  const ctx = await getContext();
+  const ctx = await getContext(seed);
   return getRawInputs(taskId, ctx);
 }
 
@@ -492,8 +503,11 @@ export interface TaskOutputs {
  * Returns the outputs declared for a task, resolved against its effective
  * configuration. Used internally by the `nx show target --outputs` renderer.
  */
-export async function getTaskOutputs(taskId: string): Promise<TaskOutputs> {
-  const ctx = await getContext();
+export async function getTaskOutputs(
+  taskId: string,
+  seed?: TaskFileCheckSeed
+): Promise<TaskOutputs> {
+  const ctx = await getContext(seed);
   const resolved = getOutputs(taskId, ctx.projectGraph);
   return {
     resolved,
