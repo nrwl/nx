@@ -79,9 +79,9 @@ for workspace-specific settings (like the [Nx Cloud token](/docs/guides/nx-cloud
 {% aside type="caution" title="Package managers can set variables before Nx runs" %}
 The rule above also applies to variables you didn't set yourself. A package manager can put variables into the process before Nx reads any `.env` file, and Nx keeps those values.
 
-For example, npm's `node-options` setting (from a project, user, or global `.npmrc`) becomes a `NODE_OPTIONS` variable when you run `npm run nx ...` or `npx nx ...`. If you also set `NODE_OPTIONS` in `.env`, the `.npmrc` value wins, while running `nx` directly uses the `.env` value.
+For example, the npm `node-options` setting (from a project, user, or global `.npmrc`) becomes a `NODE_OPTIONS` variable when you run `npm run nx ...` or `npx nx ...`. If you also set `NODE_OPTIONS` in `.env`, the `.npmrc` value wins, while running `nx` directly uses the `.env` value.
 
-This is the package manager's behavior, not Nx overriding your files. If you rely on a variable from `.env`, make sure nothing else sets it, such as npm's `node-options`.
+The package manager sets the value, not Nx. If you rely on a variable from `.env`, make sure nothing else sets it first.
 {% /aside %}
 
 {% aside type="caution" title="Env files are not loaded in batch mode" %}
