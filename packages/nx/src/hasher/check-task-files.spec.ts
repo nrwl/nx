@@ -1,5 +1,7 @@
+import { join } from 'path';
 import type { ProjectGraph } from '../config/project-graph';
 import type { HashInputs } from '../native';
+import { workspaceRoot } from '../utils/workspace-root';
 
 // ── Mocks must be declared BEFORE imports that use them ─────────────────────
 //
@@ -187,6 +189,45 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
   // ── checkFilesAreInputs ──────────────────────────────────────────────────
 
   describe('checkFilesAreInputs', () => {
+    it('relativizes an absolute path against the workspace root', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': {
+          files: ['libs/myproj/src/index.ts'],
+          runtime: [],
+          environment: [],
+          depOutputs: [],
+          external: [],
+        },
+      });
+
+      const absolute = join(workspaceRoot, 'libs/myproj/src/index.ts');
+      const result = await checkFilesAreInputs('myproj:build', [absolute]);
+
+      expect(result.matched).toEqual([absolute]);
+      expect(result.unmatched).toEqual([]);
+      expect(result.categories.get(absolute)).toEqual('files');
+    });
+
+    it('does not match a path outside the workspace', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': {
+          files: ['libs/myproj/src/index.ts'],
+          runtime: [],
+          environment: [],
+          depOutputs: [],
+          external: [],
+        },
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        '/etc/passwd',
+        join(workspaceRoot, '..', 'elsewhere/libs/myproj/src/index.ts'),
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toHaveLength(2);
+    });
+
     it('reports the category each matched value satisfied', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': {
@@ -602,6 +643,27 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
         'dist/libs/myproj/deep/file.js',
       ]);
       expect(result.matched).toEqual(['dist/libs/myproj/deep/file.js']);
+    });
+
+    it('relativizes an absolute path against the workspace root', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      const absolute = join(workspaceRoot, 'dist/libs/myproj/index.js');
+      const result = await checkFilesAreOutputs('myproj:build', [absolute]);
+
+      expect(result.matched).toEqual([absolute]);
+      expect(result.unmatched).toEqual([]);
+    });
+
+    it('does not match a path outside the workspace', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        '/etc/passwd',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual(['/etc/passwd']);
     });
 
     it('returns matched when nested inside an output directory whose name contains glob-like characters', async () => {

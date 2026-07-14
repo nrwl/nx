@@ -1,3 +1,4 @@
+import { isAbsolute, relative } from 'path';
 import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import type {
   ProjectGraph,
@@ -286,6 +287,21 @@ function matchesDependentTaskOutputs(
   return false;
 }
 
+/**
+ * Coerces a caller-supplied path to the workspace-relative, forward-slashed
+ * form the hash plan and output patterns are expressed in. A path outside the
+ * workspace stays outside (`../…`) and simply matches nothing — it cannot be a
+ * declared input or output, so "unmatched" is the true answer rather than an
+ * error.
+ */
+function toWorkspaceRelativePath(candidatePath: string): string {
+  const relativized = isAbsolute(candidatePath)
+    ? relative(defaultWorkspaceRoot, candidatePath)
+    : candidatePath;
+  const normalized = normalizePath(relativized);
+  return normalized.startsWith('./') ? normalized.slice(2) : normalized;
+}
+
 function classifyInput(
   taskId: string,
   candidate: InputCandidate,
@@ -299,20 +315,26 @@ function classifyInput(
     if (raw.runtime.includes(candidate.value)) return 'runtime';
     if (raw.external.includes(candidate.value)) return 'external';
 
-    const path = normalizePath(candidate.path);
+    const path = toWorkspaceRelativePath(candidate.path);
     if (raw.files.includes(path)) return 'files';
     if (raw.depOutputs.includes(path)) return 'depOutputs';
   }
-  return matchesDependentTaskOutputs(taskId, candidate.path, ctx)
+  return matchesDependentTaskOutputs(
+    taskId,
+    toWorkspaceRelativePath(candidate.path),
+    ctx
+  )
     ? 'dependentTasksOutputFiles'
     : null;
 }
 
 // ── API (exported from devkit-internals) ─────────────────────────────────────
 //
-// Every function here takes workspace-relative, forward-slashed paths. Callers
-// holding cwd-relative or absolute paths must normalize before calling — the
-// resolver has no cwd of its own.
+// Paths may be given workspace-relative or absolute, in either separator style;
+// absolute paths are relativized against the workspace root. There is still no
+// cwd of its own, so a caller holding *cwd-relative* paths must resolve them
+// first (pass an {@link InputCandidate} to keep the original value in the
+// result).
 //
 // The module-level context and caches above are loaded once and never
 // invalidated, which is only sound for a one-shot process (the CLI, or a
@@ -345,9 +367,11 @@ export interface InputCandidate {
  *     that lies inside the declared outputs of an upstream task in the task
  *     graph (static — works even when upstream tasks have not yet run).
  *
- * `categories` records the rule each matched value satisfied. Plain strings are
- * taken to be workspace-relative already; a caller resolving paths against a cwd
- * passes an {@link InputCandidate} so that names are still matched verbatim.
+ * `categories` records the rule each matched value satisfied. Paths may be
+ * workspace-relative or absolute; absolute ones are relativized against the
+ * workspace root, and a path outside the workspace simply matches nothing. A
+ * caller resolving paths against a cwd passes an {@link InputCandidate} so that
+ * names are still matched verbatim.
  */
 export async function checkFilesAreInputs(
   taskId: string,
@@ -396,7 +420,10 @@ export async function checkFilesAreOutputs(
   // malformed task, even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
   const patterns = getOutputs(taskId, ctx.projectGraph);
-  const results = matchOutputPaths(patterns, files.map(normalizePath));
+  const results = matchOutputPaths(
+    patterns,
+    files.map(toWorkspaceRelativePath)
+  );
   const matched: string[] = [];
   const unmatched: string[] = [];
   files.forEach((file, i) => {
