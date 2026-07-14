@@ -74,7 +74,7 @@ function getPinnedWorkspaceRange(specifier: string): string | null {
 function applyVersionPrefixToLocalDependency(
   currentSpecifier: string,
   resolvedVersion: string,
-  versionPrefix: FinalConfigForProject['versionPrefix']
+  versionPrefix: NxReleaseVersionConfiguration['versionPrefix']
 ): string {
   let prefix = '';
   if (versionPrefix === '~' || versionPrefix === '^' || versionPrefix === '=') {
@@ -922,7 +922,7 @@ export class ReleaseGroupProcessor {
    */
   private async resolveOutOfSetLocalDependencyVersion(
     versionActions: VersionActions,
-    finalConfigForProject: FinalConfigForProject,
+    finalConfigForProject: NxReleaseVersionConfiguration,
     dependencyProjectName: string,
     dependenciesToUpdate: Record<string, string>
   ): Promise<void> {
