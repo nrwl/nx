@@ -120,17 +120,20 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
           // for different config files.
           const hash = hashes[idx] + configFile;
           if (!targetsCache.has(hash)) {
-            targetsCache.set(
-              hash,
-              await buildVitestTargets(
-                configFile,
-                projectRoot,
-                normalizedOptions,
-                context,
-                pmc,
-                tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-              )
+            const result = await buildVitestTargets(
+              configFile,
+              projectRoot,
+              normalizedOptions,
+              context,
+              pmc,
+              tsconfigChainsByProjectRoot.get(projectRoot) ?? []
             );
+            // `buildVitestTargets` returns null for a root orchestrator config
+            // that must not become a project; register no node for it.
+            if (!result) {
+              return { projects: {} };
+            }
+            targetsCache.set(hash, result);
           }
           const { projectType, metadata, targets } = targetsCache.get(hash);
 
@@ -166,7 +169,7 @@ async function buildVitestTargets(
   context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
-): Promise<VitestTargets> {
+): Promise<VitestTargets | null> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -216,8 +219,10 @@ async function buildVitestTargets(
     'build'
   );
 
-  // If this is a root workspace config file with projects property, don't infer targets.
-  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  // A root config that aggregates project configs via `test.projects` is just an
+  // orchestrator; the actual tests live in the individual project configs. Skip it
+  // entirely so it does not register a project rooted at the workspace root (which
+  // would, for example, make `nx format` treat the whole workspace as one project).
   const isWorkspaceRoot = projectRoot === '.';
   // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
   // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
@@ -225,7 +230,7 @@ async function buildVitestTargets(
     (viteBuildConfig as any)?.test?.projects
   );
   if (isWorkspaceRoot && hasProjectsProperty) {
-    return { targets: {}, metadata: {}, projectType: 'library' };
+    return null;
   }
 
   let metadata: ProjectConfiguration['metadata'] = {};

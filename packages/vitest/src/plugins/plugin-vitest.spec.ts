@@ -258,7 +258,7 @@ describe('@nx/vitest', () => {
       jest.resetModules();
     });
 
-    it('should NOT create targets for root config with projects array', async () => {
+    it('should NOT create a project for root config with projects array', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({
           path: 'vitest.config.ts',
@@ -278,15 +278,13 @@ describe('@nx/vitest', () => {
         context
       );
 
-      // Root config with projects should return empty targets
-      expect(nodes[0][1].projects['.']).toMatchObject({
-        targets: {},
-        metadata: {},
-        projectType: 'library',
-      });
+      // The root orchestrator config is not a project; it must not register a
+      // node rooted at the workspace root (which would make `nx format` and
+      // affected detection treat the whole workspace as one project).
+      expect(nodes[0][1].projects ?? {}).toEqual({});
     });
 
-    it('should NOT create targets for root config with empty projects array', async () => {
+    it('should NOT create a project for root config with empty projects array', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({
           path: 'vitest.config.ts',
@@ -306,12 +304,7 @@ describe('@nx/vitest', () => {
         context
       );
 
-      // Root config with empty projects array should also return empty targets
-      expect(nodes[0][1].projects['.']).toMatchObject({
-        targets: {},
-        metadata: {},
-        projectType: 'library',
-      });
+      expect(nodes[0][1].projects ?? {}).toEqual({});
     });
   });
 });
