@@ -3027,6 +3027,15 @@ importers:
       '@babel/plugin-transform-class-properties':
         specifier: ^7.22.5
         version: 7.27.1(@babel/core@7.29.0)
+      '@babel/plugin-transform-class-static-block':
+        specifier: ^7.22.5
+        version: 7.28.3(@babel/core@7.29.0)
+      '@babel/plugin-transform-private-methods':
+        specifier: ^7.22.5
+        version: 7.27.1(@babel/core@7.29.0)
+      '@babel/plugin-transform-private-property-in-object':
+        specifier: ^7.22.5
+        version: 7.27.1(@babel/core@7.29.0)
       '@babel/plugin-transform-runtime':
         specifier: ^7.23.2
         version: 7.28.3(@babel/core@7.29.0)
