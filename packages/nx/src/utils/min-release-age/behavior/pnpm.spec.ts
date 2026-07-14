@@ -534,9 +534,10 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     // readPnpmPolicy reads pnpm's resolved config via `pnpm config list --json`,
-    // so mock that single spawn rather than any config surface. Keys use pnpm's
-    // kebab-case form; an exclude array mirrors a yaml surface, a comma-joined
-    // string mirrors .npmrc / env. pnpm itself decides which surface won.
+    // so mock that single spawn rather than any config surface. pnpm 11 reports
+    // keys camelCase, pnpm 10 kebab-case; each test mocks the form its version
+    // emits. An exclude array mirrors a yaml surface, a comma-joined string
+    // mirrors .npmrc / env. pnpm itself decides which surface won.
     function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
       jest
         .spyOn(require('child_process'), 'execSync')
@@ -633,7 +634,7 @@ describe('pnpm min-release-age behavior', () => {
     );
 
     it('v11 >=11.0.4 explicit window auto-enables strict', async () => {
-      mockPnpmConfig({ 'minimum-release-age': 2880 });
+      mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -645,8 +646,8 @@ describe('pnpm min-release-age behavior', () => {
 
     it('v11 >=11.0.4 explicit strict:false stays loose', async () => {
       mockPnpmConfig({
-        'minimum-release-age': 2880,
-        'minimum-release-age-strict': false,
+        minimumReleaseAge: 2880,
+        minimumReleaseAgeStrict: false,
       });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
@@ -656,7 +657,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.0.0 explicit window does NOT auto-enable strict', async () => {
-      mockPnpmConfig({ 'minimum-release-age': 2880 });
+      mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -665,7 +666,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.1.3+ writesExcludes true', async () => {
-      mockPnpmConfig({ 'minimum-release-age': 1440 });
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.3');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -674,7 +675,7 @@ describe('pnpm min-release-age behavior', () => {
     });
 
     it('v11.1.2 writesExcludes false', async () => {
-      mockPnpmConfig({ 'minimum-release-age': 1440 });
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -685,8 +686,8 @@ describe('pnpm min-release-age behavior', () => {
     // pnpm reports the resolved exclude as a JSON array (set in a yaml surface).
     it('honors an exclude array from pnpm config', async () => {
       mockPnpmConfig({
-        'minimum-release-age': 1440,
-        'minimum-release-age-exclude': ['pkg-a', 'pkg-b'],
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeExclude: ['pkg-a', 'pkg-b'],
       });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
@@ -717,15 +718,15 @@ describe('pnpm min-release-age behavior', () => {
     // union) is a version-dependent landmine; nx defers rather than crash.
     it('invalid exclude entry -> ambiguous (defer to install)', async () => {
       mockPnpmConfig({
-        'minimum-release-age': 1440,
-        'minimum-release-age-exclude': ['pkg-a@^1.0.0'],
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeExclude: ['pkg-a@^1.0.0'],
       });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('ambiguous');
     });
 
     it('v11 ignoreMissingTime defaults to skip; explicit false errors', async () => {
-      mockPnpmConfig({ 'minimum-release-age': 1440 });
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
       let result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -735,8 +736,8 @@ describe('pnpm min-release-age behavior', () => {
       }
 
       mockPnpmConfig({
-        'minimum-release-age': 1440,
-        'minimum-release-age-ignore-missing-time': false,
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeIgnoreMissingTime: false,
       });
       result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
@@ -744,6 +745,40 @@ describe('pnpm min-release-age behavior', () => {
         expect(pnpmBehavior(result.policy.behavior).missingTimeMap).toBe(
           'error'
         );
+      }
+    });
+
+    // pnpm 11 reports config keys camelCase via `config list --json`; pnpm 10
+    // reported them kebab-case. Reading only the kebab form dropped every
+    // explicitly-set value on pnpm 11, so the window fell back to the built-in
+    // 1440 default (gh-36330).
+    it('honors a camelCase window from pnpm 11 (auto-enables strict)', async () => {
+      mockPnpmConfig({ minimumReleaseAge: 60 });
+      const result = await readPnpmPolicy('/root', '11.13.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(60 * MINUTE);
+        const behavior = pnpmBehavior(result.policy.behavior);
+        expect(behavior.strict).toBe(true);
+        expect(behavior.looseFallback).toBe(false);
+      }
+    });
+
+    it('honors camelCase exclude, strict, and ignoreMissingTime from pnpm 11', async () => {
+      mockPnpmConfig({
+        minimumReleaseAge: 2880,
+        minimumReleaseAgeExclude: ['pkg-a'],
+        minimumReleaseAgeStrict: false,
+        minimumReleaseAgeIgnoreMissingTime: false,
+      });
+      const result = await readPnpmPolicy('/root', '11.13.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(2880 * MINUTE);
+        expect(result.policy.isExcluded('pkg-a', '2.0.0')).toBe(true);
+        const behavior = pnpmBehavior(result.policy.behavior);
+        expect(behavior.strict).toBe(false);
+        expect(behavior.missingTimeMap).toBe('error');
       }
     });
   });
