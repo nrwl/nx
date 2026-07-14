@@ -215,6 +215,38 @@ describe('show target outputs', () => {
     expect(parsed.unresolvedOutputs).toContain('{options.outputFile}');
   });
 
+  it('should resolve {options.*} from the defaultConfiguration when none is given', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                outputs: ['{options.outputPath}'],
+                configurations: {
+                  production: { outputPath: 'dist/apps/my-app' },
+                },
+                defaultConfiguration: 'production',
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    await showTargetOutputsHandler({ target: 'my-app:build', json: true });
+
+    const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+    expect(parsed.outputPaths).toContain('dist/apps/my-app');
+    // The output resolves under the default configuration, so it must not also
+    // be reported as unresolved.
+    expect(parsed.unresolvedOutputs).toBeUndefined();
+  });
+
   it('should resolve {options.*} from configuration when provided', async () => {
     setGraph(
       new GraphBuilder()

@@ -5,7 +5,7 @@ import type {
 } from '../config/project-graph';
 import type { Task, TaskGraph } from '../config/task-graph';
 import type { HashInputs } from '../native';
-import { matchGlobPaths, matchOutputPaths } from '../native';
+import { expandOutputs, matchGlobPaths, matchOutputPaths } from '../native';
 import { createProjectGraphAsync } from '../project-graph/project-graph';
 import { createTaskGraph } from '../tasks-runner/create-task-graph';
 import {
@@ -30,7 +30,12 @@ interface LoadedContext {
 let cachedContext: Promise<LoadedContext> | null = null;
 
 function getContext(): Promise<LoadedContext> {
-  return (cachedContext ??= loadContext());
+  // Only a fulfilled context is cached — caching a rejected promise would
+  // poison the resolver for the rest of the process after one transient failure.
+  return (cachedContext ??= loadContext().catch((e) => {
+    cachedContext = null;
+    throw e;
+  }));
 }
 
 async function loadContext(): Promise<LoadedContext> {
@@ -52,13 +57,13 @@ interface TaskIdentity {
   target: string;
   configuration: string | undefined;
   canonicalTaskId: string;
-  projectNode: ProjectGraphProjectNode | undefined;
+  projectNode: ProjectGraphProjectNode;
 }
 
 const identityCache = new Map<string, TaskIdentity>();
 const hashInputsCache = new Map<string, HashInputs | null>();
 const outputsCache = new Map<string, string[]>();
-const taskGraphCache = new Map<string, TaskGraph | null>();
+const taskGraphCache = new Map<string, TaskGraph>();
 const depsOutputsCache = new Map<string, ExpandedDepsOutput[]>();
 
 // ── Internal resolution helpers ──────────────────────────────────────────────
@@ -78,14 +83,24 @@ function resolveIdentity(
   }
 
   const projectNode = projectGraph.nodes[project];
-  const defaultConfiguration =
-    projectNode?.data?.targets?.[target]?.defaultConfiguration;
-  const effectiveConfiguration =
-    configuration && projectNode
-      ? projectHasTargetAndConfiguration(projectNode, target, configuration)
-        ? configuration
-        : defaultConfiguration
-      : defaultConfiguration;
+  if (!projectNode) {
+    throw new Error(
+      `Invalid taskId "${taskId}" — project "${project}" does not exist in the project graph.`
+    );
+  }
+  const targetConfig = projectNode.data?.targets?.[target];
+  if (!targetConfig) {
+    throw new Error(
+      `Invalid taskId "${taskId}" — project "${project}" has no target "${target}".`
+    );
+  }
+
+  const { defaultConfiguration } = targetConfig;
+  const effectiveConfiguration = configuration
+    ? projectHasTargetAndConfiguration(projectNode, target, configuration)
+      ? configuration
+      : defaultConfiguration
+    : defaultConfiguration;
 
   const identity: TaskIdentity = {
     project,
@@ -111,17 +126,13 @@ function getRawInputs(
     projectGraph
   );
 
-  let planResult: Record<string, HashInputs> = {};
-  try {
-    planResult = inspector.inspectTaskInputs({
-      project,
-      target,
-      configuration,
-    });
-  } catch {
-    hashInputsCache.set(taskId, null);
-    return null;
-  }
+  // `null` means "this task is absent from the hash plan" — any other failure
+  // is a real error and propagates to the caller.
+  const planResult = inspector.inspectTaskInputs({
+    project,
+    target,
+    configuration,
+  });
 
   const result = planResult[canonicalTaskId] ?? null;
   hashInputsCache.set(taskId, result);
@@ -136,50 +147,65 @@ function getOutputs(taskId: string, projectGraph: ProjectGraph): string[] {
     taskId,
     projectGraph
   );
-  const targetData = projectNode?.data?.targets?.[target];
-  const outputs = targetData
-    ? getOutputsForTargetAndConfiguration(
-        { project, target, configuration },
-        {},
-        projectNode
-      )
-    : [];
+  const outputs = getOutputsForTargetAndConfiguration(
+    { project, target, configuration },
+    {},
+    projectNode
+  ).map(normalizePath);
 
   outputsCache.set(taskId, outputs);
   return outputs;
 }
 
-function getTaskGraph(
+/**
+ * Configured outputs that `getOutputsForTargetAndConfiguration` dropped because
+ * an `{options.x}` token had no value to interpolate. The resolver discards them
+ * silently, so they have to be recovered from the target configuration.
+ */
+function getUnresolvedOutputs(
   taskId: string,
   projectGraph: ProjectGraph
-): TaskGraph | null {
-  if (taskGraphCache.has(taskId)) return taskGraphCache.get(taskId) ?? null;
-
-  const { project, target, configuration, projectNode } = resolveIdentity(
+): string[] {
+  const { target, configuration, projectNode } = resolveIdentity(
     taskId,
     projectGraph
   );
-  if (!projectNode) {
-    taskGraphCache.set(taskId, null);
-    return null;
-  }
+  const targetConfig = projectNode.data.targets[target];
+  const options = {
+    ...targetConfig.options,
+    ...(configuration
+      ? targetConfig.configurations?.[configuration]
+      : undefined),
+  };
 
-  let tg: TaskGraph | null = null;
-  try {
-    tg = createTaskGraph(
-      projectGraph,
-      {},
-      [project],
-      [target],
-      configuration,
-      {},
-      false
-    );
-  } catch {
-    tg = null;
-  }
-  taskGraphCache.set(taskId, tg);
-  return tg;
+  return (targetConfig.outputs ?? []).filter((output) =>
+    [...output.matchAll(/\{options\.([^}]+)\}/g)].some(([, key]) => {
+      const value = key.split('.').reduce<any>((acc, k) => acc?.[k], options);
+      return value === undefined;
+    })
+  );
+}
+
+function getTaskGraph(taskId: string, projectGraph: ProjectGraph): TaskGraph {
+  const cached = taskGraphCache.get(taskId);
+  if (cached) return cached;
+
+  const { project, target, configuration } = resolveIdentity(
+    taskId,
+    projectGraph
+  );
+  const taskGraph = createTaskGraph(
+    projectGraph,
+    {},
+    [project],
+    [target],
+    configuration,
+    {},
+    false
+  );
+
+  taskGraphCache.set(taskId, taskGraph);
+  return taskGraph;
 }
 
 function getDepsOutputs(
@@ -188,23 +214,11 @@ function getDepsOutputs(
 ): ExpandedDepsOutput[] {
   if (depsOutputsCache.has(taskId)) return depsOutputsCache.get(taskId)!;
 
-  const { project, target, projectNode } = resolveIdentity(
-    taskId,
-    projectGraph
-  );
-  if (!projectNode?.data?.targets?.[target]) {
-    depsOutputsCache.set(taskId, []);
-    return [];
-  }
+  const { project, target } = resolveIdentity(taskId, projectGraph);
+  const result =
+    getInputs({ target: { project, target } } as Task, projectGraph, nxJson)
+      .depsOutputs ?? [];
 
-  let result: ExpandedDepsOutput[] = [];
-  try {
-    result =
-      getInputs({ target: { project, target } } as Task, projectGraph, nxJson)
-        .depsOutputs ?? [];
-  } catch {
-    result = [];
-  }
   depsOutputsCache.set(taskId, result);
   return result;
 }
@@ -230,19 +244,18 @@ function collectUpstreamTaskIds(
 }
 
 /**
- * Whole-list output matching via the native matcher shared with the task
- * runner's expand_outputs: non-glob patterns match themselves and anything
- * nested under them, and negated (`!`-prefixed) patterns act as exclusions
- * over the full pattern set.
+ * Matches a single path against a task's whole output pattern list using the
+ * native glob engine (`globset`) that the task runner's expand_outputs also
+ * builds on: non-glob patterns match themselves and anything nested under them,
+ * and negated (`!`-prefixed) patterns act as exclusions over the full set.
  */
 function isOutput(
   taskId: string,
   path: string,
   projectGraph: ProjectGraph
 ): boolean {
-  const normalized = normalizePath(path);
-  const patterns = getOutputs(taskId, projectGraph).map(normalizePath);
-  return matchOutputPaths(patterns, [normalized])[0];
+  const patterns = getOutputs(taskId, projectGraph);
+  return matchOutputPaths(patterns, [normalizePath(path)])[0];
 }
 
 function matchesDependentTaskOutputs(
@@ -255,8 +268,6 @@ function matchesDependentTaskOutputs(
   if (depsOutputs.length === 0) return false;
 
   const taskGraph = getTaskGraph(taskId, ctx.projectGraph);
-  if (!taskGraph) return false;
-
   const { canonicalTaskId } = resolveIdentity(taskId, ctx.projectGraph);
   if (!taskGraph.tasks[canonicalTaskId]) return false;
 
@@ -275,63 +286,116 @@ function matchesDependentTaskOutputs(
   return false;
 }
 
-function isInput(taskId: string, path: string, ctx: LoadedContext): boolean {
-  const normalized = normalizePath(path);
+function classifyInput(
+  taskId: string,
+  candidate: InputCandidate,
+  ctx: LoadedContext
+): InputCategory | null {
   const raw = getRawInputs(taskId, ctx);
   if (raw) {
-    if (raw.files.includes(normalized)) return true;
-    if (raw.depOutputs.includes(normalized)) return true;
+    // `environment`, `runtime` and `external` hold names rather than paths, so
+    // they are matched against the value exactly as the caller supplied it.
+    if (raw.environment.includes(candidate.value)) return 'environment';
+    if (raw.runtime.includes(candidate.value)) return 'runtime';
+    if (raw.external.includes(candidate.value)) return 'external';
+
+    const path = normalizePath(candidate.path);
+    if (raw.files.includes(path)) return 'files';
+    if (raw.depOutputs.includes(path)) return 'depOutputs';
   }
-  return matchesDependentTaskOutputs(taskId, normalized, ctx);
+  return matchesDependentTaskOutputs(taskId, candidate.path, ctx)
+    ? 'dependentTasksOutputFiles'
+    : null;
 }
 
-// ── Public API ───────────────────────────────────────────────────────────────
+// ── API (exported from devkit-internals) ─────────────────────────────────────
+//
+// Every function here takes workspace-relative, forward-slashed paths. Callers
+// holding cwd-relative or absolute paths must normalize before calling — the
+// resolver has no cwd of its own.
+//
+// The module-level context and caches above are loaded once and never
+// invalidated, which is only sound for a one-shot process (the CLI, or a
+// short-lived light client). A long-lived caller would read stale results after
+// any workspace change.
+
+/** The rule that made a value an input for a task. */
+export type InputCategory =
+  | 'files'
+  | 'depOutputs'
+  | 'dependentTasksOutputFiles'
+  | 'runtime'
+  | 'environment'
+  | 'external';
+
+export interface InputCandidate {
+  /** The value as supplied — matched verbatim against environment/runtime/external. */
+  value: string;
+  /** Workspace-relative path form of `value` — matched against the path categories. */
+  path: string;
+}
 
 /**
- * Check which files are legitimate inputs for the given task.
+ * Check which values are legitimate inputs for the given task. A value matches
+ * when it is:
+ *   - a declared environment variable, runtime input, or external dependency;
+ *   - a file in the task's declared input file list;
+ *   - a file in the task's materialized `depOutputs` (upstream has run);
+ *   - a file matching a `dependentTasksOutputFiles` glob declared on the task
+ *     that lies inside the declared outputs of an upstream task in the task
+ *     graph (static — works even when upstream tasks have not yet run).
  *
- * A file is "matched" when it satisfies any of:
- *   - It appears in the task's declared input file list.
- *   - It appears in the task's materialized `depOutputs` (upstream has run).
- *   - It matches a `dependentTasksOutputFiles` glob declared on the task AND
- *     lies inside the declared outputs of an upstream task in the task graph
- *     (static check — works even when upstream tasks have not yet run).
+ * `categories` records the rule each matched value satisfied. Plain strings are
+ * taken to be workspace-relative already; a caller resolving paths against a cwd
+ * passes an {@link InputCandidate} so that names are still matched verbatim.
  */
 export async function checkFilesAreInputs(
   taskId: string,
-  files: string[]
-): Promise<{ matched: string[]; unmatched: string[] }> {
+  files: Array<string | InputCandidate>
+): Promise<{
+  matched: string[];
+  unmatched: string[];
+  categories: Map<string, InputCategory>;
+}> {
   const ctx = await getContext();
-  // Validate taskId eagerly so callers always get an error for invalid IDs,
-  // even when the file list is empty.
+  // Validate taskId eagerly so callers always get an error for an unknown or
+  // malformed task, even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
+
   const matched: string[] = [];
   const unmatched: string[] = [];
+  const categories = new Map<string, InputCategory>();
+
   for (const file of files) {
-    if (isInput(taskId, file, ctx)) {
-      matched.push(file);
+    const candidate =
+      typeof file === 'string' ? { value: file, path: file } : file;
+    const category = classifyInput(taskId, candidate, ctx);
+    if (category) {
+      matched.push(candidate.value);
+      categories.set(candidate.value, category);
     } else {
-      unmatched.push(file);
+      unmatched.push(candidate.value);
     }
   }
-  return { matched, unmatched };
+
+  return { matched, unmatched, categories };
 }
 
 /**
  * Check which files match the output globs declared for the given task.
  * Uses the same path-matching logic as the task runner (directory containment
- * + glob matching via minimatch), including negated (`!`-prefixed) patterns
- * acting as exclusions over the whole pattern set.
+ * + glob matching through the native `globset` engine), including negated
+ * (`!`-prefixed) patterns acting as exclusions over the whole pattern set.
  */
 export async function checkFilesAreOutputs(
   taskId: string,
   files: string[]
 ): Promise<{ matched: string[]; unmatched: string[] }> {
   const ctx = await getContext();
-  // Validate taskId eagerly so callers always get an error for invalid IDs,
-  // even when the file list is empty.
+  // Validate taskId eagerly so callers always get an error for an unknown or
+  // malformed task, even when the file list is empty.
   resolveIdentity(taskId, ctx.projectGraph);
-  const patterns = getOutputs(taskId, ctx.projectGraph).map(normalizePath);
+  const patterns = getOutputs(taskId, ctx.projectGraph);
   const results = matchOutputPaths(patterns, files.map(normalizePath));
   const matched: string[] = [];
   const unmatched: string[] = [];
@@ -345,7 +409,7 @@ export async function checkFilesAreOutputs(
   return { matched, unmatched };
 }
 
-// ── Internal helpers (not exported from devkit-exports) ──────────────────────
+// ── Renderer helpers (used by `nx show target`) ──────────────────────────────
 
 /**
  * Returns the full hash inputs for a task (files + runtime + env + depOutputs
@@ -358,13 +422,27 @@ export async function getTaskRawInputs(
   return getRawInputs(taskId, ctx);
 }
 
+export interface TaskOutputs {
+  /** Output patterns after token substitution — what the task runner will cache. */
+  resolved: string[];
+  /** `resolved`, expanded against the files currently on disk. */
+  expanded: string[];
+  /** Configured outputs left out of `resolved` because an option had no value. */
+  unresolved: string[];
+}
+
 /**
- * Returns the resolved output patterns for a task (after token substitution).
- * Used internally by the `nx show target --outputs` renderer.
+ * Returns the outputs declared for a task, resolved against its effective
+ * configuration. Used internally by the `nx show target --outputs` renderer.
  */
-export async function getTaskOutputPatterns(taskId: string): Promise<string[]> {
+export async function getTaskOutputs(taskId: string): Promise<TaskOutputs> {
   const ctx = await getContext();
-  return getOutputs(taskId, ctx.projectGraph);
+  const resolved = getOutputs(taskId, ctx.projectGraph);
+  return {
+    resolved,
+    expanded: expandOutputs(defaultWorkspaceRoot, resolved),
+    unresolved: getUnresolvedOutputs(taskId, ctx.projectGraph),
+  };
 }
 
 // ── Test utilities ───────────────────────────────────────────────────────────

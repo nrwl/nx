@@ -287,6 +287,114 @@ describe('show target inputs', () => {
     const logged = (console.log as jest.Mock).mock.calls[0][0];
     expect(logged).toContain('dist/libs/dep/index.d.ts');
     expect(logged).toContain('is an input');
+    expect(logged).toContain('dependentTasksOutputFiles');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('should identify a dependent task output given a cwd-relative --check path', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                dependsOn: ['^build'],
+                inputs: [
+                  '{projectRoot}/**/*.ts',
+                  { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .addProjectConfiguration(
+          {
+            root: 'libs/dep',
+            name: 'dep',
+            targets: {
+              build: {
+                executor: '@nx/js:tsc',
+                outputs: ['{workspaceRoot}/dist/libs/dep'],
+              },
+            },
+          },
+          'lib'
+        )
+        .addDependency('my-app', 'dep')
+        .build()
+    );
+
+    setMockHashInputs({
+      'my-app:build': {
+        files: [],
+        runtime: [],
+        environment: [],
+        depOutputs: [],
+        external: [],
+      },
+    });
+
+    // Run from inside the project, referring to the dep output relatively.
+    (process.cwd as jest.Mock).mockReturnValue('/workspace/apps/my-app');
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['../../dist/libs/dep/index.d.ts'],
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    expect(logged).toContain('is an input');
+    expect(logged).toContain('dependentTasksOutputFiles');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('should report the depOutputs category for a cwd-relative --check path', async () => {
+    setGraph(
+      new GraphBuilder()
+        .addProjectConfiguration(
+          {
+            root: 'apps/my-app',
+            name: 'my-app',
+            targets: {
+              build: {
+                executor: '@nx/web:build',
+                dependsOn: ['^build'],
+                inputs: [
+                  { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
+                ],
+              },
+            },
+          },
+          'app'
+        )
+        .build()
+    );
+
+    // The upstream task has run, so the file is a materialized depOutput — the
+    // reported category must not depend on the cwd the path was given relative to.
+    setMockHashInputs({
+      'my-app:build': {
+        files: [],
+        runtime: [],
+        environment: [],
+        depOutputs: ['dist/libs/dep/index.d.ts'],
+        external: [],
+      },
+    });
+
+    (process.cwd as jest.Mock).mockReturnValue('/workspace/apps/my-app');
+
+    await showTargetInputsHandler({
+      target: 'my-app:build',
+      check: ['../../dist/libs/dep/index.d.ts'],
+    });
+
+    const logged = (console.log as jest.Mock).mock.calls[0][0];
+    expect(logged).toContain('is an input');
     expect(logged).toContain('depOutputs');
     expect(process.exitCode).toBe(0);
   });

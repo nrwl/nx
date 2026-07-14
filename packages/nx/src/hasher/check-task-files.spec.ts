@@ -187,6 +187,79 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
   // ── checkFilesAreInputs ──────────────────────────────────────────────────
 
   describe('checkFilesAreInputs', () => {
+    it('reports the category each matched value satisfied', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': {
+          files: ['libs/myproj/src/index.ts'],
+          runtime: ['node --version'],
+          environment: ['CI'],
+          depOutputs: ['dist/libs/dep/index.d.ts'],
+          external: ['npm:typescript'],
+        },
+      });
+
+      const { categories } = await checkFilesAreInputs('myproj:build', [
+        'libs/myproj/src/index.ts',
+        'dist/libs/dep/index.d.ts',
+        'CI',
+        'node --version',
+        'npm:typescript',
+        'libs/myproj/README.md',
+      ]);
+
+      expect(Object.fromEntries(categories)).toEqual({
+        'libs/myproj/src/index.ts': 'files',
+        'dist/libs/dep/index.d.ts': 'depOutputs',
+        CI: 'environment',
+        'node --version': 'runtime',
+        'npm:typescript': 'external',
+      });
+    });
+
+    it('matches names against the raw value and paths against the path form', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': {
+          ...makeHashInputs(['libs/myproj/src/index.ts']),
+          environment: ['CI'],
+        },
+      });
+
+      // A caller running from inside libs/myproj resolves paths against its cwd,
+      // but an environment variable is a name — it must not be path-resolved.
+      const { categories } = await checkFilesAreInputs('myproj:build', [
+        { value: 'CI', path: 'libs/myproj/CI' },
+        { value: './src/index.ts', path: 'libs/myproj/src/index.ts' },
+      ]);
+
+      expect(categories.get('CI')).toBe('environment');
+      expect(categories.get('./src/index.ts')).toBe('files');
+    });
+
+    it('matches environment, runtime and external inputs by name', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': {
+          files: [],
+          runtime: ['node --version'],
+          environment: ['CI'],
+          depOutputs: [],
+          external: ['npm:typescript'],
+        },
+      });
+
+      const result = await checkFilesAreInputs('myproj:build', [
+        'CI',
+        'node --version',
+        'npm:typescript',
+        'NOT_AN_INPUT',
+      ]);
+      expect(result.matched).toEqual([
+        'CI',
+        'node --version',
+        'npm:typescript',
+      ]);
+      expect(result.unmatched).toEqual(['NOT_AN_INPUT']);
+    });
+
     it('returns matched for a path in the input file list (exact match)', async () => {
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
@@ -302,6 +375,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
     });
 
     it('does NOT match when path matches the glob but no upstream output covers it', async () => {
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -346,6 +420,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
     });
 
     it('does NOT match when path is inside an upstream output but does not match the glob', async () => {
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -448,6 +523,7 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
     });
 
     it('does NOT walk transitive deps when transitive=false', async () => {
+      mockCreateProjectGraphAsync.mockResolvedValue(buildGraphWithDeps());
       mockInspectTaskInputs.mockReturnValue({
         'myproj:build': makeHashInputs([]),
       });
@@ -640,6 +716,75 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       await expect(checkFilesAreOutputs('justproject', [])).rejects.toThrow(
         /Invalid taskId "justproject"/
       );
+    });
+
+    it('throws when the project does not exist in the project graph', async () => {
+      await expect(
+        checkFilesAreInputs('nonexistent:build', [])
+      ).rejects.toThrow(/project "nonexistent" does not exist/);
+    });
+
+    it('throws when the project has no such target', async () => {
+      await expect(
+        checkFilesAreInputs('myproj:nosuchtarget', [])
+      ).rejects.toThrow(/project "myproj" has no target "nosuchtarget"/);
+    });
+  });
+
+  // ── Error propagation ────────────────────────────────────────────────────
+  //
+  // Internal failures must surface. Swallowing them would report every file as
+  // unmatched, which a sandbox-violation consumer reads as "all inputs illegal".
+
+  describe('error propagation', () => {
+    it('propagates a hash plan inspection failure instead of reporting unmatched', async () => {
+      mockInspectTaskInputs.mockImplementation(() => {
+        throw new Error('native hasher exploded');
+      });
+
+      await expect(
+        checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts'])
+      ).rejects.toThrow('native hasher exploded');
+    });
+
+    it('propagates a task graph construction failure', async () => {
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs([]),
+      });
+      mockGetStructuredInputs.mockReturnValue({
+        selfInputs: [],
+        depsInputs: [],
+        depsOutputs: [
+          { dependentTasksOutputFiles: '**/*.d.ts', transitive: false },
+        ],
+        projectInputs: [],
+        depsFilesets: [],
+      } as ReturnType<typeof mockedGetInputs>);
+      mockCreateTaskGraph.mockImplementation(() => {
+        throw new Error('invalid dependsOn config');
+      });
+
+      await expect(
+        checkFilesAreInputs('myproj:build', ['libs/dep/dist/index.d.ts'])
+      ).rejects.toThrow('invalid dependsOn config');
+    });
+
+    it('does not cache a failed context load', async () => {
+      mockCreateProjectGraphAsync.mockRejectedValueOnce(
+        new Error('graph is broken')
+      );
+
+      await expect(checkFilesAreInputs('myproj:build', [])).rejects.toThrow(
+        'graph is broken'
+      );
+
+      mockInspectTaskInputs.mockReturnValue({
+        'myproj:build': makeHashInputs(['libs/myproj/src/index.ts']),
+      });
+      const result = await checkFilesAreInputs('myproj:build', [
+        'libs/myproj/src/index.ts',
+      ]);
+      expect(result.matched).toEqual(['libs/myproj/src/index.ts']);
     });
   });
 

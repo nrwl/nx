@@ -66,3 +66,7 @@ export {
   PromptResolutionError,
 } from './command-line/migrate/prompt-files';
 export { HashPlanInspector } from './hasher/hash-plan-inspector';
+export {
+  checkFilesAreInputs,
+  checkFilesAreOutputs,
+} from './hasher/check-task-files';

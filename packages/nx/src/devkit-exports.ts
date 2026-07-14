@@ -247,11 +247,3 @@ export { cacheDir } from './utils/cache-directory';
 export { createProjectFileMapUsingProjectGraph } from './project-graph/file-map-utils';
 
 export { isDaemonEnabled } from './daemon/client/client';
-
-/**
- * @category Utils
- */
-export {
-  checkFilesAreInputs,
-  checkFilesAreOutputs,
-} from './hasher/check-task-files';
