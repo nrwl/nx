@@ -49,7 +49,7 @@ If `.review-charter.md` exists in the worktree, read it first — it carries the
 
 ## Calibration
 
-- **Hot path + scales with workspace size** → report (important; critical if it makes every command measurably slower or the daemon leak is unbounded).
+- **Hot path + scales with workspace size** → report (important; critical if it makes any command measurably slower at scale or the daemon leak is unbounded).
 - **Warm path + clearly avoidable waste** → report as important only when the fix is straightforward; otherwise endorse with a note.
 - **Cold path** → not a finding, no matter how inefficient. A generator that clones an array twice is fine.
 - Constant-factor micro-optimizations (`for` vs `forEach`, string concat style) are never findings.
@@ -59,7 +59,7 @@ If `.review-charter.md` exists in the worktree, read it first — it carries the
 
 - `PERFORMANCE_SOUND` — no real CPU, memory, or speed cost introduced. Write 2-4 sentences naming what you checked (which paths, hot/cold classification) so the reviewer knows performance was actually examined, not skipped.
 - `PERFORMANCE_CONCERN` — avoidable cost on a hot or warm path; a maintainer would ask for a change but the PR isn't wrong. Important-level. Include the call-frequency argument and a concrete cheaper shape.
-- `PERFORMANCE_REGRESSION` — the change makes commands measurably slower for real workspaces or introduces unbounded memory growth (especially daemon-resident). Critical-level. Include the scaling argument.
+- `PERFORMANCE_REGRESSION` — the change makes any command measurably slower for real workspaces at scale (a single affected command is enough — a blowup confined to `nx release` is still a regression) or introduces unbounded memory growth (especially daemon-resident). Critical-level. Include the scaling argument.
 
 When in doubt between `PERFORMANCE_SOUND` and `PERFORMANCE_CONCERN`, endorse — speculative performance feedback is noise.
 
