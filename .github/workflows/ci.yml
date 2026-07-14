@@ -92,7 +92,7 @@ jobs:
 
       - name: Run Checks/Lint/Test/Build
         run: |
-          pnpm nx run-many -t lint --parallel=10 --no-dte
+          pnpm nx run-many -t lint,test -p cypress,jest,eslint,esbuild --parallel=10 --no-dte
         timeout-minutes: 100
       - name: Fix CI
         run: pnpm nx fix-ci
