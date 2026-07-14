@@ -1,6 +1,6 @@
 ---
 name: review-pr
-description: Deep code review of a single open PR in nrwl/nx. Sets up an isolated worktree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and, when runnable locally, executes the repro on master vs PR), and the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Use when you want a thorough review of one PR.
+description: Deep code review of a single open PR in nrwl/nx. Sets up an isolated worktree, runs the pr-review-toolkit review agents, the reproduce-verifier agent (grounds the review in the linked issues and, when runnable locally, executes the repro on master vs PR), the alternative-approach agent (independently designs competing solutions and contrasts them with the PR's choice), and the performance-analyzer agent (checks the changes don't waste CPU or memory and execute quickly at workspace scale), surfaces only critical and important findings (plus strengths; nice-to-have suggestions are dropped), and saves a GitHub-flavored draft to ~/.nx-pr-reviews/<NUMBER>.md for the reviewer to read (nothing is posted). Use when you want a thorough review of one PR.
 allowed-tools: Bash(gh pr view *), Bash(gh pr list *), Bash(gh issue view *), Bash(gh auth status*), Bash(git -C *), Bash(git worktree *), Bash(git rev-parse *), Bash(mkdir -p *), Bash(ls *), Bash(printf *), Bash(date *), Bash(cd *), Bash(test *), Bash(echo *), Bash(head *), Bash(tail *), Bash(cat *), Bash(jq *), Bash(grep *), Bash(wc *), Bash(sed *), Write(~/.nx-pr-reviews/**), Write(/tmp/**), Edit(~/.nx-pr-reviews/**), Edit(/tmp/**), Read, Grep, Glob, Skill, Agent
 argument-hint: '<PR_NUMBER> [--verify-repros]'
 ---
@@ -216,7 +216,7 @@ If all signals are cheap-negative, skip emitting the section entirely (no noise 
 
 ### Early exit on a strong close signal
 
-If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
+If **superseded (strong)** or **unnecessary (strong)** fired, skip Steps 5 through 5b entirely (toolkit, alternative-approach, performance-analyzer, reproduce-verifier, reconciliation). The verdict precedence in Step 7 already decides the outcome, so agent findings can't change it — and nobody acts on code feedback for a PR that won't merge. Set `$REVIEW_BODY` to just the `### Close-without-merge check` section and continue with Steps 6-10 as normal.
 
 ## Step 5: Run the review toolkit
 
@@ -291,6 +291,33 @@ Capture the output as `$APPROACH_REPORT` and fold it into the review body as `##
 - `APPROACH_INSUFFICIENT` — counts as a critical finding (the fix provably misses cases).
 - `BETTER_ALTERNATIVE_EXISTS` — counts as an important finding, with the sketch as the ask.
 - `APPROACH_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
+
+## Step 5a.2: Run the performance-analyzer agent
+
+In parallel with Step 5, dispatch the `performance-analyzer` agent — it answers "does this change waste CPU or memory, and does it execute quickly at workspace scale?":
+
+```
+Agent(
+  subagent_type="performance-analyzer",
+  description="Analyze PR <NUMBER> runtime performance",
+  prompt="""
+Analyze the runtime performance of PR <NUMBER> in nrwl/nx: CPU/memory footprint and execution speed.
+
+Inputs:
+- PR_NUMBER: <NUMBER>
+- WORKTREE_PATH: <WORKTREE_BASE>/pr-<NUMBER>
+- BASE_REF: <BASE_REF_NAME>
+
+Read .review-charter.md in the worktree first. Follow your standard workflow and return the structured report.
+"""
+)
+```
+
+Capture the output as `$PERF_REPORT` and fold it into the review body as `### Performance analysis`, directly below `### Approach analysis`. Verdict influence (Step 7):
+
+- `PERFORMANCE_REGRESSION` — counts as a critical finding (slower commands for real workspaces, or unbounded memory growth).
+- `PERFORMANCE_CONCERN` — counts as an important finding, with the cheaper shape as the ask.
+- `PERFORMANCE_SOUND` — fold the endorsement into **Strengths** as a one-liner; no finding.
 
 ## Step 5a.5: Run the reproduce-verifier agent
 
