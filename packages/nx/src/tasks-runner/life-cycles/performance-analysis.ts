@@ -2,7 +2,7 @@ import * as os from 'node:os';
 import { performance } from 'node:perf_hooks';
 import { TaskGraph } from '../../config/task-graph';
 import { NxJsonConfiguration } from '../../config/nx-json';
-import { isNxCloudUsed } from '../../utils/nx-cloud-utils';
+import { isNxCloudDisabled, isNxCloudUsed } from '../../utils/nx-cloud-utils';
 import { isCI as isCiEnv } from '../../utils/is-ci';
 import { MEANINGFUL_OVERHEAD } from './performance-report';
 import { TaskResult } from '../life-cycle';
@@ -15,6 +15,9 @@ const CACHE_HIT_STATUSES = new Set([
 
 /** Gap (ms) still counted as the same pre-dispatch hashing phase; a larger gap means older, unrelated hashing (e.g. a daemon's previous run). */
 const PRE_DISPATCH_HASH_GAP = 1000;
+
+/** A critical-path task shorter than this fraction of the path is noise, not a speed-up target. */
+const CRITICAL_PATH_TOP_MIN_FRACTION = 0.2;
 
 export interface TaskTiming {
   startTime?: number;
@@ -75,6 +78,8 @@ export interface PerformanceSummary {
   cacheableCount: number;
   cacheSkipped: boolean;
   remoteCacheEnabled: boolean;
+  /** The workspace opted out of Nx Cloud (`neverConnectToCloud` / NX_NO_CLOUD) — never recommend it. */
+  cloudOptedOut: boolean;
 }
 
 /** Construction-time inputs for {@link PerformanceLifeCycle}. */
@@ -265,16 +270,24 @@ export class PerformanceAnalysis {
    */
   private computeCriticalPathTop(
     criticalPathTasks: string[],
-    durations: Map<string, number>
+    durations: Map<string, number>,
+    criticalPathDuration: number
   ): Array<{ id: string; duration: number }> {
-    return criticalPathTasks
-      .filter((id) => {
-        const status = this.statuses.get(id);
-        return !status || !CACHE_HIT_STATUSES.has(status);
-      })
-      .map((id) => ({ id, duration: durations.get(id) ?? 0 }))
-      .sort((a, b) => b.duration - a.duration)
-      .slice(0, 3);
+    return (
+      criticalPathTasks
+        .filter((id) => {
+          const status = this.statuses.get(id);
+          return !status || !CACHE_HIT_STATUSES.has(status);
+        })
+        .map((id) => ({ id, duration: durations.get(id) ?? 0 }))
+        // Only tasks that meaningfully shape the path are worth speeding up.
+        .filter(
+          (t) =>
+            t.duration >= CRITICAL_PATH_TOP_MIN_FRACTION * criticalPathDuration
+        )
+        .sort((a, b) => b.duration - a.duration)
+        .slice(0, 3)
+    );
   }
 
   /** Cache outcome: tasks restored (`cacheHits`) and the total with a cache outcome (`cacheableCount` = hits + ran). No-status tasks count for neither. */
@@ -359,7 +372,8 @@ export class PerformanceAnalysis {
 
     const criticalPathTop = this.computeCriticalPathTop(
       criticalPathTasks,
-      durations
+      durations,
+      criticalPathDuration
     );
 
     const { cacheHits, cacheableCount } = this.computeCacheStats();
@@ -367,6 +381,9 @@ export class PerformanceAnalysis {
     // (normalized in command-line-utils) — don't re-read those env vars here.
     const cacheSkipped = this.options.skipNxCache === true;
     const remoteCacheEnabled = this.remoteCacheEnabled();
+    const cloudOptedOut = this.options.nxJson
+      ? !!isNxCloudDisabled(this.options.nxJson)
+      : false;
 
     // Coordinator-dominated: hashing/scheduling outweighs task work by >3x the
     // critical path, which keeps cold runs critical-path-bound.
@@ -393,14 +410,16 @@ export class PerformanceAnalysis {
       parallel,
       cores,
       isCI,
-      // Can only start distributing in CI when not already doing so.
-      canDistribute: isCI && !distributing,
+      // Can only start distributing in CI when not already doing so — and never
+      // suggest Nx Agents to a workspace that opted out of Nx Cloud.
+      canDistribute: isCI && !distributing && !cloudOptedOut,
       distributing,
       coordinatorDominated,
       cacheHits,
       cacheableCount,
       cacheSkipped,
       remoteCacheEnabled,
+      cloudOptedOut,
     };
   }
 }
