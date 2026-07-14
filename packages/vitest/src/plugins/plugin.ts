@@ -21,11 +21,16 @@ import {
   type RawTsconfigJsonCache,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { glob } from 'tinyglobby';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { loadViteDynamicImport } from '../utils/executor-utils';
+import {
+  loadViteDynamicImport,
+  loadVitestConfigDynamicImport,
+} from '../utils/executor-utils';
 
 export interface VitestPluginOptions {
   testTargetName?: string;
@@ -43,6 +48,20 @@ export interface VitestPluginOptions {
    * - 'run': Tests run once and exit
    */
   testMode?: 'watch' | 'run';
+  /**
+   * When `true` (the default), atomized test files are discovered with a glob
+   * that mirrors Vitest's own resolution instead of booting Vitest per project.
+   * Booting Vitest starts a Vite dev server that runs every config plugin's
+   * `buildStart` hook; with compilation-heavy plugins (e.g. Angular) and many
+   * projects, that leads to out-of-memory crashes during graph creation.
+   *
+   * Configs a glob cannot reproduce faithfully (`test.projects`/`test.workspace`,
+   * plugins with a `configureVitest` hook, `test.changed`/`test.related`) still
+   * fall back to Vitest automatically. Set to `false` to always enumerate
+   * through Vitest.
+   * @default true
+   */
+  disableVitestRuntime?: boolean;
 }
 
 type VitestTargets = Pick<
@@ -273,10 +292,15 @@ async function buildVitestTargets(
         },
       };
 
+      // Not normalizing in normalizeOptions since it also affects the options
+      // computed for convert-to-inferred.
+      const disableVitestRuntime = options.disableVitestRuntime !== false;
       const projectRootRelativeTestPaths =
         await getTestPathsRelativeToProjectRoot(
           projectRoot,
-          context.workspaceRoot
+          context.workspaceRoot,
+          viteBuildConfig,
+          disableVitestRuntime
         );
 
       for (const relativePath of projectRootRelativeTestPaths) {
@@ -598,9 +622,121 @@ function checkIfConfigFileShouldBeProject(
 
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
-  workspaceRoot: string
+  workspaceRoot: string,
+  viteBuildConfig: Record<string, any>,
+  disableVitestRuntime: boolean
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
+  const test = viteBuildConfig?.test ?? {};
+
+  if (
+    disableVitestRuntime &&
+    !configRequiresVitestRuntime(test, viteBuildConfig)
+  ) {
+    return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
+  }
+
+  return getTestPathsViaVitestRuntime(fullProjectRoot, projectRoot);
+}
+
+/**
+ * Enumerates a project's test files by mirroring Vitest's own resolution with
+ * a glob. Vitest globs `test.include` (skipped when `typecheck.only`),
+ * `test.typecheck.include` (when typecheck is enabled), and `test.includeSource`
+ * (kept only when the file contains an in-source test), each minus the relevant
+ * `exclude`, from the project root. Defaults come from the installed Vitest so
+ * they track the user's version. Callers must first confirm the config is
+ * reproducible with a glob via `configRequiresVitestRuntime`.
+ */
+async function globTestPathsRelativeToProjectRoot(
+  test: Record<string, any>,
+  fullProjectRoot: string
+): Promise<string[]> {
+  const { configDefaults } = await loadVitestConfigDynamicImport();
+
+  const exclude: string[] = test.exclude ?? configDefaults.exclude;
+  const typecheck = test.typecheck;
+  const typecheckOnly = !!(typecheck?.enabled && typecheck?.only);
+  const globOptions = {
+    dot: true,
+    cwd: fullProjectRoot,
+    expandDirectories: false,
+  };
+
+  // Regular and type tests are independent walks; run them together.
+  const globJobs: Promise<string[]>[] = [];
+
+  // `typecheck.only` makes Vitest run only type tests, so skip regular tests.
+  if (!typecheckOnly) {
+    const include: string[] = test.include ?? configDefaults.include;
+    globJobs.push(glob(include, { ...globOptions, ignore: exclude }));
+  }
+
+  if (typecheck?.enabled) {
+    const include: string[] =
+      typecheck.include ?? configDefaults.typecheck.include;
+    const ignore: string[] =
+      typecheck.exclude ?? configDefaults.typecheck.exclude;
+    globJobs.push(glob(include, { ...globOptions, ignore }));
+  }
+
+  const matches = new Set<string>();
+  for (const files of await Promise.all(globJobs)) {
+    for (const file of files) matches.add(file);
+  }
+
+  // In-source tests: only files that actually contain a test are included.
+  if (test.includeSource?.length) {
+    const sourceFiles = await glob(test.includeSource, {
+      ...globOptions,
+      ignore: exclude,
+    });
+    for (const file of sourceFiles) {
+      // Vitest tolerates unreadable in-source candidates and skips them; match
+      // that so a permission error or TOCTOU race can't abort graph creation.
+      try {
+        const content = await readFile(join(fullProjectRoot, file), 'utf-8');
+        if (content.includes('import.meta.vitest')) {
+          matches.add(file);
+        }
+      } catch {
+        // unreadable file; treat as not an in-source test
+      }
+    }
+  }
+
+  // tinyglobby returns paths relative to `cwd` (the project root); drop any that
+  // escape it to match the runtime path, which filters to files under the root.
+  return [...matches]
+    .filter((file) => !file.startsWith('..') && !isAbsolute(file))
+    .map((file) => normalizePath(file))
+    .sort();
+}
+
+/**
+ * Whether a config's test discovery cannot be faithfully reproduced with a
+ * glob, so enumeration must go through Vitest itself.
+ */
+function configRequiresVitestRuntime(
+  test: Record<string, any>,
+  viteBuildConfig: Record<string, any>
+): boolean {
+  // Multi-project configs resolve include/exclude per sub-project.
+  if (Array.isArray(test?.projects) || test?.workspace) return true;
+  // Vitest filters specs by VCS/graph state, which a glob cannot know.
+  if (test?.changed || test?.related) return true;
+  // A plugin can inject or reshape projects through this Vitest-only hook.
+  const plugins: unknown[] = viteBuildConfig?.plugins ?? [];
+  return plugins.some(
+    (plugin) =>
+      plugin && typeof plugin === 'object' && 'configureVitest' in plugin
+  );
+}
+
+async function getTestPathsViaVitestRuntime(
+  fullProjectRoot: string,
+  projectRoot: string
+): Promise<string[]> {
   const { createVitest } = await import('vitest/node');
   const vitest = await createVitest('test', {
     root: fullProjectRoot,

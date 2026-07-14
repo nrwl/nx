@@ -3859,6 +3859,9 @@ importers:
       semver:
         specifier: 'catalog:'
         version: 7.8.4
+      tinyglobby:
+        specifier: 'catalog:'
+        version: 0.2.15
       tslib:
         specifier: catalog:typescript
         version: 2.8.1

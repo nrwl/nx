@@ -10,3 +10,9 @@ export function loadVitestDynamicImport() {
     typeof import('vitest/node')
   >;
 }
+
+export function loadVitestConfigDynamicImport() {
+  return Function('return import("vitest/config")')() as Promise<
+    typeof import('vitest/config')
+  >;
+}
