@@ -192,6 +192,8 @@ export async function generateWorkspaceFiles(
       writeNxCloudRules: options.nxCloud !== 'skip',
       packageVersion: 'latest',
       agents: [...options.aiAgents],
+      // Explicit: there is no lockfile to detect from yet at this point.
+      packageManager: options.packageManager,
     });
   }
 

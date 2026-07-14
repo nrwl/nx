@@ -1157,12 +1157,17 @@ description = "Polls Nx Cloud CI pipeline."
 config_file = ".codex/agents/ci-monitor-subagent.toml"
 `;
 
+      // Captured once, at module scope. Taking this inside beforeEach re-reads
+      // fs.existsSync *after* the previous test already spied on it — and jest.spyOn
+      // hands back the same mock for an already-spied method, so `originalExistsSync`
+      // becomes the mock itself and its fallthrough recurses until the stack blows.
+      const originalExistsSync = fs.existsSync;
+
       beforeEach(() => {
         getAiConfigRepoPathSpy = jest
           .spyOn(cloneModule, 'getAiConfigRepoPath')
           .mockReturnValue('/fake/repo');
 
-        const originalExistsSync = fs.existsSync;
         existsSyncSpy = jest
           .spyOn(fs, 'existsSync')
           .mockImplementation((path: any) => {
@@ -1183,6 +1188,14 @@ config_file = ".codex/agents/ci-monitor-subagent.toml"
               path.includes('/fake/repo/generated/')
             ) {
               return false; // No other generated dirs
+            }
+            if (
+              typeof path === 'string' &&
+              path.includes('/fake/repo/templates')
+            ) {
+              // This fake config repo predates the workspace-context templates, so the
+              // generator should fall back to copying `generated/` as-is.
+              return false;
             }
             return originalExistsSync(path);
           });

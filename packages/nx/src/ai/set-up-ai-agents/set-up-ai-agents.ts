@@ -43,6 +43,11 @@ import {
   SetupAiAgentsGeneratorSchema,
 } from './schema';
 import { handleImport } from '../../utils/handle-import';
+import {
+  getWorkspaceContext,
+  TEMPLATES_SCHEMA_VERSION,
+} from './workspace-context';
+import type { PackageManager } from '../../utils/package-manager';
 
 export type ModificationResults = {
   messages: CLINoteMessageConfig[];
@@ -122,6 +127,7 @@ function normalizeOptions(
     writeNxCloudRules: options.writeNxCloudRules ?? false,
     packageVersion: options.packageVersion ?? 'latest',
     agents: options.agents ?? [...supportedAgents],
+    packageManager: options.packageManager,
   };
 }
 
@@ -141,12 +147,22 @@ export async function setupAiAgentsGeneratorImpl(
     hasAgent('codex') ||
     hasAgent('opencode')
   ) {
-    writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+    writeAgentRules(
+      tree,
+      agentsMd,
+      options.writeNxCloudRules,
+      options.packageManager
+    );
   }
 
   if (hasAgent('claude')) {
     const claudePath = join(options.directory, 'CLAUDE.md');
-    writeAgentRules(tree, claudePath, options.writeNxCloudRules);
+    writeAgentRules(
+      tree,
+      claudePath,
+      options.writeNxCloudRules,
+      options.packageManager
+    );
 
     // Configure Claude plugin via marketplace (plugin includes MCP server)
     const claudeSettingsPath = join(
@@ -265,7 +281,12 @@ export async function setupAiAgentsGeneratorImpl(
 
     // Only set contextFileName to AGENTS.md if GEMINI.md doesn't exist already to preserve existing setups
     if (!contextFileName && !tree.exists(geminiMd)) {
-      writeAgentRules(tree, agentsMd, options.writeNxCloudRules);
+      writeAgentRules(
+        tree,
+        agentsMd,
+        options.writeNxCloudRules,
+        options.packageManager
+      );
       updateJson(tree, geminiSettingsPath, (json) => ({
         ...json,
         contextFileName: 'AGENTS.md',
@@ -274,7 +295,8 @@ export async function setupAiAgentsGeneratorImpl(
       writeAgentRules(
         tree,
         contextFileName ?? geminiMd,
-        options.writeNxCloudRules
+        options.writeNxCloudRules,
+        options.packageManager
       );
     }
   }
@@ -283,37 +305,55 @@ export async function setupAiAgentsGeneratorImpl(
   if (aiConfigRepoPath) {
     const repoPath = aiConfigRepoPath;
 
+    // The skills come in two flavours. `templates/<version>` still carries the workspace
+    // facts as tokens, so we can tell the agent that this workspace uses yarn rather than
+    // making it go read the lockfile. `generated/` has those tokens already resolved
+    // against an empty context, and is what we fall back to when the config repo predates
+    // the schema we know how to populate.
+    const workspaceContext = getWorkspaceContext(
+      options.packageManager,
+      join(tree.root, options.directory)
+    );
+    const templatesRoot = join(repoPath, 'templates', TEMPLATES_SCHEMA_VERSION);
+    const skillsRoot = existsSync(templatesRoot) ? templatesRoot : repoPath;
+    const skillsSubdir = skillsRoot === templatesRoot ? '' : 'generated';
+
     // Shared skills directory used by codex, cursor, and gemini
     if (hasAgent('codex') || hasAgent('cursor') || hasAgent('gemini')) {
-      const sharedSkillsSrc = join(repoPath, 'generated/.agents');
+      const sharedSkillsSrc = join(skillsRoot, skillsSubdir, '.agents');
       if (existsSync(sharedSkillsSrc)) {
         generateFiles(
           tree,
           sharedSkillsSrc,
           join(options.directory, '.agents'),
-          {}
+          workspaceContext
         );
       }
     }
 
     // Agent-specific directories (commands, agents, config)
     const agentDirs: { agent: Agent; src: string; dest: string }[] = [
-      { agent: 'opencode', src: 'generated/.opencode', dest: '.opencode' },
-      { agent: 'copilot', src: 'generated/.github', dest: '.github' },
-      { agent: 'cursor', src: 'generated/.cursor', dest: '.cursor' },
+      { agent: 'opencode', src: '.opencode', dest: '.opencode' },
+      { agent: 'copilot', src: '.github', dest: '.github' },
+      { agent: 'cursor', src: '.cursor', dest: '.cursor' },
       {
         agent: 'codex',
-        src: 'generated/.codex/agents',
+        src: '.codex/agents',
         dest: '.codex/agents',
       },
-      { agent: 'gemini', src: 'generated/.gemini', dest: '.gemini' },
+      { agent: 'gemini', src: '.gemini', dest: '.gemini' },
     ];
 
     for (const { agent, src, dest } of agentDirs) {
       if (hasAgent(agent)) {
-        const srcPath = join(repoPath, src);
+        const srcPath = join(skillsRoot, skillsSubdir, src);
         if (existsSync(srcPath)) {
-          generateFiles(tree, srcPath, join(options.directory, dest), {});
+          generateFiles(
+            tree,
+            srcPath,
+            join(options.directory, dest),
+            workspaceContext
+          );
         }
       }
     }
@@ -423,12 +463,18 @@ export async function setupAiAgentsGeneratorImpl(
   };
 }
 
-function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
+function writeAgentRules(
+  tree: Tree,
+  path: string,
+  writeNxCloudRules: boolean,
+  packageManager?: PackageManager
+) {
   if (!tree.exists(path)) {
     // File doesn't exist - create with h1 header (standalone content)
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: true,
+      packageManager,
     });
     tree.write(path, expectedRules);
     return;
@@ -447,6 +493,7 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: !hasExternalH1,
+      packageManager,
     });
     const contentOnly = (str: string) =>
       str
@@ -471,6 +518,7 @@ function writeAgentRules(tree: Tree, path: string, writeNxCloudRules: boolean) {
     const expectedRules = getAgentRulesWrapped({
       writeNxCloudRules,
       useH1: !hasExistingH1,
+      packageManager,
     });
     tree.write(path, existing + '\n\n' + expectedRules);
   }

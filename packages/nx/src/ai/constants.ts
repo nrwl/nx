@@ -1,6 +1,7 @@
 import { join } from 'path';
 import { major } from 'semver';
 import { readJsonFile } from '../utils/fileutils';
+import type { PackageManager } from '../utils/package-manager';
 import {
   getAgentRules,
   AgentRulesOptions,
@@ -56,11 +57,16 @@ export const rulesRegex = new RegExp(
 export interface AgentRulesWrappedOptions {
   writeNxCloudRules: boolean;
   useH1?: boolean;
+  packageManager?: PackageManager;
 }
 
 export const getAgentRulesWrapped = (options: AgentRulesWrappedOptions) => {
-  const { writeNxCloudRules, useH1 = true } = options;
-  const agentRulesString = getAgentRules({ nxCloud: writeNxCloudRules, useH1 });
+  const { writeNxCloudRules, useH1 = true, packageManager } = options;
+  const agentRulesString = getAgentRules({
+    nxCloud: writeNxCloudRules,
+    useH1,
+    packageManager,
+  });
   return `${nxRulesMarkerCommentStart}\n${nxRulesMarkerCommentDescription}\n\n${agentRulesString}\n\n${nxRulesMarkerCommentEnd}`;
 };
 

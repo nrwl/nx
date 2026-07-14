@@ -438,6 +438,7 @@ async function runInit(
       writeNxCloudRules: options.nxCloud !== false,
       packageVersion: 'latest',
       agents: [...selectedAgents],
+      packageManager: detectPackageManager(repoRoot),
     });
 
     const changes = tree.listChanges();

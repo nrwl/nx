@@ -21,6 +21,7 @@ import {
   parseGeminiSettings,
 } from './constants';
 import setupAiAgentsGenerator from './set-up-ai-agents/set-up-ai-agents';
+import { detectPackageManager } from '../utils/package-manager';
 
 // when adding new agents, be sure to also update the list in
 // packages/create-nx-workspace/src/create-workspace-options.ts
@@ -264,6 +265,7 @@ async function agentWouldChangeWithGenerator(
       directory: '.',
       agents: [agent],
       writeNxCloudRules: isNxCloudUsed(readNxJson()),
+      packageManager: detectPackageManager(workspaceRoot),
     },
     true
   );
@@ -286,6 +288,7 @@ export async function configureAgents(
       directory: '.',
       agents,
       writeNxCloudRules,
+      packageManager: detectPackageManager(workspaceRoot),
     },
     !useLatest
   );
