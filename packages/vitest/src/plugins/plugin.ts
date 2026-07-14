@@ -52,14 +52,14 @@ export interface VitestPluginOptions {
   /**
    * When `true` (the default), atomized test files are discovered with a glob
    * that mirrors Vitest's own resolution instead of booting Vitest per project.
-   * Booting Vitest starts a Vite dev server that runs every config plugin's
-   * `buildStart` hook; with compilation-heavy plugins (e.g. Angular) and many
-   * projects, that leads to out-of-memory crashes during graph creation.
+   * Booting Vitest starts a Vite dev server and runs the config's plugin hooks,
+   * so the glob is faster during graph creation.
    *
    * Configs a glob cannot reproduce faithfully (`test.projects`/`test.workspace`,
    * plugins with a `configureVitest` hook, `test.changed`/`test.related`) still
-   * fall back to Vitest automatically. Set to `false` to always enumerate
-   * through Vitest.
+   * fall back to Vitest automatically; those configs still boot Vitest per
+   * project, so they do not get the glob speedup. Set to `false` to always
+   * enumerate through Vitest.
    * @default true
    */
   disableVitestRuntime?: boolean;
@@ -291,11 +291,25 @@ async function buildVitestTargets(
       // Not normalizing in normalizeOptions since it also affects the options
       // computed for convert-to-inferred.
       const disableVitestRuntime = options.disableVitestRuntime !== false;
+      // Glob discovery reads the serve-resolved config: Vitest runs tests
+      // through a Vite server (the `serve` command), so `apply: 'serve'`
+      // plugins and command-sensitive `test` include/exclude are absent from
+      // the build resolution used above for outputs. The runtime path resolves
+      // its own config, so only resolve here when the glob path may run.
+      const viteServeConfig = disableVitestRuntime
+        ? await resolveConfig(
+            {
+              configFile: absoluteConfigFilePath,
+              mode: 'development',
+            },
+            'serve'
+          )
+        : undefined;
       const projectRootRelativeTestPaths =
         await getTestPathsRelativeToProjectRoot(
           projectRoot,
           context.workspaceRoot,
-          viteBuildConfig,
+          viteServeConfig,
           disableVitestRuntime
         );
 
@@ -619,16 +633,13 @@ function checkIfConfigFileShouldBeProject(
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
   workspaceRoot: string,
-  viteBuildConfig: Record<string, any>,
+  viteConfig: Record<string, any> | undefined,
   disableVitestRuntime: boolean
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
-  const test: InlineConfig = viteBuildConfig?.test ?? {};
+  const test: InlineConfig = viteConfig?.test ?? {};
 
-  if (
-    disableVitestRuntime &&
-    !configRequiresVitestRuntime(test, viteBuildConfig)
-  ) {
+  if (disableVitestRuntime && !configRequiresVitestRuntime(test, viteConfig)) {
     return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
   }
 
@@ -687,16 +698,28 @@ async function globTestPathsRelativeToProjectRoot(
       ...globOptions,
       ignore: exclude,
     });
-    for (const file of sourceFiles) {
-      // Vitest tolerates unreadable in-source candidates and skips them; match
-      // that so a permission error or TOCTOU race can't abort graph creation.
-      try {
-        const content = await readFile(join(fullProjectRoot, file), 'utf-8');
-        if (content.includes('import.meta.vitest')) {
-          matches.add(file);
-        }
-      } catch {
-        // unreadable file; treat as not an in-source test
+    // The candidate set can be the whole `src` tree, so read in bounded
+    // batches; an unbounded Promise.all over every file risks EMFILE.
+    const readConcurrency = 25;
+    for (let i = 0; i < sourceFiles.length; i += readConcurrency) {
+      const inSourceMatches = await Promise.all(
+        sourceFiles.slice(i, i + readConcurrency).map(async (file) => {
+          // Vitest tolerates unreadable in-source candidates and skips them;
+          // match that so a permission error or TOCTOU race can't abort graph
+          // creation.
+          try {
+            const content = await readFile(
+              join(fullProjectRoot, file),
+              'utf-8'
+            );
+            return content.includes('import.meta.vitest') ? file : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+      for (const file of inSourceMatches) {
+        if (file) matches.add(file);
       }
     }
   }
@@ -715,14 +738,14 @@ async function globTestPathsRelativeToProjectRoot(
  */
 function configRequiresVitestRuntime(
   test: Record<string, any>,
-  viteBuildConfig: Record<string, any>
+  viteConfig: Record<string, any>
 ): boolean {
   // Multi-project configs resolve include/exclude per sub-project.
   if (Array.isArray(test?.projects) || test?.workspace) return true;
   // Vitest filters specs by VCS/graph state, which a glob cannot know.
   if (test?.changed || test?.related) return true;
   // A plugin can inject or reshape projects through this Vitest-only hook.
-  const plugins: unknown[] = viteBuildConfig?.plugins ?? [];
+  const plugins: unknown[] = viteConfig?.plugins ?? [];
   return plugins.some(
     (plugin) =>
       plugin && typeof plugin === 'object' && 'configureVitest' in plugin

@@ -508,6 +508,38 @@ describe('@nx/vitest', () => {
       expect(targets['test-ci--src/a.ts']).toBeUndefined();
     });
 
+    it('should read in-source candidates past the concurrency batch boundary', async () => {
+      const sourceFiles = Array.from({ length: 30 }, (_, i) => `src/f${i}.ts`);
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: { includeSource: ['src/**/*.ts'] },
+        }),
+      });
+      (glob as jest.Mock)
+        .mockResolvedValueOnce([]) // regular include
+        .mockResolvedValueOnce(sourceFiles); // includeSource
+      // Markers straddle the 25-file batch: f3 (first batch), f27 (second).
+      (readFile as jest.Mock).mockImplementation(async (file: string) =>
+        file.endsWith('src/f3.ts') || file.endsWith('src/f27.ts')
+          ? 'if (import.meta.vitest) { /* test */ }'
+          : 'export const x = 1;'
+      );
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      expect(targets['test-ci--src/f3.ts']).toBeDefined();
+      expect(targets['test-ci--src/f27.ts']).toBeDefined();
+      expect(readFile).toHaveBeenCalledTimes(30);
+    });
+
     it('should skip in-source candidates that cannot be read', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
         resolveConfig: jest.fn().mockResolvedValue({
@@ -551,6 +583,34 @@ describe('@nx/vitest', () => {
       expect(targets['test-ci--src/inside.spec.ts']).toBeDefined();
       expect(Object.keys(targets).some((name) => name.includes('..'))).toBe(
         false
+      );
+    });
+
+    it('should skip the regular test glob when typecheck.only is set', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: { typecheck: { enabled: true, only: true } },
+        }),
+      });
+      (glob as jest.Mock).mockResolvedValueOnce(['src/a.test-d.ts']);
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      expect(targets['test-ci--src/a.test-d.ts']).toBeDefined();
+      // typecheck.only runs only type tests, so the regular include glob is
+      // skipped and glob runs once with the typecheck include.
+      expect(glob).toHaveBeenCalledTimes(1);
+      expect(glob).toHaveBeenCalledWith(
+        ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
+        expect.objectContaining({ cwd: '.' })
       );
     });
   });
