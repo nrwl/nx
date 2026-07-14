@@ -1,10 +1,7 @@
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import type { Tree } from '../../generators/tree';
 import { formatCatalogError, type CatalogManager } from './manager';
 import {
-  readCatalogConfigFromFs,
-  readCatalogConfigFromTree,
+  readCatalogDefinitions,
   updateCatalogVersionsInFile,
 } from './manager-utils';
 import type {
@@ -21,6 +18,8 @@ const PNPM_WORKSPACE_FILENAME = 'pnpm-workspace.yaml';
 export class PnpmCatalogManager implements CatalogManager {
   readonly name = 'pnpm';
   readonly catalogProtocol = 'catalog:';
+  // Parsed fs-root definitions, cached per pass. See readCatalogDefinitions.
+  private definitionsByRoot = new Map<string, CatalogDefinitions | null>();
 
   isCatalogReference(version: string): boolean {
     return version.startsWith(this.catalogProtocol);
@@ -46,18 +45,11 @@ export class PnpmCatalogManager implements CatalogManager {
   }
 
   getCatalogDefinitions(treeOrRoot: Tree | string): CatalogDefinitions | null {
-    if (typeof treeOrRoot === 'string') {
-      const configPath = join(treeOrRoot, PNPM_WORKSPACE_FILENAME);
-      if (!existsSync(configPath)) {
-        return null;
-      }
-      return readCatalogConfigFromFs(PNPM_WORKSPACE_FILENAME, configPath);
-    } else {
-      if (!treeOrRoot.exists(PNPM_WORKSPACE_FILENAME)) {
-        return null;
-      }
-      return readCatalogConfigFromTree(PNPM_WORKSPACE_FILENAME, treeOrRoot);
-    }
+    return readCatalogDefinitions(
+      PNPM_WORKSPACE_FILENAME,
+      treeOrRoot,
+      this.definitionsByRoot
+    );
   }
 
   resolveCatalogReference(
