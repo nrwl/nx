@@ -71,7 +71,7 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
       workspaceDataDirectory,
       `vitest-${optionsHash}.hash`
     );
-    const targetsCache = new PluginCache<VitestTargets>(cachePath);
+    const targetsCache = new PluginCache<VitestTargets | null>(cachePath);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFilePaths.reduce(
@@ -128,14 +128,17 @@ export const createNodes: CreateNodes<VitestPluginOptions> = [
               pmc,
               tsconfigChainsByProjectRoot.get(projectRoot) ?? []
             );
-            // `buildVitestTargets` returns null for a root orchestrator config
-            // that must not become a project; register no node for it.
-            if (!result) {
-              return { projects: {} };
-            }
+            // Cache the result even when it's null (a root orchestrator config)
+            // so the config isn't re-resolved on every project-graph build.
             targetsCache.set(hash, result);
           }
-          const { projectType, metadata, targets } = targetsCache.get(hash);
+          const cached = targetsCache.get(hash);
+          // `buildVitestTargets` returns null for a root orchestrator config
+          // that must not become a project; register no node for it.
+          if (!cached) {
+            return { projects: {} };
+          }
+          const { projectType, metadata, targets } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
