@@ -1,3 +1,4 @@
+use super::components::link::display_width;
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use super::utils::normalize_newlines;
 use crossterm::event::{KeyCode, KeyEvent};
@@ -80,6 +81,15 @@ pub struct PtyInstance {
 /// Uses a fast path for lines that are definitely short enough to fit in one row
 /// (by byte length, which is always >= display width). Only calls wrap_ansi for
 /// lines that might actually need wrapping.
+/// Byte index where the `n`th char of `line` begins, or the line's byte length
+/// when `n` is past the end. Used to slice a char range for width measurement.
+fn char_boundary(line: &str, n: usize) -> usize {
+    line.char_indices()
+        .nth(n)
+        .map(|(byte, _)| byte)
+        .unwrap_or(line.len())
+}
+
 fn wrap_logical_line(line: &str, cols: usize) -> usize {
     if cols == 0 || line.is_empty() {
         return 1;
@@ -768,11 +778,21 @@ impl PtyInstance {
             let mut from = 0usize;
             while let Some(found) = haystack[from..].find(&needle) {
                 let byte = from + found;
+                // The match is located by char offset in the lowercased line;
+                // map it to display *columns* in the original line so wide
+                // characters (CJK, emoji) don't shift the highlight — the
+                // overlay walks the buffer in columns, and the terminal wraps
+                // by column too. (Lowercasing is assumed char-count-preserving,
+                // as elsewhere; the rare width-changing case is approximate.)
                 let char_offset = haystack[..byte].chars().count();
+                let start_byte = char_boundary(line, char_offset);
+                let end_byte = char_boundary(line, char_offset + needle_chars);
+                let col_offset = display_width(&line[..start_byte]);
+                let match_cols = display_width(&line[start_byte..end_byte]).max(1);
                 matches.push((
-                    consumed_rows + char_offset / cols,
-                    char_offset % cols,
-                    needle_chars,
+                    consumed_rows + col_offset / cols,
+                    col_offset % cols,
+                    match_cols,
                 ));
                 from = byte + needle.len().max(1);
             }
@@ -1122,6 +1142,18 @@ mod tests {
 
         assert!(pty.search_visual_positions("").is_empty());
         assert!(pty.search_visual_positions("absent").is_empty());
+    }
+
+    #[test]
+    fn search_positions_are_display_columns_not_char_counts() {
+        let pty = create_test_pty_instance(false);
+        // Two double-width CJK chars precede the match. In char counts the
+        // match would start at column 2; in display columns it starts at 4,
+        // which is what the (column-walking) highlight overlay needs.
+        pty.parser.write().process("你好error\r\n".as_bytes());
+
+        let matches = pty.search_visual_positions("error");
+        assert_eq!(matches, vec![(0, 4, 5)]);
     }
 
     #[test]

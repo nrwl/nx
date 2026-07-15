@@ -86,10 +86,14 @@ pub struct PaneSearch {
     pub query: String,
     /// Typing into the query (true) vs navigating matches with n/N (false).
     pub input_mode: bool,
-    /// Match positions in the PTY's visual coordinates: (row, col, char_len).
+    /// Match positions in the PTY's visual coordinates: (row, col, col_width).
     pub matches: Vec<(usize, usize, usize)>,
     /// Index into `matches` of the match the view last jumped to.
     pub current: usize,
+    /// PTY content-row count when `matches` was last computed. n/N re-searches
+    /// only when this changes (the output grew), so navigating a finished
+    /// task's static scrollback doesn't re-scan it on every keypress.
+    pub searched_content_rows: usize,
 }
 
 pub struct TerminalPaneData {
@@ -143,10 +147,12 @@ impl TerminalPaneData {
             .as_ref()
             .map(|search| pty.search_visual_positions(&search.query))
             .unwrap_or_default();
+        let content_rows = pty.get_total_content_rows();
         let Some(search) = &mut self.search else {
             return;
         };
         search.matches = positions;
+        search.searched_content_rows = content_rows;
         search.current = search
             .matches
             .iter()
@@ -160,10 +166,20 @@ impl TerminalPaneData {
     /// Refresh the match list against the current content (it may have grown)
     /// WITHOUT re-anchoring `current` to the scroll position: n/N must step
     /// relative to the match the user is on, not whatever scrolled into view.
+    /// Skips the re-scan entirely when the output hasn't grown since the last
+    /// search — navigating a finished task's scrollback costs nothing.
     fn refresh_matches(&mut self) {
         let Some(pty) = &self.pty else {
             return;
         };
+        let content_rows = pty.get_total_content_rows();
+        if self
+            .search
+            .as_ref()
+            .is_some_and(|search| search.searched_content_rows == content_rows)
+        {
+            return;
+        }
         let positions = self
             .search
             .as_ref()
@@ -172,6 +188,7 @@ impl TerminalPaneData {
         if let Some(search) = &mut self.search {
             let previous = search.matches.get(search.current).copied();
             search.matches = positions;
+            search.searched_content_rows = content_rows;
             search.current = previous
                 .and_then(|prev| search.matches.iter().position(|m| *m == prev))
                 .unwrap_or_else(|| search.current.min(search.matches.len().saturating_sub(1)));
@@ -1218,17 +1235,19 @@ mod tests {
             .unwrap();
     }
 
-    /// Regression: n used to re-anchor the current match to the scroll
-    /// position before stepping, so it stopped advancing after one press.
+    /// n and N step forward/backward through the match list and wrap around.
+    /// (With no pty the refresh/jump are no-ops, so this isolates the index
+    /// stepping — the scroll-position re-anchoring itself needs a live pty and
+    /// is exercised via the higher-level flows.)
     #[test]
     fn search_n_and_shift_n_step_relative_to_the_current_match() {
         let mut pane = TerminalPaneData::new();
-        // No pty: refresh/jump are no-ops, leaving pure index stepping.
         pane.search = Some(PaneSearch {
             query: "x".to_string(),
             input_mode: false,
             matches: vec![(1, 0, 1), (5, 0, 1), (9, 0, 1)],
             current: 0,
+            ..Default::default()
         });
 
         let current = |pane: &TerminalPaneData| pane.search.as_ref().unwrap().current;

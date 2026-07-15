@@ -141,7 +141,7 @@ impl StatefulWidget for &Link {
 }
 
 /// Display width (in terminal columns) of a string, honouring wide characters.
-fn display_width(text: &str) -> usize {
+pub(crate) fn display_width(text: &str) -> usize {
     Span::raw(text).width()
 }
 
