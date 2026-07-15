@@ -43,7 +43,7 @@ jobs:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)<% } %>
 
       <% if(packageManager == 'pnpm'){ %>
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
+      - script: npm install --prefix=$HOME/.local -g pnpm@11
         displayName: Install PNPM
 
       <% } %>
