@@ -95,7 +95,7 @@
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.46",
+          "version": "^2.7.47",
           "alwaysAddToPackageJson": false
         }
       }
@@ -108,19 +108,19 @@
       },
       "packages": {
         "@module-federation/enhanced": {
-          "version": "^2.7.0",
+          "version": "^2.8.0",
           "alwaysAddToPackageJson": false
         },
         "@module-federation/runtime": {
-          "version": "^2.7.0",
+          "version": "^2.8.0",
           "alwaysAddToPackageJson": false
         },
         "@module-federation/sdk": {
-          "version": "^2.7.0",
+          "version": "^2.8.0",
           "alwaysAddToPackageJson": false
         },
         "@module-federation/node": {
-          "version": "^2.7.46",
+          "version": "^2.7.47",
           "alwaysAddToPackageJson": false
         }
       }
