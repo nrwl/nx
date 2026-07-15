@@ -172,8 +172,8 @@ describe('project-configuration-utils', () => {
     });
 
     // Mirror of the dependsOn P2 regression for the inputs path:
-    // processInputs and processDependsOn share writeReplacement /
-    // createRef plumbing, but the top-level walk is separate. Locks in
+    // processInputs and processDependsOn share the createRef plumbing,
+    // but the substitution sweep walks each array separately. Locks in
     // that default-plugin inputs references get sentinel treatment too.
     it('should resolve inputs refs owned by default plugins when the referenced project is renamed during the default apply', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
