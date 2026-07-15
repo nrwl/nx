@@ -1,4 +1,4 @@
-import { existsSync } from 'fs';
+import { chmodSync, existsSync } from 'fs';
 import { createServer, Server, Socket } from 'net';
 import { join } from 'path';
 import { deserialize, serialize } from 'v8';
@@ -740,6 +740,19 @@ export async function startServer(): Promise<Server> {
       server.listen(socketPath, async () => {
         try {
           serverLogger.log(`Started listening on: ${socketPath}`);
+
+          // Belt-and-suspenders: restrict the socket file itself to its owner so
+          // that only the daemon owner can connect. On Linux, connecting to a
+          // Unix socket requires write permission on the socket file; on
+          // macOS/BSD the (already-0700) socket directory is what gates access.
+          // Skipped on Windows, where `socketPath` is a named pipe.
+          if (!isWindows) {
+            try {
+              chmodSync(socketPath, 0o600);
+            } catch {
+              // Best effort; the 0700 socket directory is the primary control.
+            }
+          }
 
           // this triggers the storage of the lock file hash
           daemonIsOutdated();
