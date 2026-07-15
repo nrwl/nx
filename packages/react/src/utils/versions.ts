@@ -25,7 +25,7 @@ export const typesNodeVersion = '^22.0.0';
 export const babelPresetReactVersion = '^7.14.5';
 export const babelCoreVersion = '^7.14.5';
 
-export const reactRouterDomVersion = '6.30.3';
+export const reactRouterDomVersion = '6.30.4';
 export const reactRouterVersion = '^7.14.2';
 export const reactRouterIsBotVersion = '^4.4.0';
 
