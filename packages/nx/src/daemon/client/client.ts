@@ -25,6 +25,7 @@ import {
   PostTasksExecutionContext,
   PreTasksExecutionContext,
 } from '../../project-graph/plugins/public-api';
+import { getPluginResolveConditionNodeArgs } from '../../plugins/js/utils/typescript';
 import { preventRecursionInGraphConstruction } from '../../project-graph/project-graph';
 import { ConfigurationSourceMaps } from '../../project-graph/utils/project-configuration/source-maps';
 import { parseMessage } from '../../utils/consume-messages-from-socket';
@@ -1332,7 +1333,12 @@ export class DaemonClient {
 
     const backgroundProcess = spawn(
       process.execPath,
-      [join(__dirname, `../server/start.js`)],
+      [
+        // Spawn with the same resolve conditions Nx uses for plugin entries so a
+        // source-loaded plugin's transitive workspace imports resolve to source.
+        ...getPluginResolveConditionNodeArgs(),
+        join(__dirname, `../server/start.js`),
+      ],
       {
         cwd: workspaceRoot,
         stdio: ['ignore', outFd, errFd],
