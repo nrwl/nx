@@ -518,7 +518,10 @@ export default defineConfig({
         Object.keys(details.targets)
           .filter((t) => t.startsWith('test-ci--'))
           .sort()
-          .map((t) => ({ target: t, command: details.targets[t].command }));
+          .map((t) => ({
+            target: t,
+            command: details.targets[t].options?.command,
+          }));
 
       // default path: spec files discovered via glob (runtime disabled)
       const globDetails = JSON.parse(
