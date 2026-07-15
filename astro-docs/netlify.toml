@@ -72,6 +72,26 @@ to = "/docs/features/ci-features/self-healing-ci"
 from = "/docs/guides/nx-cloud/manual-dte"
 to = "/docs/guides/nx-cloud/bring-your-own-compute"
 
+# DOC-549: GitHub source control guide merged into the GitHub Actions integration page
+[[redirects]]
+from = "/docs/guides/nx-cloud/source-control-integration/github"
+to = "/docs/features/ci-features/github-integration"
+
+# DOC-549: decisions overview renamed to monorepo-vs-polyrepo
+[[redirects]]
+from = "/docs/concepts/decisions/overview"
+to = "/docs/concepts/decisions/monorepo-vs-polyrepo"
+
+# DOC-549: why-monorepos renamed to what-is-a-monorepo
+[[redirects]]
+from = "/docs/concepts/decisions/why-monorepos"
+to = "/docs/concepts/decisions/what-is-a-monorepo"
+
+# DOC-549: maintain-typescript-monorepos merged into the TypeScript introduction
+[[redirects]]
+from = "/docs/features/maintain-typescript-monorepos"
+to = "/docs/technologies/typescript/introduction"
+
 [[redirects]]
 from = "/docs/extending-nx/recipes/create-preset"
 to = "/docs/extending-nx/create-preset"
