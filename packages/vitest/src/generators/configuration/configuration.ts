@@ -315,7 +315,7 @@ getTestBed().initTestEnvironment(
           tree,
           rootVitestConfig
         );
-        if (declaresProjects === false) {
+        if (declaresProjects === 'missing') {
           logger.warn(
             `Found a root "${rootVitestConfig}" without a \`test.projects\` entry. ` +
               `The "${schema.project}" project won't be part of workspace-level ` +
@@ -338,7 +338,7 @@ getTestBed().initTestEnvironment(
           tree,
           rootViteConfig
         );
-        if (declaresProjects === false) {
+        if (declaresProjects === 'missing') {
           logger.warn(
             `Found a root "${rootViteConfig}" without a \`test.projects\` entry. ` +
               `The "${schema.project}" project runs through that root config, so ` +
@@ -355,10 +355,11 @@ getTestBed().initTestEnvironment(
           );
         }
       } else {
-        // No root config exists, so emit the aggregator. The projects glob
-        // matches every project vite/vitest config; exclude the root configs so
-        // a root config added later isn't resolved as an extra project that,
-        // carrying no `include`, re-runs every spec via the default glob.
+        // No root config exists, so emit the aggregator. Its projects glob
+        // matches every vite/vitest config, including this file itself and any
+        // root vite.config added later; exclude both so neither is resolved as
+        // an extra project that, carrying no `include`, re-runs every spec via
+        // the default glob.
         tree.write(
           'vitest.config.ts',
           `import { defineConfig } from 'vitest/config';
@@ -650,15 +651,18 @@ function findRootConfig(
 }
 
 /**
- * Whether a root config's default export already aggregates projects via
- * `test.projects` (or the vitest 3 `test.workspace`). Returns `'unknown'` for
- * shapes that can't be read statically (dynamic/function configs, spreads),
- * where the safe move is to leave the config untouched rather than shadow it.
+ * Classifies a root config's default export by whether it already aggregates
+ * projects via `test.projects` (or the vitest 3 `test.workspace`):
+ * - `'declares'`: it aggregates projects.
+ * - `'missing'`: it's a readable object config with no such aggregation.
+ * - `'unknown'`: the shape can't be read statically (dynamic/function configs,
+ *   spreads), where the safe move is to leave the config untouched rather than
+ *   shadow it.
  */
 function rootConfigDeclaresProjects(
   tree: Tree,
   configPath: string
-): boolean | 'unknown' {
+): 'declares' | 'missing' | 'unknown' {
   ts ??= ensureTypescript();
   const { tsquery } = require('@phenomnomnominal/tsquery');
 
@@ -695,7 +699,7 @@ function rootConfigDeclaresProjects(
 
   const testProperty = findObjectProperty(expression, 'test');
   if (!testProperty) {
-    return false;
+    return 'missing';
   }
   if (!ts.isObjectLiteralExpression(testProperty.initializer)) {
     return 'unknown';
@@ -705,10 +709,10 @@ function rootConfigDeclaresProjects(
     return 'unknown';
   }
 
-  return (
-    !!findObjectProperty(testObject, 'projects') ||
-    !!findObjectProperty(testObject, 'workspace')
-  );
+  return findObjectProperty(testObject, 'projects') ||
+    findObjectProperty(testObject, 'workspace')
+    ? 'declares'
+    : 'missing';
 }
 
 function unwrapExpression(expression: Expression): Expression {

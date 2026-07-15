@@ -281,7 +281,7 @@ describe('@nx/vitest', () => {
       // The root orchestrator config is not a project; it must not register a
       // node rooted at the workspace root (which would make `nx format` and
       // affected detection treat the whole workspace as one project).
-      expect(nodes[0][1].projects ?? {}).toEqual({});
+      expect(nodes[0][1].projects).toEqual({});
     });
 
     it('should NOT create a project for root config with empty projects array', async () => {
@@ -304,7 +304,7 @@ describe('@nx/vitest', () => {
         context
       );
 
-      expect(nodes[0][1].projects ?? {}).toEqual({});
+      expect(nodes[0][1].projects).toEqual({});
     });
   });
 });

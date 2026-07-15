@@ -162,6 +162,37 @@ export default defineConfig(() => ({ test: { globals: true } }));
     warnSpy.mockRestore();
   });
 
+  it('should not overwrite a root vitest.config.ts that already aggregates projects', async () => {
+    setVitestVersion('~4.1.0');
+    const rootConfig = `import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: { projects: ['packages/*'] },
+});
+`;
+    tree.write('vitest.config.ts', rootConfig);
+    const warnSpy = jest.spyOn(logger, 'warn').mockImplementation(() => {});
+
+    await configurationGenerator(tree, {
+      project: 'mylib',
+      uiFramework: 'none',
+      coverageProvider: 'v8',
+      skipViteConfig: true,
+      skipPackageJson: true,
+      addPlugin: false,
+      skipFormat: true,
+    });
+
+    // The root vitest.config.ts already aggregates via test.projects; leave it
+    // untouched and don't warn.
+    expect(tree.read('vitest.config.ts', 'utf-8')).toBe(rootConfig);
+    expect(warnSpy).not.toHaveBeenCalledWith(
+      expect.stringContaining('test.projects')
+    );
+
+    warnSpy.mockRestore();
+  });
+
   it('should skip and warn when a plain root vite.config.ts exists', async () => {
     setVitestVersion('~4.1.0');
     const viteConfig = `import { defineConfig } from 'vite';
