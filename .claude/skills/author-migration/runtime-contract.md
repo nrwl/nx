@@ -1,0 +1,50 @@
+# migrations.json runtime contract
+
+How `nx migrate` actually consumes each key. Source of truth: `packages/nx/src/command-line/migrate/migrate.ts` (the `Migrator` class and `runMigrations`), `packages/nx/src/command-line/migrate/prompt-files.ts`, and the types in `packages/nx/src/config/misc-interfaces.ts` (`MigrationsJsonEntry`, `MigrationReturnObject`, `PackageJsonUpdates`). Verify against those files when in doubt; line references rot, symbol names do not.
+
+## Migration entries (`generators` section)
+
+New entries always go under `generators`. Entries under `schematics` run through the Angular Devkit adapter; the fetcher folds them into one map, so the section, not any key, selects the runner.
+
+| Key                          | Runtime behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `version`                    | Gate: entry collected when `gt(version, installed) && lte(version, target)` after `normalizeVersion`. Prerelease ordering applies (`beta.N < rc.N < stable`). Strict `gt` on the installed side: a user already at that exact prerelease never runs it.                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `description`                | Shown in run listings and the docs page; rendered inside the `<migration>` block of the agentic prompt.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `implementation` / `factory` | Equivalent aliases; `implementation` wins when both are set and is the one to author. Resolved with `require.resolve` relative to the installed package's migrations.json directory, so the path must match the PUBLISHED layout (dist-prefixed). `#symbol` selects a named export, otherwise the default export. Called as `await fn(tree, {})`. Beware: nothing ties the path to the entry. A wrong-but-existing path resolves and RUNS at run time (`getImplementationPath` just calls `require.resolve`), passes `assertValidMigrationPaths` (it requires the source file directly), and passes `@nx/nx-plugin-checks` (whose `resolveImplementation` even guesses source layouts). |
+| `requires`                   | Map of package name to semver range, evaluated with `includePrerelease: true` against the version the package will land on in THIS run (pending packageJsonUpdates first, installed version as fallback). Package absent from both = gate fails. An entry skipped this way does not re-run in the default flow; the catch-up path is `--from` + `--exclude-applied-migrations`.                                                                                                                                                                                                                                                                                                         |
+| `prompt`                     | Relative path to a colocated .md, validated to stay inside the migrations directory. At generate time the content is extracted to `tools/ai-migrations/<package>/<targetVersion>/<basename>.md` and the field is rewritten to that workspace path. At run time, prompt-only entries execute only under the agentic flow (an agent CLI is spawned); otherwise they are surfaced as next steps. Hybrid entries (implementation + prompt) always run their deterministic half. Prompts are deduped by path across entries. At least one of `implementation`/`factory`/`prompt` is required; validated at fetch time.                                                                       |
+| `documentation`              | Relative path to a colocated .md, resolved like `implementation`. Read only during agentic runs and passed to the agent as reference material (`<migration_documentation>`); a stale path logs a warning and is skipped. Plain runs never read it. The docs site does NOT read this key; it inlines the .md sharing the implementation's basename.                                                                                                                                                                                                                                                                                                                                      |
+
+Do not author: `cli` (dead since the runner-by-section change; schema marks it "No longer used"), `schema` (documented in the JSON schema but never read by the runtime), `x-repair-skip` unless the migration is an nx-core migration that must not re-run under `nx repair` (repair re-runs ALL nx-core migrations regardless of version).
+
+## Return values
+
+`Migration = (tree) => void | string[] | MigrationReturnObject | Promise<...>`.
+
+- `string[]` is shorthand for `nextSteps`.
+- `nextSteps`: shown in the end-of-run summary and failure recaps; persisted by Nx Console. The channel for anything a human must do.
+- `agentContext`: injected into the agent prompt as `<advisory_context>` during agentic runs; silently dropped otherwise. Human-relevant content must therefore be duplicated into `nextSteps`.
+- Anything else (including a `GeneratorCallback`) is silently discarded. Installs are handled by the runner diffing package.json around each migration; never return install tasks and never call `installPackagesTask`.
+
+## Execution model
+
+- Tree changes flush to disk only after the migration function returns. A child process spawned inside a migration sees pre-migration disk state.
+- The first throwing migration aborts the whole `--run-migrations` run; there is no resume state. Fail open.
+- `nx repair` re-runs every nx-core migration regardless of version (minus `x-repair-skip`), so nx-core migrations must be idempotent.
+
+## packageJsonUpdates
+
+Shape: `{ "<key>": { version, packages, requires?, incompatibleWith?, "x-prompt"? } }` with per-package `{ version, alwaysAddToPackageJson?, addToPackageJson?, ifPackageInstalled?, ignorePackageGroup?, ignoreMigrations? }`.
+
+- A group applies when `installed <= group.version <= target` (inclusive lower bound, unlike migration entries).
+- Only packages already in dependencies/devDependencies are touched unless `addToPackageJson`/`alwaysAddToPackageJson` is set (`true` = dependencies, string = that section; `alwaysAddToPackageJson` wins). Across groups the highest version per package wins; downgrades are filtered at write time.
+- Groups are processed in key order in a single pass, and each accepted group writes into the pending update set that the next group's `requires` is evaluated against. Order ladder groups oldest source major first so multi-major chains work.
+- `incompatibleWith` inverts `requires`: the group is skipped when any listed package's landing version satisfies the range.
+- `x-prompt` fires only under `--interactive` outside CI and is deprecated for removal in Nx v24; do not add it.
+- `ignorePackageGroup: true` + `ignoreMigrations: true` on a per-package update bumps that package without pulling in its own package group or migrations (used for `@angular/cli`).
+- `<version>--PackageGroup` keys are synthesized at runtime from the plugin's `packageGroup`; never author one.
+- The group key is user-visible (docs anchor in the interactive prompt footer): `X.Y.Z` or `X.Y.Z-<topic>` for separately gated third-party bumps.
+
+## package.json migrate config
+
+`readNxMigrateConfig` reads, in increasing precedence: `ng-update`, `nx-migrations`, bare top-level fields. First-party plugins declare `"nx-migrations": { "migrations": "./migrations.json", "supportsOptionalMigrations": true }`; `ng-update` survives only for Angular CLI interop (`ng update` reads it). `packageGroup` membership (authored in `packages/nx/package.json` and `packages/workspace/package.json`) determines both the synthetic group bump and the required side of the `--include` required/optional partition; there is no per-entry optionality marker.
