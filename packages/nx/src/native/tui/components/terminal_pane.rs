@@ -1248,6 +1248,101 @@ mod tests {
             .unwrap();
     }
 
+    /// Search highlights must land exactly on the matched text after the pane
+    /// renders through its real path — border, padding, `block.inner`,
+    /// scrollback, ANSI colour codes, auto-wrapped lines, and a scroll offset
+    /// from jumping to a match. Guards the "highlight is off by one when lines
+    /// wrap" class of regression: any highlighted cell run that doesn't spell
+    /// the query is drift between the match basis and the rendered grid.
+    #[test]
+    fn search_highlights_align_with_matches_through_the_render_path() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        // Area 40x100 -> pty dims via calculate_pty_dimensions: 36 rows x 93 cols.
+        let area = Rect::new(0, 0, 100, 40);
+        let (pty_rows, pty_cols) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(
+            pty_rows, pty_cols,
+        ));
+
+        // Stream enough content to overflow the screen (force scrollback) with
+        // interleaved WRAPPING lines (paths wider than pty_cols).
+        let mut feed = String::new();
+        for i in 0..60 {
+            feed.push_str(&format!("\x1b[34m[INFO]\x1b[0m step {i}\r\n"));
+            if i % 4 == 0 {
+                feed.push_str(&format!(
+                    "\x1b[33m[WARNING]\x1b[0m /home/jason/projects/nx7/packages/maven/batch-runner/src/main/kotlin/dev/nx/maven/File{i}.kt long path that wraps here\r\n"
+                ));
+            }
+        }
+        pty.process_output(feed.as_bytes());
+
+        let matches = pty.search_visual_positions("info");
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        // Pick a match in the middle and jump to it (scrolls the viewport), the
+        // exact interaction the user performs when reporting the off-by-one.
+        let current = matches.len() / 2;
+        data.search = Some(PaneSearch {
+            query: "info".to_string(),
+            input_mode: false,
+            matches,
+            current,
+            searched_content_rows: pty.get_total_content_rows(),
+        });
+        data.jump_to_current_match();
+
+        let mut state = TerminalPaneState::new(
+            "maven:build".to_string(),
+            TaskStatus::InProgress,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+
+        let mut buf = Buffer::empty(area);
+        let pane = TerminalPane::new().pty_data(&mut data);
+        StatefulWidget::render(pane, area, &mut buf, &mut state);
+
+        // Collect contiguous highlighted (REVERSED or warning-bg) runs and the
+        // text under them. Every run should read "INFO" — anything else is drift.
+        let mut bad = Vec::new();
+        for y in 0..area.height {
+            let mut run = String::new();
+            let mut run_x = 0u16;
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                let hot = cell.modifier.contains(Modifier::REVERSED) || cell.bg == THEME.warning;
+                if hot {
+                    if run.is_empty() {
+                        run_x = x;
+                    }
+                    run.push_str(cell.symbol());
+                } else if !run.is_empty() {
+                    if run.to_lowercase() != "info" {
+                        bad.push((run_x, y, run.clone()));
+                    }
+                    run.clear();
+                }
+            }
+            if !run.is_empty() && run.to_lowercase() != "info" {
+                bad.push((run_x, y, run.clone()));
+            }
+        }
+        for (x, y, text) in &bad {
+            eprintln!("MISALIGNED highlight at ({x},{y}): {text:?}");
+        }
+        assert!(bad.is_empty(), "{} misaligned highlight runs", bad.len());
+    }
+
     /// n and N step forward/backward through the match list and wrap around.
     /// (With no pty the refresh/jump are no-ops, so this isolates the index
     /// stepping — the scroll-position re-anchoring itself needs a live pty and
