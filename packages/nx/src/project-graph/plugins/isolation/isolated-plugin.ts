@@ -554,7 +554,15 @@ async function startPluginWorker(name: string) {
   };
 
   const ipcPath = getPluginOsSocketPath(
-    [process.pid, global.nxPluginWorkerCount++, performance.now()].join('-')
+    [
+      process.pid,
+      global.nxPluginWorkerCount++,
+      // pid + counter already uniquely identify a worker within this process and
+      // keep the socket file readable; this timestamp only guards against a
+      // reused pid across process restarts. Floor + base36 keeps it a few chars
+      // so the full socket path stays within the OS length limit.
+      Math.floor(performance.now()).toString(36),
+    ].join('-')
   );
 
   const worker = spawn(
