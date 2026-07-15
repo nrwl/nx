@@ -185,6 +185,70 @@ describe('ast-utils', () => {
             }
         }))"
       `);
+
+      // An override that needs compat tooling must hand parser and parserOptions to
+      // FlatCompat, which resolves the parser and hoists ecmaVersion/sourceType.
+      // Re-emitting them onto the mapped object instead would overwrite the
+      // languageOptions FlatCompat derives from env/extends.
+      expect(
+        getOutput({
+          files: ['*.ts'],
+          parser: '@typescript-eslint/parser',
+          parserOptions: { project: './tsconfig.json' },
+          plugins: ['@typescript-eslint'],
+          rules: { 'no-console': 'error' },
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            parser: "@typescript-eslint/parser",
+            parserOptions: {
+                project: "./tsconfig.json"
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.ts"
+            ],
+            rules: {
+                ...config.rules,
+                "no-console": "error"
+            }
+        }))"
+      `);
+
+      // The mapped object must not assign languageOptions, or it would clobber the
+      // globals FlatCompat derives from env.
+      expect(
+        getOutput({
+          files: ['*.js'],
+          parser: '@typescript-eslint/parser',
+          env: { node: true },
+          plugins: ['@typescript-eslint'],
+          rules: { 'no-undef': 'error' },
+        })
+      ).toMatchInlineSnapshot(`
+        "...compat.config({
+            parser: "@typescript-eslint/parser",
+            env: {
+                node: true
+            },
+            plugins: [
+                "@typescript-eslint"
+            ]
+        }).map(config => ({
+            ...config,
+            files: [
+                "**/*.js"
+            ],
+            rules: {
+                ...config.rules,
+                "no-undef": "error"
+            }
+        }))"
+      `);
     });
   });
 

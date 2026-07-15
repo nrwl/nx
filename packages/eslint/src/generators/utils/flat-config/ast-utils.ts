@@ -1744,9 +1744,12 @@ export function generateFlatOverride(
     });
   }
 
-  // At this point we are applying the flat config compat tooling to the override
-  let { excludedFiles, parser, parserOptions, rules, files, ...rest } =
-    override;
+  // At this point we are applying the flat config compat tooling to the override.
+  // Only destructure what Nx must remap or merge itself. Everything else, including
+  // parser and parserOptions, stays in `rest` so FlatCompat translates it: it resolves
+  // the parser to a module reference and hoists ecmaVersion/sourceType out of
+  // parserOptions, which re-emitting them by hand does not do.
+  let { excludedFiles, rules, files, ...rest } = override;
 
   const objectLiteralElements: ts.ObjectLiteralElementLike[] = [
     ts.factory.createSpreadAssignment(ts.factory.createIdentifier('config')),
@@ -1800,12 +1803,6 @@ export function generateFlatOverride(
       ts.factory.createObjectLiteralExpression(updatedRulesProperties, true)
     )
   );
-
-  if (parserOptions) {
-    addTSObjectProperty(objectLiteralElements, 'languageOptions', {
-      parserOptions,
-    });
-  }
 
   return ts.factory.createSpreadElement(
     ts.factory.createCallExpression(
