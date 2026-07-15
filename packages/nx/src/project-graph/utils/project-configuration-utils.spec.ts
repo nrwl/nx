@@ -172,8 +172,8 @@ describe('project-configuration-utils', () => {
     });
 
     // Mirror of the dependsOn P2 regression for the inputs path:
-    // processInputs and processDependsOn share writeReplacement /
-    // createRef plumbing, but the top-level walk is separate. Locks in
+    // processInputs and processDependsOn share the createRef plumbing,
+    // but the substitution sweep walks each array separately. Locks in
     // that default-plugin inputs references get sentinel treatment too.
     it('should resolve inputs refs owned by default plugins when the referenced project is renamed during the default apply', () => {
       const specifiedResults: CreateNodesResultEntry[][] = [
@@ -606,6 +606,113 @@ describe('project-configuration-utils', () => {
       // The target defaults override specified, so base is ['from-defaults']
       // Then project.json's ['explicit', '...'] expands to ['explicit', 'from-defaults']
       expect(buildTarget.inputs).toEqual(['explicit', 'from-defaults']);
+    });
+
+    it('should resolve name refs in every pattern-matched target when a project.json pattern target spreads targetDefaults', () => {
+      // Regression: the spread copies the targetDefaults dependsOn entries
+      // (already sentinelized as name refs) by reference into a fresh array
+      // for every target matching the pattern. Write-back through each
+      // sentinel's original array left raw sentinel objects in the copies,
+      // which later crashed task graph creation ("pattern is not iterable").
+      const specifiedResults = [
+        [
+          [
+            'fake-atomizer-plugin',
+            'e2e/maven/jest.config.ts',
+            {
+              projects: {
+                'e2e/maven': {
+                  name: 'e2e-maven',
+                  targets: {
+                    'e2e-ci--src/a.test.ts': { command: 'echo a' },
+                    'e2e-ci--src/b.test.ts': { command: 'echo b' },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const defaultResults = [
+        [
+          [
+            'nx/core/project-json',
+            'project.json',
+            {
+              projects: {
+                '.': {
+                  name: '@nx/nx-source',
+                  root: '.',
+                  targets: {
+                    'populate-storage': { command: 'echo populate' },
+                    'local-registry': { command: 'echo registry' },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'e2e/maven/project.json',
+            {
+              projects: {
+                'e2e/maven': {
+                  name: 'e2e-maven',
+                  root: 'e2e/maven',
+                  targets: {
+                    'e2e-ci--**/**': {
+                      dependsOn: ['...', 'maven-plugin:install'],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          [
+            'nx/core/project-json',
+            'libs/maven-plugin/project.json',
+            {
+              projects: {
+                'libs/maven-plugin': {
+                  name: 'maven-plugin',
+                  root: 'libs/maven-plugin',
+                  targets: {
+                    install: { command: 'echo install' },
+                  },
+                },
+              },
+            },
+          ],
+        ],
+      ] as const;
+
+      const errors = [];
+      const result = mergeCreateNodesResults(
+        specifiedResults as any,
+        defaultResults as any,
+        {
+          targetDefaults: {
+            'e2e-ci--**/**': {
+              dependsOn: [
+                '@nx/nx-source:populate-storage',
+                '@nx/nx-source:local-registry',
+              ],
+            },
+          },
+        },
+        '/tmp/test',
+        errors
+      );
+
+      const targets = result.projectRootMap['e2e/maven'].targets!;
+      const expected = [
+        '@nx/nx-source:populate-storage',
+        '@nx/nx-source:local-registry',
+        'maven-plugin:install',
+      ];
+      expect(targets['e2e-ci--src/a.test.ts'].dependsOn).toEqual(expected);
+      expect(targets['e2e-ci--src/b.test.ts'].dependsOn).toEqual(expected);
     });
 
     it('should resolve spread tokens from package.json script target augmentation against target defaults', () => {
