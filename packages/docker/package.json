@@ -87,6 +87,9 @@
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "enquirer": "catalog:",
+    "handlebars": "catalog:",
+    "semver": "catalog:",
+    "tmp": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

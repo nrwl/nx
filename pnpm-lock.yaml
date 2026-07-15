@@ -2716,6 +2716,15 @@ importers:
       enquirer:
         specifier: 'catalog:'
         version: 2.3.6
+      handlebars:
+        specifier: 4.7.9
+        version: 4.7.9
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.4
+      tmp:
+        specifier: ~0.2.7
+        version: 0.2.7
       tslib:
         specifier: catalog:typescript
         version: 2.8.1

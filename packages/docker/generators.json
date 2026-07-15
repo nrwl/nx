@@ -8,6 +8,11 @@
       "description": "Initialize the `@nx/docker` plugin. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning.",
       "aliases": ["ng-add"],
       "hidden": true
+    },
+    "configuration": {
+      "factory": "./dist/src/generators/configuration/generator",
+      "schema": "./dist/src/generators/configuration/schema.json",
+      "description": "Add a `@nx/docker:build` target to a project, scaffolding a starter Dockerfile if one doesn't already exist. **Experimental**: Docker support is experimental. Breaking changes may occur and not adhere to semver versioning."
     }
   }
 }

@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "DockerConfiguration",
+  "title": "Add a container build target to a project",
+  "type": "object",
+  "description": "Adds a `@nx/docker:build` target to a project, with a starter Dockerfile if none exists.",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The name of the project to add the container build target to.",
+      "x-prompt": "What project would you like to add the container build target to?",
+      "x-dropdown": "projects",
+      "x-priority": "important"
+    },
+    "targetName": {
+      "type": "string",
+      "description": "Name of the target to add.",
+      "default": "container"
+    },
+    "engine": {
+      "type": "string",
+      "description": "The container engine to use.",
+      "default": "docker",
+      "enum": ["docker", "podman"],
+      "x-prompt": {
+        "message": "Which container engine would you like to use?",
+        "type": "list",
+        "items": [
+          { "value": "docker", "label": "Docker" },
+          { "value": "podman", "label": "Podman" }
+        ]
+      },
+      "alias": "e"
+    },
+    "template": {
+      "type": "string",
+      "description": "Starter Dockerfile template to scaffold, if one doesn't already exist.",
+      "default": "empty",
+      "enum": ["empty", "nest", "next", "nginx"],
+      "x-prompt": {
+        "message": "Which Dockerfile template would you like to start from?",
+        "type": "list",
+        "items": [
+          { "value": "empty", "label": "Empty Dockerfile" },
+          { "value": "nest", "label": "NestJS application" },
+          { "value": "next", "label": "Next.js application" },
+          { "value": "nginx", "label": "Static site served by nginx" }
+        ]
+      },
+      "alias": "t"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Skip formatting the workspace after the generator completes.",
+      "default": false
+    }
+  },
+  "required": ["project"]
+}
