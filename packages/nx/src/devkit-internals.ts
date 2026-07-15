@@ -70,3 +70,7 @@ export {
   checkFilesAreInputs,
   checkFilesAreOutputs,
 } from './hasher/check-task-files';
+export {
+  getCatalogManager,
+  getCatalogDependenciesFromPackageJson,
+} from './utils/catalog';
