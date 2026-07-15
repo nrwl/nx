@@ -8,24 +8,27 @@
 //!
 //! All display state arrives per frame via [`StatusBarProps`], derived from
 //! the canonical `TuiState` (plus the app's focus and the task list's filter
-//! session) — the bar deliberately owns no copy of that state. The struct is
-//! persistent only so its [`LinkRegistry`] survives from the draw pass to the
-//! mouse-release hit-test.
+//! session) — the bar deliberately owns no copy of that state. It is a
+//! transient [`StatefulWidget`]: the App constructs one per frame from the
+//! props and supplies a persistent [`LinkRegistry`] as the widget state, which
+//! survives from the draw pass to the mouse-release hit-test.
 
 use ratatui::{
-    Frame,
+    buffer::Buffer,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
+    widgets::{StatefulWidget, Widget},
 };
 
 use super::help_text::{HelpText, HelpTextContext};
-use super::link::{Link, LinkRegistry};
+use super::link::{Link, LinkRegistry, fit_with_ellipsis};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
 
-const MIN_HELP_WIDTH: u16 = 19; // The first two help items: "quit: q  help: ?"
+// The two essential help items, "quit: q" + "  " + "help: ?" (16 columns).
+const MIN_HELP_WIDTH: u16 = 16;
 const MIN_CLOUD_URL_WIDTH: u16 = 15; // Minimum space to show at least part of the URL
 const MIN_BOTTOM_SPACING: u16 = 4; // Minimum space between sections
 const RIGHT_MARGIN: u16 = 1;
@@ -103,29 +106,16 @@ enum BarLayout {
     TwoLine,
 }
 
-pub struct StatusBar {
-    link_registry: LinkRegistry,
+/// Transient per-frame widget. Holds only a borrow of the props; its clickable
+/// [`LinkRegistry`] is the [`StatefulWidget`] state, owned by the App (which
+/// hit-tests it on mouse release).
+pub struct StatusBar<'a> {
+    props: &'a StatusBarProps,
 }
 
-impl Default for StatusBar {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl StatusBar {
-    pub fn new() -> Self {
-        Self {
-            link_registry: LinkRegistry::new(),
-        }
-    }
-
-    pub fn link_registry(&self) -> &LinkRegistry {
-        &self.link_registry
-    }
-
-    pub fn link_registry_mut(&mut self) -> &mut LinkRegistry {
-        &mut self.link_registry
+impl<'a> StatusBar<'a> {
+    pub fn new(props: &'a StatusBarProps) -> Self {
+        Self { props }
     }
 
     /// Rows the bar needs at `width`. Pure and in agreement with `render` so
@@ -156,27 +146,27 @@ impl StatusBar {
     }
 
     /// Render into `area` (the rect reserved by the app's layout) and record
-    /// any cloud link in the registry for the app's click hit-testing.
-    pub fn render(&mut self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
+    /// any cloud link in `registry` for the app's click hit-testing.
+    fn draw(area: Rect, buf: &mut Buffer, registry: &mut LinkRegistry, props: &StatusBarProps) {
         // Reset per-frame link hit-testing; repopulated as the cloud link
-        // renders below. (The app also clears this before the draw pass, but
-        // clearing here keeps the bar correct when rendered directly in tests.)
-        self.link_registry.clear();
+        // renders below.
+        registry.clear();
 
+        let buf_area = *buf.area();
         if area.height == 0
             || area.width == 0
-            || area.x >= f.area().width
-            || area.y >= f.area().height
+            || area.x >= buf_area.width
+            || area.y >= buf_area.height
         {
             return;
         }
-        let area = area.intersection(f.area());
+        let area = area.intersection(buf_area);
 
         let first_row = Rect { height: 1, ..area };
 
         // The filter display preempts the entire bar while active.
         if let Some(filter) = &props.filter {
-            self.render_filter(f, first_row, filter, props.is_dimmed);
+            Self::render_filter(buf, first_row, filter, props.is_dimmed);
             return;
         }
 
@@ -187,7 +177,7 @@ impl StatusBar {
             && let Some(search) = &pane.search
             && search.input_mode
         {
-            self.render_search(f, first_row, search, props.is_dimmed);
+            Self::render_search(buf, first_row, search, props.is_dimmed);
             return;
         }
 
@@ -195,7 +185,7 @@ impl StatusBar {
         match layout {
             BarLayout::TwoLine if area.height >= 2 => {
                 let status_line = Self::status_line(props);
-                self.render_status(f, first_row, status_line, props);
+                Self::render_status(buf, registry, first_row, status_line, props);
                 let second_row = Rect {
                     y: area.y + 1,
                     height: 1,
@@ -214,16 +204,16 @@ impl StatusBar {
                         Constraint::Length(help_width + RIGHT_MARGIN),
                     ])
                     .split(second_row);
-                self.render_middle(f, chunks[1], props);
-                help.render(f, chunks[3]);
+                Self::render_middle(buf, registry, chunks[1], props);
+                help.render(buf, chunks[3]);
             }
             // A TwoLine layout squeezed into a 1-row area (stale cached layout
             // for a frame) degrades to a single line without the cloud message.
             BarLayout::TwoLine => {
-                self.render_single_line(f, first_row, false, props);
+                Self::render_single_line(buf, registry, first_row, false, props);
             }
             BarLayout::SingleLine => {
-                self.render_single_line(f, first_row, true, props);
+                Self::render_single_line(buf, registry, first_row, true, props);
             }
         }
     }
@@ -233,8 +223,8 @@ impl StatusBar {
     /// space one whole hint item at a time. Slack sits between the middle and
     /// the right-aligned help.
     fn render_single_line(
-        &mut self,
-        f: &mut Frame<'_>,
+        buf: &mut Buffer,
+        registry: &mut LinkRegistry,
         row: Rect,
         allow_middle: bool,
         props: &StatusBarProps,
@@ -288,11 +278,11 @@ impl StatusBar {
             ])
             .split(row);
 
-        self.render_status(f, chunks[0], status_line, props);
+        Self::render_status(buf, registry, chunks[0], status_line, props);
         if middle_width > 0 {
-            self.render_middle(f, chunks[2], props);
+            Self::render_middle(buf, registry, chunks[2], props);
         }
-        help.render(f, chunks[4]);
+        help.render(buf, chunks[4]);
     }
 
     /// Natural width of the middle section's content: a focused pane's
@@ -335,7 +325,12 @@ impl StatusBar {
 
     /// The middle section: a focused pane's transient feedback takes the slot
     /// over its confirmed search, which takes it over the cloud message.
-    fn render_middle(&mut self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
+    fn render_middle(
+        buf: &mut Buffer,
+        registry: &mut LinkRegistry,
+        area: Rect,
+        props: &StatusBarProps,
+    ) {
         if area.width == 0 || area.height == 0 {
             return;
         }
@@ -346,47 +341,50 @@ impl StatusBar {
         };
         if let Some(pane) = &props.pane {
             if let Some(message) = &pane.status_message {
-                f.render_widget(
+                Widget::render(
                     NxParagraph::new(Line::from(Span::styled(message.clone(), info_style)))
                         .alignment(Alignment::Left),
                     area,
+                    buf,
                 );
                 return;
             }
             if let Some(search) = &pane.search {
-                f.render_widget(
+                Widget::render(
                     NxParagraph::new(Line::from(Span::styled(
                         Self::confirmed_search_text(search),
                         info_style,
                     )))
                     .alignment(Alignment::Left),
                     area,
+                    buf,
                 );
                 return;
             }
         }
-        self.render_cloud_message(f, area, props);
+        Self::render_cloud_message(buf, registry, area, props);
     }
 
     /// Render the progress counts and, when a structured cloud link exists,
     /// register their rect as the clickable way into the Nx Cloud run.
     fn render_status(
-        &mut self,
-        f: &mut Frame<'_>,
+        buf: &mut Buffer,
+        registry: &mut LinkRegistry,
         area: Rect,
         status_line: Line<'static>,
         props: &StatusBarProps,
     ) {
         let clickable_width = (status_line.width() as u16).min(area.width);
-        f.render_widget(
+        Widget::render(
             NxParagraph::new(status_line).alignment(Alignment::Left),
             area,
+            buf,
         );
         if let Some((_, url)) = &props.cloud_link
             && clickable_width > 0
             && area.height > 0
         {
-            self.link_registry.push(
+            registry.push(
                 Rect {
                     x: area.x,
                     y: area.y,
@@ -439,13 +437,7 @@ impl StatusBar {
     }
 
     /// The whole-row search display for the focused pane's vim-style search.
-    fn render_search(
-        &self,
-        f: &mut Frame<'_>,
-        row: Rect,
-        search: &PaneSearchProps,
-        is_dimmed: bool,
-    ) {
+    fn render_search(buf: &mut Buffer, row: Rect, search: &PaneSearchProps, is_dimmed: bool) {
         let base = if is_dimmed {
             Style::default().dim()
         } else {
@@ -472,15 +464,16 @@ impl StatusBar {
             spans.push(Span::styled(format!("   {}", counts), hint_style));
         }
         spans.push(Span::styled(format!("   {}", hints), hint_style));
-        f.render_widget(
+        Widget::render(
             NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
             row,
+            buf,
         );
     }
 
     /// The whole-row filter display, ported from the task list's old two-line
     /// filter area and collapsed onto a single line.
-    fn render_filter(&self, f: &mut Frame<'_>, row: Rect, filter: &FilterProps, is_dimmed: bool) {
+    fn render_filter(buf: &mut Buffer, row: Rect, filter: &FilterProps, is_dimmed: bool) {
         let filter_style = if is_dimmed {
             Style::default().fg(THEME.warning).dim()
         } else {
@@ -509,7 +502,7 @@ impl StatusBar {
             format!("  Filter: {}   {}", filter.text, instruction_text),
             filter_style,
         ));
-        f.render_widget(NxParagraph::new(line).alignment(Alignment::Left), row);
+        Widget::render(NxParagraph::new(line).alignment(Alignment::Left), row, buf);
     }
 
     /// Renders messages received from Nx Cloud.
@@ -518,7 +511,12 @@ impl StatusBar {
     /// [`Link`] (recorded in `link_registry` for the app to hit-test). The link
     /// truncates its display with an ellipsis when space is tight while still
     /// opening the full href.
-    fn render_cloud_message(&mut self, f: &mut Frame<'_>, area: Rect, props: &StatusBarProps) {
+    fn render_cloud_message(
+        buf: &mut Buffer,
+        registry: &mut LinkRegistry,
+        area: Rect,
+        props: &StatusBarProps,
+    ) {
         let available_width = area.width;
         if available_width == 0 || area.height == 0 {
             return;
@@ -535,22 +533,16 @@ impl StatusBar {
             Style::default().fg(THEME.secondary_fg)
         };
 
-        // No URL present: render the message as-is if it fits, otherwise truncate.
+        // No URL present: render the message, truncating with an ellipsis when
+        // it doesn't fit. `fit_with_ellipsis` is width-aware and never slices a
+        // multi-byte character at a non-char boundary.
         if !message.contains("https://") {
-            let message_line = Line::from(Span::styled(message.clone(), message_style));
-            if message_line.width() <= available_width as usize {
-                f.render_widget(
-                    NxParagraph::new(message_line).alignment(Alignment::Left),
-                    area,
-                );
-                return;
-            }
-            let max_message_render_len = available_width.saturating_sub(3) as usize; // Reserve for "..."
-            let truncated_message = format!("{}...", &message[..max_message_render_len]);
-            f.render_widget(
-                NxParagraph::new(Line::from(Span::styled(truncated_message, message_style)))
+            let text = fit_with_ellipsis(message, available_width as usize);
+            Widget::render(
+                NxParagraph::new(Line::from(Span::styled(text, message_style)))
                     .alignment(Alignment::Left),
                 area,
+                buf,
             );
             return;
         }
@@ -576,10 +568,12 @@ impl StatusBar {
                 width: prefix_width,
                 ..area
             };
-            let prefix_paragraph =
+            Widget::render(
                 NxParagraph::new(Line::from(Span::styled(prefix.to_string(), message_style)))
-                    .alignment(Alignment::Left);
-            f.render_widget(prefix_paragraph, prefix_area);
+                    .alignment(Alignment::Left),
+                prefix_area,
+                buf,
+            );
             area.x.saturating_add(prefix_width)
         } else {
             area.x
@@ -599,7 +593,7 @@ impl StatusBar {
         // Display text and href are the same here (the URL); a caller that wants
         // friendly text like "View in Nx Cloud" passes a distinct display.
         let link = Link::new(url, url).dim(is_dimmed);
-        f.render_stateful_widget(&link, link_area, &mut self.link_registry);
+        StatefulWidget::render(&link, link_area, buf, registry);
     }
 
     fn build_help(props: &StatusBarProps) -> HelpText {
@@ -613,6 +607,14 @@ impl StatusBar {
             },
         };
         HelpText::new(props.is_dimmed, false, context)
+    }
+}
+
+impl StatefulWidget for StatusBar<'_> {
+    type State = LinkRegistry;
+
+    fn render(self, area: Rect, buf: &mut Buffer, registry: &mut LinkRegistry) {
+        Self::draw(area, buf, registry, self.props);
     }
 }
 
@@ -633,16 +635,16 @@ mod tests {
         width: u16,
         height: u16,
         props: &StatusBarProps,
-    ) -> (Terminal<TestBackend>, StatusBar) {
-        let mut bar = StatusBar::new();
+    ) -> (Terminal<TestBackend>, LinkRegistry) {
+        let mut registry = LinkRegistry::new();
         let mut terminal = Terminal::new(TestBackend::new(width, height)).unwrap();
         terminal
             .draw(|f| {
                 let area = f.area();
-                bar.render(f, area, props);
+                f.render_stateful_widget(StatusBar::new(props), area, &mut registry);
             })
             .unwrap();
-        (terminal, bar)
+        (terminal, registry)
     }
 
     #[test]
@@ -769,13 +771,13 @@ mod tests {
             status_message: Some("copied to clipboard".to_string()),
             search: None,
         });
-        let (terminal, bar) = render_bar(140, 1, &props);
+        let (terminal, registry) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
         // The message occupies the middle, while the counts stay clickable
         // into the cloud run.
-        assert_eq!(bar.link_registry().hit_test(50, 0), None);
+        assert_eq!(registry.hit_test(50, 0), None);
         assert_eq!(
-            bar.link_registry().hit_test(1, 0),
+            registry.hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
         );
     }
@@ -796,14 +798,14 @@ mod tests {
             "View in Nx Cloud".to_string(),
             "https://nx.app/runs/KnGk4A47qk".to_string(),
         ));
-        let (terminal, bar) = render_bar(140, 1, &props);
+        let (terminal, registry) = render_bar(140, 1, &props);
         // No separate middle display: the counts are the link.
         insta::assert_snapshot!(terminal.backend());
 
         // The counts rect is hit-testable, resolves to the run URL, and gets
         // the quiet underline affordance.
         assert_eq!(
-            bar.link_registry().hit_test(1, 0),
+            registry.hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
         );
         assert!(
@@ -812,8 +814,8 @@ mod tests {
                 .contains(Modifier::UNDERLINED)
         );
         // Without a link there is no underline and nothing registered.
-        let (terminal, bar) = render_bar(140, 1, &base_props());
-        assert_eq!(bar.link_registry().hit_test(1, 0), None);
+        let (terminal, registry) = render_bar(140, 1, &base_props());
+        assert_eq!(registry.hit_test(1, 0), None);
         assert!(
             !terminal.backend().buffer()[(1, 0)]
                 .modifier
@@ -833,9 +835,9 @@ mod tests {
     fn two_line_layout_squeezed_into_one_row_drops_the_cloud_message() {
         let mut props = base_props();
         props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
-        let (terminal, bar) = render_bar(60, 1, &props);
+        let (terminal, registry) = render_bar(60, 1, &props);
         insta::assert_snapshot!(terminal.backend());
-        assert_eq!(bar.link_registry().hit_test(30, 0), None);
+        assert_eq!(registry.hit_test(30, 0), None);
     }
 
     #[test]
@@ -847,10 +849,10 @@ mod tests {
             persisted: false,
             hidden_count: 4,
         });
-        let (terminal, bar) = render_bar(140, 1, &props);
+        let (terminal, registry) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
         // No cloud link is registered while the filter preempts the bar.
-        assert_eq!(bar.link_registry().hit_test(70, 0), None);
+        assert_eq!(registry.hit_test(70, 0), None);
     }
 
     #[test]
@@ -932,11 +934,13 @@ mod tests {
         assert_eq!(StatusBar::required_height(60, false), 1);
         assert_eq!(StatusBar::required_height(40, false), 1);
 
-        // Cloud content wraps to two rows only when the section minimums cannot share one row.
+        // Cloud content wraps to two rows only when the section minimums cannot
+        // share one row. single_line_min = STATUS_MIN_WIDTH(25) + gap(4) +
+        // MIN_CLOUD_URL_WIDTH(15) + gap(4) + MIN_HELP_WIDTH(16) + RIGHT_MARGIN(1) = 65.
         assert_eq!(StatusBar::required_height(200, true), 1);
         assert_eq!(StatusBar::required_height(135, true), 1);
-        assert_eq!(StatusBar::required_height(68, true), 1);
-        assert_eq!(StatusBar::required_height(67, true), 2);
+        assert_eq!(StatusBar::required_height(65, true), 1);
+        assert_eq!(StatusBar::required_height(64, true), 2);
         assert_eq!(StatusBar::required_height(40, true), 2);
     }
 }

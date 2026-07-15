@@ -146,8 +146,9 @@ fn display_width(text: &str) -> usize {
 }
 
 /// Fit `display` into `max_width` columns, appending an ellipsis when it must be
-/// truncated. Width-aware so wide characters never overflow the area.
-fn fit_with_ellipsis(display: &str, max_width: usize) -> String {
+/// truncated. Width-aware so wide characters never overflow the area (and never
+/// slices a multi-byte character at a non-char boundary).
+pub(crate) fn fit_with_ellipsis(display: &str, max_width: usize) -> String {
     if max_width == 0 {
         return String::new();
     }

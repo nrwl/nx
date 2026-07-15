@@ -1,8 +1,9 @@
 use ratatui::{
-    Frame,
+    buffer::Buffer,
     layout::{Alignment, Rect},
     style::{Modifier, Style},
     text::{Line, Span},
+    widgets::Widget,
 };
 
 use crate::native::tui::components::nx_paragraph::NxParagraph;
@@ -100,22 +101,23 @@ impl HelpText {
         }
     }
 
-    pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
+    pub fn render(&self, buf: &mut Buffer, area: Rect) {
         // Add a safety check to prevent rendering outside buffer bounds (this can happen if the user resizes the window a lot before it stabilizes it seems)
+        let buf_area = *buf.area();
         if area.height == 0
             || area.width == 0
-            || area.x >= f.area().width
-            || area.y >= f.area().height
+            || area.x >= buf_area.width
+            || area.y >= buf_area.height
         {
             return; // Area is out of bounds, don't try to render
         }
 
-        // Ensure area is entirely within frame bounds
+        // Ensure area is entirely within buffer bounds
         let safe_area = Rect {
             x: area.x,
             y: area.y,
-            width: area.width.min(f.area().width.saturating_sub(area.x)),
-            height: area.height.min(f.area().height.saturating_sub(area.y)),
+            width: area.width.min(buf_area.width.saturating_sub(area.x)),
+            height: area.height.min(buf_area.height.saturating_sub(area.y)),
         };
 
         // Keep the longest prefix of whole items that fits the area, then pin
@@ -158,10 +160,9 @@ impl HelpText {
         } else {
             Alignment::Right
         };
-        f.render_widget(
-            NxParagraph::new(Line::from(spans)).alignment(alignment),
-            safe_area,
-        );
+        NxParagraph::new(Line::from(spans))
+            .alignment(alignment)
+            .render(safe_area, buf);
     }
 
     /// The hint items for the context, most important first (later items are

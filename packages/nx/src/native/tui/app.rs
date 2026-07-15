@@ -35,6 +35,7 @@ use super::components::hint_popup::HintPopup;
 use super::components::layout_manager::{
     LayoutAreas, LayoutManager, PaneArrangement, TaskListVisibility,
 };
+use super::components::link::LinkRegistry;
 use super::components::nx_paragraph::NxParagraph;
 use super::components::status_bar::{PaneProps, PaneSearchProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
@@ -115,10 +116,11 @@ pub struct App {
     layout_areas: Option<LayoutAreas>,
     terminal_pane_data: [TerminalPaneData; 2],
     dependency_view_states: [Option<DependencyViewState>; 2],
-    /// Full-width bottom status bar. Not a `Component`: it renders from
-    /// per-frame props derived from canonical state and persists only so its
-    /// link registry survives from the draw pass to the mouse-release hit-test.
-    status_bar: StatusBar,
+    /// Clickable links recorded by the full-width status bar during its render,
+    /// kept here (as the bar's `StatefulWidget` state) so they survive from the
+    /// draw pass to the mouse-release hit-test. The bar itself is a transient
+    /// per-frame widget, not a `Component`.
+    status_bar_links: LinkRegistry,
     spacebar_mode: bool,
     pane_tasks: [Option<SelectionEntry>; 2], // Selections assigned to panes 1 and 2 (0-indexed)
     resize_debounce_timer: Option<u128>,     // Timer for debouncing resize events
@@ -556,7 +558,7 @@ impl App {
             layout_areas: None,
             terminal_pane_data: [main_terminal_pane_data, TerminalPaneData::new()],
             dependency_view_states: [None, None],
-            status_bar: StatusBar::new(),
+            status_bar_links: LinkRegistry::new(),
             spacebar_mode: saved_spacebar_mode,
             pane_tasks: saved_pane_tasks,
             resize_debounce_timer: None,
@@ -1560,67 +1562,8 @@ impl App {
             }
             Action::Render => {
                 // Derive the status bar's props from canonical state up front,
-                // taking the state lock once and dropping it before the
-                // TasksList read (its filter methods take the same lock).
-                let (mut status_bar_props, filter_text) = {
-                    let state = self.core.state().lock();
-                    // Focused-pane details: interactivity only applies while
-                    // the pane's task is running and has an interactive PTY.
-                    let pane = if let Focus::MultipleOutput(pane_idx) = self.focus() {
-                        let pane_data = &self.terminal_pane_data[pane_idx];
-                        let task_in_progress =
-                            self.pane_tasks[pane_idx].as_ref().is_some_and(|entry| {
-                                matches!(entry, SelectionEntry::Task(name)
-                                    if state.get_task_status(name) == Some(TaskStatus::InProgress))
-                            });
-                        Some(PaneProps {
-                            interactive: (task_in_progress && pane_data.can_be_interactive)
-                                .then_some(pane_data.is_interactive),
-                            status_message: pane_data
-                                .status_message
-                                .as_ref()
-                                .map(|(message, _)| message.clone()),
-                            search: pane_data.search.as_ref().map(|search| PaneSearchProps {
-                                query: search.query.clone(),
-                                input_mode: search.input_mode,
-                                current: search.current,
-                                total: search.matches.len(),
-                            }),
-                        })
-                    } else {
-                        None
-                    };
-                    (
-                        StatusBarProps {
-                            is_dimmed: matches!(
-                                self.focus(),
-                                Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
-                            ),
-                            perf_report_available: state.has_exit_summary(),
-                            cloud_message: state.get_cloud_message().map(str::to_string),
-                            cloud_link: state.get_cloud_link().cloned(),
-                            completed_count: state.get_completed_task_count(),
-                            total_count: state.tasks().len(),
-                            all_completed: state.is_run_completed(),
-                            run_started_at: state.run_start_time(),
-                            run_ended_at: state.run_end_time(),
-                            filter: None,
-                            pane,
-                        },
-                        state.get_filter_text().to_string(),
-                    )
-                };
-                // The filter display describes typing into the task list, so
-                // it only takes the bar while the list has focus — a focused
-                // pane's own context (search, hints) wins otherwise, even with
-                // a filter still applied to the list.
-                if matches!(self.focus(), Focus::TaskList) {
-                    status_bar_props.filter = self
-                        .components
-                        .iter()
-                        .find_map(|c| c.as_any().downcast_ref::<TasksList>())
-                        .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
-                }
+                // before entering the draw closure (it takes the state lock).
+                let status_bar_props = self.build_status_bar_props();
 
                 // Hit-test regions are rebuilt every frame inside the draw closure,
                 // then stored on self so mouse events can resolve what's under the cursor.
@@ -1636,7 +1579,8 @@ impl App {
                             registry.clear();
                         }
                     }
-                    self.status_bar.link_registry_mut().clear();
+                    // The status bar clears its own registry (its widget State)
+                    // at the start of its render.
 
                     // Cache the frame area if it's never been set before (will be updated in subsequent resize events if necessary)
                     if self.frame_area.is_none() {
@@ -1837,9 +1781,15 @@ impl App {
                     }
 
                     // Draw the full-width status bar into its reserved bottom
-                    // row(s), before the popups so they overlay it.
+                    // row(s), before the popups so they overlay it. The bar is a
+                    // transient widget; its persistent link registry (for click
+                    // hit-testing) is supplied as the widget state.
                     if let Some(bar_area) = status_bar_area {
-                        self.status_bar.render(f, bar_area, &status_bar_props);
+                        f.render_stateful_widget(
+                            StatusBar::new(&status_bar_props),
+                            bar_area,
+                            &mut self.status_bar_links,
+                        );
                     }
 
                     // Draw the popups (help, countdown, interstitial)
@@ -1959,6 +1909,71 @@ impl App {
     /// Dispatches an action to the action tx for other components to handle however they see fit
     fn dispatch_action(&self, action: Action) {
         self.core.dispatch_action(action);
+    }
+
+    /// Gather the status bar's per-frame props from canonical state, the app's
+    /// focus, and the task list's filter session. Takes the `TuiState` lock
+    /// once and drops it before reading the `TasksList` (whose filter methods
+    /// take the same lock), so this must run outside the draw closure.
+    fn build_status_bar_props(&self) -> StatusBarProps {
+        let (mut props, filter_text) = {
+            let state = self.core.state().lock();
+            // Focused-pane details: interactivity only applies while the pane's
+            // task is running and has an interactive PTY.
+            let pane = if let Focus::MultipleOutput(pane_idx) = self.focus() {
+                let pane_data = &self.terminal_pane_data[pane_idx];
+                let task_in_progress = self.pane_tasks[pane_idx].as_ref().is_some_and(|entry| {
+                    matches!(entry, SelectionEntry::Task(name)
+                        if state.get_task_status(name) == Some(TaskStatus::InProgress))
+                });
+                Some(PaneProps {
+                    interactive: (task_in_progress && pane_data.can_be_interactive)
+                        .then_some(pane_data.is_interactive),
+                    status_message: pane_data
+                        .status_message
+                        .as_ref()
+                        .map(|(message, _)| message.clone()),
+                    search: pane_data.search.as_ref().map(|search| PaneSearchProps {
+                        query: search.query.clone(),
+                        input_mode: search.input_mode,
+                        current: search.current,
+                        total: search.matches.len(),
+                    }),
+                })
+            } else {
+                None
+            };
+            (
+                StatusBarProps {
+                    is_dimmed: matches!(
+                        self.focus(),
+                        Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
+                    ),
+                    perf_report_available: state.has_exit_summary(),
+                    cloud_message: state.get_cloud_message().map(str::to_string),
+                    cloud_link: state.get_cloud_link().cloned(),
+                    completed_count: state.get_completed_task_count(),
+                    total_count: state.tasks().len(),
+                    all_completed: state.is_run_completed(),
+                    run_started_at: state.run_start_time(),
+                    run_ended_at: state.run_end_time(),
+                    filter: None,
+                    pane,
+                },
+                state.get_filter_text().to_string(),
+            )
+        };
+        // The filter display describes typing into the task list, so it only
+        // takes the bar while the list has focus — a focused pane's own context
+        // (search, hints) wins otherwise, even with a filter still applied.
+        if matches!(self.focus(), Focus::TaskList) {
+            props.filter = self
+                .components
+                .iter()
+                .find_map(|c| c.as_any().downcast_ref::<TasksList>())
+                .and_then(|tasks_list| tasks_list.filter_display(&filter_text));
+        }
+        props
     }
 
     fn recalculate_layout_areas(&mut self) {
@@ -2746,7 +2761,7 @@ impl App {
         self.components
             .iter()
             .filter_map(|c| c.link_registry())
-            .chain(std::iter::once(self.status_bar.link_registry()))
+            .chain(std::iter::once(&self.status_bar_links))
             .find_map(|registry| registry.hit_test(col, row))
             .map(str::to_string)
     }
@@ -4020,8 +4035,8 @@ impl TuiApp for App {
     }
 
     /// Override the trait default (which only stores in state) so the napi
-    /// `&mut dyn TuiApp` call reaches the inherent method that also dispatches
-    /// `Action::UpdateCloudMessage` to the rendered TasksList.
+    /// `&mut dyn TuiApp` call reaches the inherent method, which also
+    /// invalidates the cached layout (cloud content can change the bar height).
     fn set_cloud_message(&mut self, message: Option<String>) {
         App::set_cloud_message(self, message);
     }
@@ -4074,7 +4089,7 @@ mod tests {
     #[test]
     fn test_link_at_finds_status_bar_links() {
         let mut app = create_test_app();
-        app.status_bar.link_registry_mut().push(
+        app.status_bar_links.push(
             Rect::new(2, 30, 10, 1),
             "https://nx.app/runs/abc".to_string(),
         );
