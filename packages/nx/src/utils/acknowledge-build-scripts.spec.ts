@@ -4,6 +4,12 @@ import { join } from 'path';
 import { createTree } from '../generators/testing-utils/create-tree';
 import type { Tree } from '../generators/tree';
 import { acknowledgeBuildScripts } from './acknowledge-build-scripts';
+import { getPackageManagerVersion } from './package-manager';
+
+jest.mock('./package-manager', () => ({
+  ...jest.requireActual('./package-manager'),
+  getPackageManagerVersion: jest.fn(),
+}));
 
 describe('acknowledgeBuildScripts', () => {
   let tree: Tree;
@@ -116,6 +122,36 @@ describe('acknowledgeBuildScripts', () => {
     acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
 
     expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toBe(original);
+  });
+
+  it('should probe the pnpm version when the packageManager pin is not exact', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@^11.0.0' })
+    );
+    jest.mocked(getPackageManagerVersion).mockReturnValueOnce('11.2.2');
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.read('pnpm-workspace.yaml', 'utf-8')).toMatchInlineSnapshot(`
+      "allowBuilds:
+        unrs-resolver: false
+      "
+    `);
+  });
+
+  it('should be a no-op when the pnpm version cannot be determined', () => {
+    tree.write(
+      'package.json',
+      JSON.stringify({ name: 'proj', packageManager: 'pnpm@latest' })
+    );
+    jest.mocked(getPackageManagerVersion).mockImplementationOnce(() => {
+      throw new Error('Cannot determine the version of pnpm.');
+    });
+
+    acknowledgeBuildScripts(tree, 'pnpm', { 'unrs-resolver': false });
+
+    expect(tree.exists('pnpm-workspace.yaml')).toBe(false);
   });
 
   it('should leave a malformed pnpm-workspace.yaml untouched', () => {

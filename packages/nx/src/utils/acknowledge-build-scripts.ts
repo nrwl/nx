@@ -4,7 +4,10 @@ import { Document, parseDocument, YAMLMap } from 'yaml';
 import { gte } from 'semver';
 import type { Tree } from '../generators/tree';
 import type { PackageManager } from './package-manager';
-import { getPackageManagerVersion } from './package-manager';
+import {
+  getPackageManagerVersion,
+  parseVersionFromPackageManagerField,
+} from './package-manager';
 import { readJsonFile } from './fileutils';
 
 const PNPM_WORKSPACE_FILE = 'pnpm-workspace.yaml';
@@ -109,11 +112,12 @@ function getPnpmVersion(host: Host): string | null {
   // in-flight package.json only exists in the tree, not on disk.
   if (host.exists('package.json')) {
     const { packageManager } = host.readJson('package.json');
-    if (
-      typeof packageManager === 'string' &&
-      packageManager.startsWith('pnpm@')
-    ) {
-      return packageManager.slice('pnpm@'.length);
+    const version = parseVersionFromPackageManagerField(
+      'pnpm',
+      typeof packageManager === 'string' ? packageManager : undefined
+    );
+    if (version) {
+      return version;
     }
   }
   try {
