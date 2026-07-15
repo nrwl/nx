@@ -1,7 +1,11 @@
 import { unlinkSync } from 'fs';
 import { platform, tmpdir } from 'os';
 import { join, resolve } from 'path';
-import { getDaemonSocketDir, getPluginSocketDir, getSocketDir } from './tmp-dir';
+import {
+  getDaemonSocketDir,
+  getPluginSocketDir,
+  getSocketDir,
+} from './tmp-dir';
 import { createSerializableError } from '../utils/serializable-error';
 import { isV8SerializerEnabled } from './is-v8-serializer-enabled';
 import { serialize as v8_serialize } from 'v8';
