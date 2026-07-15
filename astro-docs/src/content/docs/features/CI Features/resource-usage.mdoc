@@ -1,6 +1,6 @@
 ---
 title: 'Resource Usage'
-description: 'Upload and view per-agent CPU and memory metrics for distributed task execution to find bottlenecks, debug out-of-memory errors, and right-size your agents.'
+description: 'View CPU and memory metrics for your CI runs, per-agent on distributed runs and run-level on non-distributed runs, to find bottlenecks, debug out-of-memory errors, and right-size your machines.'
 keywords:
   [
     resource usage,
@@ -10,6 +10,7 @@ keywords:
     out of memory,
     nx agents,
     nx cloud,
+    non-distributed runs,
     add-on,
   ]
 sidebar:
@@ -19,24 +20,27 @@ sidebar:
 filter: 'type:Features'
 ---
 
-The resource usage add-on records per-agent CPU and memory metrics during distributed task
-execution and surfaces them in Nx Cloud. Use this data to find resource bottlenecks, debug
-out-of-memory (OOM) errors, and pick the right agent size for your workload, all the way down to
-which task caused a spike.
+The resource usage add-on records CPU and memory metrics for your CI runs and surfaces them in
+Nx Cloud. Distributed runs report per-agent metrics down to the task that caused a spike, and
+non-distributed runs report run-level aggregates for the machine. Use this data to find resource
+bottlenecks, debug out-of-memory (OOM) errors, and pick the right machine size for your workload.
 
 {% aside type="note" title="Nx Cloud add-on" %}
 Resource usage is a standalone Nx Cloud add-on. Enable it under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your
 organization.
 {% /aside %}
 
-{% aside type="caution" title="Nx 22.1+ Required" %}
-Resource usage requires Nx 22.1 or later.
+{% aside type="caution" title="Requirements" %}
+Resource usage collection needs Nx 22.1 or later, a CI environment, an eligible plan (the Nx
+Enterprise plan or the resource usage add-on), and metric collection enabled.
 {% /aside %}
 
 ## Enabling resource usage
 
 Enable the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), or from the **Enable resource profiling** prompt on
 the **Analysis** tab of any CI pipeline execution.
+
+### Distributed runs
 
 Once the add-on is active:
 
@@ -51,11 +55,22 @@ and a prompt to enable it, including a note on the
 [Self-healing CI](/docs/features/ci-features/self-healing-ci) PR comment when a run hits memory or
 CPU issues.
 
+### Non-distributed runs
+
+For non-distributed CI runs on an eligible plan, Nx Cloud collects run-level CPU and memory metrics
+automatically. There's no CLI step to add.
+
+Metric collection is on by default for eligible plans. Set `NX_CLOUD_DISABLE_METRICS_COLLECTION` to
+`true` to turn it off, or `NX_CLOUD_ENABLE_METRICS_COLLECTION` to `true` to turn it back on. See the
+[environment variables reference](/docs/reference/environment-variables) for details.
+
 ## Viewing resource usage
+
+### Distributed runs
 
 Open any CI pipeline execution and go to the **Analysis** tab.
 
-### Agent resource usage summary
+#### Agent resource usage summary
 
 The **Agent resource usage** table lists every agent in the run with its average and maximum CPU and
 memory, plus the machine specs (cores and RAM) of its resource class. It's the fastest way to spot an
@@ -63,7 +78,7 @@ agent that ran hot.
 
 ![Agent resource usage table showing per-agent average and maximum CPU and memory](../../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
 
-### Resource usage over time
+#### Resource usage over time
 
 Click an agent to open its **Resource usage over time** view. Separate memory and CPU charts plot
 utilization across the agent's lifetime, with reference lines for the machine's capacity and peak
@@ -91,6 +106,20 @@ The detail view has a few controls for digging in:
   ![Timeline scrubber for navigating resource usage over time](../../../../assets/guides/nx-cloud/resource-chart-scrubber.jpg)
 
 - **Download CSV** - export the raw per-process data for deeper analysis.
+
+### Non-distributed runs
+
+A non-distributed run has no agents to break down, so metrics are aggregated for the machine that
+ran the tasks. Open the run's detail page and go to the **Resource usage** tab to see three cards:
+
+- **Machine** - the cores and total memory of the machine, for example `8 cores · 32 GB`.
+- **CPU (avg / max)** - average and peak CPU across the run.
+- **Memory (avg / max)** - average and peak memory across the run.
+
+![Resource usage tab on a non-distributed run](../../../../assets/guides/nx-cloud/non-dte-resource-usage-tab.png)
+
+When no metrics were collected, the tab reads "No resource usage was collected for this run." Runs on
+an eligible plan collect metrics on CI automatically.
 
 ## Common use cases
 
