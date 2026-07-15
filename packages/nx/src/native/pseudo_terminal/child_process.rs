@@ -1,5 +1,5 @@
 use super::process_killer::{ProcessKiller, normalize_signal};
-use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, PtyHandles};
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
 use crossbeam_channel::Sender;
 use crossbeam_channel::{Receiver, bounded, select};
 use napi::Either;
@@ -51,7 +51,7 @@ impl ChildProcess {
     }
 
     #[napi]
-    pub fn get_pty_handles(&mut self) -> External<PtyHandles> {
+    pub fn get_pty_handles(&mut self) -> External<(ParserArc, WriterArc, MasterArc)> {
         External::new((
             self.parser.clone(),
             self.writer_arc.clone(),

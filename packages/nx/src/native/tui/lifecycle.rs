@@ -14,7 +14,7 @@ use napi::{Status, bindgen_prelude::Unknown};
 use crate::native::ide::nx_console::messaging::NxConsoleMessageConnection;
 #[cfg(not(test))]
 use crate::native::logger::enable_logger;
-use crate::native::pseudo_terminal::pseudo_terminal::PtyHandles;
+use crate::native::pseudo_terminal::pseudo_terminal::{MasterArc, ParserArc, WriterArc};
 use crate::native::tasks::types::{Task, TaskGraph, TaskResult};
 
 #[cfg(not(test))]
@@ -682,7 +682,7 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn register_running_task(&mut self, task_id: String, pty_handles: &External<PtyHandles>) {
+    pub fn register_running_task(&mut self, task_id: String, pty_handles: &External<(ParserArc, WriterArc, MasterArc)>) {
         self.with_app(|app| app.register_running_interactive_task(task_id, &**pty_handles));
     }
 
