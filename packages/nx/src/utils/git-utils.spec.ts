@@ -1,6 +1,7 @@
 import {
   parseVcsRemoteUrl,
   getVcsRemoteInfo,
+  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   tryCommitChanges,
 } from './git-utils';
@@ -208,6 +209,38 @@ describe('git utils tests', () => {
       });
 
       expect(getVcsRemoteInfo()).toBeNull();
+    });
+  });
+
+  describe('getGitCurrentBranch', () => {
+    afterEach(() => {
+      jest.resetAllMocks();
+    });
+
+    it('should return the current branch name', () => {
+      (execSync as jest.Mock).mockReturnValue('main\n');
+
+      expect(getGitCurrentBranch()).toBe('main');
+    });
+
+    it('should return null for a detached HEAD', () => {
+      (execSync as jest.Mock).mockReturnValue('HEAD\n');
+
+      expect(getGitCurrentBranch()).toBeNull();
+    });
+
+    it('should return null for empty output', () => {
+      (execSync as jest.Mock).mockReturnValue('\n');
+
+      expect(getGitCurrentBranch()).toBeNull();
+    });
+
+    it('should return null when execSync throws', () => {
+      (execSync as jest.Mock).mockImplementation(() => {
+        throw new Error('not a git repository');
+      });
+
+      expect(getGitCurrentBranch()).toBeNull();
     });
   });
 
