@@ -65,3 +65,7 @@ export {
   resolvePrompt,
   PromptResolutionError,
 } from './command-line/migrate/prompt-files';
+export {
+  getCatalogManager,
+  getCatalogDependenciesFromPackageJson,
+} from './utils/catalog';
