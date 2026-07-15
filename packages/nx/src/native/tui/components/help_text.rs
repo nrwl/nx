@@ -20,6 +20,10 @@ pub enum HelpTextContext {
     Pane {
         can_be_interactive: bool,
         is_interactive: bool,
+        /// Whether the pane shows terminal output. When false (a not-yet-started
+        /// task's dependency view) the output-only hints (search, copy) are
+        /// dropped.
+        has_output: bool,
     },
 }
 
@@ -205,15 +209,18 @@ impl HelpText {
                 is_interactive: true,
                 ..
             } => vec![],
-            HelpTextContext::Pane { .. } => {
-                vec![
-                    item("scroll: ", "↑ ↓"),
-                    item("copy: ", "c"),
-                    item("full screen: ", "<enter>"),
-                    item("search: ", "/"),
-                    item("quit: ", "q"),
-                    item("help: ", "?"),
-                ]
+            HelpTextContext::Pane { has_output, .. } => {
+                let mut items = vec![item("scroll: ", "↑ ↓")];
+                // search and copy only act on terminal output; a not-yet-started
+                // task's dependency view has none, so drop them there.
+                if has_output {
+                    items.push(item("copy: ", "c"));
+                    items.push(item("search: ", "/"));
+                }
+                items.push(item("full screen: ", "<enter>"));
+                items.push(item("quit: ", "q"));
+                items.push(item("help: ", "?"));
+                items
             }
             HelpTextContext::TaskList { show_perf_report } => {
                 let mut items = vec![];
@@ -245,6 +252,7 @@ impl HelpText {
         let HelpTextContext::Pane {
             can_be_interactive: true,
             is_interactive,
+            ..
         } = self.context
         else {
             return None;

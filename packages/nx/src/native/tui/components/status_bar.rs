@@ -68,6 +68,10 @@ pub struct FilterProps {
 /// Focused-pane details shown while a terminal pane has focus.
 #[derive(Debug, Clone, Default)]
 pub struct PaneProps {
+    /// Whether the pane is showing terminal output (the task has started) as
+    /// opposed to a dependency view (a not-yet-started task). Gates the hints
+    /// that act on output — search, copy — which are meaningless without it.
+    pub has_output: bool,
     /// Whether the pane's task can take input, and whether it currently is
     /// (`None` when interactivity doesn't apply, e.g. a finished task).
     pub interactive: Option<bool>,
@@ -601,6 +605,7 @@ impl<'a> StatusBar<'a> {
             Some(pane) => HelpTextContext::Pane {
                 can_be_interactive: pane.interactive.is_some(),
                 is_interactive: pane.interactive == Some(true),
+                has_output: pane.has_output,
             },
             None => HelpTextContext::TaskList {
                 show_perf_report: props.perf_report_available,
@@ -683,9 +688,32 @@ mod tests {
     /// (before the pinned interactivity indicator), items dropping from the
     /// left as the row narrows.
     #[test]
+    fn pane_without_output_hides_search_and_copy() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            has_output: false,
+            interactive: None,
+            status_message: None,
+            search: None,
+        });
+        let row = rendered_row(140, &props);
+        assert!(row.contains("scroll: ↑ ↓"), "got: {row}");
+        assert!(
+            row.contains("full screen: <enter>  quit: q  help: ?"),
+            "got: {row}"
+        );
+        assert!(
+            !row.contains("search:"),
+            "search hidden without output: {row}"
+        );
+        assert!(!row.contains("copy:"), "copy hidden without output: {row}");
+    }
+
+    #[test]
     fn pane_help_anchors_quit_help_and_drops_from_the_left() {
         let mut props = base_props();
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(false),
             status_message: None,
             search: None,
@@ -757,6 +785,7 @@ mod tests {
     fn pane_focus_swaps_help_to_pane_hints_and_shows_mode() {
         let mut props = base_props();
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(false),
             status_message: None,
             search: None,
@@ -769,6 +798,7 @@ mod tests {
     fn interactive_pane_shows_only_the_exit_toggle() {
         let mut props = base_props();
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(true),
             status_message: None,
             search: None,
@@ -785,6 +815,7 @@ mod tests {
         props.cloud_message =
             Some("View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string());
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(false),
             status_message: None,
             search: None,
@@ -794,6 +825,7 @@ mod tests {
 
         // The single-item INTERACTIVE toggle survives the same squeeze.
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(true),
             status_message: None,
             search: None,
@@ -813,6 +845,7 @@ mod tests {
             "https://nx.app/runs/KnGk4A47qk".to_string(),
         ));
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: None,
             status_message: Some("copied to clipboard".to_string()),
             search: None,
@@ -906,6 +939,7 @@ mod tests {
         let mut props = base_props();
         props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(false),
             status_message: None,
             search: Some(PaneSearchProps {
@@ -923,6 +957,7 @@ mod tests {
     fn confirmed_pane_search_shows_navigation_hints() {
         let mut props = base_props();
         props.pane = Some(PaneProps {
+            has_output: true,
             interactive: Some(false),
             status_message: None,
             search: Some(PaneSearchProps {

@@ -239,12 +239,14 @@ impl TerminalPaneData {
                     self.search = None;
                 }
                 KeyCode::Enter => {
-                    // Confirm and switch to n/N navigation; an empty or
-                    // matchless query just closes the search.
+                    // Confirm and switch to n/N navigation. A matchless query is
+                    // kept — a still-running task may produce matches later, and
+                    // the live refresh will pick them up. Only an empty query
+                    // (nothing to search for) closes the search.
                     if self
                         .search
                         .as_ref()
-                        .is_some_and(|search| !search.matches.is_empty())
+                        .is_some_and(|search| !search.query.is_empty())
                     {
                         if let Some(search) = &mut self.search {
                             search.input_mode = false;
@@ -1295,7 +1297,19 @@ mod tests {
         press(&mut pane, KeyCode::Backspace);
         assert_eq!(pane.search.as_ref().unwrap().query, "e");
 
-        // No matches in an empty terminal: Enter closes the session.
+        // A non-empty query with no matches is still confirmed — a running task
+        // may produce matches later, which the live refresh will pick up.
+        press(&mut pane, KeyCode::Enter);
+        assert!(
+            !pane.search_input_active(),
+            "Enter confirms into navigation"
+        );
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
+
+        // Clearing the query and confirming closes the search (nothing to find).
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search_input_active());
+        press(&mut pane, KeyCode::Backspace);
         press(&mut pane, KeyCode::Enter);
         assert!(pane.search.is_none());
     }

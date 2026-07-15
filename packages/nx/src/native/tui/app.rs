@@ -1933,6 +1933,9 @@ impl App {
                         if state.get_task_status(name) == Some(TaskStatus::InProgress))
                 });
                 Some(PaneProps {
+                    // A pane shows terminal output once its task has started (it
+                    // has a PTY); before that it renders a dependency view.
+                    has_output: pane_data.pty.is_some(),
                     interactive: (task_in_progress && pane_data.can_be_interactive)
                         .then_some(pane_data.is_interactive),
                     status_message: pane_data
