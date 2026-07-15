@@ -135,6 +135,17 @@ impl TerminalPaneData {
         self.search.as_ref().is_some_and(|search| search.input_mode)
     }
 
+    /// Re-scan for search matches if the pane's output has grown since the last
+    /// scan, keeping the user on their current match. Called each frame so an
+    /// active search's match count tracks a still-running task's streaming
+    /// output without the user pressing a key. Cheap when nothing has changed:
+    /// `refresh_matches` short-circuits on an unchanged content-row count.
+    pub fn refresh_search_if_grown(&mut self) {
+        if self.search.is_some() {
+            self.refresh_matches();
+        }
+    }
+
     /// Recompute matches for the current query and optionally jump to the
     /// nearest match at or below the current viewport top.
     fn recompute_search(&mut self, jump: bool) {
@@ -1287,6 +1298,73 @@ mod tests {
         // No matches in an empty terminal: Enter closes the session.
         press(&mut pane, KeyCode::Enter);
         assert!(pane.search.is_none());
+    }
+
+    /// A confirmed search's match count tracks a running task's streaming
+    /// output on refresh, without the user pressing a key.
+    #[test]
+    fn search_count_updates_live_as_output_grows() {
+        let feed = |n: usize| "error\r\n".repeat(n);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output(feed(40).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+
+        pane.refresh_search_if_grown();
+        let first = pane.search.as_ref().unwrap().matches.len();
+        assert!(first >= 40, "expected at least 40 matches, got {first}");
+
+        // More output arrives; a plain refresh (no keypress) grows the count.
+        pty.process_output(feed(40).as_bytes());
+        pane.refresh_search_if_grown();
+        let second = pane.search.as_ref().unwrap().matches.len();
+        assert!(
+            second > first,
+            "count should grow live: {first} -> {second}"
+        );
+
+        // With no new output, the refresh short-circuits and the count holds.
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), second);
+    }
+
+    /// A live refresh that turns up the first match (0 -> 1) must update the
+    /// count without scrolling the viewport to it — only n/N or (re)submitting
+    /// the query jumps.
+    #[test]
+    fn live_refresh_does_not_jump_the_viewport() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        // Enough non-matching output to build scrollback the view can sit in.
+        pty.process_output("no match here\r\n".repeat(50).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 0);
+
+        // The first match appears in new output. Record the scroll position
+        // *after* the output arrives, so we isolate the refresh's effect on it.
+        pty.process_output("first error\r\n".as_bytes());
+        let scroll_before = pty.get_scroll_offset();
+        pane.refresh_search_if_grown();
+
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 1);
+        assert_eq!(
+            pty.get_scroll_offset(),
+            scroll_before,
+            "a live refresh must not scroll the viewport to the new match"
+        );
     }
 
     #[test]

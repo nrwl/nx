@@ -1561,6 +1561,12 @@ impl App {
                 }
             }
             Action::Render => {
+                // Keep a focused pane's search match count live as its task
+                // streams output (cheap — only re-scans when the output grew).
+                if let Focus::MultipleOutput(pane_idx) = self.focus() {
+                    self.terminal_pane_data[pane_idx].refresh_search_if_grown();
+                }
+
                 // Derive the status bar's props from canonical state up front,
                 // before entering the draw closure (it takes the state lock).
                 let status_bar_props = self.build_status_bar_props();
