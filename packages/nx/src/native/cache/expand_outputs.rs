@@ -476,7 +476,8 @@ mod test {
             let kept = format!("{dir}/index.js");
 
             let matches =
-                match_output_paths(entries, vec![kept.clone(), excluded_child.to_string()]).unwrap();
+                match_output_paths(entries, vec![kept.clone(), excluded_child.to_string()])
+                    .unwrap();
 
             assert!(matches[0], "{kept} should still match");
             assert!(
