@@ -1,9 +1,10 @@
 import { ChildProcess, spawn } from 'child_process';
-import { FileHandle, open } from 'fs/promises';
 import { connect } from 'net';
 import {
+  closeSync,
   existsSync,
   mkdirSync,
+  openSync,
   readFileSync,
   statSync,
   writeFileSync,
@@ -179,8 +180,6 @@ export class DaemonClient {
   private _daemonStatus: DaemonStatus = DaemonStatus.DISCONNECTED;
   private _waitForDaemonReady: Promise<void> | null = null;
   private _daemonReady: () => void | null = null;
-  private _out: FileHandle = null;
-  private _err: FileHandle = null;
 
   // Shared file watcher connection state
   private fileWatcherMessenger: DaemonSocketMessenger | undefined;
@@ -275,11 +274,6 @@ export class DaemonClient {
     this.currentResolve = null;
     this.currentReject = null;
     this._enabled = undefined;
-
-    this._out?.close();
-    this._err?.close();
-    this._out = null;
-    this._err = null;
 
     // Clean up file watcher and project graph listener connections
     this.fileWatcherMessenger?.close();
@@ -1380,8 +1374,12 @@ export class DaemonClient {
       writeFileSync(DAEMON_OUTPUT_LOG_FILE, '');
     }
 
-    this._out = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
-    this._err = await open(DAEMON_OUTPUT_LOG_FILE, 'a');
+    // Redirect the detached daemon's stdout/stderr into the log file. The
+    // child dup's these descriptors at spawn, so we close ours right after
+    // instead of holding them for the life of this process (Node >=26 turns a
+    // file descriptor closed during garbage collection into a fatal error).
+    const outFd = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
+    const errFd = openSync(DAEMON_OUTPUT_LOG_FILE, 'a');
 
     clientLogger.log(`[Client] Starting new daemon server in background`);
 
@@ -1390,13 +1388,16 @@ export class DaemonClient {
       [join(__dirname, `../server/start.js`)],
       {
         cwd: workspaceRoot,
-        stdio: ['ignore', this._out.fd, this._err.fd],
+        stdio: ['ignore', outFd, errFd],
         detached: true,
         windowsHide: true,
         shell: false,
         env: getDaemonEnv(),
       }
     );
+    // The child now owns dup'd copies of the descriptors, so release ours.
+    closeSync(outFd);
+    closeSync(errFd);
     // if this process is the process that spawned the daemon,
     // the daemon env is already up to date
     this.envReflectionSent = true;
