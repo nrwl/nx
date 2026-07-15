@@ -9,9 +9,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Remix plugin for Nx, `@nx/remix`, helps you build and scale a Remix monorepo. It automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications).
+[Remix](https://remix.run/) is a full stack React framework for building web applications. In a Remix monorepo, every project benefits from Nx [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-You don't need the plugin to use Remix with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, route scaffolding, and simplified configuration.
+The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications). You don't need the plugin to use Remix with Nx - it adds automatic task inference, route scaffolding, and simplified configuration.
 
 {% aside type="note" %}
 React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2; [`@nx/react`](/docs/technologies/react/guides/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
