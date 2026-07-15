@@ -2,6 +2,8 @@ import {
   checkFilesExist,
   cleanupProject,
   createFile,
+  getPackageManagerCommand,
+  getSelectedPackageManager,
   newProject,
   readJson,
   renameFile,
@@ -511,6 +513,125 @@ exports.createNodesV2 = [
       'dist registered target'
     );
   });
+
+  it('should resolve a source-loaded local plugin transitive workspace import from source', async () => {
+    const plugin = uniq('plugin');
+    const lib = uniq('lib');
+    const marker = 'resolved-workspace-dep-from-source';
+    const pm = getSelectedPackageManager();
+
+    runCLI(`generate @nx/plugin:plugin packages/${plugin}`);
+
+    const sourceCondition =
+      readJson('tsconfig.base.json').compilerOptions.customConditions[0];
+    expect(sourceCondition).not.toBe('development');
+
+    // A sibling workspace package exposing its TS source via the workspace
+    // custom condition and its built output via `default`. Its `dist` is never
+    // built, so the plugin can only import it if source resolution wins.
+    createFile(
+      `packages/${lib}/package.json`,
+      JSON.stringify({
+        name: `@${workspaceName}/${lib}`,
+        version: '0.0.1',
+        main: './dist/index.js',
+        exports: {
+          './package.json': './package.json',
+          '.': {
+            [sourceCondition]: './src/index.ts',
+            default: './dist/index.js',
+          },
+        },
+      })
+    );
+    createFile(
+      `packages/${lib}/src/index.ts`,
+      `export const workspaceDepMarker = '${marker}';\n`
+    );
+
+    // The plugin's registered (source) entry statically imports the sibling
+    // package, so loading the plugin forces the transitive resolution of
+    // `@${workspaceName}/${lib}`.
+    updateFile(
+      `packages/${plugin}/src/plugins/deps/plugin.ts`,
+      `import { basename, dirname } from 'path';
+import type { CreateNodesV2 } from '@nx/devkit';
+import { workspaceDepMarker } from '@${workspaceName}/${lib}';
+
+type PluginOptions = { inferredTags: string[] };
+
+export const createNodesV2: CreateNodesV2<PluginOptions> = [
+  '**/my-project-file',
+  (files, options) =>
+    files.map((f) => {
+      const root = dirname(f);
+      const name = basename(root);
+      return [
+        f,
+        {
+          projects: {
+            [root]: {
+              root,
+              name,
+              targets: {
+                build: {
+                  executor: 'nx:run-commands',
+                  options: { command: \`echo '\${workspaceDepMarker}'\` },
+                },
+              },
+              tags: options.inferredTags,
+            },
+          },
+        },
+      ];
+    }),
+];
+`
+    );
+
+    updateJson(`packages/${plugin}/package.json`, (pkg) => {
+      pkg.dependencies ??= {};
+      pkg.dependencies[`@${workspaceName}/${lib}`] =
+        pm === 'pnpm' ? 'workspace:*' : '*';
+      pkg.exports = {
+        ...pkg.exports,
+        './deps': {
+          [sourceCondition]: './src/plugins/deps/plugin.ts',
+          default: './dist/plugins/deps/plugin.js',
+        },
+      };
+      return pkg;
+    });
+
+    updateJson(`nx.json`, (nxJson) => {
+      nxJson.plugins ??= [];
+      nxJson.plugins.push({
+        plugin: `@${workspaceName}/${plugin}/deps`,
+        options: { inferredTags: ['deps-tag'] },
+      });
+      return nxJson;
+    });
+
+    // Link the new package so the bare specifier resolves via node_modules.
+    runCommand(getPackageManagerCommand({ packageManager: pm }).install);
+
+    const inferredProject = uniq('deps-inferred');
+    createFile(
+      `packages/${inferredProject}/package.json`,
+      JSON.stringify({ name: inferredProject, version: '0.0.1' })
+    );
+    createFile(`packages/${inferredProject}/my-project-file`);
+
+    // The plugin loads from source during graph construction; its import of the
+    // sibling package must resolve to source (dist was never built). If it fell
+    // through to dist, plugin load would fail and the inferred target wouldn't
+    // exist.
+    const configuration = JSON.parse(
+      runCLI(`show project ${inferredProject} --json`)
+    );
+    expect(configuration.tags).toContain('deps-tag');
+    expect(runCLI(`build ${inferredProject}`)).toContain(marker);
+  }, 120000);
 
   it('should respect and support generating plugins with a name different than the import path', async () => {
     const plugin = uniq('plugin');
