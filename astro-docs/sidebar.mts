@@ -626,19 +626,19 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/yarn-pnp',
           },
           {
-            label: 'Use npm workspaces with Nx',
+            label: 'npm workspaces',
             link: 'guides/tips-n-tricks/npm-workspaces',
           },
           {
-            label: 'Use pnpm workspaces with Nx',
+            label: 'pnpm workspaces',
             link: 'guides/tips-n-tricks/pnpm-workspaces',
           },
           {
-            label: 'Use Yarn workspaces with Nx',
+            label: 'Yarn workspaces',
             link: 'guides/tips-n-tricks/yarn-workspaces',
           },
           {
-            label: 'Use Bun workspaces with Nx',
+            label: 'Bun workspaces',
             link: 'guides/tips-n-tricks/bun-workspaces',
           },
           {
@@ -754,12 +754,12 @@ const knowledgeBaseGroups: SidebarItems = [
         collapsed: true,
         items: [
           {
-            label: 'Why monorepos',
-            link: 'concepts/decisions/why-monorepos',
+            label: 'What is a monorepo',
+            link: 'concepts/decisions/what-is-a-monorepo',
           },
           {
             label: 'Monorepo or polyrepo',
-            link: 'concepts/decisions/overview',
+            link: 'concepts/decisions/monorepo-vs-polyrepo',
           },
           {
             label: 'Dependency management',
@@ -965,7 +965,7 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tasks--caching/change-cache-location',
           },
           {
-            label: 'Self-hosted caching',
+            label: 'Self-hosted remote cache',
             link: 'guides/tasks--caching/self-hosted-caching',
           },
           {
@@ -1001,10 +1001,6 @@ const knowledgeBaseGroups: SidebarItems = [
         label: 'TypeScript',
         collapsed: true,
         items: [
-          {
-            label: 'Maintain TypeScript monorepos',
-            link: 'features/maintain-typescript-monorepos',
-          },
           ...getTechnologyKBItems('typescript'),
           {
             label: 'Buildable and publishable libraries',

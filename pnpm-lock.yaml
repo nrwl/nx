@@ -2676,9 +2676,6 @@ importers:
 
   packages/devkit:
     dependencies:
-      '@zkochan/js-yaml':
-        specifier: 'catalog:'
-        version: 0.0.7
       ejs:
         specifier: 5.0.1
         version: 5.0.1
@@ -2694,9 +2691,6 @@ importers:
       tslib:
         specifier: catalog:typescript
         version: 2.8.1
-      yaml:
-        specifier: ^2.8.3
-        version: 2.9.0
       yargs-parser:
         specifier: 'catalog:'
         version: 21.1.1
