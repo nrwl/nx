@@ -1,6 +1,6 @@
 ---
 title: Folder Structure
-description: Learn about organizing your Nx monorepo with effective folder structures, and how to easily move or remove projects as your organization evolves.
+description: Learn how to organize the projects in your Nx monorepo with grouping folders by scope, and why the structure stays easy to change later.
 filter: 'type:Concepts'
 ---
 
@@ -8,27 +8,15 @@ Nx can work with any folder structure you choose, but it is good to have a plan 
 
 Projects are often grouped by _scope_. A project's scope is either the application to which it belongs or (for larger applications) a section within that application.
 
-## Move generator
+## Can you change the folder structure later?
 
-Don't be too anxious about choosing the exact right folder structure from the beginning. Projects can be moved or renamed using the [`@nx/workspace:move` generator](/docs/reference/workspace/generators#move).
-
-For instance, if a project under the `booking` folder is now being shared by multiple apps, you can move it to the shared folder like this:
-
-```shell
-nx g move --project booking-some-project shared/some-project
-```
-
-## Remove generator
-
-Similarly, if you no longer need a project, you can remove it with the [`@nx/workspace:remove` generator](/docs/reference/workspace/generators#remove).
-
-```shell
-nx g remove booking-some-project
-```
+Yes. Don't be too anxious about choosing the exact right structure from the beginning.
+Moving or renaming a project folder is a regular `mv`, and deleting one is a regular `rm`, the same as in any repository.
+Tooling doesn't factor into the decision, so pick the structure that helps developers find things, and change it when your organization changes.
 
 ## Example workspace
 
-Let's use Nrwl Airlines as an example organization. This organization has two apps, `booking` and `check-in`. In the Nx workspace, projects related to `booking` are grouped under a `libs/booking` folder, projects related to `check-in` are grouped under a `libs/check-in` folder and projects used in both applications are placed in `libs/shared`. You can also have nested grouping folders, (i.e. `libs/shared/seatmap`).
+Let's use Acme Airlines as an example organization. This organization has two apps, `booking` and `check-in`. In the Nx workspace, projects related to `booking` are grouped under a `libs/booking` folder, projects related to `check-in` are grouped under a `libs/check-in` folder and projects used in both applications are placed in `libs/shared`. You can also have nested grouping folders, (i.e. `libs/shared/seatmap`).
 
 The purpose of these folders is to help with organizing by scope. We recommend grouping projects together which are (usually) updated together. It helps minimize the amount of time a developer spends navigating the folder tree to find the right file.
 

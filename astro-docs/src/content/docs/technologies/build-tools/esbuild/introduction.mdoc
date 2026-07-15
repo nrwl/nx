@@ -7,7 +7,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Nx Plugin for [esbuild](https://esbuild.github.io/api/), an extremely fast JavaScript bundler. Use it to build and cache projects in an esbuild monorepo, with type-checking and asset handling layered on top.
+[esbuild](https://esbuild.github.io/api/) is an extremely fast JavaScript bundler. In an esbuild monorepo, Nx builds and caches projects across your workspace so only what changed gets rebuilt.
+
+The Nx Plugin for esbuild runs these builds through the `@nx/esbuild:esbuild` executor, with type-checking and asset handling layered on top.
 
 ## Requirements
 

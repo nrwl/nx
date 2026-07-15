@@ -1,6 +1,6 @@
 ---
-title: 'Remote Cache'
-description: 'Learn how to set up remote cache with Nx Cloud or a self-hosted solution.'
+title: 'Self-hosted remote cache'
+description: 'Set up a self-hosted remote cache server for Nx using the OpenAPI specification, or use Nx Cloud for a fully managed remote cache.'
 filter: 'type:Guides'
 ---
 
@@ -22,26 +22,17 @@ You'll also get access to advanced CI features:
 - [Detection and re-running of flaky tasks](/docs/features/ci-features/flaky-tasks)
 - [Self-healing CI and other AI features](https://nx.dev/ai)
 
-[Get Started](https://cloud.nx.app/get-started/)
 {% /aside %}
 
-{% aside type="note" title="Nx Enterprise" %}
+{% call_to_action title="Get started with Nx Cloud" url="https://cloud.nx.app/get-started/" icon="nxcloud" description="Fully managed remote cache with Nx Replay" %}
+Get started with Nx Cloud
+{% /call_to_action %}
 
-Recommended for large organizations.
-
-Includes everything from Nx Cloud, plus:
-
-- Work hand-in-hand with the Nx team for continual improvement
-- Run on the Nx Cloud servers in any region or run fully self-contained, on-prem
-- SOC 2 type 1 and 2 compliant and comes with single-tenant, dedicated EU region hosting as well as on-premise
-
-[Reach out for an Enterprise trial](https://nx.dev/enterprise/trial)
-
-{% /aside %}
+For single-tenant, dedicated-region, or on-prem hosting, see [Nx Enterprise](https://nx.dev/enterprise).
 
 ## Build your own caching server
 
-Starting in Nx version 20.8, you can build your own caching server using the OpenAPI specification below. This allows you to create a custom remote cache server tailored to your specific needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
+You can build your own caching server using the OpenAPI specification below and tailor it to your needs. The server manages all aspects of the remote cache, including storage, retrieval, and authentication.
 
 Implementation is up to you, but the server must adhere to the OpenAPI specification below to ensure compatibility with Nx caching mechanism. The endpoints transfer tar archives as binary data. Note that while the underlying data format may change in future Nx versions, the OpenAPI specification should remain stable.
 
@@ -50,7 +41,6 @@ You can implement your server in any programming language or framework, as long 
 ### Open API specification
 
 ```json
-// Nx 20.8+
 {
   "openapi": "3.0.0",
   "info": {
