@@ -3,6 +3,7 @@ import {
   getDependencyVersionFromPackageJson,
   type Tree,
 } from '@nx/devkit';
+import { nxVersion } from '../../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
   versions,
@@ -10,7 +11,8 @@ import {
 
 export function addDependencies(
   tree: Tree,
-  isUsingApplicationBuilder: boolean
+  isUsingApplicationBuilder: boolean,
+  isUsingWebpackBuilder: boolean
 ): void {
   const pkgVersions = versions(tree);
 
@@ -31,6 +33,10 @@ export function addDependencies(
 
   if (!isUsingApplicationBuilder) {
     devDependencies['browser-sync'] = pkgVersions.browserSyncVersion;
+    if (isUsingWebpackBuilder) {
+      devDependencies['@nx/webpack'] = nxVersion;
+      devDependencies['webpack-merge'] = pkgVersions.webpackMergeVersion;
+    }
   } else {
     dependencies['@angular-devkit/build-angular'] = angularDevkitVersion;
   }
