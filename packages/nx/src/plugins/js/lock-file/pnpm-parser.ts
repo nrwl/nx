@@ -250,7 +250,13 @@ function getNodes(
   if (data.patchedDependencies) {
     for (const specifier of Object.keys(data.patchedDependencies)) {
       const patchInfo = data.patchedDependencies[specifier];
-      if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
+      const patchHash =
+        typeof patchInfo === 'string'
+          ? patchInfo
+          : patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo
+            ? patchInfo.hash
+            : undefined;
+      if (patchHash) {
         const packageName = extractNameFromKey(specifier, false);
         const versionSpecifier = getVersion(specifier, packageName) || null;
         if (!patchEntriesByPackage.has(packageName)) {
@@ -258,7 +264,7 @@ function getNodes(
         }
         patchEntriesByPackage.get(packageName).push({
           versionSpecifier,
-          hash: patchInfo.hash,
+          hash: patchHash,
         });
       }
     }
