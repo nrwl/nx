@@ -655,6 +655,52 @@ mod tests {
         insta::assert_snapshot!(terminal.backend());
     }
 
+    fn rendered_row(width: u16, props: &StatusBarProps) -> String {
+        let (terminal, _) = render_bar(width, 1, props);
+        (0..width)
+            .map(|x| terminal.backend().buffer()[(x, 0)].symbol().to_string())
+            .collect()
+    }
+
+    #[test]
+    fn task_list_help_full_order_with_perf_report() {
+        // The full left-to-right order once the run has finished (perf report
+        // available): least-important on the left, quit/help anchored right.
+        let mut props = base_props();
+        props.perf_report_available = true;
+        props.all_completed = true;
+        props.completed_count = 3;
+        let row = rendered_row(160, &props);
+        assert!(
+            row.contains(
+                "perf report: p  pin output: 1 or 2  show output: <enter>  filter: /  navigate: ↑ ↓  quit: q  help: ?"
+            ),
+            "got: {row}"
+        );
+    }
+
+    /// The pane help follows the same rule: quit/help anchored on the right
+    /// (before the pinned interactivity indicator), items dropping from the
+    /// left as the row narrows.
+    #[test]
+    fn pane_help_anchors_quit_help_and_drops_from_the_left() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            interactive: Some(false),
+            status_message: None,
+            search: None,
+        });
+        let row = rendered_row(70, &props);
+        assert!(
+            row.contains("quit: q  help: ?  NON-INTERACTIVE i to toggle"),
+            "got: {row}"
+        );
+        assert!(
+            !row.contains("scroll:"),
+            "left-most hint should drop: {row}"
+        );
+    }
+
     #[test]
     fn running_state_narrow_shows_fewer_help_items() {
         let props = base_props();

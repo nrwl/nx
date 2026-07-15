@@ -42,8 +42,8 @@ impl HelpText {
     }
 
     /// The width of the hints that must never be crowded out by other
-    /// sections: quit/help for the task list, plus the pinned interactivity
-    /// indicator for a pane that can take input.
+    /// sections: the right-anchored quit/help for the task list, plus the
+    /// pinned interactivity indicator for a pane that can take input.
     pub fn essential_width(&self) -> u16 {
         let suffix_width = self
             .pinned_suffix()
@@ -54,18 +54,15 @@ impl HelpText {
                 is_interactive: true,
                 ..
             } => 0,
-            _ => 2, // quit, help
+            _ => 2, // quit, help (the two right-most items)
         };
-        let mut used = 0usize;
-        for (idx, item) in self.items().iter().take(essential_items).enumerate() {
-            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
-            used += separator + Self::item_width(item);
-        }
-        Self::joined_width(used, suffix_width) as u16
+        let items = self.items();
+        let start = items.len().saturating_sub(essential_items);
+        Self::joined_width(Self::items_width(&items[start..]), suffix_width) as u16
     }
 
     /// The width the help line actually renders at inside `max_width`: the
-    /// pinned suffix (if any) plus the longest prefix of whole items that
+    /// pinned suffix (if any) plus the longest suffix of whole items that
     /// fits. Lets the caller reserve exactly the used columns and give the
     /// rest to other sections.
     pub fn fitted_width(&self, max_width: u16) -> u16 {
@@ -74,21 +71,43 @@ impl HelpText {
             .map(|suffix| Self::item_width(&suffix))
             .unwrap_or(0);
         let items_budget = (max_width as usize).saturating_sub(Self::joined_width(0, suffix_width));
-        Self::joined_width(self.fitted_items_width(items_budget), suffix_width) as u16
+        let items = self.items();
+        let start = self.fitted_items_start(&items, items_budget);
+        Self::joined_width(Self::items_width(&items[start..]), suffix_width) as u16
     }
 
-    /// Width of the longest prefix of whole items fitting `budget`.
-    fn fitted_items_width(&self, budget: usize) -> usize {
+    /// Index of the left-most item that still fits when keeping the right-most
+    /// items (dropping whole items from the left). Returns `items.len()` when
+    /// nothing fits.
+    fn fitted_items_start(&self, items: &[Vec<Span<'static>>], budget: usize) -> usize {
         let mut used = 0usize;
-        for (idx, item) in self.items().iter().enumerate() {
-            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
+        let mut start = items.len();
+        for (idx, item) in items.iter().enumerate().rev() {
+            let separator = if idx == items.len() - 1 {
+                0
+            } else {
+                ITEM_SEPARATOR.len()
+            };
             let item_width = Self::item_width(item);
             if used + separator + item_width > budget {
                 break;
             }
             used += separator + item_width;
+            start = idx;
         }
-        used
+        start
+    }
+
+    /// Width of a contiguous run of items joined by separators.
+    fn items_width(items: &[Vec<Span<'static>>]) -> usize {
+        items
+            .iter()
+            .enumerate()
+            .map(|(idx, item)| {
+                let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
+                separator + Self::item_width(item)
+            })
+            .sum()
     }
 
     /// Combined width of the droppable items and the pinned suffix, with a
@@ -120,8 +139,10 @@ impl HelpText {
             height: area.height.min(buf_area.height.saturating_sub(area.y)),
         };
 
-        // Keep the longest prefix of whole items that fits the area, then pin
-        // the suffix (the pane's interactivity indicator) at the far right.
+        // Keep the longest suffix of whole items that fits, so the most
+        // important hints (quit/help) stay anchored on the right and new items
+        // grow in from the left. The pinned suffix (the pane's interactivity
+        // indicator) sits to the right of everything and is never dropped.
         let label_style = self.label_style();
         let suffix = self.pinned_suffix();
         let suffix_width = suffix
@@ -131,19 +152,17 @@ impl HelpText {
         let items_budget =
             (safe_area.width as usize).saturating_sub(Self::joined_width(0, suffix_width));
 
+        let items = self.items();
+        let start = self.fitted_items_start(&items, items_budget);
         let mut spans: Vec<Span<'static>> = Vec::new();
-        let mut used = 0usize;
-        for (idx, item) in self.items().into_iter().enumerate() {
-            let separator = if idx == 0 { 0 } else { ITEM_SEPARATOR.len() };
-            let item_width = Self::item_width(&item);
-            if used + separator + item_width > items_budget {
-                break;
+        for (idx, item) in items.into_iter().enumerate() {
+            if idx < start {
+                continue;
             }
-            if idx > 0 {
+            if idx > start {
                 spans.push(Span::styled(ITEM_SEPARATOR, label_style));
             }
             spans.extend(item);
-            used += separator + item_width;
         }
         if let Some(suffix) = suffix {
             if !spans.is_empty() {
@@ -165,8 +184,9 @@ impl HelpText {
             .render(safe_area, buf);
     }
 
-    /// The hint items for the context, most important first (later items are
-    /// the first to disappear when space runs out).
+    /// The hint items in left-to-right display order: least important first,
+    /// with quit/help anchored on the right. As space shrinks, whole items
+    /// drop from the left, so quit/help are the last to go.
     fn items(&self) -> Vec<Vec<Span<'static>>> {
         let label_style = self.label_style();
         let key_style = self.base_style().fg(THEME.info);
@@ -187,32 +207,32 @@ impl HelpText {
             } => vec![],
             HelpTextContext::Pane { .. } => {
                 vec![
+                    item("scroll: ", "↑ ↓"),
+                    item("copy: ", "c"),
+                    item("full screen: ", "<enter>"),
+                    item("search: ", "/"),
                     item("quit: ", "q"),
                     item("help: ", "?"),
-                    item("search: ", "/"),
-                    item("full screen: ", "<enter>"),
-                    item("copy: ", "c"),
-                    item("scroll: ", "↑ ↓"),
                 ]
             }
             HelpTextContext::TaskList { show_perf_report } => {
-                let mut items = vec![
-                    item("quit: ", "q"),
-                    item("help: ", "?"),
-                    item("navigate: ", "↑ ↓"),
-                    item("filter: ", "/"),
-                    vec![
-                        Span::styled("pin output: ", label_style),
-                        Span::styled("1", key_style),
-                        Span::styled(" or ", label_style),
-                        Span::styled("2", key_style),
-                    ],
-                    item("show output: ", "<enter>"),
-                ];
-                // Only advertise the performance report once it exists (run finished).
+                let mut items = vec![];
+                // Only advertise the performance report once it exists (run
+                // finished); it is the least important, so it sits left-most.
                 if show_perf_report {
                     items.push(item("perf report: ", "p"));
                 }
+                items.push(vec![
+                    Span::styled("pin output: ", label_style),
+                    Span::styled("1", key_style),
+                    Span::styled(" or ", label_style),
+                    Span::styled("2", key_style),
+                ]);
+                items.push(item("show output: ", "<enter>"));
+                items.push(item("filter: ", "/"));
+                items.push(item("navigate: ", "↑ ↓"));
+                items.push(item("quit: ", "q"));
+                items.push(item("help: ", "?"));
                 items
             }
         }
