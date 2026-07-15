@@ -294,13 +294,16 @@ async function buildVitestTargets(
       // Glob discovery reads the serve-resolved config: Vitest runs tests
       // through a Vite server (the `serve` command), so `apply: 'serve'`
       // plugins and command-sensitive `test` include/exclude are absent from
-      // the build resolution used above for outputs. The runtime path resolves
+      // the build resolution used above for outputs. Resolve under `mode:
+      // 'test'` to match Vitest, which defaults the Vite mode to 'test'; a
+      // config that branches include/exclude on `mode` would otherwise enumerate
+      // a different spec set here than at test time. The runtime path resolves
       // its own config, so only resolve here when the glob path may run.
       const viteServeConfig = disableVitestRuntime
         ? await resolveConfig(
             {
               configFile: absoluteConfigFilePath,
-              mode: 'development',
+              mode: 'test',
             },
             'serve'
           )
@@ -648,12 +651,13 @@ async function getTestPathsRelativeToProjectRoot(
 
 /**
  * Enumerates a project's test files by mirroring Vitest's own resolution with
- * a glob. Vitest globs `test.include` (skipped when `typecheck.only`),
- * `test.typecheck.include` (when typecheck is enabled), and `test.includeSource`
- * (kept only when the file contains an in-source test), each minus the relevant
- * `exclude`, from the project root. Defaults come from the installed Vitest so
- * they track the user's version. Callers must first confirm the config is
- * reproducible with a glob via `configRequiresVitestRuntime`.
+ * a glob. Vitest globs `test.include` and `test.includeSource` (both skipped
+ * when `typecheck.only`, the latter also kept only when the file contains an
+ * in-source test) plus `test.typecheck.include` (when typecheck is enabled),
+ * each minus the relevant `exclude`, from the project root. Defaults come from
+ * the installed Vitest so they track the user's version. Callers must first
+ * confirm the config is reproducible with a glob via
+ * `configRequiresVitestRuntime`.
  */
 async function globTestPathsRelativeToProjectRoot(
   test: InlineConfig,
@@ -693,7 +697,8 @@ async function globTestPathsRelativeToProjectRoot(
   }
 
   // In-source tests: only files that actually contain a test are included.
-  if (test.includeSource?.length) {
+  // `typecheck.only` makes Vitest run only type tests, so skip these too.
+  if (!typecheckOnly && test.includeSource?.length) {
     const sourceFiles = await glob(test.includeSource, {
       ...globOptions,
       ignore: exclude,

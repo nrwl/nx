@@ -613,5 +613,34 @@ describe('@nx/vitest', () => {
         expect.objectContaining({ cwd: '.' })
       );
     });
+
+    it('should skip in-source tests when typecheck.only is set', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            typecheck: { enabled: true, only: true },
+            includeSource: ['src/**/*.ts'],
+          },
+        }),
+      });
+      (glob as jest.Mock).mockResolvedValueOnce(['src/a.test-d.ts']);
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      expect(targets['test-ci--src/a.test-d.ts']).toBeDefined();
+      // typecheck.only makes Vitest collect only type tests, so both the regular
+      // include and the includeSource globs are skipped: glob runs once for the
+      // typecheck include and no in-source candidate is ever read.
+      expect(glob).toHaveBeenCalledTimes(1);
+      expect(readFile).not.toHaveBeenCalled();
+    });
   });
 });

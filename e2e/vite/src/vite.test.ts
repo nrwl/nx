@@ -553,5 +553,50 @@ export default defineConfig({
       );
       expect(collectAtomized(runtimeDetails)).toEqual(globAtomized);
     });
+
+    it('should discover atomized specs under the vitest test mode', () => {
+      // Restore the glob path (the parity test above forced the runtime).
+      updateJson('nx.json', (json) => {
+        const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
+        vitest.options.disableVitestRuntime = true;
+        return json;
+      });
+
+      // A config whose `test.include` branches on the resolved Vite mode.
+      // Vitest runs under mode 'test', so the glob path must resolve the same
+      // mode; resolving under 'development' would enumerate the wrong spec.
+      updateFile(
+        `${reactVitest}/vite.config.mts`,
+        `import { defineConfig } from 'vite';
+
+export default defineConfig(({ mode }) => ({
+  test: {
+    include:
+      mode === 'test'
+        ? ['src/**/*.vitest-mode.spec.ts']
+        : ['src/**/*.vite-dev-mode.spec.ts'],
+  },
+}));
+`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vitest-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+      updateFile(
+        `${reactVitest}/src/sample.vite-dev-mode.spec.ts`,
+        `import { expect, test } from 'vitest';\ntest('mode', () => expect(true).toBe(true));\n`
+      );
+
+      const details = JSON.parse(runCLI(`show project ${reactVitest} --json`));
+      const atomized = Object.keys(details.targets).filter((t) =>
+        t.startsWith('test-ci--')
+      );
+
+      expect(atomized).toContain('test-ci--src/sample.vitest-mode.spec.ts');
+      expect(atomized).not.toContain(
+        'test-ci--src/sample.vite-dev-mode.spec.ts'
+      );
+    });
   });
 });
