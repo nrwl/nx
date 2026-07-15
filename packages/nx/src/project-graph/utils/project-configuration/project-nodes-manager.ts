@@ -361,7 +361,7 @@ export class ProjectNodesManager {
    *
    * Pass a different `mergedRootMap` for the default-plugin intermediate
    * pass, then call again with `this.rootMap` after it's applied so
-   * sentinel parents rebind onto the final arrays.
+   * name refs introduced by that merge are sentinelized as well.
    */
   registerNameRefs(
     pluginResultProjects?: Record<

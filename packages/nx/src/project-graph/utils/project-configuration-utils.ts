@@ -432,12 +432,10 @@ export function mergeCreateNodesResults(
     }
   }
 
-  // The intermediate apply may have rebuilt dependsOn / inputs arrays
-  // via spread merges, leaving sentinels inserted against the
-  // intermediate rootMap pointing at now-orphaned arrays. Re-walking
-  // the final merged targets rebinds each encountered sentinel's
-  // `parent` to the current array (see
-  // ProjectNameInNodePropsManager#processInputs / processDependsOn).
+  // The intermediate apply may have rebuilt dependsOn / inputs arrays via
+  // spread merges, introducing name-ref strings that weren't visible in any
+  // single plugin result. Re-walking the final merged targets sentinelizes
+  // them so the final substitution sweep resolves them too.
   nodesManager.registerNameRefs(intermediateDefaultRootMap);
 
   // Overlay default-plugin attribution onto the main source maps using
