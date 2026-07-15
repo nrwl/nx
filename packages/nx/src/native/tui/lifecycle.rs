@@ -682,7 +682,11 @@ impl AppLifeCycle {
     }
 
     #[napi]
-    pub fn register_running_task(&mut self, task_id: String, pty_handles: &External<(ParserArc, WriterArc, MasterArc)>) {
+    pub fn register_running_task(
+        &mut self,
+        task_id: String,
+        pty_handles: &External<(ParserArc, WriterArc, MasterArc)>,
+    ) {
         self.with_app(|app| app.register_running_interactive_task(task_id, &**pty_handles));
     }
 
