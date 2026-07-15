@@ -254,6 +254,23 @@ async function handleMessage(socket: Socket, data: string) {
       new Error(`Unsupported payload sent to daemon server: ${unparsedPayload}`)
     );
   }
+
+  // Validate the deserialized payload shape before dispatching on `payload.type`.
+  // The daemon deserializes client-controlled data (JSON or v8), so reject
+  // anything that isn't a well-formed message object instead of acting on it.
+  if (
+    payload == null ||
+    typeof payload !== 'object' ||
+    typeof payload.type !== 'string'
+  ) {
+    await respondWithErrorAndExit(
+      socket,
+      `Invalid payload from the client`,
+      new Error(`Malformed message sent to daemon server`)
+    );
+    return;
+  }
+
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
 
   if (isDaemonMessage(payload) && payload.env) {

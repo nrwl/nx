@@ -4,6 +4,24 @@ const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 // nx-ignore-next-line
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 
+// Webpack's global runtime module falls back to `new Function("return this")()`
+// to resolve the global object. Supply-chain scanners flag that as `eval` usage.
+// The graph app only ever runs in browsers/webviews where `globalThis` exists,
+// so rewrite the runtime module to assign it directly - same value, no `Function`.
+class RemoveEvalGlobalPlugin {
+  apply(compiler) {
+    const { RuntimeGlobals, Template } = compiler.webpack;
+    compiler.hooks.thisCompilation.tap('RemoveEvalGlobal', (compilation) => {
+      compilation.hooks.runtimeModule.tap('RemoveEvalGlobal', (module) => {
+        if (module.name === 'global') {
+          module.generate = () =>
+            Template.asString([`${RuntimeGlobals.global} = globalThis;`]);
+        }
+      });
+    });
+  }
+}
+
 module.exports = {
   output: {
     path: join(__dirname, 'dist'),
@@ -23,6 +41,7 @@ module.exports = {
     },
   },
   plugins: [
+    new RemoveEvalGlobalPlugin(),
     new NxAppWebpackPlugin({
       index: './src/index.html',
       compiler: 'babel',
