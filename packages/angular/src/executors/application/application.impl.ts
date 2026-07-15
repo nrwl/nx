@@ -3,7 +3,7 @@ import type { ExecutorContext } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import { assertBuilderPackageIsInstalled } from '../utilities/builder-package';
+import { assertPackageIsInstalled } from '../utilities/builder-package';
 import {
   loadIndexHtmlTransformer,
   loadPlugins,
@@ -51,7 +51,7 @@ export default async function* applicationExecutor(
     context
   );
 
-  assertBuilderPackageIsInstalled('@angular/build');
+  assertPackageIsInstalled('@angular/build', '@nx/angular:application');
   const { buildApplication } = await import('@angular/build');
   return yield* buildApplication(delegateExecutorOptions, builderContext, {
     codePlugins: plugins,

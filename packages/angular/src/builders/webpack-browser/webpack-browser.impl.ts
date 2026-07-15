@@ -6,19 +6,14 @@ import {
   targetToTargetString,
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
-import { WebpackNxBuildCoordinationPlugin } from '@nx/webpack/internal';
 import { existsSync } from 'fs';
 import { isNpmProject } from 'nx/src/project-graph/operators';
 import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';
-import { assertBuilderPackageIsInstalled } from '../../executors/utilities/builder-package';
+import { assertPackageIsInstalled } from '../../executors/utilities/builder-package';
 import { createTmpTsConfigForBuildableLibs } from '../utilities/buildable-libs';
-import {
-  mergeCustomWebpackConfig,
-  resolveIndexHtmlTransformer,
-} from '../utilities/webpack';
 import type { BrowserBuilderSchema } from './schema';
 // This is required to ensure that the webpack version used by the Module Federation is the same as the one used by the builders.
 const Module = require('module');
@@ -70,6 +65,8 @@ export function executeWebpackBrowserBuilder(
   options: BrowserBuilderSchema,
   context: import('@angular-devkit/architect').BuilderContext
 ): Observable<import('@angular-devkit/architect').BuilderOutput> {
+  assertPackageIsInstalled('@nx/webpack', '@nx/angular:webpack-browser');
+
   options.buildLibsFromSource ??= true;
   options.watchDependencies ??= true;
 
@@ -118,59 +115,74 @@ export function executeWebpackBrowserBuilder(
     );
   }
 
-  assertBuilderPackageIsInstalled('@angular-devkit/build-angular');
-  return from(import('@angular-devkit/build-angular')).pipe(
-    switchMap(({ executeBrowserBuilder }) =>
-      executeBrowserBuilder(delegateBuilderOptions, context as any, {
-        webpackConfiguration: (baseWebpackConfig) => {
-          if (!buildLibsFromSource && delegateBuilderOptions.watch) {
-            const workspaceDependencies = dependencies
-              .filter((dep) => !isNpmProject(dep.node))
-              .map((dep) => dep.node.name);
-            // default for `nx run-many` is --all projects
-            // by passing an empty string for --projects, run-many will default to
-            // run the target for all projects.
-            // This will occur when workspaceDependencies = []
-            if (workspaceDependencies.length > 0) {
-              const skipInitialRun = shouldSkipInitialTargetRun(
-                projectGraph,
-                context.target.project,
-                context.target.target
-              );
+  assertPackageIsInstalled(
+    '@angular-devkit/build-angular',
+    '@nx/angular:webpack-browser'
+  );
+  assertPackageIsInstalled('webpack-merge', '@nx/angular:webpack-browser');
+  return from(
+    Promise.all([
+      import('@angular-devkit/build-angular'),
+      import('@nx/webpack/internal'),
+      import('../utilities/webpack.js'),
+    ])
+  ).pipe(
+    switchMap(
+      ([
+        { executeBrowserBuilder },
+        { WebpackNxBuildCoordinationPlugin },
+        { mergeCustomWebpackConfig, resolveIndexHtmlTransformer },
+      ]) =>
+        executeBrowserBuilder(delegateBuilderOptions, context as any, {
+          webpackConfiguration: (baseWebpackConfig) => {
+            if (!buildLibsFromSource && delegateBuilderOptions.watch) {
+              const workspaceDependencies = dependencies
+                .filter((dep) => !isNpmProject(dep.node))
+                .map((dep) => dep.node.name);
+              // default for `nx run-many` is --all projects
+              // by passing an empty string for --projects, run-many will default to
+              // run the target for all projects.
+              // This will occur when workspaceDependencies = []
+              if (workspaceDependencies.length > 0) {
+                const skipInitialRun = shouldSkipInitialTargetRun(
+                  projectGraph,
+                  context.target.project,
+                  context.target.target
+                );
 
-              baseWebpackConfig.plugins.push(
-                // Cast away the angular/webpack plugin type difference (webpack versions).
-                new (WebpackNxBuildCoordinationPlugin as any)(
-                  `nx run-many --target=${
-                    context.target.target
-                  } --projects=${workspaceDependencies.join(',')}`,
-                  { skipInitialRun, skipWatchingDeps: !watchDependencies }
-                )
-              );
+                baseWebpackConfig.plugins.push(
+                  // Cast away the angular/webpack plugin type difference (webpack versions).
+                  new (WebpackNxBuildCoordinationPlugin as any)(
+                    `nx run-many --target=${
+                      context.target.target
+                    } --projects=${workspaceDependencies.join(',')}`,
+                    { skipInitialRun, skipWatchingDeps: !watchDependencies }
+                  )
+                );
+              }
             }
-          }
 
-          if (!pathToWebpackConfig) {
-            return baseWebpackConfig;
-          }
-
-          return mergeCustomWebpackConfig(
-            baseWebpackConfig,
-            pathToWebpackConfig,
-            delegateBuilderOptions,
-            context.target
-          );
-        },
-        ...(pathToIndexFileTransformer
-          ? {
-              indexHtml: resolveIndexHtmlTransformer(
-                pathToIndexFileTransformer,
-                delegateBuilderOptions.tsConfig,
-                context.target
-              ),
+            if (!pathToWebpackConfig) {
+              return baseWebpackConfig;
             }
-          : {}),
-      })
+
+            return mergeCustomWebpackConfig(
+              baseWebpackConfig,
+              pathToWebpackConfig,
+              delegateBuilderOptions,
+              context.target
+            );
+          },
+          ...(pathToIndexFileTransformer
+            ? {
+                indexHtml: resolveIndexHtmlTransformer(
+                  pathToIndexFileTransformer,
+                  delegateBuilderOptions.tsConfig,
+                  context.target
+                ),
+              }
+            : {}),
+        })
     )
   );
 }

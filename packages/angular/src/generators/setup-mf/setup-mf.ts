@@ -11,6 +11,7 @@ import {
   moduleFederationEnhancedVersion,
   nxVersion,
   tsNodeVersion,
+  webpackMergeVersion,
 } from '../../utils/versions';
 import {
   getInstalledAngularDevkitVersion,
@@ -61,6 +62,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
           {
             '@nx/web': nxVersion,
             '@nx/webpack': nxVersion,
+            'webpack-merge': webpackMergeVersion,
             '@nx/module-federation': nxVersion,
           }
         )
@@ -94,6 +96,7 @@ export async function setupMf(tree: Tree, rawOptions: Schema) {
           {},
           {
             '@nx/webpack': nxVersion,
+            'webpack-merge': webpackMergeVersion,
             '@module-federation/enhanced': moduleFederationEnhancedVersion,
             '@nx/module-federation': nxVersion,
           }
