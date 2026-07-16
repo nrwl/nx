@@ -1,6 +1,14 @@
 import { names } from '@nx/devkit';
-import { readFile, runCLI, uniq, updateFile, updateJson } from '@nx/e2e-utils';
-import { join } from 'path';
+import {
+  readFile,
+  readJson,
+  runCLI,
+  tmpProjPath,
+  uniq,
+  updateFile,
+  updateJson,
+} from '@nx/e2e-utils';
+import { dirname, join, relative } from 'path';
 import {
   setupProjectsTest,
   resetProjectsTest,
@@ -162,6 +170,28 @@ describe('Angular Projects - Buildable Libraries', () => {
       `Building entry point '@${proj}/${buildableLib}'`
     );
     expect(libOutput).toContain(`nx run ${app1}:build:development`);
+
+    // the development configuration keeps declarationMap enabled, so the lib
+    // emits declaration maps that must still resolve to its sources
+    const declarationMap = `dist/${buildableLib}/lib/${
+      names(buildableLib).fileName
+    }-module.d.ts.map`;
+    const { sources } = readJson<{ sources: string[] }>(declarationMap);
+    expect(
+      sources.map((source) =>
+        relative(
+          tmpProjPath(),
+          join(tmpProjPath(dirname(declarationMap)), source)
+        )
+      )
+    ).toEqual([
+      join(
+        buildableLib,
+        'src',
+        'lib',
+        `${names(buildableLib).fileName}-module.ts`
+      ),
+    ]);
 
     // to proof it has been built from source the "main.js" should actually contain
     // the path to dist
