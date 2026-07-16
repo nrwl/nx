@@ -12,9 +12,10 @@ const INLINE_SOURCE_MAP_REGEX =
 export interface ExtractedSourceMap {
   code: string;
   /**
-   * The decoded sourcemap as a JSON string, validated to parse. Rspack's
-   * loader callback accepts string maps directly, so keeping it serialized
-   * avoids a JSON.parse/typing round-trip in the loaders.
+   * The decoded sourcemap as a JSON string, validated to be a raw v3
+   * sourcemap. Rspack's loader callback accepts string maps directly, so
+   * keeping it serialized avoids exposing a typed map object (and the casts
+   * that would require) at the loader boundary; Rspack parses it itself.
    */
   map: string | undefined;
 }
@@ -37,23 +38,46 @@ export function extractInlineSourceMap(code: string): ExtractedSourceMap {
   }
 
   const map = Buffer.from(match[1], 'base64').toString('utf-8');
-  try {
-    JSON.parse(map);
-  } catch {
-    // If the embedded map cannot be parsed, pass the code through untouched
-    // rather than failing the build over a malformed sourcemap.
+  if (!isRawSourceMap(map)) {
+    // If the embedded payload is not a sourcemap, pass the code through
+    // untouched rather than failing the build over it.
     return { code, map: undefined };
   }
 
   return { code: code.slice(0, match.index), map };
 }
 
+/**
+ * Validate that a decoded payload is a raw v3 sourcemap. Rspack fails the
+ * module build when the loader callback receives any other JSON value
+ * (`{}`, `null`, arrays, ...), so only payloads carrying the required v3
+ * fields are forwarded. This matters particularly for the partial-transform
+ * loader, which preserves input from arbitrary Angular-related JavaScript.
+ */
+function isRawSourceMap(json: string): boolean {
+  try {
+    const parsed: unknown = JSON.parse(json);
+    return (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      !Array.isArray(parsed) &&
+      (parsed as { version?: unknown }).version === 3 &&
+      typeof (parsed as { mappings?: unknown }).mappings === 'string' &&
+      Array.isArray((parsed as { sources?: unknown }).sources)
+    );
+  } catch {
+    return false;
+  }
+}
+
 // In watch mode the loaders re-read unchanged entries from the shared
 // typescript file cache on every rebuild, so memoize the extraction per cache
 // key to run the regex + base64 decode + JSON validation once per emitted
-// content instead of once per read. A re-emit stores a new string/buffer
-// instance in the file cache, so the identity check on the cached value
-// invalidates stale memo entries.
+// content instead of once per read. The `===` guard on the cached value keeps
+// the memo in sync with the file cache: reads of the same instance
+// short-circuit on reference equality, while a re-emit with changed contents
+// fails the comparison (strings compare by value, `Uint8Array` by reference)
+// and recomputes.
 const extractionCache = new Map<
   string,
   { source: string | Uint8Array; result: ExtractedSourceMap }

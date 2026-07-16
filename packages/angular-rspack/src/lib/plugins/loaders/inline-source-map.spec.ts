@@ -71,6 +71,22 @@ describe('extractInlineSourceMap', () => {
       map: undefined,
     });
   });
+
+  // Any JSON value that is not a raw v3 sourcemap would fail the module
+  // build when forwarded to Rspack's loader callback.
+  it.each([
+    ['an empty object', {}],
+    ['null', null],
+    ['an array', []],
+    ['a map missing v3 fields', { version: 3 }],
+  ])('passes the code through when the payload is %s', (_, payload) => {
+    const code = `const a = 1;\n${inlineComment(encode(payload))}`;
+
+    expect(extractInlineSourceMap(code)).toEqual({
+      code,
+      map: undefined,
+    });
+  });
 });
 
 describe('extractInlineSourceMapCached', () => {
