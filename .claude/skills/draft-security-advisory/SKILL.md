@@ -2,7 +2,7 @@
 name: draft-security-advisory
 description: Draft a GitHub security advisory (GHSA) for nrwl/nx from a vulnerability report. Investigates the affected code, determines affected packages and version ranges, proposes a CVSS score and CWEs, and writes a draft advisory following the layout of previously published nrwl/nx advisories. Output is a local draft only — a human reviews and publishes. Use when a security vulnerability report needs to become an advisory, or when the user says "draft an advisory", "write a GHSA", or "security advisory for <report>".
 allowed-tools: Bash(gh api *), Bash(gh pr view *), Bash(gh pr list *), Bash(gh issue view *), Bash(gh search *), Bash(gh release view *), Bash(gh release list *), Bash(git -C *), Bash(git log *), Bash(git tag *), Bash(git show *), Bash(git branch *), Bash(npm view *), Bash(ls *), Bash(cat *), Bash(head *), Bash(tail *), Bash(jq *), Bash(grep *), Bash(mkdir -p *), Write(tmp/security-advisories/**), Edit(tmp/security-advisories/**), Read, Grep, Glob, Agent
-argument-hint: "<report file path, pasted report text, or pointer to the report>"
+argument-hint: '<report file path, pasted report text, or pointer to the report>'
 ---
 
 # Draft Security Advisory (draft-security-advisory)
