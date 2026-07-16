@@ -120,7 +120,7 @@ describe('angular-transform.loader', () => {
       '@Component()'
     );
 
-    expect(callback).toHaveBeenCalledWith(null, 'cached content');
+    expect(callback).toHaveBeenCalledWith(null, 'cached content', undefined);
   });
 
   it('should return content when typescriptFileCache does contain Buffer', () => {
@@ -138,6 +138,41 @@ describe('angular-transform.loader', () => {
       '@Component()'
     );
 
-    expect(callback).toHaveBeenCalledWith(null, Buffer.from('cached content'));
+    expect(callback).toHaveBeenCalledWith(null, 'cached content', undefined);
+  });
+
+  it('should extract an inline sourcemap and pass it to the callback', () => {
+    const map = {
+      version: 3,
+      sources: ['app.component.ts'],
+      sourcesContent: ['@Component()'],
+      mappings: 'AAAA',
+      names: [],
+    };
+    const inlineMap = Buffer.from(JSON.stringify(map)).toString('base64');
+    // Built via concatenation so the test transform doesn't treat the literal
+    // token in this source file as a real sourcemap reference.
+    const comment =
+      `//# source` +
+      `MappingURL=data:application/json;charset=utf-8;base64,${inlineMap}`;
+    typescriptFileCache.set(
+      '/home/projects/analog/src/app/app.component.ts',
+      `export class AppComponent {}\n${comment}\n`
+    );
+
+    angularTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation,
+        resourcePath: '/home/projects/analog/src/app/app.component.ts',
+      },
+      '@Component()'
+    );
+
+    expect(callback).toHaveBeenCalledWith(
+      null,
+      'export class AppComponent {}',
+      map
+    );
   });
 });

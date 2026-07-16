@@ -28,12 +28,18 @@ export interface SetupCompilationOptions {
   hasServer?: boolean;
   includePaths?: string[];
   sass?: Sass;
+  /**
+   * Whether to emit script sourcemaps. When enabled, the Angular compilation
+   * emits an *inline* sourcemap (see `DEFAULT_NG_COMPILER_OPTIONS`) so the
+   * downstream `JavaScriptTransformer` can chain it back to the original
+   * TypeScript. Defaults to `true` to preserve the previous behavior.
+   */
+  sourceMap?: boolean;
 }
 
 export const DEFAULT_NG_COMPILER_OPTIONS: ts.CompilerOptions = {
   suppressOutputPathCheck: true,
   outDir: undefined,
-  sourceMap: true,
   declaration: false,
   declarationMap: false,
   allowEmptyCodegenFiles: false,
@@ -55,14 +61,25 @@ export async function setupCompilation(
 ) {
   assertSupportedAngularRspackCompilerVersions();
 
+  const sourceMap = options.sourceMap ?? true;
   const { readConfiguration } = await loadCompilerCli();
   const { options: tsCompilerOptions, rootNames } = readConfiguration(
     config.source?.tsconfigPath ?? options.tsConfig,
     {
       ...DEFAULT_NG_COMPILER_OPTIONS,
+      // Align with `@angular/build`'s esbuild pipeline: emit an *inline*
+      // sourcemap that also embeds the original sources. The downstream
+      // `JavaScriptTransformer` (babel + the Angular linker) only reads inline
+      // input sourcemaps, so an external `.js.map` would be dropped and the
+      // chained sourcemap would point at the intermediate Ivy JavaScript
+      // instead of the original TypeScript.
+      sourceMap: false,
+      inlineSourceMap: sourceMap,
+      inlineSources: sourceMap,
       ...(options.useTsProjectReferences
         ? {
             sourceMap: false,
+            inlineSourceMap: false,
             inlineSources: false,
             isolatedModules: true,
           }

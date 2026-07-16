@@ -507,6 +507,7 @@ export class AngularRspackPlugin implements RspackPluginInstance {
           hasServer: this.#_options.hasServer,
           includePaths: this.#_options.stylePreprocessorOptions?.includePaths,
           sass: this.#_options.stylePreprocessorOptions?.sass,
+          sourceMap: this.#_options.sourceMap.scripts,
         },
         this.#sourceFileCache,
         this.#angularCompilation,

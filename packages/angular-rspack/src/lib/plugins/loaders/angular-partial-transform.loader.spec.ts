@@ -58,9 +58,43 @@ describe('angular-partial-transform.loader', () => {
     );
 
     await vi.waitFor(() =>
-      expect(callback).toHaveBeenCalledWith(null, 'transformed')
+      expect(callback).toHaveBeenCalledWith(null, 'transformed', undefined)
     );
     expect(typescriptFileCache.get('/path/to/file.js')).toBe('transformed');
+  });
+
+  it('should extract an inline sourcemap from the transformed output', async () => {
+    const map = {
+      version: 3,
+      sources: ['file.js'],
+      sourcesContent: ['@angular content'],
+      mappings: 'AAAA',
+      names: [],
+    };
+    const inlineMap = Buffer.from(JSON.stringify(map)).toString('base64');
+    // Built via concatenation so the test transform doesn't treat the literal
+    // token in this source file as a real sourcemap reference.
+    const comment =
+      `//# source` +
+      `MappingURL=data:application/json;charset=utf-8;base64,${inlineMap}`;
+    const transformed = `transformed\n${comment}\n`;
+    transformFile.mockResolvedValue(Buffer.from(transformed));
+
+    angularPartialTransformLoader.call(
+      {
+        ...thisValue,
+        _compilation: makeCompilation(),
+        resourcePath: '/path/to/file.js',
+      },
+      '@angular content'
+    );
+
+    await vi.waitFor(() =>
+      expect(callback).toHaveBeenCalledWith(null, 'transformed', map)
+    );
+    // The full transformed output (including the inline map) stays cached so
+    // subsequent reads re-extract the same map.
+    expect(typescriptFileCache.get('/path/to/file.js')).toBe(transformed);
   });
 
   it('should fail the module when the transform rejects', async () => {
