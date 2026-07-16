@@ -419,10 +419,10 @@ impl<'a> StatusBar<'a> {
         }
 
         let mut spans = vec![Span::raw(" ")];
-        // A cloud icon marks counts that are connected to an Nx Cloud run —
-        // kept outside the underlined span so the affordance stays on the
-        // numbers themselves.
-        if props.cloud_link.is_some() {
+        // A cloud icon marks a cloud-enabled run — any cloud presence (link or
+        // free-text message) shows it. Kept outside the underlined span so the
+        // click affordance stays on the numbers themselves.
+        if props.cloud_link.is_some() || props.cloud_message.is_some() {
             let mut icon_style = Style::default().fg(THEME.secondary_fg);
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
