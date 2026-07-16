@@ -467,20 +467,16 @@ function getNodes(
 
   const hoistedDeps = loadPnpmHoistedDepsDefinition();
 
-  // Pre-build packageName -> key index for O(1) lookup instead of O(n) find() per package
-  const hoistedKeysByPackage = new Map<string, string>();
-  for (const key of Object.keys(hoistedDeps)) {
-    if (key.startsWith('/')) {
-      // Extract package name from key format: /{packageName}/{version}... or /@scope/name/{version}...
-      const withoutSlash = key.slice(1);
-      const slashIndex = withoutSlash.startsWith('@')
-        ? withoutSlash.indexOf('/', withoutSlash.indexOf('/') + 1)
-        : withoutSlash.indexOf('/');
-      if (slashIndex > 0) {
-        const pkgName = withoutSlash.slice(0, slashIndex);
-        if (!hoistedKeysByPackage.has(pkgName)) {
-          hoistedKeysByPackage.set(pkgName, key);
-        }
+  // Pre-build packageName -> version index for O(1) lookup instead of O(n) find() per package
+  const hoistedVersionsByPackage = new Map<string, string>();
+  for (const rawKey of Object.keys(hoistedDeps)) {
+    const isV5Key = rawKey.startsWith('/');
+    const key = isV5Key ? rawKey.slice(1) : rawKey;
+    const packageName = extractNameFromKey(key, isV5Key);
+    if (!hoistedVersionsByPackage.has(packageName)) {
+      const version = parseBaseVersion(getVersion(key, packageName), isV5Key);
+      if (version) {
+        hoistedVersionsByPackage.set(packageName, version);
       }
     }
   }
@@ -494,8 +490,7 @@ function getNodes(
     } else {
       const hoistedVersion = getHoistedVersion(
         packageName,
-        isV5,
-        hoistedKeysByPackage
+        hoistedVersionsByPackage
       );
       hoistedNode = versionMap.get(hoistedVersion);
     }
@@ -512,17 +507,14 @@ function getNodes(
 
 function getHoistedVersion(
   packageName: string,
-  isV5: boolean,
-  hoistedKeysByPackage: Map<string, string>
+  hoistedVersionsByPackage: Map<string, string>
 ): string {
   let version = getHoistedPackageVersion(packageName);
 
   if (!version) {
     // Use pre-built index for O(1) lookup
-    const key = hoistedKeysByPackage.get(packageName);
-    if (key) {
-      version = parseBaseVersion(getVersion(key.slice(1), packageName), isV5);
-    } else {
+    version = hoistedVersionsByPackage.get(packageName);
+    if (!version) {
       // pnpm might not hoist every package
       // similarly those packages will not be available to be used via import
       return;

@@ -2534,13 +2534,13 @@ snapshots:
             "name": "npm:another-string-width",
             "type": "npm",
           },
-          "npm:ansi-regex@5.0.1": {
+          "npm:ansi-regex": {
             "data": {
               "hash": "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==",
               "packageName": "ansi-regex",
               "version": "5.0.1",
             },
-            "name": "npm:ansi-regex@5.0.1",
+            "name": "npm:ansi-regex",
             "type": "npm",
           },
           "npm:ansi-regex@6.2.2": {
@@ -2561,13 +2561,13 @@ snapshots:
             "name": "npm:eastasianwidth",
             "type": "npm",
           },
-          "npm:emoji-regex@8.0.0": {
+          "npm:emoji-regex": {
             "data": {
               "hash": "sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==",
               "packageName": "emoji-regex",
               "version": "8.0.0",
             },
-            "name": "npm:emoji-regex@8.0.0",
+            "name": "npm:emoji-regex",
             "type": "npm",
           },
           "npm:emoji-regex@9.2.2": {
@@ -2615,13 +2615,13 @@ snapshots:
             "name": "npm:string-width@4.2.3",
             "type": "npm",
           },
-          "npm:strip-ansi@6.0.1": {
+          "npm:strip-ansi": {
             "data": {
               "hash": "sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==",
               "packageName": "strip-ansi",
               "version": "6.0.1",
             },
-            "name": "npm:strip-ansi@6.0.1",
+            "name": "npm:strip-ansi",
             "type": "npm",
           },
           "npm:strip-ansi@7.1.2": {
