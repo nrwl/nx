@@ -52,6 +52,13 @@ export async function getCommonConfig(
       normalizedOptions.optimization.styles.minify
         ? 'production'
         : 'development',
+    // `devtool` must stay coupled to `sourceMap.scripts`: with script
+    // sourcemaps disabled the Angular compilation still emits inline maps
+    // (required to keep TypeScript transpilation enabled, see
+    // `setupCompilation`) but without `inlineSources`, and babel may pass a
+    // stale pre-linker map comment through — the loaders can then extract a
+    // map that must be discarded, which only happens while `devtool` is off
+    // in exactly this configuration.
     devtool: normalizedOptions.sourceMap.scripts ? 'source-map' : false,
     infrastructureLogging: {
       appendOnly: false,

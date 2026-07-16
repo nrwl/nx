@@ -29,6 +29,7 @@ import {
   type NgRspackCompilation,
   type NormalizedAngularRspackPluginOptions,
 } from '../models';
+import { clearExtractionCache } from './loaders/inline-source-map';
 import { getLocaleBaseHref } from '../utils/get-locale-base-href';
 import { addError, addWarning } from '../utils/rspack-diagnostics';
 import { assertNever } from '../utils/misc-helpers';
@@ -400,6 +401,9 @@ export class AngularRspackPlugin implements RspackPluginInstance {
         try {
           await this.#javascriptTransformer.close();
           await disposeComponentStylesheetBundler();
+          // Drop memoized sourcemap extractions (they intentionally persist
+          // across watch rebuilds, so they are only released on shutdown).
+          clearExtractionCache();
         } catch {
           // Best-effort cleanup that must never fail the compiler teardown.
         }

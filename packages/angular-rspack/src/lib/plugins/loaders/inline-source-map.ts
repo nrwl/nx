@@ -60,6 +60,17 @@ const extractionCache = new Map<
 >();
 
 /**
+ * Release all memoized extraction results. Called on compiler shutdown so a
+ * long-lived process does not retain code/map strings for files deleted or
+ * renamed during a watch session. (During the session the memo intentionally
+ * mirrors the lifetime of the typescript file cache it shadows, which keeps
+ * such entries too.)
+ */
+export function clearExtractionCache(): void {
+  extractionCache.clear();
+}
+
+/**
  * Memoized variant of {@link extractInlineSourceMap} for contents read from
  * the typescript file cache, keyed by the cache key (the file's request path).
  */
