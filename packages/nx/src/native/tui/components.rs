@@ -18,11 +18,11 @@ pub mod hint_popup;
 pub mod layout_manager;
 pub mod link;
 pub mod nx_paragraph;
+pub mod search_filter;
 pub mod status_bar;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;
-pub mod vim_session;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
 ///

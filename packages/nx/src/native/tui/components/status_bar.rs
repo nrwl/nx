@@ -24,7 +24,7 @@ use ratatui::{
 
 use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry, fit_with_ellipsis};
-use super::vim_session::{VimSessionInput, confirmed_text};
+use super::search_filter::{SearchFilterInput, confirmed_text};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
@@ -222,7 +222,7 @@ impl<'a> StatusBar<'a> {
         if let Some(filter) = &props.filter
             && filter.input_mode
         {
-            VimSessionInput {
+            SearchFilterInput {
                 query: &filter.text,
                 counts: filter.input_counts(),
                 is_dimmed: props.is_dimmed,
@@ -238,7 +238,7 @@ impl<'a> StatusBar<'a> {
             && let Some(search) = &pane.search
             && search.input_mode
         {
-            VimSessionInput {
+            SearchFilterInput {
                 query: &search.query,
                 counts: search.input_counts(),
                 is_dimmed: props.is_dimmed,

@@ -2,8 +2,8 @@
 //! terminal pane search. One implementation renders both so the two sessions
 //! cannot drift apart; only the counts text and confirmed key hints differ.
 //!
-//! While the query is being typed, [`VimSessionInput`] takes over the status
-//! bar's row:
+//! While the query is being typed, [`SearchFilterInput`] takes over the
+//! status bar's row:
 //!
 //! ```text
 //!  /{query}   {counts}   <enter> confirm, <esc> cancel
@@ -24,7 +24,7 @@ use super::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 
 /// The whole-row input display for a session that is being typed.
-pub struct VimSessionInput<'a> {
+pub struct SearchFilterInput<'a> {
     pub query: &'a str,
     /// Session-specific feedback shown after the query, e.g. `3/17 matches`
     /// or `4 tasks filtered out`. Omitted entirely when `None`.
@@ -32,7 +32,7 @@ pub struct VimSessionInput<'a> {
     pub is_dimmed: bool,
 }
 
-impl Widget for VimSessionInput<'_> {
+impl Widget for SearchFilterInput<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let base = if self.is_dimmed {
             Style::default().dim()
