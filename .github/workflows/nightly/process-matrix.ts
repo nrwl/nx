@@ -78,7 +78,8 @@ const matrixData: MatrixData = {
       package_managers: ['npm', 'pnpm', 'yarn'],
       // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
       // See https://github.com/microsoft/playwright/issues/40724
-      node_versions: ['22.13.0', '24.0.0'],
+      // Floors track @angular/cli engines (^22.22.3 || ^24.15.0): ng new refuses older.
+      node_versions: ['22.22.3', '24.15.0'],
       excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo']
     },
     // Docker is not supported on ARM-based macOS runners (no nested virtualization)
@@ -86,7 +87,7 @@ const matrixData: MatrixData = {
     // We may want to look into adding intel only for this docker case, at least until vm-in-vm works on latest macos
     // TODO: re-add '26.0.0' once playwright ships the yauzl fix for node 26 extract hang.
     // See https://github.com/microsoft/playwright/issues/40724
-    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-docker'] }
+    { os: 'macos-latest', os_name: 'MacOS', os_timeout: 90, package_managers: ['npm'], node_versions: ['24.15.0'], excluded: ['e2e-docker'] }
     // TODO (Jack): Fix Windows support as gradle fails when running nx build https://staging.nx.app/runs/LgD4vxGn8w?utm_source=pull-request&utm_medium=comment
     // { os: 'windows-latest', os_name: 'WinOS', os_timeout: 180, package_managers: ['npm'], node_versions: ['24.0.0'], excluded: ['e2e-detox', 'e2e-react-native', 'e2e-expo'] }
   ]

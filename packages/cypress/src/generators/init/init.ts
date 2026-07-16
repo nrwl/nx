@@ -1,10 +1,12 @@
 import {
+  acknowledgeBuildScripts,
   addPlugin as _addPlugin,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   GeneratorCallback,
   ProjectGraph,
@@ -70,6 +72,12 @@ function updateDependencies(tree: Tree, options: Schema) {
   };
   if (!getInstalledCypressVersion(tree)) {
     devDependencies.cypress = cypressVersion;
+    // The user explicitly asked for cypress, and its postinstall downloads
+    // the binary it needs to run at all, so enable it — npm and yarn run it
+    // unconditionally. Transitive deps stay denied.
+    acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+      cypress: true,
+    });
   }
 
   tasks.push(

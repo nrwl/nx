@@ -62,6 +62,12 @@ export function startLocalRegistry({
           }
         );
 
+        // pnpm 11 reads pnpm_config_* env vars instead of npm_config_*, and
+        // they take precedence over any registry configured in ~/.npmrc
+        process.env.pnpm_config_registry = registry;
+        process.env[`pnpm_config_//${listenAddress}:${port}/:_authToken`] =
+          authToken;
+
         // bun
         process.env.BUN_CONFIG_REGISTRY = registry;
         process.env.BUN_CONFIG_TOKEN = authToken;
@@ -71,7 +77,9 @@ export function startLocalRegistry({
         process.env.YARN_NPM_REGISTRY_SERVER = registry;
         process.env.YARN_UNSAFE_HTTP_WHITELIST = listenAddress;
 
-        console.log('Set npm, bun, and yarn config registry to ' + registry);
+        console.log(
+          'Set npm, pnpm, bun, and yarn config registry to ' + registry
+        );
 
         resolve(() => {
           childProcess.kill();

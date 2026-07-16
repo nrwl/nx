@@ -175,7 +175,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-ci": {
@@ -186,7 +186,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-macos-ci": {
@@ -196,7 +196,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ],
       "options": {
         "args": ["--forceExit"]
@@ -206,7 +206,7 @@
       "inputs": ["e2eInputs", "^production"],
       "dependsOn": [
         "@nx/nx-source:populate-local-registry-storage",
-        "@nx/nx-source:local-registry"
+        "@nx/nx-source:local-registry-e2e"
       ]
     },
     "e2e-base": {

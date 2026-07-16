@@ -69,3 +69,4 @@ export {
   getCatalogManager,
   getCatalogDependenciesFromPackageJson,
 } from './utils/catalog';
+export { acknowledgeBuildScripts } from './utils/acknowledge-build-scripts';
