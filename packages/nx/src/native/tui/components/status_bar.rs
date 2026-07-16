@@ -334,13 +334,13 @@ impl<'a> StatusBar<'a> {
     fn confirmed_search_text(search: &PaneSearchProps) -> String {
         if search.total > 0 {
             format!(
-                "/{}  {}/{} (n/N)",
+                "/{}  {}/{} (n/N, / to edit)",
                 search.query,
                 search.total - search.current,
                 search.total
             )
         } else {
-            format!("/{}  no matches", search.query)
+            format!("/{}  no matches (/ to edit)", search.query)
         }
     }
 

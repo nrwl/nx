@@ -303,12 +303,19 @@ impl TerminalPaneData {
                     _ => {}
                 }
             }
-            // '/' opens a fresh search over the pane's content.
+            // '/' opens a search over the pane's content — resuming the
+            // confirmed query for editing when one exists, like the task
+            // filter's "/ to edit".
             if key.code == KeyCode::Char('/') && self.pty.is_some() {
-                self.search = Some(PaneSearch {
-                    input_mode: true,
-                    ..Default::default()
-                });
+                match &mut self.search {
+                    Some(search) => search.input_mode = true,
+                    None => {
+                        self.search = Some(PaneSearch {
+                            input_mode: true,
+                            ..Default::default()
+                        });
+                    }
+                }
                 return Ok(None);
             }
         }
@@ -1617,9 +1624,11 @@ mod tests {
         );
         assert_eq!(pane.search.as_ref().unwrap().query, "e");
 
-        // Clearing the query and confirming closes the search (nothing to find).
+        // '/' on a confirmed search resumes it for editing (query preserved),
+        // like the task filter; clearing it and confirming closes the search.
         press(&mut pane, KeyCode::Char('/'));
         assert!(pane.search_input_active());
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
         press(&mut pane, KeyCode::Backspace);
         press(&mut pane, KeyCode::Enter);
         assert!(pane.search.is_none());
