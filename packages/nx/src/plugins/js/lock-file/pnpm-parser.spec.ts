@@ -2928,6 +2928,48 @@ snapshots: {}`;
     });
   });
 
+  describe('modern hoisted dependency keys', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        {
+          'node_modules/.modules.yaml': `hoistedDependencies:
+  '@scope/package@2.0.0(peer@1.0.0)':
+    '@scope/package': private`,
+        },
+        '/root'
+      );
+    });
+
+    it('should parse scoped package@version keys from .modules.yaml', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .: {}
+
+packages:
+
+  '@scope/package@1.0.0': {}
+
+  '@scope/package@2.0.0(peer@1.0.0)': {}
+
+snapshots:
+
+  '@scope/package@1.0.0': {}
+
+  '@scope/package@2.0.0(peer@1.0.0)': {}`;
+
+      const { nodes } = getPnpmLockfileNodes(
+        lockFile,
+        '__modern_hoisted_dependency_keys__'
+      );
+
+      expect(nodes['npm:@scope/package']).toMatchObject({
+        data: { packageName: '@scope/package', version: '2.0.0' },
+      });
+    });
+  });
+
   describe('missing .modules.yaml', () => {
     beforeEach(() => {
       vol.fromJSON(
