@@ -754,9 +754,11 @@ impl PtyInstance {
         };
         let raw_len = parser.get_raw_output().len() as u64;
         let (rows, cols) = parser.screen().size();
-        let generation = raw_len
-            .wrapping_mul(0x9E37_79B1)
-            .wrapping_add(((rows as u64) << 16) | cols as u64);
+        // The three facts, simply concatenated into one u64:
+        //   [ raw_len (32 bits) | rows (16 bits) | cols (16 bits) ]
+        // Compaction caps raw_len at ~5 MB — far below 2^32 — so the pack is
+        // lossless: two different states never share a fingerprint.
+        let generation = (raw_len << 32) | ((rows as u64) << 16) | cols as u64;
         self.output_generation_cache
             .store(generation, Ordering::Relaxed);
         generation
