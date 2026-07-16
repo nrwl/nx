@@ -31,6 +31,7 @@ overrides:
   # pin to one version so expand-deps can flatten nx's published deps.
   hasown: '2.0.4'
   '@xhmikosr/decompress': '10.2.1'
+  websocket-driver: '^0.7.5'
 onlyBuiltDependencies:
   - '@nestjs/core'
   - 'nx'
