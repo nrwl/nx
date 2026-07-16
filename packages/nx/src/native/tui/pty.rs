@@ -69,6 +69,11 @@ pub struct PtyInstance {
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
+    /// Last value returned by `output_generation()`. Read every frame while a
+    /// pane search is active; using a non-blocking `try_read` plus this cache
+    /// keeps the render thread from stalling on the parser write lock (held by
+    /// the PTY writer during heavy output, and by the async resize swap).
+    output_generation_cache: Arc<AtomicU64>,
     /// Cached result of cursor-movement detection. Flips true on first hit and
     /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
     handles_cursor_movement: Arc<AtomicBool>,
@@ -384,6 +389,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -410,6 +416,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -433,6 +440,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -733,12 +741,22 @@ impl PtyInstance {
     /// a change too. A cache keyed on this — the pane search's match list —
     /// recomputes exactly when the screen changed.
     pub fn output_generation(&self) -> u64 {
-        let parser = self.parser.read();
+        // Non-blocking: this runs every frame while a search is active, so it
+        // must never wait on the parser write lock (held by the PTY writer
+        // during heavy output and by the async resize swap) — that would stall
+        // the repaint. When the lock is momentarily unavailable, reuse the last
+        // value; the next frame picks up any change.
+        let Some(parser) = self.parser.try_read() else {
+            return self.output_generation_cache.load(Ordering::Relaxed);
+        };
         let raw_len = parser.get_raw_output().len() as u64;
         let (rows, cols) = parser.screen().size();
-        raw_len
+        let generation = raw_len
             .wrapping_mul(0x9E37_79B1)
-            .wrapping_add(((rows as u64) << 16) | cols as u64)
+            .wrapping_add(((rows as u64) << 16) | cols as u64);
+        self.output_generation_cache
+            .store(generation, Ordering::Relaxed);
+        generation
     }
 
     /// The absolute visual row currently at the top of the viewport — the same
@@ -1025,6 +1043,7 @@ mod tests {
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation_cache: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
