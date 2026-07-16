@@ -14,9 +14,13 @@ export const logTar = (tarball, opts = {}) => {
   if (tarball.files.length) {
     console.log('');
     const columnData = columnify(
-      tarball.files
+      // Sort for a stable listing: pnpm 11 orders files differently than
+      // npm and pnpm 10.
+      [...tarball.files]
+        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
         .map((f) => {
-          const bytes = formatBytes(f.size, false);
+          const bytes =
+            typeof f.size === 'number' ? formatBytes(f.size, false) : '';
           return /^node_modules\//.test(f.path)
             ? null
             : { path: f.path, size: `${bytes}` };
