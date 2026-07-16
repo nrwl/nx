@@ -12,6 +12,7 @@
 //! Once confirmed, the session renders compactly in the bar's middle slot via
 //! [`confirmed_text`]: `/{query}  {counts} ({keys})`.
 
+use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Rect},
@@ -62,6 +63,52 @@ fn confirmed_text(query: &str, counts: Option<String>, keys: &str) -> String {
     match counts {
         Some(counts) => format!("/{query}  {counts} ({keys})"),
         None => format!("/{query}  ({keys})"),
+    }
+}
+
+/// A key press interpreted against the vim-session keymap shared by the task
+/// filter and the pane search. Both hosts translate keys through this one
+/// table — open/resume on `/`, literal characters (including `/`) while
+/// editing, `<enter>` confirms, `<esc>` cancels — so the two sessions'
+/// bindings cannot drift. Host-specific keys (the search's n/N navigation)
+/// stay with the host.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum SessionEvent {
+    /// `/` outside input mode: open a new session, or resume the confirmed
+    /// one for editing with its query preserved.
+    Open,
+    /// A character typed while editing (including a literal `/`).
+    Append(char),
+    /// Backspace while editing.
+    DeleteBack,
+    /// `<enter>` while editing: confirm the session.
+    Confirm,
+    /// `<esc>`: cancel the session being edited, or clear a confirmed one.
+    Cancel,
+    /// Not part of the session keymap; the host handles it normally.
+    NotHandled,
+}
+
+pub(crate) fn interpret_session_key(
+    input_mode: bool,
+    session_active: bool,
+    key: &KeyEvent,
+) -> SessionEvent {
+    if input_mode {
+        return match key.code {
+            KeyCode::Esc => SessionEvent::Cancel,
+            KeyCode::Enter => SessionEvent::Confirm,
+            KeyCode::Backspace => SessionEvent::DeleteBack,
+            KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                SessionEvent::Append(c)
+            }
+            _ => SessionEvent::NotHandled,
+        };
+    }
+    match key.code {
+        KeyCode::Char('/') => SessionEvent::Open,
+        KeyCode::Esc if session_active => SessionEvent::Cancel,
+        _ => SessionEvent::NotHandled,
     }
 }
 

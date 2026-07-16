@@ -37,7 +37,7 @@ use super::components::layout_manager::{
 };
 use super::components::link::LinkRegistry;
 use super::components::nx_paragraph::NxParagraph;
-use super::components::search_filter::PaneSearchProps;
+use super::components::search_filter::{PaneSearchProps, SessionEvent, interpret_session_key};
 use super::components::status_bar::{PaneProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
@@ -1324,101 +1324,89 @@ impl App {
                             let is_filter_mode = tasks_list.filter_mode;
 
                             match focus {
-                                Focus::TaskList => match key.code {
-                                    KeyCode::Char('j') if !is_filter_mode => {
-                                        self.dispatch_action(Action::NextTask);
-                                    }
-                                    KeyCode::Down => {
-                                        self.dispatch_action(Action::NextTask);
-                                    }
-                                    KeyCode::Char('k') if !is_filter_mode => {
-                                        self.dispatch_action(Action::PreviousTask);
-                                    }
-                                    KeyCode::Up => {
-                                        self.dispatch_action(Action::PreviousTask);
-                                    }
-                                    KeyCode::Right if !is_filter_mode => {
-                                        tasks_list.try_expand_selected_batch();
-                                    }
-                                    KeyCode::Left if !is_filter_mode => {
-                                        tasks_list.try_collapse_selected_batch();
-                                    }
-                                    KeyCode::Esc => {
-                                        if matches!(focus, Focus::HelpPopup) {
-                                            if let Some(help_popup) =
-                                                self.components.iter_mut().find_map(|c| {
-                                                    c.as_any_mut().downcast_mut::<HelpPopup>()
-                                                })
-                                            {
-                                                help_popup.set_visible(false);
-                                            }
-                                            self.close_popup(Focus::HelpPopup);
-                                        } else {
-                                            // Only clear filter when help popup is not in focus
-
-                                            tasks_list.clear_filter();
+                                // The filter's key bindings come from the
+                                // session keymap shared with the pane search
+                                // (`search_filter::interpret_session_key`), so
+                                // the two sessions cannot drift.
+                                Focus::TaskList => {
+                                    match interpret_session_key(is_filter_mode, true, &key) {
+                                        SessionEvent::Open => {
+                                            tasks_list.enter_filter_mode();
                                         }
-                                    }
-                                    KeyCode::Char(c) => {
-                                        if tasks_list.filter_mode {
+                                        SessionEvent::Append(c) => {
                                             tasks_list.add_filter_char(c);
-                                        } else {
-                                            match c {
-                                                '/' => {
-                                                    tasks_list.enter_filter_mode();
-                                                }
-                                                c => {
-                                                    match c {
-                                                        'j' => {
-                                                            self.dispatch_action(Action::NextTask);
-                                                        }
-                                                        'k' => {
-                                                            self.dispatch_action(
-                                                                Action::PreviousTask,
-                                                            );
-                                                        }
-                                                        '1' => {
-                                                            self.toggle_current_task_in_pane(0);
-                                                            let _ = self.handle_pty_resize();
-                                                            // No need to debounce
-                                                        }
-                                                        '2' => {
-                                                            self.toggle_current_task_in_pane(1);
-                                                            let _ = self.handle_pty_resize();
-                                                            // No need to debounce
-                                                        }
-                                                        '0' => self.clear_all_panes(),
-                                                        'b' => self.toggle_task_list(),
-                                                        'm' => {
-                                                            if let Some(area) = self.frame_area {
-                                                                self.toggle_layout_mode(area);
-                                                            }
-                                                        }
-                                                        _ => {}
-                                                    }
-                                                }
-                                            }
                                         }
-                                    }
-                                    KeyCode::Backspace => {
-                                        if tasks_list.filter_mode {
+                                        SessionEvent::DeleteBack => {
                                             tasks_list.remove_filter_char();
                                         }
+                                        SessionEvent::Confirm => {
+                                            tasks_list.persist_filter();
+                                        }
+                                        SessionEvent::Cancel => {
+                                            tasks_list.clear_filter();
+                                        }
+                                        SessionEvent::NotHandled => match key.code {
+                                            KeyCode::Char('j') if !is_filter_mode => {
+                                                self.dispatch_action(Action::NextTask);
+                                            }
+                                            KeyCode::Down => {
+                                                self.dispatch_action(Action::NextTask);
+                                            }
+                                            KeyCode::Char('k') if !is_filter_mode => {
+                                                self.dispatch_action(Action::PreviousTask);
+                                            }
+                                            KeyCode::Up => {
+                                                self.dispatch_action(Action::PreviousTask);
+                                            }
+                                            KeyCode::Right if !is_filter_mode => {
+                                                tasks_list.try_expand_selected_batch();
+                                            }
+                                            KeyCode::Left if !is_filter_mode => {
+                                                tasks_list.try_collapse_selected_batch();
+                                            }
+                                            // Filter-mode keys never reach here — the
+                                            // session keymap above consumed them.
+                                            KeyCode::Char(c) => match c {
+                                                'j' => {
+                                                    self.dispatch_action(Action::NextTask);
+                                                }
+                                                'k' => {
+                                                    self.dispatch_action(Action::PreviousTask);
+                                                }
+                                                '1' => {
+                                                    self.toggle_current_task_in_pane(0);
+                                                    let _ = self.handle_pty_resize();
+                                                    // No need to debounce
+                                                }
+                                                '2' => {
+                                                    self.toggle_current_task_in_pane(1);
+                                                    let _ = self.handle_pty_resize();
+                                                    // No need to debounce
+                                                }
+                                                '0' => self.clear_all_panes(),
+                                                'b' => self.toggle_task_list(),
+                                                'm' => {
+                                                    if let Some(area) = self.frame_area {
+                                                        self.toggle_layout_mode(area);
+                                                    }
+                                                }
+                                                _ => {}
+                                            },
+                                            KeyCode::Tab => {
+                                                self.focus_next();
+                                            }
+                                            KeyCode::BackTab => {
+                                                self.focus_previous();
+                                            }
+                                            KeyCode::Enter
+                                                if matches!(self.focus(), Focus::TaskList) =>
+                                            {
+                                                self.display_and_focus_current_task_in_terminal_pane(false);
+                                            }
+                                            _ => {}
+                                        },
                                     }
-                                    KeyCode::Tab => {
-                                        self.focus_next();
-                                    }
-                                    KeyCode::BackTab => {
-                                        self.focus_previous();
-                                    }
-                                    KeyCode::Enter if is_filter_mode => {
-                                        tasks_list.persist_filter();
-                                    }
-                                    KeyCode::Enter if matches!(self.focus(), Focus::TaskList) => {
-                                        self.display_and_focus_current_task_in_terminal_pane(false);
-                                    }
-                                    _ => {}
-                                },
+                                }
                                 Focus::MultipleOutput(_idx) => match key.code {
                                     KeyCode::Tab => {
                                         self.focus_next();

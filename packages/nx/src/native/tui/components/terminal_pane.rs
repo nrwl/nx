@@ -15,6 +15,7 @@ use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
 use crate::native::tui::components::nx_paragraph::NxParagraph;
+use crate::native::tui::components::search_filter::{SessionEvent, interpret_session_key};
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
@@ -245,12 +246,14 @@ impl TerminalPaneData {
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<Option<Action>> {
         // Vim-style search input: while typing, every key edits the query.
+        // The bindings come from the session keymap shared with the task
+        // filter (`search_filter::interpret_session_key`).
         if self.search_input_active() {
-            match key.code {
-                KeyCode::Esc => {
+            match interpret_session_key(true, true, &key) {
+                SessionEvent::Cancel => {
                     self.search = None;
                 }
-                KeyCode::Enter => {
+                SessionEvent::Confirm => {
                     // Confirm and switch to n/N navigation. A matchless query is
                     // kept — a still-running task may produce matches later, and
                     // the live refresh will pick them up. Only an empty query
@@ -267,25 +270,26 @@ impl TerminalPaneData {
                         self.search = None;
                     }
                 }
-                KeyCode::Backspace => {
+                SessionEvent::DeleteBack => {
                     if let Some(search) = &mut self.search {
                         search.query.pop();
                     }
                     self.recompute_search(true);
                 }
-                KeyCode::Char(c) if !key.modifiers.contains(KeyModifiers::CONTROL) => {
+                SessionEvent::Append(c) => {
                     if let Some(search) = &mut self.search {
                         search.query.push(c);
                     }
                     self.recompute_search(true);
                 }
-                _ => {}
+                SessionEvent::Open | SessionEvent::NotHandled => {}
             }
             return Ok(None);
         }
 
         if !self.is_interactive {
-            // A confirmed search navigates with n/N and clears with Esc.
+            // n/N navigation is search-specific and stays with the pane; the
+            // open/resume/clear bindings come from the shared session keymap.
             if self.search.is_some() {
                 match key.code {
                     KeyCode::Char('n') => {
@@ -301,27 +305,30 @@ impl TerminalPaneData {
                         self.search_step(1);
                         return Ok(None);
                     }
-                    KeyCode::Esc => {
-                        self.search = None;
-                        return Ok(None);
-                    }
                     _ => {}
                 }
             }
-            // '/' opens a search over the pane's content — resuming the
-            // confirmed query for editing when one exists, like the task
-            // filter's "/ to edit".
-            if key.code == KeyCode::Char('/') && self.pty.is_some() {
-                match &mut self.search {
-                    Some(search) => search.input_mode = true,
-                    None => {
-                        self.search = Some(PaneSearch {
-                            input_mode: true,
-                            ..Default::default()
-                        });
+            match interpret_session_key(false, self.search.is_some(), &key) {
+                // '/' opens a search over the pane's content — resuming the
+                // confirmed query for editing when one exists, like the task
+                // filter's "/ to edit".
+                SessionEvent::Open if self.pty.is_some() => {
+                    match &mut self.search {
+                        Some(search) => search.input_mode = true,
+                        None => {
+                            self.search = Some(PaneSearch {
+                                input_mode: true,
+                                ..Default::default()
+                            });
+                        }
                     }
+                    return Ok(None);
                 }
-                return Ok(None);
+                SessionEvent::Cancel => {
+                    self.search = None;
+                    return Ok(None);
+                }
+                _ => {}
             }
         }
 
