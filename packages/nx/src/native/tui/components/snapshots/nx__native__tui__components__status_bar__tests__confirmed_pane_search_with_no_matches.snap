@@ -1,0 +1,5 @@
+---
+source: packages/nx/src/native/tui/components/status_bar.rs
+expression: terminal.backend()
+---
+" 0/3    /nothere  no matches            scroll: ↑ ↓  copy: c  search: /  full screen: <enter>  quit: q  help: ?  NON-INTERACTIVE i to toggle"

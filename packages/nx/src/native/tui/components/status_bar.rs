@@ -314,12 +314,17 @@ impl<'a> StatusBar<'a> {
     }
 
     /// The compact middle-slot text for a confirmed search session.
+    ///
+    /// Matches are numbered from the bottom of the log upward — the newest
+    /// (bottom-most) match is `1`, the oldest at the top is `N` — mirroring the
+    /// backward-from-the-bottom navigation. `current` is the index in
+    /// ascending-row order, so the displayed position is `total - current`.
     fn confirmed_search_text(search: &PaneSearchProps) -> String {
         if search.total > 0 {
             format!(
                 "/{}  {}/{} (n/N)",
                 search.query,
-                search.current + 1,
+                search.total - search.current,
                 search.total
             )
         } else {
@@ -965,6 +970,44 @@ mod tests {
                 input_mode: false,
                 current: 2,
                 total: 17,
+            }),
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn confirmed_pane_search_on_the_newest_match_reads_one() {
+        // Matches are numbered from the bottom up, so the bottom-most match
+        // (current == total - 1 in ascending-row order) shows `1/N`.
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            has_output: true,
+            interactive: Some(false),
+            status_message: None,
+            search: Some(PaneSearchProps {
+                query: "error".to_string(),
+                input_mode: false,
+                current: 16,
+                total: 17,
+            }),
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn confirmed_pane_search_with_no_matches() {
+        let mut props = base_props();
+        props.pane = Some(PaneProps {
+            has_output: true,
+            interactive: Some(false),
+            status_message: None,
+            search: Some(PaneSearchProps {
+                query: "nothere".to_string(),
+                input_mode: false,
+                current: 0,
+                total: 0,
             }),
         });
         let (terminal, _) = render_bar(140, 1, &props);
