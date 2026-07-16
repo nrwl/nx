@@ -44,16 +44,32 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
     entryPointNode.data.entryPoint = entryPoint;
     entryPointNode.data.destinationFiles = entryPoint.destinationFiles;
 
+    // ngc builds the flat module file in memory and never writes it to disk, so
+    // the declaration map emitted for it points at a source that doesn't exist.
+    const flatModuleDeclarations = normalize(
+      entryPointNode.data.destinationFiles.declarations
+    );
+    const flatModuleDeclarationsMap = `${flatModuleDeclarations}.map`;
+
     for (const [
       path,
       outputCache,
     ] of entryPointNode.cache.outputCache.entries()) {
+      const originalPath = normalize(path);
+      if (originalPath === flatModuleDeclarationsMap) {
+        continue;
+      }
+
       const normalizedPath = normalizeEsm2022Path(path, entryPoint);
-      // Declaration maps under tmp-typings land one directory up, so their
-      // source paths need rebasing; maps that don't move are left untouched.
-      const content = normalizedPath.endsWith('.d.ts.map')
-        ? remapDeclarationMapSources(path, normalizedPath, outputCache.content)
-        : outputCache.content;
+      let content = outputCache.content;
+      if (originalPath === flatModuleDeclarations) {
+        // its declaration map is dropped above, so don't leave a reference behind
+        content = removeSourceMappingUrl(content);
+      } else if (normalizedPath.endsWith('.d.ts.map')) {
+        // Declaration maps under tmp-typings land one directory up, so their
+        // source paths need rebasing; maps that don't move are left untouched.
+        content = remapDeclarationMapSources(path, normalizedPath, content);
+      }
 
       // Only write if content has changed
       if (await shouldWriteFile(normalizedPath, content)) {
@@ -83,6 +99,10 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
     }
   });
 };
+
+export function removeSourceMappingUrl(content: string): string {
+  return content.replace(/\/\/# sourceMappingURL=[^\r\n]*\s*$/, '');
+}
 
 export function remapDeclarationMapSources(
   originalPath: string,

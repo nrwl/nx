@@ -1,5 +1,6 @@
 import { names } from '@nx/devkit';
 import {
+  checkFilesDoNotExist,
   readFile,
   readJson,
   runCLI,
@@ -192,6 +193,16 @@ describe('Angular Projects - Buildable Libraries', () => {
         `${names(buildableLib).fileName}-module.ts`
       ),
     ]);
+
+    // the flat module file is built in memory by ngc and has no source on disk,
+    // so it must not ship a declaration map
+    const { typings } = readJson<{ typings: string }>(
+      `dist/${buildableLib}/package.json`
+    );
+    expect(readFile(`dist/${buildableLib}/${typings}`)).not.toContain(
+      'sourceMappingURL'
+    );
+    checkFilesDoNotExist(`dist/${buildableLib}/${typings}.map`);
 
     // to proof it has been built from source the "main.js" should actually contain
     // the path to dist
