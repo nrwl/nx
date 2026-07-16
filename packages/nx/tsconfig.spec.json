@@ -2,10 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc/spec",
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

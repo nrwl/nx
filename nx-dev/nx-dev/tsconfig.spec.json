@@ -2,10 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/spec",
-    "module": "commonjs",
     "types": ["jest", "node"],
     "lib": ["dom", "es2019"],
-    "jsx": "react"
+    "jsx": "react",
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

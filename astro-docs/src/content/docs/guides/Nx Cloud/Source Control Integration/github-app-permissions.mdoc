@@ -16,7 +16,7 @@ Repository permissions:
 
 - `Checks: Read & Write`
 - `Contents: Read & Write`
-- `Commit Statuses: Read`
+- `Commit Statuses: Read & Write`
 - `Issues: Read & Write`
 - `Metadata: Read`
 - `Pull requests: Read & Write`
@@ -45,11 +45,14 @@ Organization permissions:
 
 **When it's used:** During initial setup and configuration, and regularly if Self-Healing CI is enabled.
 
-### Commit statuses (read)
+### Commit statuses (read & write)
 
-**Used for:** Reading commit status information to coordinate with other CI tools and provide accurate pipeline context.
+**Used for:**
 
-**When it's used:** During CI pipeline executions to gather context about your commits.
+- **Read:** Reading the existing statuses on a pull request's head commit so Nx Cloud only re-posts the ones that have changed.
+- **Write:** Posting each task's result (passed, failed, or in progress) as a commit status on the pull request, so the outcome of every `nx affected` or `run-many` command shows on the PR. Posted only when the workspace's "Show run status checks in pull requests" setting is enabled.
+
+**When it's used:** During CI pipeline executions on pull request branches.
 
 ### Issues (read & write)
 

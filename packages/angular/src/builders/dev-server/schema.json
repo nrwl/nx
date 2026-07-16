@@ -77,7 +77,7 @@
     },
     "allowedHosts": {
       "type": "array",
-      "description": "List of hosts that are allowed to access the dev server. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
+      "description": "List of hosts that are allowed to access the dev server.",
       "default": [],
       "items": {
         "type": "string"
@@ -96,7 +96,7 @@
     },
     "disableHostCheck": {
       "type": "boolean",
-      "description": "Don't verify connected clients are part of allowed hosts. This option has no effect when using the 'application' or other esbuild-based builders in Angular versions lower than 19.2.0.",
+      "description": "Don't verify connected clients are part of allowed hosts.",
       "default": false
     },
     "hmr": {

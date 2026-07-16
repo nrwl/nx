@@ -8,9 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "rootDir": "."
   },
   "include": ["src/**/*.ts", "src/**/*.json"],
   "exclude": [

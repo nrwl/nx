@@ -137,7 +137,7 @@ The `nx mcp` command (or `npx nx-mcp` for older versions) accepts the following 
 | `[workspacePath]`       | `-w`  | Path to the Nx workspace root. Defaults to the current working directory if not provided.                                           |
 | `--transport <type>`    |       | Transport protocol to use: `stdio` (default), `sse`, or `http`                                                                      |
 | `--port <port>`         | `-p`  | Port to use for the HTTP/SSE server (default: 9921). Only valid with `--transport sse` or `--transport http`.                       |
-| `--tools <patterns...>` | `-t`  | Filter which tools are enabled. Accepts glob patterns including negation (e.g., `"*"`, `"!nx_docs"`, `"cloud_*"`)                   |
+| `--tools <patterns...>` | `-t`  | Filter which tools are enabled. Accepts glob patterns including negation (e.g., `"*"`, `"!nx_docs"`, `"ci_*"`)                      |
 | `--minimal`             |       | Hide workspace analysis tools (default: `true`). Use `--no-minimal` to expose all tools. See [Minimal Mode](#minimal-mode-default). |
 | `--disableTelemetry`    |       | Disable sending of telemetry data                                                                                                   |
 | `--debugLogs`           |       | Enable debug logging                                                                                                                |
@@ -180,8 +180,8 @@ npx nx mcp --tools "*"
 # Disable specific tools
 npx nx mcp --tools "*" "!nx_docs"
 
-# Enable only cloud analytics tools
-npx nx mcp --tools "cloud_*"
+# Enable only Nx Cloud CI tools
+npx nx mcp --tools "ci_*"
 
 # Enable workspace tools only
 npx nx mcp --tools "nx_workspace" "nx_project_details" "nx_docs"
@@ -197,8 +197,8 @@ npx nx-mcp@latest --tools "*"
 # Disable specific tools
 npx nx-mcp@latest --tools "*" "!nx_docs"
 
-# Enable only cloud analytics tools
-npx nx-mcp@latest --tools "cloud_*"
+# Enable only Nx Cloud CI tools
+npx nx-mcp@latest --tools "ci_*"
 
 # Enable workspace tools only
 npx nx-mcp@latest --tools "nx_workspace" "nx_project_details" "nx_docs"
@@ -259,23 +259,11 @@ When the Nx Console extension manages the MCP server in VS Code or Cursor, it au
 
 These tools enable AI agents to interact with CI pipelines and self-healing capabilities:
 
-| Tool                      | Description                                                                                                                                       |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ci_information`          | Retrieves CI pipeline execution information from Nx Cloud for the current branch. Returns pipeline status, failed tasks, and self-healing status. |
-| `update_self_healing_fix` | Apply or reject a self-healing CI fix from Nx Cloud. Records the decision on the suggested fix.                                                   |
-
-### Nx Cloud analytics tools
-
-These tools provide analytics and insights into your CI/CD data:
-
-| Tool                                         | Description                                                                                      |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `cloud_analytics_pipeline_executions_search` | Analyzes historical pipeline execution data to identify trends and patterns in CI/CD workflows   |
-| `cloud_analytics_pipeline_execution_details` | Retrieves detailed data for a specific pipeline execution to investigate performance bottlenecks |
-| `cloud_analytics_runs_search`                | Analyzes historical run data to track performance trends and team productivity patterns          |
-| `cloud_analytics_run_details`                | Retrieves detailed data for a specific run to investigate command execution performance          |
-| `cloud_analytics_tasks_search`               | Analyzes aggregated task performance statistics including success rates and cache hit rates      |
-| `cloud_analytics_task_executions_search`     | Analyzes individual task execution data to investigate performance trends over time              |
+| Tool                      | Description                                                                                                                                                 |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ci_information`          | Retrieves CI pipeline execution information from Nx Cloud for the current branch. Returns pipeline status, failed tasks, and self-healing status.           |
+| `ci_task_output`          | Retrieves terminal output for a specific CI task (failed or successful), using a runId from `ci_information` or resolving it from the branch / URL context. |
+| `update_self_healing_fix` | Apply or reject a self-healing CI fix from Nx Cloud. Records the decision on the suggested fix.                                                             |
 
 ### Extended tools (--no-minimal)
 
@@ -292,14 +280,13 @@ The following tools are hidden by default in minimal mode. They're available whe
 
 #### Generator tools
 
-| Tool                  | Description                                                                                               |
-| --------------------- | --------------------------------------------------------------------------------------------------------- |
-| `nx_generators`       | Returns a list of available code generators in your workspace                                             |
-| `nx_generator_schema` | Returns the detailed JSON schema for a specific Nx generator, including all available options             |
-| `nx_run_generator`    | Opens the Nx Console Generate UI with prefilled options (requires a running IDE instance with Nx Console) |
+| Tool                  | Description                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `nx_generators`       | Returns a list of available code generators in your workspace                                 |
+| `nx_generator_schema` | Returns the detailed JSON schema for a specific Nx generator, including all available options |
 
 {% aside type="note" title="Tool Availability" %}
-When no workspace path is specified, only the `nx_docs` tool will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
+When no workspace path is specified, only the `nx_docs` and `nx_available_plugins` tools will be available. Nx Cloud tools require a workspace connected to Nx Cloud.
 {% /aside %}
 
 ## Available resources

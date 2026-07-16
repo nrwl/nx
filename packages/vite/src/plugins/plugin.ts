@@ -288,7 +288,7 @@ async function buildViteTargets(
 
     // Check if the project uses Vue plugin
     const hasVuePlugin = viteBuildConfig.plugins?.some(
-      (p) => p.name === 'vite:vue'
+      (p) => p.name === 'vite:vue' || p.name === 'vite:vue2'
     );
     // Explicit `compiler` option wins over inference so users can override
     // when their setup isn't detected (e.g. custom/non-standard Vue plugin).

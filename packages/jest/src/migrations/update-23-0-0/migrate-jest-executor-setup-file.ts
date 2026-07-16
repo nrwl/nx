@@ -1,4 +1,7 @@
-import { forEachExecutorOptions } from '@nx/devkit/internal';
+import {
+  forEachExecutorOptions,
+  updateTargetDefault,
+} from '@nx/devkit/internal';
 import {
   formatFiles,
   logger,
@@ -376,62 +379,45 @@ function stripSetupFileFromNxJson(
 ): boolean {
   if (!nxJson?.targetDefaults) return false;
 
-  let changed = false;
   let hadSetupFile = false;
-  for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
-  )) {
-    if (
-      targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-      targetConfig.executor !== EXECUTOR_TO_MIGRATE
-    ) {
-      continue;
-    }
-
-    if (targetConfig.options?.setupFile !== undefined) {
+  // Migration order isn't guaranteed, so a default may already be in the
+  // filtered array shape; `updateTargetDefault` walks both value forms, drops
+  // entries the callback empties, and collapses lone unfiltered ones back to
+  // the object form.
+  updateTargetDefault(nxJson, { executor: EXECUTOR_TO_MIGRATE }, (config) => {
+    if (config.options?.setupFile !== undefined) {
       hadSetupFile = true;
-      changed = true;
-      delete targetConfig.options.setupFile;
-      if (!Object.keys(targetConfig.options).length) {
-        delete targetConfig.options;
+      delete config.options.setupFile;
+      if (!Object.keys(config.options).length) {
+        delete config.options;
       }
     }
 
-    for (const config of Object.keys(targetConfig.configurations ?? {})) {
-      if (targetConfig.configurations[config]?.setupFile !== undefined) {
+    for (const configuration of Object.keys(config.configurations ?? {})) {
+      if (config.configurations[configuration]?.setupFile !== undefined) {
         hadSetupFile = true;
-        changed = true;
-        delete targetConfig.configurations[config].setupFile;
+        delete config.configurations[configuration].setupFile;
         if (
-          !Object.keys(targetConfig.configurations[config]).length &&
-          (!targetConfig.defaultConfiguration ||
-            targetConfig.defaultConfiguration !== config)
+          !Object.keys(config.configurations[configuration]).length &&
+          (!config.defaultConfiguration ||
+            config.defaultConfiguration !== configuration)
         ) {
-          delete targetConfig.configurations[config];
+          delete config.configurations[configuration];
         }
       }
     }
-    if (
-      targetConfig.configurations &&
-      !Object.keys(targetConfig.configurations).length
-    ) {
-      delete targetConfig.configurations;
+    if (config.configurations && !Object.keys(config.configurations).length) {
+      delete config.configurations;
     }
 
-    if (
-      !Object.keys(targetConfig).length ||
-      (Object.keys(targetConfig).length === 1 &&
-        Object.keys(targetConfig)[0] === 'executor')
-    ) {
-      delete nxJson.targetDefaults[targetOrExecutor];
+    // Drop the entry once nothing but its executor locator remains.
+    const keys = Object.keys(config);
+    if (keys.length === 0 || (keys.length === 1 && keys[0] === 'executor')) {
+      return null;
     }
-  }
+  });
 
-  if (!Object.keys(nxJson.targetDefaults).length) {
-    delete nxJson.targetDefaults;
-  }
-
-  if (changed) updateNxJson(tree, nxJson);
+  if (hadSetupFile) updateNxJson(tree, nxJson);
   return hadSetupFile;
 }
 

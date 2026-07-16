@@ -2,9 +2,10 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "out-tsc/spec",
-    "module": "commonjs",
+    "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "jest.config.ts",

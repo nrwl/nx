@@ -4,6 +4,34 @@
 /** [file, plugin] that contributed a configuration property. */
 export type SourceInformation = [file: string | null, plugin: string];
 
+/**
+ * The synthetic plugin name target-defaults results are attributed to. Shared
+ * so the merge can recognize a target-defaults stamp when reconciling
+ * provenance — target defaults never genuinely author a target's existence or
+ * its executor/command, so such a stamp must not overwrite a real plugin's
+ * attribution for those keys.
+ */
+export const TARGET_DEFAULTS_PLUGIN_NAME = 'nx/target-defaults';
+
+/**
+ * Write the source for a target's "identity" key (the target node itself, or
+ * its executor/command). Real plugins win last; a target-defaults stamp only
+ * claims the key when no real plugin already recorded it — target defaults
+ * never bring a target into existence, they only layer fields onto one.
+ */
+export function recordTargetIdentitySourceMapInfo(
+  sourceMap: Record<string, SourceInformation>,
+  key: string,
+  sourceInfo: SourceInformation
+): void {
+  if (
+    sourceInfo[1] !== TARGET_DEFAULTS_PLUGIN_NAME ||
+    sourceMap[key] === undefined
+  ) {
+    sourceMap[key] = sourceInfo;
+  }
+}
+
 /** Source map per project root. */
 export type ConfigurationSourceMaps = Record<
   string,

@@ -284,6 +284,17 @@ describe('app', () => {
       const { defaultProject } = readNxJson(appTree);
       expect(defaultProject).toBe('some-awesome-project');
     });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await generateApp(appTree);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
+    });
   });
 
   describe('nested', () => {
@@ -1343,67 +1354,9 @@ describe('app', () => {
         ...json,
         dependencies: {
           ...json.dependencies,
-          '@angular/core': '~19.2.0',
+          '@angular/core': '~20.0.0',
         },
       }));
-    });
-
-    it('should add angular peer dependencies when not installed', async () => {
-      await generateApp(appTree, 'my-app');
-
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['@angular-devkit/build-angular']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(devDependencies['@angular-devkit/schematics']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-      expect(devDependencies['@schematics/angular']).toEqual(
-        backwardCompatibleVersions[19].angularDevkitVersion
-      );
-    });
-
-    it('should set the "index" option of the application builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.options.index).toBe('my-app/src/index.html');
-    });
-
-    it('should use builders from "@angular-devkit/build-angular" for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      const project = readProjectConfiguration(appTree, 'my-app');
-      expect(project.targets.build.executor).toBe(
-        '@angular-devkit/build-angular:application'
-      );
-      expect(project.targets.serve.executor).toBe(
-        '@angular-devkit/build-angular:dev-server'
-      );
-      expect(project.targets['extract-i18n'].executor).toBe(
-        '@angular-devkit/build-angular:extract-i18n'
-      );
-      expect(
-        readJson(appTree, 'package.json').devDependencies[
-          '@angular-devkit/build-angular'
-        ]
-      ).toBeDefined();
     });
 
     it('should add "extract-i18n" target for Angular v20 (removed in v21+)', async () => {
@@ -1422,63 +1375,6 @@ describe('app', () => {
       expect(project.targets['extract-i18n'].executor).toBe(
         '@angular/build:extract-i18n'
       );
-    });
-
-    it('should not set provideBrowserGlobalErrorListeners in app.module.ts for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { bundler: 'esbuild' });
-
-      expect(
-        appTree.read('my-app/src/app/app.module.ts', 'utf-8')
-      ).not.toContain('provideBrowserGlobalErrorListeners');
-    });
-
-    it('should not set provideBrowserGlobalErrorListeners in standalone app.config.ts for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', {
-        bundler: 'esbuild',
-        standalone: true,
-      });
-
-      expect(
-        appTree.read('my-app/src/app/app.config.ts', 'utf-8')
-      ).not.toContain('provideBrowserGlobalErrorListeners');
-    });
-
-    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { strict: true });
-
-      const appTsConfig = readJson(appTree, 'my-app/tsconfig.json');
-      expect(appTsConfig.angularCompilerOptions).toMatchInlineSnapshot(`
-        {
-          "enableI18nLegacyMessageIdFormat": false,
-          "strictInjectionParameters": true,
-          "strictInputAccessModifiers": true,
-          "strictTemplates": true,
-        }
-      `);
     });
 
     it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
@@ -1501,236 +1397,6 @@ describe('app', () => {
           "strictTemplates": true,
           "typeCheckHostBindings": true,
         }
-      `);
-    });
-
-    it('should use platformBrowserDynamic for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp');
-
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-        import { AppModule } from './app/app.module';
-
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
-          .catch((err) => console.error(err));
-        "
-      `);
-    });
-
-    it('should generate components with the "component" type for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp', { standalone: true });
-
-      expect(appTree.exists('myapp/src/app/app.component.ts')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/app.component.html')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.html', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/app.component.css')).toBe(true);
-      expect(appTree.exists('myapp/src/app/app.component.spec.ts')).toBe(true);
-      expect(
-        appTree.read('myapp/src/app/app.component.spec.ts', 'utf-8')
-      ).toMatchSnapshot();
-      expect(appTree.exists('myapp/src/app/nx-welcome.component.ts')).toBe(
-        true
-      );
-      expect(
-        appTree.read('myapp/src/app/nx-welcome.component.ts', 'utf-8')
-      ).toContain('export class NxWelcomeComponent {}');
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchSnapshot();
-    });
-
-    it('should generate modules with the "." type separator for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'myapp', { standalone: false });
-
-      expect(appTree.exists('myapp/src/app/app.module.ts')).toBe(true);
-      expect(appTree.read('myapp/src/main.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
-        import { AppModule } from './app/app.module';
-
-        platformBrowserDynamic()
-          .bootstrapModule(AppModule, { ngZoneEventCoalescing: true })
-          .catch((err) => console.error(err));
-        "
-      `);
-    });
-
-    it('should set esModuleInterop when using the application builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBe(true);
-    });
-
-    it('should not set esModuleInterop when using the browser builder for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', {
-        bundler: 'webpack',
-        skipFormat: true,
-      });
-
-      expect(
-        readJson(appTree, 'my-app/tsconfig.json').compilerOptions
-          .esModuleInterop
-      ).toBeUndefined();
-    });
-
-    it('should set "files" compiler option and not include all source files in tsconfig.app.json and generate a tsconfig.editor.json for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(appTree.read('my-app/tsconfig.app.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": "./tsconfig.json",
-          "compilerOptions": {
-            "outDir": "../dist/out-tsc",
-            "types": []
-          },
-          "files": [
-            "src/main.ts"
-          ],
-          "include": [
-            "src/**/*.d.ts"
-          ],
-          "exclude": [
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/test-setup.ts"
-          ]
-        }
-        "
-      `);
-      expect(appTree.read('my-app/tsconfig.editor.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": "./tsconfig.json",
-          "include": [
-            "src/**/*.ts"
-          ],
-          "compilerOptions": {},
-          "exclude": [
-            "src/**/*.spec.ts",
-            "src/**/*.test.ts",
-            "jest.config.ts",
-            "jest.config.cts",
-            "src/test-setup.ts"
-          ]
-        }
-        "
-      `);
-    });
-
-    it('should not set app component title to protected and should have a test case for the title property for versions lower than v20', async () => {
-      updateJson(appTree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await generateApp(appTree, 'my-app', { skipFormat: true });
-
-      expect(appTree.read('my-app/src/app/app.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-
-        @Component({
-          selector: 'app-root',
-          standalone: false,
-          templateUrl: './app.component.html',
-          styleUrl: './app.component.css',
-        })
-        export class AppComponent {
-          title = 'my-app';
-        }
-        "
-      `);
-      expect(appTree.read('my-app/src/app/app.component.spec.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { TestBed } from '@angular/core/testing';
-        import { AppComponent } from './app.component';
-        import { NxWelcomeComponent } from './nx-welcome.component';
-        import { RouterModule } from '@angular/router';
-
-        describe('AppComponent', () => {
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [RouterModule.forRoot([])],
-              declarations: [AppComponent, NxWelcomeComponent]
-            }).compileComponents();
-          });
-
-          it('should render title', () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            fixture.detectChanges();
-            const compiled = fixture.nativeElement as HTMLElement;
-            expect(compiled.querySelector('h1')?.textContent).toContain(
-              'Welcome my-app'
-            );
-          });
-
-          it(\`should have as title 'my-app'\`, () => {
-            const fixture = TestBed.createComponent(AppComponent);
-            const app = fixture.componentInstance;
-            expect(app.title).toEqual('my-app');
-          });
-        });
-        "
       `);
     });
 
@@ -1815,20 +1481,6 @@ describe('app', () => {
       );
       expect(devDependencies['jsdom']).toBe(
         backwardCompatibleVersions[20].jsdomVersion
-      );
-    });
-
-    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
-      await generateApp(appTree, 'my-app', {
-        unitTestRunner: UnitTestRunner.VitestAnalog,
-      });
-
-      const { devDependencies } = readJson(appTree, 'package.json');
-      expect(devDependencies['vitest']).toBe(
-        backwardCompatibleVersions[19].vitestVersion
-      );
-      expect(devDependencies['jsdom']).toBe(
-        backwardCompatibleVersions[19].jsdomVersion
       );
     });
 

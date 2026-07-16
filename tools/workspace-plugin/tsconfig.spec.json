@@ -2,9 +2,9 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "dist/spec",
-    "module": "commonjs",
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "jest.config.ts",

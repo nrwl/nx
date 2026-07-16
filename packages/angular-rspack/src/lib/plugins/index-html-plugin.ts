@@ -3,7 +3,9 @@ import {
   type FileInfo,
   type IndexHtmlGeneratorOptions,
 } from '@angular/build/private';
+import { VERSION } from '@angular/core';
 import { Compilation, RspackPluginInstance, type Compiler } from '@rspack/core';
+import { createHash } from 'node:crypto';
 import { basename, extname, join } from 'node:path';
 import type { I18nOptions, IndexExpandedDefinition } from '../models';
 import { addEventDispatchContract } from '../utils/index-file/add-event-dispatch-contract';
@@ -72,6 +74,45 @@ export class IndexHtmlPlugin
                   file,
                   extension: extname(file),
                 });
+              }
+            }
+
+            // v22+ emits an importmap with per-lazy-chunk SRI. Fill the map the
+            // augment plugin captured at construction (allocated in ng-rspack on
+            // SRI builds). Eager chunks already carry an integrity attribute on
+            // their <script> tag; a chunk is initial when any of its groups is
+            // (entrypoint.getFiles() is deep and would wrongly include lazy files).
+            const chunksIntegrity = this.options.chunksIntegrity as
+              | Map<string, string>
+              | undefined;
+            if (chunksIntegrity && +VERSION.major >= 22) {
+              chunksIntegrity.clear();
+
+              const initialFiles = new Set<string>();
+              for (const chunk of compilation.chunks) {
+                let isInitial = false;
+                for (const group of chunk.groupsIterable) {
+                  if (group.isInitial()) {
+                    isInitial = true;
+                    break;
+                  }
+                }
+                if (isInitial) {
+                  for (const file of chunk.files) {
+                    initialFiles.add(file);
+                  }
+                }
+              }
+
+              for (const { file, extension } of files) {
+                if (extension !== '.js' || initialFiles.has(file)) {
+                  continue;
+                }
+
+                const hash = createHash('sha384')
+                  .update(compilation.assets[file].buffer())
+                  .digest('base64');
+                chunksIntegrity.set(file, `sha384-${hash}`);
               }
             }
 

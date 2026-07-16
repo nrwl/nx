@@ -1358,14 +1358,14 @@ catalogs:
       // Verify catalog definitions in pnpm-workspace.yaml
       const workspaceYaml = readFile('pnpm-workspace.yaml');
       // UPDATED packages (no ^ prefix as migrations provide resolved versions)
-      expect(workspaceYaml).toContain('migrate-parent-package: "2.0.0"');
-      expect(workspaceYaml).toContain('migrate-child-package: "9.0.0"');
-      expect(workspaceYaml).toContain('react: "18.2.0"');
-      expect(workspaceYaml).toContain('react-dom: "18.2.0"');
+      expect(workspaceYaml).toContain('migrate-parent-package: 2.0.0');
+      expect(workspaceYaml).toContain('migrate-child-package: 9.0.0');
+      expect(workspaceYaml).toContain('react: 18.2.0');
+      expect(workspaceYaml).toContain('react-dom: 18.2.0');
       // PRESERVED packages (retain original format with ^ prefix)
-      expect(workspaceYaml).toContain('typescript: "^5.3.0"');
-      expect(workspaceYaml).toContain('eslint: "^8.0.0"');
-      expect(workspaceYaml).toContain('prettier: "^3.0.0"');
+      expect(workspaceYaml).toContain('typescript: ^5.3.0');
+      expect(workspaceYaml).toContain('eslint: ^8.0.0');
+      expect(workspaceYaml).toContain('prettier: ^3.0.0');
 
       // Verify explicit version packages: updated and preserved
       expect(packageJson.dependencies['lodash']).toEqual('4.17.21');

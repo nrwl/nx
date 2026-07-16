@@ -11,6 +11,16 @@
         "clear": false
       }
     },
+    "local-registry-e2e": {
+      "executor": "@nx/js:verdaccio",
+      "options": {
+        "port": 4873,
+        "config": ".verdaccio/config.yml",
+        "storage": "dist/local-registry/storage",
+        "clear": false,
+        "location": "none"
+      }
+    },
     "populate-local-registry-storage": {
       "cache": true,
       "inputs": [
@@ -26,7 +36,7 @@
         "native"
       ],
       "dependsOn": [
-        "local-registry",
+        "local-registry-e2e",
         {
           "target": "build",
           "projects": ["tag:npm:public"]
@@ -42,7 +52,7 @@
           "projects": ["tag:npm:public"]
         }
       ],
-      "command": "ts-node -P ./scripts/tsconfig.release.json ./scripts/nx-release.ts"
+      "command": "tsx ./scripts/nx-release.ts"
     },
     "start-docker-registry": {
       "continuous": true,

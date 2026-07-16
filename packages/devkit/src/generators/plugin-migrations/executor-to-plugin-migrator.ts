@@ -27,6 +27,7 @@ import {
 import type { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
 import type { ConfigurationResult } from 'nx/src/project-graph/utils/project-configuration-utils';
 import { forEachExecutorOptions } from '../executor-options-utils';
+import { findTargetDefault } from '../target-defaults-utils';
 import { deleteMatchingProperties } from './plugin-migration-utils';
 import { logger as devkitLogger } from 'nx/src/devkit-exports';
 
@@ -290,7 +291,10 @@ class ExecutorToPluginMigrator<T> {
 
   #getTargetDefaultsForExecutor() {
     this.#targetDefaultsForExecutor = structuredClone(
-      this.#nxJson.targetDefaults?.[this.#executor]
+      readTargetDefaultsForExecutor(
+        this.#executor,
+        this.#nxJson.targetDefaults
+      ) ?? {}
     );
   }
 
@@ -343,6 +347,27 @@ export class NoTargetsToMigrateError extends Error {
   constructor() {
     super('Could not find any targets to migrate.');
   }
+}
+
+export function readTargetDefaultsForExecutor(
+  executor: string,
+  targetDefaults: NxJsonConfiguration['targetDefaults'] | undefined
+): Partial<TargetConfiguration> | undefined {
+  // Preserve the legacy record-shape semantics this migrator used before
+  // array support: only an unfiltered default keyed directly by executor
+  // applies here. Target-scoped or filtered array entries remain opt-in
+  // behaviors for callers that can evaluate them in project context.
+  const entry = findTargetDefault(targetDefaults, { executor });
+  if (!entry) {
+    return undefined;
+  }
+
+  const config = { ...entry };
+  delete config.target;
+  delete config.executor;
+  delete config.projects;
+  delete config.plugin;
+  return config;
 }
 
 export async function migrateProjectExecutorsToPlugin<T>(

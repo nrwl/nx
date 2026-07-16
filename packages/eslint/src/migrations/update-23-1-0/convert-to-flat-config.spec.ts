@@ -4,6 +4,7 @@ import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addProjectConfiguration,
   type NxJsonConfiguration,
+  readJson,
   type Tree,
   updateJson,
 } from '@nx/devkit';
@@ -160,6 +161,161 @@ describe('convert-to-flat-config migration', () => {
     expect(
       result!.agentContext.some((entry) => entry.includes('FlatCompat'))
     ).toBe(false);
+  });
+
+  it('reconciles angular-eslint v22 removed refs in an already-flat config', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'eslint.config.mjs',
+      `import nx from '@nx/eslint-plugin';
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+});
+
+export default [
+  ...nx.configs['flat/angular'],
+  ...compat.extends('plugin:@angular-eslint/template/process-inline-templates'),
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    const content = tree.read('eslint.config.mjs', 'utf-8');
+    expect(content).not.toContain('no-conflicting-lifecycle');
+    expect(content).not.toContain('process-inline-templates');
+    expect(content).not.toContain('FlatCompat');
+    expect(content).toContain("import angular from 'angular-eslint'");
+    expect(content).toContain('processor: angular.processInlineTemplates');
+  });
+
+  it('reconciles angular-eslint v22 exactly once when converting an eslintrc root', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      '.eslintrc.json',
+      JSON.stringify({
+        root: true,
+        extends: ['plugin:@angular-eslint/recommended'],
+      })
+    );
+
+    await update(tree);
+
+    // The generator converts the root and reconciles the shim during conversion,
+    // so the migration's explicit second pass is a no-op: the import is injected
+    // once and the dependency added once, not duplicated.
+    const content = tree.read('eslint.config.mjs', 'utf-8');
+    expect(content).toContain('...angular.configs.tsRecommended');
+    expect(content).not.toContain('FlatCompat');
+    expect(
+      content.match(/import angular from ['"]angular-eslint['"]/g)
+    ).toHaveLength(1);
+    const { devDependencies } = readJson(tree, 'package.json');
+    expect(devDependencies['angular-eslint']).toMatch(/^\^22\./);
+  });
+
+  it('leaves angular-eslint refs intact before v22 (rule is still valid)', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^21.0.0',
+      };
+      return json;
+    });
+    tree.write(
+      'eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('eslint.config.mjs', 'utf-8')).toContain(
+      'no-conflicting-lifecycle'
+    );
+  });
+
+  it('reconciles project flat configs even when the root config is JavaScript-based', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    // A JavaScript-based root config makes rootState 'js', so the generator does
+    // not run; a project already on flat config must still be reconciled.
+    tree.write('.eslintrc.js', 'module.exports = { root: true };');
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
+      'no-conflicting-lifecycle'
+    );
+  });
+
+  it('reconciles project flat configs even when there is no root config', async () => {
+    updateJson(tree, 'package.json', (json) => {
+      json.devDependencies = {
+        ...json.devDependencies,
+        '@angular-eslint/eslint-plugin': '^22.0.0',
+      };
+      return json;
+    });
+    // No root ESLint config of any shape makes rootState 'none'; a project
+    // already on flat config must still be reconciled, not skipped by the
+    // no-root-config early return.
+    tree.write(
+      'apps/app/eslint.config.mjs',
+      `export default [
+  {
+    files: ['**/*.ts'],
+    rules: { '@angular-eslint/no-conflicting-lifecycle': 'error' },
+  },
+];
+`
+    );
+
+    await update(tree);
+
+    expect(tree.read('apps/app/eslint.config.mjs', 'utf-8')).not.toContain(
+      'no-conflicting-lifecycle'
+    );
   });
 
   it.each(['.eslintrc.js', '.eslintrc.cjs'])(

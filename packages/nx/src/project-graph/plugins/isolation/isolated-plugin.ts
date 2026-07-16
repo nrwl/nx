@@ -11,6 +11,7 @@ import {
   consumeMessagesFromSocket,
   parseMessage,
 } from '../../../utils/consume-messages-from-socket';
+import { getPluginResolveConditionNodeArgs } from '../../../plugins/js/utils/typescript';
 import { getNxRequirePaths } from '../../../utils/installation-directory';
 import { logger } from '../../../utils/logger';
 import { ProgressTopics } from '../../../utils/progress-topics';
@@ -559,6 +560,9 @@ async function startPluginWorker(name: string) {
   const worker = spawn(
     process.execPath,
     [
+      // Spawn the worker with the same resolve conditions Nx uses for plugin
+      // entries so the plugin's transitive workspace imports resolve to source.
+      ...getPluginResolveConditionNodeArgs(),
       ...(isWorkerTypescript ? ['--require', 'ts-node/register'] : []),
       workerPath,
       ipcPath,

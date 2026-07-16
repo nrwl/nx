@@ -12,9 +12,10 @@ import {
   updateTsConfigsToJs,
 } from '@nx/devkit';
 import { configurationGenerator } from '@nx/jest';
-import { initGenerator as jsInitGenerator, tsConfigBaseOptions } from '@nx/js';
+import { initGenerator as jsInitGenerator } from '@nx/js';
 import {
   addProjectToTsSolutionWorkspace,
+  getTsConfigBaseOptions,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
@@ -44,7 +45,7 @@ function updateTsConfigOptions(tree: Tree, options: NormalizedSchema) {
     if (options.rootProject) {
       return {
         compilerOptions: {
-          ...tsConfigBaseOptions,
+          ...getTsConfigBaseOptions(tree),
           ...json.compilerOptions,
           esModuleInterop: true,
         },

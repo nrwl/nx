@@ -1,12 +1,14 @@
 ---
-title: Docker Plugin for Nx
-description: The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
+title: Nx with Docker
+description: Use Docker with Nx to build, cache, and deploy containerized projects from your monorepo.
 keywords: [docker]
 sidebar:
   label: Introduction
 weight: 2
 filter: 'type:References'
 ---
+
+[Docker](https://www.docker.com/) packages applications into portable container images. In a Docker monorepo, Nx builds, caches, and publishes those images alongside the rest of your projects.
 
 The Nx Plugin for Docker contains executors and utilities for building and publishing docker images within an Nx workspace.
 Using the `@nx/docker` [Inference Plugin](/docs/concepts/inferred-tasks), Nx will automatically detect `Dockerfile`'s in your workspace and provide a `docker:build` and `docker:run` target for each.
@@ -21,10 +23,6 @@ nx add @nx/docker
 ```
 
 This will install the correct version of `@nx/docker` to match the version of Nx you are using.
-
-{% aside title="Minimum Nx Version" type="caution" %}
-The `@nx/docker` plugin only became available in Nx 21.4.0-beta.9. Your Nx Workspace will need to be on this version or higher to use it.
-{% /aside %}
 
 ### How @nx/docker infers tasks
 
@@ -181,6 +179,16 @@ This configuration:
 - Tags images with a calendar version and commit SHA (e.g., `my-app:250130.abc1234`)
 - Enables Docker BuildKit for improved build performance
 - Injects build arguments and environment variables from the CI/CD pipeline
+
+## Set up CI
+
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
+
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
+
+{% aside type="note" title="Building Docker images on Nx Agents" %}
+To build Docker images on Nx Agents, your organization needs the [dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster) add-on. It reserves an isolated Nx Cloud environment that runs Docker-in-Docker, which agents need to build and push container images.
+{% /aside %}
 
 ## Using Nx release to publish Docker images
 

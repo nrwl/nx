@@ -10,6 +10,7 @@ import {
   ProjectConfiguration,
   readJson,
   readNxJson,
+  TargetConfiguration,
   Tree,
   updateJson,
   updateProjectConfiguration,
@@ -35,6 +36,10 @@ import {
   convertEslintJsonToFlatConfig,
   renameLegacyEslintrcFile,
 } from './converters/json-converter';
+import {
+  migrateAngularEslintV22FlatConfig,
+  resolveAngularEslintVersion,
+} from './angular-eslint';
 
 export async function convertToFlatConfigGenerator(
   tree: Tree,
@@ -95,7 +100,11 @@ export async function convertToFlatConfigGenerator(
   // replace references in nx.json and project.json files
   updateNxJsonConfig(tree, options.eslintConfigFormat);
   updateProjectConfigsInputs(tree, options.eslintConfigFormat);
-  // install missing packages
+
+  // The converter carries angular-eslint's removed eslintrc configs over as
+  // FlatCompat shims; on v22 those no longer resolve, so reconcile them to the
+  // flat-native config before formatting (no-op below v22).
+  await migrateAngularEslintV22FlatConfig(tree);
 
   if (!options.skipFormat) {
     await formatFiles(tree);
@@ -148,6 +157,30 @@ function isEslintTarget(target: { executor?: string; command?: string }) {
   );
 }
 
+function hasMatchingEslintTargetDefault(
+  projectConfig: ProjectConfiguration,
+  targetDefaults: NxJsonConfiguration['targetDefaults']
+): boolean {
+  if (!projectConfig.targets || !targetDefaults) {
+    return false;
+  }
+
+  return Object.entries(targetDefaults).some(([targetName, value]) => {
+    if (projectConfig.targets[targetName] === undefined) {
+      return false;
+    }
+    if (targetName === ESLINT_LINT_EXECUTOR) {
+      return true;
+    }
+    // A target default value can be a plain config object or an array of
+    // filtered entries; match against the filter-less (catch-all) entry.
+    const targetConfig = Array.isArray(value)
+      ? value.find((e) => e.filter === undefined)
+      : value;
+    return targetConfig ? isEslintTarget(targetConfig) : false;
+  });
+}
+
 function convertProjectToFlatConfig(
   tree: Tree,
   project: string,
@@ -191,14 +224,10 @@ function convertProjectToFlatConfig(
   if (eslintTargets.length > 0) {
     updateProjectConfiguration(tree, project, projectConfig);
   }
-  const hasEslintTargetDefaults =
-    projectConfig.targets &&
-    Object.keys(nxJson.targetDefaults || {}).some(
-      (t) =>
-        (t === ESLINT_LINT_EXECUTOR ||
-          isEslintTarget(nxJson.targetDefaults[t])) &&
-        projectConfig.targets[t]
-    );
+  const hasEslintTargetDefaults = hasMatchingEslintTargetDefault(
+    projectConfig,
+    nxJson.targetDefaults
+  );
 
   if (
     eslintTargets.length === 0 &&
@@ -271,23 +300,38 @@ function ensureInputPresent(
 
 // Updates nx.json: rewrites stale eslintrc/eslintignore references across all targetDefaults
 // inputs and namedInputs, and ensures lint targets include the new flat config file as an input
-// (and `production` excludes it).
+// (and `production` excludes it). Handles both the legacy record shape and the new array shape
+// of `targetDefaults`.
 function updateNxJsonConfig(tree: Tree, format: 'cjs' | 'mjs') {
   if (!tree.exists('nx.json')) {
     return;
   }
   updateJson(tree, 'nx.json', (json: NxJsonConfiguration) => {
+    const rewriteTargetInputs = (
+      target: Partial<TargetConfiguration>,
+      isLintTarget: boolean
+    ) => {
+      if (!target.inputs) return;
+      target.inputs = isLintTarget
+        ? ensureInputPresent(
+            target.inputs,
+            `{workspaceRoot}/eslint.config.${format}`,
+            format
+          )
+        : rewriteLegacyInputs(target.inputs, format);
+    };
     if (json.targetDefaults) {
-      for (const [name, target] of Object.entries(json.targetDefaults)) {
-        if (!target.inputs) continue;
+      for (const [name, value] of Object.entries(json.targetDefaults)) {
         const isLintTarget = name === 'lint' || name === ESLINT_LINT_EXECUTOR;
-        target.inputs = isLintTarget
-          ? ensureInputPresent(
-              target.inputs,
-              `{workspaceRoot}/eslint.config.${format}`,
-              format
-            )
-          : rewriteLegacyInputs(target.inputs, format);
+        // A target default value can be a plain config object or an array of
+        // filtered entries; rewrite inputs on each entry in the array case.
+        if (Array.isArray(value)) {
+          for (const entry of value) {
+            rewriteTargetInputs(entry, isLintTarget);
+          }
+        } else {
+          rewriteTargetInputs(value, isLintTarget);
+        }
       }
     }
     if (json.namedInputs) {
@@ -444,6 +488,12 @@ function processConvertedConfig(
 
   if (addESLintJS) {
     devDependencies['@eslint/js'] = eslintVersion;
+  }
+
+  // The flat/angular presets import the umbrella `angular-eslint` package; add
+  // it when the converted config references them so the result resolves.
+  if (content.includes('flat/angular')) {
+    devDependencies['angular-eslint'] = resolveAngularEslintVersion(tree);
   }
 
   // Direct invocation is an opt-in upgrade, so by default existing pins are

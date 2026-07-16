@@ -9,6 +9,7 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
+import { coerce, major } from 'semver';
 import { createNodesV2 } from '../../../plugins/plugin';
 import { assertSupportedExpoVersion, nxVersion } from '../../utils/versions';
 import { getExpoDependenciesVersionsToInstall } from '../../utils/version-utils';
@@ -83,6 +84,13 @@ export async function expoInitGeneratorInternal(host: Tree, schema: Schema) {
 export async function updateDependencies(host: Tree, schema: Schema) {
   const versions = await getExpoDependenciesVersionsToInstall(host);
 
+  // Expo SDK 55+ provides Metro through `@expo/metro` (a transitive dependency
+  // of `expo`). Installing the standalone `metro-config`/`metro-resolver`
+  // packages alongside it pulls in a second, incompatible Metro instance and
+  // breaks bundling, so only add them for older SDKs (53/54).
+  const expoMajor = major(coerce(versions.expo) ?? '0.0.0');
+  const usesExpoMetro = expoMajor >= 55;
+
   return addDependenciesToPackageJson(
     host,
     {
@@ -94,8 +102,12 @@ export async function updateDependencies(host: Tree, schema: Schema) {
     {
       '@nx/expo': nxVersion,
       '@expo/cli': versions.expoCli,
-      'metro-config': versions.metro,
-      'metro-resolver': versions.metro,
+      ...(usesExpoMetro
+        ? {}
+        : {
+            'metro-config': versions.metro,
+            'metro-resolver': versions.metro,
+          }),
     },
     undefined,
     schema.keepExistingVersions ?? true

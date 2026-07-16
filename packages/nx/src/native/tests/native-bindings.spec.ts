@@ -12,6 +12,8 @@ describe('native bindings type definitions', () => {
       target: ts.ScriptTarget.ES2021,
       module: ts.ModuleKind.CommonJS,
       moduleResolution: ts.ModuleResolutionKind.Node10,
+      // node10 is deprecated-as-error on TS 6; the repo is single-version TS6 so suppression is safe
+      ignoreDeprecations: '6.0',
       types: ['node'],
     });
 
@@ -23,7 +25,8 @@ describe('native bindings type definitions', () => {
         getCurrentDirectory: () => process.cwd(),
         getNewLine: () => '\n',
       });
-      fail(`index.d.ts has TypeScript errors:\n${formatted}`);
+      // jest 30 removed the global fail(); throwing keeps the diagnostics visible
+      throw new Error(`index.d.ts has TypeScript errors:\n${formatted}`);
     }
   });
 });

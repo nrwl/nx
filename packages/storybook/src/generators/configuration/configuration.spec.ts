@@ -596,6 +596,32 @@ describe('@nx/storybook:configuration', () => {
         });
       });
 
+      it('should write node10 moduleResolution in ts-node options on TypeScript < 6', async () => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+        }));
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {},
+            files: [],
+            include: [],
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.moduleResolution).toEqual(
+          'node10'
+        );
+      });
+
       it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
         tree.write(
           'tsconfig.json',
@@ -851,7 +877,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }
@@ -1717,7 +1743,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }

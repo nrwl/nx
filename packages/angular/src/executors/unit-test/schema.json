@@ -42,6 +42,14 @@
       "type": "boolean",
       "description": "Forces all configured browsers to run in headless mode. When using the Vitest runner, this option is ignored if no browsers are configured. The Karma runner does not support this option. _Note: this is only supported in Angular versions >= 21.2.0_."
     },
+    "isolate": {
+      "type": "boolean",
+      "description": "Enables isolation for test execution. When true, Vitest runs tests in separate threads or processes. This option is only available for the Vitest runner. Defaults to false to align with the Karma/Jasmine experience. _Note: this is only supported in Angular versions >= 22.0.0_."
+    },
+    "quiet": {
+      "type": "boolean",
+      "description": "Suppresses the verbose build summary and stats table on each rebuild. Defaults to `true` locally and `false` in CI environments. _Note: this is only supported in Angular versions >= 22.0.0_."
+    },
     "include": {
       "type": "array",
       "items": {

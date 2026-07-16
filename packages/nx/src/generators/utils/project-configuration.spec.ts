@@ -137,6 +137,30 @@ describe('project configuration', () => {
     expect(tree.exists('test/project.json')).toBeFalsy();
   });
 
+  it('should round-trip spread tokens through read + update', () => {
+    // `'...'` only resolves during project-graph construction. Generators
+    // read the raw file, so the token must survive read → update unchanged.
+    writeJson(tree, 'libs/test/project.json', {
+      name: 'test',
+      targets: {
+        build: {
+          inputs: ['...', '{projectRoot}/extra.json'],
+        },
+      },
+    });
+
+    const config = readProjectConfiguration(tree, 'test');
+    expect(config.targets.build.inputs).toEqual([
+      '...',
+      '{projectRoot}/extra.json',
+    ]);
+
+    updateProjectConfiguration(tree, 'test', config);
+    expect(
+      readJson(tree, 'libs/test/project.json').targets.build.inputs
+    ).toEqual(['...', '{projectRoot}/extra.json']);
+  });
+
   describe('JSON schema', () => {
     it('should have JSON $schema in project configuration for standalone projects', () => {
       addProjectConfiguration(tree, 'test', projectConfiguration, true);

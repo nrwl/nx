@@ -16,15 +16,12 @@ type ProjectsEntry = string | NameRef;
  * reference. `RootRef` carries the referenced project's root (resolved
  * via nameMap lookup); `UsageRef` carries the raw written name (for
  * forward refs, promoted to `RootRef` in place when the name is
- * identified). `parent` + `key` let the final pass write the resolved
- * name back; `targetPart` preserves the `:target` suffix from
+ * identified). `targetPart` preserves the `:target` suffix from
  * `dependsOn` strings.
  */
 export abstract class NameRef {
   constructor(
     public value: string,
-    public parent: unknown,
-    public key: string | undefined,
     public targetPart: string | undefined
   ) {}
 }
@@ -49,15 +46,15 @@ export function isUsageRef(value: unknown): value is UsageRef {
  * then resolves them after all merging is done.
  *
  * Tracking by array position breaks once `'...'` spreads shuffle indices,
- * so each ref becomes a sentinel object. Arrays spread-merge by pushing
- * element references, so sentinel identity survives any downstream
- * merges — the final pass walks a flat registry and writes the resolved
- * name back through each sentinel's `parent` back-reference. Orphaned
- * sentinels (from arrays dropped by a full-replace) write harmlessly.
+ * so each ref becomes a sentinel object. Merges copy sentinels by
+ * reference — one sentinel can end up in many arrays (e.g. a pattern
+ * target's dependsOn applied to every matching target) — so the final
+ * pass sweeps the merged rootMap and resolves every sentinel where it
+ * actually sits. Sentinels in arrays dropped by a full-replace are never
+ * visited and vanish with their array.
  */
 export class ProjectNameInNodePropsManager {
   private getNameMap: () => Record<string, ProjectConfiguration>;
-  private allRefs = new Set<RootRef | UsageRef>();
   private pendingByName = new Map<string, Set<RootRef | UsageRef>>();
 
   constructor(getNameMap?: () => Record<string, ProjectConfiguration>) {
@@ -100,24 +97,16 @@ export class ProjectNameInNodePropsManager {
   private processInputs(inputs: InputEntry[]): void {
     for (let i = 0; i < inputs.length; i++) {
       const entry = inputs[i];
-      // Existing sentinel: spread merges may have copied it out of its
-      // original array, so rebind parent to this one.
-      if (isNameRef(entry)) {
-        entry.parent = inputs;
-        continue;
-      }
+      if (isNameRef(entry)) continue;
       if (!entry || typeof entry !== 'object') continue;
       if (!('projects' in entry)) continue;
       const element = entry as { projects: unknown };
       const projects = element.projects;
 
-      if (isNameRef(projects)) {
-        // Object-parent sentinel — element identity is stable across spread.
-        continue;
-      }
+      if (isNameRef(projects)) continue;
       if (typeof projects === 'string') {
         if (projects === 'self' || projects === 'dependencies') continue;
-        element.projects = this.createRef(projects, element, 'projects');
+        element.projects = this.createRef(projects);
       } else if (Array.isArray(projects)) {
         this.processProjectsArray(projects);
       }
@@ -131,12 +120,7 @@ export class ProjectNameInNodePropsManager {
   ): void {
     for (let i = 0; i < dependsOn.length; i++) {
       const dep = dependsOn[i];
-      // Existing sentinel: rebind parent to this array in case a spread
-      // merge copied it out of its original.
-      if (isNameRef(dep)) {
-        dep.parent = dependsOn;
-        continue;
-      }
+      if (isNameRef(dep)) continue;
 
       if (typeof dep === 'string') {
         // `^target` and same-project targets aren't cross-project refs.
@@ -150,12 +134,7 @@ export class ProjectNameInNodePropsManager {
         );
         if (rest.length === 0) continue;
         const targetPart = rest.join(':');
-        dependsOn[i] = this.createRef(
-          maybeProject,
-          dependsOn,
-          undefined,
-          targetPart
-        );
+        dependsOn[i] = this.createRef(maybeProject, targetPart);
         continue;
       }
 
@@ -174,7 +153,7 @@ export class ProjectNameInNodePropsManager {
         ) {
           continue;
         }
-        element.projects = this.createRef(projects, element, 'projects');
+        element.projects = this.createRef(projects);
       } else if (Array.isArray(projects)) {
         this.processProjectsArray(projects);
       }
@@ -184,30 +163,23 @@ export class ProjectNameInNodePropsManager {
   private processProjectsArray(projects: ProjectsEntry[]): void {
     for (let j = 0; j < projects.length; j++) {
       const name = projects[j];
-      if (isNameRef(name)) {
-        name.parent = projects;
-        continue;
-      }
+      if (isNameRef(name)) continue;
       if (typeof name !== 'string') continue;
       if (isGlobPattern(name)) continue;
-      projects[j] = this.createRef(name, projects, undefined);
+      projects[j] = this.createRef(name);
     }
   }
 
   // Builds a sentinel and registers it.
   private createRef(
     referencedName: string,
-    parent: unknown,
-    key: string | undefined,
     targetPart?: string
   ): RootRef | UsageRef {
     const referencedRoot = this.getNameMap()[referencedName]?.root;
     const ref: RootRef | UsageRef =
       referencedRoot !== undefined
-        ? new RootRef(referencedRoot, parent, key, targetPart)
-        : new UsageRef(referencedName, parent, key, targetPart);
-
-    this.allRefs.add(ref);
+        ? new RootRef(referencedRoot, targetPart)
+        : new UsageRef(referencedName, targetPart);
 
     if (ref instanceof UsageRef) {
       let set = this.pendingByName.get(referencedName);
@@ -236,28 +208,73 @@ export class ProjectNameInNodePropsManager {
     }
   }
 
-  // Writes each sentinel's current resolved name back into its owning slot.
-  // Called once after all plugin results have been merged.
+  // Resolves every sentinel in the merged rootMap in place. Sweeping the
+  // final config (rather than writing through back-references held by the
+  // sentinels) covers sentinels that merges copied into arrays other than
+  // the one they were created in, e.g. a pattern target's dependsOn applied
+  // to every matching target. Called once after all plugin results have
+  // been merged.
   applySubstitutions(rootMap: Record<string, ProjectConfiguration>): void {
     const nameByRoot: Record<string, string | undefined> = {};
     for (const root in rootMap) {
       nameByRoot[root] = rootMap[root]?.name;
     }
 
-    for (const ref of this.allRefs) {
-      const finalName = this.resolveFinalName(ref, nameByRoot);
-      if (finalName === undefined) continue;
-
-      const replacement =
-        ref.targetPart !== undefined
-          ? `${finalName}:${ref.targetPart}`
-          : finalName;
-
-      this.writeReplacement(ref, replacement);
+    for (const root in rootMap) {
+      const targets = rootMap[root]?.targets;
+      if (!targets) continue;
+      for (const targetName in targets) {
+        const targetConfig = targets[targetName];
+        if (!targetConfig || typeof targetConfig !== 'object') continue;
+        if (Array.isArray(targetConfig.inputs)) {
+          this.substituteInArray(targetConfig.inputs, nameByRoot);
+        }
+        if (Array.isArray(targetConfig.dependsOn)) {
+          this.substituteInArray(targetConfig.dependsOn, nameByRoot);
+        }
+      }
     }
 
-    this.allRefs.clear();
     this.pendingByName.clear();
+  }
+
+  private substituteInArray(
+    entries: Array<InputEntry | DependsOnEntry>,
+    nameByRoot: Record<string, string | undefined>
+  ): void {
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      if (isNameRef(entry)) {
+        const finalName = this.resolveFinalName(entry, nameByRoot);
+        if (finalName !== undefined) {
+          entries[i] =
+            entry.targetPart !== undefined
+              ? `${finalName}:${entry.targetPart}`
+              : finalName;
+        }
+        continue;
+      }
+      if (!entry || typeof entry !== 'object' || !('projects' in entry)) {
+        continue;
+      }
+      const element = entry as { projects: unknown };
+      if (isNameRef(element.projects)) {
+        const finalName = this.resolveFinalName(element.projects, nameByRoot);
+        if (finalName !== undefined) {
+          element.projects = finalName;
+        }
+      } else if (Array.isArray(element.projects)) {
+        const projects = element.projects as ProjectsEntry[];
+        for (let j = 0; j < projects.length; j++) {
+          const name = projects[j];
+          if (!isNameRef(name)) continue;
+          const finalName = this.resolveFinalName(name, nameByRoot);
+          if (finalName !== undefined) {
+            projects[j] = finalName;
+          }
+        }
+      }
+    }
   }
 
   private resolveFinalName(
@@ -269,20 +286,5 @@ export class ProjectNameInNodePropsManager {
     }
     // Unpromoted forward ref — best effort, fall back to the written name.
     return this.getNameMap()[ref.value]?.name ?? ref.value;
-  }
-
-  private writeReplacement(ref: NameRef, replacement: string): void {
-    const parent = ref.parent;
-    if (Array.isArray(parent)) {
-      // One sentinel may appear at multiple indices (e.g. `[..., ...]`
-      // pushed the same reference twice via spread), so replace all.
-      for (let i = 0; i < parent.length; i++) {
-        if (parent[i] === ref) parent[i] = replacement;
-      }
-      return;
-    }
-    if (parent && typeof parent === 'object' && ref.key !== undefined) {
-      (parent as Record<string, unknown>)[ref.key] = replacement;
-    }
   }
 }

@@ -116,33 +116,37 @@ describe('app', () => {
         bundler: 'vite',
         unitTestRunner: 'vitest',
         addPlugin: true,
+        // Let the generator format the tree so we assert on the same
+        // prettier-formatted config a user gets, not the raw intermediate the
+        // e2e generator writes with skipFormat.
+        skipFormat: false,
       });
 
-      // Spot-check the generated cypress config. Avoid inline snapshot here:
-      // the `webServerCommands` interpolate `packageCmd` at runtime (`npx`,
-      // `pnpm exec`, etc), which varies by detected package manager.
-      const cypressConfig = appTree.read(
-        'my-app-e2e/cypress.config.ts',
-        'utf-8'
-      );
+      // The web-server commands interpolate the detected package manager's exec
+      // command (`npx`, `pnpm exec`, ...), so normalize it to keep the snapshot
+      // package-manager agnostic.
+      const cypressConfig = appTree
+        .read('my-app-e2e/cypress.config.ts', 'utf-8')
+        .replaceAll(packageCmd, '<pm-exec>');
       expect(cypressConfig).toMatchInlineSnapshot(`
         "const { nxE2EPreset } = require('@nx/cypress/plugins/cypress-preset');
         const { defineConfig } = require('cypress');
         module.exports = defineConfig({
-            e2e: {
-                ...nxE2EPreset(__filename, {
-                    "cypressDir": "src",
-                    "bundler": "vite",
-                    "webServerCommands": {
-                        "default": "npx nx run my-app:dev",
-                        "production": "npx nx run my-app:preview"
-                    },
-                    "ciWebServerCommand": "npx nx run my-app:preview",
-                    "ciBaseUrl": "http://localhost:4300"
-                }),
-                baseUrl: 'http://localhost:4200'
-            }
-        });"
+          e2e: {
+            ...nxE2EPreset(__filename, {
+              cypressDir: 'src',
+              bundler: 'vite',
+              webServerCommands: {
+                default: '<pm-exec> nx run my-app:dev',
+                production: '<pm-exec> nx run my-app:preview',
+              },
+              ciWebServerCommand: '<pm-exec> nx run my-app:preview',
+              ciBaseUrl: 'http://localhost:4300',
+            }),
+            baseUrl: 'http://localhost:4200',
+          },
+        });
+        "
       `);
     });
 
@@ -355,7 +359,7 @@ describe('app', () => {
           "compilerOptions": {
             "allowJs": true,
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "outDir": "../dist/out-tsc",
             "sourceMap": false,
             "types": [
@@ -383,6 +387,17 @@ describe('app', () => {
 
       const tsConfig = readJson(appTree, 'my-app/tsconfig.json');
       expect(tsConfig.extends).toEqual('../tsconfig.base.json');
+    });
+
+    it('should use node10 moduleResolution in e2e tsconfig on TypeScript < 6', async () => {
+      updateJson(appTree, 'package.json', (json) => ({
+        ...json,
+        devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+      }));
+      await applicationGenerator(appTree, schema);
+
+      const tsconfigE2E = readJson(appTree, 'my-app-e2e/tsconfig.json');
+      expect(tsconfigE2E.compilerOptions.moduleResolution).toEqual('node10');
     });
   });
 
@@ -1069,7 +1084,7 @@ describe('app', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": [
               "jest",
@@ -1213,7 +1228,22 @@ describe('app', () => {
 
     // ASSERT
     nxJson = readNxJson(tree);
-    expect(nxJson.targetDefaults.build).toMatchInlineSnapshot(`
+    const td = nxJson.targetDefaults!;
+    const buildEntry = Array.isArray(td)
+      ? td.find(
+          (e) =>
+            e.target === 'build' &&
+            e.projects === undefined &&
+            e.plugin === undefined
+        )
+      : td.build;
+    const {
+      target: _t,
+      projects: _p,
+      plugin: _pl,
+      ...buildConfig
+    } = (buildEntry as any) ?? {};
+    expect(buildConfig).toMatchInlineSnapshot(`
       {
         "cache": true,
         "dependsOn": [
