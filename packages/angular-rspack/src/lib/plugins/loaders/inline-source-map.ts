@@ -88,7 +88,16 @@ function isRawSourceMap(json: string): boolean {
     isOptional(map.sourceRoot, isString) &&
     isOptional(map.debugId, isString) &&
     isOptional(map.ignoreList, (v) =>
-      isArrayOf(v, (el) => typeof el === 'number')
+      // Source indices deserialized as u32 on the rspack side: negative,
+      // fractional, or > 0xffff_ffff values fail with `ExpectedUnsigned`.
+      isArrayOf(
+        v,
+        (el) =>
+          typeof el === 'number' &&
+          Number.isInteger(el) &&
+          el >= 0 &&
+          el <= 0xffff_ffff
+      )
     )
   );
 }

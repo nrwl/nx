@@ -91,6 +91,13 @@ describe('extractInlineSourceMap', () => {
     ['a map with a non-string sourceRoot', { ...map, sourceRoot: 1 }],
     ['a map with a non-string debugId', { ...map, debugId: 1 }],
     ['a map with a non-numeric ignoreList', { ...map, ignoreList: ['a'] }],
+    // ignoreList entries are u32 on the rspack side (`ExpectedUnsigned`).
+    ['a map with a negative ignoreList entry', { ...map, ignoreList: [-1] }],
+    ['a map with a fractional ignoreList entry', { ...map, ignoreList: [1.5] }],
+    [
+      'a map with an ignoreList entry above u32 range',
+      { ...map, ignoreList: [4294967296] },
+    ],
   ])('passes the code through when the payload is %s', (_, payload) => {
     const code = `const a = 1;\n${inlineComment(encode(payload))}`;
 
