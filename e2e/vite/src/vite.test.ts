@@ -523,7 +523,7 @@ export default defineConfig({
             command: details.targets[t].options?.command,
           }));
 
-      // default path: spec files discovered via glob (runtime disabled)
+      // default path: spec files discovered via glob
       const globDetails = JSON.parse(
         runCLI(`show project ${reactVitest} --json`)
       );

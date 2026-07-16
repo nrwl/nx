@@ -657,12 +657,12 @@ async function getTestPathsRelativeToProjectRoot(
 /**
  * Enumerates a project's test files by mirroring Vitest's own resolution with
  * a glob. Vitest globs `test.include` and `test.includeSource` (both skipped
- * when `typecheck.only`, the latter also kept only when the file contains an
- * in-source test) plus `test.typecheck.include` (when typecheck is enabled),
- * each minus the relevant `exclude`, from the project root. Defaults come from
- * the installed Vitest so they track the user's version. Callers must first
- * confirm the config is reproducible with a glob via
- * `configRequiresVitestRuntime`.
+ * when typecheck is enabled with `only`, the latter also kept only when the
+ * file contains an in-source test) plus `test.typecheck.include` (when
+ * typecheck is enabled), each minus the relevant `exclude`, from the project
+ * root. Defaults come from the installed Vitest so they track the user's
+ * version. Callers must first confirm the config is reproducible with a glob
+ * via `configRequiresVitestRuntime`.
  */
 async function globTestPathsRelativeToProjectRoot(
   test: InlineConfig,
@@ -682,7 +682,8 @@ async function globTestPathsRelativeToProjectRoot(
   // Regular and type tests are independent walks; run them together.
   const globJobs: Promise<string[]>[] = [];
 
-  // `typecheck.only` makes Vitest run only type tests, so skip regular tests.
+  // Typecheck enabled with `only` makes Vitest run only type tests, so skip
+  // regular tests.
   if (!typecheckOnly) {
     const include: string[] = test.include ?? configDefaults.include;
     globJobs.push(glob(include, { ...globOptions, ignore: exclude }));
@@ -702,7 +703,8 @@ async function globTestPathsRelativeToProjectRoot(
   }
 
   // In-source tests: only files that actually contain a test are included.
-  // `typecheck.only` makes Vitest run only type tests, so skip these too.
+  // Typecheck enabled with `only` makes Vitest run only type tests, so skip
+  // these too.
   if (!typecheckOnly && test.includeSource?.length) {
     const sourceFiles = await glob(test.includeSource, {
       ...globOptions,
