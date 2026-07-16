@@ -1,6 +1,6 @@
 ---
 title: 'Resource Usage'
-description: 'Upload and view per-agent CPU and memory metrics for distributed task execution to find bottlenecks, debug out-of-memory errors, and right-size your agents.'
+description: 'Upload and view CPU and memory metrics for your CI runs to find bottlenecks, debug out-of-memory errors, and right-size your agents.'
 keywords:
   [
     resource usage,
@@ -19,10 +19,9 @@ sidebar:
 filter: 'type:Features'
 ---
 
-The resource usage add-on records per-agent CPU and memory metrics during distributed task
-execution and surfaces them in Nx Cloud. Use this data to find resource bottlenecks, debug
-out-of-memory (OOM) errors, and pick the right agent size for your workload, all the way down to
-which task caused a spike.
+The resource usage add-on records CPU and memory metrics while your tasks run and surfaces them in
+Nx Cloud. Use this data to find resource bottlenecks, debug out-of-memory (OOM) errors, and pick the
+right agent size for your workload, all the way down to which task caused a spike.
 
 {% aside type="note" title="Nx Cloud add-on" %}
 Resource usage is a standalone Nx Cloud add-on. Enable it under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons) for your
@@ -38,13 +37,15 @@ Resource usage requires Nx 22.1 or later.
 Enable the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), or from the **Enable resource profiling** prompt on
 the **Analysis** tab of any CI pipeline execution.
 
-Once the add-on is active:
+Once the add-on is active, metrics are collected and uploaded automatically, whether you distribute
+your tasks with [Nx Agents](/docs/features/ci-features/distribute-task-execution) or run them on a
+single machine. There's nothing else to configure.
 
-- **With [Nx Agents](/docs/features/ci-features/distribute-task-execution) on Nx Cloud compute**, metrics are collected
-  and uploaded automatically for every agent and task. There's nothing else to configure.
-- **When you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute)** (running the agents on your own CI),
-  add a single CLI step per agent job to upload metrics. See
-  [the section below](#resource-metrics-when-you-bring-your-own-compute).
+{% aside type="note" title="Bringing your own compute" %}
+If you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute) and run the agents on
+your own CI, add a single CLI step per agent job to upload metrics. See
+[the section below](#resource-metrics-when-you-bring-your-own-compute).
+{% /aside %}
 
 When a CI pipeline execution doesn't yet have the add-on, Nx Cloud shows a preview with sample data
 and a prompt to enable it, including a note on the
@@ -53,9 +54,11 @@ CPU issues.
 
 ## Viewing resource usage
 
+### Runs with Nx Agents
+
 Open any CI pipeline execution and go to the **Analysis** tab.
 
-### Agent resource usage summary
+#### Agent resource usage summary
 
 The **Agent resource usage** table lists every agent in the run with its average and maximum CPU and
 memory, plus the machine specs (cores and RAM) of its resource class. It's the fastest way to spot an
@@ -63,7 +66,7 @@ agent that ran hot.
 
 ![Agent resource usage table showing per-agent average and maximum CPU and memory](../../../../assets/guides/nx-cloud/agent-resource-usage-table.png)
 
-### Resource usage over time
+#### Resource usage over time
 
 Click an agent to open its **Resource usage over time** view. Separate memory and CPU charts plot
 utilization across the agent's lifetime, with reference lines for the machine's capacity and peak
@@ -91,6 +94,13 @@ The detail view has a few controls for digging in:
   ![Timeline scrubber for navigating resource usage over time](../../../../assets/guides/nx-cloud/resource-chart-scrubber.jpg)
 
 - **Download CSV** - export the raw per-process data for deeper analysis.
+
+### Runs without Nx Agents
+
+For a run that isn't distributed on Nx Agents, open the run details and go to the **Resource usage**
+tab.
+
+![Non distributed run resource usage](../../../../assets/guides/nx-cloud/resource-non-dte-view.avif)
 
 ## Common use cases
 
