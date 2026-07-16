@@ -376,4 +376,52 @@ describe('show target outputs', () => {
     expect(allLogged).toContain('libs/other/file.js');
     expect(process.exitCode).toBe(1);
   });
+
+  describe('project pattern specifiers', () => {
+    function setSingleAppGraph() {
+      setGraph(
+        new GraphBuilder()
+          .addProjectConfiguration(
+            {
+              root: 'apps/my-app',
+              name: 'my-app',
+              targets: {
+                build: {
+                  executor: '@nx/web:build',
+                  options: { outputPath: 'dist/apps/my-app' },
+                  outputs: ['{options.outputPath}'],
+                },
+              },
+            },
+            'app'
+          )
+          .build()
+      );
+    }
+
+    it('resolves a wildcard project name to the matching project', async () => {
+      setSingleAppGraph();
+
+      await showTargetOutputsHandler({ target: 'my-*:build', json: true });
+
+      const parsed = JSON.parse((console.log as jest.Mock).mock.calls[0][0]);
+      expect(parsed.project).toEqual('my-app');
+      expect(parsed.outputPaths).toContain('dist/apps/my-app');
+    });
+
+    it('checks paths against a wildcard-resolved project', async () => {
+      setSingleAppGraph();
+
+      await showTargetOutputsHandler({
+        target: 'my-*:build',
+        check: ['dist/apps/my-app/main.js'],
+      });
+
+      const allLogged = (console.log as jest.Mock).mock.calls
+        .map((c) => c[0])
+        .join('\n');
+      expect(allLogged).toContain('is an output of');
+      expect(process.exitCode).toBe(0);
+    });
+  });
 });

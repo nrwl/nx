@@ -53,15 +53,20 @@ export async function resolveTarget(
   const { projectName, targetName, configurationName } =
     resolveTargetIdentifier(args, graph, nxJson);
 
+  // `resolveProjectNode` accepts a pattern specifier (`my-*`), so the concrete
+  // name it resolved to is the one everything downstream has to use — it is a
+  // lookup key for the task id, not just a label.
   const node = resolveProjectNode(projectName, graph);
+  const resolvedProjectName = node.name;
+
   if (!node.data.targets?.[targetName]) {
-    reportTargetNotFound(projectName, targetName, node);
+    reportTargetNotFound(resolvedProjectName, targetName, node);
   }
 
   const configuration = configurationName ?? args.configuration;
   if (configuration) {
     validateConfiguration(
-      projectName,
+      resolvedProjectName,
       targetName,
       configuration,
       node.data.targets[targetName]
@@ -71,7 +76,7 @@ export async function resolveTarget(
   return {
     graph,
     nxJson,
-    projectName,
+    projectName: resolvedProjectName,
     targetName,
     configuration,
     node,

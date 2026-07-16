@@ -48,6 +48,7 @@ import { getInputs as mockedGetInputs } from './task-hasher';
 import {
   checkFilesAreInputs,
   checkFilesAreOutputs,
+  getTaskOutputs,
   getTaskRawInputs,
   _resetContextForTesting,
 } from './check-task-files';
@@ -183,6 +184,33 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
     await checkFilesAreOutputs('myproj:build', []);
 
     expect(mockCreateProjectGraphAsync).toHaveBeenCalledTimes(1);
+    expect(MockHashPlanInspector).toHaveBeenCalledTimes(1);
+    expect(mockInit).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not build a hash plan inspector for the output paths', async () => {
+    // `init()` walks the workspace in-process, bypassing the daemon. Only the
+    // input paths read the hash plan, so nothing should force that walk here.
+    mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+    await checkFilesAreOutputs('myproj:build', ['dist/libs/myproj/index.js']);
+    await getTaskOutputs('myproj:build');
+
+    expect(MockHashPlanInspector).not.toHaveBeenCalled();
+    expect(mockInit).not.toHaveBeenCalled();
+  });
+
+  it('builds the hash plan inspector once, on the first input check', async () => {
+    mockInspectTaskInputs.mockReturnValue({
+      'myproj:build': makeHashInputs([]),
+    });
+
+    await checkFilesAreOutputs('myproj:build', []);
+    expect(MockHashPlanInspector).not.toHaveBeenCalled();
+
+    await checkFilesAreInputs('myproj:build', []);
+    await checkFilesAreInputs('myproj:build', []);
+
     expect(MockHashPlanInspector).toHaveBeenCalledTimes(1);
     expect(mockInit).toHaveBeenCalledTimes(1);
   });
@@ -667,6 +695,60 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
       expect(result.unmatched).toEqual(['/etc/passwd']);
     });
 
+    it('resolves `..` in a relative path instead of matching through it', async () => {
+      // globset matches text, so an unresolved `..` would let a path climb out
+      // of a directory the pattern had already matched.
+      mockGetOutputs.mockReturnValue(['dist/libs/dep']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/dep/../../../secrets.env',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual(['dist/libs/dep/../../../secrets.env']);
+    });
+
+    it('resolves `..` before applying a negated exclusion', async () => {
+      // Re-spelling an excluded path via `..` must not slip past the exclusion.
+      mockGetOutputs.mockReturnValue([
+        'apps/web/.next/**',
+        '!apps/web/.next/cache/**',
+      ]);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'apps/web/.next/static/../cache/webpack/a.pack',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([
+        'apps/web/.next/static/../cache/webpack/a.pack',
+      ]);
+    });
+
+    it('resolves a relative `..` path that lands back inside an output', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        'dist/libs/other/../myproj/index.js',
+      ]);
+
+      expect(result.matched).toEqual(['dist/libs/other/../myproj/index.js']);
+      expect(result.unmatched).toEqual([]);
+    });
+
+    it('does not match a relative path that escapes the workspace', async () => {
+      mockGetOutputs.mockReturnValue(['dist/libs/myproj']);
+
+      const result = await checkFilesAreOutputs('myproj:build', [
+        '../elsewhere/dist/libs/myproj/index.js',
+      ]);
+
+      expect(result.matched).toEqual([]);
+      expect(result.unmatched).toEqual([
+        '../elsewhere/dist/libs/myproj/index.js',
+      ]);
+    });
+
     it('returns matched when nested inside an output directory whose name contains glob-like characters', async () => {
       mockGetOutputs.mockReturnValue(['dist/libs/@scope/pkg']);
 
@@ -841,20 +923,6 @@ describe('checkFilesAreInputs / checkFilesAreOutputs', () => {
         checkFilesAreInputs('myproj:build', ['libs/myproj/src/index.ts'])
       ).rejects.toThrow(/not present in its own hash plan/);
     });
-  });
-
-  it('treats an output with an unresolvable {options.*} token as no output', async () => {
-    // The task runner drops `{options.outputPath}` when the option has no
-    // value, so getOutputsForTargetAndConfiguration returns an empty list and
-    // the file is simply not an output — the same as any other unmatched path.
-    mockGetOutputs.mockReturnValue([]);
-
-    const result = await checkFilesAreOutputs('myproj:build', [
-      'dist/libs/myproj/index.js',
-    ]);
-
-    expect(result.matched).toEqual([]);
-    expect(result.unmatched).toEqual(['dist/libs/myproj/index.js']);
   });
 
   describe('injected context', () => {

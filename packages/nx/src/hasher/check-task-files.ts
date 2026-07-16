@@ -1,4 +1,4 @@
-import { isAbsolute, relative } from 'path';
+import { isAbsolute, join, relative } from 'path';
 import { type NxJsonConfiguration, readNxJson } from '../config/nx-json';
 import type {
   ProjectGraph,
@@ -25,7 +25,11 @@ import { type ExpandedDepsOutput, getInputs } from './task-hasher';
 interface LoadedContext {
   projectGraph: ProjectGraph;
   nxJson: NxJsonConfiguration;
-  inspector: HashPlanInspector;
+  /**
+   * Built on first use: `init()` walks the workspace in-process, bypassing the
+   * daemon, which the output paths never need.
+   */
+  getInspector: () => Promise<HashPlanInspector>;
 }
 
 /**
@@ -52,13 +56,29 @@ function getContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
 async function loadContext(seed?: TaskFileCheckSeed): Promise<LoadedContext> {
   const projectGraph = seed?.projectGraph ?? (await createProjectGraphAsync());
   const nxJson = seed?.nxJson ?? readNxJson(defaultWorkspaceRoot) ?? {};
+
+  let inspector: Promise<HashPlanInspector> | null = null;
+  const getInspector = () =>
+    // As with the context itself, a rejection is not cached.
+    (inspector ??= initInspector(projectGraph, nxJson).catch((e) => {
+      inspector = null;
+      throw e;
+    }));
+
+  return { projectGraph, nxJson, getInspector };
+}
+
+async function initInspector(
+  projectGraph: ProjectGraph,
+  nxJson: NxJsonConfiguration
+): Promise<HashPlanInspector> {
   const inspector = new HashPlanInspector(
     projectGraph,
     defaultWorkspaceRoot,
     nxJson
   );
   await inspector.init();
-  return { projectGraph, nxJson, inspector };
+  return inspector;
 }
 
 // ── Per-process caches (valid for the entire process lifetime) ───────────────
@@ -137,10 +157,10 @@ function resolveIdentity(
   return identity;
 }
 
-function getRawInputs(
+async function getRawInputs(
   taskId: string,
-  { projectGraph, inspector }: LoadedContext
-): HashInputs | null {
+  { projectGraph, getInspector }: LoadedContext
+): Promise<HashInputs | null> {
   if (hashInputsCache.has(taskId)) {
     return hashInputsCache.get(taskId) ?? null;
   }
@@ -149,6 +169,8 @@ function getRawInputs(
     taskId,
     projectGraph
   );
+
+  const inspector = await getInspector();
 
   // `null` means "this task is absent from the hash plan" — any other failure
   // is a real error and propagates to the caller.
@@ -318,11 +340,14 @@ function matchesDependentTaskOutputs(
  * error.
  */
 function toWorkspaceRelativePath(candidatePath: string): string {
-  const relativized = isAbsolute(candidatePath)
-    ? relative(defaultWorkspaceRoot, candidatePath)
-    : candidatePath;
-  const normalized = normalizePath(relativized);
-  return normalized.startsWith('./') ? normalized.slice(2) : normalized;
+  // Anchoring a relative path to the workspace root before relativizing it back
+  // resolves any `..` segments. Left in, they would traverse *through* a pattern
+  // that globset had already matched — `dist/libs/dep/../../../secrets.env`
+  // matching an output of `dist/libs/dep`.
+  const absolute = isAbsolute(candidatePath)
+    ? candidatePath
+    : join(defaultWorkspaceRoot, candidatePath);
+  return normalizePath(relative(defaultWorkspaceRoot, absolute));
 }
 
 /**
@@ -330,8 +355,11 @@ function toWorkspaceRelativePath(candidatePath: string): string {
  * a failure to *determine* the inputs — reporting every file as unmatched would
  * tell a sandbox-violation consumer that all of them are illegal.
  */
-function requireRawInputs(taskId: string, ctx: LoadedContext): HashInputs {
-  const raw = getRawInputs(taskId, ctx);
+async function requireRawInputs(
+  taskId: string,
+  ctx: LoadedContext
+): Promise<HashInputs> {
+  const raw = await getRawInputs(taskId, ctx);
   if (!raw) {
     throw new Error(
       `Could not determine the inputs of task "${taskId}" — it is not present in its own hash plan.`
@@ -419,7 +447,7 @@ export async function checkFilesAreInputs(
   // undeterminable plan errors even when the file list is empty — rather than
   // being reported as "none of these files are inputs".
   resolveIdentity(taskId, ctx.projectGraph);
-  const raw = requireRawInputs(taskId, ctx);
+  const raw = await requireRawInputs(taskId, ctx);
 
   const matched: string[] = [];
   const unmatched: string[] = [];
@@ -450,6 +478,12 @@ export async function checkFilesAreInputs(
  * against the workspace root. An output pattern whose `{options.*}` token has no
  * value resolves to nothing — exactly as the task runner drops it — so a file it
  * would have covered is reported `unmatched`, like any other non-output.
+ *
+ * That last case makes `unmatched` two answers in one: "not an output" and
+ * "the outputs could not be determined". A consumer judging sandbox violations
+ * cannot tell them apart, and would call the second one illegal. `getTaskOutputs`
+ * already computes the `unresolved` list this would need; surfacing it here is
+ * deliberately deferred until a consumer's contract asks for the distinction.
  */
 export async function checkFilesAreOutputs(
   taskId: string,
