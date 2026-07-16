@@ -10,6 +10,7 @@
 import { transformFromPromise } from 'ng-packagr/src/lib/graph/transform';
 import type { NgEntryPoint } from 'ng-packagr/src/lib/ng-package/entry-point/entry-point';
 import {
+  byEntryPoint,
   isEntryPointInProgress,
   isPackage,
 } from 'ng-packagr/src/lib/ng-package/nodes';
@@ -86,6 +87,19 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
 
     // Update package node only when processing the primary entry point
     if (!entryPoint.isSecondaryEntryPoint) {
+      // the package manifest maps every entry point and is written while the
+      // primary one is in progress, so the rest need their destination files
+      // adjusted by now even though they may not have been processed yet
+      for (const node of graph.filter(byEntryPoint())) {
+        if (node === entryPointNode) {
+          continue;
+        }
+
+        const nodeEntryPoint = toCustomNgEntryPoint(node.data.entryPoint);
+        node.data.entryPoint = nodeEntryPoint;
+        node.data.destinationFiles = nodeEntryPoint.destinationFiles;
+      }
+
       const packageNode = graph.find(isPackage);
       if (packageNode) {
         packageNode.data = new NgPackage(

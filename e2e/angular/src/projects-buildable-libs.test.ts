@@ -1,6 +1,7 @@
 import { names } from '@nx/devkit';
 import {
   checkFilesDoNotExist,
+  checkFilesExist,
   readFile,
   readJson,
   runCLI,
@@ -36,12 +37,16 @@ describe('Angular Projects - Buildable Libraries', () => {
     // ARRANGE
     const buildableLib = uniq('buildlib1');
     const buildableChildLib = uniq('buildlib2');
+    const entryPoint = uniq('entrypoint');
 
     runCLI(
       `generate @nx/angular:library ${buildableLib} --buildable=true --no-standalone --no-interactive`
     );
     runCLI(
       `generate @nx/angular:library ${buildableChildLib} --buildable=true --no-standalone --no-interactive`
+    );
+    runCLI(
+      `generate @nx/angular:secondary-entry-point --name=${entryPoint} --library=${buildableLib} --no-interactive`
     );
 
     // update the app module to include a ref to the buildable lib
@@ -194,15 +199,26 @@ describe('Angular Projects - Buildable Libraries', () => {
       ),
     ]);
 
+    const { typings, exports: packageExports } = readJson<{
+      typings: string;
+      exports: Record<string, Record<string, string>>;
+    }>(`dist/${buildableLib}/package.json`);
+
     // the flat module file is built in memory by ngc and has no source on disk,
     // so it must not ship a declaration map
-    const { typings } = readJson<{ typings: string }>(
-      `dist/${buildableLib}/package.json`
-    );
     expect(readFile(`dist/${buildableLib}/${typings}`)).not.toContain(
       'sourceMappingURL'
     );
     checkFilesDoNotExist(`dist/${buildableLib}/${typings}.map`);
+
+    // the package manifest is written while the primary entry point is in
+    // progress, so the secondary entry point is mapped before it is built
+    expect(packageExports[`./${entryPoint}`]).toBeDefined();
+    checkFilesExist(
+      ...Object.values(packageExports).flatMap((conditions) =>
+        Object.values(conditions).map((file) => `dist/${buildableLib}/${file}`)
+      )
+    );
 
     // to proof it has been built from source the "main.js" should actually contain
     // the path to dist
