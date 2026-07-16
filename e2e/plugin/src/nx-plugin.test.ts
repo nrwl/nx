@@ -15,6 +15,7 @@ import {
   uniq,
   updateFile,
   updateJson,
+  waitForInferredProject,
 } from '@nx/e2e-utils';
 import type { PackageJson } from 'nx/src/utils/package-json';
 
@@ -320,6 +321,10 @@ describe('Nx Plugin', () => {
       // Create project that should be inferred by Nx
       const inferredProject = uniq('inferred');
       createFile(`${inferredProject}/my-project-file`);
+
+      // Wait for the daemon to register the newly created inferred project
+      // before asserting, to avoid a watcher-latency race.
+      await waitForInferredProject(inferredProject);
 
       // Attempt to use inferred project w/ Nx
       expect(runCLI(`build ${inferredProject}`)).toContain(

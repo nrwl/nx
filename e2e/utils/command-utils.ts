@@ -507,6 +507,40 @@ export function runCLI(
 }
 runCLI.lastExitCode = 0 as number;
 
+/**
+ * Polls `nx show project <name>` until the project is registered.
+ *
+ * Under the forced daemon (`NX_DAEMON=true`), the daemon only recomputes the
+ * project graph once its file watcher reports a change. A test that writes an
+ * inferred project's files and immediately queries the graph can outrun the
+ * OS's delivery of those filesystem events to the watcher, so the daemon serves
+ * a cached graph that predates the project (`Cannot find project '<name>'`).
+ * Gate assertions on this helper so the test waits for the project to actually
+ * be inferred instead of assuming instant visibility.
+ */
+export async function waitForInferredProject(
+  projectName: string,
+  opts: RunCmdOpts & { timeout?: number; interval?: number } = {}
+): Promise<void> {
+  const { timeout = 15_000, interval = 500, ...runOpts } = opts;
+  const start = performance.now();
+  let lastOutput = '';
+  do {
+    lastOutput = runCLI(`show project ${projectName} --json`, {
+      ...runOpts,
+      silenceError: true,
+    });
+    if (runCLI.lastExitCode === 0) {
+      return;
+    }
+    await new Promise((resolve) => setTimeout(resolve, interval));
+  } while (performance.now() - start < timeout);
+
+  throw new Error(
+    `Timed out after ${timeout}ms waiting for project "${projectName}" to be inferred by Nx.\nLast output:\n${lastOutput}`
+  );
+}
+
 export function runLernaCLI(
   command: string,
   opts: RunCmdOpts = {

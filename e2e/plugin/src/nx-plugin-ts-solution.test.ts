@@ -6,10 +6,10 @@ import {
   readJson,
   renameFile,
   runCLI,
-  runCommand,
   uniq,
   updateFile,
   updateJson,
+  waitForInferredProject,
 } from '@nx/e2e-utils';
 import {
   ASYNC_GENERATOR_EXECUTOR_CONTENTS,
@@ -128,6 +128,10 @@ describe('Nx Plugin (TS solution)', () => {
       })
     );
     createFile(`packages/${inferredProject}/my-project-file`);
+
+    // Wait for the daemon to register the newly created inferred project
+    // before asserting, to avoid a watcher-latency race.
+    await waitForInferredProject(inferredProject);
 
     // Attempt to use inferred project w/ Nx
     expect(runCLI(`build ${inferredProject}`)).toContain(
@@ -310,6 +314,8 @@ describe('Nx Plugin (TS solution)', () => {
     );
     createFile(`packages/${inferredProject}/my-project-file`);
 
+    await waitForInferredProject(inferredProject);
+
     expect(runCLI(`build ${inferredProject}`)).toContain(
       'custom registered target'
     );
@@ -427,6 +433,8 @@ export const dockerCreateNodes = (files: string[], options: PluginOptions) => {
       );
       createFile(`packages/${inferredProject}/my-project-file`);
 
+      await waitForInferredProject(inferredProject);
+
       expect(runCLI(`build ${inferredProject}`)).toContain(
         'custom registered target'
       );
@@ -504,6 +512,8 @@ exports.createNodesV2 = [
       JSON.stringify({ name: inferredProject, version: '0.0.1' })
     );
     createFile(`packages/${inferredProject}/my-project-file`);
+
+    await waitForInferredProject(inferredProject);
 
     // With no source condition, Nx resolves to the dist artifact — loading
     // should succeed (not hard-fail with a "custom condition" error).
