@@ -69,14 +69,6 @@ pub struct PtyInstance {
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
-    /// Monotonic counter bumped every time the terminal content or its visual
-    /// layout changes (new output, or a reparse at new dimensions). Consumers
-    /// that cache anything derived from the screen — e.g. the pane search's
-    /// match list — compare this to detect staleness. Unlike a content-row
-    /// count it never saturates: past `SCROLLBACK_SIZE` the row count pins
-    /// while old lines are still evicted underneath, so a count would freeze
-    /// and never signal the change.
-    output_generation: Arc<AtomicU64>,
     /// Cached result of cursor-movement detection. Flips true on first hit and
     /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
     handles_cursor_movement: Arc<AtomicBool>,
@@ -392,7 +384,6 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
-            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -419,7 +410,6 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
-            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -443,7 +433,6 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
-            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -534,10 +523,6 @@ impl PtyInstance {
             *parser_guard = new_parser;
         }
 
-        // Rewrapping at new dimensions shifts every absolute visual row, so
-        // anything anchored to them (the pane search) must recompute.
-        self.output_generation.fetch_add(1, Ordering::SeqCst);
-
         Ok(())
     }
 
@@ -574,7 +559,6 @@ impl PtyInstance {
         // Clone Arcs for the background thread
         let parser_arc = self.parser.clone();
         let generation_arc = self.resize_generation.clone();
-        let output_generation_arc = self.output_generation.clone();
 
         std::thread::spawn(move || {
             // Snapshot raw output under a read lock, then release.
@@ -630,8 +614,6 @@ impl PtyInstance {
             }
 
             *parser_guard = new_parser;
-            // Rewrapping shifted every absolute visual row (see `resize`).
-            output_generation_arc.fetch_add(1, Ordering::SeqCst);
         });
     }
 
@@ -740,13 +722,23 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
-    /// Monotonic version of the terminal content and its wrapping. Bumped on
-    /// every `process_output` and on every resize reparse. A cache keyed on
-    /// this recomputes exactly when the screen changed — and, unlike a
-    /// content-row count, keeps changing after the scrollback fills and old
-    /// lines start being evicted.
+    /// A version key for the terminal content and its wrapping, cheap to read.
+    ///
+    /// Derived from the parser itself so it works no matter how the parser is
+    /// fed: the raw-output length grows on every write — both `process_output`
+    /// *and* a live task's PTY reader writing the shared parser directly (which
+    /// bypasses `process_output` entirely) — and, unlike a content-row count,
+    /// never saturates once the scrollback fills. Folding in the screen
+    /// dimensions makes a resize rewrap (same bytes, shifted rows) register as
+    /// a change too. A cache keyed on this — the pane search's match list —
+    /// recomputes exactly when the screen changed.
     pub fn output_generation(&self) -> u64 {
-        self.output_generation.load(Ordering::SeqCst)
+        let parser = self.parser.read();
+        let raw_len = parser.get_raw_output().len() as u64;
+        let (rows, cols) = parser.screen().size();
+        raw_len
+            .wrapping_mul(0x9E37_79B1)
+            .wrapping_add(((rows as u64) << 16) | cols as u64)
     }
 
     /// The absolute visual row currently at the top of the viewport — the same
@@ -993,7 +985,6 @@ impl PtyInstance {
             compacted.screen_mut().set_scrollback(scrollback);
             *parser = compacted;
         }
-        self.output_generation.fetch_add(1, Ordering::SeqCst);
     }
 }
 
@@ -1016,7 +1007,6 @@ mod tests {
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
-            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -1174,12 +1164,12 @@ mod tests {
         assert!(pty.search_visual_positions("absent").is_empty());
     }
 
-    /// The output generation must keep advancing after the scrollback fills,
+    /// The output generation must keep changing after the scrollback fills,
     /// even though the content-row count saturates. This is what lets a cache
     /// keyed on the generation (the pane search) detect that content is still
     /// shifting once past `SCROLLBACK_SIZE`.
     #[test]
-    fn output_generation_advances_after_content_row_count_saturates() {
+    fn output_generation_changes_after_content_row_count_saturates() {
         let pty = create_test_pty_instance(false);
         // Fill well past SCROLLBACK_SIZE (1000).
         pty.process_output("line\r\n".repeat(1200).as_bytes());
@@ -1194,9 +1184,24 @@ mod tests {
             rows_a, rows_b,
             "the content-row count saturates and stops signalling change"
         );
-        assert!(
-            gen_b > gen_a,
-            "the output generation keeps advancing: {gen_a} -> {gen_b}"
+        assert_ne!(
+            gen_a, gen_b,
+            "the output generation still changes after saturation"
+        );
+    }
+
+    /// A live task's PTY reader writes the shared parser directly, bypassing
+    /// `process_output`. The generation must still change, or a pane search
+    /// over a streaming task would freeze (stale count and highlights).
+    #[test]
+    fn output_generation_changes_when_the_parser_is_fed_directly() {
+        let pty = create_test_pty_instance(false);
+        let gen_a = pty.output_generation();
+        pty.parser.write().process(b"streamed output line\r\n");
+        let gen_b = pty.output_generation();
+        assert_ne!(
+            gen_a, gen_b,
+            "generation must change on a direct parser write (the live PTY path)"
         );
     }
 

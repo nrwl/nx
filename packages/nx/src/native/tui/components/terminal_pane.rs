@@ -1263,6 +1263,81 @@ mod tests {
             .unwrap();
     }
 
+    /// Snapshot of the search-highlight overlay. Renders a focused pane with a
+    /// confirmed search and, under each content row, a marker row showing which
+    /// cells are highlighted: `#` = the current match (warning background),
+    /// `*` = another match (reverse video). The markers must sit exactly under
+    /// the query text — this makes any highlight drift visible in review.
+    #[test]
+    fn search_highlight_overlay_snapshot() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        let area = Rect::new(0, 0, 46, 11);
+        let (pty_rows, pty_cols) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(
+            pty_rows, pty_cols,
+        ));
+        pty.process_output(
+            b"error: build failed\r\nok\r\nanother error here\r\nfine\r\nlast error line\r\n",
+        );
+        let matches = pty.search_visual_positions("error");
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        data.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            matches,
+            current: 0,
+            searched_generation: pty.output_generation(),
+        });
+
+        let mut state = TerminalPaneState::new(
+            "build".to_string(),
+            TaskStatus::Success,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+        let mut buf = Buffer::empty(area);
+        StatefulWidget::render(
+            TerminalPane::new().pty_data(&mut data),
+            area,
+            &mut buf,
+            &mut state,
+        );
+
+        let mut out = String::new();
+        for y in 0..area.height {
+            let mut text = String::new();
+            let mut marks = String::new();
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                text.push_str(cell.symbol());
+                marks.push(if cell.bg == THEME.warning {
+                    '#'
+                } else if cell.modifier.contains(Modifier::REVERSED) {
+                    '*'
+                } else {
+                    ' '
+                });
+            }
+            out.push_str(text.trim_end());
+            out.push('\n');
+            if !marks.trim().is_empty() {
+                out.push_str(marks.trim_end());
+                out.push('\n');
+            }
+        }
+        insta::assert_snapshot!(out);
+    }
+
     /// Search highlights must land exactly on the matched text after the pane
     /// renders through its real path — border, padding, `block.inner`,
     /// scrollback, ANSI colour codes, auto-wrapped lines, and a scroll offset
