@@ -5,7 +5,7 @@ import {
 } from './write-bundles.transform';
 
 describe('removeSourceMappingUrl', () => {
-  // the flat module file as ngc emits it, without a trailing newline
+  // the flat module file as ngc emits it
   const flatModule = [
     '/**',
     ' * Generated bundle index. Do not edit.',
@@ -98,8 +98,7 @@ describe('remapDeclarationMapSources', () => {
   });
 
   it('returns the content untouched when a sourceRoot is set', () => {
-    // sources resolve against the sourceRoot rather than the map's location,
-    // so moving the map does not invalidate them
+    // the root is prepended to each source, so they are not map-relative paths
     const content = makeMap(['lib/foo.ts'], 'https://cdn.example/src/');
     expect(remapDeclarationMapSources(originalPath, newPath, content)).toBe(
       content

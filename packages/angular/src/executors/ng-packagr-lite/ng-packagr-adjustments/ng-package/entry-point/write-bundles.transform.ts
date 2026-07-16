@@ -85,7 +85,8 @@ export const writeBundlesTransform = (_options: NgPackagrOptions) => {
       await mkdir(entryPoint.destinationPath, { recursive: true });
     }
 
-    // Update package node only when processing the primary entry point
+    // Adjust the remaining entry points and the package node once the primary
+    // one is reached
     if (!entryPoint.isSecondaryEntryPoint) {
       // the package manifest maps every entry point and is written while the
       // primary one is in progress, so the rest need their destination files
@@ -139,7 +140,8 @@ export function remapDeclarationMapSources(
     return content;
   }
   // ng-packagr forces `sourceRoot: ''`, so sources are relative to the map file.
-  // A map with a sourceRoot resolves its sources against that instead, so leave it be.
+  // A non-empty root is prepended to each source, so the entries are not plain
+  // map-relative paths and rebasing them on their own would be wrong.
   if (map.sourceRoot) {
     return content;
   }
