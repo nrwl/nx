@@ -124,64 +124,16 @@ Level 2 publishes nx packages from the worktree at HEAD into a local verdaccio i
 
 #### Prerequisites
 
-1. Node 20+ and pnpm 10.28.2+ in PATH.
-2. Worktree has been built or can be built (`pnpm install` may need to run first).
-3. Port 4873 is free (or a different port is specified via `VERDACCIO_PORT`).
-4. Disk space for `dist/local-registry/storage` (~500MB-1GB).
+1. The `nx-review-sandbox` image exists: `docker image inspect nx-review-sandbox:latest`. If not, run `setup-review-sandbox` — it carries the repo's full toolchain (node/java/dotnet/maven/rust via mise). **java + dotnet are required** because nx dogfoods the `@nx/dotnet` + `@nx/gradle` graph plugins; the build fails without them.
+2. Docker + the isolation runtime (gVisor on Linux / the Docker VM on macOS) + container networking are healthy — see the `reproduce-issue` skill's Preflight.
 
-If any prerequisite is missing, report and skip Level 2 — do NOT attempt partial setup.
+If a prerequisite is missing, report and skip Level 2 — **never build or run on the host.**
 
-#### Step 1: Install dependencies in the worktree (if needed)
+#### Steps 1–3: build the PR — INSIDE the sandbox (no host build)
 
-```bash
-cd "$WORKTREE_PATH"
-test -d node_modules || pnpm install --frozen-lockfile
-```
+**Nothing builds on the host.** The build is done by the `reproduce-issue` skill's **PR-build mode** (`nx-build:<HEAD_SHA>`): the skill's sandbox container clones `nrwl/nx`, checks out that SHA, runs `mise install` + `pnpm install`, then builds + publishes nx to a verdaccio on **`localhost` inside the same container** — and reproduces against it. One container, localhost, no host verdaccio, no `WORKTREE_PATH` build.
 
-If `pnpm install` fails, stop and report. Do not try to continue.
-
-#### Step 2: Start the local registry
-
-Start verdaccio in the background. It must outlive the publish step but be killable on cleanup.
-
-```bash
-cd "$WORKTREE_PATH"
-PORT=${VERDACCIO_PORT:-4873}
-pnpm nx local-registry @nx/nx-source --port=$PORT >/tmp/verdaccio-<PR_NUMBER>.log 2>&1 &
-VERDACCIO_PID=$!
-echo "$VERDACCIO_PID" > /tmp/verdaccio-<PR_NUMBER>.pid
-```
-
-Wait up to 60s for the registry to accept connections:
-
-```bash
-for i in $(seq 1 60); do
-  if curl -sf http://localhost:$PORT/-/ping >/dev/null 2>&1; then break; fi
-  sleep 1
-done
-curl -sf http://localhost:$PORT/-/ping >/dev/null || { echo "verdaccio failed to start"; exit 1; }
-```
-
-If startup fails, kill the pid (if set), report, and exit.
-
-#### Step 3: Publish nx to the local registry
-
-```bash
-cd "$WORKTREE_PATH"
-NX_LOCAL_REGISTRY_PORT=$PORT \
-NX_VERBOSE_LOGGING=true \
-PUBLISHED_VERSION=${TARGET_PUBLISHED_VERSION:-major} \
-pnpm nx populate-local-registry-storage @nx/nx-source 2>&1 | tee /tmp/publish-<PR_NUMBER>.log
-```
-
-This runs `pnpm nx-release --local ${PUBLISHED_VERSION}` internally — it builds all packages, versions them, and publishes to verdaccio. Takes 5-10 minutes. If it fails, capture the error and skip to cleanup.
-
-After success, determine the exact published version:
-
-```bash
-PUBLISHED_NX_VERSION=$(node -p "require('$WORKTREE_PATH/dist/packages/nx/package.json').version")
-echo "Published version: $PUBLISHED_NX_VERSION"
-```
+So the old host Steps 1–3 are gone — the whole build → publish → reproduce happens in **Step 4's single skill call**. (`WORKTREE_PATH` is still used read-only by Levels 0–1; Level 2 never builds it.)
 
 #### Step 4: Run the external repro IN THE SANDBOX (via the `reproduce-issue` skill)
 
@@ -192,8 +144,7 @@ Skill(skill="reproduce-issue", args="""
 repro: repo:<REPO_URL>            # EXTERNAL_REPO
   # -- or, for GENERATED_WORKSPACE:
   # repro: create:"--preset=<PRESET_FROM_ISSUE> <OTHER_FLAGS_FROM_ISSUE> --no-interactive --skipGit"
-nx-version: <PUBLISHED_NX_VERSION>
-nx-registry: <URL of the local registry serving the PR build — see "Registry" below>
+nx-build: <HEAD_SHA>             # PR-build mode: the skill builds THIS commit in-sandbox and reproduces against it
 command: <REPRO_COMMAND, verbatim from the issue>
 node-image: node:<major from the issue's Nx Report; default 22>
 expect: <the reported symptom, one line>

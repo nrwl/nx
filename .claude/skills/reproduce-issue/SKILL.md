@@ -24,8 +24,9 @@ This is the one reproduction engine in the repo. It has two front doors:
 The caller passes these directly:
 
 - **`repro`** — `repo:<git-url>` (clone a public repo) OR `create:"<create-nx-workspace args>"`.
-- **`nx-version:<version>`** — rewrite the repro's `nx` / `@nx/*` / `@nrwl/*` deps to this exact version.
-- **`nx-registry:<url>`** (optional) — registry to install nx from. Default public npm. **Point at a host verdaccio to test an unreleased PR build** (see below).
+- **`nx-version:<version>`** — install this **published** nx and rewrite the repro's `nx` / `@nx/*` / `@nrwl/*` deps to it. For reproducing against a released version.
+- **`nx-build:<git-ref>`** (PR-verification mode) — instead of a published version, **build nx from this `nrwl/nx` commit inside the sandbox** and reproduce against it. Uses the `nx-review-sandbox` image; the skill derives the version and serves it from a `localhost` verdaccio in the same container. Mutually exclusive with `nx-version`.
+- **`nx-registry:<url>`** (optional, `nx-version` mode only) — registry to install from. Default public npm.
 - **`command:"<repro-cmd>"`** — the command whose output/exit code decides the verdict.
 - **`node-image:<img>`** (optional) — base image matching the issue's Node (default `node:22`; public images are multi-arch → native on Apple Silicon).
 - **`expect:<reported symptom>`** (optional), **`setup:"<files/steps>"`** (optional) — files to create in the workspace first.
@@ -140,11 +141,44 @@ output (tail ~20 lines):
 
 (For a human `/reproduce-issue` run against a released version, "reproduced" vs "did not reproduce" is the plain-language answer; the verdict vocab above is for the agent.)
 
-## Testing an unreleased PR build
+## PR-build mode — build nx from source in the sandbox (`nx-build`)
 
-To test a PR's _unreleased_ nx, the PR branch is **built inside the sandbox** (not on the host), and the built nx is served to the repro **from inside the same sandbox**: a verdaccio on `localhost` in the container (pass `nx-registry:http://localhost:<PORT>`), or tarballs on a docker volume shared between the build and repro containers. Either way it's container-local — **no host verdaccio, no `host.docker.internal`, no listen-address change.**
+When `nx-build:<git-ref>` is given, do everything in **one `nx-review-sandbox` container** (it carries the mise toolchain incl. **java + dotnet**, required by nx's `@nx/dotnet`/`@nx/gradle` graph plugins). One container, `localhost` throughout — no host build, no host verdaccio, no `host.docker.internal`, no listen-address change:
 
-Prerequisite: the in-sandbox nx build needs the review-sandbox image to carry **dotnet + a JDK** (nx dogfoods `@nx/dotnet` + `@nx/gradle` in its project graph). Tracked in `tmp/notes/review-in-container-plan.md`.
+```bash
+# RUNTIME="--runtime=runsc"  on Linux, ""  on macOS
+docker run --rm $RUNTIME \
+  --cap-drop ALL --security-opt no-new-privileges \
+  --memory 20g --cpus 6 --pids-limit 8192 --tmpfs /work:rw,exec,size=16g \
+  -e CI=true -e NX_DAEMON=false \
+  nx-review-sandbox:latest bash -c '
+    set -e
+    # 1. build nx from the PR commit
+    cd /work
+    git clone --filter=blob:none https://github.com/nrwl/nx nx && cd nx
+    git checkout <GIT_REF>
+    mise install && pnpm install --frozen-lockfile
+    PORT=4873
+    pnpm nx local-registry @nx/nx-source --port=$PORT >/tmp/verdaccio.log 2>&1 &
+    for i in $(seq 1 60); do curl -sf http://localhost:$PORT/-/ping >/dev/null 2>&1 && break; sleep 1; done
+    NX_LOCAL_REGISTRY_PORT=$PORT pnpm nx populate-local-registry-storage @nx/nx-source
+    NXV=$(node -p "require(\"/work/nx/dist/packages/nx/package.json\").version")
+
+    # 2. reproduce against that build — same container, localhost registry
+    cd /work
+    git clone --depth 1 <GIT_URL> repro     # or: npx --yes create-nx-workspace <ARGS> --directory repro
+    cd repro
+    # rewrite nx/@nx/@nrwl deps to "$NXV" (same node one-liner as the Run section)
+    rm -f package-lock.json pnpm-lock.yaml yarn.lock
+    npm_config_registry=http://localhost:$PORT pnpm install
+    ( timeout 300 <REPRO_COMMAND> ); echo "REPRO_EXIT=$?"
+    echo "kernel: $(uname -r)"
+  '
+```
+
+Because verdaccio and the repro live in the **same** container, the registry is plain `localhost` — the reachability/listen-address problems a host verdaccio would create simply don't exist. Classify the result exactly as in "Classify + report".
+
+Prerequisite: the `nx-review-sandbox` image (`setup-review-sandbox`). The nx build is heavy (~several min + several GB) — RAM-backed via the tmpfs above so it stays off the host disk.
 
 ## Cleanup
 
