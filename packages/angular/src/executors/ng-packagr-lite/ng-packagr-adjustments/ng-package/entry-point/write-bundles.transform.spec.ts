@@ -1,5 +1,44 @@
 import { dirname, join, relative, resolve } from 'node:path';
-import { remapDeclarationMapSources } from './write-bundles.transform';
+import {
+  remapDeclarationMapSources,
+  removeSourceMappingUrl,
+} from './write-bundles.transform';
+
+describe('removeSourceMappingUrl', () => {
+  // the flat module file as ngc emits it, without a trailing newline
+  const flatModule = [
+    '/**',
+    ' * Generated bundle index. Do not edit.',
+    ' */',
+    `export * from './public-api';`,
+    '',
+  ].join('\n');
+
+  it('removes a trailing source map reference', () => {
+    expect(
+      removeSourceMappingUrl(
+        `${flatModule}//# sourceMappingURL=my-lib.d.ts.map`
+      )
+    ).toBe(flatModule);
+  });
+
+  it('removes a trailing source map reference followed by a newline', () => {
+    expect(
+      removeSourceMappingUrl(
+        `${flatModule}//# sourceMappingURL=my-lib.d.ts.map\n`
+      )
+    ).toBe(flatModule);
+  });
+
+  it('returns the content untouched when there is no source map reference', () => {
+    expect(removeSourceMappingUrl(flatModule)).toBe(flatModule);
+  });
+
+  it('only removes the reference when it is the last thing in the file', () => {
+    const content = `//# sourceMappingURL=my-lib.d.ts.map\n${flatModule}`;
+    expect(removeSourceMappingUrl(content)).toBe(content);
+  });
+});
 
 describe('remapDeclarationMapSources', () => {
   const dest = resolve('/tmp/dist/my-lib');
