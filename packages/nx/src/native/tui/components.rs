@@ -22,6 +22,7 @@ pub mod status_bar;
 pub mod task_selection_manager;
 pub mod tasks_list;
 pub mod terminal_pane;
+pub mod vim_session;
 
 /// `Component` is a trait that represents a visual and interactive element of the user interface.
 ///

@@ -24,6 +24,7 @@ use ratatui::{
 
 use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry, fit_with_ellipsis};
+use super::vim_session::{VimSessionInput, confirmed_text};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
@@ -96,6 +97,48 @@ pub struct PaneSearchProps {
     /// Zero-based index of the match the view last jumped to.
     pub current: usize,
     pub total: usize,
+}
+
+impl PaneSearchProps {
+    /// Bottom-up match position, matching the backward-from-the-bottom n/N
+    /// navigation: the newest (bottom-most) match is `1`, the oldest is `N`.
+    /// `current` is the index in ascending-row order.
+    fn position(&self) -> usize {
+        self.total - self.current
+    }
+
+    fn input_counts(&self) -> Option<String> {
+        if self.total > 0 {
+            Some(format!("{}/{} matches", self.position(), self.total))
+        } else if self.query.is_empty() {
+            None
+        } else {
+            Some("no matches".to_string())
+        }
+    }
+
+    fn confirmed_text(&self) -> String {
+        if self.total > 0 {
+            confirmed_text(
+                &self.query,
+                Some(format!("{}/{}", self.position(), self.total)),
+                "n/N, / to edit",
+            )
+        } else {
+            confirmed_text(&self.query, Some("no matches".to_string()), "/ to edit")
+        }
+    }
+}
+
+impl FilterProps {
+    fn input_counts(&self) -> Option<String> {
+        (self.hidden_count > 0).then(|| format!("{} tasks filtered out", self.hidden_count))
+    }
+
+    fn confirmed_text(&self) -> String {
+        let counts = (self.hidden_count > 0).then(|| format!("{} hidden", self.hidden_count));
+        confirmed_text(&self.text, counts, "/ to edit")
+    }
 }
 
 impl StatusBarProps {
@@ -179,7 +222,12 @@ impl<'a> StatusBar<'a> {
         if let Some(filter) = &props.filter
             && filter.input_mode
         {
-            Self::render_filter(buf, first_row, filter, props.is_dimmed);
+            VimSessionInput {
+                query: &filter.text,
+                counts: filter.input_counts(),
+                is_dimmed: props.is_dimmed,
+            }
+            .render(first_row, buf);
             return;
         }
 
@@ -190,7 +238,12 @@ impl<'a> StatusBar<'a> {
             && let Some(search) = &pane.search
             && search.input_mode
         {
-            Self::render_search(buf, first_row, search, props.is_dimmed);
+            VimSessionInput {
+                query: &search.query,
+                counts: search.input_counts(),
+                is_dimmed: props.is_dimmed,
+            }
+            .render(first_row, buf);
             return;
         }
 
@@ -308,13 +361,11 @@ impl<'a> StatusBar<'a> {
                 return Some(Span::raw(message.as_str()).width() as u16);
             }
             if let Some(search) = &pane.search {
-                return Some(
-                    Span::raw(Self::confirmed_search_text(search).as_str()).width() as u16,
-                );
+                return Some(Span::raw(search.confirmed_text().as_str()).width() as u16);
             }
         }
         if let Some(filter) = &props.filter {
-            return Some(Span::raw(Self::confirmed_filter_text(filter).as_str()).width() as u16);
+            return Some(Span::raw(filter.confirmed_text().as_str()).width() as u16);
         }
         if props.cloud_link.is_some() {
             return None;
@@ -331,32 +382,8 @@ impl<'a> StatusBar<'a> {
     /// (bottom-most) match is `1`, the oldest at the top is `N` — mirroring the
     /// backward-from-the-bottom navigation. `current` is the index in
     /// ascending-row order, so the displayed position is `total - current`.
-    fn confirmed_search_text(search: &PaneSearchProps) -> String {
-        if search.total > 0 {
-            format!(
-                "/{}  {}/{} (n/N, / to edit)",
-                search.query,
-                search.total - search.current,
-                search.total
-            )
-        } else {
-            format!("/{}  no matches (/ to edit)", search.query)
-        }
-    }
-
     /// The compact middle-slot text for a confirmed task filter, mirroring the
     /// confirmed search's shape.
-    fn confirmed_filter_text(filter: &FilterProps) -> String {
-        if filter.hidden_count > 0 {
-            format!(
-                "/{}  {} hidden (/ to edit)",
-                filter.text, filter.hidden_count
-            )
-        } else {
-            format!("/{}  (/ to edit)", filter.text)
-        }
-    }
-
     /// The middle section: a focused pane's transient feedback takes the slot
     /// over its confirmed search, which takes it over the confirmed task
     /// filter, which takes it over the cloud message.
@@ -387,7 +414,7 @@ impl<'a> StatusBar<'a> {
             if let Some(search) = &pane.search {
                 Widget::render(
                     NxParagraph::new(Line::from(Span::styled(
-                        Self::confirmed_search_text(search),
+                        search.confirmed_text(),
                         info_style,
                     )))
                     .alignment(Alignment::Left),
@@ -400,7 +427,7 @@ impl<'a> StatusBar<'a> {
         if let Some(filter) = &props.filter {
             Widget::render(
                 NxParagraph::new(Line::from(Span::styled(
-                    Self::confirmed_filter_text(filter),
+                    filter.confirmed_text(),
                     info_style,
                 )))
                 .alignment(Alignment::Left),
@@ -484,66 +511,8 @@ impl<'a> StatusBar<'a> {
     }
 
     /// The whole-row search display for the focused pane's vim-style search.
-    fn render_search(buf: &mut Buffer, row: Rect, search: &PaneSearchProps, is_dimmed: bool) {
-        let base = if is_dimmed {
-            Style::default().dim()
-        } else {
-            Style::default()
-        };
-        let query_style = base.fg(THEME.info);
-        let hint_style = base.fg(THEME.secondary_fg);
-
-        let counts = if search.total > 0 {
-            format!("{}/{} matches", search.current + 1, search.total)
-        } else if search.query.is_empty() {
-            String::new()
-        } else {
-            "no matches".to_string()
-        };
-        let hints = if search.input_mode {
-            "<enter> confirm, <esc> cancel"
-        } else {
-            "n/N to navigate, <esc> to clear"
-        };
-
-        let mut spans = vec![Span::styled(format!(" /{}", search.query), query_style)];
-        if !counts.is_empty() {
-            spans.push(Span::styled(format!("   {}", counts), hint_style));
-        }
-        spans.push(Span::styled(format!("   {}", hints), hint_style));
-        Widget::render(
-            NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
-            row,
-            buf,
-        );
-    }
-
     /// The whole-row filter display, ported from the task list's old two-line
     /// filter area and collapsed onto a single line.
-    fn render_filter(buf: &mut Buffer, row: Rect, filter: &FilterProps, is_dimmed: bool) {
-        let base = if is_dimmed {
-            Style::default().dim()
-        } else {
-            Style::default()
-        };
-        let query_style = base.fg(THEME.info);
-        let hint_style = base.fg(THEME.secondary_fg);
-
-        let mut spans = vec![Span::styled(format!(" /{}", filter.text), query_style)];
-        if filter.hidden_count > 0 {
-            spans.push(Span::styled(
-                format!("   {} tasks filtered out", filter.hidden_count),
-                hint_style,
-            ));
-        }
-        spans.push(Span::styled("   <enter> confirm, <esc> cancel", hint_style));
-        Widget::render(
-            NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
-            row,
-            buf,
-        );
-    }
-
     /// Renders messages received from Nx Cloud.
     ///
     /// When the message contains a URL, the URL is rendered as a clickable
