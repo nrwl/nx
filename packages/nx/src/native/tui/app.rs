@@ -1962,7 +1962,7 @@ impl App {
                     cloud_message: state.get_cloud_message().map(str::to_string),
                     cloud_link: state.get_cloud_link().cloned(),
                     completed_count: state.get_completed_task_count(),
-                    total_count: state.tasks().len(),
+                    total_count: state.get_total_task_count(),
                     all_completed: state.is_run_completed(),
                     run_started_at: state.run_start_time(),
                     run_ended_at: state.run_end_time(),

@@ -16,6 +16,7 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
+use super::graph_utils::is_task_continuous;
 use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, RunMode};
 use super::pty::PtyInstance;
 
@@ -246,6 +247,16 @@ impl TuiState {
                         | TaskStatus::RemoteCache
                 )
             })
+            .count()
+    }
+
+    /// Number of tasks the progress count is measured against. Continuous tasks
+    /// (servers, watchers) never reach a terminal state, so counting them makes
+    /// the total unreachable — they're excluded from the denominator.
+    pub fn get_total_task_count(&self) -> usize {
+        self.tasks
+            .iter()
+            .filter(|task| !is_task_continuous(&self.task_graph, &task.id))
             .count()
     }
 
@@ -760,6 +771,50 @@ mod tests {
         let map = state.get_task_status_map();
         assert_eq!(map.get("app1:build"), Some(&TaskStatus::Success));
         assert_eq!(map.get("app2:build"), Some(&TaskStatus::InProgress));
+    }
+
+    #[test]
+    fn total_task_count_excludes_continuous_tasks() {
+        let tasks = vec![
+            create_test_task("app1"),
+            create_test_task("app2"),
+            create_test_task("serve"),
+        ];
+        let mut graph_tasks = HashMap::new();
+        graph_tasks.insert("app1:build".to_string(), Task::new("app1", "build"));
+        graph_tasks.insert("app2:build".to_string(), Task::new("app2", "build"));
+        graph_tasks.insert(
+            "serve:build".to_string(),
+            Task::new("serve", "build").with_continuous(true),
+        );
+        let task_graph = TaskGraph {
+            tasks: graph_tasks,
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        );
+
+        assert_eq!(state.tasks().len(), 3);
+        assert_eq!(
+            state.get_total_task_count(),
+            2,
+            "the continuous task is excluded from the total"
+        );
     }
 
     // === PTY Management Tests ===
