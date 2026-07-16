@@ -1952,6 +1952,7 @@ impl App {
                         Focus::HelpPopup | Focus::CountdownPopup | Focus::HintPopup
                     ),
                     perf_report_available: state.has_exit_summary(),
+                    cloud_enabled: state.is_cloud_enabled(),
                     cloud_message: state.get_cloud_message().map(str::to_string),
                     cloud_link: state.get_cloud_link().cloned(),
                     completed_count: state.get_completed_task_count(),

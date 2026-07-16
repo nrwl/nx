@@ -43,6 +43,9 @@ const STATUS_MIN_WIDTH: u16 = 25;
 pub struct StatusBarProps {
     pub is_dimmed: bool,
     pub perf_report_available: bool,
+    /// Whether the run is connected to Nx Cloud, independent of any
+    /// message/link having arrived; shows the cloud icon on the counts.
+    pub cloud_enabled: bool,
     pub cloud_message: Option<String>,
     pub cloud_link: Option<(String, String)>,
     pub completed_count: usize,
@@ -419,10 +422,9 @@ impl<'a> StatusBar<'a> {
         }
 
         let mut spans = vec![Span::raw(" ")];
-        // A cloud icon marks a cloud-enabled run — any cloud presence (link or
-        // free-text message) shows it. Kept outside the underlined span so the
-        // click affordance stays on the numbers themselves.
-        if props.cloud_link.is_some() || props.cloud_message.is_some() {
+        // A cloud icon marks a cloud-enabled run. Kept outside the underlined
+        // span so the click affordance stays on the numbers themselves.
+        if props.cloud_enabled || props.cloud_link.is_some() || props.cloud_message.is_some() {
             let mut icon_style = Style::default().fg(THEME.secondary_fg);
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
@@ -806,6 +808,18 @@ mod tests {
             Some("View logs and run details at https://nx.app/runs/KnGk4A47qk".to_string());
         let (terminal, _) = render_bar(180, 1, &props);
         insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn cloud_enabled_alone_shows_the_icon() {
+        // Nx Cloud is configured but no message or link has arrived (or ever
+        // will) — the icon still marks the run as cloud-connected.
+        let mut props = base_props();
+        props.cloud_enabled = true;
+        let (terminal, registry) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+        // Without a link the counts are not clickable.
+        assert_eq!(registry.hit_test(4, 0), None);
     }
 
     #[test]

@@ -83,6 +83,9 @@ pub struct TuiState {
     user_has_interacted: bool,
 
     // === Cloud Message ===
+    /// Whether the run is connected to Nx Cloud (known at startup from
+    /// nx.json, independent of any message/link arriving later).
+    is_cloud_enabled: bool,
     cloud_message: Option<String>,
     /// Structured Nx Cloud link (display label, href URL), shown as a clickable
     /// label in place of the raw cloud message when set.
@@ -158,6 +161,7 @@ impl TuiState {
             quit_at: None,
             is_forced_shutdown: false,
             user_has_interacted: false,
+            is_cloud_enabled: false,
             cloud_message: None,
             cloud_link: None,
             exit_summary: None,
@@ -542,6 +546,14 @@ impl TuiState {
     }
 
     // === Cloud Message Methods ===
+
+    pub fn set_cloud_enabled(&mut self, enabled: bool) {
+        self.is_cloud_enabled = enabled;
+    }
+
+    pub fn is_cloud_enabled(&self) -> bool {
+        self.is_cloud_enabled
+    }
 
     /// Set the cloud message to display
     pub fn set_cloud_message(&mut self, message: Option<String>) {
