@@ -175,15 +175,15 @@ Configure the plugin in `nx.json`:
 }
 ```
 
-| Option                 | Type             | Default                     | Description                                                                                                                                   |
-| ---------------------- | ---------------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| `testTargetName`       | string           | `test`                      | Name of the inferred local target.                                                                                                            |
-| `ciTargetName`         | string           | none                        | Creates a CI-only target used for atomized runs.                                                                                              |
-| `ciGroupName`          | string           | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                       |
-| `testMode`             | `watch` or `run` | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                     |
-| `disableVitestRuntime` | boolean          | `true`                      | Discover atomized test files with a glob, which is faster than booting Vitest per project. Set to `false` to always enumerate through Vitest. |
+| Option              | Type               | Default                     | Description                                                                                                                                                                                               |
+| ------------------- | ------------------ | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `testTargetName`    | string             | `test`                      | Name of the inferred local target.                                                                                                                                                                        |
+| `ciTargetName`      | string             | none                        | Creates a CI-only target used for atomized runs.                                                                                                                                                          |
+| `ciGroupName`       | string             | derived from `ciTargetName` | Display name for the atomized CI group.                                                                                                                                                                   |
+| `testMode`          | `watch` or `run`   | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                                                                                 |
+| `discoverTestFiles` | `glob` or `vitest` | `glob`                      | How atomized test files are discovered. `glob` mirrors Vitest's resolution without booting Vitest per project, which is faster during graph creation. Set to `vitest` to always enumerate through Vitest. |
 
-When `disableVitestRuntime` is `true`, configs that a glob cannot reproduce faithfully still fall back to Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`.
+When `discoverTestFiles` is `glob`, configs that a glob cannot reproduce faithfully still boot Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`.
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
 

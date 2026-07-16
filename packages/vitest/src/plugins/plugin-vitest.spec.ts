@@ -386,13 +386,13 @@ describe('@nx/vitest', () => {
       expect(glob).not.toHaveBeenCalled();
     });
 
-    it('should always use Vitest when disableVitestRuntime is false', async () => {
+    it("should always use Vitest when discoverTestFiles is 'vitest'", async () => {
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
         {
           testTargetName: 'test',
           ciTargetName: 'test-ci',
-          disableVitestRuntime: false,
+          discoverTestFiles: 'vitest',
         },
         context
       );

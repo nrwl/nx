@@ -544,7 +544,7 @@ export default defineConfig({
       // the glob path exactly so the OOM-avoiding default preserves behavior
       updateJson('nx.json', (json) => {
         const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
-        vitest.options.disableVitestRuntime = false;
+        vitest.options.discoverTestFiles = 'vitest';
         return json;
       });
 
@@ -558,7 +558,7 @@ export default defineConfig({
       // Restore the glob path (the parity test above forced the runtime).
       updateJson('nx.json', (json) => {
         const vitest = json.plugins.find((p) => p.plugin === '@nx/vitest');
-        vitest.options.disableVitestRuntime = true;
+        vitest.options.discoverTestFiles = 'glob';
         return json;
       });
 

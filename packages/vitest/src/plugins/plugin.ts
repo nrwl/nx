@@ -50,21 +50,21 @@ export interface VitestPluginOptions {
    */
   testMode?: 'watch' | 'run';
   /**
-   * When `true` (the default), atomized test files are discovered with a glob
-   * that mirrors Vitest's own resolution instead of booting Vitest per project.
-   * Booting Vitest starts a Vite dev server and runs the config's plugin hooks,
-   * so the glob is faster during graph creation.
+   * How atomized test files (the `ciTargetName` targets) are discovered.
+   * - 'glob' (default): enumerate specs with a glob that mirrors Vitest's own
+   *   resolution instead of booting Vitest per project. Booting Vitest starts a
+   *   Vite dev server and runs the config's plugin hooks, so the glob is faster
+   *   during graph creation.
+   * - 'vitest': always enumerate through Vitest.
    *
-   * Configs a glob cannot reproduce faithfully still fall back to Vitest
-   * automatically: `test.projects`/`test.workspace` (inline or an auto-loaded
-   * `vitest.workspace.*`/`vitest.projects.*` sibling file), plugins with a
-   * `configureVitest` hook, `test.changed`/`test.related`, and enabled browser
-   * `instances` that set their own include/exclude/includeSource/dir. Those
-   * configs still boot Vitest per project, so they do not get the glob speedup.
-   * Set to `false` to always enumerate through Vitest.
-   * @default true
+   * Configs a glob cannot reproduce faithfully still boot Vitest automatically
+   * even under 'glob': `test.projects`/`test.workspace` (inline or an
+   * auto-loaded `vitest.workspace.*`/`vitest.projects.*` sibling file), plugins
+   * with a `configureVitest` hook, `test.changed`/`test.related`, and enabled
+   * browser `instances` that set their own include/exclude/includeSource/dir.
+   * @default 'glob'
    */
-  disableVitestRuntime?: boolean;
+  discoverTestFiles?: 'glob' | 'vitest';
 }
 
 type VitestTargets = Pick<
@@ -292,7 +292,8 @@ async function buildVitestTargets(
 
       // Not normalizing in normalizeOptions since it also affects the options
       // computed for convert-to-inferred.
-      const disableVitestRuntime = options.disableVitestRuntime !== false;
+      const useGlobDiscovery =
+        (options.discoverTestFiles ?? 'glob') !== 'vitest';
       // Glob discovery reads the serve-resolved config: Vitest runs tests
       // through a Vite server (the `serve` command), so `apply: 'serve'`
       // plugins and command-sensitive `test` include/exclude are absent from
@@ -301,7 +302,7 @@ async function buildVitestTargets(
       // config that branches include/exclude on `mode` would otherwise enumerate
       // a different spec set here than at test time. The runtime path resolves
       // its own config, so only resolve here when the glob path may run.
-      const viteServeConfig = disableVitestRuntime
+      const viteServeConfig = useGlobDiscovery
         ? await resolveConfig(
             {
               configFile: absoluteConfigFilePath,
@@ -314,8 +315,7 @@ async function buildVitestTargets(
         await getTestPathsRelativeToProjectRoot(
           projectRoot,
           context.workspaceRoot,
-          viteServeConfig,
-          disableVitestRuntime
+          viteServeConfig
         );
 
       for (const relativePath of projectRootRelativeTestPaths) {
@@ -638,17 +638,17 @@ function checkIfConfigFileShouldBeProject(
 async function getTestPathsRelativeToProjectRoot(
   projectRoot: string,
   workspaceRoot: string,
-  viteConfig: Record<string, any> | undefined,
-  disableVitestRuntime: boolean
+  viteConfig: Record<string, any> | undefined
 ): Promise<string[]> {
   const fullProjectRoot = join(workspaceRoot, projectRoot);
-  const test: InlineConfig = viteConfig?.test ?? {};
 
-  if (
-    disableVitestRuntime &&
-    !configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)
-  ) {
-    return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
+  // `viteConfig` is resolved only when glob discovery is requested; its absence
+  // means the runtime path was selected (`discoverTestFiles: 'vitest'`).
+  if (viteConfig) {
+    const test: InlineConfig = viteConfig.test ?? {};
+    if (!configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)) {
+      return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
+    }
   }
 
   return getTestPathsViaVitestRuntime(fullProjectRoot, projectRoot);
