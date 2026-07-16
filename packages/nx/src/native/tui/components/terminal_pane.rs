@@ -1116,8 +1116,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     if let Some(search) = &pty_data.search
                         && !search.matches.is_empty()
                     {
-                        let (_, pty_cols) = pty.get_dimensions();
-                        let cols = (pty_cols as usize).max(1);
+                        // Wrap the match columns against the screen actually
+                        // being rendered — the same width `search_visual_positions`
+                        // wrapped at. The cached `get_dimensions()` can lag the
+                        // parser's real width after a resize reparse, which
+                        // shifts every highlight on a wrapped line by the
+                        // difference (visible as an off-by-one when narrow).
+                        let cols = (screen.size().1 as usize).max(1);
                         let top = selection_content_rows
                             .saturating_sub(inner_area.height as usize)
                             .saturating_sub(current_scroll);
@@ -1261,6 +1266,89 @@ mod tests {
     fn press(pane: &mut TerminalPaneData, code: KeyCode) {
         pane.handle_key_event(KeyEvent::new(code, KeyModifiers::NONE))
             .unwrap();
+    }
+
+    /// The highlight overlay must wrap match columns against the parser's real
+    /// width (what `search_visual_positions` used), not the cached
+    /// `get_dimensions()`, which lags during a resize reparse. When they differ
+    /// the highlight drifts on wrapped lines — the "off by one when narrow" the
+    /// user hit. Here the cached width is forced smaller than the parser's, and
+    /// a match sits past that smaller width but within the real one.
+    #[test]
+    fn search_highlights_wrap_against_the_parser_width_not_cached_dimensions() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        let area = Rect::new(0, 0, 40, 10);
+        let (r, c) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(r, c));
+        // "err" sits at column c/2 + 1 on the first (unwrapped) row — past a
+        // c/2-wide wrap boundary but comfortably within the real width c.
+        let lead = (c as usize) / 2 + 1;
+        pty.process_output(format!("{}err tail here", "x".repeat(lead)).as_bytes());
+        let matches = pty.search_visual_positions("err");
+        assert_eq!(
+            matches,
+            vec![(0, lead, 3)],
+            "match is on row 0 at the real width"
+        );
+
+        // Simulate the resize window: cached dimensions narrower than the parser.
+        pty.set_cached_dimensions_for_test(r, c / 2);
+
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        data.search = Some(PaneSearch {
+            query: "err".to_string(),
+            input_mode: false,
+            matches,
+            current: 0,
+            searched_generation: pty.output_generation(),
+        });
+        let mut state = TerminalPaneState::new(
+            "t".to_string(),
+            TaskStatus::Success,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+        let mut buf = Buffer::empty(area);
+        StatefulWidget::render(
+            TerminalPane::new().pty_data(&mut data),
+            area,
+            &mut buf,
+            &mut state,
+        );
+
+        // Every highlighted run must spell "err". With the cached (c/2) width the
+        // old overlay would wrap `lead` onto a second row and land on an 'x'.
+        let mut runs = Vec::new();
+        for y in 0..area.height {
+            let mut run = String::new();
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                if cell.bg == THEME.warning || cell.modifier.contains(Modifier::REVERSED) {
+                    run.push_str(cell.symbol());
+                } else if !run.is_empty() {
+                    runs.push(run.clone());
+                    run.clear();
+                }
+            }
+            if !run.is_empty() {
+                runs.push(run);
+            }
+        }
+        assert_eq!(
+            runs,
+            vec!["err".to_string()],
+            "highlight lands exactly on err"
+        );
     }
 
     /// Snapshot of the search-highlight overlay. Renders a focused pane with a

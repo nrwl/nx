@@ -753,6 +753,14 @@ impl PtyInstance {
             .saturating_sub(screen.scrollback())
     }
 
+    /// Force the cached dimensions out of sync with the parser's real width,
+    /// reproducing the window during `resize_async` where `dimensions` has been
+    /// updated but the parser has not yet been reparsed at the new size.
+    #[cfg(test)]
+    pub(crate) fn set_cached_dimensions_for_test(&self, rows: u16, cols: u16) {
+        *self.dimensions.write() = (rows, cols);
+    }
+
     /// Scroll so the given absolute visual row sits about a third from the
     /// viewport top (bringing some context above the match into view).
     pub fn scroll_to_visual_row(&mut self, row: usize) {
