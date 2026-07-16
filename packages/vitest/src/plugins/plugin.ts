@@ -55,11 +55,13 @@ export interface VitestPluginOptions {
    * Booting Vitest starts a Vite dev server and runs the config's plugin hooks,
    * so the glob is faster during graph creation.
    *
-   * Configs a glob cannot reproduce faithfully (`test.projects`/`test.workspace`,
-   * plugins with a `configureVitest` hook, `test.changed`/`test.related`) still
-   * fall back to Vitest automatically; those configs still boot Vitest per
-   * project, so they do not get the glob speedup. Set to `false` to always
-   * enumerate through Vitest.
+   * Configs a glob cannot reproduce faithfully still fall back to Vitest
+   * automatically: `test.projects`/`test.workspace` (inline or an auto-loaded
+   * `vitest.workspace.*`/`vitest.projects.*` sibling file), plugins with a
+   * `configureVitest` hook, `test.changed`/`test.related`, and enabled browser
+   * `instances` that set their own include/exclude/includeSource/dir. Those
+   * configs still boot Vitest per project, so they do not get the glob speedup.
+   * Set to `false` to always enumerate through Vitest.
    * @default true
    */
   disableVitestRuntime?: boolean;
@@ -642,7 +644,10 @@ async function getTestPathsRelativeToProjectRoot(
   const fullProjectRoot = join(workspaceRoot, projectRoot);
   const test: InlineConfig = viteConfig?.test ?? {};
 
-  if (disableVitestRuntime && !configRequiresVitestRuntime(test, viteConfig)) {
+  if (
+    disableVitestRuntime &&
+    !configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)
+  ) {
     return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
   }
 
@@ -737,18 +742,53 @@ async function globTestPathsRelativeToProjectRoot(
     .sort();
 }
 
+// Sibling files Vitest 3 auto-loads to define sub-projects even when the config
+// object declares none. Removed in Vitest 4 in favor of inline `test.projects`.
+const vitestWorkspaceFiles = ['vitest.workspace', 'vitest.projects'].flatMap(
+  (name) =>
+    ['ts', 'mts', 'cts', 'js', 'mjs', 'cjs', 'json'].map(
+      (ext) => `${name}.${ext}`
+    )
+);
+
 /**
  * Whether a config's test discovery cannot be faithfully reproduced with a
  * glob, so enumeration must go through Vitest itself.
  */
 function configRequiresVitestRuntime(
   test: Record<string, any>,
-  viteConfig: Record<string, any>
+  viteConfig: Record<string, any>,
+  projectDir: string
 ): boolean {
   // Multi-project configs resolve include/exclude per sub-project.
   if (Array.isArray(test?.projects) || test?.workspace) return true;
+  // Vitest 3 auto-loads a `vitest.workspace.*`/`vitest.projects.*` sibling file
+  // to define sub-projects even when the config object declares none; the glob
+  // resolves only the single config, so it cannot reproduce that.
+  if (vitestWorkspaceFiles.some((file) => existsSync(join(projectDir, file)))) {
+    return true;
+  }
   // Vitest filters specs by VCS/graph state, which a glob cannot know.
   if (test?.changed || test?.related) return true;
+  // Browser mode: an instance can override include/exclude/includeSource, and
+  // `dir` (the base directory Vitest scans), so a top-level glob enumerates a
+  // different spec set than the instance would. Vitest ignores `instances`
+  // while browser mode is off, and the atomized target runs `vitest run <file>`
+  // without a browser flag, so the resolved `enabled` matches the run.
+  const browserInstances: any[] = test?.browser?.instances ?? [];
+  if (
+    test?.browser?.enabled &&
+    browserInstances.some(
+      (instance) =>
+        instance &&
+        (instance.include?.length ||
+          instance.exclude?.length ||
+          instance.includeSource?.length ||
+          instance.dir)
+    )
+  ) {
+    return true;
+  }
   // A plugin can inject or reshape projects through this Vitest-only hook.
   const plugins: unknown[] = viteConfig?.plugins ?? [];
   return plugins.some(

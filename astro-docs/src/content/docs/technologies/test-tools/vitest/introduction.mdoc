@@ -183,7 +183,7 @@ Configure the plugin in `nx.json`:
 | `testMode`             | `watch` or `run` | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run).                                                                     |
 | `disableVitestRuntime` | boolean          | `true`                      | Discover atomized test files with a glob, which is faster than booting Vitest per project. Set to `false` to always enumerate through Vitest. |
 
-When `disableVitestRuntime` is `true`, configs that a glob cannot reproduce faithfully still fall back to Vitest automatically: `test.projects` or `test.workspace`, plugins with a `configureVitest` hook, and `test.changed` or `test.related`.
+When `disableVitestRuntime` is `true`, configs that a glob cannot reproduce faithfully still fall back to Vitest automatically: `test.projects` or `test.workspace` (inline or an auto-loaded `vitest.workspace.*` or `vitest.projects.*` file), plugins with a `configureVitest` hook, `test.changed` or `test.related`, and enabled browser `instances` that set their own `include`, `exclude`, `includeSource`, or `dir`.
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
 

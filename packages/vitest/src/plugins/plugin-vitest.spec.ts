@@ -1,4 +1,5 @@
 import { CreateNodesContext } from '@nx/devkit';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { glob } from 'tinyglobby';
 import { createNodesV2 } from './plugin';
@@ -336,6 +337,12 @@ describe('@nx/vitest', () => {
       };
       (glob as jest.Mock).mockClear();
       (readFile as jest.Mock).mockReset();
+      // Reset to the default so a per-test workspace-file override can't leak
+      // into later tests and force them onto the runtime path.
+      (existsSync as jest.Mock).mockImplementation(
+        (path: string) =>
+          path.endsWith('package.json') || path.endsWith('project.json')
+      );
     });
 
     afterEach(() => {
@@ -452,6 +459,119 @@ describe('@nx/vitest', () => {
         expect(glob).not.toHaveBeenCalled();
       }
     );
+
+    it.each([
+      ['include', { include: ['**/*.browser.test.ts'] }],
+      ['exclude', { exclude: ['**/*.node.test.ts'] }],
+      ['includeSource', { includeSource: ['src/**/*.ts'] }],
+      ['dir', { dir: 'browser' }],
+    ])(
+      'should fall back to Vitest when a browser instance overrides %s',
+      async (_label, instanceConfig) => {
+        (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+          resolveConfig: jest.fn().mockResolvedValue({
+            path: 'vitest.config.ts',
+            config: {},
+            dependencies: [],
+            test: {
+              browser: {
+                enabled: true,
+                instances: [{ browser: 'chromium', ...instanceConfig }],
+              },
+            },
+          }),
+        });
+
+        const nodes = await createNodesFunction(
+          ['vitest.config.ts'],
+          { testTargetName: 'test', ciTargetName: 'test-ci' },
+          context
+        );
+
+        const targets = nodes[0][1].projects!['.'].targets!;
+        // Vitest resolves an instance override, not the top-level glob, so
+        // discovery must go through the runtime to enumerate the same specs.
+        expect(targets['test-ci--src/test-1.ts']).toBeDefined();
+        expect(glob).not.toHaveBeenCalled();
+      }
+    );
+
+    it('should still glob when browser instances do not override discovery', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            browser: { enabled: true, instances: [{ browser: 'chromium' }] },
+          },
+        }),
+      });
+      (glob as jest.Mock).mockResolvedValueOnce(['src/from-glob.spec.ts']);
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      // Instances that inherit the top-level include stay on the glob path.
+      expect(targets['test-ci--src/from-glob.spec.ts']).toBeDefined();
+      expect(glob).toHaveBeenCalled();
+    });
+
+    it('should still glob when browser mode is disabled', async () => {
+      (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
+        resolveConfig: jest.fn().mockResolvedValue({
+          path: 'vitest.config.ts',
+          config: {},
+          dependencies: [],
+          test: {
+            browser: {
+              enabled: false,
+              instances: [
+                { browser: 'chromium', include: ['**/*.browser.test.ts'] },
+              ],
+            },
+          },
+        }),
+      });
+      (glob as jest.Mock).mockResolvedValueOnce(['src/from-glob.spec.ts']);
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      // Vitest ignores instances while browser mode is off, so the runtime
+      // would enumerate the same specs the glob already does.
+      expect(targets['test-ci--src/from-glob.spec.ts']).toBeDefined();
+      expect(glob).toHaveBeenCalled();
+    });
+
+    it('should fall back to Vitest when a vitest.workspace.* sibling file exists', async () => {
+      // Vitest 3 auto-loads this file to define sub-projects even though the
+      // resolved config object below declares none.
+      (existsSync as jest.Mock).mockImplementation(
+        (path: string) =>
+          path.endsWith('package.json') ||
+          path.endsWith('project.json') ||
+          path.endsWith('vitest.workspace.ts')
+      );
+
+      const nodes = await createNodesFunction(
+        ['vitest.config.ts'],
+        { testTargetName: 'test', ciTargetName: 'test-ci' },
+        context
+      );
+
+      const targets = nodes[0][1].projects!['.'].targets!;
+      expect(targets['test-ci--src/test-1.ts']).toBeDefined();
+      expect(glob).not.toHaveBeenCalled();
+    });
 
     it('should honor a config include/exclude over Vitest defaults', async () => {
       (loadViteDynamicImport as jest.Mock).mockResolvedValueOnce({
