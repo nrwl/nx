@@ -69,6 +69,14 @@ pub struct PtyInstance {
     /// Generation counter for async resize. Incremented on each resize request
     /// so that stale background resize threads can detect they've been superseded.
     resize_generation: Arc<AtomicU64>,
+    /// Monotonic counter bumped every time the terminal content or its visual
+    /// layout changes (new output, or a reparse at new dimensions). Consumers
+    /// that cache anything derived from the screen — e.g. the pane search's
+    /// match list — compare this to detect staleness. Unlike a content-row
+    /// count it never saturates: past `SCROLLBACK_SIZE` the row count pins
+    /// while old lines are still evicted underneath, so a count would freeze
+    /// and never signal the change.
+    output_generation: Arc<AtomicU64>,
     /// Cached result of cursor-movement detection. Flips true on first hit and
     /// stays true — so subsequent arrow key events skip the O(n) buffer scan.
     handles_cursor_movement: Arc<AtomicBool>,
@@ -76,11 +84,6 @@ pub struct PtyInstance {
     scrollback_state: Arc<Mutex<ScrollbackState>>,
 }
 
-/// Count how many visual rows a single logical line produces when wrapped.
-///
-/// Uses a fast path for lines that are definitely short enough to fit in one row
-/// (by byte length, which is always >= display width). Only calls wrap_ansi for
-/// lines that might actually need wrapping.
 /// Byte index where the `n`th char of `line` begins, or the line's byte length
 /// when `n` is past the end. Used to slice a char range for width measurement.
 fn char_boundary(line: &str, n: usize) -> usize {
@@ -90,6 +93,11 @@ fn char_boundary(line: &str, n: usize) -> usize {
         .unwrap_or(line.len())
 }
 
+/// Count how many visual rows a single logical line produces when wrapped.
+///
+/// Uses a fast path for lines that are definitely short enough to fit in one row
+/// (by byte length, which is always >= display width). Only calls wrap_ansi for
+/// lines that might actually need wrapping.
 fn wrap_logical_line(line: &str, cols: usize) -> usize {
     if cols == 0 || line.is_empty() {
         return 1;
@@ -384,6 +392,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -410,6 +419,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -433,6 +443,7 @@ impl PtyInstance {
             dimensions: Arc::new(RwLock::new((rows, cols))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -523,6 +534,10 @@ impl PtyInstance {
             *parser_guard = new_parser;
         }
 
+        // Rewrapping at new dimensions shifts every absolute visual row, so
+        // anything anchored to them (the pane search) must recompute.
+        self.output_generation.fetch_add(1, Ordering::SeqCst);
+
         Ok(())
     }
 
@@ -559,6 +574,7 @@ impl PtyInstance {
         // Clone Arcs for the background thread
         let parser_arc = self.parser.clone();
         let generation_arc = self.resize_generation.clone();
+        let output_generation_arc = self.output_generation.clone();
 
         std::thread::spawn(move || {
             // Snapshot raw output under a read lock, then release.
@@ -614,6 +630,8 @@ impl PtyInstance {
             }
 
             *parser_guard = new_parser;
+            // Rewrapping shifted every absolute visual row (see `resize`).
+            output_generation_arc.fetch_add(1, Ordering::SeqCst);
         });
     }
 
@@ -722,6 +740,15 @@ impl PtyInstance {
         self.parser.read().screen().get_total_content_rows()
     }
 
+    /// Monotonic version of the terminal content and its wrapping. Bumped on
+    /// every `process_output` and on every resize reparse. A cache keyed on
+    /// this recomputes exactly when the screen changed — and, unlike a
+    /// content-row count, keeps changing after the scrollback fills and old
+    /// lines start being evicted.
+    pub fn output_generation(&self) -> u64 {
+        self.output_generation.load(Ordering::SeqCst)
+    }
+
     /// The absolute visual row currently at the top of the viewport — the same
     /// coordinate basis as `content_coords_at` and `search_visual_positions`.
     pub fn visual_top(&self) -> usize {
@@ -753,9 +780,10 @@ impl PtyInstance {
     /// Case-insensitively find every occurrence of `query` in the terminal
     /// content (scrollback included). Positions are returned in the wrapped
     /// visual coordinate basis shared with `content_coords_at`, as
-    /// `(visual_row, col, char_len)`, in reading order. Matches inside a
-    /// wrapped logical line are found across the wrap (the position walks past
-    /// the row's column count into the following visual rows).
+    /// `(visual_row, col, col_width)` — the third element is the match's width
+    /// in display columns, not a character count — in reading order. Matches
+    /// inside a wrapped logical line are found across the wrap (the position
+    /// walks past the row's column count into the following visual rows).
     pub fn search_visual_positions(&self, query: &str) -> Vec<(usize, usize, usize)> {
         if query.is_empty() {
             return Vec::new();
@@ -965,6 +993,7 @@ impl PtyInstance {
             compacted.screen_mut().set_scrollback(scrollback);
             *parser = compacted;
         }
+        self.output_generation.fetch_add(1, Ordering::SeqCst);
     }
 }
 
@@ -987,6 +1016,7 @@ mod tests {
             dimensions: Arc::new(RwLock::new((24, 80))),
             scroll_momentum: Arc::new(Mutex::new(ScrollMomentum::new())),
             resize_generation: Arc::new(AtomicU64::new(0)),
+            output_generation: Arc::new(AtomicU64::new(0)),
             handles_cursor_movement: Arc::new(AtomicBool::new(false)),
             scrollback_state: Arc::new(Mutex::new(ScrollbackState {
                 pending_lines: Vec::new(),
@@ -1142,6 +1172,32 @@ mod tests {
 
         assert!(pty.search_visual_positions("").is_empty());
         assert!(pty.search_visual_positions("absent").is_empty());
+    }
+
+    /// The output generation must keep advancing after the scrollback fills,
+    /// even though the content-row count saturates. This is what lets a cache
+    /// keyed on the generation (the pane search) detect that content is still
+    /// shifting once past `SCROLLBACK_SIZE`.
+    #[test]
+    fn output_generation_advances_after_content_row_count_saturates() {
+        let pty = create_test_pty_instance(false);
+        // Fill well past SCROLLBACK_SIZE (1000).
+        pty.process_output("line\r\n".repeat(1200).as_bytes());
+        let rows_a = pty.get_total_content_rows();
+        let gen_a = pty.output_generation();
+
+        pty.process_output("more\r\n".repeat(200).as_bytes());
+        let rows_b = pty.get_total_content_rows();
+        let gen_b = pty.output_generation();
+
+        assert_eq!(
+            rows_a, rows_b,
+            "the content-row count saturates and stops signalling change"
+        );
+        assert!(
+            gen_b > gen_a,
+            "the output generation keeps advancing: {gen_a} -> {gen_b}"
+        );
     }
 
     #[test]

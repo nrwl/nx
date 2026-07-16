@@ -90,10 +90,13 @@ pub struct PaneSearch {
     pub matches: Vec<(usize, usize, usize)>,
     /// Index into `matches` of the match the view last jumped to.
     pub current: usize,
-    /// PTY content-row count when `matches` was last computed. n/N re-searches
-    /// only when this changes (the output grew), so navigating a finished
-    /// task's static scrollback doesn't re-scan it on every keypress.
-    pub searched_content_rows: usize,
+    /// PTY output generation when `matches` was last computed. A re-scan runs
+    /// only when this changes, so navigating a finished task's static
+    /// scrollback doesn't re-scan it on every keypress. Uses the generation
+    /// rather than a content-row count because the count saturates once the
+    /// scrollback fills (old lines keep being evicted while the count pins),
+    /// which would freeze the match list against shifting text.
+    pub searched_generation: u64,
 }
 
 pub struct TerminalPaneData {
@@ -135,11 +138,11 @@ impl TerminalPaneData {
         self.search.as_ref().is_some_and(|search| search.input_mode)
     }
 
-    /// Re-scan for search matches if the pane's output has grown since the last
-    /// scan, keeping the user on their current match. Called each frame so an
-    /// active search's match count tracks a still-running task's streaming
+    /// Re-scan for search matches if the pane's output has changed since the
+    /// last scan, keeping the user on their current match. Called each frame so
+    /// an active search's match count tracks a still-running task's streaming
     /// output without the user pressing a key. Cheap when nothing has changed:
-    /// `refresh_matches` short-circuits on an unchanged content-row count.
+    /// `refresh_matches` short-circuits on an unchanged output generation.
     pub fn refresh_search_if_grown(&mut self) {
         if self.search.is_some() {
             self.refresh_matches();
@@ -158,12 +161,12 @@ impl TerminalPaneData {
             .as_ref()
             .map(|search| pty.search_visual_positions(&search.query))
             .unwrap_or_default();
-        let content_rows = pty.get_total_content_rows();
+        let generation = pty.output_generation();
         let Some(search) = &mut self.search else {
             return;
         };
         search.matches = positions;
-        search.searched_content_rows = content_rows;
+        search.searched_generation = generation;
         search.current = search
             .matches
             .iter()
@@ -174,20 +177,20 @@ impl TerminalPaneData {
         }
     }
 
-    /// Refresh the match list against the current content (it may have grown)
+    /// Refresh the match list against the current content (it may have changed)
     /// WITHOUT re-anchoring `current` to the scroll position: n/N must step
     /// relative to the match the user is on, not whatever scrolled into view.
-    /// Skips the re-scan entirely when the output hasn't grown since the last
-    /// search — navigating a finished task's scrollback costs nothing.
+    /// Skips the re-scan entirely when the output generation is unchanged since
+    /// the last search — navigating a finished task's scrollback costs nothing.
     fn refresh_matches(&mut self) {
         let Some(pty) = &self.pty else {
             return;
         };
-        let content_rows = pty.get_total_content_rows();
+        let generation = pty.output_generation();
         if self
             .search
             .as_ref()
-            .is_some_and(|search| search.searched_content_rows == content_rows)
+            .is_some_and(|search| search.searched_generation == generation)
         {
             return;
         }
@@ -199,7 +202,7 @@ impl TerminalPaneData {
         if let Some(search) = &mut self.search {
             let previous = search.matches.get(search.current).copied();
             search.matches = positions;
-            search.searched_content_rows = content_rows;
+            search.searched_generation = generation;
             search.current = previous
                 .and_then(|prev| search.matches.iter().position(|m| *m == prev))
                 .unwrap_or_else(|| search.current.min(search.matches.len().saturating_sub(1)));
@@ -277,7 +280,7 @@ impl TerminalPaneData {
             if self.search.is_some() {
                 match key.code {
                     KeyCode::Char('n') => {
-                        // Content may have grown since the last search.
+                        // Content may have changed since the last search.
                         self.refresh_matches();
                         self.search_step(1);
                         return Ok(None);
@@ -450,6 +453,12 @@ impl TerminalPaneData {
         self.is_interactive = interactive;
         // Reset scroll momentum when changing modes
         self.scroll_momentum.reset();
+        // Once interactive, every key (Esc included) is forwarded to the child
+        // program, so a lingering search could never be navigated or cleared.
+        // Drop it on entering interactive mode.
+        if interactive {
+            self.search = None;
+        }
     }
 
     pub fn is_interactive(&self) -> bool {
@@ -1291,7 +1300,7 @@ mod tests {
             input_mode: false,
             matches,
             current,
-            searched_content_rows: pty.get_total_content_rows(),
+            searched_generation: pty.output_generation(),
         });
         data.jump_to_current_match();
 
@@ -1462,10 +1471,24 @@ mod tests {
         pane.refresh_search_if_grown();
         assert_eq!(pane.search.as_ref().unwrap().matches.len(), 0);
 
-        // The first match appears in new output. Record the scroll position
-        // *after* the output arrives, so we isolate the refresh's effect on it.
+        // Scroll the viewport up, away from the bottom. This is what makes the
+        // assertion meaningful: the single match appears at the *bottom*, so a
+        // stray jump to it would collapse the scroll offset back toward zero.
+        // If the view stayed at the bottom (offset 0), "no jump" and "jumped to
+        // a bottom match" would both read 0 and the test would prove nothing.
+        {
+            let mut pty_mut = pty.as_ref().clone();
+            pty_mut.scroll_to_top();
+        }
+
+        // The first match appears in new output at the bottom. Record the scroll
+        // position *after* the output arrives, so we isolate the refresh's effect.
         pty.process_output("first error\r\n".as_bytes());
         let scroll_before = pty.get_scroll_offset();
+        assert!(
+            scroll_before > 0,
+            "precondition: the viewport is scrolled up, not at the bottom"
+        );
         pane.refresh_search_if_grown();
 
         assert_eq!(pane.search.as_ref().unwrap().matches.len(), 1);
@@ -1473,6 +1496,72 @@ mod tests {
             pty.get_scroll_offset(),
             scroll_before,
             "a live refresh must not scroll the viewport to the new match"
+        );
+    }
+
+    /// Entering interactive mode (`i`) must clear a confirmed search: once
+    /// interactive, every key including Esc is forwarded to the child program,
+    /// so a lingering search could never be navigated or dismissed.
+    #[test]
+    fn entering_interactive_mode_clears_a_confirmed_search() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output(b"some output here\r\n");
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty);
+        pane.can_be_interactive = true;
+        pane.search = Some(PaneSearch {
+            query: "output".to_string(),
+            input_mode: false,
+            matches: vec![(0, 5, 6)],
+            current: 0,
+            ..Default::default()
+        });
+
+        press(&mut pane, KeyCode::Char('i'));
+
+        assert!(pane.is_interactive());
+        assert!(
+            pane.search.is_none(),
+            "interactive mode must clear the search so Esc isn't swallowed by the child"
+        );
+    }
+
+    /// The change-detector must keep firing after the scrollback fills. Past
+    /// `SCROLLBACK_SIZE` the content-row count pins forever while old lines are
+    /// still evicted underneath, so a count-based detector would freeze and the
+    /// match list would never update. Keyed on the output generation instead, a
+    /// live refresh still finds a match that appears after saturation.
+    #[test]
+    fn search_finds_matches_after_scrollback_saturates() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        // Well past SCROLLBACK_SIZE (1000): the row count is now saturated.
+        pty.process_output("no match\r\n".repeat(1200).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "target".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 0);
+
+        // A row count would report the same value before and after this output,
+        // so it can no longer signal the change — the generation still does.
+        let rows_before = pty.get_total_content_rows();
+        pty.process_output("a target appears\r\n".as_bytes());
+        assert_eq!(
+            pty.get_total_content_rows(),
+            rows_before,
+            "precondition: the content-row count is saturated (no longer changes)"
+        );
+
+        pane.refresh_search_if_grown();
+        assert_eq!(
+            pane.search.as_ref().unwrap().matches.len(),
+            1,
+            "a live refresh must re-scan even after the row count saturates"
         );
     }
 
