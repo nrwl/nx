@@ -73,12 +73,24 @@ describe('extractInlineSourceMap', () => {
   });
 
   // Any JSON value that is not a raw v3 sourcemap would fail the module
-  // build when forwarded to Rspack's loader callback.
+  // build when forwarded to Rspack's loader callback — including well-shaped
+  // maps with wrongly typed nested fields, which rspack's deserializer
+  // rejects with `bad json: ExpectedString`.
   it.each([
     ['an empty object', {}],
     ['null', null],
     ['an array', []],
     ['a map missing v3 fields', { version: 3 }],
+    ['a map with a non-string sources element', { ...map, sources: [42] }],
+    ['a map with a non-string names element', { ...map, names: [1] }],
+    [
+      'a map with a non-string sourcesContent element',
+      { ...map, sourcesContent: [42] },
+    ],
+    ['a map with a non-string file', { ...map, file: 42 }],
+    ['a map with a non-string sourceRoot', { ...map, sourceRoot: 1 }],
+    ['a map with a non-string debugId', { ...map, debugId: 1 }],
+    ['a map with a non-numeric ignoreList', { ...map, ignoreList: ['a'] }],
   ])('passes the code through when the payload is %s', (_, payload) => {
     const code = `const a = 1;\n${inlineComment(encode(payload))}`;
 
@@ -86,6 +98,20 @@ describe('extractInlineSourceMap', () => {
       code,
       map: undefined,
     });
+  });
+
+  // Optional fields may be null (rspack treats a JSON null like an absent
+  // optional field) and sourcesContent entries may be null per the spec.
+  it.each([
+    ['null optional fields', { ...map, file: null, sourceRoot: null }],
+    ['a null sourcesContent entry', { ...map, sourcesContent: [null] }],
+    ['a numeric ignoreList', { ...map, ignoreList: [0] }],
+  ])('accepts a map with %s', (_, payload) => {
+    const code = `const a = 1;\n${inlineComment(encode(payload))}`;
+
+    const result = extractInlineSourceMap(code);
+    expect(result.code).toBe('const a = 1;');
+    expect(JSON.parse(result.map!)).toEqual(payload);
   });
 });
 

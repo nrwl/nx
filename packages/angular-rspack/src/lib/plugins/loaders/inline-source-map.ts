@@ -49,25 +49,48 @@ export function extractInlineSourceMap(code: string): ExtractedSourceMap {
 
 /**
  * Validate that a decoded payload is a raw v3 sourcemap. Rspack fails the
- * module build when the loader callback receives any other JSON value
- * (`{}`, `null`, arrays, ...), so only payloads carrying the required v3
- * fields are forwarded. This matters particularly for the partial-transform
- * loader, which preserves input from arbitrary Angular-related JavaScript.
+ * module build when the loader callback receives anything its deserializer
+ * rejects — not just non-objects (`{}`, `null`, arrays, ...) but also
+ * well-shaped maps with wrongly typed fields (e.g. `sources: [42]` fails
+ * with `bad json: ExpectedString`) — so every field rspack reads is
+ * type-checked, including array elements. This matters particularly for the
+ * partial-transform loader, which preserves input from arbitrary
+ * Angular-related JavaScript. Optional fields may be `null`: rspack's
+ * deserializer treats a JSON `null` like an absent optional field.
  */
 function isRawSourceMap(json: string): boolean {
+  let parsed: unknown;
   try {
-    const parsed: unknown = JSON.parse(json);
-    return (
-      typeof parsed === 'object' &&
-      parsed !== null &&
-      !Array.isArray(parsed) &&
-      (parsed as { version?: unknown }).version === 3 &&
-      typeof (parsed as { mappings?: unknown }).mappings === 'string' &&
-      Array.isArray((parsed as { sources?: unknown }).sources)
-    );
+    parsed = JSON.parse(json);
   } catch {
     return false;
   }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    return false;
+  }
+
+  const map = parsed as Record<string, unknown>;
+  const isString = (value: unknown) => typeof value === 'string';
+  const isOptional = (value: unknown, check: (el: unknown) => boolean) =>
+    value === undefined || value === null || check(value);
+  const isArrayOf = (value: unknown, check: (el: unknown) => boolean) =>
+    Array.isArray(value) && value.every(check);
+
+  return (
+    map.version === 3 &&
+    typeof map.mappings === 'string' &&
+    isArrayOf(map.sources, isString) &&
+    isOptional(map.names, (v) => isArrayOf(v, isString)) &&
+    isOptional(map.sourcesContent, (v) =>
+      isArrayOf(v, (el) => el === null || isString(el))
+    ) &&
+    isOptional(map.file, isString) &&
+    isOptional(map.sourceRoot, isString) &&
+    isOptional(map.debugId, isString) &&
+    isOptional(map.ignoreList, (v) =>
+      isArrayOf(v, (el) => typeof el === 'number')
+    )
+  );
 }
 
 // In watch mode the loaders re-read unchanged entries from the shared
