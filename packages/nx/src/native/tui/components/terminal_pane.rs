@@ -150,12 +150,16 @@ impl TerminalPaneData {
     }
 
     /// Recompute matches for the current query and optionally jump to the
-    /// nearest match at or below the current viewport top.
+    /// anchor match. Terminal search runs *backward* from where you're sitting
+    /// (usually the bottom): the anchor is the newest match at or above the
+    /// viewport's bottom row, wrapping to the bottom-most match when every
+    /// match is below the view. This lands you on the most recent occurrence
+    /// instead of yanking you to the oldest one at the top of the log.
     fn recompute_search(&mut self, jump: bool) {
         let Some(pty) = &self.pty else {
             return;
         };
-        let top = pty.visual_top();
+        let bottom = pty.visual_top() + (pty.get_dimensions().0 as usize).saturating_sub(1);
         let positions = self
             .search
             .as_ref()
@@ -170,8 +174,8 @@ impl TerminalPaneData {
         search.current = search
             .matches
             .iter()
-            .position(|(row, _, _)| *row >= top)
-            .unwrap_or(0);
+            .rposition(|(row, _, _)| *row <= bottom)
+            .unwrap_or_else(|| search.matches.len().saturating_sub(1));
         if jump {
             self.jump_to_current_match();
         }
@@ -282,12 +286,14 @@ impl TerminalPaneData {
                     KeyCode::Char('n') => {
                         // Content may have changed since the last search.
                         self.refresh_matches();
-                        self.search_step(1);
+                        // Backward search from the bottom: `n` steps to the
+                        // next-older match (up the log), `N` back toward newer.
+                        self.search_step(-1);
                         return Ok(None);
                     }
                     KeyCode::Char('N') => {
                         self.refresh_matches();
-                        self.search_step(-1);
+                        self.search_step(1);
                         return Ok(None);
                     }
                     KeyCode::Esc => {
@@ -1352,10 +1358,11 @@ mod tests {
         assert!(bad.is_empty(), "{} misaligned highlight runs", bad.len());
     }
 
-    /// n and N step forward/backward through the match list and wrap around.
-    /// (With no pty the refresh/jump are no-ops, so this isolates the index
-    /// stepping — the scroll-position re-anchoring itself needs a live pty and
-    /// is exercised via the higher-level flows.)
+    /// Terminal search runs backward from the bottom: `n` steps to the
+    /// next-older match (lower index, up the log) and `N` toward newer, both
+    /// wrapping around. (With no pty the refresh/jump are no-ops, so this
+    /// isolates the index stepping — the scroll-position re-anchoring itself
+    /// needs a live pty and is exercised via the higher-level flows.)
     #[test]
     fn search_n_and_shift_n_step_relative_to_the_current_match() {
         let mut pane = TerminalPaneData::new();
@@ -1363,23 +1370,60 @@ mod tests {
             query: "x".to_string(),
             input_mode: false,
             matches: vec![(1, 0, 1), (5, 0, 1), (9, 0, 1)],
-            current: 0,
+            current: 1,
             ..Default::default()
         });
 
         let current = |pane: &TerminalPaneData| pane.search.as_ref().unwrap().current;
+        // `n` = next older match: index decreases.
         press(&mut pane, KeyCode::Char('n'));
-        assert_eq!(current(&pane), 1);
+        assert_eq!(current(&pane), 0);
         press(&mut pane, KeyCode::Char('n'));
-        assert_eq!(current(&pane), 2);
-        press(&mut pane, KeyCode::Char('n'));
-        assert_eq!(current(&pane), 0, "n wraps forward");
+        assert_eq!(
+            current(&pane),
+            2,
+            "n wraps past the top to the bottom-most match"
+        );
+        // `N` = back toward newer matches: index increases.
         press(&mut pane, KeyCode::Char('N'));
-        assert_eq!(current(&pane), 2, "N wraps backward");
+        assert_eq!(
+            current(&pane),
+            0,
+            "N wraps past the bottom to the top-most match"
+        );
+        press(&mut pane, KeyCode::Char('N'));
+        assert_eq!(current(&pane), 1);
 
         // Esc clears the whole search session.
         press(&mut pane, KeyCode::Esc);
         assert!(pane.search.is_none());
+    }
+
+    /// A fresh search anchors on the newest (bottom-most) match nearest the
+    /// viewport, not the oldest match at the top of the log.
+    #[test]
+    fn a_new_search_anchors_on_the_bottom_most_match() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output("hit\r\n".repeat(3).as_bytes()); // early matches
+        pty.process_output("no\r\n".repeat(40).as_bytes()); // push them into scrollback
+        pty.process_output("a late hit\r\n".as_bytes()); // newest match near the bottom
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "hit".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.recompute_search(false);
+
+        let search = pane.search.as_ref().unwrap();
+        assert_eq!(search.matches.len(), 4);
+        assert_eq!(
+            search.current,
+            search.matches.len() - 1,
+            "a fresh search lands on the newest (bottom-most) match"
+        );
     }
 
     /// The search input captures printable keys into the query and Enter
