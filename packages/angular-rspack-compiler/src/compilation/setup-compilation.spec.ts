@@ -56,14 +56,19 @@ describe('setupCompilation sourcemap options', () => {
     expect(merged.inlineSources).toBe(true);
   });
 
-  it('respects an explicit sourceMap: false', async () => {
+  it('keeps the inline sourcemap but omits sources when sourceMap is false', async () => {
     await setupCompilation(
       { mode: 'development' },
       { ...baseOptions, sourceMap: false }
     );
 
     const merged = getMergedOptions();
-    expect(merged.inlineSourceMap).toBe(false);
+    // `inlineSourceMap` must stay on even with sourcemaps disabled: without
+    // any sourcemap option, `AotCompilation.emitAffectedFiles` skips
+    // TypeScript transpilation for `isolatedModules` projects and emits raw
+    // TypeScript, which the babel-based JavaScriptTransformer cannot parse.
+    expect(merged.sourceMap).toBe(false);
+    expect(merged.inlineSourceMap).toBe(true);
     expect(merged.inlineSources).toBe(false);
   });
 

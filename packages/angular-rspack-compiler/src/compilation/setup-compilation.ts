@@ -29,9 +29,11 @@ export interface SetupCompilationOptions {
   includePaths?: string[];
   sass?: Sass;
   /**
-   * Whether to emit script sourcemaps. When enabled, the Angular compilation
-   * emits an *inline* sourcemap (see `DEFAULT_NG_COMPILER_OPTIONS`) so the
-   * downstream `JavaScriptTransformer` can chain it back to the original
+   * Whether to emit script sourcemaps. The Angular compilation always emits
+   * an *inline* sourcemap (required to keep TypeScript transpilation enabled
+   * — see the compiler options below); this option controls whether the
+   * original sources are embedded in it so the downstream
+   * `JavaScriptTransformer` can chain the mapping back to the original
    * TypeScript. Defaults to `true` to preserve the previous behavior.
    */
   sourceMap?: boolean;
@@ -73,8 +75,17 @@ export async function setupCompilation(
       // input sourcemaps, so an external `.js.map` would be dropped and the
       // chained sourcemap would point at the intermediate Ivy JavaScript
       // instead of the original TypeScript.
+      //
+      // `inlineSourceMap` must stay enabled even when sourcemaps are turned
+      // off: `AotCompilation.emitAffectedFiles` skips TypeScript transpilation
+      // entirely for `isolatedModules` projects when no sourcemap option is
+      // set, emitting raw TypeScript for esbuild to transpile — but this
+      // babel-based pipeline cannot parse TypeScript. The loaders strip the
+      // inline sourcemap comment from the emitted code, and Rspack discards
+      // the extracted map when `devtool` is disabled, so only `inlineSources`
+      // is gated on the user's sourcemap setting.
       sourceMap: false,
-      inlineSourceMap: sourceMap,
+      inlineSourceMap: true,
       inlineSources: sourceMap,
       ...(options.useTsProjectReferences
         ? {
