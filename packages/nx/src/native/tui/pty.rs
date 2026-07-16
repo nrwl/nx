@@ -788,43 +788,53 @@ impl PtyInstance {
         if query.is_empty() {
             return Vec::new();
         }
-        let (contents, cols) = {
+        // Reconstruct the exact grid the pane renders, then search it row by
+        // row. Re-parsing `all_contents_formatted()` into a parser tall enough
+        // to hold every row in its visible screen (zero scrollback) gives the
+        // SAME visual-row layout as `get_total_content_rows()` and the render.
+        //
+        // The previous approach re-wrapped `all_contents()` with wrap_ansi, but
+        // that diverges from the real grid: `all_contents()` trims trailing
+        // blanks from wrapped rows (left behind by `\r`/clear-to-end progress
+        // output), so re-wrapping the joined logical line produces fewer rows
+        // than vt100 actually used. On long, narrow, cursor-heavy output
+        // (e.g. a Maven build past the scrollback cap) the error accumulated and
+        // every highlight drifted downward.
+        let (formatted, cols, total) = {
             let parser = self.parser.read();
             let screen = parser.screen();
-            (screen.all_contents(), screen.size().1 as usize)
+            (
+                screen.all_contents_formatted(),
+                screen.size().1,
+                screen.get_total_content_rows(),
+            )
         };
-        if cols == 0 {
+        if cols == 0 || total == 0 {
             return Vec::new();
         }
+        let mut grid = Parser::new(total.min(u16::MAX as usize) as u16, cols, 0);
+        grid.process(&formatted);
 
         let needle = query.to_lowercase();
         let needle_chars = needle.chars().count();
         let mut matches = Vec::new();
-        let mut consumed_rows = 0usize;
-        for line in contents.lines() {
+        for (row, line) in grid.screen().rows(0, cols).enumerate() {
             let haystack = line.to_lowercase();
             let mut from = 0usize;
             while let Some(found) = haystack[from..].find(&needle) {
                 let byte = from + found;
-                // The match is located by char offset in the lowercased line;
-                // map it to display *columns* in the original line so wide
-                // characters (CJK, emoji) don't shift the highlight — the
-                // overlay walks the buffer in columns, and the terminal wraps
-                // by column too. (Lowercasing is assumed char-count-preserving,
-                // as elsewhere; the rare width-changing case is approximate.)
+                // Locate by char offset in the lowercased row, then measure the
+                // prefix in display *columns* so wide characters (CJK, emoji)
+                // don't shift the highlight — the overlay walks the buffer in
+                // columns. (Lowercasing is assumed char-count-preserving.)
                 let char_offset = haystack[..byte].chars().count();
-                let start_byte = char_boundary(line, char_offset);
-                let end_byte = char_boundary(line, char_offset + needle_chars);
-                let col_offset = display_width(&line[..start_byte]);
+                let start_byte = char_boundary(&line, char_offset);
+                let end_byte = char_boundary(&line, char_offset + needle_chars);
+                let col = display_width(&line[..start_byte]);
                 let match_cols = display_width(&line[start_byte..end_byte]).max(1);
-                matches.push((
-                    consumed_rows + col_offset / cols,
-                    col_offset % cols,
-                    match_cols,
-                ));
+                matches.push((row, col, match_cols));
                 from = byte + needle.len().max(1);
             }
-            consumed_rows += wrap_logical_line(line, cols);
         }
         matches
     }
