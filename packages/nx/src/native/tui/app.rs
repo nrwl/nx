@@ -1364,9 +1364,13 @@ impl App {
                                             KeyCode::Left if !is_filter_mode => {
                                                 tasks_list.try_collapse_selected_batch();
                                             }
-                                            // Filter-mode keys never reach here — the
-                                            // session keymap above consumed them.
-                                            KeyCode::Char(c) => match c {
+                                            // Unmodified characters never reach here
+                                            // in filter mode (the session keymap
+                                            // consumed them), but Ctrl-modified ones
+                                            // do — swallow those instead of firing
+                                            // commands mid-typing, matching the pane
+                                            // search host.
+                                            KeyCode::Char(c) if !is_filter_mode => match c {
                                                 'j' => {
                                                     self.dispatch_action(Action::NextTask);
                                                 }
