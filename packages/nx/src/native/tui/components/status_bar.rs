@@ -427,7 +427,7 @@ impl<'a> StatusBar<'a> {
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
             }
-            spans.push(Span::styled("☁ ", icon_style));
+            spans.push(Span::styled("☁  ", icon_style));
         }
         spans.push(Span::styled(
             format!("{}/{}", props.completed_count, props.total_count),
@@ -833,7 +833,7 @@ mod tests {
                 .contains(Modifier::UNDERLINED)
         );
         assert!(
-            terminal.backend().buffer()[(3, 0)]
+            terminal.backend().buffer()[(4, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
