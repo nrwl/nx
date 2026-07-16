@@ -418,13 +418,21 @@ impl<'a> StatusBar<'a> {
             dim_style = dim_style.add_modifier(Modifier::DIM);
         }
 
-        let mut spans = vec![
-            Span::raw(" "),
-            Span::styled(
-                format!("{}/{}", props.completed_count, props.total_count),
-                counts_style,
-            ),
-        ];
+        let mut spans = vec![Span::raw(" ")];
+        // A cloud icon marks counts that are connected to an Nx Cloud run —
+        // kept outside the underlined span so the affordance stays on the
+        // numbers themselves.
+        if props.cloud_link.is_some() {
+            let mut icon_style = Style::default().fg(THEME.secondary_fg);
+            if props.is_dimmed {
+                icon_style = icon_style.add_modifier(Modifier::DIM);
+            }
+            spans.push(Span::styled("☁ ", icon_style));
+        }
+        spans.push(Span::styled(
+            format!("{}/{}", props.completed_count, props.total_count),
+            counts_style,
+        ));
         // Overall run duration: live while running, frozen once complete.
         if let Some(started_at) = props.run_started_at {
             let duration = match props.run_ended_at {
@@ -439,9 +447,6 @@ impl<'a> StatusBar<'a> {
         Line::from(spans)
     }
 
-    /// The whole-row search display for the focused pane's vim-style search.
-    /// The whole-row filter display, ported from the task list's old two-line
-    /// filter area and collapsed onto a single line.
     /// Renders messages received from Nx Cloud.
     ///
     /// When the message contains a URL, the URL is rendered as a clickable
@@ -815,13 +820,20 @@ mod tests {
         insta::assert_snapshot!(terminal.backend());
 
         // The counts rect is hit-testable, resolves to the run URL, and gets
-        // the quiet underline affordance.
+        // the quiet underline affordance — prefixed by the (non-underlined)
+        // cloud icon marking the counts as cloud-connected.
         assert_eq!(
             registry.hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
         );
+        assert_eq!(terminal.backend().buffer()[(1, 0)].symbol(), "☁");
         assert!(
-            terminal.backend().buffer()[(1, 0)]
+            !terminal.backend().buffer()[(1, 0)]
+                .modifier
+                .contains(Modifier::UNDERLINED)
+        );
+        assert!(
+            terminal.backend().buffer()[(3, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
