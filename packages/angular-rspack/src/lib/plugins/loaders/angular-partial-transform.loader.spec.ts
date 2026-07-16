@@ -90,10 +90,15 @@ describe('angular-partial-transform.loader', () => {
     );
 
     await vi.waitFor(() =>
-      expect(callback).toHaveBeenCalledWith(null, 'transformed', map)
+      // The map is passed to Rspack as the decoded JSON string.
+      expect(callback).toHaveBeenCalledWith(
+        null,
+        'transformed',
+        JSON.stringify(map)
+      )
     );
     // The full transformed output (including the inline map) stays cached so
-    // subsequent reads re-extract the same map.
+    // subsequent reads resolve the same extraction.
     expect(typescriptFileCache.get('/path/to/file.js')).toBe(transformed);
   });
 

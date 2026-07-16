@@ -5,7 +5,7 @@ import {
   StyleUrlsResolver,
   TemplateUrlsResolver,
 } from '@nx/angular-rspack-compiler';
-import { extractInlineSourceMap } from './inline-source-map';
+import { extractInlineSourceMapCached } from './inline-source-map';
 
 const _styleUrlsResolver = new StyleUrlsResolver();
 const _templateUrlsResolver = new TemplateUrlsResolver();
@@ -65,16 +65,11 @@ export default function loader(
       // chained through the Angular linker). Rspack does not consume inline
       // sourcemaps from loader output, so extract it and pass it to the
       // callback to preserve the mapping back to the original TypeScript.
-      const code =
-        typeof contents === 'string'
-          ? contents
-          : Buffer.from(contents).toString('utf-8');
-      const { code: transformedCode, map } = extractInlineSourceMap(code);
-      callback(
-        null,
-        transformedCode,
-        map as unknown as Parameters<typeof callback>[2]
+      const { code, map } = extractInlineSourceMapCached(
+        normalizedRequest,
+        contents
       );
+      callback(null, code, map);
     }
   }
 }

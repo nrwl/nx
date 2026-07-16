@@ -169,10 +169,11 @@ describe('angular-transform.loader', () => {
       '@Component()'
     );
 
+    // The map is passed to Rspack as the decoded JSON string.
     expect(callback).toHaveBeenCalledWith(
       null,
       'export class AppComponent {}',
-      map
+      JSON.stringify(map)
     );
   });
 });

@@ -1,6 +1,6 @@
 import { LoaderContext } from '@rspack/core';
 import { NG_RSPACK_SYMBOL_NAME, NgRspackCompilation } from '../../models';
-import { extractInlineSourceMap } from './inline-source-map';
+import { extractInlineSourceMapCached } from './inline-source-map';
 
 export default function loader(this: LoaderContext<unknown>, content: string) {
   const callback = this.async();
@@ -38,12 +38,11 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
 
     const existingTransform = typescriptFileCache.get(request);
     if (existingTransform) {
-      const existingContents =
-        typeof existingTransform === 'string'
-          ? existingTransform
-          : Buffer.from(existingTransform).toString('utf8');
-      const { code, map } = extractInlineSourceMap(existingContents);
-      callback(null, code, map as unknown as Parameters<typeof callback>[2]);
+      const { code, map } = extractInlineSourceMapCached(
+        request,
+        existingTransform
+      );
+      callback(null, code, map);
       return;
     }
 
@@ -54,8 +53,11 @@ export default function loader(this: LoaderContext<unknown>, content: string) {
         // Hand the inline sourcemap emitted by the transformer to Rspack so
         // the mapping back to the original source is preserved; Rspack does
         // not consume inline sourcemaps from loader output on its own.
-        const { code, map } = extractInlineSourceMap(transformedCode);
-        callback(null, code, map as unknown as Parameters<typeof callback>[2]);
+        const { code, map } = extractInlineSourceMapCached(
+          request,
+          transformedCode
+        );
+        callback(null, code, map);
       },
       (error) => {
         // Fail the module instead of leaving the loader callback pending,
