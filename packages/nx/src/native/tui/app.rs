@@ -37,7 +37,8 @@ use super::components::layout_manager::{
 };
 use super::components::link::LinkRegistry;
 use super::components::nx_paragraph::NxParagraph;
-use super::components::status_bar::{PaneProps, PaneSearchProps, StatusBar, StatusBarProps};
+use super::components::search_filter::PaneSearchProps;
+use super::components::status_bar::{PaneProps, StatusBar, StatusBarProps};
 use super::components::task_selection_manager::{
     SelectionEntry, SelectionMode, TaskSelectionManager,
 };
@@ -3697,7 +3698,9 @@ impl App {
     /// Shows percentage of tasks that are complete (anything except NotStarted, InProgress, or Shared).
     fn update_terminal_progress(&self) {
         let state = self.core.state().lock();
-        let total_tasks = state.get_task_status_map().len();
+        // Same basis as the completed count: continuous tasks never finish, so
+        // they're excluded from both sides or the percentage can't reach 100.
+        let total_tasks = state.get_total_task_count();
         if total_tasks == 0 {
             return;
         }

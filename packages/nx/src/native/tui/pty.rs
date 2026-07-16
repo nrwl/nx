@@ -733,13 +733,16 @@ impl PtyInstance {
     /// A version key for the terminal content and its wrapping, cheap to read.
     ///
     /// Derived from the parser itself so it works no matter how the parser is
-    /// fed: the raw-output length grows on every write — both `process_output`
+    /// fed: the raw-output length changes on every write — both `process_output`
     /// *and* a live task's PTY reader writing the shared parser directly (which
     /// bypasses `process_output` entirely) — and, unlike a content-row count,
-    /// never saturates once the scrollback fills. Folding in the screen
-    /// dimensions makes a resize rewrap (same bytes, shifted rows) register as
-    /// a change too. A cache keyed on this — the pane search's match list —
-    /// recomputes exactly when the screen changed.
+    /// never saturates once the scrollback fills. It is not monotonic: the
+    /// `MAX_RAW_OUTPUT_BYTES` compaction *shrinks* it, which still reads as a
+    /// change (a post-compaction length coinciding with a previously-seen one
+    /// would skip one refresh and self-heal on the next write). Folding in the
+    /// screen dimensions makes a resize rewrap (same bytes, shifted rows)
+    /// register as a change too. A cache keyed on this — the pane search's
+    /// match list — recomputes exactly when the screen changed.
     pub fn output_generation(&self) -> u64 {
         // Non-blocking: this runs every frame while a search is active, so it
         // must never wait on the parser write lock (held by the PTY writer
@@ -799,9 +802,10 @@ impl PtyInstance {
     /// content (scrollback included). Positions are returned in the wrapped
     /// visual coordinate basis shared with `content_coords_at`, as
     /// `(visual_row, col, col_width)` — the third element is the match's width
-    /// in display columns, not a character count — in reading order. Matches
-    /// inside a wrapped logical line are found across the wrap (the position
-    /// walks past the row's column count into the following visual rows).
+    /// in display columns, not a character count — in reading order. Each grid
+    /// row is searched independently, so a query straddling a wrap seam (e.g.
+    /// `error` split as `err`/`or` across two visual rows of a long wrapped
+    /// line) is not matched — a deliberate trade for grid-exact positions.
     pub fn search_visual_positions(&self, query: &str) -> Vec<(usize, usize, usize)> {
         if query.is_empty() {
             return Vec::new();

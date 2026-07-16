@@ -232,11 +232,15 @@ impl TuiState {
     /// Get count of completed tasks (any terminal state)
     ///
     /// Counts tasks with status: Success, Failure, Skipped, LocalCache,
-    /// LocalCacheKeptExisting, RemoteCache
+    /// LocalCacheKeptExisting, RemoteCache. Continuous tasks are excluded to
+    /// stay symmetric with `get_total_task_count` — a crashed dev server
+    /// (`Failure`) or a dep-skipped watcher (`Skipped`) must not push the
+    /// numerator past the denominator.
     pub fn get_completed_task_count(&self) -> usize {
         self.task_status_map
-            .values()
-            .filter(|status| {
+            .iter()
+            .filter(|(id, _)| !is_task_continuous(&self.task_graph, id))
+            .filter(|(_, status)| {
                 matches!(
                     status,
                     TaskStatus::Success
@@ -814,6 +818,62 @@ mod tests {
             state.get_total_task_count(),
             2,
             "the continuous task is excluded from the total"
+        );
+    }
+
+    /// The numerator must filter the same task set as the denominator: a
+    /// crashed dev server (`Failure`) counts as terminal, but as a continuous
+    /// task it is excluded from the total — counting it as completed would
+    /// let the bar read e.g. 3/2.
+    #[test]
+    fn completed_task_count_excludes_continuous_tasks() {
+        let tasks = vec![
+            create_test_task("app1"),
+            create_test_task("app2"),
+            create_test_task("serve"),
+        ];
+        let mut graph_tasks = HashMap::new();
+        graph_tasks.insert("app1:build".to_string(), Task::new("app1", "build"));
+        graph_tasks.insert("app2:build".to_string(), Task::new("app2", "build"));
+        graph_tasks.insert(
+            "serve:build".to_string(),
+            Task::new("serve", "build").with_continuous(true),
+        );
+        let task_graph = TaskGraph {
+            tasks: graph_tasks,
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let mut state = TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        );
+
+        state.update_task_status("app1:build", TaskStatus::Success);
+        state.update_task_status("app2:build", TaskStatus::Success);
+        // The continuous task crashes — terminal status, but excluded.
+        state.update_task_status("serve:build", TaskStatus::Failure);
+
+        assert_eq!(
+            state.get_completed_task_count(),
+            2,
+            "the crashed continuous task must not count as completed"
+        );
+        assert!(
+            state.get_completed_task_count() <= state.get_total_task_count(),
+            "completed can never exceed the total"
         );
     }
 

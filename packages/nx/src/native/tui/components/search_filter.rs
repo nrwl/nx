@@ -58,9 +58,72 @@ impl Widget for SearchFilterInput<'_> {
 
 /// The compact middle-slot form of a confirmed session:
 /// `/{query}  {counts} ({keys})`.
-pub fn confirmed_text(query: &str, counts: Option<String>, keys: &str) -> String {
+fn confirmed_text(query: &str, counts: Option<String>, keys: &str) -> String {
     match counts {
         Some(counts) => format!("/{query}  {counts} ({keys})"),
         None => format!("/{query}  ({keys})"),
+    }
+}
+
+/// Filter session details shown while the task filter is active.
+#[derive(Debug, Clone)]
+pub struct FilterProps {
+    pub text: String,
+    /// True while the filter is being typed; the bar swaps to the input row.
+    /// A confirmed filter renders compactly in the middle slot instead.
+    pub input_mode: bool,
+    pub hidden_count: usize,
+}
+
+/// The focused pane's search session, for the bar's search display.
+#[derive(Debug, Clone, Default)]
+pub struct PaneSearchProps {
+    pub query: String,
+    /// Typing into the query (true) vs navigating matches with n/N (false).
+    pub input_mode: bool,
+    /// Zero-based index of the match the view last jumped to.
+    pub current: usize,
+    pub total: usize,
+}
+
+impl PaneSearchProps {
+    /// Bottom-up match position, matching the backward-from-the-bottom n/N
+    /// navigation: the newest (bottom-most) match is `1`, the oldest is `N`.
+    /// `current` is the index in ascending-row order.
+    pub(crate) fn position(&self) -> usize {
+        self.total - self.current
+    }
+
+    pub(crate) fn input_counts(&self) -> Option<String> {
+        if self.total > 0 {
+            Some(format!("{}/{} matches", self.position(), self.total))
+        } else if self.query.is_empty() {
+            None
+        } else {
+            Some("no matches".to_string())
+        }
+    }
+
+    pub(crate) fn confirmed_text(&self) -> String {
+        if self.total > 0 {
+            confirmed_text(
+                &self.query,
+                Some(format!("{}/{}", self.position(), self.total)),
+                "n/N, / to edit",
+            )
+        } else {
+            confirmed_text(&self.query, Some("no matches".to_string()), "/ to edit")
+        }
+    }
+}
+
+impl FilterProps {
+    pub(crate) fn input_counts(&self) -> Option<String> {
+        (self.hidden_count > 0).then(|| format!("{} tasks filtered out", self.hidden_count))
+    }
+
+    pub(crate) fn confirmed_text(&self) -> String {
+        let counts = (self.hidden_count > 0).then(|| format!("{} hidden", self.hidden_count));
+        confirmed_text(&self.text, counts, "/ to edit")
     }
 }

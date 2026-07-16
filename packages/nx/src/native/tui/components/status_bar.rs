@@ -24,7 +24,7 @@ use ratatui::{
 
 use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry, fit_with_ellipsis};
-use super::search_filter::{SearchFilterInput, confirmed_text};
+use super::search_filter::{FilterProps, PaneSearchProps, SearchFilterInput};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{format_duration_since, format_live_duration};
@@ -60,16 +60,6 @@ pub struct StatusBarProps {
     pub pane: Option<PaneProps>,
 }
 
-/// Filter session details shown while the task filter is active.
-#[derive(Debug, Clone)]
-pub struct FilterProps {
-    pub text: String,
-    /// True while the filter is being typed; the bar swaps to the input row.
-    /// A confirmed filter renders compactly in the middle slot instead.
-    pub input_mode: bool,
-    pub hidden_count: usize,
-}
-
 /// Focused-pane details shown while a terminal pane has focus.
 #[derive(Debug, Clone, Default)]
 pub struct PaneProps {
@@ -86,59 +76,6 @@ pub struct PaneProps {
     /// A vim-style search over the pane's output; swaps the bar's row to the
     /// search display while set.
     pub search: Option<PaneSearchProps>,
-}
-
-/// The focused pane's search session, for the bar's search display.
-#[derive(Debug, Clone, Default)]
-pub struct PaneSearchProps {
-    pub query: String,
-    /// Typing into the query (true) vs navigating matches with n/N (false).
-    pub input_mode: bool,
-    /// Zero-based index of the match the view last jumped to.
-    pub current: usize,
-    pub total: usize,
-}
-
-impl PaneSearchProps {
-    /// Bottom-up match position, matching the backward-from-the-bottom n/N
-    /// navigation: the newest (bottom-most) match is `1`, the oldest is `N`.
-    /// `current` is the index in ascending-row order.
-    fn position(&self) -> usize {
-        self.total - self.current
-    }
-
-    fn input_counts(&self) -> Option<String> {
-        if self.total > 0 {
-            Some(format!("{}/{} matches", self.position(), self.total))
-        } else if self.query.is_empty() {
-            None
-        } else {
-            Some("no matches".to_string())
-        }
-    }
-
-    fn confirmed_text(&self) -> String {
-        if self.total > 0 {
-            confirmed_text(
-                &self.query,
-                Some(format!("{}/{}", self.position(), self.total)),
-                "n/N, / to edit",
-            )
-        } else {
-            confirmed_text(&self.query, Some("no matches".to_string()), "/ to edit")
-        }
-    }
-}
-
-impl FilterProps {
-    fn input_counts(&self) -> Option<String> {
-        (self.hidden_count > 0).then(|| format!("{} tasks filtered out", self.hidden_count))
-    }
-
-    fn confirmed_text(&self) -> String {
-        let counts = (self.hidden_count > 0).then(|| format!("{} hidden", self.hidden_count));
-        confirmed_text(&self.text, counts, "/ to edit")
-    }
 }
 
 impl StatusBarProps {
@@ -376,14 +313,6 @@ impl<'a> StatusBar<'a> {
             .map(|message| Span::raw(message.as_str()).width() as u16)
     }
 
-    /// The compact middle-slot text for a confirmed search session.
-    ///
-    /// Matches are numbered from the bottom of the log upward — the newest
-    /// (bottom-most) match is `1`, the oldest at the top is `N` — mirroring the
-    /// backward-from-the-bottom navigation. `current` is the index in
-    /// ascending-row order, so the displayed position is `total - current`.
-    /// The compact middle-slot text for a confirmed task filter, mirroring the
-    /// confirmed search's shape.
     /// The middle section: a focused pane's transient feedback takes the slot
     /// over its confirmed search, which takes it over the confirmed task
     /// filter, which takes it over the cloud message.

@@ -13,7 +13,7 @@ use std::any::Any;
 use std::sync::Arc;
 use tokio::sync::mpsc::UnboundedSender;
 
-use super::status_bar::FilterProps;
+use super::search_filter::FilterProps;
 use super::task_selection_manager::{
     ScrollMetrics, SelectionEntry, SelectionMode, TaskSection, TaskSelectionManager,
 };

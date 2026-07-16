@@ -160,12 +160,17 @@ impl TerminalPaneData {
             return;
         };
         let bottom = pty.visual_top() + (pty.get_dimensions().0 as usize).saturating_sub(1);
+        // Read the generation BEFORE scanning (like `refresh_matches`): output
+        // landing mid-scan then reads as newer than the stamp and triggers one
+        // redundant re-scan. The reverse order would stamp a newer generation
+        // onto matches from older content — permanently stale if that write
+        // was the task's last.
+        let generation = pty.output_generation();
         let positions = self
             .search
             .as_ref()
             .map(|search| pty.search_visual_positions(&search.query))
             .unwrap_or_default();
-        let generation = pty.output_generation();
         let Some(search) = &mut self.search else {
             return;
         };
@@ -1123,33 +1128,25 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                     if let Some(search) = &pty_data.search
                         && !search.matches.is_empty()
                     {
-                        // Wrap the match columns against the screen actually
-                        // being rendered — the same width `search_visual_positions`
-                        // wrapped at. The cached `get_dimensions()` can lag the
-                        // parser's real width after a resize reparse, which
-                        // shifts every highlight on a wrapped line by the
-                        // difference (visible as an off-by-one when narrow).
-                        let cols = (screen.size().1 as usize).max(1);
                         let top = selection_content_rows
                             .saturating_sub(inner_area.height as usize)
                             .saturating_sub(current_scroll);
                         let bottom = top + inner_area.height as usize;
                         for (idx, (row, col, len)) in search.matches.iter().enumerate() {
-                            // Walk the match cells, following wraps onto
-                            // subsequent visual rows.
+                            // Matches are row-local (the search scans grid
+                            // rows independently), so every cell sits on the
+                            // match's own row.
+                            if *row < top || *row >= bottom {
+                                continue;
+                            }
                             for i in 0..*len {
-                                let offset = col + i;
-                                let cell_row = row + offset / cols;
-                                let cell_col = offset % cols;
-                                if cell_row < top
-                                    || cell_row >= bottom
-                                    || cell_col >= inner_area.width as usize
-                                {
-                                    continue;
+                                let cell_col = col + i;
+                                if cell_col >= inner_area.width as usize {
+                                    break;
                                 }
                                 if let Some(cell) = buf.cell_mut((
                                     inner_area.x + cell_col as u16,
-                                    inner_area.y + (cell_row - top) as u16,
+                                    inner_area.y + (row - top) as u16,
                                 )) {
                                     if idx == search.current {
                                         cell.set_bg(THEME.warning);
