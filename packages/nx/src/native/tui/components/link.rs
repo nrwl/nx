@@ -17,7 +17,7 @@
 //! set of mouse modes (no all-motion tracking), so bare hover produces no
 //! events to react to — see `tui.rs`.
 
-use crate::native::tui::utils::{display_width, fit_with_ellipsis};
+use crate::native::tui::strings::{display_width, fit_with_ellipsis};
 use ratatui::{
     buffer::Buffer,
     layout::{Position, Rect},

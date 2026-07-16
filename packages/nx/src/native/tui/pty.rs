@@ -1,5 +1,6 @@
 use super::scroll_momentum::{ScrollDirection, ScrollMomentum};
-use super::utils::{display_width, normalize_newlines};
+use super::strings::display_width;
+use super::utils::normalize_newlines;
 use crossterm::event::{KeyCode, KeyEvent};
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::{

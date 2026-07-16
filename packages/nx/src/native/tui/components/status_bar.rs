@@ -26,8 +26,9 @@ use super::help_text::{HelpText, HelpTextContext};
 use super::link::{Link, LinkRegistry};
 use super::search_filter::{FilterProps, PaneSearchProps, SearchFilterInput};
 use crate::native::tui::components::nx_paragraph::NxParagraph;
+use crate::native::tui::strings::fit_with_ellipsis;
 use crate::native::tui::theme::THEME;
-use crate::native::tui::utils::{fit_with_ellipsis, format_duration_since, format_live_duration};
+use crate::native::tui::utils::{format_duration_since, format_live_duration};
 
 // The two essential help items, "quit: q" + "  " + "help: ?" (16 columns).
 const MIN_HELP_WIDTH: u16 = 16;
