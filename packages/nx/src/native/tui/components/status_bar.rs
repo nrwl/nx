@@ -61,7 +61,9 @@ pub struct StatusBarProps {
 #[derive(Debug, Clone)]
 pub struct FilterProps {
     pub text: String,
-    pub persisted: bool,
+    /// True while the filter is being typed; the bar swaps to the input row.
+    /// A confirmed filter renders compactly in the middle slot instead.
+    pub input_mode: bool,
     pub hidden_count: usize,
 }
 
@@ -168,8 +170,13 @@ impl<'a> StatusBar<'a> {
 
         let first_row = Rect { height: 1, ..area };
 
-        // The filter display preempts the entire bar while active.
-        if let Some(filter) = &props.filter {
+        // The filter input row preempts the entire bar while the query is
+        // being typed. A confirmed filter renders compactly in the middle
+        // slot instead, so the counts, cloud message, and help come back —
+        // mirroring the pane search just below.
+        if let Some(filter) = &props.filter
+            && filter.input_mode
+        {
             Self::render_filter(buf, first_row, filter, props.is_dimmed);
             return;
         }
@@ -290,9 +297,9 @@ impl<'a> StatusBar<'a> {
     }
 
     /// Natural width of the middle section's content: a focused pane's
-    /// transient message, its confirmed search, or the cloud message. (A
-    /// structured cloud link has no middle display — the progress counts are
-    /// the link.)
+    /// transient message, its confirmed search, the confirmed task filter, or
+    /// the cloud message. (A structured cloud link has no middle display — the
+    /// progress counts are the link.)
     fn middle_natural_width(props: &StatusBarProps) -> Option<u16> {
         if let Some(pane) = &props.pane {
             if let Some(message) = &pane.status_message {
@@ -303,6 +310,9 @@ impl<'a> StatusBar<'a> {
                     Span::raw(Self::confirmed_search_text(search).as_str()).width() as u16,
                 );
             }
+        }
+        if let Some(filter) = &props.filter {
+            return Some(Span::raw(Self::confirmed_filter_text(filter).as_str()).width() as u16);
         }
         if props.cloud_link.is_some() {
             return None;
@@ -332,8 +342,22 @@ impl<'a> StatusBar<'a> {
         }
     }
 
+    /// The compact middle-slot text for a confirmed task filter, mirroring the
+    /// confirmed search's shape.
+    fn confirmed_filter_text(filter: &FilterProps) -> String {
+        if filter.hidden_count > 0 {
+            format!(
+                "Filter: {}  {} hidden (/ to edit)",
+                filter.text, filter.hidden_count
+            )
+        } else {
+            format!("Filter: {}  (/ to edit)", filter.text)
+        }
+    }
+
     /// The middle section: a focused pane's transient feedback takes the slot
-    /// over its confirmed search, which takes it over the cloud message.
+    /// over its confirmed search, which takes it over the confirmed task
+    /// filter, which takes it over the cloud message.
     fn render_middle(
         buf: &mut Buffer,
         registry: &mut LinkRegistry,
@@ -370,6 +394,25 @@ impl<'a> StatusBar<'a> {
                 );
                 return;
             }
+        }
+        if let Some(filter) = &props.filter {
+            // Warning-colored like the old full-row display: it signals that
+            // tasks are being hidden from the list.
+            let warning_style = if props.is_dimmed {
+                Style::default().fg(THEME.warning).dim()
+            } else {
+                Style::default().fg(THEME.warning)
+            };
+            Widget::render(
+                NxParagraph::new(Line::from(Span::styled(
+                    Self::confirmed_filter_text(filter),
+                    warning_style,
+                )))
+                .alignment(Alignment::Left),
+                area,
+                buf,
+            );
+            return;
         }
         Self::render_cloud_message(buf, registry, area, props);
     }
@@ -483,35 +526,30 @@ impl<'a> StatusBar<'a> {
     /// The whole-row filter display, ported from the task list's old two-line
     /// filter area and collapsed onto a single line.
     fn render_filter(buf: &mut Buffer, row: Rect, filter: &FilterProps, is_dimmed: bool) {
-        let filter_style = if is_dimmed {
-            Style::default().fg(THEME.warning).dim()
+        let base = if is_dimmed {
+            Style::default().dim()
         } else {
-            Style::default().fg(THEME.warning)
+            Style::default()
         };
+        let query_style = base.fg(THEME.warning);
+        let hint_style = base.fg(THEME.secondary_fg);
 
-        let instruction_text = if filter.hidden_count > 0 {
-            if filter.persisted {
-                format!(
-                    "-> {} tasks filtered out. Press / to edit, <esc> to clear",
-                    filter.hidden_count
-                )
-            } else {
-                format!(
-                    "-> {} tasks filtered out. Press / to persist, <esc> to clear",
-                    filter.hidden_count
-                )
-            }
-        } else if filter.persisted {
-            "Press / to edit filter".to_string()
-        } else {
-            "Press <esc> to clear filter".to_string()
-        };
-
-        let line = Line::from(Span::styled(
-            format!("  Filter: {}   {}", filter.text, instruction_text),
-            filter_style,
-        ));
-        Widget::render(NxParagraph::new(line).alignment(Alignment::Left), row, buf);
+        let mut spans = vec![Span::styled(
+            format!(" Filter: {}", filter.text),
+            query_style,
+        )];
+        if filter.hidden_count > 0 {
+            spans.push(Span::styled(
+                format!("   {} tasks filtered out", filter.hidden_count),
+                hint_style,
+            ));
+        }
+        spans.push(Span::styled("   <enter> confirm, <esc> cancel", hint_style));
+        Widget::render(
+            NxParagraph::new(Line::from(spans)).alignment(Alignment::Left),
+            row,
+            buf,
+        );
     }
 
     /// Renders messages received from Nx Cloud.
@@ -925,17 +963,17 @@ mod tests {
     }
 
     #[test]
-    fn filter_display_preempts_the_whole_bar() {
+    fn filter_input_preempts_the_whole_bar() {
         let mut props = base_props();
         props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
         props.filter = Some(FilterProps {
             text: "build".to_string(),
-            persisted: false,
+            input_mode: true,
             hidden_count: 4,
         });
         let (terminal, registry) = render_bar(140, 1, &props);
         insta::assert_snapshot!(terminal.backend());
-        // No cloud link is registered while the filter preempts the bar.
+        // No cloud link is registered while the filter input preempts the bar.
         assert_eq!(registry.hit_test(70, 0), None);
     }
 
@@ -1015,11 +1053,13 @@ mod tests {
     }
 
     #[test]
-    fn persisted_filter_shows_edit_hint() {
+    fn confirmed_filter_renders_compactly_with_the_rest_of_the_bar() {
+        // A confirmed filter keeps the counts and help visible, taking only
+        // the middle slot — the same treatment as a confirmed pane search.
         let mut props = base_props();
         props.filter = Some(FilterProps {
             text: "build".to_string(),
-            persisted: true,
+            input_mode: false,
             hidden_count: 4,
         });
         let (terminal, _) = render_bar(140, 1, &props);
@@ -1027,11 +1067,24 @@ mod tests {
     }
 
     #[test]
-    fn filter_with_no_hidden_tasks_shows_clear_hint() {
+    fn confirmed_filter_takes_the_middle_slot_over_the_cloud_message() {
+        let mut props = base_props();
+        props.cloud_message = Some("https://nx.app/runs/KnGk4A47qk".to_string());
+        props.filter = Some(FilterProps {
+            text: "build".to_string(),
+            input_mode: false,
+            hidden_count: 4,
+        });
+        let (terminal, _) = render_bar(140, 1, &props);
+        insta::assert_snapshot!(terminal.backend());
+    }
+
+    #[test]
+    fn filter_input_with_no_hidden_tasks_omits_the_count() {
         let mut props = base_props();
         props.filter = Some(FilterProps {
             text: "build".to_string(),
-            persisted: false,
+            input_mode: true,
             hidden_count: 0,
         });
         let (terminal, _) = render_bar(140, 1, &props);

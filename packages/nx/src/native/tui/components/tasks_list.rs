@@ -953,16 +953,11 @@ impl TasksList {
         })
     }
 
-    /// Enters filter mode for task filtering.
-    /// If there is existing filter text that isn't persisted, persists it instead.
+    /// Enters filter mode for task filtering — both starting a new filter and
+    /// re-editing a confirmed one. <enter> confirms, matching the pane search.
     pub fn enter_filter_mode(&mut self) {
-        if !self.filter_text_is_empty() && !self.filter_persisted {
-            self.persist_filter();
-        } else {
-            // Otherwise enter normal filter mode
-            self.filter_persisted = false;
-            self.filter_mode = true;
-        }
+        self.filter_persisted = false;
+        self.filter_mode = true;
     }
 
     /// Exits filter mode and clears the persisted state.
@@ -984,20 +979,11 @@ impl TasksList {
         self.apply_filter();
     }
 
-    /// Adds a character to the filter text if not in persisted mode.
-    /// Special handling for '/' character which can trigger filter persistence.
+    /// Adds a character to the filter text if not in persisted mode. Every
+    /// character is literal — including '/', so scoped project names like
+    /// `@nx/react` are filterable; <enter> is what confirms the filter,
+    /// matching the pane search.
     pub fn add_filter_char(&mut self, c: char) {
-        // Never add '/' character to filter text
-        if c == '/' {
-            if !self.filter_text_is_empty() && !self.filter_persisted {
-                // If we have filter text and it's not persisted, pressing / should persist it
-                self.filter_persisted = true;
-                self.filter_mode = false;
-            }
-            return;
-        }
-
-        // Otherwise, only add the character if we're not in persisted mode
         if !self.filter_persisted {
             {
                 let mut state = self.tui_state.lock();
@@ -1926,7 +1912,7 @@ impl TasksList {
             .count();
         Some(FilterProps {
             text: filter_text.to_string(),
-            persisted: self.filter_persisted,
+            input_mode: self.filter_mode,
             hidden_count: self.task_lookup.len().saturating_sub(filtered_task_count),
         })
     }
@@ -2795,11 +2781,17 @@ mod tests {
             .filter_display(&filter_text)
             .expect("filter session is active");
         assert_eq!(display.text, "app1");
-        assert!(!display.persisted);
+        assert!(display.input_mode);
         assert_eq!(display.hidden_count, 1);
 
         tasks_list.update(Action::RemoveFilterChar).unwrap();
         assert_eq!(state.lock().get_filter_text(), "app");
+
+        // '/' is a literal filter character (scoped names like @nx/react are
+        // filterable); <enter> is what confirms the filter, like the pane search.
+        tasks_list.update(Action::AddFilterChar('/')).unwrap();
+        assert_eq!(state.lock().get_filter_text(), "app/");
+        assert!(tasks_list.filter_mode, "typing '/' must not confirm");
 
         tasks_list.update(Action::ClearFilter).unwrap();
         assert_eq!(state.lock().get_filter_text(), "");
@@ -2838,7 +2830,7 @@ mod tests {
         let display = tasks_list
             .filter_display("app1")
             .expect("restored filter is active");
-        assert!(display.persisted);
+        assert!(!display.input_mode);
         assert_eq!(display.hidden_count, 1);
     }
 
