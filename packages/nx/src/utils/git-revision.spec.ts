@@ -1,4 +1,30 @@
-import { assertValidGitRevision } from './git-revision';
+import { assertValidGitRevision, assertValidGitSha } from './git-revision';
+
+describe('assertValidGitSha', () => {
+  it.each([
+    'e83c5163316f89bfbde7d9ab23ca2e25604af290',
+    'E83C5163316F89BFBDE7D9AB23CA2E25604AF290',
+    '4a9d2b1',
+  ])('should accept the commit sha %s', (sha) => {
+    expect(() => assertValidGitSha(sha)).not.toThrow();
+  });
+
+  it.each([
+    'HEAD; touch /tmp/pwned #',
+    'HEAD',
+    'main',
+    '$(id)',
+    'e83c516^',
+    '',
+    'abc',
+  ])('should reject %s, which is not a commit sha', (sha) => {
+    expect(() => assertValidGitSha(sha)).toThrow(/Invalid git commit sha/);
+  });
+
+  it('should name the invalid sha in the error message', () => {
+    expect(() => assertValidGitSha('HEAD; id')).toThrow('HEAD; id');
+  });
+});
 
 describe('assertValidGitRevision', () => {
   it.each([
