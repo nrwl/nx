@@ -429,7 +429,9 @@ impl<'a> StatusBar<'a> {
             if props.is_dimmed {
                 icon_style = icon_style.add_modifier(Modifier::DIM);
             }
-            spans.push(Span::styled("☁  ", icon_style));
+            // U+2601 + VS16 forces the filled emoji glyph; the trailing
+            // spaces absorb the extra cell double-width terminals give it.
+            spans.push(Span::styled("☁\u{fe0f}  ", icon_style));
         }
         spans.push(Span::styled(
             format!("{}/{}", props.completed_count, props.total_count),
@@ -840,14 +842,15 @@ mod tests {
             registry.hit_test(1, 0),
             Some("https://nx.app/runs/KnGk4A47qk")
         );
-        assert_eq!(terminal.backend().buffer()[(1, 0)].symbol(), "☁");
+        assert_eq!(terminal.backend().buffer()[(1, 0)].symbol(), "☁\u{fe0f}");
         assert!(
             !terminal.backend().buffer()[(1, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
+        // Icon (2 cells) + two spaces: the underlined counts start at col 5.
         assert!(
-            terminal.backend().buffer()[(4, 0)]
+            terminal.backend().buffer()[(5, 0)]
                 .modifier
                 .contains(Modifier::UNDERLINED)
         );
