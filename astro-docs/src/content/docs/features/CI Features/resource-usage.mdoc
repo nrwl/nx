@@ -41,11 +41,11 @@ Once the add-on is active:
 
 - **With [Nx Agents](/docs/features/ci-features/distribute-task-execution) on Nx Cloud compute**, metrics are collected
   and uploaded automatically for every agent and task. There's nothing else to configure.
+- **Without distributed execution and without Nx Agents**, metrics are collected and uploaded
+  automatically for the machine running your tasks. There's nothing else to configure.
 - **When you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute)** (running the agents on your own CI),
   add a single CLI step per agent job to upload metrics. See
   [the section below](#resource-metrics-when-you-bring-your-own-compute).
-- **Without Nx Agents**, metrics are collected and uploaded automatically for the machine running
-  your tasks. There's nothing else to configure.
 
 When a CI pipeline execution doesn't yet have the add-on, Nx Cloud shows a preview with sample data
 and a prompt to enable it, including a note on the
