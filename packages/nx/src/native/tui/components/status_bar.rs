@@ -3,8 +3,9 @@
 //! The bar shows the run progress counts on the left (clickable into the Nx
 //! Cloud run when a link exists), free-text cloud messages or focused-pane
 //! feedback in the middle, and context-aware keyboard hints on the right.
-//! While the task filter is active the whole row swaps to the filter display,
-//! vim-style.
+//! While the task filter or pane search is being typed the whole row swaps
+//! to its vim-style input display; once confirmed they render compactly in
+//! the middle slot.
 //!
 //! All display state arrives per frame via [`StatusBarProps`], derived from
 //! the canonical `TuiState` (plus the app's focus and the task list's filter
@@ -50,7 +51,8 @@ pub struct StatusBarProps {
     pub run_started_at: Option<i64>,
     /// Last task end in epoch ms; freezes the duration once the run completes
     pub run_ended_at: Option<i64>,
-    /// When set, the bar's row swaps entirely to the filter display
+    /// The task filter session: the input row takes over the bar while
+    /// typing; a confirmed filter renders compactly in the middle slot.
     pub filter: Option<FilterProps>,
     /// When set, a terminal pane has focus: the help hints describe the pane
     /// and its interactive state / transient feedback show in the bar.
@@ -347,11 +349,11 @@ impl<'a> StatusBar<'a> {
     fn confirmed_filter_text(filter: &FilterProps) -> String {
         if filter.hidden_count > 0 {
             format!(
-                "Filter: {}  {} hidden (/ to edit)",
+                "/{}  {} hidden (/ to edit)",
                 filter.text, filter.hidden_count
             )
         } else {
-            format!("Filter: {}  (/ to edit)", filter.text)
+            format!("/{}  (/ to edit)", filter.text)
         }
     }
 
@@ -396,17 +398,10 @@ impl<'a> StatusBar<'a> {
             }
         }
         if let Some(filter) = &props.filter {
-            // Warning-colored like the old full-row display: it signals that
-            // tasks are being hidden from the list.
-            let warning_style = if props.is_dimmed {
-                Style::default().fg(THEME.warning).dim()
-            } else {
-                Style::default().fg(THEME.warning)
-            };
             Widget::render(
                 NxParagraph::new(Line::from(Span::styled(
                     Self::confirmed_filter_text(filter),
-                    warning_style,
+                    info_style,
                 )))
                 .alignment(Alignment::Left),
                 area,
@@ -531,13 +526,10 @@ impl<'a> StatusBar<'a> {
         } else {
             Style::default()
         };
-        let query_style = base.fg(THEME.warning);
+        let query_style = base.fg(THEME.info);
         let hint_style = base.fg(THEME.secondary_fg);
 
-        let mut spans = vec![Span::styled(
-            format!(" Filter: {}", filter.text),
-            query_style,
-        )];
+        let mut spans = vec![Span::styled(format!(" /{}", filter.text), query_style)];
         if filter.hidden_count > 0 {
             spans.push(Span::styled(
                 format!("   {} tasks filtered out", filter.hidden_count),
