@@ -44,6 +44,24 @@ describe('extractInlineSourceMap', () => {
     });
   });
 
+  it('strips a CRLF that precedes the comment', () => {
+    const code = `const a = 1;\r\n${inlineComment(encode(map))}`;
+
+    expect(extractInlineSourceMap(code)).toEqual({
+      code: 'const a = 1;',
+      map,
+    });
+  });
+
+  it('tolerates extra trailing newlines after the comment', () => {
+    const code = `const a = 1;\n${inlineComment(encode(map))}\n\n`;
+
+    expect(extractInlineSourceMap(code)).toEqual({
+      code: 'const a = 1;',
+      map,
+    });
+  });
+
   it('passes the code through when the embedded map is malformed', () => {
     // Valid base64 that decodes to text which is not valid JSON.
     const notJson = Buffer.from('not json').toString('base64');

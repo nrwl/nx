@@ -3,8 +3,11 @@
  * and by Angular's `JavaScriptTransformer` (babel with `sourceMaps: 'inline'`),
  * e.g. `//# sourceMappingURL=data:application/json;charset=utf-8;base64,<data>`.
  */
+// The optional leading `\r?\n` consumes the newline (including CRLF) that
+// precedes the comment so no stray `\r` is left on the returned code, and the
+// trailing `\s*` tolerates any amount of trailing whitespace/newlines.
 const INLINE_SOURCE_MAP_REGEX =
-  /\n?\/\/# sourceMappingURL=data:application\/json;(?:charset=[^;,]+;)?base64,([a-zA-Z0-9+/=]+)[ \t]*\r?\n?$/;
+  /(?:\r?\n)?\/\/# sourceMappingURL=data:application\/json;(?:charset=[^;,]+;)?base64,([a-zA-Z0-9+/=]+)\s*$/;
 
 export interface ExtractedSourceMap {
   code: string;
