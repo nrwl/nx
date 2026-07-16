@@ -37,15 +37,15 @@ Resource usage requires Nx 22.1 or later.
 Enable the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons), or from the **Enable resource profiling** prompt on
 the **Analysis** tab of any CI pipeline execution.
 
-Once the add-on is active:
+Once the add-on is active, metrics are collected and uploaded automatically, whether you distribute
+your tasks with [Nx Agents](/docs/features/ci-features/distribute-task-execution) or run them on a
+single machine. There's nothing else to configure.
 
-- **With [Nx Agents](/docs/features/ci-features/distribute-task-execution) on Nx Cloud compute**, metrics are collected
-  and uploaded automatically for every agent and task. There's nothing else to configure.
-- **Without distributed execution and without Nx Agents**, metrics are collected and uploaded
-  automatically for the machine running your tasks. There's nothing else to configure.
-- **When you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute)** (running the agents on your own CI),
-  add a single CLI step per agent job to upload metrics. See
-  [the section below](#resource-metrics-when-you-bring-your-own-compute).
+{% aside type="note" title="Bringing your own compute" %}
+If you [bring your own compute](/docs/guides/nx-cloud/bring-your-own-compute) and run the agents on
+your own CI, add a single CLI step per agent job to upload metrics. See
+[the section below](#resource-metrics-when-you-bring-your-own-compute).
+{% /aside %}
 
 When a CI pipeline execution doesn't yet have the add-on, Nx Cloud shows a preview with sample data
 and a prompt to enable it, including a note on the
