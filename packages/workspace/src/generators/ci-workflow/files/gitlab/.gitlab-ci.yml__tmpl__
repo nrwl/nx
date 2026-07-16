@@ -1,4 +1,4 @@
-image: node:20
+image: node:24
 variables:
   CI: 'true'
   GIT_DEPTH: 0
@@ -11,7 +11,7 @@ variables:
     - merge_requests
   script:
     <% if(packageManager == 'pnpm'){ %>
-    - npm install --prefix=$HOME/.local -g pnpm@8
+    - npm install --prefix=$HOME/.local -g pnpm@11
     <% } %>
     <% if(packageManager == 'bun'){ %>
     - npm install --prefix=$HOME/.local -g bun

@@ -39,7 +39,7 @@ jobs:
     name: Nx Cloud - Main Job
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           # We need to fetch all branches and commits so that Nx affected has a base to compare against.
           fetch-depth: 0
@@ -51,9 +51,9 @@ jobs:
           package-json-path: '${{ github.workspace }}/package.json'
 
       - name: Use the package manager cache if available
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
@@ -85,7 +85,7 @@ jobs:
         agent: [1, 2, 3]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Set node/npm/yarn versions using volta
       - uses: volta-cli/action@v4
@@ -93,9 +93,9 @@ jobs:
           package-json-path: '${{ github.workspace }}/package.json'
 
       - name: Use the package manager cache if available
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
 
       - name: Install dependencies
