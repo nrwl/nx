@@ -81,3 +81,19 @@ Provide the following values to your developer productivity engineer so they can
 - Github App App ID
 - Github App Private Key
 - GitHub App Webhook Secret
+
+## Verify the private key
+
+The private key must be stored as a single line with `\n`-escaped newlines, as produced by the `awk` command above. A raw multi-line PEM fails at runtime with `ERR_OSSL_UNSUPPORTED`.
+
+To verify the key is stored correctly, run this from the frontend pod:
+
+```bash
+node -e 'require("crypto").createPrivateKey(process.env.NX_CLOUD_GITHUB_PRIVATE_KEY.replace(/\\n/gm,"\n")); console.log("KEY OK")'
+```
+
+Note that a broken private key does not break everything: repo listing uses the client ID and secret, so it keeps working and can mask the problem. PR comments and status checks are what fail.
+
+## Complete the setup in Nx Cloud
+
+Once the environment variables are in place, finish the setup from the Nx Cloud UI: the workspace's VCS integration form collects the repository, the auth type, and an optional API URL override for that workspace.
