@@ -1,6 +1,4 @@
 {
-  "//There are some settings in the TS Project References that angular can't run on.": "",
-  "//Therefore we do not extend the root": "",
   "compileOnSave": false,
   "compilerOptions": {
     "rootDir": ".",
