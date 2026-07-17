@@ -73,3 +73,7 @@ For advanced use cases, Nx provides environment variables to override where sock
 | `NX_NATIVE_FILE_CACHE_DIRECTORY` | Overrides the native file cache path                                                                |
 
 These are primarily useful for environments with restricted temp directory access (e.g., certain Docker or CI setups). For Claude Code's sandbox, `allowAllUnixSockets: true` is simpler and more reliable.
+
+{% aside type="caution" title="Keep the socket directory private" %}
+Do not set `NX_SOCKET_DIR` or `NX_DAEMON_SOCKET_DIR` to a location shared with other users or other workspaces. The daemon drives work inside a long-lived process, so another user who can reach its socket could execute code in your daemon.
+{% /aside %}

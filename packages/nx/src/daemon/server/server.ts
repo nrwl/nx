@@ -26,7 +26,10 @@ import {
   RESET_CONFIGURE_AI_AGENTS_STATUS,
 } from '../message-types/configure-ai-agents';
 import { applyDaemonEnvFromClient } from '../client/daemon-environment';
-import { isDaemonMessage } from '../message-types/daemon-message';
+import {
+  isDaemonMessage,
+  isForeignWorkspaceMessage,
+} from '../message-types/daemon-message';
 import {
   FLUSH_SYNC_GENERATOR_CHANGES_TO_DISK,
   isHandleFlushSyncGeneratorChangesToDiskMessage,
@@ -156,6 +159,7 @@ import {
   handleServerProcessTerminationWithRestart,
   resetInactivityTimeout,
   respondToClient,
+  respondWithError,
   respondWithErrorAndExit,
   SERVER_INACTIVITY_TIMEOUT_MS,
   storeOutputWatcherInstance,
@@ -255,6 +259,24 @@ async function handleMessage(socket: Socket, data: string) {
     );
   }
   serverLogger.log(`Received ${mode} message of type ${payload.type}`);
+
+  // Refuse messages from a different workspace without processing them any
+  // further. The daemon is scoped to the workspace that launched it; a mismatch
+  // means the client reached the wrong daemon (e.g. a shared NX_SOCKET_DIR). We
+  // respond with an error but keep the daemon alive for its own workspace.
+  if (
+    isDaemonMessage(payload) &&
+    isForeignWorkspaceMessage(payload, workspaceRoot)
+  ) {
+    await respondWithError(
+      socket,
+      `Workspace root mismatch`,
+      new Error(
+        `The Nx Daemon for '${workspaceRoot}' received a message from a different workspace ('${payload.workspaceRoot}') and refused to process it. This usually means multiple workspaces are sharing a socket directory; ensure NX_SOCKET_DIR (or NX_DAEMON_SOCKET_DIR) is not set to a shared location.`
+      )
+    );
+    return;
+  }
 
   if (isDaemonMessage(payload) && payload.env) {
     const changedEnvKeys = applyDaemonEnvFromClient(payload.env);
