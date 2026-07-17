@@ -4,7 +4,8 @@
     "outDir": "out-tsc/spec",
     "customConditions": ["@nx/nx-source"],
     "types": ["jest", "node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

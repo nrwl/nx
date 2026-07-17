@@ -517,7 +517,16 @@ export function updatePaths(
             mappedPaths = mappedPaths.concat(
               paths[path].flatMap((p) =>
                 dep.outputs.flatMap((output) => {
-                  const basePath = p.replace(root, output);
+                  // Re-map the root prefix to the output. Match root only as a
+                  // leading segment (after an optional `./`) so a root that
+                  // also appears later in the value (e.g. output `dist/libs/base`
+                  // for root `base`) isn't doubled.
+                  const dotPrefix = p.startsWith('./') ? './' : '';
+                  const value = dotPrefix ? p.slice(2) : p;
+                  const basePath =
+                    value === root || value.startsWith(`${root}/`)
+                      ? `${dotPrefix}${output}${value.slice(root.length)}`
+                      : p;
                   return [
                     // extension-less path to support compiled output
                     basePath.replace(

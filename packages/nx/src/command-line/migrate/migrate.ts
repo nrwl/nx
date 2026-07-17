@@ -43,9 +43,11 @@ import { extractFileFromTarball } from '../../utils/tar';
 import { writeFormattedJsonFile } from '../../utils/write-formatted-json-file';
 import { logger } from '../../utils/logger';
 import {
+  getGitCurrentBranch,
   getUncommittedChangesSnapshot,
   isGitRepository,
 } from '../../utils/git-utils';
+import { getBaseRef } from '../../utils/command-line-utils';
 import {
   ArrayPackageGroup,
   getDependencyVersionFromPackageJson,
@@ -413,15 +415,30 @@ export class Migrator {
               packageToCheck.package
             )))
         ) {
-          Object.entries(packageUpdate.packages).forEach(([name, update]) => {
+          const updateEntries = Object.entries(packageUpdate.packages);
+          // Validate all up front so invalid metadata fails fast, before any
+          // resolution does I/O.
+          for (const [name, update] of updateEntries) {
             this.validatePackageUpdateVersion(
               packageToCheck.package,
               name,
               update
             );
-            filteredUpdates[name] = update;
-            this.packageUpdates[name] = update;
-          });
+          }
+          // Resolve serially: resolution can prompt (pnpm strict cooldown) and
+          // append to minimumReleaseAgeExclude, so a serial loop avoids
+          // overlapping prompts and keeps packageUpdates ordering stable.
+          for (const [name, update] of updateEntries) {
+            const resolvedUpdate = {
+              ...update,
+              version: await this.resolveVersionForCascade(
+                name,
+                update.version
+              ),
+            };
+            filteredUpdates[name] = resolvedUpdate;
+            this.packageUpdates[name] = resolvedUpdate;
+          }
         }
       }
 
@@ -431,6 +448,19 @@ export class Migrator {
         )
       );
     }
+  }
+
+  private async resolveVersionForCascade(
+    packageName: string,
+    version: string
+  ): Promise<string> {
+    // Already a fully-qualified semver (incl. prereleases) - nothing to resolve.
+    if (valid(version)) {
+      return version;
+    }
+    // Otherwise resolve the spec (range/tag) through the min-release-age policy,
+    // which also honors any configured minimumReleaseAgeExclude entries.
+    return resolvePackageVersionRespectingMinReleaseAge(packageName, version);
   }
 
   private async populatePackageJsonUpdatesAndGetPackagesToCheck(
@@ -2206,7 +2236,8 @@ function readNxVersion(packageJson: PackageJson, root: string) {
   );
 }
 
-async function generateMigrationsJsonAndUpdatePackageJson(
+// Exported for testing the optional-include orchestration seam (see NXC-4590).
+export async function generateMigrationsJsonAndUpdatePackageJson(
   root: string,
   opts: GenerateMigrations,
   fetch?: MigratorOptions['fetch']
@@ -2308,11 +2339,17 @@ async function generateMigrationsJsonAndUpdatePackageJson(
       writableUpdates
     );
 
+    // Under `--include=optional` the target's own entry is filtered out of
+    // `packageUpdates` (it's a required package), so resolve the version
+    // defensively. Also reused by the completion analytics below.
+    const resolvedTargetVersion =
+      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
+
     const promptMigrationFiles = writePromptMigrationFiles(
       root,
       migrations,
       promptContents ?? {},
-      packageUpdates[walkedTargetPackage].version
+      resolvedTargetVersion
     );
 
     if (migrations.length > 0) {
@@ -2329,8 +2366,6 @@ async function generateMigrationsJsonAndUpdatePackageJson(
           ? `- Processed optional dependency updates only (skipped required package updates).`
           : null;
 
-    const resolvedTargetVersion =
-      packageUpdates[walkedTargetPackage]?.version ?? opts.targetVersion;
     // The param expressions below evaluate before the report function is
     // entered; `safeReport` keeps them inside the analytics boundary so a
     // param-building throw can't surface here and convert an already
@@ -2749,6 +2784,34 @@ export function resolveCreateCommits(args: {
         ? 'A custom migrate commit prefix is configured, but commits are not enabled for this run, so it has no effect. Set `migrate.createCommits` to `true` (or pass `--create-commits`) to create a commit per migration.'
         : undefined,
   };
+}
+
+/**
+ * Confirms before creating per-migration commits while the user sits on the
+ * repository's default branch, so migrations don't silently commit there (most
+ * relevant since `--agentic` enables commits by default). Only the default
+ * branch triggers a prompt; a detached HEAD, a different branch, or an
+ * unresolved default branch all proceed untouched. Callers gate this on
+ * commits being effective and prompting being possible, so non-interactive
+ * runs (CI, `--no-interactive`) never reach here.
+ */
+export async function confirmCommitsOnDefaultBranch(args: {
+  currentBranch: string | null;
+  defaultBranch: string | null;
+}): Promise<boolean> {
+  const { currentBranch, defaultBranch } = args;
+  if (!currentBranch || !defaultBranch || currentBranch !== defaultBranch) {
+    return true;
+  }
+  const { proceed } = await migratePrompt<{ proceed: boolean }>([
+    {
+      name: 'proceed',
+      type: 'confirm',
+      message: `You're on the default branch '${currentBranch}'. nx migrate will create a commit for each migration on this branch. Continue?`,
+      initial: false,
+    },
+  ]);
+  return proceed;
 }
 
 /**
@@ -3437,6 +3500,26 @@ async function runMigrations(
   }
   if (createCommitsWarning) {
     output.warn({ title: createCommitsWarning });
+  }
+
+  if (effectiveCreateCommits && canPrompt(opts.interactive)) {
+    const currentBranch = getGitCurrentBranch(root);
+    // `getBaseRef` may carry an `origin/` prefix (set by the CI-workflow
+    // generator); compare against the local branch name.
+    const defaultBranch = getBaseRef(readNxJson(root)).replace(/^origin\//, '');
+    const proceed = await confirmCommitsOnDefaultBranch({
+      currentBranch,
+      defaultBranch,
+    });
+    if (!proceed) {
+      output.log({
+        title: `Skipped running migrations to avoid committing to the default branch '${currentBranch}'.`,
+        bodyLines: [
+          'Switch to a different branch and re-run, or re-run and confirm to proceed.',
+        ],
+      });
+      return;
+    }
   }
 
   const shouldRunValidation = resolveShouldRunValidation({

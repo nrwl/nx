@@ -1,6 +1,6 @@
 ---
-title: React Plugin for Nx
-description: Create and manage React applications and libraries in your Nx workspace with generators for apps, libraries, and support for Module Federation.
+title: Nx with React
+description: Nx scales your React monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [react]
 sidebar:
   label: 'Introduction'
@@ -9,9 +9,9 @@ weight: 2
 filter: 'type:References'
 ---
 
-The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain.
+[React](https://react.dev/) is a popular library for building user interfaces. In a React monorepo, every project benefits from Nx [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-You don't need the plugin to use React with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin simplifies scaffolding and code generation.
+The React plugin for Nx, `@nx/react`, provides generators for [applications and libraries](#generate-react-applications-and-libraries), executors for [Module Federation](/docs/technologies/react/guides/module-federation-with-ssr), and [library build support](/docs/concepts/buildable-and-publishable-libraries). It integrates with popular bundlers and test runners so you can configure each project to match your team's toolchain. You don't need the plugin to use React with Nx - it simplifies scaffolding and code generation.
 
 ## Requirements
 
@@ -130,25 +130,11 @@ Or open the [project details view in Nx Console](/docs/guides/nx-console/console
 
 For full generator and executor option lists, see the [generators reference](/docs/technologies/react/generators) and [executors reference](/docs/technologies/react/executors).
 
-## CI considerations
+## Set up CI for your React monorepo
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are [affected](/docs/features/ci-features/affected) by your changes and only runs tasks for those.
-
-### Remote caching
-
-Share build and test cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

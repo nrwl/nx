@@ -17,6 +17,7 @@
     "composite": true,
     "declarationMap": true,
     "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true
+    "allowSyntheticDefaultImports": true,
+    "noUncheckedSideEffectImports": false
   }
 }

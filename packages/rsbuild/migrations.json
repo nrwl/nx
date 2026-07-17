@@ -48,6 +48,10 @@
         "@rsbuild/plugin-react": {
           "version": "^2.0.0",
           "alwaysAddToPackageJson": false
+        },
+        "@rsbuild/plugin-sass": {
+          "version": "^1.5.2",
+          "alwaysAddToPackageJson": false
         }
       }
     }

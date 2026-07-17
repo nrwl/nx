@@ -5,7 +5,8 @@
     "outDir": "out-tsc/spec",
     "types": ["jest", "node"],
     "noEmit": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

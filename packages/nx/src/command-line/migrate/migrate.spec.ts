@@ -41,10 +41,12 @@ import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  confirmCommitsOnDefaultBranch,
   createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
   formatSkippedPromptsNextStep,
+  generateMigrationsJsonAndUpdatePackageJson,
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
@@ -4469,6 +4471,81 @@ describe('Migration', () => {
     );
   });
 
+  describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-migrate-optional-'));
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    // NXC-4590: under `--include=optional` the target package (e.g. `nx`) is in
+    // its own required closure, so the Migrator drops its entry from
+    // `packageUpdates`. The orchestration must not assume that entry exists when
+    // resolving the version for the AI-migrations directory.
+    it('does not crash when the target package is filtered out of packageUpdates', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: {
+            nx: '0.0.0',
+            requiredChild: '1.0.0',
+            optionalChild: '1.0.0',
+          },
+        })
+      );
+
+      // `packageGroup` puts `requiredChild` in nx's required closure; both `nx`
+      // and `requiredChild` are dropped under optional, leaving `optionalChild`.
+      const fetch = (p: string, version: string) => {
+        if (p === 'nx') {
+          return Promise.resolve({
+            version: '23.0.0',
+            packageGroup: [{ package: 'requiredChild', version: '23.0.0' }],
+            packageJsonUpdates: {
+              mixed: {
+                version: '23.0.0',
+                packages: {
+                  requiredChild: { version: '3.0.0' },
+                  optionalChild: { version: '3.0.0' },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '3.0.0' });
+      };
+
+      const opts = {
+        type: 'generateMigrations' as const,
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        from: {},
+        to: {},
+        interactive: false,
+        include: 'optional' as const,
+      };
+
+      await expect(
+        generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch as any)
+      ).resolves.toBeUndefined();
+
+      const updated = JSON.parse(
+        readFileSync(join(root, 'package.json'), 'utf-8')
+      );
+      // Optional update applied; the filtered-out required packages untouched.
+      expect(updated.devDependencies.optionalChild).toBe('3.0.0');
+      expect(updated.devDependencies.requiredChild).toBe('1.0.0');
+      expect(updated.devDependencies.nx).toBe('0.0.0');
+    });
+  });
+
   describe('writePromptMigrationFiles', () => {
     let tmpRoot: string;
 
@@ -4921,6 +4998,64 @@ describe('Migration', () => {
         });
         expect(result.effective).toBe(true);
         expect(result.warning).toBeUndefined();
+      });
+    });
+
+    describe('confirmCommitsOnDefaultBranch', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('proceeds without prompting when the branch cannot be resolved', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: null,
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when the default branch is unknown', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: null,
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when not on the default branch', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'feature/foo',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds when the user confirms on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: true });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
+      });
+
+      it('aborts when the user declines on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: false });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(false);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
       });
     });
 

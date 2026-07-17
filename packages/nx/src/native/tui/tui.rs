@@ -3,7 +3,7 @@ use crate::native::tui::theme::THEME;
 use color_eyre::eyre::Result;
 use crossterm::{
     cursor,
-    event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind},
+    event::{self, Event as CrosstermEvent, KeyEvent, KeyEventKind, MouseEvent},
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -37,6 +37,7 @@ pub enum Event {
     FocusLost,
     Paste(String),
     Key(KeyEvent),
+    Mouse(MouseEvent),
     Resize(u16, u16),
 }
 
@@ -52,6 +53,39 @@ pub struct Tui {
     pub frame_rate: f64,
     pub tick_rate: f64,
     pub current_mode: TuiMode,
+}
+
+/// DEC private mode sequences for enabling mouse reporting.
+///
+/// We deliberately enable a narrow set of modes rather than crossterm's bundled
+/// `EnableMouseCapture` (which also enables `?1003h`, "any-event" / all-motion
+/// tracking). The modes we use:
+/// - `?1000h` — normal tracking: button press and release.
+/// - `?1002h` — button-event tracking: adds motion reports **while a button is
+///   held** (drag). This is what text selection needs; it does NOT report bare
+///   hover motion, avoiding a flood of events when the user merely moves the mouse.
+/// - `?1006h` — SGR extended coordinates, so columns/rows past 223 are reported
+///   correctly and release events are distinguishable.
+const ENABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1000h\x1b[?1002h\x1b[?1006h";
+/// Disable sequence — the same modes reset, in reverse order.
+const DISABLE_MOUSE_CAPTURE_SEQ: &[u8] = b"\x1b[?1006l\x1b[?1002l\x1b[?1000l";
+
+/// Enable mouse reporting on the terminal (stderr — the same stream the TUI
+/// renders to). Idempotent: re-enabling already-enabled modes is a no-op for
+/// the terminal.
+pub(crate) fn enable_mouse_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(ENABLE_MOUSE_CAPTURE_SEQ)?;
+    stderr.flush()
+}
+
+/// Disable mouse reporting on the terminal. Safe to call even when capture was
+/// never enabled (the terminal ignores resets for modes that aren't set), so we
+/// can call it unconditionally on every teardown path.
+pub(crate) fn disable_mouse_capture() -> std::io::Result<()> {
+    let mut stderr = std::io::stderr();
+    stderr.write_all(DISABLE_MOUSE_CAPTURE_SEQ)?;
+    stderr.flush()
 }
 
 /// Drain any pending input from stdin to prevent escape sequence leakage.
@@ -266,6 +300,9 @@ impl Tui {
                           CrosstermEvent::Paste(s) => {
                             _event_tx.send(Event::Paste(s)).unwrap();
                           },
+                          CrosstermEvent::Mouse(mouse) => {
+                            _event_tx.send(Event::Mouse(mouse)).unwrap();
+                          },
                           _ => {
                             debug!("Unhandled Crossterm Event: {:?}", evt);
                             continue;
@@ -361,6 +398,10 @@ impl Tui {
         match mode {
             TuiMode::FullScreen => {
                 execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+                // Capture the mouse only in fullscreen. This enables scroll-wheel,
+                // click and drag handling, at the cost of the terminal's own
+                // click-drag text selection (we provide in-app selection instead).
+                enable_mouse_capture()?;
             }
             TuiMode::Inline => {
                 // Inline terminal must exist (created upfront if stdin is TTY)
@@ -369,6 +410,10 @@ impl Tui {
                         "Cannot enter inline mode: inline terminal not available (stdin is not a TTY)"
                     ));
                 }
+                // Inline mode intentionally does NOT capture the mouse: the inline
+                // viewport occupies a moving sub-region of the normal scrollback,
+                // so absolute mouse coordinates don't map to widgets, and leaving
+                // the mouse uncaptured preserves the terminal's native selection.
                 execute!(std::io::stderr(), cursor::Hide)?;
                 execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
                 execute!(
@@ -394,8 +439,14 @@ impl Tui {
         if crossterm::terminal::is_raw_mode_enabled()? {
             self.flush()?;
 
-            // Drain pending terminal responses (e.g., OSC color query responses)
-            // to prevent escape sequences from leaking to the terminal on exit
+            // Disable mouse capture before anything else so the terminal stops
+            // sending mouse escape sequences. Safe to call unconditionally — the
+            // terminal ignores resets for modes that were never set (e.g. inline).
+            let _ = disable_mouse_capture();
+
+            // Drain pending terminal responses (e.g., OSC color query responses,
+            // and any in-flight mouse reports) to prevent escape sequences from
+            // leaking to the terminal on exit
             drain_stdin();
 
             // Only leave alternate screen if we're in full-screen mode
@@ -443,7 +494,7 @@ impl Tui {
         Ok(())
     }
 
-    pub fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
+    pub async fn switch_mode(&mut self, new_mode: TuiMode) -> Result<()> {
         if new_mode == self.current_mode {
             debug!("Mode {:?} is already active", new_mode);
             return Ok(());
@@ -454,8 +505,18 @@ impl Tui {
             self.current_mode, new_mode
         );
 
+        // Ensure the inline terminal exists before touching any terminal state, so
+        // a refusal leaves us cleanly in the current mode.
+        if new_mode == TuiMode::Inline && self.inline_terminal.is_none() {
+            return Err(color_eyre::eyre::eyre!(
+                "Cannot switch to inline mode: inline terminal not available (stdin is not a TTY)"
+            ));
+        }
+
+        let previous_mode = self.current_mode;
+
         // Clean up current mode's terminal state (but stay in raw mode)
-        match self.current_mode {
+        match previous_mode {
             TuiMode::FullScreen => {
                 // Leave alternate screen but stay in raw mode
                 execute!(std::io::stderr(), LeaveAlternateScreen)?;
@@ -466,31 +527,53 @@ impl Tui {
             }
         }
 
-        // Ensure inline terminal exists before switching to it
-        if new_mode == TuiMode::Inline && self.inline_terminal.is_none() {
-            return Err(color_eyre::eyre::eyre!(
-                "Cannot switch to inline mode: inline terminal not available (stdin is not a TTY)"
-            ));
-        }
-
         // Switch the mode
         self.current_mode = new_mode;
-
-        // Clear the new terminal's buffers to force a full redraw
-        self.terminal_mut().clear()?;
 
         // Set up new mode's terminal state (we're still in raw mode)
         match new_mode {
             TuiMode::FullScreen => {
+                // Coming from inline, clearing the terminal still triggers ratatui's
+                // cursor-position query, which races stdin and intermittently times
+                // out (the same hazard the inline direction has). Stop the input
+                // event stream around it so the switch back can't fail and bounce the
+                // user to a second Esc.
+                self.stop().await?;
+                tokio::time::sleep(Duration::from_millis(10)).await;
+                // Clear the new terminal's buffers to force a full redraw
+                self.terminal_mut().clear()?;
                 execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide)?;
+                // Capture the mouse in fullscreen (NXC-3945).
+                enable_mouse_capture()?;
+                // Fresh event channel + restart, mirroring reinitialize_inline_terminal.
+                let (new_tx, new_rx) = mpsc::unbounded_channel();
+                self.event_tx = new_tx;
+                self.event_rx = new_rx;
+                self.start();
+                tokio::task::yield_now().await;
             }
             TuiMode::Inline => {
+                // Recreate the inline viewport with the input event stream stopped,
+                // so its cursor-position query can't race stdin and time out — the
+                // same hazard the resize path handles. Querying the cursor here while
+                // the EventStream is live is what intermittently failed and left the
+                // terminal half-switched ("neither mode") before the run quit.
+                if let Err(e) = self.reinitialize_inline_terminal().await {
+                    // Roll the terminal back to the mode we came from so we never
+                    // surface a half-switched ("neither") terminal to the caller.
+                    // (Mouse capture is released only after this point, so the
+                    // fullscreen rollback still has the mouse captured.)
+                    self.current_mode = previous_mode;
+                    if previous_mode == TuiMode::FullScreen {
+                        let _ = execute!(std::io::stderr(), EnterAlternateScreen, cursor::Hide);
+                        let _ = self.terminal_mut().clear();
+                    }
+                    return Err(e);
+                }
+                // Release the mouse when dropping to inline (NXC-3944) so the
+                // terminal regains native scroll/selection in the inline viewport.
+                disable_mouse_capture()?;
                 execute!(std::io::stderr(), cursor::Hide)?;
-                execute!(std::io::stderr(), cursor::MoveTo(0, 0))?;
-                execute!(
-                    std::io::stderr(),
-                    crossterm::terminal::Clear(crossterm::terminal::ClearType::All)
-                )?;
             }
         }
 

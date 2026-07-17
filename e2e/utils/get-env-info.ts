@@ -170,6 +170,14 @@ export function getStrippedEnvironmentVariables() {
         return false;
       }
 
+      // Remove GITHUB_STEP_SUMMARY so e2e subprocesses don't append to the real CI job
+      // summary. The stripper drops NX_TASK_TARGET_PROJECT, so a child nx looks top-level
+      // and would otherwise write its performance report (once per nx command) into the
+      // runner's summary. GITHUB_ACTIONS is kept so log grouping still gets exercised.
+      if (key === 'GITHUB_STEP_SUMMARY') {
+        return false;
+      }
+
       // Remove AI agent detection env vars to prevent the test runner's
       // environment (e.g., running inside Claude Code) from leaking into
       // e2e test subprocesses. Tests that need these pass them explicitly.

@@ -166,7 +166,7 @@ describe('NX_CLOUD_HYPERLINK', () => {
 
     expect(link).toContain(`${BEL}${url}${OSC}`);
     expect(link).toContain(
-      `${url}?utm_source=nx-cli&utm_medium=create-nx-workspace`
+      `${url}?utm_source=nx-cli&utm_medium=cli&utm_campaign=nx-cloud-connect&utm_content=create-nx-workspace`
     );
   });
 

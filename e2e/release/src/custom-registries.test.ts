@@ -233,7 +233,9 @@ describe('nx release - custom npm registries', () => {
     runCLI(`generate setup-verdaccio`);
 
     const process = await runCommandUntil(
-      `local-registry @proj/source --port=${verdaccioPort}`,
+      // location=none so a killed process can't leak registry config into
+      // ~/.npmrc; every consumer passes --registry explicitly instead
+      `local-registry @proj/source --port=${verdaccioPort} --location none`,
       (output) => output.includes(`warn --- http address`)
     );
 

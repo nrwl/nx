@@ -6,16 +6,26 @@ import { join } from 'path';
 let metroConfig: any = null;
 
 /**
- * Lazily require metro-config to handle cases where it might not be installed
+ * Lazily require the Metro config helpers.
+ *
+ * Expo SDK 55+ ships Metro through the `@expo/metro` package family, so the
+ * `mergeConfig` used here must come from the same Metro instance that
+ * `@expo/metro-config`'s `getDefaultConfig` is built against. Older SDKs
+ * (53/54) use the standalone `metro-config` package. We prefer `@expo/metro`
+ * and fall back to the standalone package to stay compatible with both.
  */
 function getMetroConfig() {
   if (!metroConfig) {
     try {
-      metroConfig = require('metro-config');
-    } catch (error) {
-      throw new Error(
-        'metro-config is required but not installed. Please install metro-config >= 0.82.0'
-      );
+      metroConfig = require('@expo/metro/metro-config');
+    } catch {
+      try {
+        metroConfig = require('metro-config');
+      } catch (error) {
+        throw new Error(
+          'Unable to load Metro config. Install `@expo/metro` (Expo SDK 55+) or `metro-config` (>= 0.82.0).'
+        );
+      }
     }
   }
   return metroConfig;
@@ -73,10 +83,24 @@ export function withNxMetro(userConfig: MetroConfig, opts: WithNxOptions = {}) {
     existsSync(folder)
   );
 
+  // Expo SDK 55+ ships Metro via `@expo/metro` and resolves the project's
+  // Babel config relative to `projectRoot`. Forcing `projectRoot` to the
+  // workspace root breaks that lookup, because the app's `.babelrc.js` lives in
+  // the project directory, not the workspace root (Metro's babel transformer
+  // does `path.resolve(projectRoot, '.babelrc.js')`). So only override
+  // `projectRoot` for older SDKs (53/54). Workspace libraries remain resolvable
+  // via `watchFolders`, `nodeModulesPaths`, and the custom `resolveRequest`.
+  // `@expo/metro` has no root entry point (only subpath exports), so resolve a
+  // known subpath to detect it — `require.resolve('@expo/metro')` would throw
+  // ERR_PACKAGE_PATH_NOT_EXPORTED even when the package is installed.
+  let usesExpoMetro = false;
+  try {
+    require.resolve('@expo/metro/metro-config');
+    usesExpoMetro = true;
+  } catch {}
+
   const nxConfig: MetroConfig = {
-    // Set projectRoot to workspaceRoot to ensure originModulePath is
-    // workspace-relative. This is required for Expo SDK 54+ compatibility.
-    projectRoot: workspaceRoot,
+    ...(usesExpoMetro ? {} : { projectRoot: workspaceRoot }),
     resolver: {
       resolveRequest: getResolveRequest(
         extensions,

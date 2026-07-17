@@ -46,9 +46,11 @@ export function loadPnpmHoistedDepsDefinition() {
     const content = readFileSync(fullPath, 'utf-8');
     const { load } = require('@zkochan/js-yaml');
     return load(content)?.hoistedDependencies ?? {};
-  } else {
-    throw new Error(`Could not find ".modules.yaml" at "${fullPath}"`);
   }
+
+  throw new Error(
+    `pnpm lockfile detected, but "${fullPath}" is missing. This usually means that "node_modules" was not installed with pnpm. Run "pnpm install" or use a single package manager for this workspace.`
+  );
 }
 
 /**

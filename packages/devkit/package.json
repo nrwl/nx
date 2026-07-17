@@ -50,7 +50,6 @@
   },
   "homepage": "https://nx.dev",
   "dependencies": {
-    "@zkochan/js-yaml": "catalog:",
     "ejs": "5.0.1",
     "tslib": "catalog:typescript",
     "semver": "catalog:",

@@ -1,6 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
-import { homedir } from 'os';
-import { basename, join } from 'path';
+import { execSync } from 'child_process';
 import {
   gte,
   maxSatisfying,
@@ -11,7 +9,6 @@ import {
 } from 'semver';
 import { MS_PER_DAY, MS_PER_MINUTE } from '../constants';
 import { MinReleaseAgeViolationError } from '../errors';
-import { readNpmrcEntries } from '../npmrc';
 import type { RegistryMetadata } from '../packument';
 import {
   blockedVersionsFrom,
@@ -42,8 +39,6 @@ interface PnpmBehaviorRow {
   strictAutoOnWhenExplicit: boolean;
   excludeGrammar: 'v1-exact-names' | 'v2-globs-unions';
   writesExcludes: boolean;
-  // v11.1.0+ also reads uppercase PNPM_CONFIG_* env vars.
-  uppercaseEnv: boolean;
 }
 
 // Ordered newest-bound-first so the first matching row applies.
@@ -55,7 +50,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: true,
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: true,
-    uppercaseEnv: true,
   },
   {
     minVersion: '11.1.0',
@@ -64,7 +58,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: true,
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
-    uppercaseEnv: true,
   },
   {
     minVersion: '11.0.4',
@@ -73,7 +66,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: true,
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
-    uppercaseEnv: false,
   },
   {
     minVersion: '11.0.0',
@@ -82,7 +74,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: false,
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
-    uppercaseEnv: false,
   },
   {
     minVersion: '10.19.0',
@@ -91,7 +82,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: false,
     excludeGrammar: 'v2-globs-unions',
     writesExcludes: false,
-    uppercaseEnv: false,
   },
   {
     minVersion: '10.16.0',
@@ -100,7 +90,6 @@ const PNPM_BEHAVIOR_ROWS: PnpmBehaviorRow[] = [
     strictAutoOnWhenExplicit: false,
     excludeGrammar: 'v1-exact-names',
     writesExcludes: false,
-    uppercaseEnv: false,
   },
 ];
 
@@ -108,50 +97,100 @@ function findBehaviorRow(pmVersion: string): PnpmBehaviorRow | undefined {
   return PNPM_BEHAVIOR_ROWS.find((row) => gte(pmVersion, row.minVersion));
 }
 
-// A single resolved cooldown window plus its excludes, tagged with where the
-// window came from for messaging.
-interface WindowResolution {
-  kind: 'ok';
-  windowMinutes: number;
+// pnpm's effective minimum-release-age configuration, as pnpm itself resolves it.
+interface PnpmCooldownConfig {
+  // undefined when no surface set the window, so the caller can apply pnpm's
+  // version-specific default.
+  windowMinutes: number | undefined;
   excludes: string[];
-  sourceDescription: string;
-  // True when the window came from a real surface (env/yaml/global/.npmrc);
-  // false only for the invisible built-in 1440 default. Drives the >=11.0.4
-  // strict auto-on rule, which fires only on an explicitly set window.
-  windowExplicit: boolean;
+  strictExplicit: boolean | undefined;
+  ignoreMissingTimeExplicit: boolean | undefined;
 }
 
-// Sentinel for an unparseable surface value. A discriminant (rather than a bare
-// `{ invalid }` shape) is required because nx builds with strictNullChecks off,
-// where `in`/equality narrowing does not subtract object union members.
-interface InvalidWindow {
-  kind: 'invalid';
-  reason: string;
+// Asks pnpm for its own resolved config rather than re-deriving how pnpm layers
+// .npmrc / env / pnpm-workspace.yaml / global config across versions. Returns
+// null if pnpm cannot be run or its output is not parseable JSON, so the caller
+// defers to a real install.
+function readPnpmConfigList(root: string): Record<string, unknown> | null {
+  let raw: string;
+  try {
+    raw = execSync('pnpm config list --json', {
+      cwd: root,
+      encoding: 'utf-8',
+      windowsHide: true,
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+  } catch {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === 'object'
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
 }
 
-// Builds a resolved cooldown window, tagging it with the surface label used in
-// messaging. windowExplicit is false only for the invisible built-in default.
-function okWindow(
-  windowMinutes: number,
-  excludes: string[],
-  source: string,
-  windowExplicit = true
-): WindowResolution {
+// Extracts the cooldown keys from pnpm's reported config. pnpm 11 reports them
+// camelCase; pnpm 10 reported them kebab-case, so read both forms. The exclude
+// list comes back as a JSON array (set in a yaml surface) or a comma-joined
+// string (set via .npmrc / env).
+function parseCooldownConfig(
+  config: Record<string, unknown>
+): PnpmCooldownConfig {
+  const read = (camelKey: string, kebabKey: string): unknown =>
+    config[camelKey] ?? config[kebabKey];
   return {
-    kind: 'ok',
-    windowMinutes,
-    excludes,
-    sourceDescription: `pnpm minimumReleaseAge (${windowMinutes} min, ${source})`,
-    windowExplicit,
+    windowMinutes:
+      toNumber(read('minimumReleaseAge', 'minimum-release-age')) ?? undefined,
+    excludes: parseExcludeValue(
+      read('minimumReleaseAgeExclude', 'minimum-release-age-exclude')
+    ),
+    strictExplicit: toBoolean(
+      read('minimumReleaseAgeStrict', 'minimum-release-age-strict')
+    ),
+    ignoreMissingTimeExplicit: toBoolean(
+      read(
+        'minimumReleaseAgeIgnoreMissingTime',
+        'minimum-release-age-ignore-missing-time'
+      )
+    ),
   };
 }
 
+function parseExcludeValue(value: unknown): string[] {
+  const entries = Array.isArray(value)
+    ? value.map((entry) => String(entry))
+    : typeof value === 'string'
+      ? value.split(',')
+      : [];
+  return entries
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+}
+
+function toBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (value === 'true') {
+    return true;
+  }
+  if (value === 'false') {
+    return false;
+  }
+  return undefined;
+}
+
 /**
- * Reads pnpm's effective cooldown configuration once. The surface set and
- * precedence depend on the pnpm major: v10 layers npm-conf surfaces
- * (workspace yaml > npm_config env > project .npmrc > user .npmrc); v11
- * layers pnpm-native surfaces (pnpm_config / PNPM_CONFIG env >
- * pnpm-workspace.yaml > global config.yaml > built-in 1440-minute default).
+ * Reads pnpm's effective cooldown configuration once by asking pnpm itself
+ * (`pnpm config list --json`) instead of re-implementing how it layers config
+ * surfaces (a moving target across pnpm versions). The window and excludes come
+ * straight from pnpm; the strict default, exclude grammar, and loose-fallback
+ * semantics stay version-keyed because pnpm does not report those resolved
+ * values.
  */
 export async function readPnpmPolicy(
   root: string,
@@ -171,35 +210,37 @@ export async function readPnpmPolicy(
     return { outcome: 'inactive' };
   }
 
-  let resolution: WindowResolution | InvalidWindow | null;
-  let strictExplicit: boolean | undefined;
-  let ignoreMissingTimeExplicit: boolean | undefined;
-  if (row.major === 11) {
-    const read = readV11Surfaces(root, row);
-    resolution = read.window;
-    strictExplicit = read.strictExplicit;
-    ignoreMissingTimeExplicit = read.ignoreMissingTime;
-  } else {
-    resolution = readV10Surfaces(root);
-    // v10 strict is hardcoded; no surface toggles it.
-    strictExplicit = undefined;
-  }
-
-  if (!resolution) {
-    return { outcome: 'inactive' };
-  }
-  if (resolution.kind !== 'ok') {
-    return { outcome: 'ambiguous', reason: resolution.reason };
-  }
-
-  const { windowMinutes, excludes, sourceDescription, windowExplicit } =
-    resolution;
-  if (!Number.isFinite(windowMinutes)) {
+  const config = readPnpmConfigList(root);
+  if (config === null) {
+    // Could not read pnpm's resolved config; defer to a real install rather than
+    // guess the policy.
     return {
       outcome: 'ambiguous',
-      reason: `Invalid pnpm minimumReleaseAge value: ${String(windowMinutes)}.`,
+      reason: 'Unable to read the pnpm minimum-release-age configuration.',
     };
   }
+  const {
+    windowMinutes: explicitWindow,
+    excludes,
+    strictExplicit,
+    ignoreMissingTimeExplicit,
+  } = parseCooldownConfig(config);
+
+  // An explicitly configured window (from whatever surface pnpm honors) wins;
+  // otherwise v11 falls back to its built-in 1440-minute (1 day) default, while
+  // v10 has no default (no cooldown).
+  let windowMinutes: number;
+  let windowExplicit: boolean;
+  if (explicitWindow !== undefined) {
+    windowMinutes = explicitWindow;
+    windowExplicit = true;
+  } else if (row.major === 11) {
+    windowMinutes = 1440;
+    windowExplicit = false;
+  } else {
+    return { outcome: 'inactive' };
+  }
+
   // 0 disables; negatives push the cutoff into the future -> everything passes.
   if (windowMinutes <= 0) {
     return { outcome: 'inactive' };
@@ -207,6 +248,7 @@ export async function readPnpmPolicy(
 
   const windowMs = windowMinutes * MS_PER_MINUTE;
   const cutoffMs = Date.now() - windowMs;
+  const sourceDescription = `pnpm minimumReleaseAge (${windowMinutes} min)`;
 
   const strict = resolveStrict(row, strictExplicit, windowExplicit);
   // v10 always errors on missing time; v11 defaults to skip unless a surface
@@ -263,351 +305,6 @@ function resolveStrict(
   return row.strictAutoOnWhenExplicit && windowExplicit;
 }
 
-// --- v11 surfaces -----------------------------------------------------------
-
-function readV11Surfaces(
-  root: string,
-  row: PnpmBehaviorRow
-): {
-  window: WindowResolution | InvalidWindow | null;
-  strictExplicit: boolean | undefined;
-  ignoreMissingTime: boolean | undefined;
-} {
-  const env = process.env;
-  const keySet = envKeySetForMajor(row);
-
-  const wsRead = readYamlWindow(join(root, 'pnpm-workspace.yaml'));
-  if (wsRead && wsRead.kind === 'invalid') {
-    return {
-      window: wsRead,
-      strictExplicit: undefined,
-      ignoreMissingTime: undefined,
-    };
-  }
-  const globalRead = readYamlWindow(join(getConfigDir(env), 'config.yaml'));
-  if (globalRead && globalRead.kind === 'invalid') {
-    return {
-      window: globalRead,
-      strictExplicit: undefined,
-      ignoreMissingTime: undefined,
-    };
-  }
-  const wsYaml = wsRead && wsRead.kind === 'ok' ? wsRead : null;
-  const globalYaml = globalRead && globalRead.kind === 'ok' ? globalRead : null;
-
-  // pnpm v11 resolves each cooldown key independently across surfaces:
-  // env > pnpm-workspace.yaml > global config.yaml > built-in default.
-  const strictExplicit =
-    readEnvBoolean(env, keySet, 'minimum_release_age_strict') ??
-    wsYaml?.strict ??
-    globalYaml?.strict;
-  const ignoreMissingTime =
-    readEnvBoolean(env, keySet, 'minimum_release_age_ignore_missing_time') ??
-    wsYaml?.ignoreMissingTime ??
-    globalYaml?.ignoreMissingTime;
-  const envExcludes = readEnvArray(env, keySet, 'minimum_release_age_exclude');
-  if (envExcludes === 'invalid') {
-    return {
-      window: {
-        kind: 'invalid',
-        reason: 'Invalid pnpm minimumReleaseAgeExclude entry.',
-      },
-      strictExplicit: undefined,
-      ignoreMissingTime: undefined,
-    };
-  }
-  const excludes =
-    envExcludes ?? wsYaml?.excludes ?? globalYaml?.excludes ?? [];
-
-  const envWindow = readEnvNumber(env, keySet, 'minimum_release_age');
-  // pnpm drops a NaN env value rather than erroring; treat 'invalid' as unset
-  // and fall through to lower surfaces.
-  if (envWindow !== undefined && envWindow !== 'invalid') {
-    return {
-      window: okWindow(envWindow, excludes, 'env'),
-      strictExplicit,
-      ignoreMissingTime,
-    };
-  }
-  if (wsYaml && wsYaml.windowMinutes !== undefined) {
-    return {
-      window: okWindow(wsYaml.windowMinutes, excludes, 'pnpm-workspace.yaml'),
-      strictExplicit,
-      ignoreMissingTime,
-    };
-  }
-  if (globalYaml && globalYaml.windowMinutes !== undefined) {
-    return {
-      window: okWindow(
-        globalYaml.windowMinutes,
-        excludes,
-        'global config.yaml'
-      ),
-      strictExplicit,
-      ignoreMissingTime,
-    };
-  }
-
-  // Built-in 1440-minute (1 day) default, injected programmatically and
-  // invisible to `pnpm config get`. Loose unless some surface set strict.
-  return {
-    window: okWindow(1440, excludes, 'default', false),
-    strictExplicit,
-    ignoreMissingTime,
-  };
-}
-
-// --- v10 surfaces -----------------------------------------------------------
-
-function readV10Surfaces(
-  root: string
-): WindowResolution | InvalidWindow | null {
-  // v10 layers config via @pnpm/npm-conf, per key:
-  // workspace yaml > npm_config_* env > project .npmrc > user .npmrc.
-  const wsRead = readYamlWindow(join(root, 'pnpm-workspace.yaml'));
-  if (wsRead && wsRead.kind === 'invalid') {
-    return wsRead;
-  }
-  const wsYaml = wsRead && wsRead.kind === 'ok' ? wsRead : null;
-
-  const env = process.env;
-  const keySet: EnvKeySet = { prefix: 'npm_config_', uppercase: false };
-  const rawEnvWindow = readEnvNumber(env, keySet, 'minimum_release_age');
-  // npm-conf drops values that fail the Number type; treat as unset.
-  const envWindow = rawEnvWindow === 'invalid' ? undefined : rawEnvWindow;
-
-  const projectNpmrc = readNpmrcSurface(join(root, '.npmrc'));
-  const userNpmrc = readNpmrcSurface(join(homedir(), '.npmrc'));
-
-  // v10 reads npm_config_*, which never JSON-parses, so readEnvArray can only
-  // yield a single-entry array or undefined here - never 'invalid'.
-  const envExcludes = readEnvArray(env, keySet, 'minimum_release_age_exclude');
-  const excludes =
-    wsYaml?.excludes ??
-    (envExcludes === 'invalid' ? undefined : envExcludes) ??
-    projectNpmrc?.excludes ??
-    userNpmrc?.excludes ??
-    [];
-
-  if (wsYaml && wsYaml.windowMinutes !== undefined) {
-    return okWindow(wsYaml.windowMinutes, excludes, 'pnpm-workspace.yaml');
-  }
-  if (envWindow !== undefined) {
-    return okWindow(envWindow, excludes, 'env');
-  }
-  for (const npmrc of [projectNpmrc, userNpmrc]) {
-    if (npmrc && npmrc.windowMinutes !== undefined) {
-      return okWindow(npmrc.windowMinutes, excludes, '.npmrc');
-    }
-  }
-
-  return null;
-}
-
-// --- surface parsers --------------------------------------------------------
-
-interface YamlWindow {
-  kind: 'ok';
-  windowMinutes?: number;
-  // undefined when the key is absent, so per-key precedence can fall through
-  // to a lower surface.
-  excludes?: string[];
-  strict?: boolean;
-  ignoreMissingTime?: boolean;
-}
-
-function readYamlRaw(path: string): Record<string, unknown> | 'invalid' | null {
-  if (!existsSync(path)) {
-    return null;
-  }
-  try {
-    const { load } = require('@zkochan/js-yaml');
-    return (load(readFileSync(path, 'utf-8')) as Record<string, unknown>) ?? {};
-  } catch {
-    // The file exists but is unparseable. An absent file falls through to lower
-    // surfaces; a corrupt one can't be reasoned about, so signal it and let the
-    // caller defer to a real install (matching npm/yarn/bun on a read failure).
-    return 'invalid';
-  }
-}
-
-function readYamlWindow(path: string): YamlWindow | InvalidWindow | null {
-  const doc = readYamlRaw(path);
-  if (doc === 'invalid') {
-    return { kind: 'invalid', reason: `Unable to parse ${basename(path)}.` };
-  }
-  if (!doc) {
-    return null;
-  }
-  // Each key is read independently; pnpm merges surfaces per key.
-  const excludes = readArrayKey(doc, 'minimumReleaseAgeExclude');
-  const strict = readBooleanKey(doc, 'minimumReleaseAgeStrict');
-  const ignoreMissingTime = readBooleanKey(
-    doc,
-    'minimumReleaseAgeIgnoreMissingTime'
-  );
-  const raw = doc['minimumReleaseAge'];
-  if (raw === undefined || raw === null) {
-    return { kind: 'ok', excludes, strict, ignoreMissingTime };
-  }
-  const num = toNumber(raw);
-  if (num === null) {
-    return {
-      kind: 'invalid',
-      reason: `Invalid pnpm minimumReleaseAge value: ${String(raw)}.`,
-    };
-  }
-  return {
-    kind: 'ok',
-    windowMinutes: num,
-    excludes,
-    strict,
-    ignoreMissingTime,
-  };
-}
-
-function readNpmrcSurface(
-  path: string
-): { windowMinutes?: number; excludes?: string[] } | null {
-  const entries = readNpmrcEntries(path);
-  if (entries === null) {
-    return null;
-  }
-  // v10 reads the kebab-case keys via npm-conf; camelCase in .npmrc is never
-  // honored. Only the two cooldown keys are relevant here.
-  let windowMinutes: number | undefined;
-  let excludes: string[] | undefined;
-  for (const { key, value: rawValue } of entries) {
-    const value = stripQuotes(rawValue);
-    if (key === 'minimum-release-age') {
-      const num = toNumber(value);
-      if (num !== null) {
-        windowMinutes = num;
-      }
-    } else if (key === 'minimum-release-age-exclude') {
-      // npm-conf accumulates repeated ini keys into an array.
-      (excludes ??= []).push(value);
-    }
-  }
-  return { windowMinutes, excludes };
-}
-
-// pnpm mirrors getConfigDir: XDG_CONFIG_HOME, else per-platform default.
-function getConfigDir(env: NodeJS.ProcessEnv): string {
-  if (env.XDG_CONFIG_HOME) {
-    return join(env.XDG_CONFIG_HOME, 'pnpm');
-  }
-  if (process.platform === 'darwin') {
-    return join(homedir(), 'Library/Preferences/pnpm');
-  }
-  if (process.platform !== 'win32') {
-    return join(homedir(), '.config/pnpm');
-  }
-  if (env.LOCALAPPDATA) {
-    return join(env.LOCALAPPDATA, 'pnpm/config');
-  }
-  return join(homedir(), '.config/pnpm');
-}
-
-// --- env helpers ------------------------------------------------------------
-
-// Which env surface a pnpm major honors. v10 layers config via @pnpm/npm-conf,
-// which reads `npm_config_*`; `pnpm_config_*` is dead there. v11 reads
-// `pnpm_config_*` (and uppercase `PNPM_CONFIG_*` only >=11.1.0); `npm_config_*`
-// is dead there.
-interface EnvKeySet {
-  prefix: 'pnpm_config_' | 'npm_config_';
-  uppercase: boolean;
-}
-
-function envKeySetForMajor(row: PnpmBehaviorRow): EnvKeySet {
-  return row.major === 11
-    ? { prefix: 'pnpm_config_', uppercase: row.uppercaseEnv }
-    : { prefix: 'npm_config_', uppercase: false };
-}
-
-function envKeys(keySet: EnvKeySet, suffix: string): string[] {
-  const keys = [`${keySet.prefix}${suffix}`];
-  if (keySet.uppercase) {
-    keys.push(`${keySet.prefix.toUpperCase()}${suffix.toUpperCase()}`);
-  }
-  return keys;
-}
-
-function readEnvRaw(
-  env: NodeJS.ProcessEnv,
-  keySet: EnvKeySet,
-  suffix: string
-): string | undefined {
-  for (const key of envKeys(keySet, suffix)) {
-    if (env[key] !== undefined) {
-      return env[key];
-    }
-  }
-  return undefined;
-}
-
-function readEnvNumber(
-  env: NodeJS.ProcessEnv,
-  keySet: EnvKeySet,
-  suffix: string
-): number | 'invalid' | undefined {
-  const raw = readEnvRaw(env, keySet, suffix);
-  if (raw === undefined) {
-    return undefined;
-  }
-  const num = toNumber(raw);
-  // pnpm parses env values via Number(); NaN drops the key.
-  return num === null ? 'invalid' : num;
-}
-
-function readEnvBoolean(
-  env: NodeJS.ProcessEnv,
-  keySet: EnvKeySet,
-  suffix: string
-): boolean | undefined {
-  const raw = readEnvRaw(env, keySet, suffix);
-  // pnpm's Boolean env schema (config/reader/src/env.ts) yields only true/false
-  // for the literals; anything else drops the key, so the value falls through to
-  // lower surfaces / defaults instead of coercing to false.
-  if (raw === 'true') {
-    return true;
-  }
-  if (raw === 'false') {
-    return false;
-  }
-  return undefined;
-}
-
-function readEnvArray(
-  env: NodeJS.ProcessEnv,
-  keySet: EnvKeySet,
-  suffix: string
-): string[] | 'invalid' | undefined {
-  const raw = readEnvRaw(env, keySet, suffix);
-  if (raw === undefined) {
-    return undefined;
-  }
-  // pnpm v11's [String, Array] env schema tries a JSON array first, then falls
-  // back to the raw value as a single entry. v10 (nopt) never JSON-parses.
-  if (keySet.prefix === 'pnpm_config_') {
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        // pnpm passes the array verbatim, then errors at install
-        // (ERR_PNPM_INVALID_MINIMUM_RELEASE_AGE_EXCLUDE) on any non-string
-        // element; signal invalid so the caller defers to a real install.
-        return parsed.every((e) => typeof e === 'string')
-          ? (parsed as string[])
-          : 'invalid';
-      }
-    } catch {}
-  }
-  return [raw];
-}
-
-// --- value helpers ----------------------------------------------------------
-
 function toNumber(value: unknown): number | null {
   if (typeof value === 'number') {
     return Number.isFinite(value) ? value : null;
@@ -621,47 +318,6 @@ function toNumber(value: unknown): number | null {
     return Number.isFinite(num) ? num : null;
   }
   return null;
-}
-
-function stripQuotes(value: string): string {
-  if (
-    (value.startsWith('"') && value.endsWith('"')) ||
-    (value.startsWith("'") && value.endsWith("'"))
-  ) {
-    return value.slice(1, -1);
-  }
-  return value;
-}
-
-function readArrayKey(
-  doc: Record<string, unknown>,
-  key: string
-): string[] | undefined {
-  const value = doc[key];
-  if (Array.isArray(value)) {
-    return value.map((v) => String(v));
-  }
-  if (typeof value === 'string') {
-    return [value];
-  }
-  return undefined;
-}
-
-function readBooleanKey(
-  doc: Record<string, unknown>,
-  key: string
-): boolean | undefined {
-  const value = doc[key];
-  if (typeof value === 'boolean') {
-    return value;
-  }
-  if (value === 'true') {
-    return true;
-  }
-  if (value === 'false') {
-    return false;
-  }
-  return undefined;
 }
 
 // --- excludes ---------------------------------------------------------------

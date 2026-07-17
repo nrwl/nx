@@ -1,4 +1,6 @@
 disallowed-types = [
     # We need to ensure adjustments for light and dark themes are applied appropriately
     { path = "ratatui::style::Color", reason = "Use our utils from crate::native::tui::colors instead to ensure appropriate light/dark theme support" },
+    # Embedded links need their rendered position; ratatui's Paragraph discards it.
+    { path = "ratatui::widgets::Paragraph", reason = "Use crate::native::tui::components::nx_paragraph::NxParagraph instead (supports clickable links; nx_paragraph.rs is the only sanctioned wrapper)" },
 ]

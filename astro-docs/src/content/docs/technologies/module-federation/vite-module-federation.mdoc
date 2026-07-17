@@ -106,7 +106,10 @@ Nx is not the federation mechanism here. It runs the tasks. The `nx.json` `targe
 {
   "targetDefaults": {
     "dev": { "continuous": true, "dependsOn": ["^build"] },
-    "build": { "dependsOn": ["^build"], "outputs": ["{projectRoot}/dist"] },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["{projectRoot}/dist"]
+    },
     "preview": { "continuous": true, "dependsOn": ["build"] }
   }
 }

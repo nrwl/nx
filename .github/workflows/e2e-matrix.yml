@@ -15,7 +15,7 @@ env:
   CYPRESS_CACHE_FOLDER: ${{ github.workspace }}/.cypress
   # Pin corepack to the pnpm version from packageManager. Without this, corepack
   # falls back to "latest" in directories that have no packageManager field
-  # (e.g. e2e temp dirs), pulling pnpm 11 and breaking install.
+  # (e.g. e2e temp dirs) instead of the repo's pinned pnpm.
   COREPACK_DEFAULT_TO_LATEST: '0'
 
 permissions: {}
@@ -224,9 +224,12 @@ jobs:
           if ! brew list applesimutils &>/dev/null; then
             echo 'Installing applesimutils...'
             HOMEBREW_NO_AUTO_UPDATE=1 brew tap wix/brew >/dev/null
+            # Homebrew now refuses to load formulae from third-party taps unless trusted
+            brew trust wix/brew
             HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils >/dev/null || {
               echo 'Failed to install applesimutils, retrying with update...'
               brew update
+              brew trust wix/brew
               HOMEBREW_NO_AUTO_UPDATE=1 brew install applesimutils
             }
           else

@@ -6,20 +6,40 @@ export const nxVersion = require(join('@nx/expo', 'package.json')).version;
 
 // Lowest supported Expo SDK. Below this, generators throw via
 // assertSupportedExpoVersion. Expo Go only supports the latest SDK, but the
-// plugin keeps install lanes for the recent SDKs it has constants for (53–55).
+// plugin keeps install lanes for the recent SDKs it has constants for (53–56).
 export const minSupportedExpoVersion = '53.0.0';
 
 export function assertSupportedExpoVersion(tree: Tree): void {
   assertSupportedPackageVersion(tree, 'expo', minSupportedExpoVersion);
 }
 
-// Expo v55 versions (default for new projects) — RN 0.83, React 19.2
+// Expo v56 versions (default for new projects) — RN 0.85, React 19.2
+export const expoV56Version = '~56.0.0';
+export const expoV56SplashScreenVersion = '~56.0.10';
+export const expoV56StatusBarVersion = '~56.0.4';
+export const expoV56SystemUiVersion = '~56.0.5';
+export const expoV56CliVersion = '~56.1.14'; // @expo/cli
+export const babelPresetExpoV56Version = '~56.0.14';
+export const expoV56MetroVersion = '~56.0.0'; // @expo/metro (SDK 55+ Metro)
+export const expoV56MetroConfigVersion = '~56.0.13'; // @expo/metro-config
+export const expoV56MetroRuntimeVersion = '~56.0.14';
+export const jestExpoV56Version = '~56.0.4';
+export const reactV56Version = '^19.2.0';
+export const reactDomV56Version = '^19.2.0';
+export const typesReactV56Version = '^19.2.0';
+export const reactNativeV56Version = '0.85.3';
+export const metroV56Version = '~0.84.3';
+export const reactNativeWebV56Version = '~0.21.0';
+export const reactTestRendererV56Version = '^19.2.0';
+
+// Expo v55 versions (for existing workspaces) — RN 0.83, React 19.2
 export const expoV55Version = '~55.0.26';
 export const expoV55SplashScreenVersion = '~55.0.21';
 export const expoV55StatusBarVersion = '~55.0.6';
 export const expoV55SystemUiVersion = '~55.0.18';
 export const expoV55CliVersion = '~55.0.11';
 export const babelPresetExpoV55Version = '~55.0.7';
+export const expoV55MetroVersion = '~55.0.0'; // @expo/metro (SDK 55+ Metro)
 export const expoV55MetroConfigVersion = '~55.0.8';
 export const expoV55MetroRuntimeVersion = '~55.0.11';
 export const jestExpoV55Version = '~55.0.18';
@@ -67,25 +87,28 @@ export const metroV53Version = '~0.82.4';
 export const reactNativeWebV53Version = '~0.20.0';
 export const reactTestRendererV53Version = '^19.0.0';
 
-// Default exports point to v55 (latest)
-export const expoVersion = expoV55Version;
-export const expoSplashScreenVersion = expoV55SplashScreenVersion;
-export const expoStatusBarVersion = expoV55StatusBarVersion;
-export const expoSystemUiVersion = expoV55SystemUiVersion;
-export const expoCliVersion = expoV55CliVersion;
-export const babelPresetExpoVersion = babelPresetExpoV55Version;
-export const expoMetroConfigVersion = expoV55MetroConfigVersion;
-export const expoMetroRuntimeVersion = expoV55MetroRuntimeVersion;
-export const jestExpoVersion = jestExpoV55Version;
-export const reactVersion = reactV55Version;
-export const reactDomVersion = reactDomV55Version;
-export const typesReactVersion = typesReactV55Version;
-export const reactNativeVersion = reactNativeV55Version;
-export const metroVersion = metroV55Version;
-export const reactNativeWebVersion = reactNativeWebV55Version;
+// Default exports point to v56 (latest)
+export const expoVersion = expoV56Version;
+export const expoSplashScreenVersion = expoV56SplashScreenVersion;
+export const expoStatusBarVersion = expoV56StatusBarVersion;
+export const expoSystemUiVersion = expoV56SystemUiVersion;
+export const expoCliVersion = expoV56CliVersion;
+export const babelPresetExpoVersion = babelPresetExpoV56Version;
+export const expoMetroConfigVersion = expoV56MetroConfigVersion;
+export const expoMetroRuntimeVersion = expoV56MetroRuntimeVersion;
+export const jestExpoVersion = jestExpoV56Version;
+export const reactVersion = reactV56Version;
+export const reactDomVersion = reactDomV56Version;
+export const typesReactVersion = typesReactV56Version;
+export const reactNativeVersion = reactNativeV56Version;
+export const metroVersion = metroV56Version;
+export const reactNativeWebVersion = reactNativeWebV56Version;
 
 // Shared versions (version-independent)
 export const reactNativeSvgTransformerVersion = '~1.5.1';
 export const reactNativeSvgVersion = '15.12.1';
 export const testingLibraryReactNativeVersion = '~13.2.0';
 export const babelRuntimeVersion = '~7.27.6';
+// jest-expo's preset maps `react-native-vector-icons` to `@expo/vector-icons`,
+// so it must be installed for the Jest preset to resolve.
+export const expoVectorIconsVersion = '~15.1.0';

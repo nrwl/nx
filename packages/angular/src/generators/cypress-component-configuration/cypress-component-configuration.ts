@@ -234,9 +234,11 @@ async function configureCypressCT(
     ctConfigOptions.buildTarget = found.target;
   }
 
-  const { addDefaultCTConfig, getProjectCypressConfigPath } = <
-    typeof import('@nx/cypress/internal')
-  >require('@nx/cypress/internal');
+  const {
+    addDefaultCTConfig,
+    getProjectCypressConfigPath,
+    getInstalledCypressMajorVersion,
+  } = <typeof import('@nx/cypress/internal')>require('@nx/cypress/internal');
   const cypressConfigPath = getProjectCypressConfigPath(
     tree,
     projectConfig.root
@@ -244,7 +246,8 @@ async function configureCypressCT(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigPath, 'utf-8'),
     ctConfigOptions,
-    '@nx/angular/plugins/component-testing'
+    '@nx/angular/plugins/component-testing',
+    getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigPath, updatedCyConfig);
 }

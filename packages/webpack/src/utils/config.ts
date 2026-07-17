@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { readNxJson } from 'nx/src/config/configuration';
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';
 
