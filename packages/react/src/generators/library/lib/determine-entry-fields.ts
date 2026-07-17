@@ -1,4 +1,4 @@
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import type { NormalizedSchema } from '../schema';
 
 export function determineEntryFields(

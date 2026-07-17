@@ -15,9 +15,10 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { existsSync, readdirSync } from 'fs';
-import { hashArray, hashFile, hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { getPackageManagerCommand } from 'nx/src/utils/package-manager';
+import { hashArray } from '@nx/devkit';
+import { hashFile, hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { getPackageManagerCommand } from '@nx/devkit';
 import { dirname, extname, isAbsolute, join, relative, resolve } from 'path';
 import { readRspackOptions } from '../utils/read-rspack-options';
 import { resolveUserDefinedRspackConfig } from '../utils/resolve-user-defined-rspack-config';

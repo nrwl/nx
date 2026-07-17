@@ -1,5 +1,5 @@
 import { output, ProjectConfiguration, readJson, type Tree } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 const startLocalRegistryScript = (localRegistryTarget: string) => `/**
  * This script starts a local registry for e2e testing purposes.
@@ -9,7 +9,7 @@ const startLocalRegistryScript = (localRegistryTarget: string) => `/**
 /// <reference path="registry.d.ts" />
 
 import { startLocalRegistry } from '@nx/js/plugins/jest/local-registry';
-import { releasePublish, releaseVersion } from 'nx/release';
+import { releasePublish, releaseVersion } from '@nx/devkit/internal';
 
 export default async () => {
   // local registry target to run

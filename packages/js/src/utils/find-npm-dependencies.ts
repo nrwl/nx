@@ -1,5 +1,5 @@
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 import { isAbsolute, join, relative } from 'path';
-import { readNxJson } from 'nx/src/config/configuration';
 import {
   joinPathFragments,
   normalizePath,
@@ -8,13 +8,10 @@ import {
   type ProjectGraphProjectNode,
   readJsonFile,
 } from '@nx/devkit';
-import { fileExists } from 'nx/src/utils/fileutils';
-import { fileDataDepTarget } from 'nx/src/config/project-graph';
+import { fileExists } from '@nx/devkit/internal';
+import { fileDataDepTarget } from '@nx/devkit/internal';
 import { getRootTsConfigPath, readTsConfig } from './typescript/ts-config';
-import {
-  filterUsingGlobPatterns,
-  getTargetInputs,
-} from 'nx/src/hasher/task-hasher';
+import { filterUsingGlobPatterns, getTargetInputs } from '@nx/devkit/internal';
 
 /**
  * Finds all npm dependencies and their expected versions for a given project.

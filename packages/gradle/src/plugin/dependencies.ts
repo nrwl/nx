@@ -16,7 +16,7 @@ import {
 } from './utils/get-project-graph-from-gradle-plugin';
 import { GradlePluginOptions } from './utils/gradle-plugin-options';
 import { GRADLEW_FILES, splitConfigFiles } from '../utils/split-config-files';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import { existsSync } from 'node:fs';
 
 export const createDependencies: CreateDependencies<

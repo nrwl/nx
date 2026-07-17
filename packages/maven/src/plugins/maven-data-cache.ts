@@ -1,5 +1,5 @@
 import { join } from 'path';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { PluginCache } from '@nx/devkit/internal';
 import { MavenAnalysisData } from './types';
 
 /**

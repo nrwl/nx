@@ -18,7 +18,7 @@ import { initGenerator as jsInitGenerator, extractTsConfigBase } from '@nx/js';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 import { updateJestTestMatch } from '../../utils/testing-config-utils';
 import {
   isbotVersion,

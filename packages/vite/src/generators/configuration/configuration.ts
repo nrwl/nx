@@ -22,7 +22,7 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { join } from 'node:path/posix';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedViteVersion } from '../../utils/assert-supported-vite-version';
 import { warnViteExecutorGenerating } from '../../utils/deprecation';

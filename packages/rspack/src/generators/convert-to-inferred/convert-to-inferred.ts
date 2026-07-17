@@ -20,7 +20,7 @@ import {
   servePostTargetTransformerFactory,
   type MigrationContext,
 } from './utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
+import { logger as devkitLogger } from '@nx/devkit';
 import { assertSupportedRspackVersion } from '../../utils/assert-supported-rspack-version';
 
 interface Schema {

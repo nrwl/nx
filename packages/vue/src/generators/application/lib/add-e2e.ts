@@ -12,7 +12,7 @@ import { webStaticServeGenerator } from '@nx/web';
 import { nxVersion } from '../../../utils/versions';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export async function addE2e(
   tree: Tree,

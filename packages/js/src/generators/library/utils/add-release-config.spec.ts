@@ -6,7 +6,7 @@ import {
   output,
   ProjectConfiguration,
 } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
   addReleaseConfigForNonTsSolution,
   addReleaseConfigForTsSolution,

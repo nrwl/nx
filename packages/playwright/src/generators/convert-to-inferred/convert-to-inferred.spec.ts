@@ -1,7 +1,5 @@
-import {
-  getRelativeProjectJsonSchemaPath,
-  updateProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
+import { updateProjectConfiguration } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { convertToInferred } from './convert-to-inferred';
 import {

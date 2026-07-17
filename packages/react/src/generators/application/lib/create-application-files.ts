@@ -20,7 +20,7 @@ import { getAppTests } from './get-app-tests';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import {

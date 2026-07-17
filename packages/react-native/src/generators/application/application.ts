@@ -25,7 +25,7 @@ import { Schema } from './schema';
 import { ensureDependencies } from '../../utils/ensure-dependencies';
 import { assertSupportedReactNativeVersion } from '../../utils/versions';
 import { syncDeps } from '../../executors/sync-deps/sync-deps.impl';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,

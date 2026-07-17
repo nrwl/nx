@@ -1,7 +1,7 @@
-import { Tree } from 'nx/src/generators/tree';
+import { Tree } from '@nx/devkit';
 import type { Linter as EsLintLinter } from 'eslint';
 import { Linter, LinterType, lintProjectGenerator } from '@nx/eslint';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { joinPathFragments } from '@nx/devkit';
 import {
   addDependenciesToPackageJson,
   GeneratorCallback,

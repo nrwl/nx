@@ -1,4 +1,4 @@
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from '@nx/devkit';
 
 export function getComponentDataFromAST(
   tree: Tree,

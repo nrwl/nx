@@ -1,6 +1,6 @@
 import { type CreateNodesContext } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes } from './plugin';
 
 jest.mock('@rsbuild/core', () => ({

@@ -1,4 +1,4 @@
-import { Tree } from 'nx/src/generators/tree';
+import { Tree } from '@nx/devkit';
 import { visitNotIgnoredFiles } from '@nx/devkit';
 import { extname } from 'path';
 

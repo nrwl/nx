@@ -1,10 +1,11 @@
+import type { TaskResult } from '@nx/devkit/internal';
 import { ExecutorContext, TaskGraph, workspaceRoot } from '@nx/devkit';
 import { spawn } from 'child_process';
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 import { createInterface } from 'readline';
-import { TaskResult } from 'nx/src/config/misc-interfaces';
-import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
+import { TaskResult } from '@nx/devkit';
+import { RunCommandsOptions } from '@nx/devkit/internal';
 import { MavenExecutorSchema } from './schema';
 
 /**

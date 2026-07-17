@@ -28,7 +28,7 @@ import {
   updateProjectConfiguration,
   writeJson,
 } from '@nx/devkit';
-import { type PackageJson } from 'nx/src/utils/package-json';
+import { type PackageJson } from '@nx/devkit/internal';
 import { join } from 'path';
 import type { CompilerOptions } from 'typescript';
 import { assertSupportedTypescriptVersion } from '../../utils/assert-supported-typescript-version';

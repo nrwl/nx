@@ -25,8 +25,8 @@ import {
   addBuildAndWatchDepsTargets,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { dirname, isAbsolute, join, relative, resolve } from 'path';
 import { readWebpackOptions } from '../utils/webpack/read-webpack-options';
 import { resolveUserDefinedWebpackConfig } from '../utils/webpack/resolve-user-defined-webpack-config';

@@ -1,5 +1,5 @@
 import { logger } from '@nx/devkit';
-import { daemonClient } from 'nx/src/daemon/client/client';
+import { daemonClient } from '@nx/devkit/internal';
 import { join } from 'path';
 import type { TaskInfo } from './types';
 

@@ -11,9 +11,9 @@ import {
 import { getRootTsConfigPath } from '@nx/js';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { existsSync } from 'fs';
-import { readNxJson } from 'nx/src/config/configuration';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
+import { isNpmProject } from '@nx/devkit/internal';
+import { readCachedProjectConfiguration } from '@nx/devkit/internal';
 import { relative } from 'path';
 import { combineLatest, from } from 'rxjs';
 import { switchMap } from 'rxjs/operators';

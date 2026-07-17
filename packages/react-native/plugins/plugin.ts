@@ -20,8 +20,8 @@ import {
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/devkit-internals';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { hashObject } from '@nx/devkit/internal';
 
 export interface ReactNativePluginOptions {
   startTargetName?: string;

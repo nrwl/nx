@@ -3,7 +3,7 @@ import { getRelativePathToRootTsConfig, getRootTsConfigFileName } from '@nx/js';
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import {
   getComponentType,

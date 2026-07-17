@@ -39,7 +39,7 @@ import {
   addReleaseConfigForTsSolution,
   releaseTasks,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { relative } from 'path';
 import {

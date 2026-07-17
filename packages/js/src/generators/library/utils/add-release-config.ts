@@ -10,7 +10,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { findMatchingProjects } from '@nx/devkit/internal';
 import setupVerdaccio from '../../setup-verdaccio/generator';
 
 /**

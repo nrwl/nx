@@ -6,8 +6,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
-import { deduceDefaultBase } from 'nx/src/utils/default-base';
+import { getNxCloudUrl, isNxCloudUsed } from '@nx/devkit/internal';
+import { deduceDefaultBase } from '@nx/devkit/internal';
 
 function getCiCommands(ci: Schema['ci']): Command[] {
   switch (ci) {

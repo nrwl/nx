@@ -1,6 +1,6 @@
 import { Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { FsTree } from '@nx/devkit/internal';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import {
   updatePluginVersionInCatalogAst,
   extractPluginVersionFromCatalogAst,

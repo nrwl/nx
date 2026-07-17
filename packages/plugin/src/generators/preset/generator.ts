@@ -6,7 +6,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { createPackageGenerator } from '../create-package/create-package';
 import { pluginGenerator } from '../plugin/plugin';
 import type {

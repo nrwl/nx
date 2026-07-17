@@ -22,8 +22,8 @@ import {
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
 import { readdirSync } from 'fs';
-import { hashObject } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { dirname, join } from 'path';
 
 export interface NextPluginOptions {

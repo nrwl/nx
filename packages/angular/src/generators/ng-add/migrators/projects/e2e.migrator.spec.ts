@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 // mock so we can test multiple versions
 jest.mock('@nx/cypress/internal', () => ({

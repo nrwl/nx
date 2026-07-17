@@ -13,7 +13,7 @@ import {
 } from '@nx/devkit';
 import { type NormalizedSchema } from './normalize-options';
 import { nxVersion } from '../../../utils/versions';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export async function addE2E(
   tree: Tree,

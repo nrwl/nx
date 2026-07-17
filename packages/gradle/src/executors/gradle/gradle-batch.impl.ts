@@ -1,3 +1,4 @@
+import type { TaskResult } from '@nx/devkit/internal';
 import {
   ExecutorContext,
   output,
@@ -5,8 +6,8 @@ import {
   TaskGraph,
   workspaceRoot,
 } from '@nx/devkit';
-import { RunCommandsOptions } from 'nx/src/executors/run-commands/run-commands.impl';
-import { TaskResult } from 'nx/src/config/misc-interfaces';
+import { RunCommandsOptions } from '@nx/devkit/internal';
+import { TaskResult } from '@nx/devkit';
 import { GradleExecutorSchema } from './schema';
 import {
   findGradlewFile,

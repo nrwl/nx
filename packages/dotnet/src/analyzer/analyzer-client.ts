@@ -3,10 +3,10 @@ import { createHash } from 'node:crypto';
 import { existsSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { logger, workspaceRoot, ProjectConfiguration } from '@nx/devkit';
-import { hashWithWorkspaceContext } from 'nx/src/utils/workspace-context';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { hashWithWorkspaceContext } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { hashObject } from '@nx/devkit/internal';
+import { PluginCache } from '@nx/devkit/internal';
 
 export interface AnalysisSuccessResult {
   // Maps project file path -> node configuration

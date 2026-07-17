@@ -1,11 +1,8 @@
 import { type Plugin } from 'vite';
-import { BatchFunctionRunner } from 'nx/src/command-line/watch/watch';
+import { BatchFunctionRunner } from '@nx/devkit/internal';
 import { exec, type ChildProcess } from 'child_process';
-import {
-  daemonClient,
-  type UnregisterCallback,
-} from 'nx/src/daemon/client/client';
-import { output } from 'nx/src/utils/output';
+import { daemonClient, type UnregisterCallback } from '@nx/devkit/internal';
+import { output } from '@nx/devkit';
 
 export interface NxViteBuildCoordinationPluginOptions {
   buildCommand: string;

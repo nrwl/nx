@@ -7,7 +7,7 @@ import {
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { readTargetDefaultsForTarget } from 'nx/src/project-graph/utils/project-configuration-utils';
+import { readTargetDefaultsForTarget } from '@nx/devkit/internal';
 import {
   findRootJestConfig,
   type JestPresetExtension,

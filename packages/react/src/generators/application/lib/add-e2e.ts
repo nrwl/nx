@@ -16,7 +16,7 @@ import { hasVitePlugin } from '../../../utils/has-vite-plugin';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
 import { hasRsbuildPlugin } from '../../../utils/has-rsbuild-plugin';
 import { NormalizedSchema } from '../schema';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export async function addE2e(
   tree: Tree,

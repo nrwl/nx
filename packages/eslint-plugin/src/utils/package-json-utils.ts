@@ -1,6 +1,6 @@
 import { readJsonFile } from '@nx/devkit';
 import { existsSync } from 'fs';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export function getAllDependencies(
   packageJson: PackageJson

@@ -9,7 +9,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { NormalizedSchema } from './normalize-options';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { warnReactNativeExecutorGenerating } from '../../../utils/deprecation';
 
 export function addProject(host: Tree, options: NormalizedSchema) {

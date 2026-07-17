@@ -2,7 +2,7 @@ import {
   createProjectGraphAsync,
   getDependencyVersionFromPackageJson,
 } from '@nx/devkit';
-import type { Tree } from 'nx/src/generators/tree';
+import type { Tree } from '@nx/devkit';
 import { clean, coerce, major } from 'semver';
 import {
   h3Version,

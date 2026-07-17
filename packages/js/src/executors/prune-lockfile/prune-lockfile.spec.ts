@@ -3,7 +3,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { getCatalogManager } from '@nx/devkit/internal';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { type PackageJson } from 'nx/src/utils/package-json';
+import { type PackageJson } from '@nx/devkit/internal';
 import pruneLockfileExecutor, {
   resolveCatalogReferences,
 } from './prune-lockfile';

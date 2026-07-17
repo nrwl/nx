@@ -8,7 +8,7 @@ import {
   visitNotIgnoredFiles,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { nxVersion } from 'nx/src/utils/versions';
+import { nxVersion } from '@nx/devkit/internal';
 import { getActualBundler, isComponent } from '../../../utils/ct-utils';
 import { componentTestGenerator } from '../../component-test/component-test';
 import type { CypressComponentConfigurationSchema } from '../schema';

@@ -9,7 +9,7 @@ import {
   readJson,
   detectPackageManager,
 } from '@nx/devkit';
-import { fileExists } from 'nx/src/utils/fileutils';
+import { fileExists } from '@nx/devkit/internal';
 import { readFileSync } from 'fs';
 import { dirname, join } from 'path';
 

@@ -13,8 +13,8 @@ import { prompt } from 'enquirer';
 import {
   GeneratorInformation,
   getGeneratorInformation,
-} from 'nx/src/command-line/generate/generator-utils';
-import { findInstalledPlugins } from 'nx/src/utils/plugins/installed-plugins';
+  findInstalledPlugins,
+} from '@nx/devkit/internal';
 
 interface Schema {
   project?: string;

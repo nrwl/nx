@@ -7,16 +7,16 @@ import {
   createNodesFromFiles,
 } from '@nx/devkit';
 import { basename, dirname, join } from 'node:path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
-import { findProjectForPath } from 'nx/src/devkit-internals';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { PluginCache } from '@nx/devkit/internal';
+import { findProjectForPath } from '@nx/devkit/internal';
 
 import {
   populateGradleReport,
   getCurrentGradleReport,
   GradleReport,
 } from './utils/get-gradle-report';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashObject } from '@nx/devkit/internal';
 import {
   gradleConfigAndTestGlob,
   gradleConfigGlob,

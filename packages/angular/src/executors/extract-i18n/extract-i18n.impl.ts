@@ -1,6 +1,6 @@
 import { parseTargetString, type ExecutorContext } from '@nx/devkit';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { readCachedProjectConfiguration } from 'nx/src/project-graph/project-graph';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
+import { readCachedProjectConfiguration } from '@nx/devkit/internal';
 import { assertPackageIsInstalled } from '../utilities/builder-package';
 import { patchBuilderContext } from '../utilities/patch-builder-context';
 import type { ExtractI18nExecutorOptions } from './schema';

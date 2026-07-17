@@ -8,7 +8,7 @@ import {
 import {
   createNxCloudOnboardingURLForWelcomeApp,
   getNxCloudAppOnBoardingUrl,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 import { join } from 'path';
 import { NormalizedSchema } from './normalize-options';
 import { getInstalledExpoMajor } from '../../../utils/version-utils';

@@ -5,7 +5,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import { toNewFormat } from 'nx/src/adapter/angular-json';
+import { toNewFormat } from '@nx/devkit/internal';
 import type { MigrationProjectConfiguration, WorkspaceProjects } from './types';
 
 export function getAllProjects(tree: Tree): WorkspaceProjects {

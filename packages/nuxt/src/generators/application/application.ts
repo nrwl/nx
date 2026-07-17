@@ -36,14 +36,14 @@ import { join } from 'node:path';
 import {
   getNxCloudAppOnBoardingUrl,
   createNxCloudOnboardingURLForWelcomeApp,
-} from 'nx/src/nx-cloud/utilities/onboarding';
+} from '@nx/devkit/internal';
 import {
   addProjectToTsSolutionWorkspace,
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export async function applicationGenerator(tree: Tree, schema: Schema) {
   return await applicationGeneratorInternal(tree, {

@@ -1,4 +1,4 @@
-import { combineGlobPatterns } from 'nx/src/utils/globs';
+import { combineGlobPatterns } from '@nx/devkit/internal';
 import { basename, dirname } from 'node:path';
 
 export const GRADLE_BUILD_FILES = new Set(['build.gradle', 'build.gradle.kts']);

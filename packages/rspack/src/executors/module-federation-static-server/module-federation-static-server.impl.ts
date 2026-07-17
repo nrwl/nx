@@ -21,7 +21,7 @@ import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
 import { fork } from 'child_process';
 import type { Express } from 'express';
 import { cpSync, existsSync, readFileSync, rmSync } from 'fs';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { ExecutorContext } from '@nx/devkit';
 import { basename, extname, join } from 'path';
 import { ModuleFederationDevServerOptions } from '../module-federation-dev-server/schema';
 import type { RspackExecutorSchema } from '../rspack/schema';

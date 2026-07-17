@@ -13,7 +13,7 @@ import { assertPackageIsInstalled } from '../utilities/builder-package';
 import { type Schema } from './schema';
 import { normalizeOptions, startRemotes } from './lib';
 import { waitForPortOpen, fileServerExecutor } from '@nx/web/internal';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
 import { executeDevServerBuilder } from '../../builders/dev-server/dev-server.impl';
 import {
   getDynamicMfManifestFile,

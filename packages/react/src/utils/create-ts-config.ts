@@ -1,6 +1,6 @@
-import { Tree } from 'nx/src/generators/tree';
+import { Tree } from '@nx/devkit';
 import * as shared from '@nx/js';
-import { updateJson, writeJson } from 'nx/src/generators/utils/json';
+import { updateJson, writeJson } from '@nx/devkit';
 import {
   getTsConfigBaseOptions,
   isUsingTsSolutionSetup,

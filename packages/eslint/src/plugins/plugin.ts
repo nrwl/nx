@@ -20,10 +20,10 @@ import type { ESLint as ESLintType } from 'eslint';
 import { existsSync } from 'node:fs';
 import { relative as nativeRelative, sep as nativeSep } from 'node:path';
 import { basename, dirname, join, normalize, sep } from 'node:path/posix';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { combineGlobPatterns } from '@nx/devkit/internal';
+import { globWithWorkspaceContext } from '@nx/devkit/internal';
 import {
   BASE_ESLINT_CONFIG_FILENAMES,
   baseEsLintConfigFile,

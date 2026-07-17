@@ -1,6 +1,6 @@
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { type Tree, readNxJson, updateNxJson } from 'nx/src/devkit-exports';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { getViteE2EWebServerInfo } from './e2e-web-server-info-utils';
 
 describe('getViteE2EWebServerInfo', () => {

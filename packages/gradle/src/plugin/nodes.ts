@@ -8,10 +8,10 @@ import {
   normalizePath,
 } from '@nx/devkit';
 import { dirname, join } from 'node:path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { PluginCache } from 'nx/src/utils/plugin-cache-utils';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { PluginCache } from '@nx/devkit/internal';
 
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashObject } from '@nx/devkit/internal';
 import {
   gradleConfigAndTestGlob,
   splitConfigFiles,

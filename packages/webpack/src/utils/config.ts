@@ -5,7 +5,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
-import { readNxJson } from 'nx/src/config/configuration';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 import type { Configuration } from 'webpack';
 import { NormalizedWebpackExecutorOptions } from '../executors/webpack/schema';
 import { warnWebpackComposeHelpersDeprecation } from './deprecation';

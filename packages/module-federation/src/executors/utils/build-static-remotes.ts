@@ -3,7 +3,7 @@ import { type StaticRemotesConfig } from '../../utils';
 import { type BuildStaticRemotesOptions } from './models';
 import { fork } from 'node:child_process';
 import { join } from 'path';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { createWriteStream } from 'fs';
 import { childBuildEnv } from '../../utils/is-serve-mode';
 

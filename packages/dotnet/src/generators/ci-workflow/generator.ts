@@ -6,8 +6,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { join } from 'path';
-import { getNxCloudUrl, isNxCloudUsed } from 'nx/src/utils/nx-cloud-utils';
-import { deduceDefaultBase } from 'nx/src/utils/default-base';
+import { getNxCloudUrl, isNxCloudUsed } from '@nx/devkit/internal';
+import { deduceDefaultBase } from '@nx/devkit/internal';
 
 const NX_AFFECTED_COMMENT = `# Nx Affected runs only tasks affected by the changes in this PR/commit. Learn more: https://nx.dev/ci/features/affected.`;
 

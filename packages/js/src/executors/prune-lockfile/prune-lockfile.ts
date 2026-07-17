@@ -10,18 +10,13 @@ import {
 import { getCatalogManager } from '@nx/devkit/internal';
 import { existsSync, lstatSync, writeFileSync } from 'fs';
 import { dirname, join } from 'path';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { interpolate } from '@nx/devkit/internal';
 import {
   type PackageJson,
   type PackageJsonDependencySection,
-} from 'nx/src/utils/package-json';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import {
-  getLockFileName,
-  createLockFile,
-} from 'nx/src/plugins/js/lock-file/lock-file';
-// eslint-disable-next-line @typescript-eslint/no-restricted-imports
-import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+} from '@nx/devkit/internal';
+import { getLockFileName, createLockFile } from '@nx/devkit/internal';
+import { getWorkspacePackagesFromGraph } from '@nx/devkit/internal';
 import { type PruneLockfileOptions } from './schema';
 import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 

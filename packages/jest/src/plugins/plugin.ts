@@ -27,13 +27,15 @@ import {
   relative,
   resolve,
 } from 'node:path';
-import { hashObject } from 'nx/src/devkit-internals';
-import { getGlobPatternsFromPackageManagerWorkspaces } from 'nx/src/plugins/package-json';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { combineGlobPatterns } from 'nx/src/utils/globs';
-import { getNxRequirePaths } from 'nx/src/utils/installation-directory';
-import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
-import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
+import {
+  hashObject,
+  getGlobPatternsFromPackageManagerWorkspaces,
+  workspaceDataDirectory,
+  combineGlobPatterns,
+  getNxRequirePaths,
+  deriveGroupNameFromTarget,
+  globWithWorkspaceContext,
+} from '@nx/devkit/internal';
 import { getLockFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,

@@ -20,7 +20,7 @@ import {
   getDependencyVersionFromPackageJson,
 } from '@nx/devkit';
 import { existsSync } from 'fs';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 // Deferred so a top-level import of @rspack/core (pure ESM in v2) doesn't
 // crash Jest's CJS loading of any test that imports this module.

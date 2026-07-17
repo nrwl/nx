@@ -15,9 +15,9 @@ import {
   getRootTsConfigPathInTree,
   initGenerator as jsInitGenerator,
 } from '@nx/js';
-import { deduceDefaultBase } from 'nx/src/utils/default-base';
+import { deduceDefaultBase } from '@nx/devkit/internal';
 import { prettierVersion } from '@nx/js/internal';
-import { toNewFormat } from 'nx/src/adapter/angular-json';
+import { toNewFormat } from '@nx/devkit/internal';
 import { angularDevkitVersion, nxVersion } from '../../../utils/versions';
 import type { ProjectMigrator } from '../migrators';
 import type { GeneratorOptions } from '../schema';

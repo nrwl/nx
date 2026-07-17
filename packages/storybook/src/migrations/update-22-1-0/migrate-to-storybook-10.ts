@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { output } from 'nx/src/utils/output';
+import { output } from '@nx/devkit';
 import migrate10Generator from '../../generators/migrate-10/migrate-10';
 
 export default async function migrateToStorybook10(tree: Tree) {

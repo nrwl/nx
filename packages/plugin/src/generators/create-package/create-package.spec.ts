@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import {
   joinPathFragments,
@@ -7,13 +7,13 @@ import {
   Tree,
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import pluginGenerator from '../plugin/plugin';
 import { createPackageGenerator } from './create-package';
 import { CreatePackageSchema } from './schema';
 import { setCwd } from '@nx/devkit/internal-testing-utils';
 import { tsLibVersion } from '@nx/js/internal';
-import { nxVersion } from 'nx/src/utils/versions';
+import { nxVersion } from '@nx/devkit/internal';
 
 const getSchema: (
   overrides?: Partial<CreatePackageSchema>

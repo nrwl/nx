@@ -1,5 +1,5 @@
 import { Tree } from '@nx/devkit';
-import { output } from 'nx/src/utils/output';
+import { output } from '@nx/devkit';
 import migrate9Generator from '../../generators/migrate-9/migrate-9';
 import { storybookMajorVersion } from '../../utils/utilities';
 

@@ -1,7 +1,7 @@
 import { fork } from 'node:child_process';
 import { join } from 'path';
 import { createWriteStream } from 'node:fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { workspaceRoot } from '@nx/devkit';
 import { StaticRemoteConfig } from '../../utils';
 import { NxModuleFederationDevServerConfig } from '../models';

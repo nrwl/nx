@@ -26,7 +26,7 @@ import { lintInitGenerator } from '../init/init';
 import { warnEslintExecutorGenerating } from '../../utils/deprecation';
 import type { Linter } from 'eslint';
 import { migrateConfigToMonorepoStyle } from '../init/init-migration';
-import { getProjects } from 'nx/src/generators/utils/project-configuration';
+import { getProjects } from '@nx/devkit';
 import { useFlatConfig } from '../../utils/flat-config';
 import {
   createNodeList,

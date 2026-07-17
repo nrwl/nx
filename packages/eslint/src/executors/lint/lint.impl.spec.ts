@@ -1,6 +1,10 @@
 import type { ExecutorContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as fs from 'fs';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- jest.spyOn
+// must target the module the code under test binds (packages/devkit imports
+// nx/src/devkit-internals directly); spying on the @nx/devkit/internal barrel
+// re-export would not intercept it.
 import * as devkitInternals from 'nx/src/devkit-internals';
 import { resolve } from 'path';
 

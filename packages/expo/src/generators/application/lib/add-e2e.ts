@@ -11,7 +11,7 @@ import {
   Tree,
   writeJson,
 } from '@nx/devkit';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { hasExpoPlugin } from '../../../utils/has-expo-plugin';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';

@@ -6,7 +6,7 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import type { Configuration } from '@rspack/core';
-import { readNxJson } from 'nx/src/config/configuration';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 import { NormalizedRspackExecutorSchema } from '../executors/rspack/schema';
 import { warnRspackComposeHelpersDeprecation } from './deprecation';
 

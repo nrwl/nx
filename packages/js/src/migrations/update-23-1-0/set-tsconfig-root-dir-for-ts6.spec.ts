@@ -1,5 +1,5 @@
 import { readJson, type Tree } from '@nx/devkit';
-import { FsTree } from 'nx/src/generators/tree';
+import { FsTree } from '@nx/devkit/internal';
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { tmpdir } from 'node:os';

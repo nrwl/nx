@@ -9,7 +9,7 @@ import {
   setCurrentMavenData,
   writeMavenCache,
 } from './maven-data-cache';
-import { hashObject } from 'nx/src/devkit-internals';
+import { hashObject } from '@nx/devkit/internal';
 
 /**
  * Maven plugin that analyzes Maven projects and returns configurations

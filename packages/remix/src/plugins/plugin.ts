@@ -4,8 +4,8 @@ import {
   loadConfigFile,
   PluginCache,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
+import { hashObject } from '@nx/devkit/internal';
 import {
   AggregateCreateNodesError,
   type CreateDependencies,

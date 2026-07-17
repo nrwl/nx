@@ -1,5 +1,5 @@
 import type { Plugin } from 'rollup';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { updatePackageJson } from './update-package-json';
 
 export interface GeneratePackageJsonOptions {

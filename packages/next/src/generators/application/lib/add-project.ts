@@ -12,7 +12,7 @@ import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { nextVersion } from '../../../utils/versions';
 import { warnNextExecutorGenerating } from '../../../utils/deprecation';
 import { reactDomVersion, reactVersion } from '@nx/react';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const targets: Record<string, any> = {};

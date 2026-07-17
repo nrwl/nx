@@ -12,7 +12,7 @@ import {
   TSESTree,
 } from '@typescript-eslint/utils';
 import { isBuiltinModuleImport } from '@nx/js/internal';
-import { isRelativePath } from 'nx/src/utils/fileutils';
+import { isRelativePath } from '@nx/devkit/internal';
 import { basename, dirname, join, relative, resolve } from 'path';
 import {
   getBarrelEntryPointByImportScope,
@@ -50,7 +50,7 @@ import {
   matchImportWithWildcard,
   stringifyTags,
 } from '../utils/runtime-lint-utils';
-import { isProjectGraphProjectNode } from 'nx/src/config/project-graph';
+import { isProjectGraphProjectNode } from '@nx/devkit/internal';
 
 export type Options = [
   {

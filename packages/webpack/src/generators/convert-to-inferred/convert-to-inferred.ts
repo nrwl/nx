@@ -23,7 +23,7 @@ import {
   servePostTargetTransformerFactory,
   type MigrationContext,
 } from './utils';
-import { logger as devkitLogger } from 'nx/src/devkit-exports';
+import { logger as devkitLogger } from '@nx/devkit';
 
 interface Schema {
   project?: string;

@@ -1,5 +1,5 @@
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-import { normalizePath } from 'nx/src/utils/path';
+import { normalizePath } from '@nx/devkit';
 import { basename, dirname, join, relative, resolve } from 'path';
 import { statSync } from 'fs';
 

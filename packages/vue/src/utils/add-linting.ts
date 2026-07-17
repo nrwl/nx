@@ -16,8 +16,7 @@ import {
   versions,
 } from '@nx/eslint/internal';
 import type { Linter as EsLintLinter } from 'eslint';
-import { Tree } from 'nx/src/generators/tree';
-import { joinPathFragments } from 'nx/src/utils/path';
+import { Tree, joinPathFragments } from '@nx/devkit';
 import {
   eslintPluginVueVersion,
   vueEslintConfigPrettierVersion,

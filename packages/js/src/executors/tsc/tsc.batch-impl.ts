@@ -6,8 +6,8 @@ import {
   TaskGraph,
 } from '@nx/devkit';
 import { rmSync } from 'fs';
-import type { BatchExecutorTaskResult } from 'nx/src/config/misc-interfaces';
-import { getLastValueFromAsyncIterableIterator } from 'nx/src/utils/async-iterator';
+import type { BatchExecutorTaskResult } from '@nx/devkit/internal';
+import { getLastValueFromAsyncIterableIterator } from '@nx/devkit/internal';
 import { updatePackageJson } from '../../utils/package-json/update-package-json';
 import type { ExecutorOptions } from '../../utils/schema';
 import { determineModuleFormatFromTsConfig } from './tsc.impl';

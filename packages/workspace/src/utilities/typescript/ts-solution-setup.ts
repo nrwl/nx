@@ -1,6 +1,6 @@
 import { globAsync, readJson, type Tree, workspaceRoot } from '@nx/devkit';
 import { dirname } from 'node:path/posix';
-import { FsTree } from 'nx/src/generators/tree';
+import { FsTree } from '@nx/devkit/internal';
 import {
   getPackageManagerWorkspacesPatterns,
   isProjectIncludedInPackageManagerWorkspaces,

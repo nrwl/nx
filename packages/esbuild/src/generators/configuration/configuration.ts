@@ -21,8 +21,8 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { basename, dirname, join } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import { PackageJson } from '@nx/devkit/internal';
 import { getOutExtension } from '../../executors/esbuild/lib/build-esbuild-options';
 import { EsBuildExecutorOptions } from '../../executors/esbuild/schema';
 import { assertSupportedEsbuildVersion } from '../../utils/assert-supported-esbuild-version';

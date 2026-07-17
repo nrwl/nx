@@ -14,10 +14,8 @@ import {
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { join } from 'node:path';
-import {
-  getRelativeProjectJsonSchemaPath,
-  updateProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+import { updateProjectConfiguration } from '@nx/devkit';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import { convertToInferred } from './convert-to-inferred';
 
 let fs: TempFs;

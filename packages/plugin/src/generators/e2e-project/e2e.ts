@@ -31,7 +31,7 @@ import {
   addProjectToTsSolutionWorkspace,
   isUsingTsSolutionSetup,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { join } from 'path';
 import type { Schema } from './schema';
 

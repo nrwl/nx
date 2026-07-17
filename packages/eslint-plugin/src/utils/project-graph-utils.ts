@@ -8,10 +8,10 @@ import chalk = require('chalk');
 import {
   createProjectRootMappings,
   ProjectRootMappings,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { readNxJson } from 'nx/src/config/configuration';
+} from '@nx/devkit/internal';
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 import { TargetProjectLocator } from '@nx/js/internal';
-import { readFileMapCache } from 'nx/src/project-graph/nx-deps-cache';
+import { readFileMapCache } from '@nx/devkit/internal';
 
 export function ensureGlobalProjectGraph(ruleName: string) {
   /**

@@ -15,8 +15,8 @@ import {
   getPackageManagerCommand,
   detectPackageManager,
 } from '@nx/devkit';
-import { hashObject } from 'nx/src/hasher/file-hasher';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import {
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,
   addBuildAndWatchDepsTargets,

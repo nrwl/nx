@@ -21,8 +21,8 @@ import { getLockFileName } from '@nx/js';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import * as posix from 'node:path/posix';
-import { hashObject } from 'nx/src/devkit-internals';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { hashObject } from '@nx/devkit/internal';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { targetFromTargetString } from '../utils/targets';
 import { findVitestBaseConfig, loadVite } from './utils/vitest';
 

@@ -18,9 +18,9 @@ import {
 
 import { dirname, join } from 'path';
 import { readdirSync } from 'fs';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { getLockFileName } from '@nx/js';
-import { hashObject } from 'nx/src/devkit-internals';
+import { hashObject } from '@nx/devkit/internal';
 import {
   addBuildAndWatchDepsTargets,
   isUsingTsSolutionSetup as _isUsingTsSolutionSetup,

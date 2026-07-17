@@ -25,8 +25,8 @@ import {
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,
 } from '@nx/js/internal';
 import { dirname, join, relative } from 'node:path/posix';
-import { mergeTargetConfigurations } from 'nx/src/devkit-internals';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import { mergeTargetConfigurations } from '@nx/devkit/internal';
+import type { PackageJson } from '@nx/devkit/internal';
 import { RollupExecutorOptions } from '../../executors/rollup/schema';
 import { RollupWithNxPluginOptions } from '../../plugins/with-nx/with-nx-options';
 import { ensureDependencies } from '../../utils/ensure-dependencies';

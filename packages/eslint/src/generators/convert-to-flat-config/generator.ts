@@ -15,7 +15,7 @@ import {
   updateJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import type { InputDefinition } from 'nx/src/config/workspace-json-project-json';
+import type { InputDefinition } from '@nx/devkit/internal';
 import { ConvertToFlatConfigGeneratorSchema } from './schema';
 import { findEslintFile } from '../utils/eslint-file';
 import { hasEslintPlugin } from '../utils/plugin';

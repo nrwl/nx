@@ -14,7 +14,7 @@ jest.mock('@nx/js/internal', () => ({
 
 import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { join } from 'path';
 
 describe('@nx/webpack/plugin', () => {

@@ -8,7 +8,7 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 import { Schema } from './schema';
-import { toNewFormat, toOldFormat } from 'nx/src/adapter/angular-json';
+import { toNewFormat, toOldFormat } from '@nx/devkit/internal';
 import { output } from '../../utils/output';
 
 export async function validateSchema(schema: Schema, configName: string) {

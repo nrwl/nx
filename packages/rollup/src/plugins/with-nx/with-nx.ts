@@ -22,7 +22,7 @@ import nodeResolve from '@rollup/plugin-node-resolve';
 import autoprefixer from 'autoprefixer';
 import { existsSync } from 'node:fs';
 import { dirname, join, parse } from 'node:path';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import * as rollup from 'rollup';
 import { analyze } from '../analyze';
 import { deleteOutput } from '../delete-output';

@@ -16,7 +16,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
-import { readModulePackageJson } from 'nx/src/devkit-internals';
+import { readModulePackageJson } from '@nx/devkit/internal';
 import { intersects, satisfies, valid, validRange } from 'semver';
 import { nxVersion, oxcProjectRuntimeVersion } from '../../utils/versions';
 import {

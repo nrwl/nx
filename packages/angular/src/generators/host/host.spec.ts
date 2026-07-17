@@ -1,11 +1,8 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { readJson, updateJson } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
-import {
-  getProjects,
-  readProjectConfiguration,
-} from 'nx/src/generators/utils/project-configuration';
+import { getProjects, readProjectConfiguration } from '@nx/devkit';
 import { E2eTestRunner, UnitTestRunner } from '../../utils/test-runners';
 import {
   generateTestHostApplication,

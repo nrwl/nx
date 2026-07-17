@@ -21,9 +21,7 @@ function mergeUserTargetConfigurations(
   }
 
   // Import mergeTargetConfigurations from nx
-  const {
-    mergeTargetConfigurations,
-  } = require('nx/src/project-graph/utils/project-configuration-utils');
+  const { mergeTargetConfigurations } = require('@nx/devkit/internal');
 
   const targetMappings: Array<{
     targetOption: TargetConfigurationWithName | false | undefined;

@@ -9,8 +9,8 @@ import {
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
-import { findAllProjectNodeDependencies } from 'nx/src/utils/project-graph-utils';
+} from '@nx/devkit/internal';
+import { findAllProjectNodeDependencies } from '@nx/devkit/internal';
 import { normalize, relative, sep } from 'path';
 
 /**

@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { ExecutorContext } from 'nx/src/config/misc-interfaces';
+import { ExecutorContext } from '@nx/devkit';
 import type {
   Configuration,
   WebpackOptionsNormalized,

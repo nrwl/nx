@@ -5,7 +5,7 @@ import * as os from 'os';
 import { CopyAssetsHandler } from './copy-assets-handler';
 
 import { Subject } from 'rxjs';
-import type { ChangedFile } from 'nx/src/daemon/client/client';
+import type { ChangedFile } from '@nx/devkit/internal';
 
 const mockWatcher = new Subject<ChangedFile>();
 

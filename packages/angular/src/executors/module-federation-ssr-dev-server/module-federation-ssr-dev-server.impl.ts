@@ -7,8 +7,8 @@ import {
 } from '@nx/devkit/internal';
 import { waitForPortOpen } from '@nx/web/internal';
 import { existsSync } from 'fs';
-import { createBuilderContext } from 'nx/src/adapter/ngcli-adapter';
-import { readProjectsConfigurationFromProjectGraph } from 'nx/src/project-graph/project-graph';
+import { createBuilderContext } from '@nx/devkit/ngcli-adapter';
+import { readProjectsConfigurationFromProjectGraph } from '@nx/devkit';
 import { extname, join } from 'path';
 import {
   getDynamicMfManifestFile,

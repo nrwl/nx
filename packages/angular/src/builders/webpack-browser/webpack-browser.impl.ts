@@ -7,8 +7,8 @@ import {
 } from '@nx/devkit';
 import type { DependentBuildableProjectNode } from '@nx/js/internal';
 import { existsSync } from 'fs';
-import { isNpmProject } from 'nx/src/project-graph/operators';
-import { getDependencyConfigs } from 'nx/src/tasks-runner/utils';
+import { isNpmProject } from '@nx/devkit/internal';
+import { getDependencyConfigs } from '@nx/devkit/internal';
 import { relative } from 'path';
 import { from, Observable } from 'rxjs';
 import { switchMap } from 'rxjs/operators';

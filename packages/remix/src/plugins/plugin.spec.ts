@@ -4,7 +4,7 @@ import {
   joinPathFragments,
 } from '@nx/devkit';
 import { createNodesV2 as createNodes } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { getLockFileName } from '@nx/js';

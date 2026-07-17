@@ -1,5 +1,5 @@
 import { AggregateCreateNodesError, output, workspaceRoot } from '@nx/devkit';
-import { isCI } from 'nx/src/devkit-internals';
+import { isCI } from '@nx/devkit/internal';
 import { execGradleAsync, newLineSeparator } from '../../utils/exec-gradle';
 import { GradlePluginOptions } from './gradle-plugin-options';
 

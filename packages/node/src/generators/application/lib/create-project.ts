@@ -7,7 +7,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { TS_SOLUTION_SETUP_TSCONFIG_INPUT } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { NormalizedSchema } from './normalized-schema';
 import {

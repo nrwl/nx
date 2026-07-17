@@ -1,3 +1,4 @@
+import { readNxJsonFromDisk as readNxJson } from '@nx/devkit/internal';
 import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
@@ -26,7 +27,6 @@ import {
   withNx,
 } from '@nx/webpack';
 import { suppressWebpackComposeHelperWarnings } from '@nx/webpack/internal';
-import { readNxJson } from 'nx/src/config/configuration';
 import { join } from 'path';
 import { NextBuildBuilderOptions } from '../src/utils/types';
 

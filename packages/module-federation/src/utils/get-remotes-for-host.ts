@@ -6,7 +6,7 @@ import {
   ProjectGraphProjectNode,
 } from '@nx/devkit';
 import { loadTsFile } from '@nx/js/internal';
-import { findMatchingProjects } from 'nx/src/utils/find-matching-projects';
+import { findMatchingProjects } from '@nx/devkit/internal';
 import * as pc from 'picocolors';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';

@@ -13,7 +13,7 @@ import {
 } from '@nx/devkit';
 import { isUsingTsSolutionSetup } from '@nx/js/internal';
 import { join } from 'node:path';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import { hasGenerator } from '../../utils/has-generator';
 import { getArtifactMetadataDirectory } from '../../utils/paths';
 import { nxVersion } from '../../utils/versions';

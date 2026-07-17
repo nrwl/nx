@@ -1,5 +1,5 @@
 import { basename, dirname } from 'path';
-import { interpolate } from 'nx/src/devkit-internals';
+import { interpolate } from '@nx/devkit/internal';
 import { joinPathFragments, ProjectGraph } from '@nx/devkit';
 import { StaticRemoteConfig } from '../../utils';
 

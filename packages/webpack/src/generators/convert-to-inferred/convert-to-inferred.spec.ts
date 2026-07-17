@@ -15,7 +15,7 @@ import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/project-configuration';
+import { getRelativeProjectJsonSchemaPath } from '@nx/devkit/internal';
 import type { WebpackPluginOptions } from '../../plugins/plugin';
 import { convertToInferred } from './convert-to-inferred';
 

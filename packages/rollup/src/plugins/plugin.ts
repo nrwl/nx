@@ -3,7 +3,7 @@ import {
   getNamedInputs,
   PluginCache,
 } from '@nx/devkit/internal';
-import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
+import { workspaceDataDirectory } from '@nx/devkit/internal';
 import { basename, dirname, join } from 'path';
 import { readdirSync } from 'fs';
 import {
@@ -20,7 +20,7 @@ import {
 } from '@nx/devkit';
 import { getLockFileName } from '@nx/js';
 import { type RollupOptions } from 'rollup';
-import { hashObject } from 'nx/src/hasher/file-hasher';
+import { hashObject } from '@nx/devkit/internal';
 import {
   isUsingTsSolutionSetup,
   TS_SOLUTION_SETUP_TSCONFIG_INPUT,

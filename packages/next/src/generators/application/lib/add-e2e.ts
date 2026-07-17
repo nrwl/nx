@@ -12,7 +12,7 @@ import {
   writeJson,
 } from '@nx/devkit';
 import { webStaticServeGenerator } from '@nx/web';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { nxVersion } from '../../../utils/versions';
 import { NormalizedSchema } from './normalize-options';
 

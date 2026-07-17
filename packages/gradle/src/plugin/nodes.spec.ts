@@ -1,6 +1,6 @@
 import { CreateNodesContext, readJsonFile } from '@nx/devkit';
 import { join } from 'path';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { type ProjectGraphReport } from './utils/get-project-graph-from-gradle-plugin';
 
 let gradleReport: ProjectGraphReport;

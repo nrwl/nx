@@ -1,7 +1,7 @@
 import { CreateNodesContext, workspaceRoot } from '@nx/devkit';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
 import { createNodes, getProjectNameFromPath } from './plugin';
-import * as gitUtils from 'nx/src/utils/git-utils';
+import { getLatestCommitSha } from '@nx/devkit/internal';
 
 jest.mock('nx/src/utils/cache-directory', () => ({
   ...jest.requireActual('nx/src/utils/cache-directory'),
@@ -27,10 +27,9 @@ describe('@nx/docker', () => {
   let tempFs: TempFs;
   let cwd: string;
 
-  const mockGetLatestCommitSha =
-    gitUtils.getLatestCommitSha as jest.MockedFunction<
-      typeof gitUtils.getLatestCommitSha
-    >;
+  const mockGetLatestCommitSha = getLatestCommitSha as jest.MockedFunction<
+    typeof getLatestCommitSha
+  >;
 
   beforeEach(async () => {
     jest.clearAllMocks();

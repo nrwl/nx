@@ -9,7 +9,7 @@ import {
   displayNewlyAddedDepsMessage,
   syncDeps,
 } from '../sync-deps/sync-deps.impl';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 
 export default async function* reactNativeStorybookExecutor(
   options: ReactNativeStorybookOptions,

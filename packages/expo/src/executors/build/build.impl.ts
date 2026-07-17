@@ -12,7 +12,7 @@ import { getLockFileName } from '@nx/js';
 import { ChildProcess, fork } from 'child_process';
 import { copyFileSync, existsSync, rmSync, writeFileSync } from 'node:fs';
 import { resolve as pathResolve } from 'path';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 import { resolveEas } from '../../utils/resolve-eas';
 import { warnExpoExecutorDeprecation } from '../../utils/deprecation';

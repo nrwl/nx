@@ -2,8 +2,8 @@ import { CreateNodesContext } from '@nx/devkit';
 import { defineConfig } from 'cypress';
 
 import { createNodesV2 } from './plugin';
-import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
-import { resetWorkspaceContext } from 'nx/src/utils/workspace-context';
+import { TempFs } from '@nx/devkit/internal-testing-utils';
+import { resetWorkspaceContext } from '@nx/devkit/internal';
 import { join } from 'path';
 import { nxE2EPreset } from '../../plugins/cypress-preset';
 

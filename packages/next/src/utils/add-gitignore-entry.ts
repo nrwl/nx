@@ -1,4 +1,4 @@
-import { Tree } from 'nx/src/generators/tree';
+import { Tree } from '@nx/devkit';
 import ignore from 'ignore';
 
 export function addGitIgnoreEntry(host: Tree) {

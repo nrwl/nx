@@ -12,7 +12,7 @@ import {
 import { hasWebpackPlugin } from '../../../utils/has-webpack-plugin';
 import { maybeJs } from '../../../utils/maybe-js';
 import { hasRspackPlugin } from '../../../utils/has-rspack-plugin';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 
 export function addProject(host: Tree, options: NormalizedSchema) {
   const project: ProjectConfiguration = {

@@ -36,7 +36,7 @@ import {
 } from '@nx/js/internal';
 import { warnPlaywrightExecutorGenerating } from '../../utils/deprecation';
 import { execSync } from 'child_process';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import * as path from 'path';
 import { addLinterToPlaywrightProject } from '../../utils/add-linter';
 import { assertSupportedPlaywrightVersion } from '../../utils/assert-supported-playwright-version';

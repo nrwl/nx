@@ -1,4 +1,4 @@
-import 'nx/src/internal-testing-utils/mock-project-graph';
+import '@nx/devkit/internal-testing-utils/mock-project-graph';
 
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import {
@@ -11,11 +11,11 @@ import {
   readJson,
 } from '@nx/devkit';
 
-import * as devkitExports from 'nx/src/devkit-exports';
+import * as devkitExports from '@nx/devkit';
 
 import { applicationGenerator } from './application';
 import { Schema } from './schema';
-import { PackageManagerCommands } from 'nx/src/utils/package-manager';
+import { PackageManagerCommands } from '@nx/devkit/internal';
 
 describe('application generator', () => {
   let tree: Tree;

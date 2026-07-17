@@ -11,9 +11,9 @@ import {
 import { copyFileSync, unlinkSync } from 'fs';
 import { Schema } from './schema';
 import { join, resolve } from 'path';
-import { readModulePackageJson } from 'nx/src/utils/package-json';
-import { daemonClient } from 'nx/src/daemon/client/client';
-import { interpolate } from 'nx/src/tasks-runner/utils';
+import { readModulePackageJson } from '@nx/devkit/internal';
+import { daemonClient } from '@nx/devkit/internal';
+import { interpolate } from '@nx/devkit/internal';
 import { stripGlobToBaseDir } from '@nx/js/internal';
 import detectPort from 'detect-port';
 

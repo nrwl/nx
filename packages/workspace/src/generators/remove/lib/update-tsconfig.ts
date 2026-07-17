@@ -11,7 +11,7 @@ import { Schema } from '../schema';
 import {
   createProjectRootMappings,
   findProjectForPath,
-} from 'nx/src/project-graph/utils/find-project-for-path';
+} from '@nx/devkit/internal';
 import { isUsingTsSolutionSetup } from '../../../utilities/typescript/ts-solution-setup';
 import { relative } from 'path';
 

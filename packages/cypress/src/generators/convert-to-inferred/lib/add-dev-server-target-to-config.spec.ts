@@ -1,5 +1,5 @@
 import type { Tree } from '@nx/devkit';
-import { createTreeWithEmptyWorkspace } from 'nx/src/devkit-testing-exports';
+import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import { addDevServerTargetToConfig } from './add-dev-server-target-to-config';
 
 describe('addDevServerTargetToConfig', () => {

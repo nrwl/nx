@@ -144,9 +144,7 @@ export function buildEsbuildOptions(
 export function createPathsFromTsConfigReferences(
   context: ExecutorContext
 ): Record<string, string[]> {
-  const {
-    findAllProjectNodeDependencies,
-  } = require('nx/src/utils/project-graph-utils');
+  const { findAllProjectNodeDependencies } = require('@nx/devkit/internal');
   const {
     isValidPackageJsonBuildConfig,
     findRuntimeTsConfigName,

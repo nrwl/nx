@@ -1,5 +1,5 @@
 import { dirname, parse } from 'path';
-import { joinPathFragments, normalizePath } from 'nx/src/utils/path';
+import { joinPathFragments, normalizePath } from '@nx/devkit';
 import { getRelativeDirectoryToProjectRoot } from '../../../utils/get-main-file-dir';
 
 interface OutputFileNameOptions {

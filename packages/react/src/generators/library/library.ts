@@ -27,7 +27,7 @@ import {
   shouldConfigureTsSolutionSetup,
   updateTsconfigFiles,
 } from '@nx/js/internal';
-import type { PackageJson } from 'nx/src/utils/package-json';
+import type { PackageJson } from '@nx/devkit/internal';
 import { extractTsConfigBase } from '../../utils/create-ts-config';
 import { updateJestConfigContent } from '../../utils/jest-utils';
 import { maybeJs } from '../../utils/maybe-js';

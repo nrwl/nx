@@ -33,7 +33,7 @@ import {
   updateTsconfigFiles,
   sortPackageJsonFields,
 } from '@nx/js/internal';
-import { PackageJson } from 'nx/src/utils/package-json';
+import { PackageJson } from '@nx/devkit/internal';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { expoComponentGenerator } from '../component/component';
 import { relative, join } from 'path';
