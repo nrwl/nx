@@ -277,7 +277,7 @@ The `NODE_AUTH_TOKEN` environment variable is needed to authenticate with the np
 
 To generate the correct `NODE_AUTH_TOKEN` for the npmJS registry specifically, first login to [https://www.npmjs.com/](https://www.npmjs.com/). Select your profile icon, then navigate to "Access Tokens". Generate a new Granular Access Token. Ensure that the token has read and write access to both the packages you are publishing and their organization (if applicable). Copy the generated token and add it as a secret to your GitHub repository.
 
-#### Add the nODE_AUTH_TOKEN to GitHub secrets
+#### Add the NODE_AUTH_TOKEN to GitHub secrets
 
 To add the token as a secret to your GitHub repository, navigate to your repository, then select "Settings" > "Secrets and Variables" > "Actions". Add a new Repository Secret with the name `NPM_ACCESS_TOKEN` and the value of the token you generated in the previous step.
 
