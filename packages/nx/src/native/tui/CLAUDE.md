@@ -109,7 +109,7 @@ Related capacity limits, both relevant to tests:
   logical line can be chopped mid-wrap at the top of the scrollback.
 - `MAX_RAW_OUTPUT_BYTES` (5 MB) compaction replays the formatted screen into
   a fresh parser — `raw_output` **shrinks**, so nothing may assume its
-  length is monotonic (it only ever *changes* per write).
+  length is monotonic (it only ever _changes_ per write).
 
 ## Locking discipline (the render thread must never wait)
 
@@ -160,7 +160,7 @@ against its source that TUI code relies on:
 - `all_contents_formatted()` reproduces the exact visual layout when re-fed
   to a parser at the same width — this is what makes the tall re-parse
   grid-exact.
-- Only *visible* rows are addressable (`rows()`, `row_wrapped()`);
+- Only _visible_ rows are addressable (`rows()`, `row_wrapped()`);
   scrollback rows have no public per-row access — exposing an `all_rows()`
   iterator upstream is the known cleaner alternative to the re-parse.
 
