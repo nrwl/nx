@@ -36,6 +36,14 @@ to = "/docs/reference/environment-variables#loading-environment-variables"
 from = "/docs/technologies/react/guides/use-environment-variables-in-react"
 to = "/docs/reference/environment-variables#loading-environment-variables"
 
+[[redirects]]
+from = "/recipes/environment-variables/use-environment-variables-in-angular"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/recipes/environment-variables/use-environment-variables-in-react"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
 # Storybook docs consolidation
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"

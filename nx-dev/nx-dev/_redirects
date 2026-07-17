@@ -367,7 +367,7 @@
 /recipes/angular/migration/angular-manual /docs/technologies/angular 301
 /recipes/adopting-nx-angular/angular-multiple /docs/technologies/angular/migration/angular-multiple 301
 /recipes/adopting-nx/migration-angularjs /docs/technologies/angular 301
-/recipes/environment-variables/use-environment-variables-in-angular /docs/reference/environment-variables#loading-environment-variables 301
+/recipes/environment-variables/use-environment-variables-in-angular /recipes/angular/use-environment-variables-in-angular 301
 /recipes/other/using-tailwind-css-with-angular-projects /recipes/angular/using-tailwind-css-with-angular-projects 301
 /recipes/module-federation/dynamic-module-federation-with-angular /recipes/angular/dynamic-module-federation-with-angular 301
 /recipes/other/setup-incremental-builds-angular /recipes/angular/setup-incremental-builds-angular 301
@@ -376,7 +376,7 @@
 /recipes/other/react-18 /nx-api/react 301
 /recipes/other/react-native /recipes/react/react-native 301
 /recipes/other/remix /recipes/react/remix 301
-/recipes/environment-variables/use-environment-variables-in-react /docs/reference/environment-variables#loading-environment-variables 301
+/recipes/environment-variables/use-environment-variables-in-react /recipes/react/use-environment-variables-in-react 301
 /recipes/other/using-tailwind-css-in-react /recipes/react/using-tailwind-css-in-react 301
 /recipes/deployment/deploy-nextjs-to-vercel /recipes/react/deploy-nextjs-to-vercel 301
 /recipes/module-federation/module-federation-with-ssr /recipes/react/module-federation-with-ssr 301
