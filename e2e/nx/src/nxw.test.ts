@@ -11,7 +11,6 @@ import {
   readJson,
   readFile,
 } from '@nx/e2e-utils';
-import { styleText } from 'node:util';
 
 describe('nx wrapper / .nx installation', () => {
   let runNxWrapper: ReturnType<typeof newWrappedNxWorkspace>;
@@ -85,14 +84,12 @@ describe('nx wrapper / .nx installation', () => {
       installedPluginEnd
     );
 
-    expect(
-      installedPluginLines.some((x) => x.includes(`${styleText('bold', 'nx')}`))
-    ).toBe(true);
-    expect(
-      installedPluginLines.some((x) =>
-        x.includes(`${styleText('bold', '@nx/js')}`)
-      )
-    ).toBe(true);
+    expect(installedPluginLines).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^nx(?:\s|$)/),
+        expect.stringMatching(/^@nx\/js(?:\s|$)/),
+      ])
+    );
 
     output = runNxWrapper('list @nx/js');
     expect(output).toContain('Capabilities in @nx/js');
