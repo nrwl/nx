@@ -1115,6 +1115,61 @@ describe('pnpm LockFile utility', () => {
     });
   });
 
+  describe('workspace-only lockfile (no packages block)', () => {
+    // pnpm omits the `packages:` block entirely when a project depends only on
+    // other workspace packages. Stringify must still write the workspace
+    // importer blocks instead of throwing on the missing block.
+    const lockFile = `lockfileVersion: '9.0'
+
+settings:
+  autoInstallPeers: true
+  excludeLinksFromLockfile: false
+
+importers:
+
+  .:
+    dependencies:
+      '@myorg/b':
+        specifier: workspace:*
+        version: link:packages/b
+
+  packages/b: {}
+`;
+
+    it('should stringify without throwing and write the workspace importer', () => {
+      const graph: ProjectGraph = {
+        nodes: {
+          b: {
+            name: 'b',
+            type: 'lib',
+            data: {
+              root: 'packages/b',
+              metadata: { js: { packageName: '@myorg/b' } },
+            },
+          } as any,
+        },
+        dependencies: {},
+        externalNodes: {},
+      };
+      const packageJson = {
+        name: '@myorg/a',
+        version: '0.0.0',
+        dependencies: { '@myorg/b': 'workspace:*' },
+      } as any;
+
+      let result = '';
+      expect(() => {
+        result = stringifyPnpmLockfile(
+          graph,
+          lockFile,
+          packageJson,
+          '/virtual'
+        );
+      }).not.toThrow();
+      expect(result).toContain('workspace_modules/@myorg/b');
+    });
+  });
+
   describe('mixed keys', () => {
     let lockFile, lockFileHash;
 
@@ -2056,6 +2111,45 @@ snapshots:
       });
     });
 
+    it('should include pnpm 11 scalar patch hash in external node hash', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+patchedDependencies:
+  vitest@3.2.4: pnpm-11-patch-hash
+
+importers:
+
+  .:
+    dependencies:
+      vitest:
+        specifier: 3.2.4
+        version: 3.2.4
+
+packages:
+
+  vitest@3.2.4:
+    resolution: {integrity: sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==}
+
+snapshots:
+
+  vitest@3.2.4: {}`;
+
+      const { nodes: externalNodes } = getPnpmLockfileNodes(
+        lockFile,
+        'test-lockfile-hash-pnpm-11'
+      );
+
+      expect(externalNodes['npm:vitest']).toMatchObject({
+        type: 'npm',
+        name: 'npm:vitest',
+        data: {
+          version: '3.2.4',
+          packageName: 'vitest',
+          hash: 'sha512-LUCP5ev3GURDysTWiP47wRRUpLKMOfPh+yKTx3kVIEiu5KOMeqzpnYNsKyOoVrULivR8tLcks4+lga33Whn90A==|pnpm-11-patch-hash',
+        },
+      });
+    });
+
     it('should detect patch hash changes', () => {
       const lockFileWithPatch = `lockfileVersion: '9.0'
 
@@ -2831,6 +2925,40 @@ snapshots: {}`;
       expect(result).toMatch(
         /'@myorg\/shared':\s+specifier: file:\.\.\/shared\s+version: link:\.\.\/shared/
       );
+    });
+  });
+
+  describe('missing .modules.yaml', () => {
+    beforeEach(() => {
+      vol.fromJSON(
+        { 'node_modules/lodash/package.json': '{"version": "4.17.21"}' },
+        '/root'
+      );
+    });
+
+    it('should throw an actionable error when node_modules/.modules.yaml is absent', () => {
+      const lockFile = `lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+
+packages:
+
+  lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+
+snapshots:
+
+  lodash@4.17.21: {}`;
+
+      expect(() =>
+        getPnpmLockfileNodes(lockFile, '__missing_modules_yaml__')
+      ).toThrow(/was not installed with pnpm/);
     });
   });
 });

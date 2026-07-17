@@ -268,4 +268,18 @@ describe('new', () => {
       fail('Generating into a non-empty directory should error.');
     } catch (e) {}
   });
+
+  it('should not throw for a non-empty directory when skipEmptyDirCheck is set', async () => {
+    tree.write('my-workspace/README.md', '# repo');
+
+    await expect(
+      newGenerator(tree, {
+        ...defaultOptions,
+        name: 'my-workspace',
+        directory: 'my-workspace',
+        appName: 'app',
+        skipEmptyDirCheck: true,
+      })
+    ).resolves.toBeDefined();
+  });
 });

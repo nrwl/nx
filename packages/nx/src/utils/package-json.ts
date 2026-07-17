@@ -13,6 +13,7 @@ import {
 } from '../config/workspace-json-project-json';
 import type { Tree } from '../generators/tree';
 import { readJson } from '../generators/utils/json';
+import { readTargetDefaultsForTarget } from '../project-graph/utils/project-configuration-utils';
 import { mergeTargetConfigurations } from '../project-graph/utils/project-configuration/target-merging';
 import { getCatalogManager } from './catalog';
 import { readJsonFile } from './fileutils';
@@ -99,6 +100,9 @@ export interface PackageJson {
     ignoredOptionalDependencies?: string[];
   };
   overrides?: PackageOverride;
+  // npm install-script allowlist (npm 11.16+). Keys are `name`, `name@version`,
+  // or git specs; `true` approves, `false` denies.
+  allowScripts?: Record<string, boolean>;
   bin?: Record<string, string> | string;
   workspaces?:
     | string[]
@@ -281,8 +285,15 @@ export function readTargetsFromPackageJson(
     !res['nx-release-publish'] &&
     hasNxJsPlugin(projectRoot, workspaceRoot)
   ) {
+    // No project/plugin context here, so only catch-all entries of a
+    // `targetDefaults` value apply (the reader resolves both the object and
+    // array value forms).
     const nxReleasePublishTargetDefaults =
-      nxJson?.targetDefaults?.['nx-release-publish'] ?? {};
+      readTargetDefaultsForTarget(
+        'nx-release-publish',
+        nxJson?.targetDefaults,
+        '@nx/js:release-publish'
+      ) ?? {};
     res['nx-release-publish'] = {
       executor: '@nx/js:release-publish',
       ...nxReleasePublishTargetDefaults,
@@ -405,9 +416,25 @@ function preparePackageInstallation(
   // it into the temp dir, so the `-w` here resolves to the temp dir.
   const pmCommands = getPackageManagerCommand(packageManager);
   const preInstallCommand = pmCommands.preInstall;
-  const installCommand = `${pmCommands.addDev} ${pkg}@${requiredVersion} ${
-    pmCommands.ignoreScriptsFlag ?? ''
-  }`;
+
+  // Omit peer dependencies from the temp install. `ensurePackage` puts the
+  // workspace's `node_modules` on `NODE_PATH`, so a loaded package resolves its
+  // peers from the workspace instead of pulling its own (possibly incompatible)
+  // copies into the temp dir.
+  const omitPeerDependenciesFlag =
+    packageManager === 'npm' || packageManager === 'bun'
+      ? '--omit=peer'
+      : packageManager === 'pnpm'
+        ? '--config.auto-install-peers=false'
+        : '';
+  const installCommand = [
+    pmCommands.addDev,
+    `${pkg}@${requiredVersion}`,
+    omitPeerDependenciesFlag,
+    pmCommands.ignoreScriptsFlag,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   const execOptions = {
     cwd: tempDir,

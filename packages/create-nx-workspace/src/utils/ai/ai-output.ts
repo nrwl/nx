@@ -58,7 +58,7 @@ export function detectAiAgentName(): string | null {
 // Progress stages for NDJSON streaming
 export type ProgressStage =
   | 'starting'
-  | 'cloning'
+  | 'downloading'
   | 'installing'
   | 'configuring'
   | 'initializing'

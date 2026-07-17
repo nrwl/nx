@@ -1,6 +1,7 @@
 import { ExecutorContext, names, workspaceRoot } from '@nx/devkit';
 import { signalToCode } from '@nx/devkit/internal';
 import { ChildProcess, fork } from 'child_process';
+import { resolveExpoCliPath } from '../../utils/resolve-expo-cli';
 import { join } from 'path';
 
 import { podInstall } from '../../utils/pod-install-task';
@@ -52,7 +53,7 @@ export function prebuildAsync(
 ): Promise<number> {
   return new Promise((resolve, reject) => {
     childProcess = fork(
-      require.resolve('@expo/cli/build/bin/cli'),
+      resolveExpoCliPath(),
       ['prebuild', ...createPrebuildOptions(options), '--no-install'],
       {
         cwd: join(workspaceRoot, projectRoot),

@@ -1,4 +1,5 @@
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -12,7 +13,7 @@ import { execSync } from 'node:child_process';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -96,7 +97,9 @@ describe('release publishable libraries', () => {
       `generate @nx/js:lib packages/${jsLib} --publishable --importPath=@proj/${jsLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.2 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -142,6 +145,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -151,7 +158,9 @@ describe('release publishable libraries', () => {
       `generate @nx/react:lib packages/${reactLib} --publishable --importPath=@proj/${reactLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.3 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -199,6 +208,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -208,7 +221,9 @@ describe('release publishable libraries', () => {
       `generate @nx/angular:lib packages/${angularLib} --publishable --importPath=@proj/${angularLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.4 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -254,6 +269,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -264,7 +283,9 @@ describe('release publishable libraries', () => {
     );
     runCLI('sync');
 
-    const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.5 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -307,6 +328,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 
@@ -316,7 +341,9 @@ describe('release publishable libraries', () => {
       `generate @nx/react-native:lib packages/${reactNativeLib} --publishable --importPath=@proj/${reactNativeLib} --no-interactive`
     );
 
-    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`);
+    const releaseOutput = runCLI(`release --specifier 0.0.6 --yes`, {
+      timeout: 10 * 60 * 1000,
+    });
     expect(releaseOutput).toMatchInlineSnapshot(`
       NX   Executing pre-version command
       NX   Running release version for project: {project-name}
@@ -364,6 +391,10 @@ describe('release publishable libraries', () => {
       total files: X
       Published to ${e2eRegistryUrl} with tag "latest"
       NX   Successfully ran target nx-release-publish for project {project-name}
+      Run duration: {DURATION}
+      Cache: 0/1 hit (0%)
+      Critical path: {DURATION} (1 task)
+      Recoverable time: {DURATION}
     `);
   });
 });

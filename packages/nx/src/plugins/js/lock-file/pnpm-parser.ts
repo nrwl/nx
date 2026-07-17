@@ -250,7 +250,13 @@ function getNodes(
   if (data.patchedDependencies) {
     for (const specifier of Object.keys(data.patchedDependencies)) {
       const patchInfo = data.patchedDependencies[specifier];
-      if (patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo) {
+      const patchHash =
+        typeof patchInfo === 'string'
+          ? patchInfo
+          : patchInfo && typeof patchInfo === 'object' && 'hash' in patchInfo
+            ? patchInfo.hash
+            : undefined;
+      if (patchHash) {
         const packageName = extractNameFromKey(specifier, false);
         const versionSpecifier = getVersion(specifier, packageName) || null;
         if (!patchEntriesByPackage.has(packageName)) {
@@ -258,7 +264,7 @@ function getNodes(
         }
         patchEntriesByPackage.get(packageName).push({
           versionSpecifier,
-          hash: patchInfo.hash,
+          hash: patchHash,
         });
       }
     }
@@ -579,19 +585,25 @@ export function stringifyPnpmLockfile(
   workspaceRoot: string
 ): string {
   const data = parseAndNormalizePnpmLockfile(rootLockFileContent);
-  const { lockfileVersion, packages, importers } = data;
+  const { lockfileVersion, importers } = data;
+  // pnpm omits the packages block for workspace-only lockfiles (no external deps)
+  const packages = data.packages ?? {};
+
+  const packageIndex = indexPackagesByName(packages, +lockfileVersion);
 
   const { snapshot: rootSnapshot, importers: requiredImporters } =
     mapRootSnapshot(
       packageJson,
       importers,
       packages,
+      packageIndex,
       graph,
       +lockfileVersion,
       workspaceRoot
     );
   const snapshots = mapSnapshots(
-    data.packages,
+    packages,
+    packageIndex,
     graph.externalNodes,
     +lockfileVersion
   );
@@ -662,14 +674,19 @@ export function stringifyPnpmLockfile(
 
 function mapSnapshots(
   packages: PackageSnapshots,
+  packageIndex: PackageIndex,
   nodes: Record<string, ProjectGraphExternalNode>,
   lockfileVersion: number
 ): PackageSnapshots {
   const result: PackageSnapshots = {};
   Object.values(nodes).forEach((node) => {
-    const matchedKeys = findOriginalKeys(packages, node, lockfileVersion, {
-      returnFullKey: true,
-    });
+    const matchedKeys = findOriginalKeys(
+      packages,
+      packageIndex,
+      node,
+      lockfileVersion,
+      { returnFullKey: true }
+    );
 
     // the package manager doesn't check for types of dependencies
     // so we can safely set all to prod
@@ -715,16 +732,53 @@ function remapDependencies(snapshot: PackageSnapshot) {
   });
 }
 
+type PackageIndex = Map<string, Array<[string, PackageSnapshot]>>;
+
+// Bucket package keys by their package name so a node only scans its own name's
+// versions instead of every key (was O(nodes * allPackages)). v5 is excluded
+// below and keeps the full scan: its standard keys use a "/" separator while
+// tarball keys use "@", so a single name index would misfile v5 tarballs.
+function indexPackagesByName(
+  packages: PackageSnapshots,
+  lockfileVersion: number
+): PackageIndex {
+  const isV5 = lockfileVersion < 6;
+  const index: PackageIndex = new Map();
+  for (const key of Object.keys(packages)) {
+    const name = extractNameFromKey(key, isV5);
+    let bucket = index.get(name);
+    if (!bucket) index.set(name, (bucket = []));
+    bucket.push([key, packages[key]]);
+  }
+  return index;
+}
+
+// npm alias version is "npm:<name>@<ver>"; extract <name> the same way
+// versionIsAlias does so the index lookup matches the alias branch below.
+function aliasTargetName(version: string): string {
+  return version.slice('npm:'.length, version.indexOf('@', 'npm:'.length + 1));
+}
+
+const NO_CANDIDATES: Array<[string, PackageSnapshot]> = [];
+
 function findOriginalKeys(
   packages: PackageSnapshots,
-  { data: { packageName, version } }: ProjectGraphExternalNode,
+  packageIndex: PackageIndex,
+  node: ProjectGraphExternalNode,
   lockfileVersion: number,
   { returnFullKey }: { returnFullKey?: boolean } = {}
 ): Array<[string, PackageSnapshot]> {
+  const {
+    data: { packageName, version },
+  } = node;
+  const candidates: Iterable<[string, PackageSnapshot]> =
+    lockfileVersion >= 6
+      ? (packageIndex.get(
+          version.startsWith('npm:') ? aliasTargetName(version) : packageName
+        ) ?? NO_CANDIDATES)
+      : Object.entries(packages);
   const matchedKeys = [];
-  for (const key of Object.keys(packages)) {
-    const snapshot = packages[key];
-
+  for (const [key, snapshot] of candidates) {
     // tarball package
     if (
       key.startsWith(`${packageName}@${version}`) &&
@@ -800,6 +854,7 @@ function mapRootSnapshot(
   packageJson: NormalizedPackageJson,
   rootImporters: Record<string, ProjectSnapshot>,
   packages: PackageSnapshots,
+  packageIndex: PackageIndex,
   graph: ProjectGraph,
   lockfileVersion: number,
   workspaceRoot: string
@@ -807,6 +862,7 @@ function mapRootSnapshot(
   const workspaceModules = getWorkspacePackagesFromGraph(graph);
   const snapshot: ProjectSnapshot = { specifiers: {} };
   const importers: Record<string, string> = {};
+  const manager = getCatalogManager(workspaceRoot);
   [
     'dependencies',
     'optionalDependencies',
@@ -816,7 +872,6 @@ function mapRootSnapshot(
     if (packageJson[depType]) {
       Object.keys(packageJson[depType]).forEach((packageName) => {
         let version = packageJson[depType][packageName];
-        const manager = getCatalogManager(workspaceRoot);
         if (manager?.isCatalogReference(version)) {
           version = manager.resolveCatalogReference(
             workspaceRoot,
@@ -874,6 +929,7 @@ function mapRootSnapshot(
           snapshot[section] = snapshot[section] || {};
           snapshot[section][packageName] = findOriginalKeys(
             packages,
+            packageIndex,
             node,
             lockfileVersion
           )[0][0];

@@ -4,7 +4,8 @@
     "outDir": "dist",
     "declaration": true,
     "types": ["node"],
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "exclude": ["**/*.spec.ts", "**/*.test.ts", "jest.config.ts"],
   "include": ["**/*.ts"],

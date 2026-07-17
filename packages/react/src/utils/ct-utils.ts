@@ -60,6 +60,7 @@ export async function configureCypressCT(
   const {
     addDefaultCTConfig,
     getProjectCypressConfigPath,
+    getInstalledCypressMajorVersion,
   }: typeof import('@nx/cypress/internal') = require('@nx/cypress/internal');
 
   const ctConfigOptions: NxComponentTestingOptions = {
@@ -86,7 +87,8 @@ export async function configureCypressCT(
   const updatedCyConfig = await addDefaultCTConfig(
     tree.read(cypressConfigFilePath, 'utf-8'),
     ctConfigOptions,
-    '@nx/react/plugins/component-testing'
+    '@nx/react/plugins/component-testing',
+    getInstalledCypressMajorVersion(tree)
   );
   tree.write(cypressConfigFilePath, updatedCyConfig);
 

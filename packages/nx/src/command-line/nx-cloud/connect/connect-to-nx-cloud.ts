@@ -229,31 +229,39 @@ function sleep(ms: number) {
 
 export async function connectExistingRepoToNxCloudPrompt(
   command = 'init',
-  key: MessageKey = 'setupNxCloud'
+  key: MessageKey = 'setupNxCloud',
+  recordCompletion = true
 ): Promise<MessageOptionKey> {
-  const res = await nxCloudPrompt(key, utmMediumForCommand(command));
-  await recordStat({
-    command,
-    nxVersion,
-    useCloud: res === 'yes',
-    meta: {
-      type: 'complete',
-      setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
-      nxCloudArg: res,
-      nodeVersion: process.versions.node,
-      os: process.platform,
-      packageManager: detectPackageManager(),
-      aiAgent: isAiAgent(),
-      isCI: isCI(),
-    },
-  });
+  const res = await nxCloudPrompt(key, utmContentForCommand(command));
+  // TODO: once legacy init-v1 (the NX_ADD_PLUGINS=false / useInferencePlugins:false path) is
+  // removed, drop this recordStat and the recordCompletion flag entirely - init-v2 records its
+  // own complete, and view-logs should record its own stat, so this shared helper won't record.
+  // init-v2 records its own init "complete" stat, so it opts out here to avoid double-counting.
+  // Other callers (e.g. view-logs, legacy init-v1) rely on this as their only completion event.
+  if (recordCompletion) {
+    await recordStat({
+      command,
+      nxVersion,
+      useCloud: res === 'yes',
+      meta: {
+        type: 'complete',
+        setupCloudPrompt: messages.codeOfSelectedPromptMessage(key) || '',
+        nxCloudArg: res,
+        nodeVersion: process.versions.node,
+        os: process.platform,
+        packageManager: detectPackageManager(),
+        aiAgent: isAiAgent(),
+        isCI: isCI(),
+      },
+    });
+  }
   return res;
 }
 
 export async function connectToNxCloudWithPrompt(command: string) {
   const setNxCloud = await nxCloudPrompt(
     'setupNxCloud',
-    utmMediumForCommand(command)
+    utmContentForCommand(command)
   );
   let useCloud = false;
   if (setNxCloud === 'yes') {
@@ -284,7 +292,7 @@ export async function connectToNxCloudWithPrompt(command: string) {
   });
 }
 
-function utmMediumForCommand(command: string): string {
+function utmContentForCommand(command: string): string {
   switch (command) {
     case 'migrate':
       return 'nx-migrate';
@@ -297,7 +305,7 @@ function utmMediumForCommand(command: string): string {
 
 async function nxCloudPrompt(
   key: MessageKey,
-  utmMedium: string
+  utmContent: string
 ): Promise<MessageOptionKey> {
   const { message, choices, initial, footer, hint } = messages.getPrompt(key);
 
@@ -310,7 +318,7 @@ async function nxCloudPrompt(
   } as any; // meeroslav: types in enquirer are not up to date
   if (footer) {
     promptConfig.footer = () =>
-      pc.dim(`${footer} ${nxCloudHyperlink(utmMedium)}`);
+      pc.dim(`${footer} ${nxCloudHyperlink(utmContent)}`);
   }
   if (hint) {
     promptConfig.hint = () => pc.dim(hint);

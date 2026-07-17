@@ -43,10 +43,20 @@
       }
     },
     "targetDefaults": {
+      "description": "Target defaults — a map keyed by target name, glob (e.g. 'e2e-ci--*'), or executor (e.g. '@nx/js:tsc'). Each value is either a configuration object applied to that target, or an ordered array of filtered entries (used when one target needs different defaults per plugin, projects, or executor). Array entries apply in document order, last match winning.",
       "type": "object",
-      "description": "Target defaults",
       "additionalProperties": {
-        "$ref": "#/definitions/targetDefaultsConfig"
+        "oneOf": [
+          {
+            "$ref": "#/definitions/targetDefaultsConfig"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/targetDefaultArrayEntry"
+            }
+          }
+        ]
       }
     },
     "workspaceLayout": {
@@ -850,6 +860,72 @@
       },
       "additionalProperties": false
     },
+    "targetDefaultArrayEntry": {
+      "type": "object",
+      "description": "A filtered target defaults entry. The optional `filter` narrows where the entry applies; the remaining fields are the configuration applied when it matches. An entry with no `filter` is a catch-all baseline for its target key.",
+      "properties": {
+        "filter": {
+          "type": "object",
+          "description": "Narrows where this entry applies. When present, every listed criterion must match the target being resolved.",
+          "properties": {
+            "plugin": {
+              "type": "string",
+              "description": "Restrict to targets originated by a specific plugin (e.g. '@nx/vite')."
+            },
+            "projects": {
+              "type": "array",
+              "items": { "type": "string" },
+              "description": "Restrict the default to matching projects. A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy', 'tag:dotnet']). Uses findMatchingProjects syntax."
+            },
+            "executor": {
+              "type": "string",
+              "description": "Restrict to targets that resolve to a specific executor (e.g. '@nx/jest:jest')."
+            }
+          },
+          "additionalProperties": false
+        },
+        "executor": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/executor"
+        },
+        "command": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/command"
+        },
+        "metadata": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/metadata"
+        },
+        "options": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/options"
+        },
+        "outputs": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/outputs"
+        },
+        "defaultConfiguration": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/defaultConfiguration"
+        },
+        "configurations": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/configurations"
+        },
+        "continuous": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/continuous"
+        },
+        "parallelism": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/parallelism"
+        },
+        "inputs": {
+          "$ref": "#/definitions/inputs"
+        },
+        "dependsOn": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/dependsOn"
+        },
+        "cache": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/cache"
+        },
+        "syncGenerators": {
+          "$ref": "#/definitions/targetDefaultsConfig/properties/syncGenerators"
+        }
+      },
+      "additionalProperties": false
+    },
     "targetDefaultsConfig": {
       "type": "object",
       "description": "Target defaults",
@@ -857,6 +933,15 @@
         "executor": {
           "description": "The function that Nx will invoke when you run this target",
           "type": "string"
+        },
+        "command": {
+          "description": "Shorthand for `nx:run-commands` — the shell command to run.",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Free-form metadata about the target (description, technologies, help text, etc.).",
+          "type": "object",
+          "additionalProperties": true
         },
         "options": {
           "type": "object"

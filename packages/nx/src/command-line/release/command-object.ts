@@ -71,6 +71,18 @@ export type ChangelogOptions = NxReleaseArgs &
     createRelease?: false | 'github' | 'gitlab';
     resolveVersionPlans?: 'all' | 'using-from-and-to';
     replaceExistingContents?: boolean;
+    /**
+     * Force changelog generation to run even when the resolved changelog configuration is
+     * considered effectively disabled (i.e. changelog file writing is disabled via `file: false`
+     * and remote release creation resolves to being disabled).
+     *
+     * This is intended for programmatic API consumers of `releaseChangelog` who intentionally
+     * disable file writing and remote release creation because they want to consume the generated
+     * changelog contents in memory from the returned result instead.
+     *
+     * NOTE: This option is only available via the programmatic API, it is not exposed as a CLI flag.
+     */
+    forceChangelogGeneration?: boolean;
     // This will only be set if using the `nx release` top level command, or orchestrating via the programmatic API
     releaseGraph?: ReleaseGraph;
   };

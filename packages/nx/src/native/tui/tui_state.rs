@@ -16,7 +16,8 @@ use crate::native::utils::time::current_timestamp_millis;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchInfo, BatchStatus, RunMode};
+use super::graph_utils::is_task_continuous;
+use super::lifecycle::{BatchInfo, BatchStatus, PerformanceSummaryPayload, RunMode};
 use super::pty::PtyInstance;
 
 // In test mode, use a stub type instead of the real NAPI ThreadsafeFunction.
@@ -82,7 +83,18 @@ pub struct TuiState {
     user_has_interacted: bool,
 
     // === Cloud Message ===
+    /// Whether the run is connected to Nx Cloud (known at startup from
+    /// nx.json, independent of any message/link arriving later).
+    is_cloud_enabled: bool,
     cloud_message: Option<String>,
+    /// Structured Nx Cloud link (display label, href URL), shown as a clickable
+    /// label in place of the raw cloud message when set.
+    cloud_link: Option<(String, String)>,
+
+    // === Performance Report ===
+    /// Stored here (not on the per-instance popup) so it survives mode switches;
+    /// both apps re-hydrate their popup from this on construction.
+    exit_summary: Option<PerformanceSummaryPayload>,
 
     // === UI State (for mode switching persistence) ===
     /// Tasks assigned to terminal panes [pane0, pane1]
@@ -99,9 +111,10 @@ pub struct TuiState {
     // === Batch Metadata (for mode switching persistence) ===
     batch_metadata: HashMap<String, StoredBatchState>,
 
-    // === Filter State (for mode switching persistence) ===
-    /// Filter text from TasksList (always persisted when restored)
-    ui_filter_text: String,
+    // === Filter State ===
+    /// Canonical filter text. TasksList mutates it via its state handle; the
+    /// status bar reads it for the filter display.
+    filter_text: String,
 
     /// Batch expansion states for mode switching restoration
     ui_batch_expansion_states: HashbrownHashMap<String, bool>,
@@ -148,14 +161,17 @@ impl TuiState {
             quit_at: None,
             is_forced_shutdown: false,
             user_has_interacted: false,
+            is_cloud_enabled: false,
             cloud_message: None,
+            cloud_link: None,
+            exit_summary: None,
             ui_pane_tasks: [None, None],
             ui_spacebar_mode: false,
             ui_focused_pane: None,
             ui_selected_item: None,
             batch_metadata: HashMap::new(),
             ui_max_parallel: None,
-            ui_filter_text: String::new(),
+            filter_text: String::new(),
             ui_batch_expansion_states: HashbrownHashMap::new(),
             dimensions,
         }
@@ -220,11 +236,15 @@ impl TuiState {
     /// Get count of completed tasks (any terminal state)
     ///
     /// Counts tasks with status: Success, Failure, Skipped, LocalCache,
-    /// LocalCacheKeptExisting, RemoteCache
+    /// LocalCacheKeptExisting, RemoteCache. Continuous tasks are excluded to
+    /// stay symmetric with `get_total_task_count` — a crashed dev server
+    /// (`Failure`) or a dep-skipped watcher (`Skipped`) must not push the
+    /// numerator past the denominator.
     pub fn get_completed_task_count(&self) -> usize {
         self.task_status_map
-            .values()
-            .filter(|status| {
+            .iter()
+            .filter(|(id, _)| !is_task_continuous(&self.task_graph, id))
+            .filter(|(_, status)| {
                 matches!(
                     status,
                     TaskStatus::Success
@@ -236,6 +256,45 @@ impl TuiState {
                 )
             })
             .count()
+    }
+
+    /// Number of tasks the progress count is measured against. Continuous tasks
+    /// (servers, watchers) never reach a terminal state, so counting them makes
+    /// the total unreachable — they're excluded from the denominator.
+    pub fn get_total_task_count(&self) -> usize {
+        self.tasks
+            .iter()
+            .filter(|task| !is_task_continuous(&self.task_graph, &task.id))
+            .count()
+    }
+
+    /// Whether every task reached a terminal state. Unlike
+    /// `get_completed_task_count`, this includes `Stopped` so a cancelled run
+    /// still reads as finished.
+    pub fn is_run_completed(&self) -> bool {
+        !self.task_status_map.is_empty()
+            && self.task_status_map.values().all(|status| {
+                matches!(
+                    status,
+                    TaskStatus::Success
+                        | TaskStatus::Failure
+                        | TaskStatus::Skipped
+                        | TaskStatus::Stopped
+                        | TaskStatus::LocalCache
+                        | TaskStatus::LocalCacheKeptExisting
+                        | TaskStatus::RemoteCache
+                )
+            })
+    }
+
+    /// First task start in epoch ms, when any task has started
+    pub fn run_start_time(&self) -> Option<i64> {
+        self.task_start_times.values().min().copied()
+    }
+
+    /// Last task end in epoch ms, when any task has ended
+    pub fn run_end_time(&self) -> Option<i64> {
+        self.task_end_times.values().max().copied()
     }
 
     /// Get names of tasks that failed
@@ -443,14 +502,35 @@ impl TuiState {
 
     // === User Interaction Methods ===
 
-    /// Mark that the user has interacted with the TUI
+    /// Mark that the user has interacted with the TUI.
+    ///
+    /// Also cancels any pending auto-exit countdown: that countdown only applies
+    /// while the user is idle, so any interaction keeps the TUI running. The explicit
+    /// quit handlers (q / Ctrl-C) re-schedule a quit when the user actually confirms,
+    /// so this can't strand a deliberate quit.
     pub fn mark_user_interacted(&mut self) {
         self.user_has_interacted = true;
+        self.quit_at = None;
     }
 
     /// Check if the user has interacted with the TUI
     pub fn has_user_interacted(&self) -> bool {
         self.user_has_interacted
+    }
+
+    // === Performance Report Methods ===
+
+    pub fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        self.exit_summary = Some(summary);
+    }
+
+    pub fn exit_summary(&self) -> Option<PerformanceSummaryPayload> {
+        self.exit_summary.clone()
+    }
+
+    /// Whether the run report exists yet (run finished) without cloning the payload
+    pub fn has_exit_summary(&self) -> bool {
+        self.exit_summary.is_some()
     }
 
     // === Forced Shutdown Methods ===
@@ -467,6 +547,14 @@ impl TuiState {
 
     // === Cloud Message Methods ===
 
+    pub fn set_cloud_enabled(&mut self, enabled: bool) {
+        self.is_cloud_enabled = enabled;
+    }
+
+    pub fn is_cloud_enabled(&self) -> bool {
+        self.is_cloud_enabled
+    }
+
     /// Set the cloud message to display
     pub fn set_cloud_message(&mut self, message: Option<String>) {
         self.cloud_message = message;
@@ -475,6 +563,16 @@ impl TuiState {
     /// Get the cloud message (if any)
     pub fn get_cloud_message(&self) -> Option<&str> {
         self.cloud_message.as_deref()
+    }
+
+    /// Set the structured cloud link (display label, href URL).
+    pub fn set_cloud_link(&mut self, link: Option<(String, String)>) {
+        self.cloud_link = link;
+    }
+
+    /// Get the structured cloud link (if any).
+    pub fn get_cloud_link(&self) -> Option<&(String, String)> {
+        self.cloud_link.as_ref()
     }
 
     // === UI State Methods (for mode switching persistence) ===
@@ -487,13 +585,11 @@ impl TuiState {
         focused_pane: Option<usize>,
         selected_item: Option<SelectionEntry>,
         batch_expansion_states: HashbrownHashMap<String, bool>,
-        filter_text: String,
     ) {
         self.ui_pane_tasks = pane_tasks;
         self.ui_spacebar_mode = spacebar_mode;
         self.ui_focused_pane = focused_pane;
         self.ui_selected_item = selected_item;
-        self.ui_filter_text = filter_text;
         self.ui_batch_expansion_states = batch_expansion_states;
     }
 
@@ -589,9 +685,14 @@ impl TuiState {
         self.ui_max_parallel
     }
 
-    /// Get saved filter text for mode switching restoration
+    /// Get the canonical filter text
     pub fn get_filter_text(&self) -> &str {
-        &self.ui_filter_text
+        &self.filter_text
+    }
+
+    /// Set the canonical filter text
+    pub fn set_filter_text(&mut self, text: String) {
+        self.filter_text = text;
     }
 
     /// Get saved batch expansion states for mode switching restoration
@@ -686,6 +787,106 @@ mod tests {
         let map = state.get_task_status_map();
         assert_eq!(map.get("app1:build"), Some(&TaskStatus::Success));
         assert_eq!(map.get("app2:build"), Some(&TaskStatus::InProgress));
+    }
+
+    #[test]
+    fn total_task_count_excludes_continuous_tasks() {
+        let tasks = vec![
+            create_test_task("app1"),
+            create_test_task("app2"),
+            create_test_task("serve"),
+        ];
+        let mut graph_tasks = HashMap::new();
+        graph_tasks.insert("app1:build".to_string(), Task::new("app1", "build"));
+        graph_tasks.insert("app2:build".to_string(), Task::new("app2", "build"));
+        graph_tasks.insert(
+            "serve:build".to_string(),
+            Task::new("serve", "build").with_continuous(true),
+        );
+        let task_graph = TaskGraph {
+            tasks: graph_tasks,
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        );
+
+        assert_eq!(state.tasks().len(), 3);
+        assert_eq!(
+            state.get_total_task_count(),
+            2,
+            "the continuous task is excluded from the total"
+        );
+    }
+
+    /// The numerator must filter the same task set as the denominator: a
+    /// crashed dev server (`Failure`) counts as terminal, but as a continuous
+    /// task it is excluded from the total — counting it as completed would
+    /// let the bar read e.g. 3/2.
+    #[test]
+    fn completed_task_count_excludes_continuous_tasks() {
+        let tasks = vec![
+            create_test_task("app1"),
+            create_test_task("app2"),
+            create_test_task("serve"),
+        ];
+        let mut graph_tasks = HashMap::new();
+        graph_tasks.insert("app1:build".to_string(), Task::new("app1", "build"));
+        graph_tasks.insert("app2:build".to_string(), Task::new("app2", "build"));
+        graph_tasks.insert(
+            "serve:build".to_string(),
+            Task::new("serve", "build").with_continuous(true),
+        );
+        let task_graph = TaskGraph {
+            tasks: graph_tasks,
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let mut state = TuiState::new(
+            tasks,
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        );
+
+        state.update_task_status("app1:build", TaskStatus::Success);
+        state.update_task_status("app2:build", TaskStatus::Success);
+        // The continuous task crashes — terminal status, but excluded.
+        state.update_task_status("serve:build", TaskStatus::Failure);
+
+        assert_eq!(
+            state.get_completed_task_count(),
+            2,
+            "the crashed continuous task must not count as completed"
+        );
+        assert!(
+            state.get_completed_task_count() <= state.get_total_task_count(),
+            "completed can never exceed the total"
+        );
     }
 
     // === PTY Management Tests ===
@@ -875,6 +1076,21 @@ mod tests {
 
         // Now true
         assert!(state.has_user_interacted());
+    }
+
+    #[test]
+    fn test_interaction_cancels_pending_auto_exit() {
+        let mut state = create_test_state();
+
+        // An auto-exit countdown is pending.
+        state.schedule_quit(Duration::from_secs(3));
+        assert!(state.quit_at.is_some());
+
+        // Interacting keeps the TUI running: the pending quit is cleared, not just
+        // "not yet reached".
+        state.mark_user_interacted();
+        assert!(state.quit_at.is_none());
+        assert!(!state.should_quit());
     }
 
     // === Forced Shutdown Tests ===

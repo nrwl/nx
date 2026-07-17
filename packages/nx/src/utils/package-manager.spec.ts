@@ -12,6 +12,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import * as childProcess from 'child_process';
 import { tmpdir } from 'os';
+import { parse } from 'yaml';
 
 import * as configModule from '../config/configuration';
 import * as projectGraphFileUtils from '../project-graph/file-utils';
@@ -26,6 +27,8 @@ import {
   modifyPnpmWorkspaceYamlToFitNewDirectory,
   modifyYarnRcToFitNewDirectory,
   modifyYarnRcYmlToFitNewDirectory,
+  packageRegistryPack,
+  packageRegistryView,
   parseVersionFromPackageManagerField,
   PackageManager,
 } from './package-manager';
@@ -414,16 +417,32 @@ describe('package-manager', () => {
   });
 
   describe('modifyPnpmWorkspaceYamlToFitNewDirectory', () => {
-    it('should drop workspace packages but keep settings', () => {
+    it('should replace member globs with a temp-root self-reference but keep settings', () => {
       const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
         [
           'packages:',
           "  - 'packages/*'",
+          "  - '!libs/owners'",
           'minimumReleaseAge: 1440',
           'registry: https://example.com/',
         ].join('\n')
       );
-      expect(result).not.toContain('packages');
+      // The original member globs don't resolve in the temp dir, so drop them...
+      expect(result).not.toContain('packages/*');
+      expect(result).not.toContain('!libs/owners');
+      // ...but keep `packages` non-empty so pnpm <10.5 accepts the manifest.
+      expect(parse(result).packages).toEqual(['.']);
+      expect(result).toContain('minimumReleaseAge: 1440');
+      expect(result).toContain('registry: https://example.com/');
+    });
+
+    it('should add a packages field when the source manifest has none', () => {
+      // pnpm <10.5 (and corepack's default pnpm) reject a workspace manifest
+      // whose `packages` field is missing or empty.
+      const result = modifyPnpmWorkspaceYamlToFitNewDirectory(
+        ['minimumReleaseAge: 1440', 'registry: https://example.com/'].join('\n')
+      );
+      expect(parse(result).packages).toEqual(['.']);
       expect(result).toContain('minimumReleaseAge: 1440');
       expect(result).toContain('registry: https://example.com/');
     });
@@ -441,8 +460,14 @@ describe('package-manager', () => {
       expect(result).toContain('minimumReleaseAge: 1440');
     });
 
-    it('should not throw on an empty file', () => {
-      expect(() => modifyPnpmWorkspaceYamlToFitNewDirectory('')).not.toThrow();
+    it('should add a packages field to an empty or comments-only manifest', () => {
+      // An empty/comments-only source has null doc contents; older pnpm still
+      // rejects a packages-less manifest, so `packages: ['.']` must be added.
+      for (const src of ['', '   \n', '# only a comment\n']) {
+        expect(
+          parse(modifyPnpmWorkspaceYamlToFitNewDirectory(src)).packages
+        ).toEqual(['.']);
+      }
     });
   });
 
@@ -762,6 +787,80 @@ describe('package-manager', () => {
       expect(commands.publish(...publishCmdParam)).toEqual(
         'bun publish --cwd="dist/packages/my-pkg" --json --registry="https://registry.npmjs.org/" --tag=latest'
       );
+    });
+  });
+
+  describe('packageRegistryView', () => {
+    let execMock: jest.SpyInstance;
+
+    beforeEach(() => {
+      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout: '' });
+        return undefined;
+      }) as any);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('should force npm to bypass devEngines enforcement when substituting npm in a yarn workspace', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'yarn' } });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('npm view');
+      expect(options.env.npm_config_force).toBe('true');
+    });
+
+    it('should not force when querying through pnpm', async () => {
+      jest
+        .spyOn(configModule, 'readNxJson')
+        .mockReturnValue({ cli: { packageManager: 'pnpm' } });
+
+      await packageRegistryView('nx', 'latest', '--json');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('pnpm view');
+      expect(options.env?.npm_config_force).toBeUndefined();
+    });
+  });
+
+  describe('packageRegistryPack', () => {
+    let execMock: jest.SpyInstance;
+
+    beforeEach(() => {
+      execMock = jest.spyOn(childProcess, 'exec').mockImplementation(((
+        _cmd: string,
+        options: any,
+        callback: any
+      ) => {
+        const cb = typeof options === 'function' ? options : callback;
+        cb(null, { stdout: 'nx-1.0.0.tgz' });
+        return undefined;
+      }) as any);
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.clearAllMocks();
+    });
+
+    it('should force npm to bypass devEngines enforcement', async () => {
+      await packageRegistryPack('/tmp/pack', 'nx', '1.0.0');
+
+      const [cmd, options] = execMock.mock.calls[0];
+      expect(cmd).toContain('npm pack');
+      expect(options.env.npm_config_force).toBe('true');
     });
   });
 });

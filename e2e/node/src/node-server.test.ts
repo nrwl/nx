@@ -4,8 +4,8 @@ import {
   cleanupProject,
   getSelectedPackageManager,
   killPort,
+  killProcessAndPorts,
   newProject,
-  promisifiedTreeKill,
   readFile,
   reservePort,
   runCLI,
@@ -15,6 +15,7 @@ import {
   updateJson,
 } from '@nx/e2e-utils';
 import { join } from 'path';
+import { stripVTControlCharacters } from 'node:util';
 
 describe('Node Applications + webpack', () => {
   let proj: string;
@@ -204,5 +205,64 @@ describe('Node Applications + webpack', () => {
 
     checkFilesExist(`dist/apps/${nodeApp1}/main.js`);
     checkFilesExist(`dist/apps/${nodeApp2}/main.js`);
+  }, 300_000);
+
+  it('should wait for the previous process to exit on watch restart so the port is released', async () => {
+    const app = uniq('slowshutdown');
+    const port = await reservePort();
+
+    runCLI(
+      `generate @nx/node:app apps/${app} --framework=none --no-interactive --port=${port} --linter=eslint --unitTestRunner=jest`
+    );
+
+    // Server with a slow graceful shutdown that holds the port after SIGTERM.
+    // A watch-mode restart must wait for it to exit, otherwise the new
+    // process fails with EADDRINUSE. The 8s hold exceeds the 5s kill grace
+    // period, so the executor force-kills it rather than waiting forever.
+    updateFile(
+      `apps/${app}/src/main.ts`,
+      `
+      import { createServer } from 'http';
+      const server = createServer((req, res) => res.end('ok'));
+      server.listen(${port}, () => console.log('Listening on ${port} pid ' + process.pid));
+      process.on('SIGTERM', () => {
+        setTimeout(() => process.exit(0), 8000);
+      });
+      `
+    );
+
+    const p = await runCommandUntil(`serve ${app}`, (output) =>
+      output.includes(`Listening on ${port}`)
+    );
+
+    try {
+      const restarted = new Promise<void>((resolve, reject) => {
+        let output = '';
+        const timeoutId = setTimeout(() => {
+          reject(new Error(`Server did not restart. Output:\n${output}`));
+        }, 120_000);
+        const check = (chunk: Buffer) => {
+          output += stripVTControlCharacters(chunk.toString());
+          if (output.includes('EADDRINUSE')) {
+            clearTimeout(timeoutId);
+            reject(new Error(`Restarted server hit EADDRINUSE:\n${output}`));
+          } else if (output.includes(`Listening on ${port}`)) {
+            clearTimeout(timeoutId);
+            resolve();
+          }
+        };
+        p.stdout?.on('data', check);
+        p.stderr?.on('data', check);
+      });
+
+      // Trigger a watch rebuild and restart.
+      updateFile(`apps/${app}/src/main.ts`, (content) =>
+        content.replace(`res.end('ok')`, `res.end('ok v2')`)
+      );
+
+      await restarted;
+    } finally {
+      await killProcessAndPorts(p.pid, port);
+    }
   }, 300_000);
 });

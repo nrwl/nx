@@ -4,7 +4,6 @@ import chalk from 'chalk';
 
 import { MessageKey, messages } from '../utils/nx/ab-testing';
 import { deduceDefaultBase } from '../utils/git/default-base';
-import { isGitAvailable } from '../utils/git/git';
 import {
   detectInvokedPackageManager,
   PackageManager,
@@ -112,8 +111,6 @@ export async function determineTemplate(
   if (!parsedArgs.interactive || isCI()) return 'nrwl/empty-template';
   // Docs generation needs preset flow to document all presets
   if (process.env.NX_GENERATE_DOCS_PROCESS === 'true') return 'custom';
-  // Template flow requires git for cloning - fall back to custom preset if git is not available
-  if (!isGitAvailable()) return 'custom';
   const { template } = await enquirer.prompt<{ template: string }>([
     {
       name: 'template',

@@ -509,3 +509,87 @@ describe('resolvePackageVersionRespectingMinReleaseAge', () => {
     ).rejects.toThrow('registry exploded');
   });
 });
+
+describe('preapproved packages with min-release-age', () => {
+  it('preapproved packages (exact name and glob) bypass the min-release-age gate during resolution', async () => {
+    resetResolvePackageVersionState();
+    // Simulate yarn policy with npmMinimalAgeGate and npmPreapprovedPackages
+    mockReadPolicy.mockResolvedValue({
+      outcome: 'active',
+      policy: {
+        packageManager: 'yarn',
+        packageManagerVersion: '4.15.0',
+        cutoffMs: Date.now() - 24 * 60 * 60 * 1000, // 24 hours ago
+        windowMs: 24 * 60 * 60 * 1000,
+        sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
+        // isExcluded checks both exact name ('nx') and glob ('@nx/*')
+        isExcluded: (name: string, version: string) => {
+          return name === 'nx' || name.startsWith('@nx/');
+        },
+        behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
+      },
+    });
+
+    // Mock the resolution to return an immature version when it would be blocked,
+    // but isApproved() in the actual implementation checks isExcluded first
+    // so preapproved packages should resolve successfully even to fresh versions
+    mockResolve.mockResolvedValue({
+      version: '23.1.0-beta.0', // Fresh prerelease < 24h old
+      unconstrained: '23.1.0-beta.0',
+    });
+
+    // Both exact name and glob-matched packages should resolve to the immature version
+    const nxVersion = await resolvePackageVersionRespectingMinReleaseAge(
+      'nx',
+      '23.1.0-beta.0'
+    );
+    expect(nxVersion).toBe('23.1.0-beta.0');
+
+    const nxParserVersion = await resolvePackageVersionRespectingMinReleaseAge(
+      '@nx/parser',
+      '23.1.0-beta.0'
+    );
+    expect(nxParserVersion).toBe('23.1.0-beta.0');
+  });
+
+  it('non-preapproved packages are still gated by the min-release-age policy', async () => {
+    resetResolvePackageVersionState();
+    mockReadPolicy.mockResolvedValue({
+      outcome: 'active',
+      policy: {
+        packageManager: 'yarn',
+        packageManagerVersion: '4.15.0',
+        cutoffMs: Date.now() - 24 * 60 * 60 * 1000,
+        windowMs: 24 * 60 * 60 * 1000,
+        sourceDescription: 'yarn npmMinimalAgeGate (1440 min)',
+        // Only 'nx' and '@nx/*' are preapproved; other packages are not
+        isExcluded: (name: string, version: string) => {
+          return name === 'nx' || name.startsWith('@nx/');
+        },
+        behavior: { packageManager: 'yarn', missingVersionTime: 'pass' },
+      },
+    });
+
+    // A non-preapproved package hitting a violation should still be gated
+    const blocked = [
+      { version: '2.0.0-rc.0', publishedAt: new Date().toISOString() },
+    ];
+    mockResolve.mockRejectedValue(
+      new MinReleaseAgeViolationError({
+        packageManager: 'yarn',
+        packageName: 'some-other-pkg',
+        spec: '2.0.0-rc.0',
+        pmShapedDetail: 'All versions satisfying "2.0.0-rc.0" are quarantined',
+        blocked,
+        remediation: [],
+      })
+    );
+
+    await expect(
+      resolvePackageVersionRespectingMinReleaseAge(
+        'some-other-pkg',
+        '2.0.0-rc.0'
+      )
+    ).rejects.toThrow(MinReleaseAgeViolationError);
+  });
+});

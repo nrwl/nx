@@ -1,4 +1,4 @@
-import { minimatch } from 'minimatch';
+import { Minimatch } from 'minimatch';
 import { existsSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
@@ -160,10 +160,12 @@ type PackageJsonPatterns = {
 export function buildPackageJsonWorkspacesMatcher(
   patterns: PackageJsonPatterns
 ) {
+  // Compile each glob once; the returned matcher runs per package.json path.
+  const positive = patterns.positive.map((p) => new Minimatch(p));
+  const negative = patterns.negative.map((p) => new Minimatch(p));
   return (p) =>
     // use lookup to avoid unnecessary minimatch calls
-    (patterns.positiveLookup[p] ||
-      patterns.positive.some((positive) => minimatch(p, positive))) &&
+    (patterns.positiveLookup[p] || positive.some((m) => m.match(p))) &&
     /**
      * minimatch will return true if the given p is NOT excluded by the negative pattern.
      *
@@ -174,7 +176,7 @@ export function buildPackageJsonWorkspacesMatcher(
      * excluded by any of the negative patterns.
      */
     !patterns.negativeLookup[p] &&
-    patterns.negative.every((negative) => minimatch(p, negative));
+    negative.every((m) => m.match(p));
 }
 
 export function createNodeFromPackageJson(
