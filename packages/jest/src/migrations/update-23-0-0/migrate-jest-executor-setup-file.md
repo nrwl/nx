@@ -135,7 +135,7 @@ Remove the option from a target default using the `@nx/jest:jest` executor:
 }
 ```
 
-Per-project paths don't make sense as workspace defaults, so the option is removed without rewriting individual project Jest configs. A warning is logged so the setup file path can be added to each project's Jest config manually if needed.
+Per-project paths don't make sense as workspace defaults, so the option is removed from `nx.json`. Base targets that inherited it don't lose their setup file: the inherited path is expanded and added to `setupFilesAfterEnv` in each project's Jest config, the same as if the target had declared the option itself. A warning is logged noting the removal from `nx.json`.
 
 Remove the option from a target default entry matching on the `@nx/jest:jest` executor:
 
