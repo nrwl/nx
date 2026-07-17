@@ -11,6 +11,7 @@ import { extname, join, relative, sep } from 'path';
 import type { FileData } from '../config/project-graph';
 import type { NxArgs } from '../utils/command-line-utils';
 import { readJsonFile } from '../utils/fileutils';
+import { assertValidGitRevision } from '../utils/git-revision';
 import { getIgnoreObject } from '../utils/ignore';
 import { jsonDiff } from '../utils/json-diff';
 import { workspaceRoot } from '../utils/workspace-root';
@@ -161,15 +162,22 @@ function defaultReadFileAtRevision(
   file: string,
   revision: void | string
 ): string {
+  if (revision) {
+    assertValidGitRevision(revision);
+  }
   try {
     const filePathInGitRepository = getFilePathInGitRepository(file);
     return !revision
       ? readFileSync(file, 'utf-8')
-      : execSync(`git show ${revision}:${filePathInGitRepository}`, {
-          maxBuffer: TEN_MEGABYTES,
-          stdio: ['pipe', 'pipe', 'ignore'],
-          windowsHide: true,
-        })
+      : execFileSync(
+          'git',
+          ['show', `${revision}:${filePathInGitRepository}`],
+          {
+            maxBuffer: TEN_MEGABYTES,
+            stdio: ['pipe', 'pipe', 'ignore'],
+            windowsHide: true,
+          }
+        )
           .toString()
           .trim();
   } catch {
@@ -189,6 +197,7 @@ function defaultReadBunLockFileAtRevision(
     }).trim();
   }
 
+  assertValidGitRevision(revision);
   const filePathInGitRepository = getFilePathInGitRepository(file);
   const tempDirectory = mkdtempSync(join(tmpdir(), 'nx-bun-lock-'));
   const tempLockfilePath = join(tempDirectory, 'bun.lockb');
