@@ -1,4 +1,4 @@
-import { execSync, spawn, ChildProcess } from 'child_process';
+import { execSync, execFileSync, spawn, ChildProcess } from 'child_process';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import type { MigrationDetailsWithId } from '../../config/misc-interfaces';
@@ -116,20 +116,22 @@ export function finishMigrationProcess(
     windowsHide: true,
   });
 
-  execSync(`git commit -m "${commitMessage}" --no-verify`, {
+  // Pass args as an array (no shell) so commit messages and refs read from
+  // migrations.json can't break out into shell command injection.
+  execFileSync('git', ['commit', '-m', commitMessage, '--no-verify'], {
     cwd: workspacePath,
     encoding: 'utf-8',
     windowsHide: true,
   });
 
   if (squashCommits && initialGitRef) {
-    execSync(`git reset --soft ${initialGitRef.ref}`, {
+    execFileSync('git', ['reset', '--soft', initialGitRef.ref], {
       cwd: workspacePath,
       encoding: 'utf-8',
       windowsHide: true,
     });
 
-    execSync(`git commit -m "${commitMessage}" --no-verify`, {
+    execFileSync('git', ['commit', '-m', commitMessage, '--no-verify'], {
       cwd: workspacePath,
       encoding: 'utf-8',
       windowsHide: true,
@@ -489,7 +491,7 @@ export function undoMigration(workspacePath: string, id: string) {
     // `existing.ref` is the unmodified HEAD at run time, so `ref^` would
     // reset past unrelated history. Only flip the metadata to skipped.
     if (existing.changedFiles.length > 0) {
-      execSync(`git reset --hard ${existing.ref}^`, {
+      execFileSync('git', ['reset', '--hard', `${existing.ref}^`], {
         cwd: workspacePath,
         encoding: 'utf-8',
         windowsHide: true,
