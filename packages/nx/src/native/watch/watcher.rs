@@ -38,13 +38,19 @@ const IDLE_WINDOW: Duration = Duration::from_millis(100);
 /// Starvation cap from the start of a burst — flush even if events keep
 /// arriving faster than IDLE_WINDOW.
 const MAX_WAIT: Duration = Duration::from_millis(500);
-/// Grace given to the kernel→notify-crate hop on a force-flush so an event
-/// the caller just produced isn't missed. macOS FSEvents coalesces with
-/// noticeably more latency than Linux inotify, so it needs more room.
+/// Grace for the kernel→notify hop before the first event arrives; short so an
+/// idle force-flush adds no latency. macOS FSEvents lags more than inotify.
 #[cfg(target_os = "macos")]
 const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(50);
 #[cfg(not(target_os = "macos"))]
 const FORCE_FLUSH_GRACE: Duration = Duration::from_millis(10);
+/// Silence window that ends a trickling burst once collection is underway.
+/// Larger than FORCE_FLUSH_GRACE so inter-event gaps under load aren't mistaken
+/// for the burst ending; only paid while events keep arriving.
+const FORCE_FLUSH_QUIET: Duration = Duration::from_millis(50);
+/// Overall cap, kept under the 500ms reply timeout in `force_flush_pending` so
+/// a late reply isn't read as "no changes".
+const FORCE_FLUSH_MAX: Duration = Duration::from_millis(250);
 
 #[cfg(not(target_os = "macos"))]
 fn build_ignore_glob_set() -> Arc<NxGlobSet> {
@@ -341,25 +347,34 @@ impl WatchPipeline {
 
                         let handler_started_at = Instant::now();
 
-                        // Wait briefly for notify-crate sends that are
-                        // mid-flight — a bare try_recv would miss them.
-                        match self.notify_rx.recv_timeout(FORCE_FLUSH_GRACE) {
-                            Ok(event) => {
-                                if let Err(msg) = self.ingest_event(event) {
-                                    fatal = Some(msg);
+                        // Collect until delivery goes quiet. An idle channel
+                        // returns after one short grace; once a burst is in
+                        // progress each event restarts the longer
+                        // FORCE_FLUSH_QUIET window so a trickle isn't cut
+                        // mid-stream. Bounded by FORCE_FLUSH_MAX.
+                        let deadline = handler_started_at + FORCE_FLUSH_MAX;
+                        let mut burst_in_progress = !self.accumulator.is_empty();
+                        while fatal.is_none() {
+                            let now = Instant::now();
+                            if now >= deadline {
+                                break;
+                            }
+                            let window = if burst_in_progress {
+                                FORCE_FLUSH_QUIET
+                            } else {
+                                FORCE_FLUSH_GRACE
+                            };
+                            let wait = window.min(deadline - now);
+                            match self.notify_rx.recv_timeout(wait) {
+                                Ok(event) => {
+                                    burst_in_progress = true;
+                                    if let Err(msg) = self.ingest_event(event) {
+                                        fatal = Some(msg);
+                                    }
                                 }
-                            }
-                            Err(crossbeam_channel::RecvTimeoutError::Timeout) => {}
-                            Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
-                                fatal = Some("watcher channel disconnected".to_string());
-                            }
-                        }
-
-                        if fatal.is_none() {
-                            while let Ok(event) = self.notify_rx.try_recv() {
-                                if let Err(msg) = self.ingest_event(event) {
-                                    fatal = Some(msg);
-                                    break;
+                                Err(crossbeam_channel::RecvTimeoutError::Timeout) => break,
+                                Err(crossbeam_channel::RecvTimeoutError::Disconnected) => {
+                                    fatal = Some("watcher channel disconnected".to_string());
                                 }
                             }
                         }
@@ -785,6 +800,34 @@ mod tests {
                 "iteration {i}: missed nx.json event — got {events:?}"
             );
         }
+    }
+
+    #[test]
+    fn force_flush_pending_captures_trickling_burst() {
+        // Regression: force-flush used to drain only already-arrived events,
+        // cutting a burst delivered with gaps mid-stream and serving a stale
+        // graph. Writes are spaced 20ms apart — past the 10ms Linux grace but
+        // under FORCE_FLUSH_QUIET — so the last write must still be captured.
+        let dir = tempdir().expect("tempdir");
+        let (watcher, _captured) = start_watcher(dir.path());
+        let dir_path = dir.path().to_path_buf();
+
+        let writer = std::thread::spawn(move || {
+            for i in 0..5 {
+                fs::write(dir_path.join(format!("t{i}.txt")), "x").expect("write");
+                std::thread::sleep(Duration::from_millis(20));
+            }
+        });
+
+        // Flush while writes are still trickling in.
+        std::thread::sleep(Duration::from_millis(5));
+        let events = watcher.force_flush_pending();
+        writer.join().unwrap();
+
+        assert!(
+            events.iter().any(|e| e.path == "t4.txt"),
+            "flush cut the burst mid-stream; expected trailing write t4.txt — got {events:?}"
+        );
     }
 
     #[test]
