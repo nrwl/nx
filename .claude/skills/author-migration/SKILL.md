@@ -59,7 +59,7 @@ The version field is a gate, not a label: an entry runs when `installed < versio
 - `requires` evaluates against the version the package will LAND on in this run (pending packageJsonUpdates first, installed as fallback), with `includePrerelease`. A package absent from both fails the gate.
 - Codemod for upstream major N: gate `{"<pkg>": ">=N.0.0"}`. It fires when the same run bumps into N.
 - Never put an upper bound on a migration entry's `requires` from-version: if the same run bumps the package past the bound, the migration is dead (this shipped as a real bug in storybook, fixed by dropping the bound). Upper-bounded source windows belong on `packageJsonUpdates.requires`.
-- `requires` is AND across packages. Mutually exclusive conditions need separate entries; a condition `requires` cannot express (an OR of packages) gets a code-level gate via `getDeclaredPackageVersion` + semver inside the migration function.
+- `requires` is AND across packages. Mutually exclusive conditions need separate entries; a condition `requires` cannot express (an OR of packages) gets a code-level gate via `getDeclaredPackageVersion` + semver inside the migration function. A dependency installable under alternative names is an OR condition (umbrella vs scoped: `typescript-eslint` vs `@typescript-eslint/eslint-plugin`); gating on one name silently skips workspaces that declare only the other. This shipped as a real bug in eslint, fixed by dropping the gate and checking both names inside the migration (see `hasTypescriptEslintV8` in `packages/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts`). In `packageJsonUpdates`, express the OR as one group per name (the paired `21.2.0-typescript-eslint` / `21.2.0-@typescript-eslint` groups in `packages/eslint/migrations.json`).
 - `packageJsonUpdates` groups gate on the SOURCE major window (`">=N.0.0 <N+1.0.0"`), one group per supported source major, ordered oldest source major first: groups are processed in key order in a single pass and each accepted group feeds the next group's `requires`, which is what lets a workspace chain major steps. Unlike migration entries, a group's `version` gate is inclusive on the installed side (`installed <= version <= target`).
 - Nx-version-only migrations carry no `requires`.
 
@@ -94,9 +94,10 @@ First migration in a plugin? Also check:
 - `export default async function update(tree: Tree)` and nothing else. Migrations take no options; the runner calls them with `(tree, {})`.
 - Import helpers from `@nx/devkit` and, for the semi-private ones (`forEachExecutorOptions`, target-default helpers), from `@nx/devkit/internal`. Exception: migrations inside `packages/nx` itself use relative imports and `formatChangedFilesWithPrettierIfAvailable`.
 - Tree APIs only, never `fs`. All existence/content checks via `tree.exists` / `tree.read` / `readJson`.
+- Build tree paths with `joinPathFragments` or `node:path`'s `posix` helpers, matching what the Tree returns (always slash-separated). Plain `join`/`dirname` emit backslashes on Windows; the Tree normalizes them on API calls, but any string-level use of such a path (comparison with a tree-provided path, a visited-set key, log output) silently mismatches.
 - End with `await formatFiles(tree)` (skip only when the migration touches no JS/TS/JSON surface).
 - User-facing warnings via devkit `logger.warn`, listing the affected files, reserved for cases the user must finish manually. Never `console.*`.
-- Version strings come from named constants (`nxVersion` and friends from the plugin's `utils/versions`), or a local const frozen in the migration file when the value must not float with later releases. Never inline version literals at call sites.
+- Version strings come from named constants (`nxVersion` and friends from the plugin's `utils/versions`), or a local const frozen in the migration file when the value must not float with later releases. Never inline version literals at call sites. When a migration adds a new dependency, install the same versions-constant the plugin's generators use; do not derive the version from what the workspace already has installed unless matching the installed version is the point.
 - Fail open: skip files or projects the migration cannot parse or does not recognize (early return), never throw. A throwing migration aborts the user's whole `nx migrate --run-migrations` run with no resume.
 - Idempotent by construction: the rewrite consumes its own trigger, or the write is gated on `updated !== original`, or there is an explicit already-migrated guard. `nx repair` re-runs nx-core migrations unconditionally (minus `x-repair-skip`), and users re-run failed sessions.
 - Never return a `GeneratorCallback` or install task; the return value contract is `void | string[] | { nextSteps, agentContext }` and callbacks are silently discarded. The runner handles installs by diffing package.json.
@@ -105,8 +106,9 @@ First migration in a plugin? Also check:
 
 Exemplars: `packages/vite/src/migrations/update-23-0-0/migrate-to-vitest-4.ts`, `packages/angular/src/migrations/update-21-2-0/replace-provide-server-routing.ts`.
 
-- Discovery: scope to relevant projects first (project-graph dependency filtering, or `forEachExecutorOptions` when the file set derives from executor options), then `visitNotIgnoredFiles` over each project root. Prefilter before parsing: check the extension, then bail unless the content `.includes()` the trigger token.
+- Discovery, two shapes. File sets that derive from project or executor configuration: scope by the project graph (`forEachExecutorOptions`, dependency filtering), then visit each project root. User-owned config files matched by name (`tsconfig*.json`, tool rc files): scan the whole tree with `visitNotIgnoredFiles` from the root instead; name-matched files exist outside target references (a `tsconfig.editor.json` nothing points at), and the scan works even where project-graph construction fails. Either way, prefilter before parsing: check the filename or extension, then bail unless the content `.includes()` the trigger token.
 - Parse with tsquery (`ast` + `query`) for selector-style lookups or the raw TypeScript API for structural checks. Use the AST only to LOCATE positions, then splice replacement text into the original content: devkit `applyChangesToString` (sorts and offsets the edits internally; see `packages/angular/src/migrations/update-23-0-0/rewrite-internal-subpath-imports.ts`) or a local splice helper like the exemplars above use. Never reprint a whole file through `ts.createPrinter`; it destroys the user's formatting.
+- Property keys in user configs come single-quoted, double-quoted, or backtick-quoted: match `ts.isStringLiteral(key) || ts.isNoSubstitutionTemplateLiteral(key)` and preserve the original quotes when splicing a rename (see `packages/eslint/src/migrations/update-23-1-0/remove-removed-typescript-eslint-extension-rules.ts`).
 - Load TypeScript lazily: `import type * as ts from 'typescript'` at the top plus `ensureTypescript()` (from `@nx/js/internal`) or `ensurePackage<typeof import('typescript')>('typescript', '*')` at first use. No static value import.
 - For `.js` config files parse with `ts.createSourceFile(..., ScriptKind.JS)`.
 
@@ -117,6 +119,9 @@ Exemplars: `packages/vite/src/migrations/update-23-0-0/migrate-to-vitest-4.ts`, 
 - nx.json: `readNxJson(tree)` / `updateNxJson(tree, nxJson)`, write only when changed. `targetDefaults` keys may be target names or executors and values may be objects or arrays; guard with `Array.isArray`. Generator defaults come in two shapes (flat `"@nx/x:gen"` keys and nested `"@nx/x": { gen: {} }`); handle both.
 - Plugin registrations are `string | ExpandedPluginConfiguration`; match with `typeof p === 'string' ? p === name : p.plugin === name`, preserve array order and per-entry include/exclude scopes, and gate registration on actual usage (glob the tool's config files first).
 - Dual-world rule: a migration touching a tool's configuration handles executor-based targets, inferred-plugin registrations, and `targetDefaults` independently in one pass (exemplar: `packages/vite/src/migrations/update-23-0-0/ensure-vitest-package-migration.ts`).
+- User-owned jsonc files (`tsconfig*.json` and other configs that may carry comments): `readJson`/`updateJson` strips comments and reformats the whole file. Locate and edit nodes with `jsonc-parser` (`modify` + `applyEdits`) so only the targeted span changes (exemplar: `packages/angular/src/migrations/update-23-1-0/remove-conflicting-extended-diagnostics.ts`). A migration that newly uses such a package must add it to the plugin's `package.json` dependencies (and to `allowedNonPeerDependencies` in `ng-package.json` for ng-packaged plugins).
+- When the trigger is a resolved (inherited) setting, edit only the file that locally declares the offending block. Never mutate a shared or ancestor config based on one consumer's resolution: sibling projects extending the same base may resolve differently. The exemplar above removes `extendedDiagnostics` only where declared and leaves shared bases alone.
+- When re-implementing a host tool's config resolution (tsconfig `extends` chains, ESLint config cascades), handle every input form the real resolver accepts, not just the common one: for `extends`, string and array forms (later entries win), package-specifier bases, and circular references. A resolver that only handles the string form silently mis-resolves the rest.
 - Ignore files: `addEntryToGitIgnore` (`packages/nx/src/utils/ignore.ts`, parses with the `ignore` package instead of substring matching); keep the `if (tree.exists('lerna.json') && !tree.exists('nx.json')) return` guard used by this family.
 - Invoking a generator from a migration is sanctioned only for same-package generators via relative import, passing `keepExistingVersions: true` and `skipFormat: true` where supported so `packageJsonUpdates` keeps ownership of version bumps.
 
@@ -124,11 +129,14 @@ Exemplars: `packages/vite/src/migrations/update-23-0-0/migrate-to-vitest-4.ts`, 
 
 Declarative `packageJsonUpdates` first; a .ts implementation only for conditional logic. In groups: explicit `"alwaysAddToPackageJson": false` on bump-only packages; `requires` for gating; do not use `x-prompt` (deprecated) or `ifPackageInstalled` (unused; gate with `requires`). To bump a package that ships its own migrations without triggering them (the `@angular/cli` pattern), set `ignorePackageGroup: true` and `ignoreMigrations: true` on that package's update.
 
+When the bump targets a package this repo itself depends on (root `package.json` or a `pnpm-workspace.yaml` catalog entry), update the repo's own pin in the same change and run the install so the lockfile follows: the migration only fixes user workspaces.
+
 ### Prompt-only and hybrid
 
 - The prompt .md is colocated in the `update-<ver>/` directory. Its filename MUST differ from any implementation basename: the docs site inlines `<implementation path>.md` into public docs, so a shared basename leaks the LLM runbook onto nx.dev. Pattern to copy: jest's `set-ts-jest-isolated-modules` pairs `documentation: set-ts-jest-isolated-modules.md` with `prompt: verify-typecheck.md`.
 - Naming: `ai-instructions-for-<framework>-<major>.md` for whole-framework upgrade runbooks; task-named files (`migrate-ban-types-rule.md`) for scoped tasks.
 - Write the runbook per [templates/prompt-runbook.md](templates/prompt-runbook.md). Every scoped-task prompt opens with a no-op guard: confirm the preconditions, otherwise change nothing and stop (exemplar: `packages/eslint/src/migrations/update-23-1-0/migrate-ban-types-rule.md`).
+- A prompt migrating a rule or option must also spell out the bare form (the rule enabled with no options): default-configuration users are the most common case and the easiest to leave unhandled.
 - Prompt-only migrations execute only under the agentic flow; in plain runs they surface as next steps. Do not put must-happen changes in a prompt.
 - Hybrid = one entry with both `implementation` and `prompt`. The .ts does only mechanically safe edits, accumulates human-readable descriptions of every shape it could not handle, and returns `{ nextSteps, agentContext }`. `agentContext` is silently dropped in non-agentic runs, so ALWAYS return `nextSteps` covering the same ground for human users. The .md tells the agent to verify (not redo) the pre-pass output and treat each advisory-context item as pending work. Exemplar: eslint `convert-to-flat-config` (copy its return contract, not its shared implementation/prompt basename, which predates the naming rule above).
 - Re-delivering an existing prompt at a later version: add a new entry pointing at the same .md; the runner dedupes by path.
@@ -141,6 +149,8 @@ Spec canon (skeleton in [templates/spec-skeleton.md](templates/spec-skeleton.md)
 - Mandatory negative test: capture the content, run the migration on a workspace it should not touch, assert the content is unchanged.
 - Mandatory idempotency test when the trigger can survive: run the migration twice, assert the second run changes nothing.
 - Mandatory malformed-input test when the migration parses files: feed an unparseable file and assert the migration skips it without throwing.
+- Mandatory multi-edit test when a codemod can rewrite several spots in one file: one fixture with all rewrite shapes in the same block, asserting adjacent edits do not corrupt each other's offsets.
+- Mandatory precedence test when the migration resolves an inherited setting: one fixture where a local declaration differs from the inherited value, asserting the nearest declaration wins.
 - Hybrids: `const result = await migration(tree)` and assert on `result.agentContext` / `result.nextSteps`.
 - `packages/nx` specs import the tree util relatively; every other plugin from `@nx/devkit/testing`.
 
@@ -155,6 +165,8 @@ Before release, validate against a real repository:
 
 - `description` feeds the agentic prompt and the public docs page. State the concrete action ("Removes the deprecated X option from Y executor options"). For prompt migrations, also state why it is AI-driven ("...whose options do not map 1:1, so it is driven by an AI prompt rather than a deterministic codemod").
 - Codemods get a colocated `documentation` .md per [templates/documentation-md.md](templates/documentation-md.md): h4/h5 headings only, short description, before/after samples. The `documentation` key is read only by the agentic flow; the docs site instead inlines the .md that shares the implementation's basename. Colocating one file named after the implementation serves both.
+- Before finishing, re-read every claim in the .md files against the implementation as written: version selection, trigger conditions, file coverage, and option lists must describe what the code actually does, not an earlier draft's design. Doc text written before a design change is the easiest artifact to leave stale.
+- Verify tool-behavior claims (deprecation timelines, option semantics, error codes) against the tool's source or changelog in `node_modules` before putting them in a .md. These files ship to users, and a wrong version claim reads as authoritative long after review.
 - Do not author: `cli` (dead key), `schema` (never read), `<version>--PackageGroup` keys (runtime-reserved).
 
 ## 7. Pre-PR checklist
@@ -162,9 +174,10 @@ Before release, validate against a real repository:
 - [ ] Entry key `update-<ver>-<slug>` and its version part matches the `version` field exactly.
 - [ ] `implementation` path is dist-prefixed (`./dist/src/migrations/...`) and points at THIS migration's file (open the file and confirm; validation only checks that the path resolves, never that it matches the entry).
 - [ ] `implementation` used, not `factory`; no `cli`, no `schema`.
-- [ ] Version is latest tag + 1 on the active train; `requires` reviewed against landing versions (no upper bound on the entry's own gate).
+- [ ] Version is latest tag + 1 on the active train; `requires` reviewed against landing versions (no upper bound on the entry's own gate) and against alternative package names (umbrella vs scoped: no single-name gate).
 - [ ] No orphans: every file under the touched `update-<ver>/` directory is referenced by an entry, and every new entry's files exist.
 - [ ] Spec includes a negative test (plus a malformed-input test when the migration parses files); hybrid specs assert the return object; `formatFiles` called.
 - [ ] .md files colocated and, for prompts, the filename differs from the implementation basename; `assets.json` covers `src/migrations/**/*.md`.
+- [ ] .md claims (version selection, triggers, coverage) re-checked against the final implementation.
 - [ ] PR description carries the `## Migration coverage` mapping.
 - [ ] Real-repo validation done or explicitly handed off.
