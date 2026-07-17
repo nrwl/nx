@@ -10,6 +10,7 @@ pub mod lifecycle;
 pub mod pty;
 pub mod scroll_momentum;
 pub mod status_icons;
+pub mod strings;
 pub mod theme;
 #[allow(clippy::module_inception)]
 pub mod tui;
