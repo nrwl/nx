@@ -28,7 +28,14 @@ import {
   pluginToTechnology,
 } from './utils/plugin-mappings';
 
-const PLUGIN_PATHS = readdirSync(join(workspaceRoot, 'packages'));
+// Only directories are packages. Stray files at the packages/ root (e.g.
+// a CLAUDE.md dev-doc) must not be treated as plugins — doing so generates
+// a bogus `technologies/undefined/<file>/...` route that fails link validation.
+const PLUGIN_PATHS = readdirSync(join(workspaceRoot, 'packages'), {
+  withFileTypes: true,
+})
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => entry.name);
 
 type DocEntry = CollectionEntry<'plugin-docs'>;
 
