@@ -6,6 +6,7 @@ import {
   newProject,
   promisifiedTreeKill,
   readJson,
+  reservePort,
   runCLI,
   runCLIAsync,
   runCommand,
@@ -93,7 +94,7 @@ describe('@nx/expo (legacy)', () => {
 
   it('should serve with metro', async () => {
     let process: ChildProcess;
-    const port = 8051;
+    const port = await reservePort();
 
     try {
       process = await runCommandUntil(
@@ -184,7 +185,7 @@ describe('@nx/expo (legacy)', () => {
   });
 
   it('should start', async () => {
-    const port = 8041;
+    const port = await reservePort();
     // run start command
     const startProcess = await runCommandUntil(
       `start ${appName} -- --port=${port}`,
