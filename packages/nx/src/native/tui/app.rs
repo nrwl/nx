@@ -991,7 +991,7 @@ impl App {
                 if matches!(key.code, KeyCode::F(11))
                     && !matches!(self.focus(), Focus::CountdownPopup)
                 {
-                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    self.request_inline_mode();
                     return Ok(false);
                 }
 
@@ -1123,7 +1123,7 @@ impl App {
                                 countdown_popup.cancel_countdown();
                                 self.core.state().lock().cancel_quit();
                                 self.close_popup(Focus::CountdownPopup);
-                                self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                                self.request_inline_mode();
                                 return Ok(false);
                             }
                             _ => {
@@ -1303,8 +1303,7 @@ impl App {
                                     // If focused on a specific terminal pane, and not interactive, enter should
                                     // swap to inline tui mode focusing that task
                                     KeyCode::Enter => {
-                                        // dispatch action to switch to inline mode with focused task
-                                        self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                                        self.request_inline_mode();
                                     }
                                     _ => {
                                         // Forward other keys for interactivity, scrolling (j/k) etc
@@ -1979,6 +1978,33 @@ impl App {
         props
     }
 
+    /// Switch to inline mode showing the focused (or selected) item.
+    ///
+    /// Inline mode renders that one item's pty, so a task that another Nx
+    /// process is running has nothing to show there. Stay in full-screen, where
+    /// the pane at least explains what's happening, and say why.
+    fn request_inline_mode(&mut self) {
+        let item_id = self
+            .get_focused_pane_item()
+            .or_else(|| self.get_selected_item())
+            .map(|item| item.id().to_string());
+
+        if let Some(item_id) = item_id
+            && self
+                .core
+                .state()
+                .lock()
+                .is_running_in_another_process(&item_id)
+        {
+            self.dispatch_action(Action::ShowHint(
+                "This task is running in another Nx process".to_string(),
+            ));
+            return;
+        }
+
+        self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+    }
+
     fn recalculate_layout_areas(&mut self) {
         if let Some(frame_area) = self.frame_area {
             // Only a free-text cloud message can need a second bar row; a
@@ -2598,7 +2624,7 @@ impl App {
                     return;
                 }
                 if is_double {
-                    self.dispatch_action(Action::SwitchMode(TuiMode::Inline));
+                    self.request_inline_mode();
                     return;
                 }
                 // Begin a text selection drag at the clicked cell (NXC-3946).
@@ -4603,6 +4629,63 @@ mod tests {
         let switched = std::iter::from_fn(|| rx.try_recv().ok())
             .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
         assert!(switched, "two clicks on the same cell are a double-click");
+    }
+
+    /// Inline mode has nothing to render for a task another Nx process is
+    /// running (there is no pty here), so entering it is blocked with a hint.
+    #[test]
+    fn test_inline_mode_blocked_for_task_running_in_another_process() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        app.pane_tasks[0] = Some(SelectionEntry::Task("app1:build".to_string()));
+        app.set_base_focus(Focus::MultipleOutput(0));
+        app.core
+            .state()
+            .lock()
+            .update_task_status("app1:build", TaskStatus::Shared);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        app.request_inline_mode();
+
+        let actions: Vec<Action> = std::iter::from_fn(|| rx.try_recv().ok()).collect();
+        assert!(
+            !actions
+                .iter()
+                .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline))),
+            "a task running in another Nx process must not open the inline view"
+        );
+        assert!(
+            actions.iter().any(|a| matches!(a, Action::ShowHint(_))),
+            "the user should be told why the inline view didn't open"
+        );
+    }
+
+    /// The guard is specific to tasks running elsewhere - a normal in-progress
+    /// task still drops into inline.
+    #[test]
+    fn test_inline_mode_allowed_for_local_task() {
+        let mut app = create_test_app();
+        app.spacebar_mode = false;
+        app.pane_tasks[0] = Some(SelectionEntry::Task("app1:build".to_string()));
+        app.set_base_focus(Focus::MultipleOutput(0));
+        app.core
+            .state()
+            .lock()
+            .update_task_status("app1:build", TaskStatus::InProgress);
+
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx).unwrap();
+
+        app.request_inline_mode();
+
+        let switched = std::iter::from_fn(|| rx.try_recv().ok())
+            .any(|a| matches!(a, Action::SwitchMode(TuiMode::Inline)));
+        assert!(
+            switched,
+            "a locally running task should open the inline view"
+        );
     }
 
     #[test]
