@@ -328,7 +328,7 @@ function warnIfUsingOutdatedGlobalInstall(
       : [];
 
     bodyLines.push(
-      'For more information, see https://nx.dev/more-concepts/global-nx'
+      'For more information, see https://nx.dev/docs/getting-started/installation#global-installation'
     );
     output.warn({
       title: `It's time to update Nx 🎉`,

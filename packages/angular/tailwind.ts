@@ -4,7 +4,7 @@ let hasWarned = false;
 
 /**
  * @deprecated `@nx/angular/tailwind` will be removed in Nx 24. Migrate to Tailwind CSS v4 which no longer needs glob patterns.
- * See: https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular
+ * See: https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects
  */
 export function createGlobPatternsForDependencies(
   dirPath: string,
@@ -15,7 +15,7 @@ export function createGlobPatternsForDependencies(
     console.warn(
       `\nWARNING: "@nx/angular/tailwind" is deprecated and will be removed in Nx 24.\n` +
         `Migrate to Tailwind CSS v4 which no longer needs glob patterns for content detection.\n` +
-        `See: https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular\n`
+        `See: https://nx.dev/docs/technologies/angular/guides/using-tailwind-css-with-angular-projects\n`
     );
   }
   try {
