@@ -113,15 +113,16 @@ describe('migration-markdown-assets', () => {
     expect(violations).toEqual([]);
   });
 
-  it('should ignore references that point outside dist', () => {
-    writeFile('packages/acme/migrations/update-1-0-0/doc.md');
+  it('should return a violation when a reference points outside dist', () => {
+    writeFile('packages/acme/src/migrations/update-1-0-0/doc.md');
 
     const violations = validate(
-      migrationWith('documentation', './migrations/update-1-0-0/doc.md'),
-      [{ glob: 'src/**/schema.json' }]
+      migrationWith('documentation', './src/migrations/update-1-0-0/doc.md'),
+      [{ glob: 'src/migrations/**/*.md' }]
     );
 
-    expect(violations).toEqual([]);
+    expect(violations).toHaveLength(1);
+    expect(violations[0].message).toContain('resolves outside');
   });
 
   it('should return no violations when no migration references markdown', () => {

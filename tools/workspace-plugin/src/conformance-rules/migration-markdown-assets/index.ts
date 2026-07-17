@@ -62,40 +62,51 @@ export function validateMigrationMarkdownAssets(opts: {
 }): ConformanceViolation[] {
   const { migrations, assetsJson, projectRoot, rootDir } = opts;
   const outputDir = resolve(rootDir, assetsJson.outDir);
+  // Same precedence as nx's own migration resolution: a `generators` entry wins
+  // over a `schematics` one of the same name.
   const entries = {
-    ...(migrations.generators ?? {}),
     ...(migrations.schematics ?? {}),
+    ...(migrations.generators ?? {}),
   };
 
+  const violations: ConformanceViolation[] = [];
   const referenced: { key: string; value: string; expected: string }[] = [];
   for (const migration of Object.values<any>(entries)) {
     for (const key of REFERENCE_KEYS) {
       const value = migration[key];
       if (!value) continue;
       const expected = resolve(rootDir, projectRoot, value);
-      // A reference outside the output dir is a file checked into the package
-      // and published through package.json#files, not one the build copies.
-      if (!isInside(outputDir, expected)) continue;
+      if (!isInside(outputDir, expected)) {
+        violations.push({
+          message: `The \`${key}\` file "${value}" referenced by migrations.json resolves outside "${assetsJson.outDir}". Only that directory is published, so the reference cannot resolve in the installed package.`,
+          sourceProject: opts.sourceProject,
+          file: opts.migrationsPath,
+        });
+        continue;
+      }
       referenced.push({ key, value, expected });
     }
   }
-  if (!referenced.length) return [];
 
-  const copied = collectCopiedFiles(assetsJson, projectRoot, rootDir);
+  if (referenced.length) {
+    const copied = collectCopiedFiles(assetsJson, projectRoot, rootDir);
+    for (const { key, value, expected } of referenced) {
+      if (copied.has(expected)) continue;
+      violations.push({
+        message: `The \`${key}\` file "${value}" referenced by migrations.json is not copied into "${assetsJson.outDir}", so the published package does not contain it. Either the source file is missing or no assets.json glob copies it to that path.`,
+        sourceProject: opts.sourceProject,
+        file: opts.migrationsPath,
+      });
+    }
+  }
 
-  return referenced
-    .filter(({ expected }) => !copied.has(expected))
-    .map(({ key, value }) => ({
-      message: `The \`${key}\` file "${value}" is referenced by migrations.json but no assets.json glob copies it into "${assetsJson.outDir}", so the published package does not contain it.`,
-      sourceProject: opts.sourceProject,
-      file: opts.migrationsPath,
-    }));
+  return violations;
 }
 
 /**
- * Drives the real copy-assets pipeline with a collecting callback in place of
- * the copying one, so the resulting paths are what a build would produce
- * without touching the file system.
+ * Drives the real copy-assets pipeline over the working tree with a collecting
+ * callback in place of the copying one, so the resulting paths are the ones a
+ * build would produce, without writing any of them.
  */
 function collectCopiedFiles(
   assetsJson: AssetsJson,
