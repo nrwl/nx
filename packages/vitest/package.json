@@ -74,7 +74,6 @@
     "@nx/js": "workspace:*",
     "tslib": "catalog:typescript",
     "semver": "catalog:",
-    "tinyglobby": "catalog:",
     "@phenomnomnominal/tsquery": "catalog:typescript"
   },
   "peerDependencies": {

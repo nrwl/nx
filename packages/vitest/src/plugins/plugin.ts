@@ -23,11 +23,11 @@ import {
 import { existsSync, readdirSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
-import { glob } from 'tinyglobby';
 import type { InlineConfig } from 'vitest/node';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { deriveGroupNameFromTarget } from 'nx/src/utils/plugins';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import {
   loadViteDynamicImport,
   loadVitestConfigDynamicImport,
@@ -647,7 +647,11 @@ async function getTestPathsRelativeToProjectRoot(
   if (viteConfig) {
     const test: InlineConfig = viteConfig.test ?? {};
     if (!configRequiresVitestRuntime(test, viteConfig, fullProjectRoot)) {
-      return globTestPathsRelativeToProjectRoot(test, fullProjectRoot);
+      return globTestPathsRelativeToProjectRoot(
+        test,
+        workspaceRoot,
+        projectRoot
+      );
     }
   }
 
@@ -661,23 +665,29 @@ async function getTestPathsRelativeToProjectRoot(
  * file contains an in-source test) plus `test.typecheck.include` (when
  * typecheck is enabled), each minus the relevant `exclude`, from the project
  * root. Defaults come from the installed Vitest so they track the user's
- * version. Callers must first confirm the config is reproducible with a glob
- * via `configRequiresVitestRuntime`.
+ * version. Globbing goes through the Nx workspace context (the daemon-cached
+ * file index), so files ignored by `.gitignore`/`.nxignore` are never
+ * candidates. Callers must first confirm the config is reproducible with a
+ * glob via `configRequiresVitestRuntime`.
  */
 async function globTestPathsRelativeToProjectRoot(
   test: InlineConfig,
-  fullProjectRoot: string
+  workspaceRoot: string,
+  projectRoot: string
 ): Promise<string[]> {
   const { configDefaults } = await loadVitestConfigDynamicImport();
 
   const exclude: string[] = test.exclude ?? configDefaults.exclude;
   const typecheck = test.typecheck;
   const typecheckOnly = !!(typecheck?.enabled && typecheck?.only);
-  const globOptions = {
-    dot: true,
-    cwd: fullProjectRoot,
-    expandDirectories: false,
-  };
+  // The workspace context matches workspace-relative paths, while the config's
+  // patterns are relative to the project root; anchor them to it.
+  const globProjectFiles = (include: string[], ignore: string[]) =>
+    globWithWorkspaceContext(
+      workspaceRoot,
+      include.map((pattern) => joinPathFragments(projectRoot, pattern)),
+      ignore.map((pattern) => joinPathFragments(projectRoot, pattern))
+    );
 
   // Regular and type tests are independent walks; run them together.
   const globJobs: Promise<string[]>[] = [];
@@ -686,7 +696,7 @@ async function globTestPathsRelativeToProjectRoot(
   // regular tests.
   if (!typecheckOnly) {
     const include: string[] = test.include ?? configDefaults.include;
-    globJobs.push(glob(include, { ...globOptions, ignore: exclude }));
+    globJobs.push(globProjectFiles(include, exclude));
   }
 
   if (typecheck?.enabled) {
@@ -694,7 +704,7 @@ async function globTestPathsRelativeToProjectRoot(
       typecheck.include ?? configDefaults.typecheck.include;
     const ignore: string[] =
       typecheck.exclude ?? configDefaults.typecheck.exclude;
-    globJobs.push(glob(include, { ...globOptions, ignore }));
+    globJobs.push(globProjectFiles(include, ignore));
   }
 
   const matches = new Set<string>();
@@ -706,10 +716,7 @@ async function globTestPathsRelativeToProjectRoot(
   // Typecheck enabled with `only` makes Vitest run only type tests, so skip
   // these too.
   if (!typecheckOnly && test.includeSource?.length) {
-    const sourceFiles = await glob(test.includeSource, {
-      ...globOptions,
-      ignore: exclude,
-    });
+    const sourceFiles = await globProjectFiles(test.includeSource, exclude);
     // The candidate set can be the whole `src` tree, so read in bounded
     // batches; an unbounded Promise.all over every file risks EMFILE.
     const readConcurrency = 25;
@@ -720,10 +727,7 @@ async function globTestPathsRelativeToProjectRoot(
           // match that so a permission error or TOCTOU race can't abort graph
           // creation.
           try {
-            const content = await readFile(
-              join(fullProjectRoot, file),
-              'utf-8'
-            );
+            const content = await readFile(join(workspaceRoot, file), 'utf-8');
             return content.includes('import.meta.vitest') ? file : null;
           } catch {
             return null;
@@ -736,11 +740,19 @@ async function globTestPathsRelativeToProjectRoot(
     }
   }
 
-  // tinyglobby returns paths relative to `cwd` (the project root); drop any that
-  // escape it to match the runtime path, which filters to files under the root.
+  // The workspace context returns workspace-relative paths; keep only files
+  // under the project root (matching the runtime path, which filters to files
+  // under the root) and re-relativize them to it.
+  const projectPrefix =
+    projectRoot === '.' ? '' : `${normalizePath(projectRoot)}/`;
   return [...matches]
-    .filter((file) => !file.startsWith('..') && !isAbsolute(file))
-    .map((file) => normalizePath(file))
+    .filter(
+      (file) =>
+        !file.startsWith('..') &&
+        !isAbsolute(file) &&
+        file.startsWith(projectPrefix)
+    )
+    .map((file) => normalizePath(file.slice(projectPrefix.length)))
     .sort();
 }
 

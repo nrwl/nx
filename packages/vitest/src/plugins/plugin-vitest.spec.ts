@@ -1,7 +1,7 @@
 import { CreateNodesContext } from '@nx/devkit';
 import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
-import { glob } from 'tinyglobby';
+import { globWithWorkspaceContext } from 'nx/src/utils/workspace-context';
 import { createNodesV2 } from './plugin';
 import { loadViteDynamicImport } from '../utils/executor-utils';
 
@@ -38,8 +38,17 @@ jest.mock('vitest/node', () => ({
 
 // Default enumeration path globs test files instead of booting Vitest.
 // Return the files unsorted to also exercise the plugin's sort.
-jest.mock('tinyglobby', () => ({
-  glob: jest.fn().mockResolvedValue(['src/test-2.ts', 'src/test-1.ts']),
+// Mocked with an explicit factory (requireActual hits a circular init through
+// the devkit barrels); the hashing stubs cover calculateHashesForCreateNodes.
+jest.mock('nx/src/utils/workspace-context', () => ({
+  globWithWorkspaceContext: jest
+    .fn()
+    .mockResolvedValue(['src/test-2.ts', 'src/test-1.ts']),
+  hashWithWorkspaceContext: jest.fn().mockResolvedValue('hash'),
+  hashMultiGlobWithWorkspaceContext: jest.fn(
+    (_workspaceRoot: string, globGroups: string[][]) =>
+      Promise.resolve(globGroups.map((_, idx) => `hash-${idx}`))
+  ),
 }));
 
 jest.mock('node:fs/promises', () => ({
@@ -154,10 +163,10 @@ describe('@nx/vitest', () => {
     });
 
     it('should sort atomized target names when test discovery returns shuffled paths', async () => {
-      // tinyglobby does not sort its filesystem walk output. Simulate that by
-      // returning paths in non-alphabetic order; the plugin must sort them so
-      // atomized target insertion order is stable across runs.
-      (glob as jest.Mock).mockResolvedValueOnce([
+      // The workspace context glob does not guarantee sorted output. Simulate
+      // that by returning paths in non-alphabetic order; the plugin must sort
+      // them so atomized target insertion order is stable across runs.
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
         'src/c.test.ts',
         'src/a.test.ts',
         'src/b.test.ts',
@@ -335,7 +344,7 @@ describe('@nx/vitest', () => {
         },
         workspaceRoot: '',
       };
-      (glob as jest.Mock).mockClear();
+      (globWithWorkspaceContext as jest.Mock).mockClear();
       (readFile as jest.Mock).mockReset();
       // Reset to the default so a per-test workspace-file override can't leak
       // into later tests and force them onto the runtime path.
@@ -350,7 +359,9 @@ describe('@nx/vitest', () => {
     });
 
     it('should glob test files instead of booting Vitest for a glob-safe config', async () => {
-      (glob as jest.Mock).mockResolvedValueOnce(['src/from-glob.spec.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'src/from-glob.spec.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -360,7 +371,7 @@ describe('@nx/vitest', () => {
 
       const targets = nodes[0][1].projects!['.'].targets!;
       expect(targets['test-ci--src/from-glob.spec.ts']).toBeDefined();
-      expect(glob).toHaveBeenCalled();
+      expect(globWithWorkspaceContext).toHaveBeenCalled();
     });
 
     it('should fall back to Vitest when a plugin exposes configureVitest', async () => {
@@ -383,7 +394,7 @@ describe('@nx/vitest', () => {
       // Comes from the createVitest mock, not the glob.
       expect(targets['test-ci--src/test-1.ts']).toBeDefined();
       expect(targets['test-ci--src/test-2.ts']).toBeDefined();
-      expect(glob).not.toHaveBeenCalled();
+      expect(globWithWorkspaceContext).not.toHaveBeenCalled();
     });
 
     it("should always use Vitest when discoverTestFiles is 'vitest'", async () => {
@@ -400,7 +411,7 @@ describe('@nx/vitest', () => {
       const targets = nodes[0][1].projects!['.'].targets!;
       expect(targets['test-ci--src/test-1.ts']).toBeDefined();
       expect(targets['test-ci--src/test-2.ts']).toBeDefined();
-      expect(glob).not.toHaveBeenCalled();
+      expect(globWithWorkspaceContext).not.toHaveBeenCalled();
     });
 
     it('should also glob type tests when typecheck is enabled', async () => {
@@ -412,7 +423,7 @@ describe('@nx/vitest', () => {
           test: { typecheck: { enabled: true } },
         }),
       });
-      (glob as jest.Mock)
+      (globWithWorkspaceContext as jest.Mock)
         .mockResolvedValueOnce(['src/a.spec.ts'])
         .mockResolvedValueOnce(['src/a.test-d.ts']);
 
@@ -426,9 +437,10 @@ describe('@nx/vitest', () => {
       expect(targets['test-ci--src/a.spec.ts']).toBeDefined();
       expect(targets['test-ci--src/a.test-d.ts']).toBeDefined();
       // The type-test glob runs with Vitest's typecheck include default.
-      expect(glob).toHaveBeenCalledWith(
+      expect(globWithWorkspaceContext).toHaveBeenCalledWith(
+        '',
         ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
-        expect.objectContaining({ cwd: '.' })
+        ['**/node_modules/**', '**/.git/**']
       );
     });
 
@@ -456,7 +468,7 @@ describe('@nx/vitest', () => {
 
         const targets = nodes[0][1].projects!['.'].targets!;
         expect(targets['test-ci--src/test-1.ts']).toBeDefined();
-        expect(glob).not.toHaveBeenCalled();
+        expect(globWithWorkspaceContext).not.toHaveBeenCalled();
       }
     );
 
@@ -492,7 +504,7 @@ describe('@nx/vitest', () => {
         // Vitest resolves an instance override, not the top-level glob, so
         // discovery must go through the runtime to enumerate the same specs.
         expect(targets['test-ci--src/test-1.ts']).toBeDefined();
-        expect(glob).not.toHaveBeenCalled();
+        expect(globWithWorkspaceContext).not.toHaveBeenCalled();
       }
     );
 
@@ -507,7 +519,9 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (glob as jest.Mock).mockResolvedValueOnce(['src/from-glob.spec.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'src/from-glob.spec.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -518,7 +532,7 @@ describe('@nx/vitest', () => {
       const targets = nodes[0][1].projects!['.'].targets!;
       // Instances that inherit the top-level include stay on the glob path.
       expect(targets['test-ci--src/from-glob.spec.ts']).toBeDefined();
-      expect(glob).toHaveBeenCalled();
+      expect(globWithWorkspaceContext).toHaveBeenCalled();
     });
 
     it('should still glob when browser mode is disabled', async () => {
@@ -537,7 +551,9 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (glob as jest.Mock).mockResolvedValueOnce(['src/from-glob.spec.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'src/from-glob.spec.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -549,7 +565,7 @@ describe('@nx/vitest', () => {
       // Vitest ignores instances while browser mode is off, so the runtime
       // would enumerate the same specs the glob already does.
       expect(targets['test-ci--src/from-glob.spec.ts']).toBeDefined();
-      expect(glob).toHaveBeenCalled();
+      expect(globWithWorkspaceContext).toHaveBeenCalled();
     });
 
     it('should fall back to Vitest when a vitest.workspace.* sibling file exists', async () => {
@@ -570,7 +586,7 @@ describe('@nx/vitest', () => {
 
       const targets = nodes[0][1].projects!['.'].targets!;
       expect(targets['test-ci--src/test-1.ts']).toBeDefined();
-      expect(glob).not.toHaveBeenCalled();
+      expect(globWithWorkspaceContext).not.toHaveBeenCalled();
     });
 
     it('should honor a config include/exclude over Vitest defaults', async () => {
@@ -585,7 +601,9 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (glob as jest.Mock).mockResolvedValueOnce(['custom/a.spec.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'custom/a.spec.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -593,9 +611,10 @@ describe('@nx/vitest', () => {
         context
       );
 
-      expect(glob).toHaveBeenCalledWith(
+      expect(globWithWorkspaceContext).toHaveBeenCalledWith(
+        '',
         ['custom/**/*.spec.ts'],
-        expect.objectContaining({ ignore: ['**/skip/**'] })
+        ['**/skip/**']
       );
       const targets = nodes[0][1].projects!['.'].targets!;
       expect(targets['test-ci--custom/a.spec.ts']).toBeDefined();
@@ -610,7 +629,7 @@ describe('@nx/vitest', () => {
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (glob as jest.Mock)
+      (globWithWorkspaceContext as jest.Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(['src/a.ts', 'src/b.ts']); // includeSource
       (readFile as jest.Mock)
@@ -638,7 +657,7 @@ describe('@nx/vitest', () => {
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (glob as jest.Mock)
+      (globWithWorkspaceContext as jest.Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(sourceFiles); // includeSource
       // Markers straddle the 25-file batch: f3 (first batch), f27 (second).
@@ -669,7 +688,7 @@ describe('@nx/vitest', () => {
           test: { includeSource: ['src/**/*.ts'] },
         }),
       });
-      (glob as jest.Mock)
+      (globWithWorkspaceContext as jest.Mock)
         .mockResolvedValueOnce([]) // regular include
         .mockResolvedValueOnce(['src/unreadable.ts']); // includeSource
       (readFile as jest.Mock).mockRejectedValueOnce(
@@ -688,7 +707,7 @@ describe('@nx/vitest', () => {
     });
 
     it('should drop test files that escape the project root', async () => {
-      (glob as jest.Mock).mockResolvedValueOnce([
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
         '../outside.spec.ts',
         'src/inside.spec.ts',
       ]);
@@ -715,7 +734,9 @@ describe('@nx/vitest', () => {
           test: { typecheck: { enabled: true, only: true } },
         }),
       });
-      (glob as jest.Mock).mockResolvedValueOnce(['src/a.test-d.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'src/a.test-d.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -727,10 +748,11 @@ describe('@nx/vitest', () => {
       expect(targets['test-ci--src/a.test-d.ts']).toBeDefined();
       // typecheck.only runs only type tests, so the regular include glob is
       // skipped and glob runs once with the typecheck include.
-      expect(glob).toHaveBeenCalledTimes(1);
-      expect(glob).toHaveBeenCalledWith(
+      expect(globWithWorkspaceContext).toHaveBeenCalledTimes(1);
+      expect(globWithWorkspaceContext).toHaveBeenCalledWith(
+        '',
         ['**/*.{test,spec}-d.?(c|m)[jt]s?(x)'],
-        expect.objectContaining({ cwd: '.' })
+        ['**/node_modules/**', '**/.git/**']
       );
     });
 
@@ -746,7 +768,9 @@ describe('@nx/vitest', () => {
           },
         }),
       });
-      (glob as jest.Mock).mockResolvedValueOnce(['src/a.test-d.ts']);
+      (globWithWorkspaceContext as jest.Mock).mockResolvedValueOnce([
+        'src/a.test-d.ts',
+      ]);
 
       const nodes = await createNodesFunction(
         ['vitest.config.ts'],
@@ -759,7 +783,7 @@ describe('@nx/vitest', () => {
       // typecheck.only makes Vitest collect only type tests, so both the regular
       // include and the includeSource globs are skipped: glob runs once for the
       // typecheck include and no in-source candidate is ever read.
-      expect(glob).toHaveBeenCalledTimes(1);
+      expect(globWithWorkspaceContext).toHaveBeenCalledTimes(1);
       expect(readFile).not.toHaveBeenCalled();
     });
   });
