@@ -44,6 +44,10 @@ export default defineConfig({
   redirects: {
     '/guides/tips-n-tricks/define-environment-variables':
       '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/angular/guides/use-environment-variables-in-angular':
+      '/docs/reference/environment-variables#loading-environment-variables',
+    '/technologies/react/guides/use-environment-variables-in-react':
+      '/docs/reference/environment-variables#loading-environment-variables',
     '/knowledge-base/installation':
       '/docs/knowledge-base/installation-and-updates',
     '/guides/nx-cloud/source-control-integration/github':

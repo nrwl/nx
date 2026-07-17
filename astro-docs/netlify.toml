@@ -28,6 +28,14 @@ NX_DOTNET_DISABLE = "true"
 from = "/docs/guides/tips-n-tricks/define-environment-variables"
 to = "/docs/reference/environment-variables#loading-environment-variables"
 
+[[redirects]]
+from = "/docs/technologies/angular/guides/use-environment-variables-in-angular"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
+[[redirects]]
+from = "/docs/technologies/react/guides/use-environment-variables-in-react"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
 # Storybook docs consolidation
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"
