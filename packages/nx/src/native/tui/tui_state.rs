@@ -195,6 +195,18 @@ impl TuiState {
         &self.task_status_map
     }
 
+    /// Whether the task is `Shared` or `Stopped` with no local pty.
+    ///
+    /// Either way this process has no pty to stream or interact with, so all it
+    /// can do is wait for the task's results. The pty check is what separates a
+    /// task stopped elsewhere from one stopped locally, which does have a pty.
+    pub fn is_running_in_another_process(&self, task_id: &str) -> bool {
+        matches!(
+            self.get_task_status(task_id),
+            Some(TaskStatus::Shared | TaskStatus::Stopped)
+        ) && self.get_pty_instance(task_id).is_none()
+    }
+
     /// Get the task ID of the first currently running task (if any)
     ///
     /// This is useful for inline mode which shows output for the current running task.
