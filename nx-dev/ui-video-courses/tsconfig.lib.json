@@ -1,14 +1,15 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../dist/out-tsc/nx-dev/ui-video-courses",
+    "outDir": "dist",
     "types": [
       "node",
       "@nx/react/typings/cssmodule.d.ts",
       "@nx/react/typings/image.d.ts"
     ],
     "composite": true,
-    "declaration": true
+    "declaration": true,
+    "rootDir": "."
   },
   "exclude": [
     "jest.config.ts",

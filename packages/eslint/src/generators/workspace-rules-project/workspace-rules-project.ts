@@ -153,14 +153,15 @@ export async function lintWorkspaceRulesProjectGenerator(
 function findLintTargetDefault(
   td: TargetDefaults | undefined
 ): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'lint' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
+  const value = td?.['lint'];
+  if (value === undefined) return undefined;
+  // A target default value can be a plain config object or an array of
+  // filtered entries; use the filter-less (catch-all) entry.
+  if (Array.isArray(value)) {
+    const found = value.find((e) => e.filter === undefined);
+    if (!found) return undefined;
+    const { filter: _filter, ...rest } = found;
+    return rest;
   }
-  return td['lint'];
+  return value;
 }

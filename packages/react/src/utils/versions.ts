@@ -39,7 +39,7 @@ export const reactReduxVersion = '^9.2.0';
 
 export const eslintPluginImportVersion = '2.31.0';
 export const eslintPluginJsxA11yVersion = '6.10.1';
-export const eslintPluginReactVersion = '7.35.0';
+export const eslintPluginReactVersion = '^7.35.0';
 export const eslintPluginReactHooksVersion = '5.0.0';
 
 export const tsLibVersion = '^2.3.0';

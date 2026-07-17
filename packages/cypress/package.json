@@ -6,7 +6,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "migrations.json",
     "executors.json",
     "generators.json"
@@ -82,7 +81,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",

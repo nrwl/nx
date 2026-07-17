@@ -11,7 +11,6 @@ import {
 } from '../../utils/artifact-types';
 import { validateHtmlSelector } from '../../utils/selector';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
-import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
 import type { NormalizedSchema } from './normalized-schema';
 
 export async function createFiles(
@@ -19,8 +18,6 @@ export async function createFiles(
   options: NormalizedSchema,
   rootOffset: string
 ) {
-  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-
   const rootSelector = `${options.prefix}-root`;
   validateHtmlSelector(rootSelector);
   const nxWelcomeSelector = `${options.prefix}-nx-welcome`;
@@ -51,10 +48,7 @@ export async function createFiles(
     minimal: options.minimal,
     nxWelcomeSelector,
     rootTsConfig: joinPathFragments(rootOffset, getRootTsConfigFileName(tree)),
-    angularMajorVersion,
     rootOffset,
-    provideGlobalErrorListener: angularMajorVersion >= 20,
-    usePlatformBrowserDynamic: angularMajorVersion < 20,
     componentType: componentType ? names(componentType).className : '',
     componentFileSuffix,
     moduleTypeSeparator,
@@ -74,12 +68,6 @@ export async function createFiles(
     options.appProjectRoot,
     substitutions
   );
-
-  if (angularMajorVersion >= 20) {
-    tree.delete(
-      joinPathFragments(options.appProjectRoot, 'tsconfig.editor.json')
-    );
-  }
 
   if (options.standalone) {
     generateFiles(

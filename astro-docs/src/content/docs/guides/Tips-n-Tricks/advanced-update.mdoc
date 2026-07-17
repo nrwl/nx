@@ -15,7 +15,7 @@ The following steps are a summary of the [standard update process](/docs/feature
 First, run the `migrate` command:
 
 ```shell
-nx migrate latest # same as nx migrate nx@latest
+nx migrate
 ```
 
 This performs the following changes:
@@ -43,15 +43,62 @@ After you run all the migrations, you can remove `migrations.json` and commit an
 
 Migrating Jest, Cypress, ESLint, React, Angular, Next, and more is a difficult task. All the tools change at different rates, and they can conflict with each other. In addition, every workspace is different. Even though our goal is for you to update any version of Nx to a newer version of Nx in a single go, sometimes it doesn't work. The recommended process is to update, at most, one major version at a time.
 
-Say you want to migrate from Nx 17.1.0 to Nx 18.2.4. The following steps are more likely to work comparing to `nx migrate 18.2.4`.
+Say you want to migrate from Nx 22.1.0 to Nx 23.0.0. The following steps are more likely to work comparing to `nx migrate 23.0.0`.
 
-- Run `nx migrate 17.3.2` to update the latest version in the 17.x branch.
+- Run `nx migrate 22.7.5` to update the latest version in the 22.x branch.
 - Run `nx migrate --run-migrations`.
-- Next, run `nx migrate 18.2.4`.
+- Next, run `nx migrate 23.0.0`.
 - Run `nx migrate --run-migrations`.
 
 {% aside type="caution" title="Angular updates" %}
 If your workspace uses Angular, this becomes a requirement rather than a recommendation. The Angular packages maintain migrations for a single major version at a time. If you try to update over multiple major versions, only the migrations for the latest major version will be applied. This can lead to issues in your workspace.
+{% /aside %}
+
+## Crossing multiple major versions
+
+When the target is more than one major version ahead of your installed version, `nx migrate` prompts you to choose how far to jump: migrate to the latest in your current major (recommended), step into the next major, or go directly to the target. To skip the prompt, use `--multi-major-mode`:
+
+- `--multi-major-mode=gradual` migrates to the smallest recommended step (typically the latest in your current major), then tells you to re-run to continue.
+- `--multi-major-mode=direct` migrates straight to the target.
+
+The `NX_MULTI_MAJOR_MODE` environment variable is equivalent and takes precedence over a `multiMajorMode` value set in `nx.json`. In non-interactive environments there is no prompt - Nx warns that updating one major at a time is recommended and proceeds directly to the target.
+
+## Choosing which packages to migrate
+
+While in most cases you want to be up to date with Nx and the dependencies it manages, sometimes you might need to stay on an older version of such a dependency. For example, you might want to update Nx to the latest version but keep Angular on **v21.x.x** and not update it to **v22.x.x**.
+
+The `--include` flag controls which packages are updated: `required` (the target package and the packages it ships with), `optional` (the dependency updates those packages recommend), or `all` (the default). The interactive `nx migrate` flow prompts for this. Pass `--include` to set it ahead of time.
+
+`--include` applies only when the target package opts into package selection. Nx and its official plugins do starting in Nx 23, and other plugin authors can opt in as well. For targets that don't, Nx uses `all` without prompting, and passing `--include` explicitly errors. Non-interactive runs also default to `all`.
+
+When unsure, prefer `--include=required` and follow up with `--include=optional`. Updating only Nx and its plugins keeps the PR scope small and has less chance of introducing issues, which matters most in large workspaces. Use `--include=all` when you're okay with doing everything in one PR.
+
+{% aside type="note" title="Optional package updates" %}
+You can't choose to skip any arbitrary package update. To ensure that a plugin works well with older versions of a given package, the plugin must support it. Therefore, Nx plugin authors define what package updates are optional.
+{% /aside %}
+
+{% aside type="caution" title="Taking control of package updates" %}
+While opting out of applying some package updates is supported by Nx, please keep in mind that you are effectively taking control of those package updates and opting out of Nx managing them. This means you'll need to keep up with the version requirements for those packages and those that depend on them. You'll also need to consider more things when updating them at some point [as explained later](#updating-dependencies-that-are-behind-the-versions-nx-manages).
+{% /aside %}
+
+### Skipping optional package updates
+
+To skip the optional package updates, generate the migration with `--include=required`:
+
+```shell
+nx migrate --include=required
+```
+
+Only the target package and the packages it ships with are updated. The `package.json` and the `migrations.json` are generated without the optional dependency updates, and you can catch up on those later.
+
+### Updating dependencies that are behind the versions Nx manages
+
+Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. Run `nx migrate --include=optional` to collect the optional dependency updates recommended for your installed version. It anchors to your installed version, so the target package must be installed and you can't migrate to a version higher than what's installed.
+
+The catch-up can be scoped to a single plugin by naming it as the target. For example, `nx migrate @nx/vite --include=optional` collects only the optional updates `@nx/vite` recommends, such as `vite` itself.
+
+{% aside type="caution" title="Scoping to a single plugin" %}
+Some plugin updates depend on other plugins running their updates too. For example, `@nx/angular` sometimes requires the `@nx/js` updates for TypeScript. Scoping the catch-up to a single plugin skips those, so prefer the full `nx migrate --include=optional` when unsure.
 {% /aside %}
 
 ## Managing migration steps
@@ -129,107 +176,20 @@ You can even provide a custom location for the migrations file if you wish, you 
 nx migrate --run-migrations=migrations.json
 ```
 
-## Choosing optional package updates to apply
+## Using an AI agent to apply migrations
 
-While in most cases you want to be up to date with Nx and the dependencies it manages, sometimes you might need to stay on an older version of such a dependency. For example, you might want to update Nx to the latest version but keep Angular on **v15.x.x** and not update it to **v16.x.x**. For such scenarios, `nx migrate` allows you to choose what to update using the `--interactive` flag.
+Some migrations ship an AI prompt that an installed agent applies for you. The [agentic flow](/docs/features/automate-updating-dependencies#step-2-run-migrations) is interactive by default, but you can control it with flags:
 
-{% aside type="note" title="Optional package updates" %}
-You can't choose to skip any arbitrary package update. To ensure that a plugin works well with older versions of a given package, the plugin must support it. Therefore, Nx plugin authors define what package updates are optional.
-{% /aside %}
+- `--agentic` enables it and resolves the installed agent. Use `--agentic=claude-code` (or `codex`, `opencode`) to pin one, or `--no-agentic` to disable it.
+- `--validate` / `--no-validate` toggles agent validation of generator-only migrations - on by default when the agentic flow is enabled.
 
-{% aside type="caution" title="Taking control of package updates" %}
-While opting out of applying some package updates is supported by Nx, please keep in mind that you are effectively taking control of those package updates and opting out of Nx managing them. This means you'll need to keep up with the version requirements for those packages and those that depend on them. You'll also need to consider more things when updating them at some point [as explained later](#updating-dependencies-that-are-behind-the-versions-nx-manages).
-{% /aside %}
+A non-interactive `--agentic` run warns and continues without the agent, since the flow requires an interactive terminal. When the flow is enabled, Nx commits each migration separately by default so the agent can review an isolated diff.
 
-### Interactively opting out of package updates
+To always use the agentic flow (or a specific agent) without passing the flag, set the `agentic` and `validate` options in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate).
 
-To opt out of package updates, you need to run the migration in interactive mode:
+## Workspace-wide migrate defaults
 
-```shell
-nx migrate latest --interactive
-```
-
-As the migration runs and collects the package updates, you'll be prompted to apply optional package updates, and you can choose what to do based on your needs. The `package.json` will be updated and the `migrations.json` will be generated considering your responses to those prompts.
-
-### Updating dependencies that are behind the versions Nx manages
-
-Once you have skipped some optional updates, there'll come a time when you'll want to update those packages. To do so, you'll need to generate the package updates and migrations from the Nx version that contained those skipped updates.
-
-Say you skipped updating Angular to **v16.x.x**. That package update was meant to happen as part of the `@nx/angular@16.1.0` update, but you decided to skip it at the time. The recommended way to collect the migrations from such an older version is to run the following:
-
-```shell
-nx migrate latest --from=nx@16.0.0 --exclude-applied-migrations
-```
-
-A couple of things are happening there:
-
-- The `--from=nx@16.0.0` flag tells the `migrate` command to use the version **16.0.0** as the installed version for the `nx` package and all the first-party Nx plugins. Note we use a version lower than the one where the update was meant to happen. This is to account for the fact that the update is normally targeted to a prerelease version for testing it before the final release.
-- The `--exclude-applied-migrations` flag tells the `migrate` command not to collect migrations that should have been applied on previous updates.
-
-So, the above command will effectively collect any package update and migration meant to run if your workspace had `nx@16.0.0` installed while excluding those that should have been applied before. You can provide a different older version to collect migrations from.
-
-{% aside type="caution" title="Automatically excluding previously applied migrations" %}
-Automatically excluding previously applied migrations doesn't consider migrations manually removed from the `migrations.json` in previous updates. If you've manually removed migrations in the past and want to run them, don't pass the `--exclude-applied-migrations` and collect all previous migrations.
-{% /aside %}
-
-### Identifying the Nx version to migrate from to collect previously skipped updates
-
-After running the migrations in interactive mode and opting-out of some package updates, a message is printed to the terminal with the command to run later to collect and apply those skipped updates. For example, if you skipped updating Angular to **v16.0.0**, this is the output you'll see (simplified for brevity):
-
-```shell
-nx migrate latest --interactive
-Fetching meta data about packages.
-It may take a few minutes.
-...
-✔ Do you want to update to TypeScript v5.0? (Y/n) · false
-✔ Do you want to update the Angular version to v16? (Y/n) · false
-
-NX   The migrate command has run successfully.
-
-- package.json has been updated.
-- migrations.json has been generated.
-
-NX   Next steps:
-
-- Make sure package.json changes make sense and then run 'pnpm install --no-frozen-lockfile',
-- Run 'pnpm exec nx migrate --run-migrations'
-- You opted out of some migrations for now. Write the following command down somewhere to apply these migrations later:
-- nx migrate 16.5.3 --from nx@16.1.0-beta.0 --exclude-applied-migrations
-- To learn more go to https://nx.dev/recipes/other/advanced-update
-```
-
-You can see in the "Next steps" section a suggested command to run to apply the skipped package updates. Make sure to store that information somewhere so you can later remember from which version you need to run the migration to apply the skipped package updates.
-
-Please note the suggested command is only based on a particular run of the `nx migrate` command. If you've skipped package updates in previous runs, you'll need to use the oldest version you've stored that you haven't yet run the migration from.
-
-If you don't have the command and need to find out from which version to run the migration, you can take a look at the `migrations.json` file of the relevant package. For example, if you skipped updating Angular to **v16.0.0**, you can take a look at the `migrations.json` file of the `@nx/angular` package and you'll find the following:
-
-```jsonc
-// node_modules/@nx/angular/migrations.json
-{
-  // ...
-  "packageJsonUpdates": {
-    // ...
-    "16.1.0": {
-      "version": "16.1.0-beta.1",
-      "x-prompt": "Do you want to update the Angular version to v16?",
-      "requires": {
-        "@angular/core": ">=15.2.0 <16.0.0",
-      },
-      "packages": {
-        "@angular/core": {
-          "version": "~16.0.0",
-          "alwaysAddToPackageJson": true,
-        },
-        // ...
-      },
-    },
-    // ...
-  },
-}
-```
-
-You can see the `16.1.0-beta.1` version is the one that contains the update for `@angular/core` to **~16.0.0**. That's the version you need to run the migration from to apply the package update.
+To avoid passing the same flags on every run, set defaults in the [`migrate` section of `nx.json`](/docs/reference/nx-json#migrate) - `createCommits`, `commitPrefix`, `include`, `multiMajorMode`, `agentic`, and `validate`. A command-line flag always overrides the `nx.json` value, which in turn overrides the built-in Nx defaults.
 
 ## Other advanced capabilities
 
@@ -238,13 +198,13 @@ You can see the `16.1.0-beta.1` version is the one that contains the update for 
 Sometimes, you may want to use a different version of a package than what Nx recommends. To do that, specify the package and version:
 
 ```shell
-nx migrate latest --to="jest@22.0.0,cypress@3.4.0"
+nx migrate --to="jest@30.0.0,cypress@15.0.0"
 ```
 
 By default, Nx uses currently installed packages to calculate what migrations need to run. To override them, override the version:
 
 ```shell
-nx migrate latest --to="@nx/jest@12.0.0"
+nx migrate --to="@nx/jest@12.0.0"
 ```
 
 {% aside type="caution" title="Overriding versions" %}

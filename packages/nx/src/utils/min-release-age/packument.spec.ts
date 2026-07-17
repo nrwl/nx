@@ -3,7 +3,7 @@ jest.mock('../package-manager', () => ({
 }));
 
 import { packageRegistryView } from '../package-manager';
-import { fetchDeprecations, fetchRegistryMetadata } from './packument';
+import { fetchRegistryMetadata } from './packument';
 
 const viewMock = packageRegistryView as jest.Mock;
 
@@ -71,60 +71,5 @@ describe('fetchRegistryMetadata', () => {
     );
     await fetchRegistryMetadata('pkg-a');
     expect(viewMock).toHaveBeenCalledWith('pkg-a', '', '--json');
-  });
-});
-
-describe('fetchDeprecations', () => {
-  afterEach(() => jest.clearAllMocks());
-
-  it('queries the per-version map via npm with a ranged version+deprecated projection', async () => {
-    viewMock.mockResolvedValue('[]');
-    await fetchDeprecations('pkg-a');
-    expect(viewMock).toHaveBeenCalledWith(
-      'pkg-a',
-      '>=0.0.0',
-      'version deprecated --json',
-      { forceNpm: true }
-    );
-  });
-
-  it('returns an empty map when the lookup throws (e.g. npm unavailable)', async () => {
-    viewMock.mockRejectedValue(new Error('npm not found'));
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
-  });
-
-  it('maps an array of mixed version/deprecated entries', async () => {
-    viewMock.mockResolvedValue(
-      JSON.stringify([
-        { version: '1.0.0', deprecated: 'do not use' },
-        { version: '1.1.0' },
-        { version: '1.2.0', deprecated: 'gone' },
-      ])
-    );
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({
-      '1.0.0': 'do not use',
-      '1.2.0': 'gone',
-    });
-  });
-
-  it('returns an empty map when no version is deprecated (array of strings)', async () => {
-    viewMock.mockResolvedValue(JSON.stringify(['1.0.0', '1.1.0']));
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
-  });
-
-  it('maps a single-object response', async () => {
-    viewMock.mockResolvedValue(
-      JSON.stringify({ version: '1.0.0', deprecated: 'do not use' })
-    );
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({
-      '1.0.0': 'do not use',
-    });
-  });
-
-  it('returns an empty object for a scalar/empty response', async () => {
-    viewMock.mockResolvedValue('');
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
-    viewMock.mockResolvedValue(JSON.stringify('1.0.0'));
-    await expect(fetchDeprecations('pkg-a')).resolves.toEqual({});
   });
 });

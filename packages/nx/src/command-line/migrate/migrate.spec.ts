@@ -36,14 +36,17 @@ jest.mock('./resolve-package-version', () => ({
       version
     ),
 }));
+import { resolveCatalogSpecifiers } from '../../utils/catalog';
 import { PackageJson } from '../../utils/package-json';
 import * as packageMgrUtils from '../../utils/package-manager';
 
 import {
+  confirmCommitsOnDefaultBranch,
   createFetcher,
   filterDowngradedUpdates,
   formatCommandFailure,
   formatSkippedPromptsNextStep,
+  generateMigrationsJsonAndUpdatePackageJson,
   isHybridMigration,
   isNpmPeerDepsError,
   isPromptOnlyMigration,
@@ -86,12 +89,12 @@ const createPackageJson = (
   ...overrides,
 });
 
-// Stub fetcher driving the `--include` supportsOptionalUpdates gate without the
-// registry/install round-trip. `supportsOptionalUpdates` defaults to true; pass a
+// Stub fetcher driving the `--include` supportsOptionalMigrations gate without the
+// registry/install round-trip. `supportsOptionalMigrations` defaults to true; pass a
 // predicate to mark specific (package, version) targets unsupported.
 const includeGateFetch =
   (
-    supportsOptionalUpdates:
+    supportsOptionalMigrations:
       | boolean
       | ((pkg: string, version: string) => boolean) = true
   ): ((
@@ -102,10 +105,10 @@ const includeGateFetch =
     Promise.resolve({
       name: pkg,
       version,
-      supportsOptionalUpdates:
-        typeof supportsOptionalUpdates === 'function'
-          ? supportsOptionalUpdates(pkg, version)
-          : supportsOptionalUpdates,
+      supportsOptionalMigrations:
+        typeof supportsOptionalMigrations === 'function'
+          ? supportsOptionalMigrations(pkg, version)
+          : supportsOptionalMigrations,
     });
 
 describe('Migration', () => {
@@ -2075,7 +2078,15 @@ describe('Migration', () => {
   });
 
   describe('parseMigrationsOptions', () => {
+    // Pin non-TTY so the canPrompt-gated eligibility fetch stays off as it does
+    // on CI, instead of hitting the registry in a local TTY run.
+    let originalStdinIsTTY: boolean | undefined;
     beforeEach(() => {
+      originalStdinIsTTY = process.stdin.isTTY;
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: false,
+        configurable: true,
+      });
       mockGetInstalledNxVersion.mockReturnValue('22.0.0');
       // `getInstalledVersion(pkg)` mirrors the installed nx version for the
       // canonical packages so optional bound checks read the same value.
@@ -2102,6 +2113,10 @@ describe('Migration', () => {
       mockGetInstalledPackageGroup.mockReset();
       mockGetInstalledLegacyNrwlWorkspaceVersion.mockReset();
       jest.restoreAllMocks();
+      Object.defineProperty(process.stdin, 'isTTY', {
+        value: originalStdinIsTTY,
+        configurable: true,
+      });
     });
 
     it('should work for generating migrations', async () => {
@@ -2645,7 +2660,7 @@ describe('Migration', () => {
     });
 
     it('should gate --include=optional on the installed version, not the older explicit target', async () => {
-      // Catch-up reads `supportsOptionalUpdates` at the INSTALLED version (what you
+      // Catch-up reads `supportsOptionalMigrations` at the INSTALLED version (what you
       // have), not the older explicit target. The stub only marks 23.0.0 as
       // supporting optional updates, so eligibility proves the gate read installed 23,
       // even though the target 22 predates the flag.
@@ -2684,7 +2699,7 @@ describe('Migration', () => {
     });
 
     it('should surface a fetch failure instead of reporting the target as unsupported', async () => {
-      // The gate resolves `supportsOptionalUpdates` through the shared fetcher (registry,
+      // The gate resolves `supportsOptionalMigrations` through the shared fetcher (registry,
       // then install). A genuine fetch failure must surface as-is, not be
       // swallowed into a misleading "does not support optional updates" rejection.
       mockGetInstalledNxVersion.mockReturnValue('23.0.0');
@@ -3047,7 +3062,7 @@ describe('Migration', () => {
       });
     });
 
-    const supportsOptionalUpdatesContext = {
+    const supportsOptionalMigrationsContext = {
       hasFrom: false,
       hasExcludeAppliedMigrations: false,
       targetSupportsOptionalUpdates: true,
@@ -3061,14 +3076,14 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         'required',
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('required');
       expect(mockPrompt).not.toHaveBeenCalled();
     });
 
     it('should return the provided include even when the target does not support optional updates', async () => {
-      // The `supportsOptionalUpdates` gate is enforced in `resolveTargetAndInclude`;
+      // The `supportsOptionalMigrations` gate is enforced in `resolveTargetAndInclude`;
       // `resolveInclude` honors an explicit include as-is.
       const result = await resolveInclude('required', {
         hasFrom: false,
@@ -3086,7 +3101,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3100,7 +3115,7 @@ describe('Migration', () => {
       process.env.CI = 'true';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('all');
       expect(mockPrompt).not.toHaveBeenCalled();
@@ -3113,7 +3128,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       const result = await resolveInclude(undefined, {
-        ...supportsOptionalUpdatesContext,
+        ...supportsOptionalMigrationsContext,
         interactive: false,
       });
       expect(result).toBe('all');
@@ -3144,7 +3159,7 @@ describe('Migration', () => {
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'required' }));
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext
+        supportsOptionalMigrationsContext
       );
       expect(result).toBe('required');
       expect(mockPrompt).toHaveBeenCalled();
@@ -3157,7 +3172,7 @@ describe('Migration', () => {
       });
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
-      await resolveInclude(undefined, supportsOptionalUpdatesContext);
+      await resolveInclude(undefined, supportsOptionalMigrationsContext);
       const choices = mockPrompt.mock.calls[0][0].choices;
       expect(choices.map((c: { name: string }) => c.name)).toEqual([
         'required',
@@ -3212,7 +3227,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       mockPrompt.mockReturnValueOnce(Promise.resolve({ include: 'all' }));
       await resolveInclude(undefined, {
-        ...supportsOptionalUpdatesContext,
+        ...supportsOptionalMigrationsContext,
         interactive: true,
       });
       const choices = mockPrompt.mock.calls[0][0].choices;
@@ -3230,7 +3245,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('required');
@@ -3245,7 +3260,7 @@ describe('Migration', () => {
       process.env.CI = 'true';
       const result = await resolveInclude(
         undefined,
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('required');
@@ -3260,7 +3275,7 @@ describe('Migration', () => {
       process.env.CI = 'false';
       const result = await resolveInclude(
         'all',
-        supportsOptionalUpdatesContext,
+        supportsOptionalMigrationsContext,
         'required'
       );
       expect(result).toBe('all');
@@ -3472,6 +3487,58 @@ describe('Migration', () => {
       );
 
       expect(result).toEqual({});
+    });
+
+    it('should not narrow non-range specifiers (workspace:/npm:/git/file)', () => {
+      const nonSemverSpecifiers = [
+        'workspace:*',
+        'workspace:^',
+        'npm:@scope/alias@^1.0.0',
+        'git+https://github.com/owner/repo.git',
+        'file:../local-pkg',
+      ];
+
+      for (const specifier of nonSemverSpecifiers) {
+        const result = filterDowngradedUpdates(
+          { pkg: { version: '1.0.0', addToPackageJson: 'dependencies' } },
+          createPackageJson({ dependencies: { pkg: specifier } }),
+          () => '1.0.0'
+        );
+
+        expect(result).toEqual({});
+      }
+    });
+  });
+
+  describe('resolveCatalogSpecifiers', () => {
+    it('returns null when given null', () => {
+      expect(resolveCatalogSpecifiers(null)).toBeNull();
+    });
+
+    it('passes plain semver specifiers through unchanged', () => {
+      const packageJson = createPackageJson({
+        dependencies: { react: '^18.0.0' },
+        devDependencies: { vite: '~6.2.0' },
+      });
+
+      const result = resolveCatalogSpecifiers(packageJson);
+
+      expect(result?.dependencies).toEqual({ react: '^18.0.0' });
+      expect(result?.devDependencies).toEqual({ vite: '~6.2.0' });
+    });
+
+    it('leaves an unresolvable catalog reference as-is instead of throwing', () => {
+      // Unresolvable catalog entry: preserved rather than throwing.
+      const packageJson = createPackageJson({
+        dependencies: { 'nonexistent-pkg-xyz': 'catalog:does-not-exist' },
+      });
+
+      const run = () => resolveCatalogSpecifiers(packageJson);
+
+      expect(run).not.toThrow();
+      expect(run()?.dependencies).toEqual({
+        'nonexistent-pkg-xyz': 'catalog:does-not-exist',
+      });
     });
   });
 
@@ -4404,6 +4471,81 @@ describe('Migration', () => {
     );
   });
 
+  describe('generateMigrationsJsonAndUpdatePackageJson (--include=optional)', () => {
+    let root: string;
+
+    beforeEach(() => {
+      root = mkdtempSync(join(tmpdir(), 'nx-migrate-optional-'));
+      writeFileSync(join(root, 'nx.json'), JSON.stringify({}));
+    });
+
+    afterEach(() => {
+      rmSync(root, { recursive: true, force: true });
+    });
+
+    // NXC-4590: under `--include=optional` the target package (e.g. `nx`) is in
+    // its own required closure, so the Migrator drops its entry from
+    // `packageUpdates`. The orchestration must not assume that entry exists when
+    // resolving the version for the AI-migrations directory.
+    it('does not crash when the target package is filtered out of packageUpdates', async () => {
+      writeFileSync(
+        join(root, 'package.json'),
+        JSON.stringify({
+          name: 'w',
+          version: '0.0.0',
+          devDependencies: {
+            nx: '0.0.0',
+            requiredChild: '1.0.0',
+            optionalChild: '1.0.0',
+          },
+        })
+      );
+
+      // `packageGroup` puts `requiredChild` in nx's required closure; both `nx`
+      // and `requiredChild` are dropped under optional, leaving `optionalChild`.
+      const fetch = (p: string, version: string) => {
+        if (p === 'nx') {
+          return Promise.resolve({
+            version: '23.0.0',
+            packageGroup: [{ package: 'requiredChild', version: '23.0.0' }],
+            packageJsonUpdates: {
+              mixed: {
+                version: '23.0.0',
+                packages: {
+                  requiredChild: { version: '3.0.0' },
+                  optionalChild: { version: '3.0.0' },
+                },
+              },
+            },
+          });
+        }
+        return Promise.resolve({ version: '3.0.0' });
+      };
+
+      const opts = {
+        type: 'generateMigrations' as const,
+        targetPackage: 'nx',
+        targetVersion: '23.0.0',
+        from: {},
+        to: {},
+        interactive: false,
+        include: 'optional' as const,
+      };
+
+      await expect(
+        generateMigrationsJsonAndUpdatePackageJson(root, opts, fetch as any)
+      ).resolves.toBeUndefined();
+
+      const updated = JSON.parse(
+        readFileSync(join(root, 'package.json'), 'utf-8')
+      );
+      // Optional update applied; the filtered-out required packages untouched.
+      expect(updated.devDependencies.optionalChild).toBe('3.0.0');
+      expect(updated.devDependencies.requiredChild).toBe('1.0.0');
+      expect(updated.devDependencies.nx).toBe('0.0.0');
+    });
+  });
+
   describe('writePromptMigrationFiles', () => {
     let tmpRoot: string;
 
@@ -4856,6 +4998,64 @@ describe('Migration', () => {
         });
         expect(result.effective).toBe(true);
         expect(result.warning).toBeUndefined();
+      });
+    });
+
+    describe('confirmCommitsOnDefaultBranch', () => {
+      beforeEach(() => {
+        jest.clearAllMocks();
+      });
+
+      it('proceeds without prompting when the branch cannot be resolved', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: null,
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when the default branch is unknown', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: null,
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds without prompting when not on the default branch', async () => {
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'feature/foo',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).not.toHaveBeenCalled();
+      });
+
+      it('proceeds when the user confirms on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: true });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(true);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
+      });
+
+      it('aborts when the user declines on the default branch', async () => {
+        mockPrompt.mockResolvedValue({ proceed: false });
+        await expect(
+          confirmCommitsOnDefaultBranch({
+            currentBranch: 'main',
+            defaultBranch: 'main',
+          })
+        ).resolves.toBe(false);
+        expect(mockPrompt).toHaveBeenCalledTimes(1);
       });
     });
 

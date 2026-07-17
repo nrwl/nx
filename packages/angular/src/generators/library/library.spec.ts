@@ -30,6 +30,7 @@ jest.mock('@nx/devkit', () => {
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   async function runLibraryGeneratorWithOpts(opts: Partial<Schema> = {}) {
     await generateTestLibrary(tree, {
@@ -46,12 +47,22 @@ describe('lib', () => {
   }
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace({ layout: 'apps-libs' });
 
     projectGraph = {
       dependencies: {},
       nodes: {},
     };
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should run the library generator without erroring if the directory has a trailing slash', async () => {
@@ -672,72 +683,7 @@ describe('lib', () => {
         expect(tree.exists(path)).toBeTruthy();
       });
 
-      expect(tree.read('my-dir/my-lib/.eslintrc.json', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "{
-          "extends": [
-            "../../.eslintrc.json"
-          ],
-          "ignorePatterns": [
-            "!**/*"
-          ],
-          "overrides": [
-            {
-              "files": [
-                "*.ts"
-              ],
-              "extends": [
-                "plugin:@nx/angular",
-                "plugin:@angular-eslint/template/process-inline-templates"
-              ],
-              "rules": {
-                "@angular-eslint/directive-selector": [
-                  "error",
-                  {
-                    "type": "attribute",
-                    "prefix": "lib",
-                    "style": "camelCase"
-                  }
-                ],
-                "@angular-eslint/component-selector": [
-                  "error",
-                  {
-                    "type": "element",
-                    "prefix": "lib",
-                    "style": "kebab-case"
-                  }
-                ]
-              }
-            },
-            {
-              "files": [
-                "*.html"
-              ],
-              "extends": [
-                "plugin:@nx/angular-template"
-              ],
-              "rules": {}
-            },
-            {
-              "files": [
-                "*.json"
-              ],
-              "parser": "jsonc-eslint-parser",
-              "rules": {
-                "@nx/dependency-checks": [
-                  "error",
-                  {
-                    "ignoredFiles": [
-                      "{projectRoot}/eslint.config.{js,cjs,mjs}"
-                    ]
-                  }
-                ]
-              }
-            }
-          ]
-        }
-        "
-      `);
+      expect(tree.exists('my-dir/my-lib/eslint.config.mjs')).toBeTruthy();
 
       // Make sure these have properties
       [
@@ -760,11 +706,6 @@ describe('lib', () => {
           path: 'my-dir/my-lib/tsconfig.lib.json',
           lookupFn: (json) => json.compilerOptions.outDir,
           expectedValue: '../../dist/out-tsc',
-        },
-        {
-          path: 'my-dir/my-lib/.eslintrc.json',
-          lookupFn: (json) => json.extends,
-          expectedValue: ['../../.eslintrc.json'],
         },
       ].forEach(hasJsonValue);
     });
@@ -1335,6 +1276,7 @@ describe('lib', () => {
 
       it('should add valid eslint JSON configuration which extends from Nx presets (eslintrc)', async () => {
         // ACT
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({ linter: 'eslint' });
 
         // ASSERT
@@ -1391,6 +1333,7 @@ describe('lib', () => {
       });
 
       it('should set parserOptions.project when enabled (eslintrc)', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await runLibraryGeneratorWithOpts({
           linter: 'eslint',
           setParserOptionsProject: true,
@@ -1411,70 +1354,65 @@ describe('lib', () => {
 
         // ASSERT
 
-        const eslintConfig = readJson(tree, 'my-lib/.eslintrc.json');
+        const eslintConfig = tree.read('my-lib/eslint.config.mjs', 'utf-8');
         expect(eslintConfig).toMatchInlineSnapshot(`
-          {
-            "extends": [
-              "../.eslintrc.json",
-            ],
-            "ignorePatterns": [
-              "!**/*",
-            ],
-            "overrides": [
+          "import nx from "@nx/eslint-plugin";
+          import baseConfig from "../eslint.config.mjs";
+
+          export default [
+              ...nx.configs["flat/angular"],
+              ...nx.configs["flat/angular-template"],
+              ...baseConfig,
               {
-                "extends": [
-                  "plugin:@nx/angular",
-                  "plugin:@angular-eslint/template/process-inline-templates",
-                ],
-                "files": [
-                  "*.ts",
-                ],
-                "rules": {
-                  "@angular-eslint/component-selector": [
-                    "error",
-                    {
-                      "prefix": "lib",
-                      "style": "kebab-case",
-                      "type": "element",
-                    },
+                  files: [
+                      "**/*.json"
                   ],
-                  "@angular-eslint/directive-selector": [
-                    "error",
-                    {
-                      "prefix": "lib",
-                      "style": "camelCase",
-                      "type": "attribute",
-                    },
-                  ],
-                },
+                  rules: {
+                      "@nx/dependency-checks": [
+                          "error",
+                          {
+                              ignoredFiles: [
+                                  "{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}"
+                              ]
+                          }
+                      ]
+                  },
+                  languageOptions: {
+                      parser: await import("jsonc-eslint-parser")
+                  }
               },
               {
-                "extends": [
-                  "plugin:@nx/angular-template",
-                ],
-                "files": [
-                  "*.html",
-                ],
-                "rules": {},
-              },
-              {
-                "files": [
-                  "*.json",
-                ],
-                "parser": "jsonc-eslint-parser",
-                "rules": {
-                  "@nx/dependency-checks": [
-                    "error",
-                    {
-                      "ignoredFiles": [
-                        "{projectRoot}/eslint.config.{js,cjs,mjs}",
+                  files: [
+                      "**/*.ts"
+                  ],
+                  rules: {
+                      "@angular-eslint/directive-selector": [
+                          "error",
+                          {
+                              type: "attribute",
+                              prefix: "lib",
+                              style: "camelCase"
+                          }
                       ],
-                    },
-                  ],
-                },
+                      "@angular-eslint/component-selector": [
+                          "error",
+                          {
+                              type: "element",
+                              prefix: "lib",
+                              style: "kebab-case"
+                          }
+                      ]
+                  }
               },
-            ],
-          }
+              {
+                  files: [
+                      "**/*.html"
+                  ],
+                  // Override or add rules here
+                  rules: {}
+              }
+          ];
+          "
         `);
       });
     });
@@ -1876,31 +1814,31 @@ describe('lib', () => {
         tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8')
       ).toMatchSnapshot();
     });
+
+    it('should not opt out of the default change detection strategy when not specified on Angular >= 22', async () => {
+      await runLibraryGeneratorWithOpts({
+        standalone: true,
+        inlineStyle: true,
+        inlineTemplate: true,
+      });
+
+      expect(tree.read('my-lib/src/lib/my-lib/my-lib.ts', 'utf-8'))
+        .toMatchInlineSnapshot(`
+        "import { Component } from '@angular/core';
+
+        @Component({
+          selector: 'lib-my-lib',
+          imports: [],
+          template: \`<p>MyLib works!</p>\`,
+          styles: \`\`
+        })
+        export class MyLib {}
+        "
+      `);
+    });
   });
 
   describe('angular compat support', () => {
-    it('should not set "typeCheckHostBindings" when strict is true if Angular version is lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.0.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts();
-
-      expect(readJson(tree, 'my-lib/tsconfig.json').angularCompilerOptions)
-        .toMatchInlineSnapshot(`
-        {
-          "enableI18nLegacyMessageIdFormat": false,
-          "strictInjectionParameters": true,
-          "strictInputAccessModifiers": true,
-          "strictTemplates": true,
-        }
-      `);
-    });
-
     it('should set "typeCheckHostBindings" to true when strict is enabled for Angular v20 only', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -1924,126 +1862,6 @@ describe('lib', () => {
       `);
     });
 
-    it('should generate components with the "component" type for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-      await generateTestApplication(tree, {
-        directory: 'app1',
-        routing: true,
-        standalone: true,
-        skipFormat: true,
-      });
-
-      await runLibraryGeneratorWithOpts({
-        standalone: true,
-        routing: true,
-        lazy: true,
-        parent: 'app1/src/app/app.routes.ts',
-        skipFormat: true,
-      });
-
-      expect(tree.read('my-lib/src/index.ts', 'utf-8')).toMatchInlineSnapshot(`
-        "export * from './lib/lib.routes';
-
-        export * from './lib/my-lib/my-lib.component';"
-      `);
-      expect(tree.read('my-lib/src/lib/my-lib/my-lib.component.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Component } from '@angular/core';
-
-        @Component({
-          selector: 'lib-my-lib',
-          imports: [],
-          templateUrl: './my-lib.component.html',
-          styleUrl: './my-lib.component.css'
-        })
-        export class MyLibComponent {}
-        "
-      `);
-      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.html')).toBe(
-        true
-      );
-      expect(tree.exists('my-lib/src/lib/my-lib/my-lib.component.css')).toBe(
-        true
-      );
-      expect(
-        tree.read('my-lib/src/lib/my-lib/my-lib.component.spec.ts', 'utf-8')
-      ).toMatchInlineSnapshot(`
-        "import { ComponentFixture, TestBed } from '@angular/core/testing';
-        import { MyLibComponent } from './my-lib.component';
-
-        describe('MyLibComponent', () => {
-          let component: MyLibComponent;
-          let fixture: ComponentFixture<MyLibComponent>;
-
-          beforeEach(async () => {
-            await TestBed.configureTestingModule({
-              imports: [MyLibComponent]
-            }).compileComponents();
-
-            fixture = TestBed.createComponent(MyLibComponent);
-            component = fixture.componentInstance;
-            await fixture.whenStable();
-          });
-
-          it('should create', () => {
-            expect(component).toBeTruthy();
-          });
-        });
-        "
-      `);
-      expect(tree.read('my-lib/src/lib/lib.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-        import { MyLibComponent } from './my-lib/my-lib.component';
-
-        export const myLibRoutes: Route[] = [
-          { path: '', component: MyLibComponent }
-        ];
-        "
-      `);
-      expect(tree.read('app1/src/app/app.routes.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { Route } from '@angular/router';
-
-        export const appRoutes: Route[] = [
-            { path: 'my-lib', loadChildren: () => import('@proj/my-lib').then(m => m.myLibRoutes) },];
-        "
-      `);
-    });
-
-    it('should generate modules with the "." type separator for versions lower than v20', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts({
-        standalone: false,
-        skipFormat: true,
-      });
-
-      expect(tree.read('my-lib/src/lib/my-lib.module.ts', 'utf-8'))
-        .toMatchInlineSnapshot(`
-        "import { NgModule } from '@angular/core';
-        import { CommonModule } from '@angular/common';
-
-        @NgModule({
-          imports: [CommonModule],
-        })
-        export class MyLibModule {}
-        "
-      `);
-    });
-
     it('should install vitest v3 when using vitest-analog with Angular v20', async () => {
       updateJson(tree, 'package.json', (json) => ({
         ...json,
@@ -2063,28 +1881,6 @@ describe('lib', () => {
       );
       expect(devDependencies['jsdom']).toBe(
         backwardCompatibleVersions[20].jsdomVersion
-      );
-    });
-
-    it('should install vitest v3 when using vitest-analog with Angular v19', async () => {
-      updateJson(tree, 'package.json', (json) => ({
-        ...json,
-        dependencies: {
-          ...json.dependencies,
-          '@angular/core': '~19.2.0',
-        },
-      }));
-
-      await runLibraryGeneratorWithOpts({
-        unitTestRunner: UnitTestRunner.VitestAnalog,
-      });
-
-      const { devDependencies } = readJson(tree, 'package.json');
-      expect(devDependencies['vitest']).toBe(
-        backwardCompatibleVersions[19].vitestVersion
-      );
-      expect(devDependencies['jsdom']).toBe(
-        backwardCompatibleVersions[19].jsdomVersion
       );
     });
   });

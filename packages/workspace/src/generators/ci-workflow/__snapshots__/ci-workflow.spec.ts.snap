@@ -67,7 +67,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud optional e2e should add e2e to bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -177,7 +177,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -189,9 +189,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -225,7 +225,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -237,9 +237,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -391,7 +391,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -444,7 +444,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -603,12 +603,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -647,12 +647,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -691,12 +691,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -719,9 +719,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with bun should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -739,8 +740,8 @@ CI:
     # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
@@ -881,7 +882,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -930,7 +931,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -1077,7 +1078,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -1089,9 +1090,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -1123,7 +1124,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -1135,9 +1136,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -1169,7 +1170,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -1181,9 +1182,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -1199,9 +1200,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with npm should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -1217,8 +1219,8 @@ CI:
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
@@ -1275,7 +1277,7 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
+      - script: npm install --prefix=$HOME/.local -g pnpm@11
         displayName: Install PNPM
 
       # This enables task distribution via Nx Cloud
@@ -1342,7 +1344,7 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
+      - script: npm install --prefix=$HOME/.local -g pnpm@11
         displayName: Install PNPM
 
       # This enables task distribution via Nx Cloud
@@ -1365,7 +1367,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -1378,7 +1380,7 @@ pipelines:
           script:
             - export NX_BRANCH=$BITBUCKET_PR_ID
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
@@ -1407,7 +1409,7 @@ pipelines:
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             - pnpm install --frozen-lockfile
 
@@ -1418,7 +1420,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -1431,7 +1433,7 @@ pipelines:
           script:
             - export NX_BRANCH=$BITBUCKET_PR_ID
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
@@ -1460,7 +1462,7 @@ pipelines:
             # Learn more at https://nx.dev/ci/reference/nx-cloud-cli#npx-nxcloud-startcirun
             - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             - pnpm install --frozen-lockfile
 
@@ -1485,7 +1487,7 @@ jobs:
 
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
+          command: npm install --prefix=$HOME/.local -g pnpm@11
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1530,7 +1532,7 @@ jobs:
 
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
+          command: npm install --prefix=$HOME/.local -g pnpm@11
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -1577,15 +1579,15 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 11.13.0
           run_install: false
 
       # This enables task distribution via Nx Cloud
@@ -1595,9 +1597,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -1629,12 +1631,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -1646,9 +1648,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -1680,15 +1682,15 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 11.13.0
           run_install: false
 
       # This enables task distribution via Nx Cloud
@@ -1698,9 +1700,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -1716,9 +1718,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with pnpm should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -1727,7 +1730,7 @@ CI:
     - main
     - merge_requests
   script:
-    - npm install --prefix=$HOME/.local -g pnpm@8
+    - npm install --prefix=$HOME/.local -g pnpm@11
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
@@ -1736,8 +1739,8 @@ CI:
     # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
@@ -1878,7 +1881,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -1927,7 +1930,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -2074,7 +2077,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -2086,9 +2089,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -2120,7 +2123,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -2134,9 +2137,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -2168,7 +2171,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -2180,9 +2183,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -2198,9 +2201,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator connected to nxCloud with yarn should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -2216,8 +2220,8 @@ CI:
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World
@@ -2296,7 +2300,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud optional e2e should add e2e to bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -2407,7 +2411,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -2419,9 +2423,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -2455,7 +2459,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -2467,9 +2471,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="e2e-ci"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -2621,7 +2625,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -2675,7 +2679,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with bun should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -2835,12 +2839,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -2879,12 +2883,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -2923,12 +2927,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@v1
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
@@ -2951,9 +2955,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with bun should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -2971,8 +2976,8 @@ CI:
     # - bunx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - bun install --no-cache
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - bun nx record -- echo Hello World
@@ -3113,7 +3118,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -3163,7 +3168,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with npm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -3311,7 +3316,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -3323,9 +3328,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -3357,7 +3362,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -3369,9 +3374,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -3403,7 +3408,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -3415,9 +3420,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -3433,9 +3438,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with npm should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -3451,8 +3457,8 @@ CI:
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - npm ci
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - npx nx record -- echo Hello World
@@ -3509,7 +3515,7 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
+      - script: npm install --prefix=$HOME/.local -g pnpm@11
         displayName: Install PNPM
 
       # This enables task distribution via Nx Cloud
@@ -3576,7 +3582,7 @@ jobs:
         env:
           AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)
 
-      - script: npm install --prefix=$HOME/.local -g pnpm@8
+      - script: npm install --prefix=$HOME/.local -g pnpm@11
         displayName: Install PNPM
 
       # This enables task distribution via Nx Cloud
@@ -3599,7 +3605,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -3612,7 +3618,7 @@ pipelines:
           script:
             - export NX_BRANCH=$BITBUCKET_PR_ID
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
@@ -3642,7 +3648,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             - pnpm install --frozen-lockfile
 
@@ -3653,7 +3659,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with pnpm should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -3666,7 +3672,7 @@ pipelines:
           script:
             - export NX_BRANCH=$BITBUCKET_PR_ID
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             # This enables task distribution via Nx Cloud
             # Run this command as early as possible, before dependencies are installed
@@ -3696,7 +3702,7 @@ pipelines:
             # Connect your workspace by running "nx connect" and uncomment this
             # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
-            - npm install --prefix=$HOME/.local -g pnpm@8
+            - npm install --prefix=$HOME/.local -g pnpm@11
 
             - pnpm install --frozen-lockfile
 
@@ -3721,7 +3727,7 @@ jobs:
 
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
+          command: npm install --prefix=$HOME/.local -g pnpm@11
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -3766,7 +3772,7 @@ jobs:
 
       - run:
           name: Install PNPM
-          command: npm install --prefix=$HOME/.local -g pnpm@8
+          command: npm install --prefix=$HOME/.local -g pnpm@11
 
       # This enables task distribution via Nx Cloud
       # Run this command as early as possible, before dependencies are installed
@@ -3813,15 +3819,15 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 11.13.0
           run_install: false
 
       # This enables task distribution via Nx Cloud
@@ -3831,9 +3837,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -3865,12 +3871,12 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -3882,9 +3888,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -3916,15 +3922,15 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
-          version: 9.8.0
+          version: 11.13.0
           run_install: false
 
       # This enables task distribution via Nx Cloud
@@ -3934,9 +3940,9 @@ jobs:
       # - run: pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'pnpm'
 
       - run: pnpm install --frozen-lockfile
@@ -3952,9 +3958,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with pnpm should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -3963,7 +3970,7 @@ CI:
     - main
     - merge_requests
   script:
-    - npm install --prefix=$HOME/.local -g pnpm@8
+    - npm install --prefix=$HOME/.local -g pnpm@11
 
     # This enables task distribution via Nx Cloud
     # Run this command as early as possible, before dependencies are installed
@@ -3972,8 +3979,8 @@ CI:
     # - pnpm dlx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - pnpm install --frozen-lockfile
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - pnpm exec nx record -- echo Hello World
@@ -4114,7 +4121,7 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -4164,7 +4171,7 @@ pipelines:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with yarn should generate bitbucket pipelines config when packageManager is set to \${packageManager} in package.json 1`] = `
-"image: node:20
+"image: node:24
 
 clone:
   depth: full
@@ -4312,7 +4319,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -4324,9 +4331,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -4358,7 +4365,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -4372,9 +4379,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -4406,7 +4413,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -4418,9 +4425,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'yarn'
 
       - run: yarn install --frozen-lockfile
@@ -4436,9 +4443,10 @@ jobs:
 `;
 
 exports[`CI Workflow generator not connected to nxCloud with yarn should generate gitlab config 1`] = `
-"image: node:20
+"image: node:24
 variables:
   CI: 'true'
+  GIT_DEPTH: 0
 
 # Main job
 CI:
@@ -4454,8 +4462,8 @@ CI:
     # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
     - yarn install --frozen-lockfile
-    - NX_HEAD=$CI_COMMIT_SHA
-    - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+    - export NX_HEAD=$CI_COMMIT_SHA
+    - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
     # Prepend any command with "nx record --" to record its logs to Nx Cloud
     # - yarn nx record -- echo Hello World

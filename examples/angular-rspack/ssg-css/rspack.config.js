@@ -11,6 +11,7 @@ module.exports = () => {
           polyfills: ['zone.js'],
           ssr: { entry: './src/server.ts' },
           prerender: true,
+          subresourceIntegrity: true,
           assets: [
             {
               glob: '**/*',

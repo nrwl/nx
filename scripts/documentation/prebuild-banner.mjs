@@ -63,6 +63,20 @@ function validateBannerConfig(config) {
   return true;
 }
 
+/**
+ * Strip optional fields that are present but malformed, so a bad optional
+ * value never drops the whole banner.
+ */
+function normalizeBannerConfig(config) {
+  if (config.artwork !== undefined) {
+    if (typeof config.artwork !== 'string' || !config.artwork) {
+      console.warn('Ignoring invalid artwork value:', config.artwork);
+      delete config.artwork;
+    }
+  }
+  return config;
+}
+
 async function main() {
   // Empty array for when no banner is configured
   const emptyCollection = [];
@@ -99,7 +113,7 @@ async function main() {
     }
 
     // Wrap in array for collection format, add id for Astro file loader
-    const collection = [{ id: 'banner', ...config }];
+    const collection = [{ id: 'banner', ...normalizeBannerConfig(config) }];
 
     console.log('Banner config fetched successfully:', config.title);
     mkdirSync(dirname(OUTPUT_PATH), { recursive: true });

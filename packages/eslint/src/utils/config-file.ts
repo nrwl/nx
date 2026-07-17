@@ -3,18 +3,12 @@ import { basename, dirname, join, resolve } from 'path';
 import {
   baseEslintConfigFilenames,
   eslintFlatConfigFilenames,
+  eslintrcFilenames,
 } from './flat-config';
 
 export const ESLINT_FLAT_CONFIG_FILENAMES = eslintFlatConfigFilenames;
 
-export const ESLINT_OLD_CONFIG_FILENAMES = [
-  '.eslintrc',
-  '.eslintrc.js',
-  '.eslintrc.cjs',
-  '.eslintrc.yaml',
-  '.eslintrc.yml',
-  '.eslintrc.json',
-];
+export const ESLINT_OLD_CONFIG_FILENAMES = eslintrcFilenames;
 
 export const ESLINT_CONFIG_FILENAMES = [
   ...ESLINT_OLD_CONFIG_FILENAMES,

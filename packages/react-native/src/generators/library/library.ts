@@ -42,7 +42,11 @@ import {
 import { PackageJson } from 'nx/src/utils/package-json';
 import { addRollupBuildTarget } from '@nx/react/internal';
 import { relative } from 'path';
-import { reactNativeVersion, reactVersion } from '../../utils/versions';
+import {
+  reactVersion,
+  versions,
+  assertSupportedReactNativeVersion,
+} from '../../utils/versions';
 export async function reactNativeLibraryGenerator(
   host: Tree,
   schema: Schema
@@ -58,6 +62,8 @@ export async function reactNativeLibraryGeneratorInternal(
   host: Tree,
   schema: Schema
 ): Promise<GeneratorCallback> {
+  assertSupportedReactNativeVersion(host);
+
   const tasks: GeneratorCallback[] = [];
 
   const addTsPlugin = shouldConfigureTsSolutionSetup(host, schema.addPlugin);
@@ -177,6 +183,7 @@ async function addProject(
   host: Tree,
   options: NormalizedSchema
 ): Promise<GeneratorCallback> {
+  const rnVersions = versions(host);
   const project: ProjectConfiguration = {
     root: options.projectRoot,
     sourceRoot: joinPathFragments(options.projectRoot, 'src'),
@@ -199,7 +206,7 @@ async function addProject(
       files: options.publishable ? ['dist', '!**/*.tsbuildinfo'] : undefined,
       peerDependencies: {
         react: reactVersion,
-        'react-native': reactNativeVersion,
+        'react-native': rnVersions.reactNativeVersion,
       },
     };
     if (options.name !== options.importPath) {
@@ -256,7 +263,7 @@ async function addProject(
       json.peerDependencies = {
         ...json.peerDependencies,
         react: reactVersion,
-        'react-native': reactNativeVersion,
+        'react-native': rnVersions.reactNativeVersion,
       };
       return json;
     });

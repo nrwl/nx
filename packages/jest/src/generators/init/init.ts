@@ -1,20 +1,20 @@
 import {
+  acknowledgeBuildScripts,
   addPlugin,
-  normalizeTargetDefaults,
+  findTargetDefault,
   upsertTargetDefault,
 } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
+  detectPackageManager,
   formatFiles,
   readNxJson,
   removeDependenciesFromPackageJson,
   runTasksInSerial,
   updateNxJson,
   type GeneratorCallback,
-  type TargetDefaultEntry,
   type TargetConfiguration,
-  type TargetDefaults,
   type Tree,
 } from '@nx/devkit';
 import { createNodesV2 } from '../../plugins/plugin';
@@ -54,46 +54,15 @@ function updateProductionFileSet(tree: Tree) {
 function addJestTargetDefaults(tree: Tree, presetExt: JestPresetExtension) {
   const nxJson = readNxJson(tree) ?? {};
   const productionFileSet = nxJson.namedInputs?.production;
-  const existingEntries = findExistingJestDefaults(nxJson.targetDefaults);
-
-  if (existingEntries.length === 0) {
-    const patch = createJestDefaultPatch(
-      undefined,
-      productionFileSet,
-      presetExt
-    );
-    if (Object.keys(patch).length > 0) {
-      upsertTargetDefault(tree, nxJson, {
-        executor: '@nx/jest:jest',
-        ...patch,
-      });
-      updateNxJson(tree, nxJson);
-    }
-    return;
-  }
-
-  let didUpdate = false;
-  for (const existing of existingEntries) {
-    const patch = createJestDefaultPatch(
-      existing,
-      productionFileSet,
-      presetExt
-    );
-    if (Object.keys(patch).length === 0) {
-      continue;
-    }
-
-    upsertTargetDefault(tree, nxJson, {
-      target: existing.target,
-      executor: existing.executor,
-      projects: existing.projects,
-      plugin: existing.plugin,
-      ...patch,
-    });
-    didUpdate = true;
-  }
-
-  if (didUpdate) {
+  // Manage the workspace-wide `@nx/jest:jest` default; `upsertTargetDefault`
+  // updates the unfiltered entry (or creates one), leaving any project- or
+  // plugin-scoped jest overrides the user authored untouched.
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    executor: '@nx/jest:jest',
+  });
+  const patch = createJestDefaultPatch(existing, productionFileSet, presetExt);
+  if (Object.keys(patch).length > 0) {
+    upsertTargetDefault(tree, nxJson, { executor: '@nx/jest:jest', ...patch });
     updateNxJson(tree, nxJson);
   }
 }
@@ -128,16 +97,15 @@ function createJestDefaultPatch(
   return patch;
 }
 
-function findExistingJestDefaults(
-  td: TargetDefaults | undefined
-): TargetDefaultEntry[] {
-  return normalizeTargetDefaults(td).filter(
-    (e) => e.executor === '@nx/jest:jest'
-  );
-}
-
 function updateDependencies(tree: Tree, options: JestInitSchema) {
   const { jestVersion, nxVersion } = versions(tree);
+
+  // jest 30 pulls in unrs-resolver; its postinstall only fetches a fallback
+  // binding for platforms not covered by its prebuilt optional dependencies,
+  // so skip it.
+  acknowledgeBuildScripts(tree, detectPackageManager(tree.root), {
+    'unrs-resolver': false,
+  });
 
   return addDependenciesToPackageJson(
     tree,

@@ -2,11 +2,7 @@ import type {
   BrowserBuilderOptions,
   ServerBuilderOptions,
 } from '@angular-devkit/build-angular';
-import type {
-  NxJsonConfiguration,
-  TargetConfiguration,
-  Tree,
-} from '@nx/devkit';
+import type { Tree } from '@nx/devkit';
 import {
   joinPathFragments,
   logger,
@@ -15,7 +11,7 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { upsertTargetDefault } from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
@@ -71,11 +67,7 @@ export function updateProjectConfigForApplicationBuilder(
   buildTarget.options.ssr = {
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
-  if (options.serverRouting) {
-    buildTarget.options.outputMode = 'server';
-  } else {
-    buildTarget.options.prerender = true;
-  }
+  buildTarget.options.outputMode = 'server';
 
   updateProjectConfiguration(tree, options.project, project);
 }
@@ -101,7 +93,9 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
-    executor: buildTarget.executor.startsWith('@angular-devkit/build-angular:')
+    executor: options.buildTargetExecutor.startsWith(
+      '@angular-devkit/build-angular:'
+    )
       ? '@angular-devkit/build-angular:server'
       : '@nx/angular:webpack-server',
     options: {
@@ -161,26 +155,13 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  const existing = findServerDefault(nxJson.targetDefaults);
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'server',
+  });
   if (!existing || existing.cache === undefined) {
     upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
   }
   updateNxJson(tree, nxJson);
-}
-
-function findServerDefault(
-  td: NxJsonConfiguration['targetDefaults']
-): Partial<TargetConfiguration> | undefined {
-  if (!td) return undefined;
-  if (Array.isArray(td)) {
-    return td.find(
-      (e) =>
-        e.target === 'server' &&
-        e.projects === undefined &&
-        e.plugin === undefined
-    );
-  }
-  return td['server'];
 }
 
 function getServerOptions(

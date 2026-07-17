@@ -2,4 +2,4 @@ import { join } from 'path';
 export const nxVersion = require(join('@nx/gradle', 'package.json')).version;
 
 export const gradleProjectGraphPluginName = 'dev.nx.gradle.project-graph';
-export const gradleProjectGraphVersion = '0.1.21';
+export const gradleProjectGraphVersion = '0.1.24';

@@ -111,6 +111,7 @@ const banner = defineCollection({
     slug: z.string(),
     title: z.string(),
     description: z.string(),
+    artwork: z.string().optional(),
     primaryCtaUrl: z.string(),
     primaryCtaText: z.string(),
     secondaryCtaUrl: z.string().optional(),

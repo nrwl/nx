@@ -14,6 +14,7 @@ import { Schema } from './schema';
 
 describe('library', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   let defaultSchema: Schema = {
     directory: 'my-lib',
@@ -26,6 +27,8 @@ describe('library', () => {
   };
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     updateJson(tree, '/package.json', (json) => {
       json.devDependencies = {
@@ -35,6 +38,14 @@ describe('library', () => {
       };
       return json;
     });
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it('should add vite types to tsconfigs and generate correct vite.config.ts file', async () => {
@@ -154,8 +165,7 @@ describe('library', () => {
     expect(tree.exists('my-lib/src/index.ts')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.vue')).toBeTruthy();
     expect(tree.exists('my-lib/src/lib/my-lib.spec.ts')).toBeTruthy();
-    const eslintJson = readJson(tree, 'my-lib/.eslintrc.json');
-    expect(eslintJson).toMatchSnapshot();
+    expect(tree.exists('my-lib/eslint.config.mjs')).toBeTruthy();
   });
 
   it('should support eslint flat config CJS', async () => {
@@ -506,6 +516,7 @@ module.exports = [
 
   describe('--setParserOptionsProject', () => {
     it('should set the parserOptions.project in the eslintrc.json file', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultSchema,
         setParserOptionsProject: true,

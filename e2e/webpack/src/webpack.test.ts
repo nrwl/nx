@@ -381,6 +381,59 @@ describe('Webpack Plugin', () => {
     );
   });
 
+  it('should build a tsc app that imports a workspace lib from source', () => {
+    // Regression for #35017: ts-loader 9.5.7+ forwards the tsconfig rootDir to
+    // transpileModule, so lib sources bundled from source (outside the app
+    // rootDir) failed with TS6059.
+    const appName = uniq('app');
+    const myPkg = uniq('my-pkg');
+
+    runCLI(
+      `generate @nx/web:application ${appName} --directory=apps/${appName} --bundler=webpack`
+    );
+
+    runCLI(
+      `generate @nx/js:lib ${myPkg} --directory=libs/${myPkg} --importPath=@${appName}/${myPkg}`
+    );
+
+    updateFile(`libs/${myPkg}/src/index.ts`, `export const foo = 'bar';\n`);
+
+    updateFile(
+      `apps/${appName}/src/main.ts`,
+      `import { foo } from '@${appName}/${myPkg}';\nconsole.log(foo);\n`
+    );
+
+    updateFile(
+      `apps/${appName}/webpack.config.js`,
+      `
+      const path  = require('path');
+      const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
+
+      module.exports = {
+        target: 'node',
+        output: {
+          path: path.join(__dirname, '../../dist/${appName}')
+        },
+        plugins: [
+          new NxAppWebpackPlugin({
+            compiler: 'tsc',
+            main: 'apps/${appName}/src/main.ts',
+            tsConfig: 'apps/${appName}/tsconfig.app.json',
+            outputHashing: 'none',
+            optimization: false,
+          })
+        ]
+      };`
+    );
+
+    const result = runCLI(`build ${appName}`);
+
+    expect(result).not.toContain('TS6059');
+    expect(result).toContain(
+      `Successfully ran target build for project ${appName}`
+    );
+  });
+
   it('should be able to support webpack config with nx enhanced and babel', () => {
     const appName = uniq('app');
 

@@ -1,6 +1,6 @@
 ---
-title: Next.js Plugin for Nx
-description: Create and manage Next.js applications in your Nx workspace with inferred build, dev, and start tasks, generators for apps and libraries, and optimized CI configuration.
+title: Nx with Next.js
+description: Nx scales your Next.js monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [nextjs, next, react]
 sidebar:
   label: 'Introduction'
@@ -9,7 +9,7 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and `start` tasks](#how-nxnext-infers-tasks) from your Next.js configuration and provides [generators for creating applications and libraries](#develop-nextjs-applications).
+Nx helps you organize a Next.js monorepo where apps and shared libraries live side by side. The Next.js plugin for Nx, `@nx/next`, automatically [infers `build`, `dev`, and `start` tasks](#how-nxnext-infers-tasks) from your Next.js configuration and provides [generators for creating applications and libraries](#develop-nextjs-applications).
 
 You don't need the plugin to use Next.js with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, code generators, and simplified configuration.
 
@@ -19,7 +19,7 @@ The `@nx/next` plugin supports the following package versions.
 
 | Package | Supported Versions |
 | ------- | ------------------ |
-| `next`  | >=14.0.0 <17.0.0   |
+| `next`  | >=15.0.0 <17.0.0   |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -62,8 +62,10 @@ Verify the plugin is setup:
 
 ### Create a new workspace
 
+Start from the [Next.js template](/docs/templates/nextjs) to scaffold a Next.js app with a shared UI library:
+
 ```shell
-npx create-nx-workspace@latest --preset=next
+npx create-nx-workspace@latest my-workspace --template nrwl/nextjs-template
 ```
 
 ### Generate a new application
@@ -205,29 +207,11 @@ nx show project my-app
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI considerations
+## Set up CI for your Next.js monorepo
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those. Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
-
-### Remote caching
-
-Share build cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
-
-### Static HTML export for E2E testing
-
-Next.js applications support [static HTML export](https://nextjs.org/docs/app/building-your-application/deploying/static-exports) by setting `output: 'export'` in `next.config.js`. The `serve-static` target serves these static files for E2E testing in CI, without requiring a Next.js server.
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

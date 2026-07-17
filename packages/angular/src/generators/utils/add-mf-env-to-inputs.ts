@@ -1,8 +1,5 @@
 import { type Tree, readNxJson, updateNxJson } from '@nx/devkit';
-import {
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 
 export function addMfEnvToTargetDefaultInputs(tree: Tree) {
   const nxJson = readNxJson(tree) ?? {};
@@ -15,13 +12,9 @@ export function addMfEnvToTargetDefaultInputs(tree: Tree) {
       : ['default', '^default']),
   ];
 
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.executor === webpackExecutor &&
-      e.target === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    executor: webpackExecutor,
+  });
 
   const inputs = [...(existing?.inputs ?? defaultInputs)];
   let mfEnvVarExists = false;

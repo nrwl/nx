@@ -1,5 +1,5 @@
 import type { moduleFederationPlugin } from '@module-federation/enhanced';
-import { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
+import type { NormalModuleReplacementPlugin as RspackNormalModuleReplacementPlugin } from '@rspack/core';
 
 export type ModuleFederationLibrary = { type: string; name: string };
 

@@ -23,7 +23,6 @@
   "files": [
     "dist",
     "!dist/tsconfig.tsbuildinfo",
-    "!dist/spec",
     "typings",
     "migrations.json",
     "executors.json",
@@ -65,7 +64,7 @@
   "ng-update": {
     "requirements": {},
     "migrations": "./migrations.json",
-    "supportsOptionalUpdates": true
+    "supportsOptionalMigrations": true
   },
   "peerDependencies": {
     "next": ">=14.0.0 <17.0.0"

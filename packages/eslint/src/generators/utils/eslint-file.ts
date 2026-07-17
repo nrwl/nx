@@ -19,11 +19,7 @@ import {
   eslintFlatConfigFilenames,
   useFlatConfig,
 } from '../../utils/flat-config';
-import {
-  eslintCompat,
-  eslintrcVersion,
-  getInstalledEslintMajorVersion,
-} from '../../utils/versions';
+import { eslintCompat, eslintrcVersion } from '../../utils/versions';
 import {
   addBlockToFlatConfigExport,
   addFlatCompatToFlatConfig,
@@ -436,43 +432,32 @@ export function addExtendsToLintConfig(
           : 'mjs';
 
     let shouldImportEslintCompat = false;
-    // assume eslint major is 9 if not found, as it's what we'd be generating by default
-    const eslintMajor = getInstalledEslintMajorVersion(tree) ?? 9;
-    if (eslintMajor >= 9) {
-      // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
-      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
-        typeof p === 'string' ? { name: p, needCompatFixup: false } : p
-      );
-      let compatiblePluginsBatch: string[] = [];
-      plugins.forEach(({ name, needCompatFixup }) => {
-        if (needCompatFixup) {
-          if (compatiblePluginsBatch.length > 0) {
-            // flush the current batch of compatible plugins and reset it
-            pluginExtends.push(
-              generatePluginExtendsElement(compatiblePluginsBatch)
-            );
-            compatiblePluginsBatch = [];
-          }
-          // generate the extends for the incompatible plugin
-          pluginExtends.push(generatePluginExtendsElementWithCompatFixup(name));
-          shouldImportEslintCompat = true;
-        } else {
-          // add the compatible plugin to the current batch
-          compatiblePluginsBatch.push(name);
+    // eslint v9 requires the incompatible plugins to be wrapped with a helper from @eslint/compat
+    const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
+      typeof p === 'string' ? { name: p, needCompatFixup: false } : p
+    );
+    let compatiblePluginsBatch: string[] = [];
+    plugins.forEach(({ name, needCompatFixup }) => {
+      if (needCompatFixup) {
+        if (compatiblePluginsBatch.length > 0) {
+          // flush the current batch of compatible plugins and reset it
+          pluginExtends.push(
+            generatePluginExtendsElement(compatiblePluginsBatch)
+          );
+          compatiblePluginsBatch = [];
         }
-      });
-
-      if (compatiblePluginsBatch.length > 0) {
-        // flush the batch of compatible plugins
-        pluginExtends.push(
-          generatePluginExtendsElement(compatiblePluginsBatch)
-        );
+        // generate the extends for the incompatible plugin
+        pluginExtends.push(generatePluginExtendsElementWithCompatFixup(name));
+        shouldImportEslintCompat = true;
+      } else {
+        // add the compatible plugin to the current batch
+        compatiblePluginsBatch.push(name);
       }
-    } else {
-      const plugins = (Array.isArray(plugin) ? plugin : [plugin]).map((p) =>
-        typeof p === 'string' ? p : p.name
-      );
-      pluginExtends.push(generatePluginExtendsElement(plugins));
+    });
+
+    if (compatiblePluginsBatch.length > 0) {
+      // flush the batch of compatible plugins
+      pluginExtends.push(generatePluginExtendsElement(compatiblePluginsBatch));
     }
 
     let content = tree.read(fileName, 'utf8');

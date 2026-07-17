@@ -1,6 +1,7 @@
 import { workspaceRoot, type Tree } from 'nx/src/devkit-exports';
 import { valid } from 'semver';
-import { getCatalogManager } from './catalog';
+// eslint-disable-next-line @typescript-eslint/no-restricted-imports -- nx/src/utils/catalog exists since nx 22.0.0, the whole supported range; swap to the nx/src/devkit-internals re-export in v25
+import { getCatalogManager } from 'nx/src/utils/catalog';
 
 export function checkAndCleanWithSemver(
   pkgName: string,

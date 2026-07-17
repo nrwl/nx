@@ -36,6 +36,18 @@ jest.mock('../../utils/utilities', () => ({
 }));
 
 describe('@nx/storybook:configuration', () => {
+  let envBackup: string | undefined;
+
+  beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) delete process.env.ESLINT_USE_FLAT_CONFIG;
+    else process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+  });
+
   describe('v10', () => {
     beforeEach(() => {
       // Simulate behavior when version is a range ('^10.1.0'):
@@ -484,6 +496,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -581,6 +594,32 @@ describe('@nx/storybook:configuration', () => {
           json.devDependencies['storybook'] = storybookVersion;
           return json;
         });
+      });
+
+      it('should write node10 moduleResolution in ts-node options on TypeScript < 6', async () => {
+        updateJson(tree, 'package.json', (json) => ({
+          ...json,
+          devDependencies: { ...json.devDependencies, typescript: '~5.9.2' },
+        }));
+        tree.write(
+          'tsconfig.json',
+          JSON.stringify({
+            extends: './tsconfig.base.json',
+            compilerOptions: {},
+            files: [],
+            include: [],
+          })
+        );
+
+        await configurationGenerator(tree, {
+          project: 'test-ui-lib',
+          addPlugin: true,
+        });
+
+        const tsconfig = readJson(tree, 'tsconfig.json');
+        expect(tsconfig['ts-node'].compilerOptions.moduleResolution).toEqual(
+          'node10'
+        );
       });
 
       it('should set the tsnode module to commonjs if there is a root tsconfig.json', async () => {
@@ -838,7 +877,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }
@@ -1349,6 +1388,7 @@ describe('@nx/storybook:configuration', () => {
       });
 
       it("should update the project's .eslintrc.json if config exists", async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           directory: 'test-ui-lib2',
           linter: 'eslint',
@@ -1703,7 +1743,7 @@ describe('@nx/storybook:configuration', () => {
           "ts-node": {
             "compilerOptions": {
               "module": "commonjs",
-              "moduleResolution": "node10",
+              "moduleResolution": "bundler",
             },
           },
         }

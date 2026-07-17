@@ -66,10 +66,30 @@ const pkgEdge = metadataFromAges(
 
 // A latest tag whose target is a too-new new-major; degrade has no same-major
 // mature candidate but a lower major does.
-const pkgNewMajor = metadataFromAges(
-  'pkg-newmajor',
-  { '1.2.0': 25, '1.2.1': 12, '2.0.0': 6 },
-  { latest: '2.0.0' }
+// Multiple prerelease channels sharing a release line, for the channel-aware
+// tag degrade: an `rc` next-target with an internal `pr` build and a `beta` of
+// the same line, plus an older cross-line `rc` and a same-line older `rc`.
+const pkgChannels = metadataFromAges(
+  'pkg-ch',
+  {
+    '22.7.0': 200,
+    '22.7.5': 6,
+    '22.7.0-rc.2': 220,
+    '23.0.0-beta.1': 100,
+    '23.0.0-pr.5': 90,
+    '23.0.0-rc.0': 2,
+    '23.1.0-rc.1': 80,
+    '23.1.0-rc.4': 4,
+  },
+  { latest: '22.7.5', next: '23.0.0-rc.0', pre: '23.1.0-rc.4' }
+);
+
+// Every version younger than the 24h window: a too-new tag has no compliant
+// degrade candidate, exercising the strict-violation / loose-immature paths.
+const pkgAllTooNew = metadataFromAges(
+  'pkg-allnew',
+  { '1.2.0': 12, '2.0.0': 6 },
+  { latest: '1.2.0', hot: '2.0.0' }
 );
 
 function basePolicy(
@@ -90,7 +110,6 @@ function basePolicy(
       packageManager: 'pnpm',
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'error',
       ...behaviorOverrides,
@@ -109,7 +128,6 @@ function v10Policy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'same-major',
       writesExcludes: false,
       missingTimeMap: 'error',
     },
@@ -127,7 +145,6 @@ function v11StrictPolicy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: true,
       missingTimeMap: 'skip',
     },
@@ -146,7 +163,6 @@ function v11SingleFormStrictPolicy(
     {
       strict: true,
       looseFallback: false,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'skip',
     },
@@ -164,7 +180,6 @@ function v11LoosePolicy(
     {
       strict: false,
       looseFallback: true,
-      latestTagDegrade: 'any-major',
       writesExcludes: false,
       missingTimeMap: 'skip',
     },
@@ -188,18 +203,11 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('latest tag degrades to newest mature any-major (tag-latest 10.20+ -> 1.2.0)', () => {
-      // pivot: pnpm 10.16-10.19 (same-major) FAIL; 10.20+ (any-major) -> 1.2.0.
+    it('latest tag (too-new stable) degrades to the newest compliant stable (2.0.0 -> 1.2.0)', () => {
       expect(pickPnpmVersion('latest', pkgA, v11StrictPolicy(24))).toEqual({
         version: '1.2.0',
         unconstrained: '2.0.0',
       });
-    });
-
-    it('latest tag same-major (10.16-10.19) with no same-major mature -> violation (tag-latest)', () => {
-      expect(() => pickPnpmVersion('latest', pkgA, v10Policy(24))).toThrow(
-        MinReleaseAgeViolationError
-      );
     });
 
     it('tag pointing at an already-mature version returns it (tag-stableold)', () => {
@@ -209,7 +217,7 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('prerelease tag degrades within its line (tag-prerelease canary.3 -> canary.1)', () => {
+    it('prerelease tag keeps a compliant same-line same-channel version (canary.3 -> canary.1)', () => {
       expect(pickPnpmVersion('canary', pkgA, v10Policy(24))).toEqual({
         version: '3.0.0-canary.1',
         unconstrained: '3.0.0-canary.3',
@@ -222,6 +230,25 @@ describe('pnpm min-release-age behavior', () => {
       ).toEqual({
         version: '3.0.0-canary.1',
         unconstrained: '3.0.0-canary.3',
+      });
+    });
+
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      // next -> 23.0.0-rc.0 too new with no older same-line rc; the same-line
+      // 23.0.0-beta.1 (lower ladder rung) wins, while the newer-published
+      // internal 23.0.0-pr.5 is off the ladder and stays walled off.
+      expect(pickPnpmVersion('next', pkgChannels, v11StrictPolicy(24))).toEqual(
+        {
+          version: '23.0.0-beta.1',
+          unconstrained: '23.0.0-rc.0',
+        }
+      );
+    });
+
+    it('too-new rc tag keeps a compliant same-line rc (pre -> 23.1.0-rc.1)', () => {
+      expect(pickPnpmVersion('pre', pkgChannels, v11StrictPolicy(24))).toEqual({
+        version: '23.1.0-rc.1',
+        unconstrained: '23.1.0-rc.4',
       });
     });
   });
@@ -331,19 +358,16 @@ describe('pnpm min-release-age behavior', () => {
     // 11.0.0..11.1.2 cannot derive an immatureVersion from a tag name, so a
     // too-new non-latest tag falls back to NO_MATCHING (pivot: 11.0.4..11.1.0
     // tag-nonlatest -> ERR_PNPM_NO_MATCHING_VERSION).
-    it('v11.0.0..11.1.2 too-new non-latest tag -> NO_MATCHING fallback shape', () => {
-      const meta = metadataFromAges(
-        'pkg-hot',
-        { '1.2.0': 25, '2.0.0': 6 },
-        { latest: '1.2.0', hot: '2.0.0' }
-      );
+    it('v11.0.0..11.1.2 too-new tag with no compliant degrade -> NO_MATCHING fallback shape', () => {
       try {
-        pickPnpmVersion('hot', meta, v11SingleFormStrictPolicy(24));
+        pickPnpmVersion('hot', pkgAllTooNew, v11SingleFormStrictPolicy(24));
         throw new Error('expected throw');
       } catch (e) {
         expect(e).toBeInstanceOf(MinReleaseAgeViolationError);
         const detail = (e as MinReleaseAgeViolationError).pmShapedDetail;
-        expect(detail).toContain('No matching version found for pkg-hot@hot');
+        expect(detail).toContain(
+          'No matching version found for pkg-allnew@hot'
+        );
         expect(detail).not.toContain('does not meet the minimumReleaseAge');
       }
     });
@@ -403,131 +427,27 @@ describe('pnpm min-release-age behavior', () => {
       });
     });
 
-    it('non-latest tag too-new keeps original target immature (tag-nonlatest 11.0.0 -> 2.0.0)', () => {
-      expect(pickPnpmVersion('hot', pkgA, v11LoosePolicy(24))).toEqual({
+    it('too-new tag with no compliant degrade keeps original target immature (hot -> 2.0.0)', () => {
+      expect(pickPnpmVersion('hot', pkgAllTooNew, v11LoosePolicy(24))).toEqual({
         version: '2.0.0',
         unconstrained: '2.0.0',
         immature: true,
       });
     });
-  });
 
-  describe('latest tag degrade: same-major vs any-major', () => {
-    it('v10 (<10.20) same-major: too-new new-major latest with no same-major mature -> violation', () => {
-      // latest -> 2.0.0 (too new); same-major candidates are only 2.x (all too
-      // new) -> no degrade -> hard fail.
-      expect(() =>
-        pickPnpmVersion('latest', pkgNewMajor, v10Policy(24))
-      ).toThrow(MinReleaseAgeViolationError);
-    });
-
-    it('any-major (>=10.20) degrades latest across majors (-> 1.2.0)', () => {
-      expect(
-        pickPnpmVersion('latest', pkgNewMajor, v11StrictPolicy(24))
-      ).toEqual({
-        version: '1.2.0',
-        unconstrained: '2.0.0',
-      });
-    });
-
-    it('non-latest tag never degrades across majors even on any-major rows', () => {
-      // hot -> 2.0.0 too new; non-latest stays same-major -> no 2.x mature ->
-      // strict violation.
-      const meta = metadataFromAges(
-        'pkg-hot',
-        { '1.2.0': 25, '2.0.0': 6 },
-        { latest: '1.2.0', hot: '2.0.0' }
-      );
-      expect(() => pickPnpmVersion('hot', meta, v11StrictPolicy(24))).toThrow(
+    it('tag pointing at a non-semver target -> violation, never an immature install', () => {
+      // An immature return here would make the consumer write pkg@<garbage>
+      // into minimumReleaseAgeExclude, which pnpm rejects on every later
+      // install (ERR_PNPM_INVALID_VERSION_UNION).
+      const meta: RegistryMetadata = {
+        name: 'pkg-garbage',
+        versions: ['1.0.0'],
+        time: { '1.0.0': new Date(NOW - 9600 * HOUR).toISOString() },
+        distTags: { latest: 'not-a-version' },
+      };
+      expect(() => pickPnpmVersion('latest', meta, v11LoosePolicy(24))).toThrow(
         MinReleaseAgeViolationError
       );
-    });
-  });
-
-  // pnpm 10.16 matched the degrade same-major by string prefix with NO
-  // prerelease filter; 10.17 switched to a numeric-major comparison plus a
-  // prerelease-flag filter (npm-resolver -> registry/pkg-metadata-filter). A
-  // same-major mature prerelease therefore wins the degrade on 10.16 but is
-  // excluded on 10.17+.
-  describe('same-major degrade prerelease filter (10.16 vs 10.17+)', () => {
-    // latest -> 1.5.0 (stable, too new). Same major has a mature stable 1.2.0
-    // and a mature prerelease 1.9.0-beta.1.
-    const meta = metadataFromAges(
-      'pkg-prefix',
-      { '1.2.0': 100, '1.5.0': 6, '1.9.0-beta.1': 100 },
-      { latest: '1.5.0' }
-    );
-
-    it('10.16 includes a same-major prerelease and picks the highest (-> 1.9.0-beta.1)', () => {
-      expect(pickPnpmVersion('latest', meta, v10Policy(24))).toEqual({
-        version: '1.9.0-beta.1',
-        unconstrained: '1.5.0',
-      });
-    });
-
-    it('10.17 filters the prerelease out and degrades to the stable 1.2.0', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          meta,
-          v10Policy(24, { packageManagerVersion: '10.17.0' })
-        )
-      ).toEqual({
-        version: '1.2.0',
-        unconstrained: '1.5.0',
-      });
-    });
-  });
-
-  describe('deprecation tie-break (10.18+) prefers non-deprecated', () => {
-    it('any-major skips a deprecated higher candidate when a non-deprecated lower one is mature', () => {
-      const meta: RegistryMetadata & {
-        deprecations?: Record<string, string | true>;
-      } = {
-        ...metadataFromAges(
-          'pkg-dep',
-          { '1.1.0': 100, '1.2.0': 80, '2.0.0': 6 },
-          { latest: '2.0.0' }
-        ),
-        deprecations: { '1.2.0': 'do not use' },
-      };
-      expect(pickPnpmVersion('latest', meta, v11StrictPolicy(24))).toEqual({
-        version: '1.1.0',
-        unconstrained: '2.0.0',
-      });
-    });
-
-    // pnpm applies the tie-break to same-major degrades too (since 10.18), not
-    // only the any-major latest path.
-    const sameMajorMeta: RegistryMetadata & {
-      deprecations?: Record<string, string | true>;
-    } = {
-      ...metadataFromAges(
-        'pkg-dep-same',
-        { '1.1.0': 100, '1.2.0': 80, '1.5.0': 6 },
-        { latest: '1.5.0' }
-      ),
-      deprecations: { '1.2.0': 'do not use' },
-    };
-
-    it('10.18 same-major skips the deprecated higher candidate (-> 1.1.0)', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          sameMajorMeta,
-          v10Policy(24, { packageManagerVersion: '10.18.0' })
-        )
-      ).toEqual({ version: '1.1.0', unconstrained: '1.5.0' });
-    });
-
-    it('10.17 has no tie-break and keeps the deprecated higher candidate (-> 1.2.0)', () => {
-      expect(
-        pickPnpmVersion(
-          'latest',
-          sameMajorMeta,
-          v10Policy(24, { packageManagerVersion: '10.17.0' })
-        )
-      ).toEqual({ version: '1.2.0', unconstrained: '1.5.0' });
     });
   });
 
@@ -609,48 +529,31 @@ describe('pnpm min-release-age behavior', () => {
   });
 
   describe('readPnpmPolicy', () => {
-    let originalEnv: NodeJS.ProcessEnv;
-
-    beforeEach(() => {
-      originalEnv = process.env;
-      process.env = { ...originalEnv };
-      for (const key of Object.keys(process.env)) {
-        if (/^pnpm_config_|^PNPM_CONFIG_|^npm_config_/i.test(key)) {
-          delete process.env[key];
-        }
-      }
-    });
-
     afterEach(() => {
-      process.env = originalEnv;
       jest.restoreAllMocks();
     });
 
-    function mockYaml(doc: Record<string, unknown> | null) {
-      jest.resetModules();
-      const fs = require('fs');
-      jest.spyOn(fs, 'existsSync').mockImplementation((p: any) => {
-        return typeof p === 'string' && p.endsWith('pnpm-workspace.yaml')
-          ? doc !== null
-          : false;
-      });
+    // readPnpmPolicy reads pnpm's resolved config via `pnpm config list --json`,
+    // so mock that single spawn rather than any config surface. pnpm 11 reports
+    // keys camelCase, pnpm 10 kebab-case; each test mocks the form its version
+    // emits. An exclude array mirrors a yaml surface, a comma-joined string
+    // mirrors .npmrc / env. pnpm itself decides which surface won.
+    function mockPnpmConfig(config: Record<string, unknown> | 'throw') {
       jest
-        .spyOn(fs, 'readFileSync')
-        .mockImplementation(() => require('@zkochan/js-yaml').dump(doc ?? {}));
+        .spyOn(require('child_process'), 'execSync')
+        .mockImplementation(() => {
+          if (config === 'throw') {
+            throw new Error('pnpm config list failed');
+          }
+          return JSON.stringify(config);
+        });
     }
 
-    // Workspace yaml present but unparseable (unterminated flow collection).
-    function mockCorruptWorkspaceYaml() {
-      jest.resetModules();
-      const fs = require('fs');
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation(
-          (p: any) => typeof p === 'string' && p.endsWith('pnpm-workspace.yaml')
-        );
-      jest
-        .spyOn(fs, 'readFileSync')
-        .mockReturnValue('minimumReleaseAge: [1, 2');
+    function pnpmBehavior(behavior: PmMinReleaseAgeBehavior) {
+      return behavior as Extract<
+        PmMinReleaseAgeBehavior,
+        { packageManager: 'pnpm' }
+      >;
     }
 
     it('versions below 10.16.0 -> inactive', async () => {
@@ -663,244 +566,129 @@ describe('pnpm min-release-age behavior', () => {
       expect(result.outcome).toBe('ambiguous');
     });
 
-    it('v10 no surfaces set -> inactive', async () => {
-      mockYaml(null);
+    it('unable to read pnpm config -> ambiguous (defer to install)', async () => {
+      mockPnpmConfig('throw');
+      const result = await readPnpmPolicy('/root', '10.16.0');
+      expect(result.outcome).toBe('ambiguous');
+    });
+
+    it('v10 no cooldown configured -> inactive', async () => {
+      mockPnpmConfig({});
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
-    it('v10 workspace yaml window -> active strict', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
+    it('v10 window -> active strict', async () => {
+      mockPnpmConfig({ 'minimum-release-age': 1440 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
+        const behavior = pnpmBehavior(result.policy.behavior);
         expect(behavior.strict).toBe(true);
         expect(behavior.looseFallback).toBe(false);
         expect(behavior.missingTimeMap).toBe('error');
       }
     });
 
-    it('v10 zero window -> inactive (window-zero)', async () => {
-      mockYaml({ minimumReleaseAge: 0 });
+    it('zero window -> inactive', async () => {
+      mockPnpmConfig({ 'minimum-release-age': 0 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
-    it('v10 negative window -> inactive (window-negative)', async () => {
-      mockYaml({ minimumReleaseAge: -10 });
+    it('negative window -> inactive', async () => {
+      mockPnpmConfig({ 'minimum-release-age': -10 });
       const result = await readPnpmPolicy('/root', '10.16.0');
       expect(result.outcome).toBe('inactive');
     });
 
-    it('v10 invalid window -> ambiguous (window-invalid)', async () => {
-      mockYaml({ minimumReleaseAge: 'abc' });
-      const result = await readPnpmPolicy('/root', '10.16.0');
-      expect(result.outcome).toBe('ambiguous');
-    });
-
-    it('v10 unparseable workspace yaml -> ambiguous (defer to install)', async () => {
-      mockCorruptWorkspaceYaml();
-      const result = await readPnpmPolicy('/root', '10.16.0');
-      expect(result.outcome).toBe('ambiguous');
-    });
-
-    it('v11 unparseable workspace yaml -> ambiguous (defer to install)', async () => {
-      mockCorruptWorkspaceYaml();
-      const result = await readPnpmPolicy('/root', '11.0.0');
-      expect(result.outcome).toBe('ambiguous');
-    });
-
-    it('v11 no explicit surface -> active loose default 1440', async () => {
-      mockYaml(null);
+    it('v11 no explicit window -> active loose default 1440', async () => {
+      mockPnpmConfig({});
       const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
         expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        expect(result.policy.sourceDescription).toContain('default');
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
+        const behavior = pnpmBehavior(result.policy.behavior);
         expect(behavior.strict).toBe(false);
         expect(behavior.looseFallback).toBe(true);
       }
     });
 
-    // The built-in 1440 default is injected programmatically (not in pnpm's
-    // explicitlySetKeys), so the >=11.0.4 strict auto-on rule must NOT fire on
-    // it - the default stays loose, the normal pnpm 11 state.
+    // The built-in 1440 default is not reported by pnpm's config (only an
+    // explicitly-set window is), so the >=11.0.4 strict auto-on rule must NOT
+    // fire on it - the default stays loose, the normal pnpm 11 state.
     it.each(['11.0.4', '11.1.3', '11.5.2'])(
       'v%s built-in default window stays loose (no strict auto-on)',
       async (version) => {
-        mockYaml(null);
+        mockPnpmConfig({});
         const result = await readPnpmPolicy('/root', version);
         expect(result.outcome).toBe('active');
         if (result.outcome === 'active') {
           expect(result.policy.windowMs).toBe(1440 * MINUTE);
-          expect(result.policy.sourceDescription).toContain('default');
-          const behavior = result.policy.behavior as Extract<
-            PmMinReleaseAgeBehavior,
-            { packageManager: 'pnpm' }
-          >;
+          const behavior = pnpmBehavior(result.policy.behavior);
           expect(behavior.strict).toBe(false);
           expect(behavior.looseFallback).toBe(true);
         }
       }
     );
 
-    it('v11 >=11.0.4 explicit yaml window auto-enables strict', async () => {
-      mockYaml({ minimumReleaseAge: 2880 });
+    it('v11 >=11.0.4 explicit window auto-enables strict', async () => {
+      mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
+        const behavior = pnpmBehavior(result.policy.behavior);
         expect(behavior.strict).toBe(true);
         expect(behavior.looseFallback).toBe(false);
       }
     });
 
     it('v11 >=11.0.4 explicit strict:false stays loose', async () => {
-      mockYaml({ minimumReleaseAge: 2880, minimumReleaseAgeStrict: false });
+      mockPnpmConfig({
+        minimumReleaseAge: 2880,
+        minimumReleaseAgeStrict: false,
+      });
       const result = await readPnpmPolicy('/root', '11.0.4');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        expect(behavior.strict).toBe(false);
+        expect(pnpmBehavior(result.policy.behavior).strict).toBe(false);
       }
     });
 
     it('v11.0.0 explicit window does NOT auto-enable strict', async () => {
-      mockYaml({ minimumReleaseAge: 2880 });
+      mockPnpmConfig({ minimumReleaseAge: 2880 });
       const result = await readPnpmPolicy('/root', '11.0.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        expect(behavior.strict).toBe(false);
+        expect(pnpmBehavior(result.policy.behavior).strict).toBe(false);
       }
     });
 
     it('v11.1.3+ writesExcludes true', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.3');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        expect(behavior.writesExcludes).toBe(true);
+        expect(pnpmBehavior(result.policy.behavior).writesExcludes).toBe(true);
       }
     });
 
     it('v11.1.2 writesExcludes false', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
       const result = await readPnpmPolicy('/root', '11.1.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        expect(behavior.writesExcludes).toBe(false);
+        expect(pnpmBehavior(result.policy.behavior).writesExcludes).toBe(false);
       }
     });
 
-    it('v11 lowercase env window beats yaml', async () => {
-      mockYaml({ minimumReleaseAge: 2880 });
-      process.env.pnpm_config_minimum_release_age = '60';
-      const result = await readPnpmPolicy('/root', '11.0.4');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(60 * MINUTE);
-        expect(result.policy.sourceDescription).toContain('env');
-      }
-    });
-
-    it('v11.0.4 ignores uppercase env (only lowercase honored <11.1.0)', async () => {
-      mockYaml(null);
-      process.env.PNPM_CONFIG_MINIMUM_RELEASE_AGE = '60';
-      const result = await readPnpmPolicy('/root', '11.0.4');
-      // No explicit lowercase surface -> falls to default loose 1440.
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(1440 * MINUTE);
-      }
-    });
-
-    it('v11.1.0 honors uppercase env', async () => {
-      mockYaml(null);
-      process.env.PNPM_CONFIG_MINIMUM_RELEASE_AGE = '60';
-      const result = await readPnpmPolicy('/root', '11.1.0');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(60 * MINUTE);
-      }
-    });
-
-    // v10 layers config via @pnpm/npm-conf -> reads npm_config_*; pnpm_config_*
-    // is a v11-only surface and dead on v10.
-    it('v10 reads npm_config_minimum_release_age env', async () => {
-      mockYaml(null);
-      process.env.npm_config_minimum_release_age = '120';
-      const result = await readPnpmPolicy('/root', '10.16.0');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(120 * MINUTE);
-        expect(result.policy.sourceDescription).toContain('env');
-      }
-    });
-
-    it('v10 ignores pnpm_config_minimum_release_age env', async () => {
-      mockYaml(null);
-      process.env.pnpm_config_minimum_release_age = '120';
-      const result = await readPnpmPolicy('/root', '10.16.0');
-      // No npm_config_* / yaml / .npmrc surface -> nothing active on v10.
-      expect(result.outcome).toBe('inactive');
-    });
-
-    // v11 reads pnpm_config_*; npm_config_* is dead on v11.
-    it('v11 ignores npm_config_minimum_release_age env', async () => {
-      mockYaml(null);
-      process.env.npm_config_minimum_release_age = '120';
-      const result = await readPnpmPolicy('/root', '11.0.4');
-      // npm_config_* not read on v11 -> falls to the built-in 1440 default.
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        expect(result.policy.sourceDescription).toContain('default');
-      }
-    });
-
-    it('v11 reads pnpm_config_minimum_release_age env', async () => {
-      mockYaml(null);
-      process.env.pnpm_config_minimum_release_age = '120';
-      const result = await readPnpmPolicy('/root', '11.0.4');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(120 * MINUTE);
-        expect(result.policy.sourceDescription).toContain('env');
-      }
-    });
-
-    // pnpm v11's [String, Array] env schema: JSON array first, else the raw
-    // string as ONE entry - never comma-split.
-    it('v11 env exclude accepts a JSON array', async () => {
-      mockYaml(null);
-      process.env.pnpm_config_minimum_release_age_exclude = '["pkg-a","pkg-b"]';
+    // pnpm reports the resolved exclude as a JSON array (set in a yaml surface).
+    it('honors an exclude array from pnpm config', async () => {
+      mockPnpmConfig({
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeExclude: ['pkg-a', 'pkg-b'],
+      });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
@@ -910,100 +698,87 @@ describe('pnpm min-release-age behavior', () => {
       }
     });
 
-    // pnpm merges surfaces per key: window, excludes, and strict can each come
-    // from a different surface.
-    it('v11 env window combines with yaml excludes and yaml strict', async () => {
-      mockYaml({
-        minimumReleaseAgeExclude: ['pkg-a'],
-        minimumReleaseAgeStrict: false,
+    // pnpm reports the resolved exclude as a comma-joined string (set via
+    // .npmrc / env). This is the ocean case: `minimum-release-age-exclude=nx,@nx/*`.
+    it('honors a comma-joined exclude string from pnpm config', async () => {
+      mockPnpmConfig({
+        'minimum-release-age': 10080,
+        'minimum-release-age-exclude': 'nx,@nx/*',
       });
-      process.env.pnpm_config_minimum_release_age = '60';
-      const result = await readPnpmPolicy('/root', '11.0.4');
+      const result = await readPnpmPolicy('/root', '10.26.1');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(60 * MINUTE);
-        expect(result.policy.isExcluded('pkg-a', '1.0.0')).toBe(true);
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        // Explicit yaml strict: false beats the >=11.0.4 auto-on rule.
-        expect(behavior.strict).toBe(false);
+        expect(result.policy.isExcluded('nx', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('@nx/devkit', '1.0.0')).toBe(true);
+        expect(result.policy.isExcluded('other', '1.0.0')).toBe(false);
       }
     });
 
-    it('v11 env exclude overrides yaml exclude (per-key replace, not merge)', async () => {
-      mockYaml({ minimumReleaseAgeExclude: ['pkg-a'] });
-      process.env.pnpm_config_minimum_release_age_exclude = '["pkg-b"]';
-      const result = await readPnpmPolicy('/root', '11.5.2');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.isExcluded('pkg-b', '1.0.0')).toBe(true);
-        expect(result.policy.isExcluded('pkg-a', '1.0.0')).toBe(false);
-      }
-    });
-
-    it('v10 yaml window combines with npm_config_ env excludes', async () => {
-      mockYaml({ minimumReleaseAge: 1440 });
-      process.env.npm_config_minimum_release_age_exclude = 'pkg-a';
-      const result = await readPnpmPolicy('/root', '10.20.0');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        expect(result.policy.windowMs).toBe(1440 * MINUTE);
-        expect(result.policy.isExcluded('pkg-a', '1.0.0')).toBe(true);
-      }
-    });
-
-    it('v11 env exclude treats a non-JSON value as a single entry', async () => {
-      mockYaml(null);
-      process.env.pnpm_config_minimum_release_age_exclude = 'pkg-a,pkg-b';
-      const result = await readPnpmPolicy('/root', '11.5.2');
-      expect(result.outcome).toBe('active');
-      if (result.outcome === 'active') {
-        // Not comma-split: neither bare name matches the literal entry.
-        expect(result.policy.isExcluded('pkg-a', '2.0.0')).toBe(false);
-        expect(result.policy.isExcluded('pkg-b', '1.0.0')).toBe(false);
-      }
-    });
-
-    // pnpm passes a JSON array with a non-string element verbatim, then errors at
-    // install (ERR_PNPM_INVALID_MINIMUM_RELEASE_AGE_EXCLUDE); nx defers rather
-    // than mimic the crash.
-    it('v11 env exclude JSON array with a non-string element -> ambiguous', async () => {
-      mockYaml(null);
-      process.env.pnpm_config_minimum_release_age_exclude = '["pkg-a", 123]';
+    // An entry pnpm's version-policy grammar rejects (a range in a version
+    // union) is a version-dependent landmine; nx defers rather than crash.
+    it('invalid exclude entry -> ambiguous (defer to install)', async () => {
+      mockPnpmConfig({
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeExclude: ['pkg-a@^1.0.0'],
+      });
       const result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('ambiguous');
     });
 
-    // pnpm's Boolean env schema yields true/false only for the literals; a
-    // malformed value drops the key, so the >=11.0.4 explicit-window strict
-    // auto-on still fires (the env doesn't force strict off).
-    it('v11 malformed strict env value falls through (auto-on still applies)', async () => {
-      mockYaml({ minimumReleaseAge: 2880 });
-      process.env.pnpm_config_minimum_release_age_strict = '1';
-      const result = await readPnpmPolicy('/root', '11.0.4');
+    it('v11 ignoreMissingTime defaults to skip; explicit false errors', async () => {
+      mockPnpmConfig({ minimumReleaseAge: 1440 });
+      let result = await readPnpmPolicy('/root', '11.5.2');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
-        expect(behavior.strict).toBe(true);
+        expect(pnpmBehavior(result.policy.behavior).missingTimeMap).toBe(
+          'skip'
+        );
+      }
+
+      mockPnpmConfig({
+        minimumReleaseAge: 1440,
+        minimumReleaseAgeIgnoreMissingTime: false,
+      });
+      result = await readPnpmPolicy('/root', '11.5.2');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(pnpmBehavior(result.policy.behavior).missingTimeMap).toBe(
+          'error'
+        );
       }
     });
 
-    it('v11 explicit strict:false env beats the >=11.0.4 auto-on rule', async () => {
-      mockYaml({ minimumReleaseAge: 2880 });
-      process.env.pnpm_config_minimum_release_age_strict = 'false';
-      const result = await readPnpmPolicy('/root', '11.0.4');
+    // pnpm 11 reports config keys camelCase via `config list --json`; pnpm 10
+    // reported them kebab-case. Reading only the kebab form dropped every
+    // explicitly-set value on pnpm 11, so the window fell back to the built-in
+    // 1440 default (gh-36330).
+    it('honors a camelCase window from pnpm 11 (auto-enables strict)', async () => {
+      mockPnpmConfig({ minimumReleaseAge: 60 });
+      const result = await readPnpmPolicy('/root', '11.13.0');
       expect(result.outcome).toBe('active');
       if (result.outcome === 'active') {
-        const behavior = result.policy.behavior as Extract<
-          PmMinReleaseAgeBehavior,
-          { packageManager: 'pnpm' }
-        >;
+        expect(result.policy.windowMs).toBe(60 * MINUTE);
+        const behavior = pnpmBehavior(result.policy.behavior);
+        expect(behavior.strict).toBe(true);
+        expect(behavior.looseFallback).toBe(false);
+      }
+    });
+
+    it('honors camelCase exclude, strict, and ignoreMissingTime from pnpm 11', async () => {
+      mockPnpmConfig({
+        minimumReleaseAge: 2880,
+        minimumReleaseAgeExclude: ['pkg-a'],
+        minimumReleaseAgeStrict: false,
+        minimumReleaseAgeIgnoreMissingTime: false,
+      });
+      const result = await readPnpmPolicy('/root', '11.13.0');
+      expect(result.outcome).toBe('active');
+      if (result.outcome === 'active') {
+        expect(result.policy.windowMs).toBe(2880 * MINUTE);
+        expect(result.policy.isExcluded('pkg-a', '2.0.0')).toBe(true);
+        const behavior = pnpmBehavior(result.policy.behavior);
         expect(behavior.strict).toBe(false);
+        expect(behavior.missingTimeMap).toBe('error');
       }
     });
   });
@@ -1055,37 +830,18 @@ describe('pnpm min-release-age behavior', () => {
   });
 
   describe('exclude grammar (via readPnpmPolicy.isExcluded)', () => {
-    let originalEnv: NodeJS.ProcessEnv;
-
-    beforeEach(() => {
-      originalEnv = process.env;
-      process.env = { ...originalEnv };
-      for (const key of Object.keys(process.env)) {
-        if (/^pnpm_config_|^PNPM_CONFIG_|^npm_config_/i.test(key)) {
-          delete process.env[key];
-        }
-      }
-    });
-
     afterEach(() => {
-      process.env = originalEnv;
       jest.restoreAllMocks();
     });
 
-    function mockYaml(doc: Record<string, unknown>) {
-      const fs = require('fs');
-      jest
-        .spyOn(fs, 'existsSync')
-        .mockImplementation(
-          (p: any) => typeof p === 'string' && p.endsWith('pnpm-workspace.yaml')
-        );
-      jest
-        .spyOn(fs, 'readFileSync')
-        .mockImplementation(() => require('@zkochan/js-yaml').dump(doc));
-    }
-
     async function excludeFor(version: string, doc: Record<string, unknown>) {
-      mockYaml(doc);
+      // pnpm reports a yaml-set exclude as a JSON array via `config list --json`.
+      jest.spyOn(require('child_process'), 'execSync').mockReturnValue(
+        JSON.stringify({
+          'minimum-release-age': doc.minimumReleaseAge,
+          'minimum-release-age-exclude': doc.minimumReleaseAgeExclude,
+        })
+      );
       const result = await readPnpmPolicy('/root', version);
       if (result.outcome !== 'active') {
         return result.outcome;

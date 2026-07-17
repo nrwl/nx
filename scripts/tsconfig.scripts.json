@@ -2,9 +2,8 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "../scripts/tools-out",
-    "module": "commonjs",
     "types": ["node"],
-    "baseUrl": ".."
+    "rootDir": "."
   },
   "include": ["**/*.ts"],
   "references": [
@@ -23,12 +22,5 @@
     {
       "path": "../nx-dev/data-access-documents/tsconfig.lib.json"
     }
-  ],
-  "ts-node": {
-    "require": ["tsconfig-paths/register"],
-    "transpileOnly": true,
-    "compilerOptions": {
-      "module": "commonjs"
-    }
-  }
+  ]
 }

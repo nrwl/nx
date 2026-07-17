@@ -65,6 +65,23 @@ const pkgEdge = metadataFromAges(
   { latest: '1.0.1' }
 );
 
+// Multiple prerelease channels sharing a release line, for the channel-aware
+// tag degrade.
+const pkgChannels = metadataFromAges(
+  'pkg-ch',
+  {
+    '22.7.0': 200,
+    '22.7.5': 6,
+    '22.7.0-rc.2': 220,
+    '23.0.0-beta.1': 100,
+    '23.0.0-pr.5': 90,
+    '23.0.0-rc.0': 2,
+    '23.1.0-rc.1': 80,
+    '23.1.0-rc.4': 4,
+  },
+  { latest: '22.7.5', next: '23.0.0-rc.0', pre: '23.1.0-rc.4' }
+);
+
 function policyWithWindow(windowHours: number): MinReleaseAgePolicy {
   const windowMs = windowHours * HOUR;
   return {
@@ -172,25 +189,38 @@ describe('bun min-release-age behavior', () => {
       );
     });
 
-    it('latest tag degrades via the stability walk (2.0.0 -> 1.1.1)', () => {
-      // bun applies the same stability walk to ALL tags (no npm-style <=target).
+    it('latest tag (too-new stable) degrades to the newest compliant stable (2.0.0 -> 1.2.0)', () => {
       expect(pickBunVersion('latest', pkgA, policy)).toEqual({
-        version: '1.1.1',
+        version: '1.2.0',
         unconstrained: '2.0.0',
       });
     });
 
-    it('non-latest tag (hot -> 2.0.0) degrades to 1.1.1', () => {
+    it('non-latest tag (hot -> 2.0.0) degrades to 1.2.0', () => {
       expect(pickBunVersion('hot', pkgA, policy)).toEqual({
-        version: '1.1.1',
+        version: '1.2.0',
         unconstrained: '2.0.0',
       });
     });
 
-    it('prerelease tag stays in its channel (canary -> canary.1, never beta)', () => {
+    it('prerelease tag keeps a compliant same-line same-channel version (canary.3 -> canary.1)', () => {
       expect(pickBunVersion('canary', pkgA, policy)).toEqual({
         version: '3.0.0-canary.1',
         unconstrained: '3.0.0-canary.3',
+      });
+    });
+
+    it('too-new rc tag falls to its same-line beta, never into pr', () => {
+      expect(pickBunVersion('next', pkgChannels, policy)).toEqual({
+        version: '23.0.0-beta.1',
+        unconstrained: '23.0.0-rc.0',
+      });
+    });
+
+    it('too-new rc tag keeps a compliant same-line rc (pre -> 23.1.0-rc.1)', () => {
+      expect(pickBunVersion('pre', pkgChannels, policy)).toEqual({
+        version: '23.1.0-rc.1',
+        unconstrained: '23.1.0-rc.4',
       });
     });
 

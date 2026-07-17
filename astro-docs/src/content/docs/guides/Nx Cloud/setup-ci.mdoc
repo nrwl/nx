@@ -46,7 +46,7 @@ jobs:
   main:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           filter: tree:0
           fetch-depth: 0
@@ -58,9 +58,9 @@ jobs:
       # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
       # Cache node_modules
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
           cache: 'npm'
 
       - run: npm ci
@@ -140,7 +140,7 @@ Below is an example of a GitLab setup, building and testing only what is affecte
 
 ```yaml
 // .gitlab-ci.yml
-image: node:20
+image: node:22
 variables:
   CI: 'true'
 
@@ -321,7 +321,7 @@ Below is an example of a Bitbucket Pipelines, building and testing only what is 
 
 ```yaml
 // bitbucket-pipelines.yml
-image: node:20
+image: node:22
 
 clone:
   depth: full

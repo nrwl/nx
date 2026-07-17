@@ -147,6 +147,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -258,6 +259,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -335,6 +337,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                   run-docker: {
@@ -469,6 +472,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },
@@ -630,6 +634,7 @@ describe('@nx/docker', () => {
                     },
                   },
                   nx-release-publish: {
+                    continuous: false,
                     executor: @nx/docker:release-publish,
                   },
                 },

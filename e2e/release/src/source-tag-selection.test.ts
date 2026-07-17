@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -53,7 +54,7 @@ describe('nx release source tag selection', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 

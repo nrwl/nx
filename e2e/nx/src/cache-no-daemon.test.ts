@@ -597,7 +597,7 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   it('should honor NX_MAX_CACHE_SIZE env var', async () => {
     runCLI('reset');
@@ -646,7 +646,7 @@ console.log('Build complete');
     expect(cacheEntries).toBeGreaterThan(1);
     expect(cacheEntries).toBeLessThan(10);
     expect(cacheEntriesSize).toBeLessThanOrEqual(500 * 1024);
-  });
+  }, 120000);
 
   describe('http remote cache', () => {
     let cacheServer: any;

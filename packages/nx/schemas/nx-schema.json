@@ -43,24 +43,21 @@
       }
     },
     "targetDefaults": {
-      "description": "Target defaults. The recommended form is an array of entries; each entry matches by `target` (name or glob), `executor`, or both, and optionally narrows by `projects` and `plugin`. The legacy record/object form (keyed by target name or executor) is still read but deprecated; run `nx repair` to convert it.",
-      "oneOf": [
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/targetDefaultEntry"
-          }
-        },
-        {
-          "type": "object",
-          "deprecated": true,
-          "deprecationMessage": "The record-shape `targetDefaults` is deprecated and will be removed in a future major. Run `nx repair` to convert this nx.json to the new array-shape `targetDefaults`, which also unlocks the `projects` and `plugin` filters.",
-          "description": "Deprecated: the record-shape `targetDefaults` is still read for backwards compatibility, but new workspaces should use the array form. Run `nx repair` to convert.",
-          "additionalProperties": {
+      "description": "Target defaults — a map keyed by target name, glob (e.g. 'e2e-ci--*'), or executor (e.g. '@nx/js:tsc'). Each value is either a configuration object applied to that target, or an ordered array of filtered entries (used when one target needs different defaults per plugin, projects, or executor). Array entries apply in document order, last match winning.",
+      "type": "object",
+      "additionalProperties": {
+        "oneOf": [
+          {
             "$ref": "#/definitions/targetDefaultsConfig"
+          },
+          {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/targetDefaultArrayEntry"
+            }
           }
-        }
-      ]
+        ]
+      }
     },
     "workspaceLayout": {
       "type": "object",
@@ -863,37 +860,29 @@
       },
       "additionalProperties": false
     },
-    "targetDefaultEntry": {
+    "targetDefaultArrayEntry": {
       "type": "object",
-      "description": "A single target defaults entry. At least one of `target`, `executor`, `projects`, or `plugin` must be set — an entry with neither a locator nor a filter would broadcast to every target in the workspace and is ignored at runtime.",
-      "anyOf": [
-        { "required": ["target"] },
-        { "required": ["executor"] },
-        { "required": ["projects"] },
-        { "required": ["plugin"] }
-      ],
+      "description": "A filtered target defaults entry. The optional `filter` narrows where the entry applies; the remaining fields are the configuration applied when it matches. An entry with no `filter` is a catch-all baseline for its target key.",
       "properties": {
-        "target": {
-          "type": "string",
-          "description": "The target name or glob pattern (e.g. 'build', 'e2e-ci--*') this default applies to. When omitted, the entry matches by `executor` alone."
-        },
-        "projects": {
-          "oneOf": [
-            {
+        "filter": {
+          "type": "object",
+          "description": "Narrows where this entry applies. When present, every listed criterion must match the target being resolved.",
+          "properties": {
+            "plugin": {
               "type": "string",
-              "description": "A project name, glob, or tag (e.g. 'tag:dotnet')."
+              "description": "Restrict to targets originated by a specific plugin (e.g. '@nx/vite')."
             },
-            {
+            "projects": {
               "type": "array",
               "items": { "type": "string" },
-              "description": "A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy'])."
+              "description": "Restrict the default to matching projects. A list of project names, globs, or tags (e.g. ['apps/*', '!apps/legacy', 'tag:dotnet']). Uses findMatchingProjects syntax."
+            },
+            "executor": {
+              "type": "string",
+              "description": "Restrict to targets that resolve to a specific executor (e.g. '@nx/jest:jest')."
             }
-          ],
-          "description": "Restrict the default to matching projects. Uses findMatchingProjects syntax."
-        },
-        "plugin": {
-          "type": "string",
-          "description": "Restrict the default to targets originated by a specific plugin (e.g. '@nx/vite')."
+          },
+          "additionalProperties": false
         },
         "executor": {
           "$ref": "#/definitions/targetDefaultsConfig/properties/executor"

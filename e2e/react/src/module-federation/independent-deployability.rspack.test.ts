@@ -281,7 +281,10 @@ describe('Independent Deployability', () => {
       const remoteProcess = await runCommandUntil(
         `serve ${remote} --no-watch --verbose`,
         (output) => {
-          return output.includes(`Loopback: http://localhost:${remotePort}/`);
+          // rspack dev-server v1 prints "Loopback:", v2 prints "Local:"
+          return new RegExp(
+            `(Loopback|Local):\\s+http://localhost:${remotePort}/`
+          ).test(output);
         },
         { timeout: 120000 }
       );

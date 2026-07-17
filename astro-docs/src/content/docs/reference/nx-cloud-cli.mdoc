@@ -103,8 +103,6 @@ npx nx-cloud configure --personalAccessToken=SOME_ACCESS_TOKEN --nx-cloud-url=ht
 
 When logging into Nx Cloud with a [Personal Access Token](/docs/guides/nx-cloud/personal-access-tokens), your `nx.json` file needs to include the `nxCloudId` property, which acts as a unique identifier for your workspace. If you have been using the previous `nxCloudAccessToken` to connect, simply run `npx nx-cloud convert-to-nx-cloud-id` to automatically update your configuration to use `nxCloudId`.
 
-If you are connecting to Nx Cloud with a workspace that is version 19.6 or lower, this command will also install the latest version of the Nx Cloud npm package and add it into your `package.json`. Only Nx versions 19.7 and higher natively support the `nxCloudId` property in the `nx.json` file; for versions 19.6 and lower, the Nx Cloud npm package will be needed to use that property.
-
 **Usage:**
 
 ```shell
@@ -353,6 +351,12 @@ npx nx-cloud onboard workspace create --org=org_123 --template=tmpl_react --name
 At the beginning of your main job, invoke `npx nx-cloud start-ci-run`. This tells Nx Cloud that the following series of command correspond to the same CI run.
 
 This command is the same as running `nx start-ci-run`.
+
+{% aside type="caution" title="Run start-ci-run before any other Nx command" %}
+Run `npx nx-cloud start-ci-run` (or the orchestrator job that runs it) before any other `nx` command, including across separate or downstream pipelines that share the same CI Pipeline Execution (CIPE).
+
+The first `nx` command that contacts Nx Cloud creates the CIPE and locks in its settings for the whole run, including the access token's scope, the distribution configuration, your [assignment rules](/docs/reference/nx-cloud/assignment-rules), and the stop-agents conditions. If another `nx` command reaches Nx Cloud first, the CIPE is created with default settings and your `start-ci-run` flags are ignored for that run. The result is assignment rules or stop conditions that appear to have no effect.
+{% /aside %}
 
 **Usage:**
 

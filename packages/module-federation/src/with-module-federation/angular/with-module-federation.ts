@@ -6,6 +6,7 @@ import {
 import { getModuleFederationConfig } from './utils';
 import { ModuleFederationPlugin } from '@module-federation/enhanced/webpack';
 import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 export async function withModuleFederation(
   options: ModuleFederationConfig,
@@ -18,7 +19,7 @@ export async function withModuleFederation(
   process.env['FEDERATION_WEBPACK_PATH'] = require.resolve('webpack', {
     paths: [require.resolve('@angular-devkit/build-angular')],
   });
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     await getModuleFederationConfig(options, undefined, 'webpack');

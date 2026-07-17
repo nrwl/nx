@@ -1,6 +1,6 @@
 ---
-title: Remix Plugin for Nx
-description: Create and manage Remix applications in your Nx workspace with inferred build, dev, start, and typecheck tasks, plus generators for apps, libraries, routes, loaders, and actions.
+title: Nx with Remix
+description: Nx scales your Remix monorepo with caching, distributed task execution, and affected-only builds.
 keywords: [remix, react]
 sidebar:
   label: 'Introduction'
@@ -9,12 +9,12 @@ weight: 2
 filter: 'type:References'
 ---
 
-The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications).
+[Remix](https://remix.run/) is a full stack React framework for building web applications. In a Remix monorepo, every project benefits from Nx [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph).
 
-You don't need the plugin to use Remix with Nx. Any project already benefits from [caching](/docs/features/cache-task-results), [task orchestration](/docs/features/run-tasks), and the [project graph](/docs/features/explore-graph). The plugin adds automatic task inference, route scaffolding, and simplified configuration.
+The Remix plugin for Nx, `@nx/remix`, automatically [infers `build`, `dev`, `start`, and `typecheck` tasks](#how-nxremix-infers-tasks) from your Remix configuration and provides [generators for applications, libraries, routes, loaders, actions, and meta functions](#develop-remix-applications). You don't need the plugin to use Remix with Nx - it adds automatic task inference, route scaffolding, and simplified configuration.
 
 {% aside type="note" %}
-React Router is the successor to Remix. For new projects, consider using [React Router](/docs/technologies/react/guides/react-router) instead. Existing Remix projects continue to work with `@nx/remix`.
+React Router v7 is the successor to Remix. `@nx/remix` supports Remix v2; [`@nx/react`](/docs/technologies/react/guides/react-router) handles React Router v7. For new projects, use React Router instead. Existing Remix v2 projects continue to work with `@nx/remix`.
 {% /aside %}
 
 ## Requirements
@@ -23,7 +23,7 @@ The `@nx/remix` plugin supports the following package versions.
 
 | Package          | Supported Versions |
 | ---------------- | ------------------ |
-| `@remix-run/dev` | ^2.17.3            |
+| `@remix-run/dev` | ^2.0.0             |
 
 [Nx generators](/docs/features/generate-code) install the latest supported versions automatically when scaffolding new projects.
 
@@ -228,26 +228,11 @@ nx show project my-app
 
 Or open the [project details view in Nx Console](/docs/guides/nx-console/console-project-details#_top).
 
-## CI considerations
+## Set up CI for your Remix monorepo
 
-See [Set Up CI](/docs/guides/nx-cloud/setup-ci) for a complete CI configuration guide.
+In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.
 
-### Build and test only what changed
-
-```shell
-nx affected -t build test typecheck lint
-```
-
-This uses the [project graph](/docs/features/explore-graph) to determine which projects are affected by your changes and only runs tasks for those.
-Read more about [the benefits of `nx affected`](/docs/features/ci-features/affected).
-
-### Remote caching
-
-Share build and typecheck cache results across your team and CI with [remote caching](/docs/features/ci-features/remote-cache):
-
-```shell
-nx connect
-```
+For a complete pipeline, see [Set up CI](/docs/getting-started/setup-ci).
 
 ## What's next
 

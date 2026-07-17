@@ -6,7 +6,6 @@ import {
 } from '@nx/devkit';
 import { getProjectSourceRoot } from '@nx/js/internal';
 import { basename } from 'node:path';
-import { getInstalledAngularVersionInfo } from './version-utils';
 
 export type ComponentMetadata = {
   fileName: string;
@@ -58,13 +57,7 @@ function getComponentInfo(
   }
 
   if (!tree.exists(componentPath)) {
-    const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
-    componentPath = joinPathFragments(
-      sourceRoot,
-      angularMajorVersion >= 20
-        ? `app/${component}.ts`
-        : `app/${component}.component.ts`
-    );
+    componentPath = joinPathFragments(sourceRoot, `app/${component}.ts`);
   }
 
   const fileName = basename(componentPath);

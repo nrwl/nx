@@ -56,6 +56,43 @@ describe('use-minimal-config-for-tasks-runner-options migration', () => {
     `);
   });
 
+  it('should set cache on the catch-all entry of array-shaped target defaults', async () => {
+    // `nx repair` can't assume migration order, so a default may already be
+    // array-shaped; set the workspace-wide baseline without clobbering filters.
+    writeJson<NxJsonConfiguration>(tree, 'nx.json', {
+      tasksRunnerOptions: {
+        default: {
+          runner: 'nx/tasks-runners/default',
+          options: { cacheableOperations: ['build', 'test'] },
+        },
+      },
+      targetDefaults: {
+        // Has an unfiltered catch-all already — merge cache into it.
+        build: [
+          { filter: { projects: ['tag:foo'] }, inputs: ['^production'] },
+          { dependsOn: ['^build'] },
+        ],
+        // Only filtered entries — append a catch-all for the workspace baseline.
+        test: [{ filter: { projects: ['tag:foo'] }, inputs: ['^production'] }],
+      },
+    });
+
+    await migrate(tree);
+
+    expect(
+      readJson<NxJsonConfiguration>(tree, 'nx.json').targetDefaults
+    ).toEqual({
+      build: [
+        { filter: { projects: ['tag:foo'] }, inputs: ['^production'] },
+        { dependsOn: ['^build'], cache: true },
+      ],
+      test: [
+        { filter: { projects: ['tag:foo'] }, inputs: ['^production'] },
+        { cache: true },
+      ],
+    });
+  });
+
   it('should not update nx.json if there are multiple tasks runners', async () => {
     writeJson<NxJsonConfiguration>(tree, 'nx.json', {
       tasksRunnerOptions: {

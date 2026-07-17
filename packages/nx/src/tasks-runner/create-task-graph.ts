@@ -10,7 +10,7 @@ import {
   projectHasTargetAndConfiguration,
 } from '../utils/project-graph-utils';
 import { Task, TaskGraph } from '../config/task-graph';
-import { TargetDefaults, TargetDependencies } from '../config/nx-json';
+import { TargetDependencies } from '../config/nx-json';
 import { output } from '../utils/output';
 import { TargetDependencyConfig } from '../config/workspace-json-project-json';
 import { findCycles } from './task-graph-utils';
@@ -448,17 +448,6 @@ export function createTaskGraph(
     dependencies: p.dependencies,
     continuousDependencies: p.continuousDependencies,
   };
-}
-
-export function mapTargetDefaultsToDependencies(
-  defaults: TargetDefaults | undefined
-): TargetDependencies {
-  const res = {};
-  Object.keys(defaults ?? {}).forEach((k) => {
-    res[k] = defaults[k].dependsOn;
-  });
-
-  return res;
 }
 
 function interpolateOverrides<T = any>(

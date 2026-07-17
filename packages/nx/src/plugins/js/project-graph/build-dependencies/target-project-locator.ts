@@ -54,6 +54,13 @@ export function isBuiltinModuleImport(importExpr: string): boolean {
   return isBuiltin(packageName) || experimentalNodeModules.has(packageName);
 }
 
+// TypeScript matches the `${configDir}` template case-insensitively and only as a
+// prefix (commandLineParser.ts `startsWithConfigDirTemplate`).
+const configDirTemplate = '${configDir}';
+function startsWithConfigDirTemplate(value: string): boolean {
+  return value.toLowerCase().startsWith(configDirTemplate.toLowerCase());
+}
+
 export class TargetProjectLocator {
   private projectRootMappings = createProjectRootMappings(this.nodes);
   private npmProjects: Record<string, ProjectGraphExternalNode | null>;
@@ -129,7 +136,10 @@ export class TargetProjectLocator {
               importExpr.length - path.suffix.length
             );
       for (let p of paths) {
-        const path = matchedStar ? p.replace('*', matchedStar) : p;
+        let path = matchedStar ? p.replace('*', matchedStar) : p;
+        if (startsWithConfigDirTemplate(path)) {
+          path = this.substituteConfigDirTemplate(path, filePath);
+        }
         const maybeResolvedProject = this.findProjectOfResolvedModule(path);
         if (maybeResolvedProject) {
           return maybeResolvedProject;
@@ -505,6 +515,30 @@ export class TargetProjectLocator {
       normalizedResolvedModule
     );
     return importedProject ? importedProject.name : void 0;
+  }
+
+  /**
+   * Expand a `${configDir}` path mapping the same way TypeScript does. The
+   * template resolves to the directory of the tsconfig used for compilation,
+   * which for the importing file is its own project, so a configDir alias always
+   * points back into the source project (matching what `tsc` resolves).
+   */
+  private substituteConfigDirTemplate(value: string, filePath: string): string {
+    const sourceFilePath = isAbsolute(filePath)
+      ? relative(workspaceRoot, filePath)
+      : filePath;
+    const sourceProjectName = findProjectForPath(
+      sourceFilePath,
+      this.projectRootMappings
+    );
+    const sourceProjectRoot = this.nodes[sourceProjectName]?.data.root ?? '.';
+
+    // tsc replaces the template with './' and normalizes against the config dir;
+    // here the config dir is the source project root (workspace-relative).
+    return posix.join(
+      sourceProjectRoot,
+      value.replace(configDirTemplate, './')
+    );
   }
 
   private getAbsolutePath(path: string) {

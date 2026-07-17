@@ -80,8 +80,26 @@ export function getMergeValueResult<T>(
   }
 
   // Scalar / null / plain object replace — newValue fully wins.
-  writeTopLevelSourceMap(sourceMapContext);
+  // Only (re)attribute when the value actually changes. A no-op primitive
+  // replace — e.g. a target default that re-stamps the `executor`/`command` a
+  // plugin already set, purely as a merge guard — must not steal provenance
+  // from the layer that introduced the value. A genuinely new value (no base,
+  // or a different one) still attributes to the new layer.
+  if (!isUnchangedPrimitive(newValue, baseValue)) {
+    writeTopLevelSourceMap(sourceMapContext);
+  }
   return newValue;
+}
+
+// Whether `newValue` leaves a defined primitive base untouched. Objects fall
+// through (always re-attributed) to preserve the existing replace semantics —
+// the regression this guards is scalar executor/command re-stamping.
+function isUnchangedPrimitive(newValue: unknown, baseValue: unknown): boolean {
+  return (
+    baseValue !== undefined &&
+    (typeof newValue !== 'object' || newValue === null) &&
+    Object.is(newValue, baseValue)
+  );
 }
 
 function mergeArrayValue<T>(

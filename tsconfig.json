@@ -383,5 +383,8 @@
       "path": "./e2e/nx-build"
     }
   ],
-  "extends": "./tsconfig.base.json"
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "ignoreDeprecations": "6.0"
+  }
 }

@@ -9,7 +9,10 @@ These instructions guide you through migrating an Nx workspace containing multip
 The pre-pass handled, mechanically:
 
 - dead `coverage.{all,extensions,ignoreEmptyLines,experimentalAstAwareRemapping}` removal
-- `test.workspace` → `test.projects` rename (the property only — external `vitest.workspace.*` files are NOT inlined)
+- `test.workspace` → `test.projects` rename (the property form)
+- inlining of static `vitest.workspace.*` files (a plain array of glob strings) into the root `vitest.config.*` under `test.projects`, deleting the workspace file. Workspace files the pre-pass could not safely inline are forwarded to you: dynamic content (imports, spreads, object entries), an empty project list, or a sibling config it could not merge into (an existing `test.projects`/`test.workspace`, a non-object-literal config, or a directory that only has a `vite.config.*`)
+- when the inlined globs matched both a `vite.config.*` and a `vitest.config.*` in the same directory resolving to the same project name, a negative glob excluding the `vite.config.*` was appended (avoids vitest's duplicate-project-name startup error). When either config's project name could not be statically determined, an advisory was forwarded to you instead
+- minimal local `vitest.config.*` files for packages that run vitest via a package.json script but had no local config. Without one, Vitest 4 climbs from the package directory to the root `test.projects` config, resolves the globs relative to the package directory, and fails with "No projects were found"
 - `@vitest/browser/context` import-path rewrite to `vitest/browser`
 - `deps.optimizer.web` → `deps.optimizer.client` rename
 - `poolOptions.threads.useAtomics` and top-level `test.minWorkers` removal
@@ -18,7 +21,7 @@ The pre-pass handled, mechanically:
 
 The pre-pass **skips the rename when both `VITEST_MAX_THREADS` and `VITEST_MAX_FORKS` appear in the same file/scope** (they collapse to a single `VITEST_MAX_WORKERS` whose value depends on which pool the project uses — a decision the pre-pass can't make safely). It also **does not** edit CI provider configs (`.github/workflows/*.yml`, `.gitlab-ci.yml`, `azure-pipelines.yml`, `.circleci/config.yml`, `bitbucket-pipelines.yml`) — YAML structure varies too much. Any conflicts and any CI matches are forwarded to you in `<advisory_context>`.
 
-**The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, `vitest.workspace.*` file inlining + `defineWorkspace` removal, custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
+**The cross-cutting changes below still require your attention** — pool option flattening (`singleThread`/`singleFork`, `maxThreads`/`maxForks`, `poolOptions.<pool>.{execArgv,isolate}`, `poolOptions.vmThreads.memoryLimit`), `test.deps.{external,inline,fallbackCJS}` → `test.server.deps.*` move, `test.{poolMatchGlobs,environmentMatchGlobs}` projects rewrite, browser provider function-form rewrite, `browser.testerScripts` → `testerHtmlPath`, inlining of `vitest.workspace.*` files the pre-pass could not inline automatically (+ `defineWorkspace` removal), custom reporter callback API updates, and `@vitest/browser` package replacement with per-provider packages.
 
 How to read the wrapper sections above this file:
 
@@ -195,8 +198,26 @@ export default defineConfig({
 **Action Items**:
 
 - [ ] Rename `workspace` property to `projects` in all config files.
-- [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported).
+- [ ] Inline any external `vitest.workspace.*` content into `test.projects` and delete the workspace file (external file references are no longer supported). The pre-pass already inlined workspace files containing a plain static array of glob strings; the ones you see in `<advisory_context>` were skipped because of dynamic content or because the sibling config could not be merged into mechanically (existing `test.projects`/`test.workspace`, non-object-literal config, or a directory with only a `vite.config.*`). For an existing `test.projects`, merge the workspace entries into it; for a `vite.config.*`-only directory, decide whether its `test` block (if any) and the project list belong in that file or a new `vitest.config.*`.
 - [ ] If projects need different pool/environment options, set them inside each project entry rather than via the (now-removed) `poolMatchGlobs` / `environmentMatchGlobs` — see section 1.5.
+
+When you inline a workspace file yourself, also apply these checks (the pre-pass applies them for the files it inlines):
+
+- [ ] **Config-less packages**: a root config with `test.projects` breaks `vitest` invocations from package directories that have no `vite.config.*`/`vitest.config.*` of their own (common for packages with a package.json `"test": "vitest run"` script). Vitest 4 finds the root config by walking up from the package directory, but resolves the `test.projects` globs relative to the package directory, so it errors with "No projects were found". For each such package, create a minimal local config so vitest stops at it and `@nx/vitest` infers the test target:
+
+  ```typescript
+  import { defineConfig } from 'vitest/config';
+
+  export default defineConfig({
+    test: {},
+  });
+  ```
+
+  Do NOT "fix" this by anchoring the root globs to the workspace root instead: that makes the package-directory invocation run every project in the workspace while still skipping the config-less package's own tests. Skip packages whose vitest script already passes an explicit `--config`/`-c`/`--root` (space- or `=`-joined); those don't rely on config discovery.
+
+- [ ] **Duplicate project names**: when the inlined globs match both a `vite.config.*` and a `vitest.config.*` in the same directory and both resolve to the same project name (the default name is the directory's package.json name, so two name-less configs always collide), vitest errors at startup with "Project name ... is not unique". Append a negative glob excluding the `vite.config.*` file (e.g. `'!packages/foo/vite.config.ts'`), matching vitest's own vitest-over-vite preference. Leave directories whose configs have distinct explicit `test.name` values alone; those are intentionally separate projects.
+
+- [ ] **Root config self-match**: when the inlined globs match the root config file itself (e.g. `**/vitest.config.*` matches the `vitest.config.*` you inlined into), vitest resolves that root config as an extra project. A pure aggregator has no `include` of its own, so this extra project re-runs every test via vitest's default glob without each project's `environment`/`setupFiles`, duplicating runs and failing tests that depend on their project config. Append a negative glob excluding the root config file (e.g. `'!vitest.config.ts'`, relative to its own directory) so vitest treats it only as the projects orchestrator. Skip this when the root config is itself a real project with its own `test.include`: it runs its own tests and needs no exclusion.
 
 <fail_if note="inlining is a semantic merge, not a copy">
 The `vitest.workspace.*` file imports modules / calls functions / uses spreads that you cannot evaluate at edit time (dynamic project arrays, conditional imports). Write status: failed listing the file path and the dynamic shape that needs human resolution.

@@ -28,10 +28,7 @@ import { StorybookConfigureSchema } from '../schema';
 import { UiFramework } from '../../../utils/models';
 import { nxVersion } from '../../../utils/versions';
 import { findEslintFile, useFlatConfig } from '@nx/eslint/internal';
-import {
-  normalizeTargetDefaults,
-  upsertTargetDefault,
-} from '@nx/devkit/internal';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
 import {
   findRuntimeTsConfigName,
   getProjectType,
@@ -524,13 +521,9 @@ export function addStorybookToNamedInputs(tree: Tree) {
 export function addStorybookToTargetDefaults(tree: Tree, setCache = true) {
   const nxJson = readNxJson(tree) ?? {};
 
-  const existing = normalizeTargetDefaults(nxJson.targetDefaults).find(
-    (e) =>
-      e.target === 'build-storybook' &&
-      e.executor === undefined &&
-      e.projects === undefined &&
-      e.plugin === undefined
-  );
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'build-storybook',
+  });
 
   const inputs = existing?.inputs
     ? [...existing.inputs]

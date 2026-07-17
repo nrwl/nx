@@ -1,11 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "dist/spec",
+    "customConditions": ["@nx/nx-source"],
+    "outDir": "out-tsc/spec",
     "types": ["jest", "node"],
     "noEmit": true,
-    "composite": true
+    "composite": true,
+    "rootDir": "."
   },
   "include": [
     "**/*.spec.ts",

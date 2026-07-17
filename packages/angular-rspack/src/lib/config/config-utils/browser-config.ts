@@ -1,5 +1,7 @@
 import { TS_ALL_EXT_REGEX } from '@nx/angular-rspack-compiler';
 import type { Configuration } from '@rspack/core';
+import { isRspackV2 } from '../../utils/rspack-version';
+import { isServeMode } from '../../utils/rspack-serve-env';
 import type {
   HashFormat,
   I18nOptions,
@@ -18,7 +20,7 @@ export async function getBrowserConfig(
   hashFormat: HashFormat,
   defaultConfig: Configuration
 ): Promise<Configuration> {
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
   const isProduction = process.env['NODE_ENV'] === 'production';
   const { root } = normalizedOptions;
 
@@ -62,11 +64,11 @@ export async function getBrowserConfig(
             workerChunkLoading: 'import',
           }),
     },
-    experiments: isDevServer
-      ? {}
-      : {
-          outputModule: true,
-        },
+    // v2 folded experiments.outputModule into top-level output.module.
+    experiments:
+      isDevServer || isRspackV2()
+        ? {}
+        : ({ outputModule: true } as unknown as Configuration['experiments']),
     resolve: {
       ...defaultConfig.resolve,
       mainFields: ['es2020', 'es2015', 'browser', 'module', 'main'],

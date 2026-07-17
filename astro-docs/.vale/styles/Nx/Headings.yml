@@ -76,6 +76,10 @@ exceptions:
   - Turborepo
   - Lerna
   - Bazel
+  - Depot
+  - Blacksmith
+  - Buildkite
+  - Develocity
   - JSON
   - YAML
   - TOML
