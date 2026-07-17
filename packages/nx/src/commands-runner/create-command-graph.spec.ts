@@ -94,7 +94,7 @@ describe('createCommandGraph', () => {
       roots: ['dep2'],
     });
   });
-  
+
   it('should create command graph when --excludeTaskDependencies is true', () => {
     const projectGraph = {
       dependencies: {
@@ -120,11 +120,9 @@ describe('createCommandGraph', () => {
         },
       },
     };
-    const result = createCommandGraph(
-      projectGraph,
-      ['dep1'],
-      { excludeTaskDependencies: true }
-    );
+    const result = createCommandGraph(projectGraph, ['dep1'], {
+      excludeTaskDependencies: true,
+    });
     expect(result).toEqual({
       dependencies: { dep1: [] },
       roots: ['dep1'],
