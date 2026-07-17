@@ -37,6 +37,67 @@ nx add @nx/rsbuild
 
 This will install the correct version of `@nx/rsbuild`.
 
+## Configure task inference
+
+The `@nx/rsbuild` plugin looks for these configuration files in directories that also contain a `package.json` or `project.json`:
+
+- `rsbuild.config.js`
+- `rsbuild.config.ts`
+- `rsbuild.config.mjs`
+- `rsbuild.config.mts`
+- `rsbuild.config.cjs`
+- `rsbuild.config.cts`
+
+Nx creates a cached `build` task using the output directory from the Rsbuild configuration, continuous `dev` and `preview` tasks, and an `inspect` task. It also creates a cached `typecheck` task when the project has a `tsconfig*.json` file.
+
+Configure the plugin in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/rsbuild",
+      "options": {
+        "buildTargetName": "build",
+        "devTargetName": "dev",
+        "previewTargetName": "preview",
+        "inspectTargetName": "inspect",
+        "typecheckTargetName": "typecheck",
+        "buildDepsTargetName": "build-deps",
+        "watchDepsTargetName": "watch-deps"
+      }
+    }
+  ]
+}
+```
+
+| Option                | Type   | Default     | Description                                        |
+| --------------------- | ------ | ----------- | -------------------------------------------------- |
+| `buildTargetName`     | string | `build`     | Name of the cached production build task.          |
+| `devTargetName`       | string | `dev`       | Name of the continuous development server task.    |
+| `previewTargetName`   | string | `preview`   | Name of the continuous production preview task.    |
+| `inspectTargetName`   | string | `inspect`   | Name of the Rsbuild configuration inspection task. |
+| `typecheckTargetName` | string | `typecheck` | Name of the cached TypeScript typecheck task.      |
+| `buildDepsTargetName` | string | none        | Name of an optional dependency build task.         |
+| `watchDepsTargetName` | string | none        | Name of an optional dependency watch task.         |
+
+Use `include` and `exclude` glob patterns on the plugin entry to scope inference. To apply [target defaults](/docs/reference/nx-json#target-defaults) only to these tasks, use the exact plugin identifier:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "plugin": "@nx/rsbuild" },
+        "cache": true
+      }
+    ]
+  }
+}
+```
+
 ## Using @nx/rsbuild
 
 ### Generate a new project using Rsbuild

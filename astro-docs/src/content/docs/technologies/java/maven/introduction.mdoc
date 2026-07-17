@@ -176,6 +176,8 @@ Use `include`/`exclude` glob patterns to scope the plugin to specific projects:
 
 There is no per-project disable for `@nx/maven`. To stop inference entirely, remove `@nx/maven` from the `plugins` array in `nx.json`.
 
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for inferred Maven tasks must use the exact identifier `@nx/maven`.
+
 ## Set up CI for your Maven monorepo
 
 In CI, Nx runs [`nx affected`](/docs/features/ci-features/affected) to rebuild and retest only the projects a change touches, and [caches](/docs/features/cache-task-results) results to skip repeated work.

@@ -97,6 +97,48 @@ This scaffolds an Nx monorepo with an Angular app and Nx preconfigured for cachi
 For a guided, step-by-step walkthrough of building a monorepo with Nx, follow the [Learn Nx tutorial](/docs/getting-started/tutorials/crafting-your-workspace).
 {% /aside %}
 
+## Configure inferred Angular tasks
+
+The `@nx/angular/plugin` plugin reads `angular.json` files that are next to a `package.json`. It registers every Angular project in the file as an Nx project and converts each Angular CLI builder target into an Nx task. Nx preserves the Angular target's configurations and default configuration, then derives cache inputs, outputs, dependencies, and continuous task settings from the configured builder.
+
+Configure the plugin in the `plugins` array in `nx.json`:
+
+```json
+// nx.json
+{
+  "plugins": [
+    {
+      "plugin": "@nx/angular/plugin",
+      "options": {
+        "targetNamePrefix": "angular:"
+      }
+    }
+  ]
+}
+```
+
+| Option             | Type   | Default | Description                                                                         |
+| ------------------ | ------ | ------- | ----------------------------------------------------------------------------------- |
+| `targetNamePrefix` | string | none    | Prefix added to every target imported from `angular.json`, such as `angular:build`. |
+
+Omit `targetNamePrefix` to keep the target names from `angular.json`. Use `include` and `exclude` glob patterns on the plugin entry to scope which `angular.json` files it processes.
+
+To apply [target defaults](/docs/reference/nx-json#target-defaults) only to tasks from this plugin, use a `plugin` filter with the exact plugin identifier:
+
+```json
+// nx.json
+{
+  "targetDefaults": {
+    "build": [
+      {
+        "filter": { "plugin": "@nx/angular/plugin" },
+        "cache": true
+      }
+    ]
+  }
+}
+```
+
 ## Local development
 
 ### Generate an Angular application
