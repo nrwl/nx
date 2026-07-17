@@ -1,6 +1,6 @@
 import 'nx/src/internal-testing-utils/mock-project-graph';
 
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   logger,
   readJson,
@@ -14,8 +14,8 @@ import { componentGenerator } from './component';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -78,6 +78,18 @@ describe('component', () => {
     expect(appTree.read('my-lib/src/lib/hello/hello.tsx').toString()).toMatch(
       /<div className={styles\['container']}>/
     );
+  });
+
+  it('should generate jsx when path has .jsx extension', async () => {
+    await componentGenerator(appTree, {
+      name: 'hello',
+      style: 'css',
+      path: `${projectName}/src/lib/hello/hello.jsx`,
+    });
+
+    expect(appTree.exists('my-lib/src/lib/hello/hello.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.spec.jsx')).toBeTruthy();
+    expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeFalsy();
   });
 
   it('should generate files with global CSS', async () => {
@@ -220,120 +232,6 @@ describe('component', () => {
       expect(content).not.toContain('hello.scss');
       expect(content).not.toContain('hello.module.css');
       expect(content).not.toContain('hello.module.scss');
-      expect(content).toMatchSnapshot();
-    });
-  });
-
-  describe('--style styled-components', () => {
-    it('should use styled-components as the styled API library', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello/hello`,
-        style: 'styled-components',
-      });
-
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
-      ).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
-      expect(content).toContain('styled-components');
-      expect(content).toContain('<StyledHello>');
-      expect(content).toMatchSnapshot();
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello`,
-        style: 'styled-components',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-components']).toBeDefined();
-    });
-  });
-
-  describe('--style @emotion/styled', () => {
-    it('should use @emotion/styled as the styled API library', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello/hello`,
-        style: '@emotion/styled',
-      });
-
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.@emotion/styled')
-      ).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
-      expect(content).toContain('@emotion/styled');
-      expect(content).toContain('<StyledHello>');
-      expect(content).toMatchSnapshot();
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello`,
-        style: '@emotion/styled',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['@emotion/styled']).toBeDefined();
-      expect(packageJSON.dependencies['@emotion/react']).toBeDefined();
-    });
-  });
-
-  describe('--style styled-jsx', () => {
-    it('should use styled-jsx as the styled API library', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello/hello`,
-        style: 'styled-jsx',
-      });
-
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-jsx')
-      ).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
-      expect(content).toContain('<style jsx>');
-      expect(content).not.toContain("styles['container']");
-      expect(content).toMatchSnapshot();
-    });
-
-    it('should add dependencies to package.json', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello`,
-        style: 'styled-jsx',
-      });
-
-      const packageJSON = readJson(appTree, 'package.json');
-      expect(packageJSON.dependencies['styled-jsx']).toBeDefined();
-    });
-  });
-
-  describe('--style tailwind', () => {
-    it('should not generate any style in component', async () => {
-      await componentGenerator(appTree, {
-        name: 'hello',
-        path: `${projectName}/src/lib/hello/hello`,
-        style: 'tailwind',
-      });
-
-      expect(
-        appTree.exists('my-lib/src/lib/hello/hello.styled-components')
-      ).toBeFalsy();
-      expect(appTree.exists('my-lib/src/lib/hello/hello.tsx')).toBeTruthy();
-
-      const content = appTree.read('my-lib/src/lib/hello/hello.tsx').toString();
-      expect(content).not.toContain("styles['container']");
-      expect(content).not.toContain('import styles');
       expect(content).toMatchSnapshot();
     });
   });

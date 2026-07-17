@@ -120,33 +120,23 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
 
-    pub(super) fn create_test_task(id: &str, outputs: Vec<String>) -> Task {
-        Task {
-            id: id.to_string(),
-            target: crate::native::tasks::types::TaskTarget {
-                project: "test".to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs,
-            project_root: Some("test".to_string()),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+    pub(super) fn create_test_task(project: &str, outputs: Vec<String>) -> Task {
+        Task::new(project, "build")
+            .with_outputs(outputs)
+            .with_project_root("test")
     }
 
     #[test]
     fn test_collect_direct_dependencies() {
         let mut tasks = HashMap::new();
-        tasks.insert("task1".to_string(), create_test_task("task1", vec![]));
-        tasks.insert("task2".to_string(), create_test_task("task2", vec![]));
-        tasks.insert("task3".to_string(), create_test_task("task3", vec![]));
+        tasks.insert("task1:build".to_string(), create_test_task("task1", vec![]));
+        tasks.insert("task2:build".to_string(), create_test_task("task2", vec![]));
+        tasks.insert("task3:build".to_string(), create_test_task("task3", vec![]));
 
         let mut dependencies = HashMap::new();
         dependencies.insert(
-            "task1".to_string(),
-            vec!["task2".to_string(), "task3".to_string()],
+            "task1:build".to_string(),
+            vec!["task2:build".to_string(), "task3:build".to_string()],
         );
 
         let task_graph = TaskGraph {
@@ -156,24 +146,24 @@ mod tests {
             continuous_dependencies: HashMap::new(),
         };
 
-        let result = collect_task_dependencies(&task_graph, "task1", false);
+        let result = collect_task_dependencies(&task_graph, "task1:build", false);
 
         assert_eq!(result.len(), 2);
         let ids: Vec<&str> = result.iter().map(|t| t.id.as_str()).collect();
-        assert!(ids.contains(&"task2"));
-        assert!(ids.contains(&"task3"));
+        assert!(ids.contains(&"task2:build"));
+        assert!(ids.contains(&"task3:build"));
     }
 
     #[test]
     fn test_collect_transitive_dependencies() {
         let mut tasks = HashMap::new();
-        tasks.insert("task1".to_string(), create_test_task("task1", vec![]));
-        tasks.insert("task2".to_string(), create_test_task("task2", vec![]));
-        tasks.insert("task3".to_string(), create_test_task("task3", vec![]));
+        tasks.insert("task1:build".to_string(), create_test_task("task1", vec![]));
+        tasks.insert("task2:build".to_string(), create_test_task("task2", vec![]));
+        tasks.insert("task3:build".to_string(), create_test_task("task3", vec![]));
 
         let mut dependencies = HashMap::new();
-        dependencies.insert("task1".to_string(), vec!["task2".to_string()]);
-        dependencies.insert("task2".to_string(), vec!["task3".to_string()]);
+        dependencies.insert("task1:build".to_string(), vec!["task2:build".to_string()]);
+        dependencies.insert("task2:build".to_string(), vec!["task3:build".to_string()]);
 
         let task_graph = TaskGraph {
             roots: vec![],
@@ -182,12 +172,12 @@ mod tests {
             continuous_dependencies: HashMap::new(),
         };
 
-        let result = collect_task_dependencies(&task_graph, "task1", true);
+        let result = collect_task_dependencies(&task_graph, "task1:build", true);
 
         assert_eq!(result.len(), 2);
         let ids: Vec<&str> = result.iter().map(|t| t.id.as_str()).collect();
-        assert!(ids.contains(&"task2"));
-        assert!(ids.contains(&"task3"));
+        assert!(ids.contains(&"task2:build"));
+        assert!(ids.contains(&"task3:build"));
     }
 
     #[test]
@@ -195,18 +185,18 @@ mod tests {
         // Diamond pattern: task1 -> task2 -> task4
         //                   task1 -> task3 -> task4
         let mut tasks = HashMap::new();
-        tasks.insert("task1".to_string(), create_test_task("task1", vec![]));
-        tasks.insert("task2".to_string(), create_test_task("task2", vec![]));
-        tasks.insert("task3".to_string(), create_test_task("task3", vec![]));
-        tasks.insert("task4".to_string(), create_test_task("task4", vec![]));
+        tasks.insert("task1:build".to_string(), create_test_task("task1", vec![]));
+        tasks.insert("task2:build".to_string(), create_test_task("task2", vec![]));
+        tasks.insert("task3:build".to_string(), create_test_task("task3", vec![]));
+        tasks.insert("task4:build".to_string(), create_test_task("task4", vec![]));
 
         let mut dependencies = HashMap::new();
         dependencies.insert(
-            "task1".to_string(),
-            vec!["task2".to_string(), "task3".to_string()],
+            "task1:build".to_string(),
+            vec!["task2:build".to_string(), "task3:build".to_string()],
         );
-        dependencies.insert("task2".to_string(), vec!["task4".to_string()]);
-        dependencies.insert("task3".to_string(), vec!["task4".to_string()]);
+        dependencies.insert("task2:build".to_string(), vec!["task4:build".to_string()]);
+        dependencies.insert("task3:build".to_string(), vec!["task4:build".to_string()]);
 
         let task_graph = TaskGraph {
             roots: vec![],
@@ -215,14 +205,14 @@ mod tests {
             continuous_dependencies: HashMap::new(),
         };
 
-        let result = collect_task_dependencies(&task_graph, "task1", true);
+        let result = collect_task_dependencies(&task_graph, "task1:build", true);
 
         // Should only contain task2, task3, task4 once (not task4 twice)
         assert_eq!(result.len(), 3);
         let ids: Vec<&str> = result.iter().map(|t| t.id.as_str()).collect();
-        assert!(ids.contains(&"task2"));
-        assert!(ids.contains(&"task3"));
-        assert!(ids.contains(&"task4"));
+        assert!(ids.contains(&"task2:build"));
+        assert!(ids.contains(&"task3:build"));
+        assert!(ids.contains(&"task4:build"));
     }
 
     #[test]
@@ -246,7 +236,10 @@ mod tests {
         let mut tasks = HashMap::new();
         let mut dependencies = HashMap::new();
 
-        tasks.insert("root".to_string(), tests::create_test_task("root", vec![]));
+        tasks.insert(
+            "root:build".to_string(),
+            tests::create_test_task("root", vec![]),
+        );
 
         // Create diamond pattern repeated at each level
         for level in 0..depth {
@@ -268,7 +261,7 @@ mod tests {
             );
 
             if level == 0 {
-                dependencies.insert("root".to_string(), vec![left.clone(), right.clone()]);
+                dependencies.insert("root:build".to_string(), vec![left.clone(), right.clone()]);
             } else {
                 let prev_bottom = format!("bottom{}", level - 1);
                 dependencies.insert(prev_bottom, vec![left.clone(), right.clone()]);
@@ -279,7 +272,7 @@ mod tests {
         }
 
         TaskGraph {
-            roots: vec!["root".to_string()],
+            roots: vec!["root:build".to_string()],
             tasks,
             dependencies,
             continuous_dependencies: HashMap::new(),
@@ -291,7 +284,7 @@ mod tests {
         // This test verifies that deduplication works and the function is fast
         // on a large diamond graph (depth 30 = 90 tasks with many duplicate paths)
         let graph = create_diamond_graph(30);
-        let root_task = &graph.tasks["root"];
+        let root_task = &graph.tasks["root:build"];
 
         let start = std::time::Instant::now();
         let result = get_dep_output(root_task, &graph, "**/*.js", true).unwrap();

@@ -1,9 +1,9 @@
-import { Task } from '../config/task-graph';
 import { config as loadDotEnvFile } from 'dotenv';
 import { expand } from 'dotenv-expand';
-import { workspaceRoot } from '../utils/workspace-root';
 import { join } from 'node:path';
 import { ProjectGraph } from '../config/project-graph';
+import { Task } from '../config/task-graph';
+import { workspaceRoot } from '../utils/workspace-root';
 import { getEnvPathsForTask } from './task-env-paths';
 
 export function getEnvVariablesForBatchProcess(
@@ -130,6 +130,10 @@ function getNxEnvVariablesForTask(
     env.NX_TERMINAL_CAPTURE_STDERR = 'true';
   }
 
+  // Pass the root Nx process PID to nested processes for DB-based loop detection.
+  // The root PID is used as a key in the task_invocations table to track which tasks
+  // have been invoked across nested Nx processes.
+
   return {
     ...getNxEnvVariablesForForkedProcess(
       forceColor,
@@ -141,6 +145,9 @@ function getNxEnvVariablesForTask(
     ...env,
     // Ensure the TUI does not get spawned within the TUI if ever tasks invoke Nx again
     NX_TUI: 'false',
+    // tracks the root PID for child nx tasks, used to verify nx is infinitely recursing through the same tasks
+    NX_INVOCATION_ROOT_PID:
+      process.env.NX_INVOCATION_ROOT_PID ?? String(process.pid),
   };
 }
 

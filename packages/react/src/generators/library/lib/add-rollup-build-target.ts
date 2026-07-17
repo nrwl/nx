@@ -4,6 +4,7 @@ import {
   ensurePackage,
   GeneratorCallback,
   joinPathFragments,
+  logger,
   offsetFromRoot,
   readNxJson,
   readProjectConfiguration,
@@ -47,16 +48,14 @@ export async function addRollupBuildTarget(
         {
           '@rollup/plugin-url': rollupPluginUrlVersion,
           '@svgr/rollup': svgrRollupVersion,
-        }
+        },
+        undefined,
+        true
       )
     );
   }
 
-  if (options.style === '@emotion/styled') {
-    external.add('@emotion/react/jsx-runtime');
-  } else {
-    external.add('react/jsx-runtime');
-  }
+  external.add('react/jsx-runtime');
 
   const nxJson = readNxJson(host);
   const hasRollupPlugin = !!nxJson.plugins?.some((p) =>
@@ -107,6 +106,14 @@ module.exports = withNx(
     );
   } else {
     // Legacy behavior, there is a target in project.json using rollup executor.
+    // Mirrors warnRollupExecutorGenerating from @nx/rollup/src/utils/deprecation.
+    // Inlined to avoid a cross-package deep import; @nx/rollup's package
+    // exports field doesn't expose internal `src/...` paths, so the import
+    // works at compile time (via tsconfig project refs) but fails at runtime
+    // in published packages.
+    logger.warn(
+      'The `@nx/rollup:rollup` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/rollup:convert-to-inferred` to migrate to the `@nx/rollup/plugin` inferred targets. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.'
+    );
     const { targets } = readProjectConfiguration(host, options.name);
     targets.build = {
       executor: '@nx/rollup:rollup',

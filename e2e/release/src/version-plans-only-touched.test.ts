@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -75,7 +76,7 @@ describe('nx release version plans only touched', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
@@ -85,12 +86,12 @@ describe('nx release version plans only touched', () => {
         groups: {
           'fixed-group': {
             projects: [pkg1, pkg2],
-            releaseTagPattern: 'v{version}',
+            releaseTag: { pattern: 'v{version}' },
           },
           'independent-group': {
             projects: [pkg3, pkg4, pkg5],
             projectsRelationship: 'independent',
-            releaseTagPattern: '{projectName}@{version}',
+            releaseTag: { pattern: '{projectName}@{version}' },
           },
         },
         version: {
@@ -108,6 +109,9 @@ describe('nx release version plans only touched', () => {
       'release plan minor -m "Should not happen due to no changed projects" --verbose',
       {
         silenceError: true,
+        // The "No version bumps were selected" message is emitted via
+        // output.warn (stderr); merge it into stdout for the snapshot.
+        redirectStderr: true,
       }
     );
 

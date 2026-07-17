@@ -1,4 +1,4 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { TempFs } from '@nx/devkit/internal-testing-utils';
 import * as jsUtils from '@nx/js';
 import { PlaywrightTestConfig } from '@playwright/test';
@@ -7,7 +7,7 @@ import { createNodesV2 } from './plugin';
 
 describe('@nx/playwright/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
   let tempFs: TempFs;
   let cwd = process.cwd();
   let originalCacheProjectGraph: string | undefined;
@@ -139,6 +139,7 @@ describe('@nx/playwright/plugin', () => {
                   },
                   "e2e-ci--merge-reports": {
                     "cache": true,
+                    "continuous": false,
                     "executor": "@nx/playwright:merge-reports",
                     "inputs": [
                       "default",
@@ -284,6 +285,7 @@ describe('@nx/playwright/plugin', () => {
                   },
                   "e2e-ci--merge-reports": {
                     "cache": true,
+                    "continuous": false,
                     "executor": "@nx/playwright:merge-reports",
                     "inputs": [
                       "default",
@@ -366,13 +368,11 @@ describe('@nx/playwright/plugin', () => {
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
           },
         ],
@@ -547,13 +547,11 @@ describe('@nx/playwright/plugin', () => {
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
           },
         ],
@@ -687,6 +685,7 @@ describe('@nx/playwright/plugin', () => {
     expect(targets['e2e-ci--merge-reports']).toMatchInlineSnapshot(`
       {
         "cache": true,
+        "continuous": false,
         "executor": "@nx/playwright:merge-reports",
         "inputs": [
           "default",
@@ -790,13 +789,11 @@ describe('@nx/playwright/plugin', () => {
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
           },
         ],
@@ -1016,13 +1013,11 @@ describe('@nx/playwright/plugin', () => {
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me-2.spec.ts",
           },
           {
             "options": "forward",
             "params": "forward",
-            "projects": "self",
             "target": "e2e-ci--tests/run-me.spec.ts",
           },
         ],

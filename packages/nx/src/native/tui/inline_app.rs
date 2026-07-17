@@ -1,4 +1,3 @@
-use arboard::Clipboard;
 use color_eyre::eyre::Result;
 use crossterm::event::{KeyCode, KeyModifiers};
 use hashbrown::HashSet;
@@ -6,7 +5,6 @@ use parking_lot::Mutex;
 use ratatui::layout::{Constraint, Direction, Layout, Size};
 use ratatui::style::Modifier;
 use ratatui::text::{Line, Span};
-use ratatui::widgets::Paragraph;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::Instant;
@@ -16,6 +14,7 @@ use tracing::debug;
 /// Duration before status messages are automatically cleared
 const STATUS_MESSAGE_DURATION: std::time::Duration = std::time::Duration::from_secs(3);
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
 use crate::native::tui::utils::{
     calculate_actual_duration_ms, format_duration_with_estimate, get_task_status_style,
 };
@@ -25,11 +24,12 @@ use crate::native::{
 };
 
 use super::action::Action;
+use super::clipboard::copy_to_clipboard;
 use super::components::countdown_popup::CountdownPopup;
 use super::components::task_selection_manager::SelectionEntry;
 use super::components::tasks_list::TaskStatus;
 use super::config::TuiConfig;
-use super::lifecycle::{BatchStatus, RunMode, TuiMode};
+use super::lifecycle::{BatchStatus, PerformanceSummaryPayload, RunMode, TuiMode};
 use super::pty::PtyInstance;
 use super::tui;
 use super::tui_app::TuiApp;
@@ -352,6 +352,12 @@ impl TuiApp for InlineApp {
         &mut self.core
     }
 
+    fn set_exit_summary(&mut self, summary: PerformanceSummaryPayload) {
+        // Inline doesn't render the report, but record it in shared state so a later
+        // switch to full-screen can pull it up with `p`.
+        self.core.state().lock().set_exit_summary(summary);
+    }
+
     // === Event Handling ===
 
     fn handle_event(
@@ -365,6 +371,13 @@ impl TuiApp for InlineApp {
                 return Ok(false);
             }
             tui::Event::Key(key) => {
+                // A key press is user interaction. Inline mode otherwise records none,
+                // so the run-end auto-exit decision would treat an active inline user
+                // as idle and quit on them. This also clears any pending auto-exit (see
+                // mark_user_interacted); the explicit q / Ctrl-C handlers below re-quit
+                // when the user actually confirms.
+                self.core.mark_user_interacted();
+
                 // If countdown popup is visible, handle countdown-specific keys
                 if self.countdown_popup.is_visible() {
                     match key.code {
@@ -478,12 +491,10 @@ impl TuiApp for InlineApp {
                                 // Unformatted output (no ANSI escape codes)
                                 let output = screen.all_contents();
                                 drop(state); // Release lock before clipboard operations
-                                if let Ok(mut clipboard) = Clipboard::new() {
-                                    if clipboard.set_text(output).is_ok() {
-                                        // Show status message in bottom chrome
-                                        self.status_message =
-                                            Some((String::from("Output copied"), Instant::now()));
-                                    }
+                                if copy_to_clipboard(&output) {
+                                    // Show status message in bottom chrome
+                                    self.status_message =
+                                        Some((String::from("Output copied"), Instant::now()));
                                 }
                             }
                         }
@@ -768,20 +779,19 @@ impl InlineApp {
                     use crate::native::tui::theme::THEME;
                     use ratatui::style::Style;
                     use ratatui::text::Line;
-                    use ratatui::widgets::Paragraph;
 
                     let height = lines_to_render as u16;
 
                     // Call insert_before on the dereferenced Terminal
                     // This only works with inline viewport
                     if let Ok(()) = tui.insert_before(height, |buf| {
-                        // Convert batched scrollback lines to ratatui Lines
-                        let lines: Vec<Line> =
-                            batch.iter().map(|line| Line::from(line.as_str())).collect();
+                        // Convert batched scrollback lines to owned ratatui Lines
+                        let lines: Vec<Line<'static>> =
+                            batch.iter().map(|line| Line::from(line.clone())).collect();
 
                         // Create a paragraph with the buffered scrollback content
                         let paragraph =
-                            Paragraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
+                            NxParagraph::new(lines).style(Style::default().fg(THEME.secondary_fg));
 
                         // Render using the Widget trait
                         use ratatui::widgets::Widget;
@@ -980,7 +990,7 @@ impl InlineApp {
             Span::styled(task_name.clone(), status_style),
         ];
 
-        f.render_widget(Paragraph::new(Line::from(left_spans)), chunks[0]);
+        f.render_widget(NxParagraph::new(Line::from(left_spans)), chunks[0]);
 
         // Build right side: status msg + esc hint + interactive hint (if space) + cloud message (if space) + duration
         let mut right_spans = Vec::new();
@@ -1019,7 +1029,7 @@ impl InlineApp {
                 ));
             }
         }
-        f.render_widget(Paragraph::new(Line::from(right_spans)), chunks[1]);
+        f.render_widget(NxParagraph::new(Line::from(right_spans)), chunks[1]);
     }
 
     fn render_inline_main_content(&mut self, f: &mut ratatui::Frame, area: ratatui::layout::Rect) {
@@ -1044,9 +1054,9 @@ impl InlineApp {
         use crate::native::tui::theme::THEME;
         use ratatui::layout::Alignment;
         use ratatui::style::Style;
-        use ratatui::widgets::{Block, Borders, Paragraph};
+        use ratatui::widgets::{Block, Borders};
 
-        let message = Paragraph::new(" Waiting for tasks to start... ")
+        let message = NxParagraph::new(" Waiting for tasks to start... ")
             .style(Style::default().fg(THEME.secondary_fg))
             .alignment(Alignment::Center)
             .block(Block::default().borders(Borders::NONE));
@@ -1061,6 +1071,7 @@ impl InlineApp {
         pty: &Arc<PtyInstance>,
     ) {
         use crate::native::tui::theme::THEME;
+        use crate::native::tui::vt100_adapter::Vt100CttScreen;
         use ratatui::style::Style;
         use ratatui::widgets::Block;
         use tui_term::widget::PseudoTerminal;
@@ -1073,7 +1084,7 @@ impl InlineApp {
                 .border_style(Style::default().fg(THEME.primary_fg));
 
             // Use PseudoTerminal with block
-            let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+            let pseudo_term = PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
             f.render_widget(pseudo_term, area);
         }
     }
@@ -1082,30 +1093,18 @@ impl InlineApp {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::native::tasks::types::{TaskResult, TaskTarget};
+    use crate::native::tasks::types::TaskResult;
     use crate::native::tui::config;
     use crossterm::event::KeyEvent;
     use tokio::sync::mpsc;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -1212,8 +1211,8 @@ mod tests {
         let (tx, _rx) = mpsc::unbounded_channel();
 
         // Mark all tasks as completed
-        app.update_task_status("app1", TaskStatus::Success);
-        app.update_task_status("app2", TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
+        app.update_task_status("app2:build", TaskStatus::Success);
 
         let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('q'), KeyModifiers::NONE));
         let result = app.handle_event(event, &tx).unwrap();
@@ -1265,6 +1264,27 @@ mod tests {
         // Should dispatch SwitchMode(FullScreen) action
         let action = rx.try_recv().unwrap();
         assert!(matches!(action, Action::SwitchMode(TuiMode::FullScreen)));
+    }
+
+    #[test]
+    fn test_keypress_records_interaction_and_cancels_auto_exit() {
+        // Regression: inline mode recorded no interaction, so the run-end auto-exit
+        // decision treated an active inline user as idle and quit on them. A key press
+        // must mark interaction and clear any already-pending auto-exit countdown.
+        let mut app = create_test_inline_app();
+        let (tx, _rx) = mpsc::unbounded_channel();
+        app.register_action_handler(tx.clone()).unwrap();
+
+        // Simulate an auto-exit countdown already scheduled, with no interaction yet.
+        app.core().schedule_quit(std::time::Duration::from_secs(3));
+        assert!(!app.core().state().lock().has_user_interacted());
+
+        // A plain navigation key (not q / Ctrl-C) is interaction.
+        let event = tui::Event::Key(KeyEvent::new(KeyCode::Char('j'), KeyModifiers::NONE));
+        app.handle_event(event, &tx).unwrap();
+
+        assert!(app.core().state().lock().has_user_interacted());
+        assert!(!app.should_quit()); // the pending auto-exit was cancelled
     }
 
     #[test]
@@ -1345,15 +1365,15 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Register non-interactive PTY (simpler test)
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Verify scrollback tracking initialized
-        assert_eq!(app.task_scrollback_lines.get("app1"), Some(&0));
+        assert_eq!(app.task_scrollback_lines.get("app1:build"), Some(&0));
 
         // Verify PTY registered in state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert!(state.get_pty_instance("app1").is_some());
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1378,18 +1398,24 @@ mod tests {
         // Verify status updated in state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::InProgress));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::InProgress)
+        );
     }
 
     #[test]
     fn test_update_task_status() {
         let mut app = create_test_inline_app();
 
-        app.update_task_status("app1", TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
 
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::Success)
+        );
     }
 
     #[test]
@@ -1411,7 +1437,7 @@ mod tests {
         // Verify timing recorded
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        let (start, end) = state.get_task_timing("app1");
+        let (start, end) = state.get_task_timing("app1:build");
         assert!(start.is_some());
         assert!(end.is_some());
     }
@@ -1426,10 +1452,13 @@ mod tests {
         assert!(app.get_current_running_item().is_none());
 
         // Start a task
-        app.update_task_status("app1", TaskStatus::InProgress);
+        app.update_task_status("app1:build", TaskStatus::InProgress);
 
         // Should find running task
-        assert_eq!(app.get_current_running_item(), Some(String::from("app1")));
+        assert_eq!(
+            app.get_current_running_item(),
+            Some(String::from("app1:build"))
+        );
     }
 
     #[test]
@@ -1565,6 +1594,39 @@ mod tests {
     }
 
     #[test]
+    fn test_inline_records_exit_summary_in_shared_state() {
+        // Regression: report was lost when a run ended in inline; it must survive in
+        // shared state for a full-screen switch to re-hydrate from.
+        let task_graph = TaskGraph {
+            tasks: HashMap::new(),
+            dependencies: HashMap::new(),
+            continuous_dependencies: HashMap::new(),
+            roots: vec![],
+        };
+        let cli_args = config::TuiCliArgs {
+            targets: vec![],
+            tui_auto_exit: None,
+        };
+        let state = Arc::new(Mutex::new(TuiState::new(
+            vec![create_test_task("app1")],
+            HashSet::new(),
+            RunMode::RunMany,
+            vec![],
+            config::TuiConfig::new(None, None, &cli_args),
+            String::from("Test"),
+            task_graph,
+            HashMap::new(),
+            None,
+        )));
+
+        let mut app = InlineApp::with_state(state.clone(), None).unwrap();
+        app.set_exit_summary(PerformanceSummaryPayload::default());
+
+        assert!(!app.countdown_popup.has_summary());
+        assert!(state.lock().exit_summary().is_some());
+    }
+
+    #[test]
     fn test_with_state_starts_non_interactive() {
         // Create existing state
         let tasks = vec![create_test_task("app1")];
@@ -1617,13 +1679,13 @@ mod tests {
         let mut app = create_test_inline_app();
 
         // Register same task twice
-        app.register_running_non_interactive_task(String::from("app1"));
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Should overwrite, not panic
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert!(state.get_pty_instance("app1").is_some());
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1646,28 +1708,16 @@ mod tests {
 #[cfg(test)]
 mod integration_tests {
     use super::*;
-    use crate::native::tasks::types::{TaskResult, TaskTarget};
+    use crate::native::tasks::types::TaskResult;
     use crate::native::tui::config;
 
     fn create_test_task(id: &str) -> Task {
-        Task {
-            id: id.to_string(),
-            target: TaskTarget {
-                project: id.to_string(),
-                target: "build".to_string(),
-                configuration: None,
-            },
-            outputs: vec![],
-            project_root: Some(format!("/tmp/{}", id)),
-            start_time: None,
-            end_time: None,
-            continuous: None,
-        }
+        Task::new(id, "build").with_project_root(format!("/tmp/{}", id))
     }
 
     fn create_test_inline_app() -> InlineApp {
         let tasks = vec![create_test_task("app1"), create_test_task("app2")];
-        let initiating_tasks = HashSet::from([String::from("app1")]);
+        let initiating_tasks = HashSet::from([String::from("app1:build")]);
         let task_graph = TaskGraph {
             tasks: HashMap::new(),
             dependencies: HashMap::new(),
@@ -1704,10 +1754,10 @@ mod integration_tests {
         app.start_tasks(tasks);
 
         // Register PTY
-        app.register_running_non_interactive_task(String::from("app1"));
+        app.register_running_non_interactive_task(String::from("app1:build"));
 
         // Update to success
-        app.update_task_status("app1", TaskStatus::Success);
+        app.update_task_status("app1:build", TaskStatus::Success);
 
         // End tasks
         app.end_tasks(vec![TaskResult {
@@ -1723,8 +1773,11 @@ mod integration_tests {
         // Verify final state
         let state_ref = app.get_state();
         let state = state_ref.lock();
-        assert_eq!(state.get_task_status("app1"), Some(TaskStatus::Success));
-        assert!(state.get_pty_instance("app1").is_some());
+        assert_eq!(
+            state.get_task_status("app1:build"),
+            Some(TaskStatus::Success)
+        );
+        assert!(state.get_pty_instance("app1:build").is_some());
     }
 
     #[test]
@@ -1759,12 +1812,15 @@ mod integration_tests {
         let app2 = InlineApp::with_state(state.clone(), None).unwrap();
 
         // Modify through app1
-        app1.update_task_status("shared", TaskStatus::Success);
+        app1.update_task_status("shared:build", TaskStatus::Success);
 
         // Verify visible through app2
         assert!(!app2.should_quit()); // Can access state without issues
         let state2_ref = app2.get_state();
         let state2 = state2_ref.lock();
-        assert_eq!(state2.get_task_status("shared"), Some(TaskStatus::Success));
+        assert_eq!(
+            state2.get_task_status("shared:build"),
+            Some(TaskStatus::Success)
+        );
     }
 }

@@ -5,9 +5,10 @@
   "projectType": "library",
   "targets": {
     "build": {
-      "outputs": ["{workspaceRoot}/dist/packages/nuxt/README.md"],
-      "command": "node ./scripts/copy-readme.js nuxt",
+      "outputs": ["{projectRoot}/README.md"],
+      "command": "node ./scripts/copy-readme.js nuxt packages/nuxt/readme-template.md packages/nuxt/README.md",
       "inputs": ["copyReadme"]
     }
-  }
+  },
+  "implicitDependencies": ["cypress", "playwright"]
 }

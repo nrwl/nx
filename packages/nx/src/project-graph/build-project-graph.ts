@@ -48,19 +48,19 @@ import type { ConfigurationSourceMaps } from './utils/project-configuration/sour
 import { mergeMetadata } from './utils/project-configuration/target-merging';
 
 let storedFileMap: FileMap | null = null;
-let storedAllWorkspaceFiles: FileData[] | null = null;
 let storedRustReferences: NxWorkspaceFilesExternals | null = null;
 
 export function getFileMap(): {
   fileMap: FileMap;
-  allWorkspaceFiles: FileData[];
   rustReferences: NxWorkspaceFilesExternals | null;
+  /** @deprecated always `[]`; kept so cached nx-cloud workers that destructure it don't see `undefined`. */
+  allWorkspaceFiles: FileData[];
 } {
   if (!!storedFileMap) {
     return {
       fileMap: storedFileMap,
-      allWorkspaceFiles: storedAllWorkspaceFiles,
       rustReferences: storedRustReferences,
+      allWorkspaceFiles: [],
     };
   } else {
     return {
@@ -68,27 +68,37 @@ export function getFileMap(): {
         nonProjectFiles: [],
         projectFileMap: {},
       },
-      allWorkspaceFiles: [],
       rustReferences: null,
+      allWorkspaceFiles: [],
     };
   }
 }
 
 export function hydrateFileMap(
   fileMap: FileMap,
+  rustReferences: NxWorkspaceFilesExternals
+): void;
+/** @deprecated pass `(fileMap, rustReferences)`. Kept for cached nx-cloud workers still on the 3-arg form. */
+export function hydrateFileMap(
+  fileMap: FileMap,
   allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals
-) {
+): void;
+export function hydrateFileMap(
+  fileMap: FileMap,
+  rustReferencesOrAllFiles: NxWorkspaceFilesExternals | FileData[],
+  maybeRustReferences?: NxWorkspaceFilesExternals
+): void {
   storedFileMap = fileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
-  storedRustReferences = rustReferences;
+  storedRustReferences = Array.isArray(rustReferencesOrAllFiles)
+    ? (maybeRustReferences ?? null)
+    : rustReferencesOrAllFiles;
 }
 
 export async function buildProjectGraphUsingProjectFileMap(
   projectRootMap: Record<string, ProjectConfiguration>,
   externalNodes: Record<string, ProjectGraphExternalNode>,
   fileMap: FileMap,
-  allWorkspaceFiles: FileData[],
   rustReferences: NxWorkspaceFilesExternals,
   fileMapCache: FileMapCache | null,
   plugins: LoadedNxPlugin[],
@@ -98,7 +108,6 @@ export async function buildProjectGraphUsingProjectFileMap(
   projectFileMapCache: FileMapCache;
 }> {
   storedFileMap = fileMap;
-  storedAllWorkspaceFiles = allWorkspaceFiles;
   storedRustReferences = rustReferences;
 
   const projects: Record<string, ProjectConfiguration> = {};

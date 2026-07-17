@@ -2,21 +2,22 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import {
   combineAsyncIterables,
   createAsyncIterable,
-} from '@nx/devkit/src/utils/async-iterable';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import { startRemoteIterators } from '@nx/module-federation/src/executors/utils';
-import fileServerExecutor from '@nx/web/src/executors/file-server/file-server.impl';
-import { waitForPortOpen } from '@nx/web/src/utils/wait-for-port-open';
-import devServerExecutor from '@nx/webpack/src/executors/dev-server/dev-server.impl';
+} from '@nx/devkit/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
+import { startRemoteIterators } from '@nx/module-federation/internal';
+import { fileServerExecutor, waitForPortOpen } from '@nx/web/internal';
+import { devServerExecutor } from '@nx/webpack';
 import { existsSync } from 'fs';
 import { extname, join } from 'path';
 import { normalizeOptions, startRemotes } from './lib';
 import { ModuleFederationDevServerOptions } from './schema';
+import { warnReactMfDevServerExecutorDeprecation } from '../../utils/module-federation-deprecation';
 
 export default async function* moduleFederationDevServer(
   schema: ModuleFederationDevServerOptions,
   context: ExecutorContext
 ): AsyncIterableIterator<{ success: boolean; baseUrl?: string }> {
+  warnReactMfDevServerExecutorDeprecation();
   const options = normalizeOptions(schema);
   const currIter = options.static
     ? fileServerExecutor(

@@ -11,18 +11,20 @@ import { PluginCache, safeWriteFileCache } from './plugin-cache-utils';
 
 describe('plugin-cache-utils', () => {
   let tempDir: string;
+  let cachePath: string;
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'nx-cache-utils-test-'));
+    cachePath = join(tempDir, 'plugin-cache.json');
   });
 
   describe('PluginCache', () => {
     it('should track access in session log on get', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2', c: '3' }, [
-        'a',
-        'b',
-        'c',
-      ]);
+      const cache = new PluginCache<string>(
+        cachePath,
+        { a: '1', b: '2', c: '3' },
+        ['a', 'b', 'c']
+      );
 
       cache.get('a'); // access 'a', moves to end
 
@@ -31,7 +33,7 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should track access in session log on set', () => {
-      const cache = new PluginCache<string>({}, []);
+      const cache = new PluginCache<string>(cachePath, {}, []);
       cache.set('x', 'hello');
       cache.set('y', 'world');
 
@@ -42,7 +44,10 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should move existing key to end on set', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2' }, ['a', 'b']);
+      const cache = new PluginCache<string>(cachePath, { a: '1', b: '2' }, [
+        'a',
+        'b',
+      ]);
       cache.set('a', 'updated'); // re-set 'a', moves to end
 
       const serialized = cache.toSerializable();
@@ -50,7 +55,10 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should NOT track access on has()', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2' }, ['a', 'b']);
+      const cache = new PluginCache<string>(cachePath, { a: '1', b: '2' }, [
+        'a',
+        'b',
+      ]);
       expect(cache.has('a')).toBe(true);
       expect(cache.has('c')).toBe(false);
 
@@ -60,7 +68,7 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should return undefined for missing keys on get', () => {
-      const cache = new PluginCache<string>({ a: '1' }, ['a']);
+      const cache = new PluginCache<string>(cachePath, { a: '1' }, ['a']);
       expect(cache.get('missing')).toBeUndefined();
 
       // Missing key should not appear in session log
@@ -69,11 +77,11 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should dedup session log at serialization: access a→b→a expects [b, a]', () => {
-      const cache = new PluginCache<string>({ a: '1', b: '2', c: '3' }, [
-        'a',
-        'b',
-        'c',
-      ]);
+      const cache = new PluginCache<string>(
+        cachePath,
+        { a: '1', b: '2', c: '3' },
+        ['a', 'b', 'c']
+      );
 
       cache.get('a');
       cache.get('b');
@@ -86,7 +94,7 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should place new keys (from set) after unaccessed but before accessed', () => {
-      const cache = new PluginCache<string>({ a: '1' }, ['a']);
+      const cache = new PluginCache<string>(cachePath, { a: '1' }, ['a']);
 
       cache.set('new1', 'v1');
       cache.get('a');
@@ -98,9 +106,8 @@ describe('plugin-cache-utils', () => {
     });
   });
 
-  describe('PluginCache constructor from cachePath', () => {
+  describe('PluginCache constructor reading from disk', () => {
     it('should read current format with entries and accessOrder', () => {
-      const cachePath = join(tempDir, 'cache.json');
       writeFileSync(
         cachePath,
         JSON.stringify({
@@ -116,7 +123,6 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should return empty cache for unrecognized format', () => {
-      const cachePath = join(tempDir, 'legacy-cache.json');
       writeFileSync(cachePath, JSON.stringify({ a: '1', b: '2' }));
 
       const cache = new PluginCache<string>(cachePath);
@@ -129,20 +135,45 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should return empty cache if file is corrupted', () => {
-      const cachePath = join(tempDir, 'bad.json');
       writeFileSync(cachePath, 'not json!!!');
 
       const cache = new PluginCache<string>(cachePath);
       expect(cache.has('anything')).toBe(false);
     });
+
+    it('should not read from disk when entries are provided', () => {
+      writeFileSync(
+        cachePath,
+        JSON.stringify({
+          entries: { stale: 'on-disk' },
+          accessOrder: ['stale'],
+        })
+      );
+
+      const cache = new PluginCache<string>(cachePath, { fresh: 'in-memory' }, [
+        'fresh',
+      ]);
+      expect(cache.has('stale')).toBe(false);
+      expect(cache.get('fresh')).toBe('in-memory');
+    });
   });
 
   describe('writeToDisk', () => {
     it('should write cache with entries and accessOrder', () => {
-      const cachePath = join(tempDir, 'plugin-cache.json');
-      const cache = new PluginCache<string>({ a: '1' }, ['a']);
+      const cache = new PluginCache<string>(cachePath, { a: '1' }, ['a']);
 
-      cache.writeToDisk(cachePath);
+      cache.writeToDisk();
+
+      const written = JSON.parse(readFileSync(cachePath, 'utf-8'));
+      expect(written.entries).toEqual({ a: '1' });
+      expect(written.accessOrder).toEqual(['a']);
+    });
+
+    it('should write to the path passed at construction', () => {
+      const cache = new PluginCache<string>(cachePath);
+      cache.set('a', '1');
+
+      cache.writeToDisk();
 
       const written = JSON.parse(readFileSync(cachePath, 'utf-8'));
       expect(written.entries).toEqual({ a: '1' });
@@ -150,8 +181,6 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should evict oldest 50% when RangeError and retry', () => {
-      const cachePath = join(tempDir, 'plugin-cache.json');
-
       const entries: Record<string, any> = {};
       const accessOrder: string[] = [];
       for (let i = 0; i < 10; i++) {
@@ -165,8 +194,8 @@ describe('plugin-cache-utils', () => {
         },
       };
 
-      const cache = new PluginCache(entries, accessOrder);
-      cache.writeToDisk(cachePath);
+      const cache = new PluginCache(cachePath, entries, accessOrder);
+      cache.writeToDisk();
 
       // key0-key4 evicted (front of queue), key5-key9 remain
       const written = JSON.parse(readFileSync(cachePath, 'utf-8'));
@@ -184,12 +213,11 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should write empty cache when circular ref (TypeError) is encountered', () => {
-      const cachePath = join(tempDir, 'plugin-cache.json');
       const circular: any = { self: null };
       circular.self = circular;
 
-      const cache = new PluginCache({ a: circular }, ['a']);
-      cache.writeToDisk(cachePath);
+      const cache = new PluginCache(cachePath, { a: circular }, ['a']);
+      cache.writeToDisk();
 
       // Circular refs are a hard error — skips eviction, writes empty cache
       expect(existsSync(cachePath)).toBe(true);
@@ -199,7 +227,6 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should write empty cache when RangeError persists after eviction', () => {
-      const cachePath = join(tempDir, 'plugin-cache.json');
       const entries: Record<string, any> = {};
       const accessOrder: string[] = [];
       for (let i = 0; i < 4; i++) {
@@ -211,8 +238,8 @@ describe('plugin-cache-utils', () => {
         accessOrder.push(`key${i}`);
       }
 
-      const cache = new PluginCache(entries, accessOrder);
-      cache.writeToDisk(cachePath);
+      const cache = new PluginCache(cachePath, entries, accessOrder);
+      cache.writeToDisk();
 
       // Should write an empty cache (not delete the file)
       expect(existsSync(cachePath)).toBe(true);
@@ -222,8 +249,6 @@ describe('plugin-cache-utils', () => {
     });
 
     it('should evict based on LRU order when accessed keys exist', () => {
-      const cachePath = join(tempDir, 'plugin-cache.json');
-
       const entries: Record<string, any> = {};
       const accessOrder: string[] = [];
       for (let i = 0; i < 10; i++) {
@@ -238,12 +263,12 @@ describe('plugin-cache-utils', () => {
         },
       };
 
-      const cache = new PluginCache(entries, accessOrder);
+      const cache = new PluginCache(cachePath, entries, accessOrder);
 
       // Access key0 to move it to the end (most recently used)
       cache.get('key0');
 
-      cache.writeToDisk(cachePath);
+      cache.writeToDisk();
 
       // After access, order is: [key1..key9, key0]
       // Evict first 5: [key1, key2, key3, key4, key5]

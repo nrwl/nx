@@ -1,10 +1,13 @@
-import type { Tree } from '@nx/devkit';
+import type { GeneratorCallback, Tree } from '@nx/devkit';
 import { UnitTestRunner } from '../../../utils/test-runners';
 import { addJest } from '../../utils/add-jest';
 import { addVitestAnalog, addVitestAngular } from '../../utils/add-vitest';
 import type { NormalizedSchema } from './normalized-schema';
 
-export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
+export async function addUnitTestRunner(
+  host: Tree,
+  options: NormalizedSchema
+): Promise<GeneratorCallback> {
   switch (options.unitTestRunner) {
     case UnitTestRunner.Jest:
       await addJest(host, {
@@ -16,16 +19,15 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
         runtimeTsconfigFileName: 'tsconfig.app.json',
         zoneless: options.zoneless,
       });
-      break;
+      return () => {};
     case UnitTestRunner.VitestAngular:
-      await addVitestAngular(host, {
+      return addVitestAngular(host, {
         name: options.name,
         projectRoot: options.appProjectRoot,
         skipPackageJson: options.skipPackageJson,
       });
-      break;
     case UnitTestRunner.VitestAnalog:
-      await addVitestAnalog(host, {
+      return addVitestAnalog(host, {
         name: options.name,
         projectRoot: options.appProjectRoot,
         skipFormat: options.skipFormat,
@@ -34,6 +36,7 @@ export async function addUnitTestRunner(host: Tree, options: NormalizedSchema) {
         addPlugin: options.addPlugin,
         zoneless: options.zoneless,
       });
-      break;
+    default:
+      return () => {};
   }
 }

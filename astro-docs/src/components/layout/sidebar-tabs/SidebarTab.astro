@@ -6,20 +6,33 @@ interface Props {
   icon?: string
   label: string
   active?: boolean
+  href?: string
 }
 
-const { id, icon, label, active = false } = Astro.props
+const { id, icon, label, active = false, href } = Astro.props
 const panelId = `${id}-panel`
 ---
 
-<button
-  role="tab"
-  id={id}
-  aria-selected={active ? 'true' : 'false'}
-  aria-controls={panelId}
-  data-active={active ? 'true' : undefined}
-  tabindex={active ? 0 : -1}
->
-  {icon && <Icon name={icon} size="1rem" />}
-  {label}
-</button>
+{href ? (
+  <a
+    class="nx-tab-link"
+    id={id}
+    href={href}
+    aria-current={active ? 'page' : undefined}
+  >
+    {icon && <Icon name={icon} size="1rem" />}
+    {label}
+  </a>
+) : (
+  <button
+    role="tab"
+    id={id}
+    aria-selected={active ? 'true' : 'false'}
+    aria-controls={panelId}
+    data-active={active ? 'true' : undefined}
+    tabindex={active ? 0 : -1}
+  >
+    {icon && <Icon name={icon} size="1rem" />}
+    {label}
+  </button>
+)}

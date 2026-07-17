@@ -89,7 +89,8 @@ function performInstallation(
   );
 
   try {
-    cp.execSync('npm i', {
+    // --include=dev forces install even if consumer env sets NODE_ENV=production / omit=dev.
+    cp.execSync('npm i --include=dev', {
       cwd: path.dirname(installationPath),
       stdio: 'inherit',
       windowsHide: true,

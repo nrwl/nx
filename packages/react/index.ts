@@ -1,13 +1,7 @@
-import { NxReactWebpackPlugin as _NxReactWebpackPlugin } from './plugins/nx-react-webpack-plugin/nx-react-webpack-plugin';
-
-/** @deprecated Use '@nx/react/webpack-plugin' instead, which can improve graph creation by 150-200ms per file. */
-export const NxReactWebpackPlugin = _NxReactWebpackPlugin;
-
 export {
   extraEslintDependencies,
   extendReactEslintJson,
 } from './src/utils/lint';
-export { cssInJsDependenciesBabel } from './src/utils/styled';
 export { assertValidStyle } from './src/utils/assertion';
 export { reactDomVersion, reactVersion } from './src/utils/versions';
 export { applicationGenerator } from './src/generators/application/application';
@@ -23,6 +17,5 @@ export { hostGenerator } from './src/generators/host/host';
 export { remoteGenerator } from './src/generators/remote/remote';
 export { cypressComponentConfigGenerator } from './src/generators/cypress-component-configuration/cypress-component-configuration';
 export { componentTestGenerator } from './src/generators/component-test/component-test';
-export { setupTailwindGenerator } from './src/generators/setup-tailwind/setup-tailwind';
 export type { SupportedStyles } from './typings/style';
 export * from './plugins/with-react';

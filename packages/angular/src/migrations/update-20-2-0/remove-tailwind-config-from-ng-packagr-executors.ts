@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   readNxJson,
@@ -6,7 +7,6 @@ import {
   updateProjectConfiguration,
   type Tree,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 export const executors = ['@nx/angular:ng-packagr-lite', '@nx/angular:package'];
 
@@ -56,16 +56,9 @@ export default async function (tree: Tree) {
     return;
   }
 
-  for (const [targetOrExecutor, targetConfig] of Object.entries(
-    nxJson.targetDefaults
-  )) {
-    if (
-      !executors.includes(targetOrExecutor) &&
-      !executors.includes(targetConfig.executor)
-    ) {
-      continue;
-    }
-
+  const cleanEntry = (
+    targetConfig: Record<string, any>
+  ): { empty: boolean } => {
     if (targetConfig.options) {
       delete targetConfig.options.tailwindConfig;
       if (!Object.keys(targetConfig.options).length) {
@@ -74,7 +67,7 @@ export default async function (tree: Tree) {
     }
 
     Object.entries(targetConfig.configurations ?? {}).forEach(
-      ([name, config]) => {
+      ([name, config]: [string, any]) => {
         delete config.tailwindConfig;
         if (!Object.keys(config).length) {
           delete targetConfig.configurations[name];
@@ -86,11 +79,31 @@ export default async function (tree: Tree) {
       delete targetConfig.configurations;
     }
 
+    return {
+      empty:
+        !Object.keys(targetConfig).length ||
+        (Object.keys(targetConfig).length === 1 &&
+          Object.keys(targetConfig)[0] === 'executor'),
+    };
+  };
+
+  for (const [targetOrExecutor, targetConfig] of Object.entries(
+    nxJson.targetDefaults
+  )) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
+
     if (
-      !Object.keys(targetConfig).length ||
-      (Object.keys(targetConfig).length === 1 &&
-        Object.keys(targetConfig)[0] === 'executor')
+      !executors.includes(targetOrExecutor) &&
+      !executors.includes(targetConfig.executor)
     ) {
+      continue;
+    }
+
+    const { empty } = cleanEntry(targetConfig as any);
+    if (empty) {
       delete nxJson.targetDefaults[targetOrExecutor];
     }
 

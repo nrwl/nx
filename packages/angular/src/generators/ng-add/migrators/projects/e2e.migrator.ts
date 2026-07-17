@@ -16,7 +16,7 @@ import {
 } from '@nx/devkit';
 import { lintProjectGenerator } from '@nx/eslint';
 import { getRootTsConfigPathInTree, insertImport } from '@nx/js';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 import { basename, relative } from 'path';
 import type {
   Node,
@@ -288,14 +288,9 @@ export class E2eMigrator extends ProjectMigrator<SupportedTargets> {
     });
 
     // add e2e project config
-    addProjectConfiguration(
-      this.tree,
-      this.project.name,
-      {
-        ...this.projectConfig,
-      },
-      true
-    );
+    addProjectConfiguration(this.tree, this.project.name, {
+      ...this.projectConfig,
+    });
 
     if (this.isProjectUsingEsLint) {
       await lintProjectGenerator(this.tree, {

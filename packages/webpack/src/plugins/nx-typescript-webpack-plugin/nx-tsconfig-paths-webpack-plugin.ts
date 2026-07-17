@@ -1,16 +1,16 @@
 import * as path from 'path';
-import {
+import type {
   Compiler,
-  type Configuration,
-  type WebpackOptionsNormalized,
+  Configuration,
+  WebpackOptionsNormalized,
 } from 'webpack';
 import { TsconfigPathsPlugin } from 'tsconfig-paths-webpack-plugin';
 import { workspaceRoot } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
+} from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { NormalizedNxAppWebpackPluginOptions } from '../nx-webpack-plugin/nx-app-webpack-plugin-options';
 import { WebpackNxBuildCoordinationPlugin } from '../webpack-nx-build-coordination-plugin';
 

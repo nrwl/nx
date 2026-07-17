@@ -37,11 +37,4 @@ export interface JestExecutorOptions {
   watchAll?: boolean;
   testLocationInResults?: boolean;
   testTimeout?: number;
-
-  /**
-   * @deprecated Use the `setupFilesAfterEnv` option in the Jest configuration
-   * file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array.
-   * It will be removed in Nx v22.
-   */
-  setupFile?: string;
 }

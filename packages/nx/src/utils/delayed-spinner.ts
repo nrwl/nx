@@ -1,6 +1,5 @@
 import { isOnDaemon } from '../daemon/is-on-daemon';
 import { sendProgressMessageToTopic } from '../daemon/server/client-socket-context';
-import { isCI } from './is-ci';
 import { ProgressTopic } from './progress-topics';
 import { globalSpinner, SHOULD_SHOW_SPINNERS } from './spinner';
 
@@ -38,13 +37,13 @@ export class DelayedSpinner {
     opts = normalizeDelayedSpinnerOpts(opts);
     this.progressTopic = opts.progressTopic;
     const delay = SHOULD_SHOW_SPINNERS ? opts.delay : opts.ciDelay;
+    this.lastMessage = message;
 
     this.broadcastProgress(message);
 
     this.timeouts.push(
       setTimeout(() => {
         this.ready = true;
-        this.lastMessage = message;
         if (!SHOULD_SHOW_SPINNERS) {
           console.warn(this.lastMessage);
         } else if (!globalSpinner.isSpinning()) {
@@ -62,7 +61,7 @@ export class DelayedSpinner {
    */
   setMessage(message: string) {
     if (SHOULD_SHOW_SPINNERS) {
-      if (this.spinner) {
+      if (this.spinner && this.ready) {
         this.spinner.updateText(message);
       }
     } else if (this.ready && this.lastMessage && this.lastMessage !== message) {

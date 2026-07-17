@@ -16,8 +16,10 @@ jest.mock('@nx/devkit', () => ({
 
 describe('disable-angular-eslint-prefer-standalone', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
 
     const projectConfig: ProjectConfiguration = {
@@ -45,7 +47,19 @@ describe('disable-angular-eslint-prefer-standalone', () => {
     addProjectConfiguration(tree, projectConfig.name, projectConfig);
   });
 
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
+  });
+
   describe('.eslintrc.json', () => {
+    beforeEach(() => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
+    });
+
     it('should not disable @angular-eslint/prefer-standalone when it is set', async () => {
       writeJson(tree, 'apps/app1/.eslintrc.json', {
         overrides: [

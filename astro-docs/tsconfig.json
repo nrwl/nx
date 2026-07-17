@@ -1,7 +1,13 @@
 {
   "extends": "../tsconfig.base.json",
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": [
+    "dist",
+    "e2e",
+    "eslint.config.js",
+    "eslint.config.mjs",
+    "eslint.config.cjs"
+  ],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "react",
@@ -17,7 +23,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowJs": true,
-    "strict": true
+    "strict": true,
+    "ignoreDeprecations": "6.0"
   },
   "references": [
     {

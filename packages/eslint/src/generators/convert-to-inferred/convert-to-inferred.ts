@@ -1,18 +1,19 @@
 import {
+  migrateProjectExecutorsToPlugin,
+  NoTargetsToMigrateError,
+  processTargetOutputs,
+} from '@nx/devkit/internal';
+import {
   createProjectGraphAsync,
   formatFiles,
   type ProjectConfiguration,
   type TargetConfiguration,
   type Tree,
 } from '@nx/devkit';
-import {
-  migrateProjectExecutorsToPlugin,
-  NoTargetsToMigrateError,
-} from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
-import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
 import { basename, dirname, relative } from 'node:path/posix';
 import { interpolate } from 'nx/src/tasks-runner/utils';
-import { createNodesV2, type EslintPluginOptions } from '../../plugins/plugin';
+import { createNodes, type EslintPluginOptions } from '../../plugins/plugin';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
 import { ESLINT_CONFIG_FILENAMES } from '../../utils/config-file';
 import { targetOptionsToCliMap } from './lib/target-options-map';
 
@@ -22,6 +23,8 @@ interface Schema {
 }
 
 export async function convertToInferred(tree: Tree, options: Schema) {
+  assertSupportedEslintVersion(tree);
+
   const projectGraph = await createProjectGraphAsync();
 
   const migratedProjects =
@@ -29,7 +32,7 @@ export async function convertToInferred(tree: Tree, options: Schema) {
       tree,
       projectGraph,
       '@nx/eslint/plugin',
-      createNodesV2,
+      createNodes,
       { targetName: 'lint' },
       [
         {

@@ -14,6 +14,11 @@
       "type": "array",
       "description": "Directory(ies) where to load Storybook configurations from. Use this if you want to customize the Storybook projects you'd like to migrate.",
       "default": []
+    },
+    "skipAiInstructions": {
+      "type": "boolean",
+      "description": "Skip writing the AI migration instructions file to `tools/ai-migrations/`.",
+      "default": false
     }
   },
   "examplesFile": "../../../docs/migrate-10-generator-examples.md"

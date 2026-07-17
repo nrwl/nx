@@ -1,15 +1,14 @@
-import {
-  getDependencyVersionFromPackageJson,
-  TargetConfiguration,
-  Tree,
-} from '@nx/devkit';
+import { TargetConfiguration, Tree } from '@nx/devkit';
 import { CompilerOptions } from 'typescript';
 import { statSync } from 'fs';
 import { findNodes } from '@nx/js';
 import ts = require('typescript');
-import { gte, major, coerce } from 'semver';
-import { join } from 'path';
-import { storybookVersion } from './versions';
+import { versions } from './versions';
+
+export {
+  storybookMajorVersion,
+  getInstalledStorybookVersion,
+} from './versions';
 
 export const Constants = {
   addonDependencies: ['@storybook/addons'],
@@ -19,88 +18,11 @@ export const Constants = {
   },
   jsonIndentLevel: 2,
   coreAddonPrefix: '@storybook/addon-',
-  uiFrameworks7: [
-    '@storybook/angular',
-    '@storybook/html-webpack5',
-    '@storybook/nextjs',
-    '@storybook/preact-webpack5',
-    '@storybook/react-webpack5',
-    '@storybook/react-vite',
-    '@storybook/server-webpack5',
-    '@storybook/svelte-webpack5',
-    '@storybook/svelte-vite',
-    '@storybook/sveltekit',
-    '@storybook/vue-webpack5',
-    '@storybook/vue-vite',
-    '@storybook/vue3-webpack5',
-    '@storybook/vue3-vite',
-    '@storybook/web-components-webpack5',
-    '@storybook/web-components-vite',
-  ],
 };
 type Constants = typeof Constants;
 
-export function getStorybookVersionToInstall(tree: Tree) {
-  let storybookVersionToInstall = storybookVersion;
-  const installedStorybookMajorVersion = storybookMajorVersion(tree);
-  const installedStorybookVersion = getInstalledStorybookVersion(tree);
-  if (installedStorybookMajorVersion >= 7 && installedStorybookVersion) {
-    // Normalize the version by removing range operators (^, ~, etc.)
-    // coerce handles ranges like ^10.0.0 and returns a valid SemVer object
-    const coercedVersion = coerce(installedStorybookVersion);
-    if (coercedVersion && gte(coercedVersion.version, '7.0.0')) {
-      storybookVersionToInstall = installedStorybookVersion;
-    }
-  }
-  return storybookVersionToInstall;
-}
-
-export function storybookMajorVersion(tree?: Tree): number | undefined {
-  let foundStorybookPackageVersion: string | null = null;
-  if (tree) {
-    foundStorybookPackageVersion = getDependencyVersionFromPackageJson(
-      tree,
-      'storybook'
-    );
-  }
-  if (foundStorybookPackageVersion) {
-    try {
-      return major(foundStorybookPackageVersion);
-    } catch {
-      // unable to parse, fallback to requiring version from disk
-    }
-  }
-  try {
-    const storybookPackageVersion = require(
-      join('storybook', 'package.json')
-    ).version;
-    return major(storybookPackageVersion);
-  } catch {
-    return undefined;
-  }
-}
-
-export function getInstalledStorybookVersion(tree?: Tree): string | undefined {
-  let foundStorybookPackageVersion: string | null = null;
-  if (tree) {
-    foundStorybookPackageVersion = getDependencyVersionFromPackageJson(
-      tree,
-      'storybook'
-    );
-  }
-  if (foundStorybookPackageVersion) {
-    return foundStorybookPackageVersion;
-  }
-
-  // unable to find in root packageJson, fallback to requiring version from disk
-  try {
-    const storybookPackageVersion = require(
-      join('storybook', 'package.json')
-    ).version;
-    return storybookPackageVersion;
-  } catch {
-    return undefined;
-  }
+export function getStorybookVersionToInstall(tree: Tree): string {
+  return versions(tree).storybookVersion;
 }
 
 export function safeFileDelete(tree: Tree, path: string): boolean {
@@ -289,14 +211,4 @@ export function getTsSourceFile(host: Tree, path: string): ts.SourceFile {
   );
 
   return source;
-}
-
-export function pleaseUpgrade(): string {
-  return `
-    Storybook 7 and lower are no longer maintained, and not supported in Nx. 
-    Please upgrade to Storybook 8.
-
-    Here is a guide on how to upgrade:
-    https://nx.dev/nx-api/storybook/generators/migrate-8
-    `;
 }

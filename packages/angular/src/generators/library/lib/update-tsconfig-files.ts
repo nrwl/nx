@@ -5,8 +5,7 @@ import {
   getRelativePathToRootTsConfig,
   getRootTsConfigFileName,
 } from '@nx/js';
-import { getNeededCompilerOptionOverrides } from '@nx/js/src/utils/typescript/configuration';
-import { gte } from 'semver';
+import { getNeededCompilerOptionOverrides } from '@nx/js/internal';
 import { getDefinedCompilerOption } from '../../utils/tsconfig-utils';
 import { updateProjectRootTsConfig } from '../../utils/update-project-root-tsconfig';
 import { getInstalledAngularVersionInfo } from '../../utils/version-utils';
@@ -47,29 +46,22 @@ export function updateTsConfigFiles(
 
   const rootTsConfigPath = getRootTsConfigFileName(tree);
 
-  const { major: angularMajorVersion, version: angularVersion } =
-    getInstalledAngularVersionInfo(tree);
-  if (gte(angularVersion, '19.1.0')) {
-    // Angular started warning about emitDecoratorMetadata and isolatedModules
-    // in v19.1.0. If enabled in the root tsconfig, we need to disable it.
-    if (
-      getDefinedCompilerOption(
-        tree,
-        rootTsConfigPath,
-        'emitDecoratorMetadata'
-      ) === true
-    ) {
-      compilerOptions.emitDecoratorMetadata = false;
-    }
+  const { major: angularMajorVersion } = getInstalledAngularVersionInfo(tree);
+  // Angular warns about emitDecoratorMetadata when isolatedModules is enabled,
+  // so disable it if it's set in the root tsconfig.
+  if (
+    getDefinedCompilerOption(
+      tree,
+      rootTsConfigPath,
+      'emitDecoratorMetadata'
+    ) === true
+  ) {
+    compilerOptions.emitDecoratorMetadata = false;
   }
   if (angularMajorVersion >= 21) {
     compilerOptions.moduleResolution = 'bundler';
   }
-  if (angularMajorVersion >= 20) {
-    compilerOptions.module = 'preserve';
-  } else {
-    compilerOptions.module = 'es2022';
-  }
+  compilerOptions.module = 'preserve';
 
   const tsconfigPath = joinPathFragments(options.projectRoot, 'tsconfig.json');
   updateJson(tree, tsconfigPath, (json) => {

@@ -1,6 +1,6 @@
 import {
   addProjectConfiguration,
-  CreateNodesV2,
+  CreateNodes,
   readProjectConfiguration,
   Tree,
 } from 'nx/src/devkit-exports';
@@ -10,7 +10,7 @@ import { replaceProjectConfigurationsWithPlugin } from './replace-project-config
 
 describe('replaceProjectConfigurationsWithPlugin', () => {
   let tree: Tree;
-  let createNodes: CreateNodesV2;
+  let createNodes: CreateNodes;
 
   beforeEach(async () => {
     tree = createTreeWithEmptyWorkspace();

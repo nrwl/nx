@@ -27,7 +27,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             text="automatically split"
           />
           {' the potentially slow'}
-          <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+          <code className="mx-2 rounded-sm bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             {props.nonAtomizedTarget}
           </code>
           {'task into separate tasks for each file. Enable '}
@@ -59,7 +59,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             text="flaky task re-runs"
           />
           . Use
-          <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+          <code className="mx-2 rounded-sm bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
             {props.nonAtomizedTarget}
           </code>
           when running without{' '}
@@ -71,7 +71,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
           <p className="pr-4 normal-case">
             {props.onNxConnect ? (
               <button
-                className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-inset ring-slate-400/40 hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
+                className="inline-flex cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-base text-slate-600 ring-2 ring-slate-400/40 ring-inset hover:bg-slate-50 dark:text-slate-300 dark:ring-slate-400/30 dark:hover:bg-slate-800/60"
                 onClick={() => props.onNxConnect!()}
               >
                 <NxCloudIcon className="h-5 w-5"></NxCloudIcon>
@@ -80,7 +80,7 @@ export function AtomizerTooltip(props: AtomizerTooltipProps) {
             ) : (
               <span className="font-mono">
                 {'Run'}
-                <code className="mx-2 rounded bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                <code className="mx-2 rounded-sm bg-gray-100 px-1 font-mono text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                   nx connect
                 </code>
                 {'to connect to Nx Cloud'}

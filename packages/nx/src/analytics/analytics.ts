@@ -17,6 +17,7 @@ import {
 } from '../utils/package-manager';
 import { parse } from 'semver';
 import * as os from 'os';
+import { createHash } from 'crypto';
 import { getCurrentMachineId } from '../utils/machine-id-cache';
 import { isCI } from '../utils/is-ci';
 import { generateWorkspaceId } from '../utils/analytics-prompt';
@@ -58,40 +59,44 @@ export async function startAnalytics() {
     return;
   }
 
-  if (!isAnalyticsEnabled()) {
-    return;
-  }
-
-  const nxJson = readNxJson(workspaceRoot);
-  const workspaceId = generateWorkspaceId();
-  if (!workspaceId) {
-    // Not a git repo — no telemetry
-    return;
-  }
-  const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
-  const userId = await getCurrentMachineId();
-  const packageManagerInfo = getPackageManagerInfo();
-
-  const nodeVersion = parse(process.version);
-  const nodeVersionString = nodeVersion
-    ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
-    : 'unknown';
-
-  const commonArgs = [
-    workspaceId,
-    userId,
-    nxVersion,
-    packageManagerInfo.name,
-    packageManagerInfo.version,
-    nodeVersionString,
-    os.arch(),
-    os.platform(),
-    os.release(),
-    !!isCI(),
-    isNxCloud,
-  ] as const;
-
+  // Analytics must never break the command that triggered it; callers await
+  // this bare. Nothing below (nx.json read, package-manager version
+  // detection, machine id, telemetry init) may throw past this boundary -
+  // on any failure, continue without telemetry.
   try {
+    if (!isAnalyticsEnabled()) {
+      return;
+    }
+
+    const nxJson = readNxJson(workspaceRoot);
+    const workspaceId = generateWorkspaceId();
+    if (!workspaceId) {
+      // Not a git repo — no telemetry
+      return;
+    }
+    const isNxCloud = !!(nxJson?.nxCloudId ?? nxJson?.nxCloudAccessToken);
+    const userId = await getTelemetryUserId(workspaceId);
+    const packageManagerInfo = getPackageManagerInfo();
+
+    const nodeVersion = parse(process.version);
+    const nodeVersionString = nodeVersion
+      ? `${nodeVersion.major}.${nodeVersion.minor}.${nodeVersion.patch}`
+      : 'unknown';
+
+    const commonArgs = [
+      workspaceId,
+      userId,
+      nxVersion,
+      packageManagerInfo.name,
+      packageManagerInfo.version,
+      nodeVersionString,
+      os.arch(),
+      os.platform(),
+      os.release(),
+      !!isCI(),
+      isNxCloud,
+    ] as const;
+
     const sessionId = process.env.NX_ANALYTICS_SESSION_ID;
 
     if (sessionId) {
@@ -112,9 +117,13 @@ export async function startAnalytics() {
       flushAnalytics();
     });
   } catch (error) {
-    // If telemetry service fails to initialize, continue without it
+    // If telemetry fails to initialize, continue without it
     if (process.env.NX_VERBOSE_LOGGING === 'true') {
-      console.log(`Failed to initialize telemetry: ${error.message}`);
+      console.log(
+        `Failed to initialize telemetry: ${
+          error instanceof Error ? error.message : error
+        }`
+      );
     }
   }
 }
@@ -261,4 +270,13 @@ function getPackageManagerInfo() {
 function isAnalyticsEnabled(): boolean {
   const nxJson = readNxJson(workspaceRoot);
   return nxJson?.analytics === true;
+}
+
+// Mix workspace id in: shared Docker images (Gitpod, Cypress, etc.) bake
+// in /etc/machine-id, so machine-id alone collapses many users into one.
+async function getTelemetryUserId(workspaceId: string): Promise<string> {
+  const machineId = await getCurrentMachineId();
+  return createHash('sha256')
+    .update(`${machineId}|${workspaceId}`)
+    .digest('hex');
 }

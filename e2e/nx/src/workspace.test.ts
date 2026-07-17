@@ -159,7 +159,16 @@ describe('@nx/workspace:infer-targets', () => {
 
 describe('@nx/workspace:convert-to-monorepo', () => {
   beforeEach(() => {
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: [
+        '@nx/eslint',
+        '@nx/js',
+        '@nx/playwright',
+        '@nx/react',
+        '@nx/vite',
+        '@nx/vitest',
+      ],
+    });
   });
 
   afterEach(() => cleanupProject());
@@ -174,7 +183,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
     checkFilesExist(
       `apps/${reactApp}/src/main.tsx`,
-      `apps/e2e/playwright.config.ts`
+      `apps/e2e/playwright.config.mts`
     );
 
     expect(() => runCLI(`build ${reactApp}`)).not.toThrow();
@@ -189,7 +198,7 @@ describe('@nx/workspace:convert-to-monorepo', () => {
 
 describe('Workspace Tests', () => {
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/workspace', '@nx/js'] });
+    proj = newProject({ packages: ['@nx/workspace', '@nx/js', '@nx/jest'] });
   });
 
   afterAll(() => cleanupProject());
@@ -753,18 +762,14 @@ describe('Workspace Tests', () => {
        * Try removing the project (should fail)
        */
 
-      let error;
-      try {
-        console.log(runCLI(`generate @nx/workspace:remove --project ${lib1}`));
-      } catch (e) {
-        error = e;
-      }
+      const output = runCLI(`generate @nx/workspace:remove --project ${lib1}`, {
+        silenceError: true,
+      });
 
-      expect(error).toBeDefined();
-      expect(error.stdout.toString()).toContain(
+      expect(output).toContain(
         `${lib1} is still a dependency of the following projects`
       );
-      expect(error.stdout.toString()).toContain(lib2);
+      expect(output).toContain(lib2);
 
       /**
        * Try force removing the project

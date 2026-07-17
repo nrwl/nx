@@ -28,13 +28,13 @@ export declare class ExternalObject<T> {
   }
 }
 export declare class AppLifeCycle {
-  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph)
+  constructor(tasks: Array<Task>, initiatingTasks: Array<string>, runMode: RunMode, pinnedTasks: Array<string>, tuiCliArgs: TuiCliArgs, tuiConfig: TuiConfig, titleText: string, workspaceRoot: string, taskGraph: TaskGraph, isCloudEnabled?: boolean | undefined | null)
   startCommand(threadCount?: number | undefined | null): void
   scheduleTask(task: Task): void
   startTasks(tasks: Array<Task>, metadata: object): void
   printTaskTerminalOutput(task: Task, status: string, output: string): void
   endTasks(taskResults: Array<TaskResult>, metadata: object): void
-  endCommand(): void
+  endCommand(summary?: PerformanceSummaryPayload | undefined | null): void
   __init(doneCallback: (() => unknown)): void
   registerRunningTask(taskId: string, parserAndWriter: ExternalObject<[ParserArc, WriterArc]>): void
   registerRunningTaskWithEmptyParser(taskId: string): void
@@ -47,12 +47,18 @@ export declare class AppLifeCycle {
   registerRunningBatch(batchId: string, batchInfo: BatchInfo): void
   appendBatchOutput(batchId: string, output: string): void
   setBatchStatus(batchId: string, status: BatchStatus): void
+  /**
+   * Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+   * `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+   * Cloud client can call it via the lifecycle it already receives.
+   */
+  setCloudLink(label: string, url: string): void
 }
 
 export declare class ChildProcess {
   getParserAndWriter(): ExternalObject<[ParserArc, WriterArc]>
   getPid(): number
-  kill(signal?: NodeJS.Signals): void
+  kill(signal?: NodeJS.Signals | number): void
   onExit(callback: (message: string) => void): void
   onOutput(callback: (message: string) => void): void
   cleanup(): void
@@ -206,16 +212,35 @@ export declare class TaskHasher {
   hashPlans(hashPlans: ExternalObject<Record<string, Array<HashInstruction>>>, perTaskEnvs: Record<string, Record<string, string>>, cwd: string, collectTaskInputs?: boolean | undefined | null): Record<string, HashDetails>
 }
 
+export declare class TaskInvocationTracker {
+  constructor(db: ExternalObject<NxDbConnection>, rootPid: number)
+  /** Register a task as invoked. Throws if the task was already registered (loop detected). */
+  registerTask(parentPid: number, taskId: string): void
+  /** Remove a task invocation record after task completes. */
+  unregisterTask(taskId: string): void
+  /** Get all invocations for this root_pid, ordered by creation time. */
+  getInvocationChain(): Array<InvocationRecord>
+  /** Clean up stale invocations older than 1 day (handles PID recycling). */
+  cleanupStale(): void
+}
+
 export declare class Watcher {
   origin: string
   /**
-   * Creates a new Watcher instance.
-   * Will always ignore directories from HARDCODED_IGNORE_PATTERNS plus
-   * watcher-specific patterns like vite/vitest timestamp files.
+   * Always applies HARDCODED_IGNORE_PATTERNS plus watcher-specific
+   * patterns (vite/vitest timestamp files), regardless of `use_ignore`.
    */
   constructor(origin: string, additionalGlobs?: Array<string> | undefined | null, useIgnore?: boolean | undefined | null)
   watch(callbackTsfn: (err: string | null, events: WatchEvent[]) => void): void
   stop(): Promise<void>
+  /**
+   * Synchronously drains the accumulator. Used by the daemon before
+   * serving a cached project graph so events buffered inside the
+   * IDLE_WINDOW debounce don't go missing. Returns an empty vec if
+   * the watcher hasn't started, the loop has exited, or no events
+   * are buffered.
+   */
+  forceFlushPending(): Array<WatchEvent>
 }
 
 export declare class WorkspaceContext {
@@ -254,6 +279,15 @@ export interface CachedResult {
   terminalOutput?: string
   outputsPath: string
   size?: number
+}
+
+/**
+ * Cache hits vs total; present only when there was a cache outcome. A bypassed
+ * cache is signalled separately by `cache_skipped`.
+ */
+export interface CacheStat {
+  hits: number
+  total: number
 }
 
 export declare function canInstallNxConsole(): Promise<boolean>
@@ -295,6 +329,24 @@ export interface EventDimensions {
   taskCount: string
   projectCount: string
   cachedTaskCount: string
+  cliSource: string
+  interactive: string
+  excludeAppliedMigrations: string
+  include: string
+  includeSource: string
+  multiMajorChoice: string
+  fetchMethod: string
+  fetchFallbackReason: string
+  createCommits: string
+  agenticOutcome: string
+  agentUsed: string
+  errorName: string
+  errorLocation: string
+  migrationName: string
+  promptChoice: string
+  majorsCrossed: string
+  migrationCount: string
+  appliedCount: string
 }
 
 export declare const enum EventType {
@@ -337,6 +389,13 @@ export declare function findImports(projectFileMap: Record<string, Array<string>
  * This should be called before process exit
  */
 export declare function flushTelemetry(): void
+
+/**
+ * The single duration formatter — used by the task list, terminal report, and TUI
+ * popup. Exposed to JS as `formatDuration` so all three share one implementation.
+ * 0 (or sub-millisecond) → "<1ms", then "470ms", "13.4s", "1m 30s".
+ */
+export declare function formatDuration(ms: number): string
 
 export declare function getBinaryTarget(): string
 
@@ -447,6 +506,11 @@ export declare function installNxConsole(): Promise<boolean>
 
 export declare function installNxConsoleForEditor(editor: SupportedEditor): Promise<boolean>
 
+export interface InvocationRecord {
+  parentPid: number
+  taskId: string
+}
+
 export const IS_WASM: boolean
 
 /**
@@ -463,6 +527,32 @@ export interface JsonInput {
   json: string
   fields?: Array<string>
   excludeFields?: Array<string>
+}
+
+/**
+ * Kill a process and all its descendants (fire-and-forget).
+ *
+ * Sends the requested signal but does NOT wait for processes to exit.
+ * Use `killProcessTreeGraceful` when cleanup handlers must run.
+ */
+export declare function killProcessTree(rootPid: number, signal?: string | number | undefined | null): void
+
+/**
+ * Kill a process tree gracefully: signal → wait → SIGKILL.
+ *
+ * Signals leaf processes first, waits for them to exit, then signals
+ * their parents (now leaves). Repeats until the tree is empty or the
+ * grace period expires, then force-kills survivors.
+ */
+export declare function killProcessTreeGraceful(rootPid: number, signal?: string | number | undefined | null, gracePeriodMs?: number | undefined | null): Promise<void>
+
+/**
+ * A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+ * popup never hardcodes a URL.
+ */
+export interface Link {
+  text: string
+  href: string
 }
 
 export declare function logDebug(message: string): void
@@ -504,6 +594,26 @@ export interface NxWorkspaceFilesExternals {
 }
 
 export declare function parseTaskStatus(stringStatus: string): TaskStatus
+
+/**
+ * Structured run report shown in the exit-countdown popup. The TUI builds the
+ * visual from these numbers rather than receiving a pre-formatted string.
+ */
+export interface PerformanceSummaryPayload {
+  runDurationMs: number
+  criticalPathMs: number
+  criticalPathTaskCount: number
+  recoverableMs: number
+  cache?: CacheStat
+  cacheSkipped: boolean
+  /** Already in display order; a multi-line entry embeds a task list. */
+  recommendations: Array<string>
+  /**
+   * Phrases already in `recommendations` to hyperlink in place (e.g. the
+   * remote-cache CTA); empty when none apply.
+   */
+  links: Array<Link>
+}
 
 /** Process metadata (static, doesn't change during process lifetime) */
 export interface ProcessMetadata {
@@ -574,26 +684,66 @@ export interface Target {
   parallelism?: boolean
 }
 
+/** A representation of the invocation of an Executor */
 export interface Task {
+  /** Unique ID */
   id: string
+  /** Details about which project, target, and configuration to run. */
   target: TaskTarget
+  /** Overrides for the configured options of the target */
+  overrides: Record<string, unknown>
+  /** The outputs the task may produce */
   outputs: Array<string>
+  /** Root of the project the task belongs to */
   projectRoot?: string
+  /** Hash of the task which is used for caching. */
+  hash?: string
+  /** Details about the composition of the hash */
+  hashDetails?: TaskHashDetails
+  /** Unix timestamp of when a Batch Task starts */
   startTime?: number
+  /** Unix timestamp of when a Batch Task ends */
   endTime?: number
+  /** Determines if a given task should be cacheable. */
+  cache: boolean
+  /** Determines if a given task should be parallelizable. */
+  parallelism?: boolean
+  /** This denotes if the task runs continuously */
   continuous?: boolean
 }
 
+/** Graph of Tasks to be executed */
 export interface TaskGraph {
+  /** IDs of Tasks which do not have any dependencies and are thus ready to execute immediately */
   roots: Array<string>
+  /** Map of Task IDs to Tasks */
   tasks: Record<string, Task>
+  /** Map of Task IDs to IDs of tasks which the task depends on */
   dependencies: Record<string, Array<string>>
   continuousDependencies: Record<string, Array<string>>
 }
 
+/** Details about the composition of a task's hash */
+export interface TaskHashDetails {
+  /** Command of the task */
+  command: string
+  /** Hashes of inputs used in the hash */
+  nodes: Record<string, string>
+  /** Hashes of implicit dependencies which are included in the hash */
+  implicitDeps?: Record<string, string>
+  /** Hash of the runtime environment which the task was executed */
+  runtime?: Record<string, string>
+}
+
+/**
+ * The result of a completed Task.
+ *
+ * Task timing information (start and end timestamps) is available
+ * on the Task object itself via `Task.startTime` and `Task.endTime`.
+ */
 export interface TaskResult {
   task: Task
-  status: string
+  status: 'success' | 'failure' | 'skipped' | 'stopped' | 'local-cache-kept-existing' | 'local-cache' | 'remote-cache'
   code: number
   terminalOutput?: string
 }
@@ -620,8 +770,11 @@ export declare const enum TaskStatus {
 }
 
 export interface TaskTarget {
+  /** The project for which the task belongs to */
   project: string
+  /** The target name which the task should invoke */
   target: string
+  /** The configuration of the target which the task invokes */
   configuration?: string
 }
 

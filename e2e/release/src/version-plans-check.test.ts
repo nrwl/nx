@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -14,7 +15,7 @@ import { join } from 'path';
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -78,7 +79,7 @@ describe('nx release version plans check command', () => {
     await runCommandAsync(`git tag -a ${pkg3}@0.0.0 -m "${pkg3}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg4}@0.0.0 -m "${pkg4}@0.0.0"`);
     await runCommandAsync(`git tag -a ${pkg5}@0.0.0 -m "${pkg5}@0.0.0"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
@@ -204,8 +205,17 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --base=HEAD~1 --head=HEAD~1 --verbose'))
-      .toMatchInlineSnapshot(`
+    // Verbose output is tested via toContain to avoid coupling snapshots to
+    // every verbose log the CLI may emit. `redirectStderr: true` so the
+    // "No changed files found" warning (stderr) is part of the returned string.
+    const verboseResult = runCLI(
+      'release plan:check --base=HEAD~1 --head=HEAD~1 --verbose',
+      { redirectStderr: true }
+    );
+    expect(verboseResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseResult).toMatchInlineSnapshot(`
 
       NX   No changed files found based on resolved "base" and "head"
 
@@ -239,11 +249,14 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(
-      runCLI('release plan:check --verbose', {
-        env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
-      })
-    ).toMatchInlineSnapshot(`
+    const verboseEnvResult = runCLI('release plan:check --verbose', {
+      env: { NX_BASE: 'HEAD~1', NX_HEAD: 'HEAD~1' },
+      redirectStderr: true,
+    });
+    expect(verboseEnvResult).toContain(
+      'No changed files found based on resolved "base" and "head"'
+    );
+    expect(verboseEnvResult).toMatchInlineSnapshot(`
 
       NX   No explicit --base argument provided, but found environment variable NX_BASE so using its value as the affected base: HEAD~1
 
@@ -516,8 +529,11 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --verbose', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    expect(
+      runCLI('release plan:check --verbose', {
+        silenceError: true,
+      })
+    ).toMatchInlineSnapshot(`
 
       NX   Affected criteria defaulted to --base=main --head=HEAD
 
@@ -619,10 +635,26 @@ describe('nx release version plans check command', () => {
     writeFileSync(join(pkg3Dir, 'file.css'), '.foo { color: red; }');
 
     // it should show information about the missing version plans and show an error message
-    expect(runCLI('release plan:check', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    const planCheckResult = runCLI('release plan:check', {
+      silenceError: true,
+    });
+    expect(planCheckResult).toContain('Touched projects missing version plans');
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
+    expect(planCheckResult).toMatchInlineSnapshot(`
 
       NX   Touched projects based on changed files under release group "fixed-group"
+
+      - {project-name}
+
+      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
+
+
+      NX   Touched projects based on changed files under release group "independent-group"
 
       - {project-name}
 
@@ -639,13 +671,6 @@ describe('nx release version plans check command', () => {
       Run with --verbose to see the full list of changed files used for the touched projects logic.
 
 
-      NX   Touched projects based on changed files under release group "independent-group"
-
-      - {project-name}
-
-      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
-
-
       NX   Touched projects missing version plans
 
       The following touched projects under release group "independent-group" do not feature in any version plan files:
@@ -657,8 +682,19 @@ describe('nx release version plans check command', () => {
 
 
     `);
-    expect(runCLI('release plan:check --verbose', { silenceError: true }))
-      .toMatchInlineSnapshot(`
+    const verbosePlanCheckResult = runCLI('release plan:check --verbose', {
+      silenceError: true,
+    });
+    expect(verbosePlanCheckResult).toContain(
+      'Touched projects missing version plans'
+    );
+    expect(verbosePlanCheckResult).toContain(
+      'The following touched projects under release group "fixed-group" do not feature in any version plan files'
+    );
+    expect(verbosePlanCheckResult).toContain(
+      'The following touched projects under release group "independent-group" do not feature in any version plan files'
+    );
+    expect(verbosePlanCheckResult).toMatchInlineSnapshot(`
 
       NX   Affected criteria defaulted to --base=main --head=HEAD
 
@@ -677,19 +713,19 @@ describe('nx release version plans check command', () => {
       NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
+      NX   Touched projects based on changed files under release group "independent-group"
+
+      - {project-name}
+
+      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
+
+
       NX   Touched projects missing version plans
 
       The following touched projects under release group "fixed-group" do not feature in any version plan files:
       - {project-name}
 
       Please use \`nx release plan\` to generate missing version plans, or adjust your "versionPlans.ignorePatternsForPlanCheck" config stop certain files from affecting the projects for the purposes of this command.
-
-
-      NX   Touched projects based on changed files under release group "independent-group"
-
-      - {project-name}
-
-      NOTE: You can adjust your "versionPlans.ignorePatternsForPlanCheck" config to stop certain files from resulting in projects being classed as touched for the purposes of this command.
 
 
       NX   Touched projects missing version plans

@@ -5,16 +5,24 @@ common-env-vars: &common-env-vars
   GIT_COMMITTER_NAME: Test
   SELECTED_PM: 'pnpm'
   NX_NATIVE_LOGGING: 'nx::native::db'
+  # Pin corepack to the pnpm version from packageManager. Without this, corepack
+  # falls back to "latest" in directories that have no packageManager field
+  # (e.g. e2e temp dirs created by create-nx-workspace) instead of the repo's
+  # pinned pnpm. Same treatment as .github/workflows/{ci,e2e-matrix}.yml, which
+  # pair it with `corepack prepare --activate` (see the init step below).
+  COREPACK_DEFAULT_TO_LATEST: '0'
   # These are need for build and link validation for next.js and astro apps
   NEXT_PUBLIC_ASTRO_URL: 'https://master--nx-docs.netlify.app'
   NX_DEV_URL: 'https://canary.nx.dev'
+  # Cap gradle workers so co-located e2e tasks don't oversubscribe the agent.
+  GRADLE_OPTS: '-Dorg.gradle.workers.max=2'
 
 common-init-steps: &common-init-steps
   - name: Checkout
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
 
   - name: Cache restore
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
     inputs:
       key: 'pnpm-lock.yaml'
       paths: ~/.local/share/pnpm/store
@@ -22,13 +30,22 @@ common-init-steps: &common-init-steps
 
   # reads mise.toml and installs toolchains needed for repo
   - name: Setup toolchains
-    uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-mise/main.yaml'
+    uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-mise/main.yaml'
+
+  # Make the repo's pinned pnpm corepack's default so e2e temp dirs (no
+  # packageManager field) resolve it too, instead of corepack's bundled
+  # last-known-good version.
+  - name: Activate repo pnpm via corepack
+    script: |
+      corepack enable
+      corepack prepare --activate
 
   - name: Verify toolchain versions
     script: |
       echo "mise:   $(mise --version)"
       echo "node:   $(node --version)"
       echo "pnpm:   $(pnpm --version)"
+      echo "pnpm outside repo: $(cd $(mktemp -d) && pnpm --version)"
       echo "bun:    $(bun --version)"
       echo "rust:   $(rustc --version) - $(cargo --version)"
       echo "dotnet: $(dotnet --version)"
@@ -36,11 +53,17 @@ common-init-steps: &common-init-steps
 
   - name: Install system deps
     script: |
-      # archive.ubuntu.com periodically serves a Packages.gz that doesn't
-      # match its own InRelease metadata while the canonical mirror is
-      # mid-sync, breaking apt-get update across all agents at once.
-      # Azure's mirror has a better SLA and is what GitHub Actions runners use.
-      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g; s|http://security.ubuntu.com/ubuntu|http://azure.archive.ubuntu.com/ubuntu|g' /etc/apt/sources.list
+      # apt mirror+file failover: tab-separated; printf preserves \t (YAML heredocs don't).
+      printf 'https://archive.ubuntu.com/ubuntu/\tpriority:1\n'       | sudo tee /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'https://security.ubuntu.com/ubuntu/\tpriority:2\n'      | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      printf 'http://azure.archive.ubuntu.com/ubuntu/\tpriority:3\n'  | sudo tee -a /etc/apt/apt-mirrors.txt > /dev/null
+      # Retries=0: mirror+file already retries via failover; apt-level retries multiply stall on a dead mirror.
+      sudo tee /etc/apt/apt.conf.d/80-nx-mirror-failover > /dev/null <<'EOF'
+      Acquire::http::Timeout "5";
+      Acquire::https::Timeout "5";
+      Acquire::Retries "0";
+      EOF
+      sudo sed -i 's|http://archive.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g; s|http://security.ubuntu.com/ubuntu|mirror+file:/etc/apt/apt-mirrors.txt|g' /etc/apt/sources.list
       sudo apt-get update
       sudo apt-get install -y ca-certificates lsof libvips-dev libglib2.0-dev libgirepository1.0-dev zip unzip
 
@@ -66,6 +89,10 @@ common-init-steps: &common-init-steps
       ./gradlew wrapper
       ./gradlew --version
 
+  - name: Restore .NET analyzer projects
+    script: |
+      dotnet restore nx.sln
+
   - name: Configure git metadata (needed for lerna smoke tests)
     script: |
       git config --global user.email test@test.com
@@ -74,12 +101,12 @@ common-init-steps: &common-init-steps
 launch-templates:
   linux-large:
     resource-class: 'docker_linux_amd64/large'
-    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    image: 'ubuntu22.04-node20.19-v1'
     env: *common-env-vars
     init-steps: *common-init-steps
 
   linux-extra-large:
     resource-class: 'docker_linux_amd64/extra_large'
-    image: 'us-east1-docker.pkg.dev/nxcloudoperations/nx-cloud/nx-agents-base-images:ubuntu22.04-node20.19-v1'
+    image: 'ubuntu22.04-node20.19-v1'
     env: *common-env-vars
     init-steps: *common-init-steps

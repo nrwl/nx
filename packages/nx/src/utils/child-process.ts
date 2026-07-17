@@ -21,8 +21,8 @@ export function getRunNxBaseCommand(
 ): string {
   if (existsSync(join(workspaceRoot, 'package.json'))) {
     if (!packageManagerCommand) {
-      const pm = detectPackageManager();
-      packageManagerCommand = getPackageManagerCommand(pm);
+      const pm = detectPackageManager(workspaceRoot);
+      packageManagerCommand = getPackageManagerCommand(pm, workspaceRoot);
     }
     return `${packageManagerCommand.exec} nx`;
   } else {

@@ -8,7 +8,6 @@ export interface Schema {
   linter?: string;
   formatter?: string;
   workspaces?: boolean;
-  standaloneConfig?: boolean;
   framework?: string;
   packageManager?: string;
   bundler?: string;

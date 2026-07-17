@@ -17,10 +17,7 @@ Nx **restores both the terminal output and the files** created from running the 
 
 ## Define cacheable tasks
 
-{% tabs syncKey="nx-version" %}
-{% tabitem label="Nx >= 17" %}
-
-To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include the `build` and `test` tasks:
+To enable caching for `build` and `test`, edit the `targetDefaults` property in `nx.json` to include entries for the `build` and `test` tasks:
 
 ```json
 // nx.json
@@ -35,28 +32,6 @@ To enable caching for `build` and `test`, edit the `targetDefaults` property in 
   }
 }
 ```
-
-{% /tabitem %}
-{% tabitem label="Nx < 17" %}
-
-To enable caching for `build` and `test`, edit the `cacheableOperations` property in `nx.json` to include the `build` and `test` tasks:
-
-```json
-// nx.json
-{
-  "tasksRunnerOptions": {
-    "default": {
-      "runner": "nx/tasks-runners/default",
-      "options": {
-        "cacheableOperations": ["build", "test"]
-      }
-    }
-  }
-}
-```
-
-{% /tabitem %}
-{% /tabs %}
 
 {% aside type="note" title="Cacheable operations need to be side effect free" %}
 This means that given the same input they should always result in

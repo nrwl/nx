@@ -16,6 +16,7 @@ import type { LibraryGeneratorSchema } from './schema';
 
 describe('lib', () => {
   let tree: Tree;
+  let envBackup: string | undefined;
   const defaultOptions: Partial<LibraryGeneratorSchema> = {
     skipTsConfig: false,
     includeBabelRc: false,
@@ -29,8 +30,18 @@ describe('lib', () => {
   };
 
   beforeEach(() => {
+    envBackup = process.env.ESLINT_USE_FLAT_CONFIG;
+    delete process.env.ESLINT_USE_FLAT_CONFIG;
     tree = createTreeWithEmptyWorkspace();
     tree.write('/.gitignore', '');
+  });
+
+  afterEach(() => {
+    if (envBackup === undefined) {
+      delete process.env.ESLINT_USE_FLAT_CONFIG;
+    } else {
+      process.env.ESLINT_USE_FLAT_CONFIG = envBackup;
+    }
   });
 
   it.each`
@@ -261,7 +272,7 @@ describe('lib', () => {
           tree.exists('my-dir/my-lib/src/lib/my-lib.spec.ts')
         ).toBeTruthy();
         expect(tree.exists('my-dir/my-lib/src/index.ts')).toBeTruthy();
-        expect(tree.exists(`my-dir/my-lib/.eslintrc.json`)).toBeTruthy();
+        expect(tree.exists(`my-dir/my-lib/eslint.config.mjs`)).toBeTruthy();
         expect(tree.exists(`my-dir/my-lib/package.json`)).toBeTruthy();
       });
 
@@ -480,6 +491,7 @@ describe('lib', () => {
     `(
       'should ignore $expectedIgnoredFile when bundler=$bundler',
       async ({ bundler, expectedIgnoredFile }) => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -507,7 +519,8 @@ describe('lib', () => {
       }
     );
 
-    it('should ignore rollup and vite config files when bundler=rollup and unitTestRunner=vitest', async () => {
+    it('should ignore rollup and vitest config files when bundler=rollup and unitTestRunner=vitest', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -526,7 +539,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/rollup.config.{js,ts,mjs,mts,cjs,cts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
@@ -534,7 +547,8 @@ describe('lib', () => {
       });
     });
 
-    it('should ignore esbuild and vite config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+    it('should ignore esbuild and vitest config files when bundler=esbuild and unitTestRunner=vitest', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -553,7 +567,7 @@ describe('lib', () => {
               ignoredFiles: [
                 '{projectRoot}/eslint.config.{js,cjs,mjs,ts,cts,mts}',
                 '{projectRoot}/esbuild.config.{js,ts,mjs,mts}',
-                '{projectRoot}/vite.config.{js,ts,mjs,mts}',
+                '{projectRoot}/vitest.config.{js,ts,mjs,mts}',
               ],
             },
           ],
@@ -563,6 +577,7 @@ describe('lib', () => {
 
     describe('not nested', () => {
       it('should create a local .eslintrc.json', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -625,6 +640,7 @@ describe('lib', () => {
 
     describe('nested', () => {
       it('should create a local .eslintrc.json', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -751,6 +767,7 @@ describe('lib', () => {
       });
 
       it('should configure the project for linting js files', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           name: 'my-lib',
@@ -812,6 +829,7 @@ describe('lib', () => {
       });
 
       it('should not ignore "out-tsc" from eslint', async () => {
+        process.env.ESLINT_USE_FLAT_CONFIG = 'false';
         await libraryGenerator(tree, {
           ...defaultOptions,
           directory: 'my-lib',
@@ -1610,6 +1628,7 @@ describe('lib', () => {
 
   describe('--bundler=esbuild', () => {
     it('should add build with esbuild', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -1662,6 +1681,7 @@ describe('lib', () => {
 
   describe('--bundler=rollup', () => {
     it('should add build with rollup', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',
@@ -2545,6 +2565,7 @@ describe('lib', () => {
     });
 
     it('should ignore "out-tsc" from eslint', async () => {
+      process.env.ESLINT_USE_FLAT_CONFIG = 'false';
       await libraryGenerator(tree, {
         ...defaultOptions,
         directory: 'my-lib',

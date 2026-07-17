@@ -1,4 +1,8 @@
 import {
+  forEachExecutorOptions,
+  updateTargetDefault,
+} from '@nx/devkit/internal';
+import {
   formatFiles,
   readNxJson,
   readProjectConfiguration,
@@ -7,7 +11,6 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 
 const EXECUTOR_TO_MIGRATE = '@nx/jest:jest';
 
@@ -35,40 +38,23 @@ export default async function (tree: Tree) {
     }
   );
 
-  // update options from nx.json target defaults
+  // update options from nx.json target defaults. `updateTargetDefault` walks
+  // both the object and filtered array value forms, drops entries left with
+  // nothing but their executor locator, and collapses lone unfiltered ones
+  // back to the object form.
   const nxJson = readNxJson(tree);
-  if (nxJson.targetDefaults) {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-        targetConfig.executor !== EXECUTOR_TO_MIGRATE
-      ) {
-        continue;
-      }
-
-      if (targetConfig.options) {
-        updateOptions(targetConfig);
-      }
-
-      Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
-        updateConfiguration(targetConfig, config);
+  if (nxJson?.targetDefaults) {
+    updateTargetDefault(nxJson, { executor: EXECUTOR_TO_MIGRATE }, (config) => {
+      if (config.options) updateOptions(config as TargetConfiguration);
+      Object.keys(config.configurations ?? {}).forEach((configuration) => {
+        updateConfiguration(config as TargetConfiguration, configuration);
       });
-
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
+      // Drop the entry once nothing but its executor locator remains.
+      const keys = Object.keys(config);
+      if (keys.length === 0 || (keys.length === 1 && keys[0] === 'executor')) {
+        return null;
       }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
-    }
-
+    });
     updateNxJson(tree, nxJson);
   }
 

@@ -1,11 +1,16 @@
 import { join } from 'node:path';
 
 import { shouldMergeAngularProjects } from '../../adapter/angular-json';
-import { PluginConfiguration, readNxJson } from '../../config/nx-json';
+import {
+  NxJsonConfiguration,
+  PluginConfiguration,
+  readNxJson,
+} from '../../config/nx-json';
 import { hashObject } from '../../hasher/file-hasher';
 import { workspaceRoot } from '../../utils/workspace-root';
 import { loadNxPlugin } from './in-process-loader';
 import { loadIsolatedNxPlugin } from './isolation';
+import { resetResolvePluginCache } from './resolve-plugin';
 
 import { isIsolationEnabled } from './isolation/enabled';
 import type { LoadedNxPlugin } from './loaded-nx-plugin';
@@ -19,8 +24,23 @@ import {
  */
 let currentPluginsConfigurationHash: string;
 let loadedPlugins: LoadedNxPlugin[];
+let cachedSeparatedPlugins: SeparatedPlugins;
 let pendingPluginsPromise: Promise<LoadedNxPlugin[]> | undefined;
 let cleanupSpecifiedPlugins: () => void | undefined;
+
+// In-flight separated-plugins load, tagged with its hash. Two roles: a
+// concurrent caller for the same set shares this load instead of racing a
+// second one, and it gates the cache commit — a load writes the cache only if
+// it's still the registered load when it finishes, so a slow older load can't
+// clobber a newer one's result (two recomputes can overlap).
+let pendingSeparatedPlugins:
+  | { hash: string; promise: Promise<SeparatedPlugins> }
+  | undefined;
+
+export interface SeparatedPlugins {
+  specifiedPlugins: LoadedNxPlugin[];
+  defaultPlugins: LoadedNxPlugin[];
+}
 
 const loadingMethod = (
   plugin: PluginConfiguration,
@@ -31,49 +51,117 @@ const loadingMethod = (
     ? loadIsolatedNxPlugin(plugin, root, index)
     : loadNxPlugin(plugin, root, index);
 
+/**
+ * Returns all plugins (specified + default) as a flat list.
+ * Specified plugins come first, followed by default plugins.
+ */
 export async function getPlugins(
+  nxJson: NxJsonConfiguration,
   root = workspaceRoot
 ): Promise<LoadedNxPlugin[]> {
-  const pluginsConfiguration = readNxJson(root).plugins ?? [];
+  const { specifiedPlugins, defaultPlugins } = await getPluginsSeparated(
+    nxJson,
+    root
+  );
+  return specifiedPlugins.concat(defaultPlugins);
+}
+
+/**
+ * Returns specified plugins (from nx.json) and default plugins (project.json,
+ * package.json, etc.) as separate arrays. This separation is needed for
+ * two-phase project configuration processing where target defaults are
+ * applied between specified and default plugin results.
+ *
+ * `nxJson` is required so callers control the snapshot of nx.json the plugin
+ * loader uses. This matters for the daemon's freshness-gated recompute, where
+ * the snap hash and the plugin set must reflect the same disk state.
+ */
+export async function getPluginsSeparated(
+  nxJson: NxJsonConfiguration,
+  root = workspaceRoot
+): Promise<SeparatedPlugins> {
+  const pluginsConfiguration = nxJson.plugins ?? [];
   const pluginsConfigurationHash = hashObject(pluginsConfiguration);
 
   // If the plugins configuration has not changed, reuse the current plugins
   if (
-    loadedPlugins &&
+    cachedSeparatedPlugins &&
     pluginsConfigurationHash === currentPluginsConfigurationHash
   ) {
-    return loadedPlugins;
+    return cachedSeparatedPlugins;
   }
 
-  currentPluginsConfigurationHash = pluginsConfigurationHash;
-  const results = await Promise.allSettled([
-    getOnlyDefaultPlugins(root),
-    (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
-      pluginsConfiguration,
-      root
-    )),
-  ]);
+  // A concurrent call is already loading this exact plugin set — share its
+  // load rather than starting a second one that would race the module-level
+  // cache state below.
+  if (pendingSeparatedPlugins?.hash === pluginsConfigurationHash) {
+    return pendingSeparatedPlugins.promise;
+  }
 
-  const errors: Error[] = [];
-  const defaultPlugins: LoadedNxPlugin[] = [];
-  const specifiedPlugins: LoadedNxPlugin[] = [];
+  // Plugins config changed (e.g. `nx add @nx/maven` updated nx.json). The
+  // cached SeparatedPlugins is invalidated by the early-return above, but
+  // pendingPluginsPromise — the in-flight load — would otherwise be reused
+  // by the `??=` below and serve the previous plugin set forever. Tear
+  // down the old workers and force a fresh load.
+  cleanupSpecifiedPlugins?.();
+  pendingPluginsPromise = undefined;
 
-  for (let i = 0; i < results.length; i++) {
-    const result = results[i];
-    if (result.status === 'fulfilled') {
-      (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
-    } else {
-      errors.push(reasonToError(result.reason));
+  const loadPromise = (async (): Promise<SeparatedPlugins> => {
+    const results = await Promise.allSettled([
+      getOnlyDefaultPlugins(root),
+      (pendingPluginsPromise ??= loadSpecifiedNxPlugins(
+        pluginsConfiguration,
+        root
+      )),
+    ]);
+
+    const errors: Error[] = [];
+    const defaultPlugins: LoadedNxPlugin[] = [];
+    const specifiedPlugins: LoadedNxPlugin[] = [];
+
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled') {
+        (i === 0 ? defaultPlugins : specifiedPlugins).push(...result.value);
+      } else {
+        errors.push(reasonToError(result.reason));
+      }
+    }
+
+    if (errors.length > 0) {
+      throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
+    }
+
+    const separatedPlugins: SeparatedPlugins = {
+      specifiedPlugins,
+      defaultPlugins,
+    };
+
+    // Commit only if we're still the registered load — so the hash and the
+    // cached set are always written together and describe the same plugins.
+    if (pendingSeparatedPlugins?.promise === loadPromise) {
+      cachedSeparatedPlugins = separatedPlugins;
+      currentPluginsConfigurationHash = pluginsConfigurationHash;
+      loadedPlugins = specifiedPlugins.concat(defaultPlugins);
+    }
+
+    return separatedPlugins;
+  })();
+
+  pendingSeparatedPlugins = {
+    hash: pluginsConfigurationHash,
+    promise: loadPromise,
+  };
+
+  try {
+    return await loadPromise;
+  } finally {
+    // Clear the in-flight marker, but only if it still points at our load —
+    // a newer call may have already replaced it.
+    if (pendingSeparatedPlugins?.promise === loadPromise) {
+      pendingSeparatedPlugins = undefined;
     }
   }
-
-  if (errors.length > 0) {
-    throw new AggregateError(errors, errors.map((e) => e.message).join('\n'));
-  }
-
-  loadedPlugins = specifiedPlugins.concat(defaultPlugins);
-
-  return loadedPlugins;
 }
 
 /**
@@ -119,6 +207,10 @@ export function cleanupPlugins() {
   cleanupDefaultPlugins?.();
   pendingPluginsPromise = undefined;
   pendingDefaultPluginPromise = undefined;
+  cachedSeparatedPlugins = undefined;
+  // Drop the in-flight load too: clearing the marker flips its commit gate to
+  // false, so a load resolving after teardown can't repopulate the torn-down cache.
+  pendingSeparatedPlugins = undefined;
 }
 
 /**
@@ -211,6 +303,11 @@ async function loadSpecifiedNxPlugins(
   performance.mark('loadSpecifiedNxPlugins:start');
 
   pluginsConfigurations ??= [];
+
+  // Drop the cached workspace-layout snapshot local-plugin resolution uses:
+  // in a long-lived daemon it can predate a newly added local plugin and
+  // resolve it to the workspace root. Runs only when the plugin set changed.
+  resetResolvePluginCache();
 
   const cleanupFunctions: Array<() => void> = [];
   const results = await Promise.allSettled(

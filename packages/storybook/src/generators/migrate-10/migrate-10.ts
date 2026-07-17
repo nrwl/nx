@@ -5,8 +5,11 @@ import { callUpgrade, checkStorybookInstalled } from './calling-storybook-cli';
 import { Schema } from './schema';
 import { join } from 'path';
 import { existsSync, readFileSync } from 'fs';
+import { assertSupportedStorybookVersion } from '../../utils/assert-supported-storybook-version';
 
 export async function migrate10Generator(tree: Tree, schema: Schema) {
+  assertSupportedStorybookVersion(tree);
+
   const packageJson = readJson(tree, 'package.json');
   if (!checkStorybookInstalled(packageJson)) {
     output.error({
@@ -20,6 +23,10 @@ export async function migrate10Generator(tree: Tree, schema: Schema) {
   }
 
   callUpgrade(schema);
+
+  if (schema.skipAiInstructions) {
+    return;
+  }
 
   const pathToAiInstructions = join(
     __dirname,

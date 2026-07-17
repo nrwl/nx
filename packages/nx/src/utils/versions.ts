@@ -1,5 +1,1 @@
-import { extname } from 'path';
-
-const isTS = extname(__filename) === '.ts';
-const pathToPackageJson = isTS ? '../../package.json' : '../../../package.json';
-export const nxVersion = require(pathToPackageJson).version;
+export const nxVersion = require('nx/package.json').version;

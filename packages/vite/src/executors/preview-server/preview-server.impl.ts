@@ -12,14 +12,18 @@ import {
 } from '../../utils/options-utils';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import { VitePreviewServerExecutorOptions } from './schema';
+import schema from './schema.json';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
 import { loadViteDynamicImport } from '../../utils/executor-utils';
+import { warnVitePreviewServerExecutorDeprecation } from '../../utils/deprecation';
 
 export async function* vitePreviewServerExecutor(
   options: VitePreviewServerExecutorOptions,
   context: ExecutorContext
 ) {
+  warnVitePreviewServerExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, preview, resolveConfig } = await loadViteDynamicImport();
@@ -216,7 +220,6 @@ async function getExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {

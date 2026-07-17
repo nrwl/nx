@@ -1,0 +1,11 @@
+// Exposed by the federation plugin as '<%= projectName %>/<%= exposeName %>'.
+// Consumers render it lazily via `lazyProvider('<%= projectName %>', '<%= exposeName %>')`.
+export function <%= componentName %>() {
+  return (
+    <section data-testid="<%= projectName %>">
+      <h1>Hello from <%= projectName %></h1>
+    </section>
+  );
+}
+
+export default <%= componentName %>;

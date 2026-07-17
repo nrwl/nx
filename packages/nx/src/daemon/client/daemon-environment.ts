@@ -100,6 +100,13 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'npm_',
   'pnpm_',
 
+  // Nx Cloud runner/agent vars (per-worker values like NX_CLOUD_WORKER_ID
+  // and NX_CLOUD_EXECUTION_ID diverge between distributed-execution workers
+  // and cannot affect the project graph; without this every worker that
+  // talks to the daemon would force a graph recompute). The cloud auth/access
+  // tokens are allow-listed below — they are stable and signal cloud usage.
+  'NX_CLOUD_',
+
   // Editors / IDEs
   'VSCODE_',
   'JETBRAINS_',
@@ -111,9 +118,27 @@ const DAEMON_ENV_PREFIX_EXCLUSIONS = [
   'ALACRITTY_',
   'KONSOLE_',
   'TMUX',
+
+  // Benchmarking / profiling tools
+  'HYPERFINE_', // hyperfine sets HYPERFINE_RANDOMIZED_ENVIRONMENT_OFFSET for each iteration
 ];
 
+/**
+ * Vars that match an excluded prefix but should still reach the daemon. The
+ * Nx Cloud auth/access tokens are excluded by the `NX_CLOUD_` prefix, but
+ * unlike the per-worker cloud vars they are stable across clients (so they
+ * don't churn the daemon env) and signal that the workspace uses Nx Cloud
+ * (e.g. for analytics). Keep them.
+ */
+const DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES = new Set([
+  'NX_CLOUD_ACCESS_TOKEN',
+  'NX_CLOUD_AUTH_TOKEN',
+]);
+
 function isExcludedEnvVar(key: string): boolean {
+  if (DAEMON_ENV_PREFIX_EXCLUSION_OVERRIDES.has(key)) {
+    return false;
+  }
   return (
     DAEMON_ENV_VARS_EXCLUSIONS.has(key) ||
     DAEMON_ENV_PREFIX_EXCLUSIONS.some((prefix) => key.startsWith(prefix))
@@ -128,4 +153,34 @@ export function getDaemonEnv() {
     }
   }
   return Object.assign(env, DAEMON_ENV_REQUIRED_SETTINGS);
+}
+
+/**
+ * Without the deletion step, a var set by one client (e.g.
+ * `NX_PREFER_NODE_STRIP_TYPES=true` or `JAVA_TOOL_OPTIONS=...` for a single
+ * command) would persist in the daemon and leak into every subsequent
+ * client's project-graph computation. Deletion skips excluded vars and
+ * required settings, which the daemon owns and clients should not control.
+ */
+export function applyDaemonEnvFromClient(newEnv: NodeJS.ProcessEnv): string[] {
+  const changedKeys: string[] = [];
+  const allKeys = new Set([
+    ...Object.keys(process.env),
+    ...Object.keys(newEnv),
+  ]);
+  for (const key of allKeys) {
+    if (key in newEnv) {
+      if (process.env[key] !== newEnv[key]) {
+        process.env[key] = newEnv[key];
+        changedKeys.push(key);
+      }
+    } else if (
+      !isExcludedEnvVar(key) &&
+      !Object.hasOwn(DAEMON_ENV_REQUIRED_SETTINGS, key)
+    ) {
+      delete process.env[key];
+      changedKeys.push(key);
+    }
+  }
+  return changedKeys;
 }

@@ -3,9 +3,7 @@ source: packages/nx/src/native/tui/components/tasks_list.rs
 expression: terminal.backend()
 ---
 "                                                                                                                        "
-" NX    Running Test Tasks...                                                                            Cache   Duration"
-"                                                                                                                        "
-"> ✔    task1                                                                                                -        ..."
+" NX    Test Tasks                                                                                       Cache   Duration"
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
@@ -13,7 +11,9 @@ expression: terminal.backend()
 "                                                                                                                        "
 "                                                                                                                        "
 "                                                                                                                        "
-"  Filter: task1                                                                                                         "
-"  -> 2 tasks filtered out. Press / to persist, <esc> to clear                                                           "
 "                                                                                                                        "
-"                                    quit: q  help: ?  navigate: ↑ ↓  filter: /  pin output: 1 or 2  show output: <enter>"
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "
+"                                                                                                                        "

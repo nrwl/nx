@@ -1,5 +1,6 @@
 import { getDependencyVersionFromPackageJson, type Tree } from '@nx/devkit';
-import { clean, coerce, major } from 'semver';
+import { getDeclaredPackageVersion } from '@nx/devkit/internal';
+import { coerce, major } from 'semver';
 import {
   backwardCompatibleVersions,
   type PackageCompatVersions,
@@ -20,22 +21,7 @@ export function getInstalledAngularDevkitVersion(tree: Tree): string | null {
 }
 
 export function getInstalledAngularVersion(tree: Tree): string {
-  const installedAngularVersion = getDependencyVersionFromPackageJson(
-    tree,
-    '@angular/core'
-  );
-
-  if (
-    !installedAngularVersion ||
-    installedAngularVersion === 'latest' ||
-    installedAngularVersion === 'next'
-  ) {
-    return clean(angularVersion) ?? coerce(angularVersion).version;
-  }
-
-  return (
-    clean(installedAngularVersion) ?? coerce(installedAngularVersion).version
-  );
+  return getDeclaredPackageVersion(tree, '@angular/core', angularVersion)!;
 }
 
 export function getInstalledAngularMajorVersion(tree: Tree): number {
@@ -79,20 +65,6 @@ export function versions(
   }
 
   return backwardCompatibleVersions[majorAngularVersion] ?? latestVersions;
-}
-
-/**
- * Temporary helper to abstract away the version of angular-rspack to be installed
- * until we stop supporting Angular 19.
- */
-export function getAngularRspackVersion(tree: Tree): string {
-  const majorAngularVersion = getInstalledAngularMajorVersion(tree);
-
-  // Starting with Angular 20, we can use an Angular Rspack version that is
-  // aligned with the Nx version
-  return majorAngularVersion === 19
-    ? backwardCompatibleVersions[19].angularRspackVersion
-    : latestVersions.nxVersion;
 }
 
 // Helper types

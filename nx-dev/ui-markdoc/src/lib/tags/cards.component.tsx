@@ -85,7 +85,7 @@ export function Cards({
       {moreLink && (
         <div className="col-span-full mt-2 flex justify-end">
           <Link
-            className="group flex items-center whitespace-nowrap border-transparent px-4 py-0 text-sm font-semibold no-underline transition-all duration-200 ease-in-out hover:text-zinc-900 dark:hover:text-blue-400"
+            className="group flex items-center border-transparent px-4 py-0 text-sm font-semibold whitespace-nowrap no-underline transition-all duration-200 ease-in-out hover:text-zinc-900 dark:hover:text-blue-400"
             href={moreLink}
             prefetch={false}
           >
@@ -129,7 +129,7 @@ export function LinkCard({
     <Link
       key={title}
       href={url}
-      className="no-prose relative col-span-1 mx-auto flex w-full max-w-md flex-col items-center rounded-md border border-zinc-200 bg-zinc-50/40 p-4 text-center font-semibold shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-100 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+      className="no-prose relative col-span-1 mx-auto flex w-full max-w-md flex-col items-center rounded-md border border-zinc-200 bg-zinc-50/40 p-4 text-center font-semibold shadow-xs transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-100 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
       style={{ textDecorationLine: 'none' }}
       prefetch={false}
     >
@@ -162,7 +162,7 @@ export function LinkCard({
         className={cx({ 'pt-4': !!icon }, { 'pt-2': appearance === 'small' })}
       >
         {appearance === 'small' && type ? null : (
-          <div className="mb-1 text-xs font-medium uppercase text-zinc-600 dark:text-zinc-300">
+          <div className="mb-1 text-xs font-medium text-zinc-600 uppercase dark:text-zinc-300">
             {type}
           </div>
         )}
@@ -208,7 +208,7 @@ export function Card({
       key={title}
       href={url}
       title={title}
-      className="not-content group flex flex-col items-stretch rounded-md border border-zinc-200 bg-zinc-50/40 text-sm no-underline shadow-sm transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
+      className="not-content group flex flex-col items-stretch rounded-md border border-zinc-200 bg-zinc-50/40 text-sm no-underline shadow-xs transition focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2 hover:bg-zinc-50 dark:border-zinc-800/40 dark:bg-zinc-800/60 dark:hover:bg-zinc-800"
       prefetch={false}
     >
       {!!hasYoutubeId && (
@@ -233,7 +233,7 @@ export function Card({
         ) : null}
 
         {/*HOVER ICON*/}
-        <span className="absolute right-2 top-1/2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
+        <span className="absolute top-1/2 right-2 -translate-x-2 -translate-y-2.5 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100">
           <ArrowRightCircleIcon className="h-5 w-5" />
         </span>
       </div>

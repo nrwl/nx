@@ -9,11 +9,13 @@ import {
   normalizeViteConfigFilePath,
 } from '../../utils/options-utils';
 import { ViteDevServerExecutorOptions } from './schema';
+import schema from './schema.json';
 import { ViteBuildExecutorOptions } from '../build/schema';
 import {
   createBuildableTsConfig,
   loadViteDynamicImport,
 } from '../../utils/executor-utils';
+import { warnViteDevServerExecutorDeprecation } from '../../utils/deprecation';
 import { relative } from 'path';
 import { getBuildExtraArgs } from '../build/build.impl';
 
@@ -21,6 +23,8 @@ export async function* viteDevServerExecutor(
   options: ViteDevServerExecutorOptions,
   context: ExecutorContext
 ): AsyncGenerator<{ success: boolean; baseUrl: string }> {
+  warnViteDevServerExecutorDeprecation();
+
   process.env.VITE_CJS_IGNORE_WARNING = 'true';
   // Allows ESM to be required in CJS modules. Vite will be published as ESM in the future.
   const { mergeConfig, createServer, resolveConfig } =
@@ -140,7 +144,6 @@ async function getServerExtraArgs(
   otherOptions: Record<string, any>;
 }> {
   // support passing extra args to vite cli
-  const schema = await import('./schema.json');
   const extraArgs = {};
   for (const key of Object.keys(options)) {
     if (!schema.properties[key]) {
@@ -178,10 +181,19 @@ async function getServerExtraArgs(
   }
 
   if (configuration) {
+    const normalizeWatchOption = <T>(
+      watch: T | false | undefined
+    ): T | undefined => {
+      return watch === false ? undefined : watch;
+    };
+
     serverOptions = {
       ...serverOptions,
-      watch: buildOptionsFromBuildTarget?.watch ?? serverOptions?.watch,
+      watch:
+        normalizeWatchOption(buildOptionsFromBuildTarget?.watch) ??
+        normalizeWatchOption(serverOptions?.watch),
     };
+
     otherOptions = {
       ...otherOptions,
       ...(otherOptionsFromBuildTarget ?? {}),

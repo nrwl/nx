@@ -138,11 +138,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "addTailwind": {
-      "type": "boolean",
-      "description": "Whether to configure Tailwind CSS for the application.",
-      "default": false
-    },
     "standalone": {
       "description": "Generate an application that is setup to use standalone components.",
       "type": "boolean",
@@ -174,10 +169,6 @@
       "type": "boolean",
       "x-prompt": "Do you want to enable Server-Side Rendering (SSR) and Static Site Generation (SSG/Prerendering)?",
       "default": false
-    },
-    "serverRouting": {
-      "description": "Creates a server application using the Server Routing and App Engine APIs for application using the `application` builder (Developer Preview). _Note: this is only supported in Angular versions 19.x.x_. From Angular 20 onwards, SSR will always enable server routing when using the `application` builder.",
-      "type": "boolean"
     },
     "zoneless": {
       "description": "Generate an application that does not use `zone.js`. It defaults to `true`. _Note: this is only supported in Angular versions >= 21.0.0_",

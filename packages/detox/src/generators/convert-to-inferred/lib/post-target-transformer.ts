@@ -1,6 +1,5 @@
 import type { TargetConfiguration, Tree } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
-import { processTargetOutputs } from '@nx/devkit/src/generators/plugin-migrations/plugin-migration-utils';
+import { processTargetOutputs, type AggregatedLog } from '@nx/devkit/internal';
 
 export function postTargetTransformer(
   migrationLogs: AggregatedLog,

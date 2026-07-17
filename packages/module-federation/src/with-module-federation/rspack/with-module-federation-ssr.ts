@@ -1,4 +1,3 @@
-import { DefinePlugin } from '@rspack/core';
 import {
   ModuleFederationConfig,
   normalizeProjectName,
@@ -6,6 +5,7 @@ import {
 } from '../../utils';
 import { getModuleFederationConfig } from './utils';
 import { workspaceRoot } from '@nx/devkit';
+import { isServeMode } from '../../utils/is-serve-mode';
 
 export async function withModuleFederationForSSR(
   options: ModuleFederationConfig,
@@ -14,12 +14,14 @@ export async function withModuleFederationForSSR(
   if (global.NX_GRAPH_CREATION) {
     return (config) => config;
   }
-  const isDevServer = process.env['WEBPACK_SERVE'];
+  const isDevServer = isServeMode();
 
   const { sharedLibraries, sharedDependencies, mappedRemotes } =
     getModuleFederationConfig(options, {
       isServer: true,
     });
+  const { DefinePlugin } =
+    require('@rspack/core') as typeof import('@rspack/core');
 
   return (config, { context }) => {
     config.target = 'async-node';
@@ -70,7 +72,7 @@ export async function withModuleFederationForSSR(
                   ...(configOverride?.runtimePlugins ?? []),
                   require.resolve('@module-federation/node/runtimePlugin'),
                   require.resolve(
-                    '@nx/module-federation/src/utils/plugins/runtime-library-control.plugin.js'
+                    '@nx/module-federation/runtime-library-control-plugin'
                   ),
                 ]
               : [

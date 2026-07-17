@@ -1,14 +1,14 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
-  type ProjectConfiguration,
   readNxJson,
   readProjectConfiguration,
   type TargetConfiguration,
+  type TargetDefaultArrayEntry,
   type Tree,
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import type { CypressExecutorOptions } from '../../executors/cypress/cypress.impl';
 
 const EXECUTOR_TO_MIGRATE = '@nx/cypress:cypress';
@@ -40,35 +40,46 @@ export default async function (tree: Tree) {
   // update options from nx.json target defaults
   const nxJson = readNxJson(tree);
   if (nxJson.targetDefaults) {
-    for (const [targetOrExecutor, targetConfig] of Object.entries(
-      nxJson.targetDefaults
-    )) {
-      if (
-        targetOrExecutor !== EXECUTOR_TO_MIGRATE &&
-        targetConfig.executor !== EXECUTOR_TO_MIGRATE
-      ) {
-        continue;
-      }
+    const targetDefaults = nxJson.targetDefaults;
+    for (const key of Object.keys(targetDefaults)) {
+      const value = targetDefaults[key];
+      const entries: TargetDefaultArrayEntry[] = Array.isArray(value)
+        ? value
+        : [value];
 
-      if (targetConfig.options) {
-        updateOptions(targetConfig);
-      }
+      const usesExecutor = (entry: TargetDefaultArrayEntry) =>
+        key === EXECUTOR_TO_MIGRATE ||
+        entry.executor === EXECUTOR_TO_MIGRATE ||
+        entry.filter?.executor === EXECUTOR_TO_MIGRATE;
 
-      Object.keys(targetConfig.configurations ?? {}).forEach((config) => {
-        updateConfiguration(targetConfig, config);
+      const kept = entries.filter((entry) => {
+        if (usesExecutor(entry)) {
+          if (entry.options) {
+            updateOptions(entry as TargetConfiguration);
+          }
+          Object.keys(entry.configurations ?? {}).forEach((config) => {
+            updateConfiguration(entry as TargetConfiguration, config);
+          });
+        }
+        // Drop entries left with nothing but their `filter`/`executor` locator.
+        return Object.keys(entry).some(
+          (k) => k !== 'filter' && k !== 'executor'
+        );
       });
 
-      if (
-        !Object.keys(targetConfig).length ||
-        (Object.keys(targetConfig).length === 1 &&
-          Object.keys(targetConfig)[0] === 'executor')
-      ) {
-        delete nxJson.targetDefaults[targetOrExecutor];
+      if (kept.length === 0) {
+        delete targetDefaults[key];
+      } else if (kept.length === 1 && kept[0].filter === undefined) {
+        // A lone unfiltered entry is stored as the plain object form (which
+        // omits `filter`).
+        const { filter: _filter, ...config } = kept[0];
+        targetDefaults[key] = config;
+      } else {
+        targetDefaults[key] = kept;
       }
-
-      if (!Object.keys(nxJson.targetDefaults).length) {
-        delete nxJson.targetDefaults;
-      }
+    }
+    if (Object.keys(targetDefaults).length === 0) {
+      delete nxJson.targetDefaults;
     }
 
     updateNxJson(tree, nxJson);

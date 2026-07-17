@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   removeDependenciesFromPackageJson,
@@ -7,14 +8,14 @@ import {
   readNxJson,
   createProjectGraphAsync,
 } from '@nx/devkit';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import {
   getReactDependenciesVersionsToInstall,
   isReact18,
-} from '@nx/react/src/utils/version-utils';
+} from '@nx/react/internal';
 import { addGitIgnoreEntry } from '../../utils/add-gitignore-entry';
 import { nxVersion } from '../../utils/versions';
 import { getNextDependenciesVersionsToInstall } from '../../utils/version-utils';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 import type { InitSchema } from './schema';
 
 async function updateDependencies(host: Tree, schema: InitSchema) {
@@ -40,7 +41,7 @@ async function updateDependencies(host: Tree, schema: InitSchema) {
         '@nx/next': nxVersion,
       },
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions ?? true
     )
   );
 
@@ -55,6 +56,8 @@ export async function nextInitGeneratorInternal(
   host: Tree,
   schema: InitSchema
 ) {
+  assertSupportedNextVersion(host);
+
   const nxJson = readNxJson(host);
   const addPluginDefault =
     process.env.NX_ADD_PLUGINS !== 'false' &&
@@ -62,7 +65,9 @@ export async function nextInitGeneratorInternal(
 
   schema.addPlugin ??= addPluginDefault;
   if (schema.addPlugin) {
-    const { createNodesV2 } = await import('../../plugins/plugin');
+    const {
+      createNodesV2,
+    }: typeof import('../../plugins/plugin') = require('../../plugins/plugin');
     await addPlugin(
       host,
       await createProjectGraphAsync(),

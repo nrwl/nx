@@ -1,19 +1,21 @@
 import {
-  type CreateNodesV2,
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  type CreateNodes,
   type ProjectConfiguration,
   type TargetConfiguration,
   createNodesFromFiles,
   readJsonFile,
-  writeJsonFile,
-  CreateNodesContextV2,
+  CreateNodesContext,
   workspaceRoot,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
 import { hashObject } from 'nx/src/hasher/file-hasher';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLatestCommitSha } from 'nx/src/utils/git-utils';
 import { interpolateObject } from '../utils/interpolate-pattern';
 
@@ -52,20 +54,9 @@ interface NormalizedDockerPluginOptions {
 
 type DockerTargets = Pick<ProjectConfiguration, 'targets' | 'metadata'>;
 
-function readTargetsCache(cachePath: string): Record<string, DockerTargets> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
-
-function writeTargetsCache(
-  cachePath: string,
-  results?: Record<string, DockerTargets>
-) {
-  writeJsonFile(cachePath, results ?? {});
-}
-
 const dockerfileGlob = '**/Dockerfile';
 
-export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
+export const createNodes: CreateNodes<DockerPluginOptions> = [
   dockerfileGlob,
   async (configFilePaths, options, context) => {
     const optionsHash = hashObject(options);
@@ -73,7 +64,7 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
       workspaceDataDirectory,
       `docker-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<DockerTargets>(cachePath);
     const projectRoots = configFilePaths.map((c) => dirname(c));
     const normalizedOptions = normalizePluginOptions(options);
     // TODO(colum): investigate hashing only the dockerfile
@@ -97,27 +88,33 @@ export const createNodesV2: CreateNodesV2<DockerPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
+
+/**
+ * @deprecated Use {@link createNodes} instead. This will be removed in Nx 24.
+ */
+export const createNodesV2 = createNodes;
 
 async function createNodesInternal(
   configFilePath: string,
   hash: string,
   normalizedOptions: NormalizedDockerPluginOptions,
-  context: CreateNodesContextV2,
-  targetsCache: Record<string, DockerTargets>
+  context: CreateNodesContext,
+  targetsCache: PluginCache<DockerTargets>
 ) {
   const projectRoot = dirname(configFilePath);
 
-  targetsCache[hash] ??= await createDockerTargets(
-    projectRoot,
-    normalizedOptions,
-    context
-  );
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      await createDockerTargets(projectRoot, normalizedOptions, context)
+    );
+  }
 
-  const { targets, metadata } = targetsCache[hash];
+  const { targets, metadata } = targetsCache.get(hash);
 
   return {
     projects: {
@@ -134,7 +131,7 @@ function interpolateDockerTargetOptions(
   options: DockerTargetOptions,
   projectRoot: string,
   imageRef: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): DockerTargetOptions {
   const commitSha = getLatestCommitSha();
   const projectName = getProjectName(projectRoot, context.workspaceRoot);
@@ -254,7 +251,7 @@ function buildTargetConfigurations(
 async function createDockerTargets(
   projectRoot: string,
   options: NormalizedDockerPluginOptions,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ) {
   const imageRef = getProjectNameFromPath(projectRoot, workspaceRoot);
 
@@ -360,6 +357,7 @@ async function createDockerTargets(
 
   targets['nx-release-publish'] = {
     executor: '@nx/docker:release-publish',
+    continuous: false,
   };
 
   return { targets, metadata };

@@ -2,6 +2,14 @@
   "name": "@nx/cypress",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Cypress contains executors and generators allowing your workspace to use the powerful Cypress integration testing capabilities.",
   "repository": {
     "type": "git",
@@ -21,9 +29,47 @@
     "Front-end",
     "Testing"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "plugin": [
+        "dist/plugin.d.ts"
+      ],
+      "plugins/cypress-preset": [
+        "dist/plugins/cypress-preset.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./executors.json": "./executors.json",
+    "./plugin": {
+      "@nx/nx-source": "./plugin.ts",
+      "types": "./dist/plugin.d.ts",
+      "default": "./dist/plugin.js"
+    },
+    "./plugins/cypress-preset": {
+      "@nx/nx-source": "./plugins/cypress-preset.ts",
+      "types": "./dist/plugins/cypress-preset.d.ts",
+      "default": "./dist/plugins/cypress-preset.js"
+    },
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -34,16 +80,17 @@
   "executors": "./executors.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
   },
   "dependencies": {
     "@nx/devkit": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/js": "workspace:*",
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "detect-port": "^1.5.1",
+    "detect-port": "^2.1.0",
     "semver": "catalog:",
-    "tree-kill": "1.2.2",
+    "tree-kill": "catalog:",
     "tslib": "catalog:typescript"
   },
   "devDependencies": {

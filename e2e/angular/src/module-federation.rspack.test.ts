@@ -5,6 +5,7 @@ import {
   killProcessAndPorts,
   newProject,
   readFile,
+  reservePort,
   runCLI,
   runCommandUntil,
   runE2ETests,
@@ -19,7 +20,9 @@ describe('Angular Module Federation', () => {
   let oldVerboseLoggingValue: string;
 
   beforeAll(() => {
-    proj = newProject({ packages: ['@nx/angular'] });
+    proj = newProject({
+      packages: ['@nx/angular', '@nx/rspack', '@nx/vitest', '@nx/playwright'],
+    });
     oldVerboseLoggingValue = process.env.NX_E2E_VERBOSE_LOGGING;
     process.env.NX_E2E_VERBOSE_LOGGING = 'true';
   });
@@ -34,12 +37,12 @@ describe('Angular Module Federation', () => {
     const sharedLib = uniq('shared-lib');
     const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
-    const hostPort = 4300;
-    const remotePort = 4301;
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --bundler=rspack --no-standalone --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --bundler=rspack --no-standalone --no-interactive`
     );
     let rspackConfigFileContents = readFile(join(hostApp, 'rspack.config.ts'));
     let updatedConfigFileContents = rspackConfigFileContents.replace(
@@ -179,12 +182,12 @@ describe('Angular Module Federation', () => {
   it('should load remote app in the browser via ESM module federation', async () => {
     const hostApp = uniq('host');
     const remoteApp = uniq('remote');
-    const hostPort = 4200;
-    const remotePort = 4401;
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host with playwright e2e runner
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --bundler=rspack --e2eTestRunner=playwright --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --bundler=rspack --e2eTestRunner=playwright --no-interactive`
     );
 
     // generate remote

@@ -1,13 +1,9 @@
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
-import {
-  type Configuration,
-  type RspackPluginInstance,
-  type RuleSetRule,
-  CssExtractRspackPlugin,
-  DefinePlugin,
-  EnvironmentPlugin,
-  HtmlRspackPlugin,
-  LightningCssMinimizerRspackPlugin,
+import { getProjectSourceRoot } from '@nx/js/internal';
+import type {
+  Compiler,
+  Configuration,
+  RspackPluginInstance,
+  RuleSetRule,
   RspackOptionsNormalized,
 } from '@rspack/core';
 import { join, resolve } from 'path';
@@ -27,14 +23,31 @@ export function applyWebConfig(
   config: Partial<RspackOptionsNormalized | Configuration> = {},
   {
     useNormalizedEntry,
+    compiler,
   }: {
     // rspack.Configuration allows arrays to be set on a single entry
     // rspack then normalizes them to { import: "..." } objects
     // This option allows use to preserve existing composePlugins behavior where entry.main is an array.
     useNormalizedEntry?: boolean;
+    compiler?: Compiler;
   } = {}
 ): void {
   if (global.NX_GRAPH_CREATION) return;
+
+  // Prefer compiler.rspack when available; otherwise lazy-require
+  // @rspack/core (works on Node 22.12+ via require(esm), and keeps the
+  // file Jest-loadable since the require is inside the function body).
+  const rspackCore: typeof import('@rspack/core') = compiler
+    ? (compiler.rspack as unknown as typeof import('@rspack/core'))
+    : require('@rspack/core');
+  const {
+    CssExtractRspackPlugin,
+    DefinePlugin,
+    EnvironmentPlugin,
+    HtmlRspackPlugin,
+    LightningCssMinimizerRspackPlugin,
+  } = rspackCore;
+  const cssExtractLoader = CssExtractRspackPlugin.loader;
 
   // Defaults that was applied from executor schema previously.
   options.runtimeChunk ??= true; // need this for HMR and other things to work
@@ -153,13 +166,21 @@ export function applyWebConfig(
     {
       test: /\.module\.css$/,
       exclude: globalStylePaths,
-      use: getCommonLoadersForCssModules(options, includePaths),
+      use: getCommonLoadersForCssModules(
+        options,
+        includePaths,
+        cssExtractLoader
+      ),
     },
     {
       test: /\.module\.(scss|sass)$/,
       exclude: globalStylePaths,
       use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
+        ...getCommonLoadersForCssModules(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
           loader: require.resolve('sass-loader'),
           options: {
@@ -179,9 +200,13 @@ export function applyWebConfig(
       test: /\.module\.less$/,
       exclude: globalStylePaths,
       use: [
-        ...getCommonLoadersForCssModules(options, includePaths),
+        ...getCommonLoadersForCssModules(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             lessOptions: {
               paths: includePaths,
@@ -197,13 +222,21 @@ export function applyWebConfig(
     {
       test: /\.css$/,
       exclude: globalStylePaths,
-      use: getCommonLoadersForGlobalCss(options, includePaths),
+      use: getCommonLoadersForGlobalCss(
+        options,
+        includePaths,
+        cssExtractLoader
+      ),
     },
     {
       test: /\.scss$|\.sass$/,
       exclude: globalStylePaths,
       use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
+        ...getCommonLoadersForGlobalCss(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
           loader: require.resolve('sass-loader'),
           options: {
@@ -225,9 +258,13 @@ export function applyWebConfig(
       test: /\.less$/,
       exclude: globalStylePaths,
       use: [
-        ...getCommonLoadersForGlobalCss(options, includePaths),
+        ...getCommonLoadersForGlobalCss(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -245,13 +282,21 @@ export function applyWebConfig(
     {
       test: /\.css$/,
       include: globalStylePaths,
-      use: getCommonLoadersForGlobalStyle(options, includePaths),
+      use: getCommonLoadersForGlobalStyle(
+        options,
+        includePaths,
+        cssExtractLoader
+      ),
     },
     {
       test: /\.scss$|\.sass$/,
       include: globalStylePaths,
       use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
+        ...getCommonLoadersForGlobalStyle(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
           loader: require.resolve('sass-loader'),
           options: {
@@ -273,9 +318,13 @@ export function applyWebConfig(
       test: /\.less$/,
       include: globalStylePaths,
       use: [
-        ...getCommonLoadersForGlobalStyle(options, includePaths),
+        ...getCommonLoadersForGlobalStyle(
+          options,
+          includePaths,
+          cssExtractLoader
+        ),
         {
-          loader: require.resolve('less-loader'),
+          loader: join(__dirname, 'loaders/deprecated-less-loader.js'),
           options: {
             sourceMap: !!options.sourceMap,
             lessOptions: {
@@ -375,19 +424,9 @@ export function applyWebConfig(
     ...(config.module ?? {}),
     rules: [
       ...(config.module.rules ?? []),
-      // Images: Inline small images, and emit a separate file otherwise.
+      // Images: Inline small images, and emit a separate file otherwise (including SVGs).
       {
-        test: /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/,
-        type: 'asset',
-        parser: {
-          dataUrlCondition: {
-            maxSize: 10_000, // 10 kB
-          },
-        },
-      },
-      // SVG: same as image but we need to separate it so it can be swapped for SVGR in the React plugin.
-      {
-        test: /\.svg$/,
+        test: /\.(avif|bmp|gif|ico|jpe?g|png|svg|webp)$/,
         type: 'asset',
         parser: {
           dataUrlCondition: {

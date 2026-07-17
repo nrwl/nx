@@ -1,4 +1,5 @@
-import { createConformanceRule, ConformanceViolation } from '@nx/conformance';
+import { createConformanceRule } from '@nx/conformance';
+import type { ConformanceViolation } from '@nx/conformance';
 import { execSync } from 'child_process';
 
 export default createConformanceRule({

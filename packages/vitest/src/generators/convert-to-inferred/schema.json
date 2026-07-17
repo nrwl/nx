@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "$id": "NxVitestConvertToInferred",
+  "description": "Convert existing vitest project(s) using `@nx/vitest:test` executors to use the `@nx/vitest` inferred plugin. Defaults to migrating all projects. Pass '--project' to migrate only one target.",
+  "title": "Convert vitest project from executor to inferred plugin",
+  "type": "object",
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "The project to convert from using the `@nx/vitest:test` executor to use the `@nx/vitest` inferred plugin.",
+      "x-priority": "important"
+    },
+    "skipFormat": {
+      "type": "boolean",
+      "description": "Whether to format files at the end of the migration.",
+      "default": false
+    }
+  }
+}

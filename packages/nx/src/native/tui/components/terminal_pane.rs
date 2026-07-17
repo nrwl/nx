@@ -1,4 +1,4 @@
-use arboard::Clipboard;
+use crate::native::tui::clipboard::copy_to_clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use ratatui::{
     buffer::Buffer,
@@ -6,21 +6,59 @@ use ratatui::{
     style::{Modifier, Style, Stylize},
     text::{Line, Span},
     widgets::{
-        Block, BorderType, Borders, Padding, Paragraph, Scrollbar, ScrollbarOrientation,
-        ScrollbarState, StatefulWidget, Widget,
+        Block, BorderType, Borders, Padding, Scrollbar, ScrollbarOrientation, ScrollbarState,
+        StatefulWidget, Widget,
     },
 };
 use std::{io, sync::Arc, time::Instant};
 use tracing::debug;
 use tui_term::widget::PseudoTerminal;
 
+use crate::native::tui::components::nx_paragraph::NxParagraph;
+use crate::native::tui::components::search_filter::{SessionEvent, interpret_session_key};
 use crate::native::tui::components::tasks_list::TaskStatus;
 use crate::native::tui::scroll_momentum::{ScrollDirection, ScrollMomentum};
 use crate::native::tui::theme::THEME;
 use crate::native::tui::utils::{
     format_duration_with_estimate, get_task_status_icon, get_task_status_style,
 };
+use crate::native::tui::vt100_adapter::Vt100CttScreen;
 use crate::native::tui::{action::Action, pty::PtyInstance};
+
+/// A text selection within a terminal pane, tracked in absolute content
+/// (visual-row, column) coordinates so it stays anchored to the text as the
+/// pane scrolls.
+#[derive(Debug, Clone, Copy)]
+struct TextSelection {
+    anchor: (usize, usize),
+    cursor: (usize, usize),
+    /// Whether a drag is currently in progress (vs. a finalized selection).
+    dragging: bool,
+}
+
+impl TextSelection {
+    /// Normalized `(start, end)` with `start <= end` in reading order.
+    fn range(&self) -> ((usize, usize), (usize, usize)) {
+        if self.anchor <= self.cursor {
+            (self.anchor, self.cursor)
+        } else {
+            (self.cursor, self.anchor)
+        }
+    }
+
+    /// True once the selection spans more than its origin cell (a real drag).
+    fn is_nonempty(&self) -> bool {
+        self.anchor != self.cursor
+    }
+
+    /// Whether content cell `(row, col)` falls inside the selection (inclusive).
+    fn contains(&self, row: usize, col: usize) -> bool {
+        let (start, end) = self.range();
+        let after_start = row > start.0 || (row == start.0 && col >= start.1);
+        let before_end = row < end.0 || (row == end.0 && col <= end.1);
+        after_start && before_end
+    }
+}
 
 /// Configuration for terminal pane layout and display constants
 #[derive(Debug, Clone)]
@@ -43,6 +81,25 @@ struct TerminalPaneConfig {
     short_tab_text: &'static str,
 }
 
+/// A vim-style search session over a pane's terminal content.
+#[derive(Debug, Clone, Default)]
+pub struct PaneSearch {
+    pub query: String,
+    /// Typing into the query (true) vs navigating matches with n/N (false).
+    pub input_mode: bool,
+    /// Match positions in the PTY's visual coordinates: (row, col, col_width).
+    pub matches: Vec<(usize, usize, usize)>,
+    /// Index into `matches` of the match the view last jumped to.
+    pub current: usize,
+    /// PTY output generation when `matches` was last computed. A re-scan runs
+    /// only when this changes, so navigating a finished task's static
+    /// scrollback doesn't re-scan it on every keypress. Uses the generation
+    /// rather than a content-row count because the count saturates once the
+    /// scrollback fills (old lines keep being evicted while the count pins),
+    /// which would freeze the match list against shifting text.
+    pub searched_generation: u64,
+}
+
 pub struct TerminalPaneData {
     pub pty: Option<Arc<PtyInstance>>,
     pub is_interactive: bool,
@@ -52,6 +109,13 @@ pub struct TerminalPaneData {
     scroll_momentum: ScrollMomentum,
     // Transient status message with timestamp for auto-clear
     pub status_message: Option<(String, Instant)>,
+    /// Active text selection within this pane, if any (NXC-3946).
+    selection: Option<TextSelection>,
+    /// Active search session, if any.
+    pub search: Option<PaneSearch>,
+    /// Inner content rect (inside borders/padding) captured during the last
+    /// render, used to translate mouse coordinates into content coordinates.
+    last_content_area: Option<Rect>,
 }
 
 impl TerminalPaneData {
@@ -63,10 +127,211 @@ impl TerminalPaneData {
             can_be_interactive: false,
             scroll_momentum: ScrollMomentum::new(),
             status_message: None,
+            selection: None,
+            search: None,
+            last_content_area: None,
+        }
+    }
+
+    /// Whether the search input is capturing keystrokes (the app routes every
+    /// key here while this is true).
+    pub fn search_input_active(&self) -> bool {
+        self.search.as_ref().is_some_and(|search| search.input_mode)
+    }
+
+    /// Re-scan for search matches if the pane's output has changed since the
+    /// last scan, keeping the user on their current match. Called each frame so
+    /// an active search's match count tracks a still-running task's streaming
+    /// output without the user pressing a key. Cheap when nothing has changed:
+    /// `refresh_matches` short-circuits on an unchanged output generation.
+    pub fn refresh_search_if_grown(&mut self) {
+        if self.search.is_some() {
+            self.refresh_matches();
+        }
+    }
+
+    /// Recompute matches for the current query and optionally jump to the
+    /// anchor match. Terminal search runs *backward* from where you're sitting
+    /// (usually the bottom): the anchor is the newest match at or above the
+    /// viewport's bottom row, wrapping to the bottom-most match when every
+    /// match is below the view. This lands you on the most recent occurrence
+    /// instead of yanking you to the oldest one at the top of the log.
+    fn recompute_search(&mut self, jump: bool) {
+        let Some(pty) = &self.pty else {
+            return;
+        };
+        let bottom = pty.visual_top() + (pty.get_dimensions().0 as usize).saturating_sub(1);
+        // Read the generation BEFORE scanning (like `refresh_matches`): output
+        // landing mid-scan then reads as newer than the stamp and triggers one
+        // redundant re-scan. The reverse order would stamp a newer generation
+        // onto matches from older content — permanently stale if that write
+        // was the task's last.
+        let generation = pty.output_generation();
+        let positions = self
+            .search
+            .as_ref()
+            .map(|search| pty.search_visual_positions(&search.query))
+            .unwrap_or_default();
+        let Some(search) = &mut self.search else {
+            return;
+        };
+        search.matches = positions;
+        search.searched_generation = generation;
+        search.current = search
+            .matches
+            .iter()
+            .rposition(|(row, _, _)| *row <= bottom)
+            .unwrap_or_else(|| search.matches.len().saturating_sub(1));
+        if jump {
+            self.jump_to_current_match();
+        }
+    }
+
+    /// Refresh the match list against the current content (it may have changed)
+    /// WITHOUT re-anchoring `current` to the scroll position: n/N must step
+    /// relative to the match the user is on, not whatever scrolled into view.
+    /// Skips the re-scan entirely when the output generation is unchanged since
+    /// the last search — navigating a finished task's scrollback costs nothing.
+    fn refresh_matches(&mut self) {
+        let Some(pty) = &self.pty else {
+            return;
+        };
+        let generation = pty.output_generation();
+        if self
+            .search
+            .as_ref()
+            .is_some_and(|search| search.searched_generation == generation)
+        {
+            return;
+        }
+        let positions = self
+            .search
+            .as_ref()
+            .map(|search| pty.search_visual_positions(&search.query))
+            .unwrap_or_default();
+        if let Some(search) = &mut self.search {
+            let previous = search.matches.get(search.current).copied();
+            search.matches = positions;
+            search.searched_generation = generation;
+            search.current = previous
+                .and_then(|prev| search.matches.iter().position(|m| *m == prev))
+                .unwrap_or_else(|| search.current.min(search.matches.len().saturating_sub(1)));
+        }
+    }
+
+    /// Step to the next (+1) or previous (-1) match, wrapping around.
+    fn search_step(&mut self, direction: i64) {
+        if let Some(search) = &mut self.search {
+            let len = search.matches.len();
+            if len == 0 {
+                return;
+            }
+            search.current = ((search.current as i64 + direction).rem_euclid(len as i64)) as usize;
+        }
+        self.jump_to_current_match();
+    }
+
+    fn jump_to_current_match(&mut self) {
+        let Some(search) = &self.search else {
+            return;
+        };
+        let Some((row, _, _)) = search.matches.get(search.current).copied() else {
+            return;
+        };
+        if let Some(pty) = &self.pty {
+            let mut pty_mut = pty.as_ref().clone();
+            pty_mut.scroll_to_visual_row(row);
         }
     }
 
     pub fn handle_key_event(&mut self, key: KeyEvent) -> io::Result<Option<Action>> {
+        // Vim-style search input: while typing, every key edits the query.
+        // The bindings come from the session keymap shared with the task
+        // filter (`search_filter::interpret_session_key`).
+        if self.search_input_active() {
+            match interpret_session_key(true, true, &key) {
+                SessionEvent::Cancel => {
+                    self.search = None;
+                }
+                SessionEvent::Confirm => {
+                    // Confirm and switch to n/N navigation. A matchless query is
+                    // kept — a still-running task may produce matches later, and
+                    // the live refresh will pick them up. Only an empty query
+                    // (nothing to search for) closes the search.
+                    if self
+                        .search
+                        .as_ref()
+                        .is_some_and(|search| !search.query.is_empty())
+                    {
+                        if let Some(search) = &mut self.search {
+                            search.input_mode = false;
+                        }
+                    } else {
+                        self.search = None;
+                    }
+                }
+                SessionEvent::DeleteBack => {
+                    if let Some(search) = &mut self.search {
+                        search.query.pop();
+                    }
+                    self.recompute_search(true);
+                }
+                SessionEvent::Append(c) => {
+                    if let Some(search) = &mut self.search {
+                        search.query.push(c);
+                    }
+                    self.recompute_search(true);
+                }
+                SessionEvent::Open | SessionEvent::NotHandled => {}
+            }
+            return Ok(None);
+        }
+
+        if !self.is_interactive {
+            // n/N navigation is search-specific and stays with the pane; the
+            // open/resume/clear bindings come from the shared session keymap.
+            if self.search.is_some() {
+                match key.code {
+                    KeyCode::Char('n') => {
+                        // Content may have changed since the last search.
+                        self.refresh_matches();
+                        // Backward search from the bottom: `n` steps to the
+                        // next-older match (up the log), `N` back toward newer.
+                        self.search_step(-1);
+                        return Ok(None);
+                    }
+                    KeyCode::Char('N') => {
+                        self.refresh_matches();
+                        self.search_step(1);
+                        return Ok(None);
+                    }
+                    _ => {}
+                }
+            }
+            match interpret_session_key(false, self.search.is_some(), &key) {
+                // '/' opens a search over the pane's content — resuming the
+                // confirmed query for editing when one exists, like the task
+                // filter's "/ to edit".
+                SessionEvent::Open if self.pty.is_some() => {
+                    match &mut self.search {
+                        Some(search) => search.input_mode = true,
+                        None => {
+                            self.search = Some(PaneSearch {
+                                input_mode: true,
+                                ..Default::default()
+                            });
+                        }
+                    }
+                    return Ok(None);
+                }
+                SessionEvent::Cancel => {
+                    self.search = None;
+                    return Ok(None);
+                }
+                _ => {}
+            }
+        }
+
         if let Some(pty) = &mut self.pty {
             let mut pty_mut = pty.as_ref().clone();
             match key.code {
@@ -115,24 +380,31 @@ impl TerminalPaneData {
                     pty_mut.scroll_down(12);
                     return Ok(None);
                 }
-                // Handle 'c' for copying when not in interactive mode
+                // Handle 'c' for copying when not in interactive mode. Prefer an
+                // active selection; fall back to copying the whole output.
                 KeyCode::Char('c') if !self.is_interactive => {
-                    let status_message = if let Some(screen) = pty.get_screen() {
-                        // Unformatted output (no ANSI escape codes)
-                        let output = screen.all_contents();
-                        match Clipboard::new() {
-                            Ok(mut clipboard) => {
-                                if clipboard.set_text(output).is_ok() {
-                                    Some("Output copied")
-                                } else {
-                                    Some("Copy failed")
-                                }
+                    let status_message =
+                        if let Some(sel) = self.selection.filter(|s| s.is_nonempty()) {
+                            let (start, end) = sel.range();
+                            let text = pty.selected_text(start, end);
+                            if text.is_empty() {
+                                None
+                            } else if copy_to_clipboard(&text) {
+                                Some("Selection copied")
+                            } else {
+                                Some("Copy failed")
                             }
-                            Err(_) => Some("Copy failed"),
-                        }
-                    } else {
-                        None
-                    };
+                        } else if let Some(screen) = pty.get_screen() {
+                            // Unformatted output (no ANSI escape codes)
+                            let output = screen.all_contents();
+                            if copy_to_clipboard(&output) {
+                                Some("Output copied")
+                            } else {
+                                Some("Copy failed")
+                            }
+                        } else {
+                            None
+                        };
                     // Set status message outside the pty borrow
                     if let Some(msg) = status_message {
                         self.status_message = Some((msg.to_owned(), Instant::now()));
@@ -206,6 +478,12 @@ impl TerminalPaneData {
         self.is_interactive = interactive;
         // Reset scroll momentum when changing modes
         self.scroll_momentum.reset();
+        // Once interactive, every key (Esc included) is forwarded to the child
+        // program, so a lingering search could never be navigated or cleared.
+        // Drop it on entering interactive mode.
+        if interactive {
+            self.search = None;
+        }
     }
 
     pub fn is_interactive(&self) -> bool {
@@ -223,6 +501,130 @@ impl TerminalPaneData {
                 ScrollDirection::Down => pty_mut.scroll_down(scroll_amount),
             }
         }
+    }
+
+    /// Public entry point for mouse-wheel scrolling of the terminal output.
+    /// Reuses the same momentum model as keyboard scrolling so the wheel and
+    /// arrow keys feel consistent.
+    pub fn handle_mouse_scroll(&mut self, direction: ScrollDirection) {
+        self.scroll(direction);
+    }
+
+    // --- Text selection (NXC-3946) -------------------------------------------
+
+    /// Translate a terminal cell `(col, row)` into absolute content coordinates
+    /// `(visual_row, column)` within this pane, if the pane has rendered content
+    /// and the cell falls inside the content area.
+    pub fn content_coords_at(&self, col: u16, row: u16) -> Option<(usize, usize)> {
+        let area = self.last_content_area?;
+        if col < area.x
+            || col >= area.x.saturating_add(area.width)
+            || row < area.y
+            || row >= area.y.saturating_add(area.height)
+        {
+            return None;
+        }
+        let pty = self.pty.as_ref()?;
+        let screen_row = (row - area.y) as usize;
+        let screen_col = (col - area.x) as usize;
+        // Map the on-screen row to an absolute content row: the top visible row
+        // is `total - viewport_height - scrollback` rows from the start.
+        let top = pty
+            .get_total_content_rows()
+            .saturating_sub(area.height as usize)
+            .saturating_sub(pty.get_scroll_offset());
+        Some((top + screen_row, screen_col))
+    }
+
+    /// Like [`content_coords_at`](Self::content_coords_at) but clamps the cell
+    /// into the content area first, so a drag that strays outside the pane still
+    /// extends the selection to the nearest edge.
+    pub fn content_coords_clamped(&self, col: u16, row: u16) -> Option<(usize, usize)> {
+        let area = self.last_content_area?;
+        if area.width == 0 || area.height == 0 {
+            return None;
+        }
+        let c = col.clamp(area.x, area.x + area.width - 1);
+        let r = row.clamp(area.y, area.y + area.height - 1);
+        self.content_coords_at(c, r)
+    }
+
+    /// Vertical edge of the content area the cell is at, for drag auto-scroll:
+    /// `-1` at/above the top edge, `1` at/below the bottom edge, `0` otherwise.
+    pub fn content_edge(&self, row: u16) -> i8 {
+        match self.last_content_area {
+            Some(area) if area.height > 0 => {
+                if row <= area.y {
+                    -1
+                } else if row >= area.y + area.height - 1 {
+                    1
+                } else {
+                    0
+                }
+            }
+            _ => 0,
+        }
+    }
+
+    /// Begin a selection drag at the given content coordinates.
+    pub fn begin_selection(&mut self, row: usize, col: usize) {
+        self.selection = Some(TextSelection {
+            anchor: (row, col),
+            cursor: (row, col),
+            dragging: true,
+        });
+    }
+
+    /// Update the in-progress selection's cursor to new content coordinates.
+    pub fn update_selection(&mut self, row: usize, col: usize) {
+        if let Some(sel) = &mut self.selection
+            && sel.dragging
+        {
+            sel.cursor = (row, col);
+        }
+    }
+
+    /// Finish the current selection drag. A plain click (no movement) clears the
+    /// selection. Returns true if a non-empty selection remains.
+    pub fn finish_selection(&mut self) -> bool {
+        if let Some(sel) = &mut self.selection {
+            sel.dragging = false;
+            if !sel.is_nonempty() {
+                self.selection = None;
+                return false;
+            }
+            return true;
+        }
+        false
+    }
+
+    /// Clear any selection.
+    pub fn clear_selection(&mut self) {
+        self.selection = None;
+    }
+
+    /// Copy the current selection to the clipboard and set a status message.
+    pub fn copy_selection(&mut self) {
+        let Some(sel) = self.selection else {
+            return;
+        };
+        if !sel.is_nonempty() {
+            return;
+        }
+        let Some(pty) = self.pty.as_ref() else {
+            return;
+        };
+        let (start, end) = sel.range();
+        let text = pty.selected_text(start, end);
+        if text.is_empty() {
+            return;
+        }
+        let msg = if copy_to_clipboard(&text) {
+            "Selection copied"
+        } else {
+            "Copy failed"
+        };
+        self.status_message = Some((msg.to_owned(), Instant::now()));
     }
 }
 
@@ -431,7 +833,7 @@ impl<'a> TerminalPane<'a> {
 impl<'a> StatefulWidget for TerminalPane<'a> {
     type State = TerminalPaneState;
 
-    fn render(self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
+    fn render(mut self, area: Rect, buf: &mut Buffer, state: &mut Self::State) {
         // Clamp to the buffer to avoid rendering outside bounds
         let safe_area = area.intersection(*buf.area());
         if safe_area.width == 0 || safe_area.height == 0 {
@@ -443,7 +845,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
         if safe_area.width < 5 || safe_area.height < 5 {
             // Just render a minimal indicator instead of a full pane
             let text = "...";
-            let paragraph = Paragraph::new(text)
+            let paragraph = NxParagraph::new(text)
                 .style(Style::default().fg(THEME.secondary_fg))
                 .alignment(Alignment::Center);
             Widget::render(paragraph, safe_area, buf);
@@ -546,7 +948,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -569,7 +971,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -590,7 +992,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 },
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -612,7 +1014,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 message_style,
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -641,7 +1043,7 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                 message_style,
             )])];
 
-            let paragraph = Paragraph::new(message)
+            let paragraph = NxParagraph::new(message)
                 .block(block)
                 .alignment(Alignment::Center)
                 .style(Style::default());
@@ -652,20 +1054,36 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 
         let inner_area = block.inner(safe_area);
 
+        // Record the content rect so mouse events can map cells to content
+        // coordinates for text selection. Scoped so the mutable borrow ends
+        // before the immutable render borrow below.
+        if let Some(pty_data) = &mut self.pty_data {
+            pty_data.last_content_area = Some(inner_area);
+        }
+
         if let Some(pty_data) = &self.pty_data {
             if let Some(pty) = &pty_data.pty {
-                if let Some(screen) = pty.get_screen() {
-                    let viewport_height = inner_area.height;
+                // Read every value that needs the parser lock BEFORE acquiring the
+                // `screen` read guard below. parking_lot's RwLock is non-reentrant
+                // and writer-preferring: a blocking `read()` taken while `screen`
+                // is still held deadlocks the render thread against the PTY's
+                // output-writer thread the moment that thread has a `write()`
+                // queued. That is what froze the entire TUI when selecting text in
+                // a pane that was still producing output.
+                let viewport_height = inner_area.height;
+                let current_scroll = pty.get_scroll_offset();
+                // Calculate content based on expected dimensions, not current PTY
+                // dimensions. This prevents scrollbar flash when the PTY hasn't
+                // been resized yet.
+                let total_content_rows =
+                    self.calculate_content_rows_for_viewport(pty, viewport_height);
+                // Absolute content-row count used to map the selection overlay,
+                // matching `content_coords_at`'s basis.
+                let selection_content_rows = pty.get_total_content_rows();
 
+                if let Some(screen) = pty.get_screen() {
                     // Cache expected viewport height for consistent calculations
                     state.expected_viewport_height = Some(viewport_height);
-
-                    let current_scroll = pty.get_scroll_offset();
-
-                    // Calculate content based on expected dimensions, not current PTY dimensions
-                    // This prevents scrollbar flash when PTY hasn't been resized yet
-                    let total_content_rows =
-                        self.calculate_content_rows_for_viewport(pty, viewport_height);
                     let scrollable_rows =
                         total_content_rows.saturating_sub(viewport_height as usize);
 
@@ -685,8 +1103,70 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                         ScrollbarState::default()
                     };
 
-                    let pseudo_term = PseudoTerminal::new(&*screen).block(block);
+                    let pseudo_term =
+                        PseudoTerminal::new(Vt100CttScreen::wrap(&screen)).block(block);
                     Widget::render(pseudo_term, safe_area, buf);
+
+                    // Overlay the text-selection highlight (NXC-3946). tui-term has
+                    // no selection concept, so we reverse-video the selected cells
+                    // after it has rendered. Map each visible cell to its content
+                    // row and test it against the selection.
+                    if let Some(selection) = pty_data.selection {
+                        let top = selection_content_rows
+                            .saturating_sub(inner_area.height as usize)
+                            .saturating_sub(current_scroll);
+                        for sy in 0..inner_area.height {
+                            let content_row = top + sy as usize;
+                            for sx in 0..inner_area.width {
+                                if selection.contains(content_row, sx as usize)
+                                    && let Some(cell) =
+                                        buf.cell_mut((inner_area.x + sx, inner_area.y + sy))
+                                {
+                                    cell.modifier |= Modifier::REVERSED;
+                                }
+                            }
+                        }
+                    }
+
+                    // Overlay search-match highlights the same way: plain
+                    // matches in reverse-video, the current match on a
+                    // distinct warning-colored background (like vim's
+                    // CurSearch) so it stands out from its siblings.
+                    if let Some(search) = &pty_data.search
+                        && !search.matches.is_empty()
+                    {
+                        let top = selection_content_rows
+                            .saturating_sub(inner_area.height as usize)
+                            .saturating_sub(current_scroll);
+                        let bottom = top + inner_area.height as usize;
+                        for (idx, (row, col, len)) in search.matches.iter().enumerate() {
+                            // Matches are row-local (the search scans grid
+                            // rows independently), so every cell sits on the
+                            // match's own row.
+                            if *row < top || *row >= bottom {
+                                continue;
+                            }
+                            for i in 0..*len {
+                                let cell_col = col + i;
+                                if cell_col >= inner_area.width as usize {
+                                    break;
+                                }
+                                if let Some(cell) = buf.cell_mut((
+                                    inner_area.x + cell_col as u16,
+                                    inner_area.y + (row - top) as u16,
+                                )) {
+                                    if idx == search.current {
+                                        cell.set_bg(THEME.warning);
+                                        cell.set_fg(ratatui::style::Color::Black);
+                                        cell.modifier.remove(Modifier::DIM);
+                                        cell.modifier.remove(Modifier::REVERSED);
+                                    } else {
+                                        cell.modifier |= Modifier::REVERSED;
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     // Only render scrollbar if needed
                     if needs_scrollbar {
@@ -697,157 +1177,6 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                             .style(border_style);
 
                         scrollbar.render(safe_area, buf, &mut state.scrollbar_state);
-                    }
-
-                    let show_interactive_status = state.task_status == TaskStatus::InProgress
-                        && state.is_focused
-                        && pty_data.can_be_interactive;
-
-                    // Show status message and/or interactive status for focused, in progress tasks
-                    if show_interactive_status || pty_data.status_message.is_some() {
-                        // Get status message if present
-                        let status_msg = pty_data
-                            .status_message
-                            .as_ref()
-                            .map(|(msg, _)| msg.as_str());
-
-                        // Determine mode text
-                        let mode_text = if self.is_currently_interactive() {
-                            "INTERACTIVE"
-                        } else {
-                            "NON-INTERACTIVE"
-                        };
-
-                        let mode_style = if self.is_currently_interactive() {
-                            Style::default().fg(THEME.primary_fg)
-                        } else {
-                            Style::default().fg(THEME.secondary_fg)
-                        };
-
-                        // Build the bottom text based on what we need to display
-                        let bottom_text = if let Some(msg) = status_msg {
-                            if show_interactive_status {
-                                // Both status and interactive mode to show
-                                let combined_text = format!("  {} │ {}  ", msg, mode_text);
-                                let combined_width = combined_text.len();
-
-                                // Check if we have enough space for both
-                                if combined_width as u16 + Self::CONFIG.right_margin
-                                    < safe_area.width
-                                {
-                                    // Enough space: show both with separator
-                                    Line::from(vec![
-                                        Span::styled(
-                                            format!("  {} ", msg),
-                                            Style::default().fg(THEME.info),
-                                        ),
-                                        Span::styled("│", Style::default().fg(THEME.secondary_fg)),
-                                        Span::styled(format!(" {}  ", mode_text), mode_style),
-                                    ])
-                                } else {
-                                    // Limited space: status message takes priority
-                                    Line::from(vec![Span::styled(
-                                        format!("  {}  ", msg),
-                                        Style::default().fg(THEME.info),
-                                    )])
-                                }
-                            } else {
-                                // Only status message (no interactive status)
-                                Line::from(vec![Span::styled(
-                                    format!("  {}  ", msg),
-                                    Style::default().fg(THEME.info),
-                                )])
-                            }
-                        } else if show_interactive_status {
-                            // No status message, show full interactive status with toggle hint
-                            if self.is_currently_interactive() {
-                                Line::from(vec![
-                                    Span::styled(
-                                        "  INTERACTIVE ",
-                                        Style::default().fg(THEME.primary_fg),
-                                    ),
-                                    Span::styled("<ctrl>+z", Style::default().fg(THEME.info)),
-                                    Span::styled(
-                                        " to toggle  ",
-                                        Style::default().fg(THEME.primary_fg),
-                                    ),
-                                ])
-                            } else {
-                                Line::from(vec![
-                                    Span::styled(
-                                        "  NON-INTERACTIVE ",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ),
-                                    Span::styled("i", Style::default().fg(THEME.info)),
-                                    Span::styled(
-                                        " to toggle  ",
-                                        Style::default().fg(THEME.secondary_fg),
-                                    ),
-                                ])
-                            }
-                        } else {
-                            // Nothing to show (shouldn't reach here due to outer condition)
-                            Line::from(vec![])
-                        };
-
-                        let text_width = bottom_text
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>();
-
-                        // Ensure status text doesn't extend past safe area
-                        if text_width > 0
-                            && text_width as u16 + Self::CONFIG.right_margin < safe_area.width
-                        {
-                            let bottom_right_area = Rect {
-                                x: safe_area.x + safe_area.width
-                                    - text_width as u16
-                                    - Self::CONFIG.right_margin,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: text_width as u16 + Self::CONFIG.width_padding,
-                                height: 1,
-                            };
-
-                            Paragraph::new(bottom_text)
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(bottom_right_area, buf);
-                        }
-                    }
-
-                    // Show "enter to view full screen" help text in bottom left when focused
-                    if state.is_focused {
-                        let help_line = Line::from(vec![
-                            Span::styled("  <", Style::default().fg(THEME.secondary_fg)),
-                            Span::styled("enter", Style::default().fg(THEME.info)),
-                            Span::styled(
-                                "> full screen  ",
-                                Style::default().fg(THEME.secondary_fg),
-                            ),
-                        ]);
-
-                        let help_text_width: u16 = help_line
-                            .spans
-                            .iter()
-                            .map(|span| span.content.len())
-                            .sum::<usize>()
-                            as u16;
-
-                        // Ensure help text fits within the safe area
-                        if help_text_width + 2 < safe_area.width && safe_area.height > 1 {
-                            let bottom_left_area = Rect {
-                                x: safe_area.x + 1,
-                                y: safe_area.y + safe_area.height - 1,
-                                width: help_text_width,
-                                height: 1,
-                            };
-
-                            Paragraph::new(help_line)
-                                .alignment(Alignment::Left)
-                                .style(border_style)
-                                .render(bottom_left_area, buf);
-                        }
                     }
 
                     // Render scrollbar padding when needed, but not for minimal non-interactive panes
@@ -868,27 +1197,31 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                 height: 1,
                             };
 
-                            Paragraph::new(padding_text.clone())
-                                .alignment(Alignment::Right)
-                                .style(border_style)
-                                .render(top_right_area, buf);
-
-                            // Bottom padding (only if interactive status is not being displayed)
-                            if !show_interactive_status {
-                                let bottom_right_area = Rect {
-                                    x: safe_area.x + safe_area.width
-                                        - padding_width
-                                        - Self::CONFIG.right_margin,
-                                    y: safe_area.y + safe_area.height - 1,
-                                    width: padding_width + Self::CONFIG.width_padding,
-                                    height: 1,
-                                };
-
-                                Paragraph::new(padding_text)
+                            Widget::render(
+                                NxParagraph::new(padding_text.clone())
                                     .alignment(Alignment::Right)
-                                    .style(border_style)
-                                    .render(bottom_right_area, buf);
-                            }
+                                    .style(border_style),
+                                top_right_area,
+                                buf,
+                            );
+
+                            // Bottom padding
+                            let bottom_right_area = Rect {
+                                x: safe_area.x + safe_area.width
+                                    - padding_width
+                                    - Self::CONFIG.right_margin,
+                                y: safe_area.y + safe_area.height - 1,
+                                width: padding_width + Self::CONFIG.width_padding,
+                                height: 1,
+                            };
+
+                            Widget::render(
+                                NxParagraph::new(padding_text)
+                                    .alignment(Alignment::Right)
+                                    .style(border_style),
+                                bottom_right_area,
+                                buf,
+                            );
                         }
                     }
 
@@ -920,10 +1253,13 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
                                     height: 1,
                                 };
 
-                                Paragraph::new(duration_line)
-                                    .alignment(Alignment::Right)
-                                    .style(border_style)
-                                    .render(duration_area, buf);
+                                Widget::render(
+                                    NxParagraph::new(duration_line)
+                                        .alignment(Alignment::Right)
+                                        .style(border_style),
+                                    duration_area,
+                                    buf,
+                                );
                             }
                         }
                     }
@@ -937,6 +1273,565 @@ impl<'a> StatefulWidget for TerminalPane<'a> {
 mod tests {
     use super::*;
     use ratatui::layout::Rect;
+
+    fn press(pane: &mut TerminalPaneData, code: KeyCode) {
+        pane.handle_key_event(KeyEvent::new(code, KeyModifiers::NONE))
+            .unwrap();
+    }
+
+    /// The highlight overlay must wrap match columns against the parser's real
+    /// width (what `search_visual_positions` used), not the cached
+    /// `get_dimensions()`, which lags during a resize reparse. When they differ
+    /// the highlight drifts on wrapped lines — the "off by one when narrow" the
+    /// user hit. Here the cached width is forced smaller than the parser's, and
+    /// a match sits past that smaller width but within the real one.
+    #[test]
+    fn search_highlights_wrap_against_the_parser_width_not_cached_dimensions() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        let area = Rect::new(0, 0, 40, 10);
+        let (r, c) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(r, c));
+        // "err" sits at column c/2 + 1 on the first (unwrapped) row — past a
+        // c/2-wide wrap boundary but comfortably within the real width c.
+        let lead = (c as usize) / 2 + 1;
+        pty.process_output(format!("{}err tail here", "x".repeat(lead)).as_bytes());
+        let matches = pty.search_visual_positions("err");
+        assert_eq!(
+            matches,
+            vec![(0, lead, 3)],
+            "match is on row 0 at the real width"
+        );
+
+        // Simulate the resize window: cached dimensions narrower than the parser.
+        pty.set_cached_dimensions_for_test(r, c / 2);
+
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        data.search = Some(PaneSearch {
+            query: "err".to_string(),
+            input_mode: false,
+            matches,
+            current: 0,
+            searched_generation: pty.output_generation(),
+        });
+        let mut state = TerminalPaneState::new(
+            "t".to_string(),
+            TaskStatus::Success,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+        let mut buf = Buffer::empty(area);
+        StatefulWidget::render(
+            TerminalPane::new().pty_data(&mut data),
+            area,
+            &mut buf,
+            &mut state,
+        );
+
+        // Every highlighted run must spell "err". With the cached (c/2) width the
+        // old overlay would wrap `lead` onto a second row and land on an 'x'.
+        let mut runs = Vec::new();
+        for y in 0..area.height {
+            let mut run = String::new();
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                if cell.bg == THEME.warning || cell.modifier.contains(Modifier::REVERSED) {
+                    run.push_str(cell.symbol());
+                } else if !run.is_empty() {
+                    runs.push(run.clone());
+                    run.clear();
+                }
+            }
+            if !run.is_empty() {
+                runs.push(run);
+            }
+        }
+        assert_eq!(
+            runs,
+            vec!["err".to_string()],
+            "highlight lands exactly on err"
+        );
+    }
+
+    /// Snapshot of the search-highlight overlay. Renders a focused pane with a
+    /// confirmed search and, under each content row, a marker row showing which
+    /// cells are highlighted: `#` = the current match (warning background),
+    /// `*` = another match (reverse video). The markers must sit exactly under
+    /// the query text — this makes any highlight drift visible in review.
+    #[test]
+    fn search_highlight_overlay_snapshot() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        let area = Rect::new(0, 0, 46, 11);
+        let (pty_rows, pty_cols) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(
+            pty_rows, pty_cols,
+        ));
+        pty.process_output(
+            b"error: build failed\r\nok\r\nanother error here\r\nfine\r\nlast error line\r\n",
+        );
+        let matches = pty.search_visual_positions("error");
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        data.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            matches,
+            current: 0,
+            searched_generation: pty.output_generation(),
+        });
+
+        let mut state = TerminalPaneState::new(
+            "build".to_string(),
+            TaskStatus::Success,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+        let mut buf = Buffer::empty(area);
+        StatefulWidget::render(
+            TerminalPane::new().pty_data(&mut data),
+            area,
+            &mut buf,
+            &mut state,
+        );
+
+        let mut out = String::new();
+        for y in 0..area.height {
+            let mut text = String::new();
+            let mut marks = String::new();
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                text.push_str(cell.symbol());
+                marks.push(if cell.bg == THEME.warning {
+                    '#'
+                } else if cell.modifier.contains(Modifier::REVERSED) {
+                    '*'
+                } else {
+                    ' '
+                });
+            }
+            out.push_str(text.trim_end());
+            out.push('\n');
+            if !marks.trim().is_empty() {
+                out.push_str(marks.trim_end());
+                out.push('\n');
+            }
+        }
+        insta::assert_snapshot!(out);
+    }
+
+    /// Search highlights must land exactly on the matched text after the pane
+    /// renders through its real path — border, padding, `block.inner`,
+    /// scrollback, ANSI colour codes, auto-wrapped lines, and a scroll offset
+    /// from jumping to a match. Guards the "highlight is off by one when lines
+    /// wrap" class of regression: any highlighted cell run that doesn't spell
+    /// the query is drift between the match basis and the rendered grid.
+    #[test]
+    fn search_highlights_align_with_matches_through_the_render_path() {
+        use crate::native::tui::pty::PtyInstance;
+        use ratatui::style::Modifier;
+        use std::sync::Arc;
+
+        // Area 40x100 -> pty dims via calculate_pty_dimensions: 36 rows x 93 cols.
+        let area = Rect::new(0, 0, 100, 40);
+        let (pty_rows, pty_cols) = TerminalPane::calculate_pty_dimensions(area);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(
+            pty_rows, pty_cols,
+        ));
+
+        // Stream enough content to overflow the screen (force scrollback) with
+        // interleaved WRAPPING lines (paths wider than pty_cols).
+        let mut feed = String::new();
+        for i in 0..60 {
+            feed.push_str(&format!("\x1b[34m[INFO]\x1b[0m step {i}\r\n"));
+            if i % 4 == 0 {
+                feed.push_str(&format!(
+                    "\x1b[33m[WARNING]\x1b[0m /home/jason/projects/nx7/packages/maven/batch-runner/src/main/kotlin/dev/nx/maven/File{i}.kt long path that wraps here\r\n"
+                ));
+            }
+        }
+        pty.process_output(feed.as_bytes());
+
+        let matches = pty.search_visual_positions("info");
+        let mut data = TerminalPaneData::new();
+        data.pty = Some(pty.clone());
+        // Pick a match in the middle and jump to it (scrolls the viewport), the
+        // exact interaction the user performs when reporting the off-by-one.
+        let current = matches.len() / 2;
+        data.search = Some(PaneSearch {
+            query: "info".to_string(),
+            input_mode: false,
+            matches,
+            current,
+            searched_generation: pty.output_generation(),
+        });
+        data.jump_to_current_match();
+
+        let mut state = TerminalPaneState::new(
+            "maven:build".to_string(),
+            TaskStatus::InProgress,
+            false,
+            true,
+            true,
+            false,
+            true,
+            None,
+            None,
+            None,
+        );
+
+        let mut buf = Buffer::empty(area);
+        let pane = TerminalPane::new().pty_data(&mut data);
+        StatefulWidget::render(pane, area, &mut buf, &mut state);
+
+        // Collect contiguous highlighted (REVERSED or warning-bg) runs and the
+        // text under them. Every run should read "INFO" — anything else is drift.
+        let mut bad = Vec::new();
+        for y in 0..area.height {
+            let mut run = String::new();
+            let mut run_x = 0u16;
+            for x in 0..area.width {
+                let cell = &buf[(x, y)];
+                let hot = cell.modifier.contains(Modifier::REVERSED) || cell.bg == THEME.warning;
+                if hot {
+                    if run.is_empty() {
+                        run_x = x;
+                    }
+                    run.push_str(cell.symbol());
+                } else if !run.is_empty() {
+                    if run.to_lowercase() != "info" {
+                        bad.push((run_x, y, run.clone()));
+                    }
+                    run.clear();
+                }
+            }
+            if !run.is_empty() && run.to_lowercase() != "info" {
+                bad.push((run_x, y, run.clone()));
+            }
+        }
+        for (x, y, text) in &bad {
+            eprintln!("MISALIGNED highlight at ({x},{y}): {text:?}");
+        }
+        assert!(bad.is_empty(), "{} misaligned highlight runs", bad.len());
+    }
+
+    /// Terminal search runs backward from the bottom: `n` steps to the
+    /// next-older match (lower index, up the log) and `N` toward newer, both
+    /// wrapping around. (With no pty the refresh/jump are no-ops, so this
+    /// isolates the index stepping — the scroll-position re-anchoring itself
+    /// needs a live pty and is exercised via the higher-level flows.)
+    #[test]
+    fn search_n_and_shift_n_step_relative_to_the_current_match() {
+        let mut pane = TerminalPaneData::new();
+        pane.search = Some(PaneSearch {
+            query: "x".to_string(),
+            input_mode: false,
+            matches: vec![(1, 0, 1), (5, 0, 1), (9, 0, 1)],
+            current: 1,
+            ..Default::default()
+        });
+
+        let current = |pane: &TerminalPaneData| pane.search.as_ref().unwrap().current;
+        // `n` = next older match: index decreases.
+        press(&mut pane, KeyCode::Char('n'));
+        assert_eq!(current(&pane), 0);
+        press(&mut pane, KeyCode::Char('n'));
+        assert_eq!(
+            current(&pane),
+            2,
+            "n wraps past the top to the bottom-most match"
+        );
+        // `N` = back toward newer matches: index increases.
+        press(&mut pane, KeyCode::Char('N'));
+        assert_eq!(
+            current(&pane),
+            0,
+            "N wraps past the bottom to the top-most match"
+        );
+        press(&mut pane, KeyCode::Char('N'));
+        assert_eq!(current(&pane), 1);
+
+        // Esc clears the whole search session.
+        press(&mut pane, KeyCode::Esc);
+        assert!(pane.search.is_none());
+    }
+
+    /// A fresh search anchors on the newest (bottom-most) match nearest the
+    /// viewport, not the oldest match at the top of the log.
+    #[test]
+    fn a_new_search_anchors_on_the_bottom_most_match() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output("hit\r\n".repeat(3).as_bytes()); // early matches
+        pty.process_output("no\r\n".repeat(40).as_bytes()); // push them into scrollback
+        pty.process_output("a late hit\r\n".as_bytes()); // newest match near the bottom
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "hit".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.recompute_search(false);
+
+        let search = pane.search.as_ref().unwrap();
+        assert_eq!(search.matches.len(), 4);
+        assert_eq!(
+            search.current,
+            search.matches.len() - 1,
+            "a fresh search lands on the newest (bottom-most) match"
+        );
+    }
+
+    /// The search input captures printable keys into the query and Enter
+    /// confirms into n/N navigation only when matches exist.
+    #[test]
+    fn search_input_edits_the_query_and_enter_without_matches_closes() {
+        let mut pane = TerminalPaneData::new();
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search.is_none(), "no pty: '/' does not open a search");
+
+        pane.pty = Some(Arc::new(PtyInstance::non_interactive_with_dimensions(
+            24, 80,
+        )));
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search_input_active());
+
+        press(&mut pane, KeyCode::Char('e'));
+        press(&mut pane, KeyCode::Char('r'));
+        press(&mut pane, KeyCode::Backspace);
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
+
+        // A non-empty query with no matches is still confirmed — a running task
+        // may produce matches later, which the live refresh will pick up.
+        press(&mut pane, KeyCode::Enter);
+        assert!(
+            !pane.search_input_active(),
+            "Enter confirms into navigation"
+        );
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
+
+        // '/' on a confirmed search resumes it for editing (query preserved),
+        // like the task filter; clearing it and confirming closes the search.
+        press(&mut pane, KeyCode::Char('/'));
+        assert!(pane.search_input_active());
+        assert_eq!(pane.search.as_ref().unwrap().query, "e");
+        press(&mut pane, KeyCode::Backspace);
+        press(&mut pane, KeyCode::Enter);
+        assert!(pane.search.is_none());
+    }
+
+    /// A confirmed search's match count tracks a running task's streaming
+    /// output on refresh, without the user pressing a key.
+    #[test]
+    fn search_count_updates_live_as_output_grows() {
+        let feed = |n: usize| "error\r\n".repeat(n);
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output(feed(40).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+
+        pane.refresh_search_if_grown();
+        let first = pane.search.as_ref().unwrap().matches.len();
+        assert!(first >= 40, "expected at least 40 matches, got {first}");
+
+        // More output arrives; a plain refresh (no keypress) grows the count.
+        pty.process_output(feed(40).as_bytes());
+        pane.refresh_search_if_grown();
+        let second = pane.search.as_ref().unwrap().matches.len();
+        assert!(
+            second > first,
+            "count should grow live: {first} -> {second}"
+        );
+
+        // With no new output, the refresh short-circuits and the count holds.
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), second);
+    }
+
+    /// A live refresh that turns up the first match (0 -> 1) must update the
+    /// count without scrolling the viewport to it — only n/N or (re)submitting
+    /// the query jumps.
+    #[test]
+    fn live_refresh_does_not_jump_the_viewport() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        // Enough non-matching output to build scrollback the view can sit in.
+        pty.process_output("no match here\r\n".repeat(50).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "error".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 0);
+
+        // Scroll the viewport up, away from the bottom. This is what makes the
+        // assertion meaningful: the single match appears at the *bottom*, so a
+        // stray jump to it would collapse the scroll offset back toward zero.
+        // If the view stayed at the bottom (offset 0), "no jump" and "jumped to
+        // a bottom match" would both read 0 and the test would prove nothing.
+        {
+            let mut pty_mut = pty.as_ref().clone();
+            pty_mut.scroll_to_top();
+        }
+
+        // The first match appears in new output at the bottom. Record the scroll
+        // position *after* the output arrives, so we isolate the refresh's effect.
+        pty.process_output("first error\r\n".as_bytes());
+        let scroll_before = pty.get_scroll_offset();
+        assert!(
+            scroll_before > 0,
+            "precondition: the viewport is scrolled up, not at the bottom"
+        );
+        pane.refresh_search_if_grown();
+
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 1);
+        assert_eq!(
+            pty.get_scroll_offset(),
+            scroll_before,
+            "a live refresh must not scroll the viewport to the new match"
+        );
+    }
+
+    /// Entering interactive mode (`i`) must clear a confirmed search: once
+    /// interactive, every key including Esc is forwarded to the child program,
+    /// so a lingering search could never be navigated or dismissed.
+    #[test]
+    fn entering_interactive_mode_clears_a_confirmed_search() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        pty.process_output(b"some output here\r\n");
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty);
+        pane.can_be_interactive = true;
+        pane.search = Some(PaneSearch {
+            query: "output".to_string(),
+            input_mode: false,
+            matches: vec![(0, 5, 6)],
+            current: 0,
+            ..Default::default()
+        });
+
+        press(&mut pane, KeyCode::Char('i'));
+
+        assert!(pane.is_interactive());
+        assert!(
+            pane.search.is_none(),
+            "interactive mode must clear the search so Esc isn't swallowed by the child"
+        );
+    }
+
+    /// The change-detector must keep firing after the scrollback fills. Past
+    /// `SCROLLBACK_SIZE` the content-row count pins forever while old lines are
+    /// still evicted underneath, so a count-based detector would freeze and the
+    /// match list would never update. Keyed on the output generation instead, a
+    /// live refresh still finds a match that appears after saturation.
+    #[test]
+    fn search_finds_matches_after_scrollback_saturates() {
+        let pty = Arc::new(PtyInstance::non_interactive_with_dimensions(24, 80));
+        // Well past SCROLLBACK_SIZE (1000): the row count is now saturated.
+        pty.process_output("no match\r\n".repeat(1200).as_bytes());
+
+        let mut pane = TerminalPaneData::new();
+        pane.pty = Some(pty.clone());
+        pane.search = Some(PaneSearch {
+            query: "target".to_string(),
+            input_mode: false,
+            ..Default::default()
+        });
+        pane.refresh_search_if_grown();
+        assert_eq!(pane.search.as_ref().unwrap().matches.len(), 0);
+
+        // A row count would report the same value before and after this output,
+        // so it can no longer signal the change — the generation still does.
+        let rows_before = pty.get_total_content_rows();
+        pty.process_output("a target appears\r\n".as_bytes());
+        assert_eq!(
+            pty.get_total_content_rows(),
+            rows_before,
+            "precondition: the content-row count is saturated (no longer changes)"
+        );
+
+        pane.refresh_search_if_grown();
+        assert_eq!(
+            pane.search.as_ref().unwrap().matches.len(),
+            1,
+            "a live refresh must re-scan even after the row count saturates"
+        );
+    }
+
+    #[test]
+    fn test_text_selection_contains_inclusive_range() {
+        let sel = TextSelection {
+            anchor: (1, 2),
+            cursor: (3, 4),
+            dragging: false,
+        };
+        // Before the start of the selection.
+        assert!(!sel.contains(1, 1));
+        assert!(!sel.contains(0, 9));
+        // Start cell is inclusive.
+        assert!(sel.contains(1, 2));
+        // A fully-covered middle row.
+        assert!(sel.contains(2, 0));
+        assert!(sel.contains(2, 999));
+        // End row is covered up to and including the end column.
+        assert!(sel.contains(3, 4));
+        assert!(!sel.contains(3, 5));
+    }
+
+    #[test]
+    fn test_text_selection_normalizes_reversed_drag() {
+        // Dragging up/left puts the cursor before the anchor; the range should
+        // still be normalized.
+        let sel = TextSelection {
+            anchor: (3, 4),
+            cursor: (1, 2),
+            dragging: true,
+        };
+        assert!(sel.contains(1, 2));
+        assert!(sel.contains(2, 10));
+        assert!(sel.contains(3, 4));
+        assert!(!sel.contains(1, 1));
+        assert!(!sel.contains(3, 5));
+    }
+
+    #[test]
+    fn test_text_selection_empty_is_single_cell() {
+        let sel = TextSelection {
+            anchor: (2, 5),
+            cursor: (2, 5),
+            dragging: true,
+        };
+        assert!(!sel.is_nonempty());
+        assert!(sel.contains(2, 5));
+        assert!(!sel.contains(2, 6));
+    }
 
     // Helper function to create a TerminalPane for testing
     fn create_terminal_pane() -> TerminalPane<'static> {

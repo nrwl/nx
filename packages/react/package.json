@@ -17,9 +17,66 @@
     "CLI",
     "Front-end"
   ],
-  "main": "./index.js",
+  "main": "./dist/index.js",
   "type": "commonjs",
-  "types": "./index.d.ts",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "typings",
+    "migrations.json",
+    "executors.json",
+    "generators.json"
+  ],
+  "typesVersions": {
+    "*": {
+      "mf": [
+        "dist/mf/index.d.ts"
+      ],
+      "babel": [
+        "dist/babel.d.ts"
+      ],
+      "tailwind": [
+        "dist/tailwind.d.ts"
+      ],
+      "module-federation": [
+        "dist/module-federation.d.ts"
+      ],
+      "webpack-plugin": [
+        "dist/webpack-plugin.d.ts"
+      ],
+      "router-plugin": [
+        "dist/router-plugin.d.ts"
+      ],
+      "ast-utils": [
+        "dist/ast-utils.d.ts"
+      ],
+      "plugins/storybook": [
+        "dist/plugins/storybook/index.d.ts"
+      ],
+      "plugins/component-testing": [
+        "dist/plugins/component-testing/index.d.ts"
+      ],
+      "plugins/webpack": [
+        "dist/plugins/webpack.d.ts"
+      ],
+      "plugins/bundle-rollup": [
+        "dist/plugins/bundle-rollup.d.ts"
+      ],
+      "plugins/jest": [
+        "dist/plugins/jest.d.ts"
+      ],
+      "plugins/with-react": [
+        "dist/plugins/with-react.d.ts"
+      ],
+      "typings/*.d.ts": [
+        "dist/typings/*.d.ts"
+      ],
+      "internal": [
+        "dist/internal.d.ts"
+      ]
+    }
+  },
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -30,13 +87,23 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "peerDependencies": {
+    "babel-plugin-react-compiler": "^1.0.0",
+    "react": ">=18.0.0 <20.0.0",
+    "react-dom": ">=18.0.0 <20.0.0"
+  },
+  "peerDependenciesMeta": {
+    "babel-plugin-react-compiler": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@phenomnomnominal/tsquery": "catalog:typescript",
-    "@svgr/webpack": "^8.0.1",
+    "@svgr/webpack": "catalog:",
     "minimatch": "catalog:",
-    "picocolors": "catalog:",
     "tslib": "catalog:typescript",
     "@nx/devkit": "workspace:*",
     "@nx/js": "workspace:*",
@@ -45,7 +112,7 @@
     "@nx/module-federation": "workspace:*",
     "@nx/rollup": "workspace:*",
     "express": "^4.21.2",
-    "http-proxy-middleware": "^3.0.5",
+    "http-proxy-middleware": "catalog:",
     "semver": "catalog:"
   },
   "devDependencies": {
@@ -66,156 +133,88 @@
   },
   "exports": {
     ".": {
-      "import": "./index.js",
-      "require": "./index.js",
-      "types": "./index.d.ts"
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./package.json": "./package.json",
     "./migrations.json": "./migrations.json",
     "./generators.json": "./generators.json",
     "./executors.json": "./executors.json",
     "./mf": {
-      "import": "./mf/index.js",
-      "require": "./mf/index.js",
-      "types": "./mf/index.d.ts"
+      "@nx/nx-source": "./mf/index.ts",
+      "types": "./dist/mf/index.d.ts",
+      "default": "./dist/mf/index.js"
     },
     "./babel": {
-      "import": "./babel.js",
-      "require": "./babel.js",
-      "types": "./babel.d.ts"
+      "@nx/nx-source": "./babel.ts",
+      "types": "./dist/babel.d.ts",
+      "default": "./dist/babel.js"
     },
     "./tailwind": {
-      "import": "./tailwind.js",
-      "require": "./tailwind.js",
-      "types": "./tailwind.d.ts"
+      "@nx/nx-source": "./tailwind.ts",
+      "types": "./dist/tailwind.d.ts",
+      "default": "./dist/tailwind.js"
     },
     "./module-federation": {
-      "import": "./module-federation.js",
-      "require": "./module-federation.js",
-      "types": "./module-federation.d.ts"
+      "@nx/nx-source": "./module-federation.ts",
+      "types": "./dist/module-federation.d.ts",
+      "default": "./dist/module-federation.js"
     },
     "./webpack-plugin": {
-      "import": "./webpack-plugin.js",
-      "require": "./webpack-plugin.js",
-      "types": "./webpack-plugin.d.ts"
+      "@nx/nx-source": "./webpack-plugin.ts",
+      "types": "./dist/webpack-plugin.d.ts",
+      "default": "./dist/webpack-plugin.js"
     },
     "./router-plugin": {
-      "import": "./router-plugin.js",
-      "require": "./router-plugin.js",
-      "types": "./router-plugin.d.ts"
+      "@nx/nx-source": "./router-plugin.ts",
+      "types": "./dist/router-plugin.d.ts",
+      "default": "./dist/router-plugin.js"
     },
     "./ast-utils": {
-      "import": "./ast-utils.js",
-      "require": "./ast-utils.js",
-      "types": "./ast-utils.d.ts"
+      "@nx/nx-source": "./ast-utils.ts",
+      "types": "./dist/ast-utils.d.ts",
+      "default": "./dist/ast-utils.js"
     },
     "./plugins/storybook": {
-      "import": "./plugins/storybook/index.js",
-      "require": "./plugins/storybook/index.js",
-      "types": "./plugins/storybook/index.d.ts"
+      "@nx/nx-source": "./plugins/storybook/index.ts",
+      "types": "./dist/plugins/storybook/index.d.ts",
+      "default": "./dist/plugins/storybook/index.js"
     },
     "./plugins/component-testing": {
-      "import": "./plugins/component-testing/index.js",
-      "require": "./plugins/component-testing/index.js",
-      "types": "./plugins/component-testing/index.d.ts"
+      "@nx/nx-source": "./plugins/component-testing/index.ts",
+      "types": "./dist/plugins/component-testing/index.d.ts",
+      "default": "./dist/plugins/component-testing/index.js"
     },
     "./plugins/webpack": {
-      "import": "./plugins/webpack.js",
-      "require": "./plugins/webpack.js",
-      "types": "./plugins/webpack.d.ts"
+      "@nx/nx-source": "./plugins/webpack.ts",
+      "types": "./dist/plugins/webpack.d.ts",
+      "default": "./dist/plugins/webpack.js"
     },
     "./plugins/bundle-rollup": {
-      "import": "./plugins/bundle-rollup.js",
-      "require": "./plugins/bundle-rollup.js",
-      "types": "./plugins/bundle-rollup.d.ts"
+      "@nx/nx-source": "./plugins/bundle-rollup.ts",
+      "types": "./dist/plugins/bundle-rollup.d.ts",
+      "default": "./dist/plugins/bundle-rollup.js"
     },
     "./plugins/jest": {
-      "import": "./plugins/jest.js",
-      "require": "./plugins/jest.js",
-      "types": "./plugins/jest.d.ts"
+      "@nx/nx-source": "./plugins/jest.ts",
+      "types": "./dist/plugins/jest.d.ts",
+      "default": "./dist/plugins/jest.js"
     },
     "./plugins/with-react": {
-      "import": "./plugins/with-react.js",
-      "require": "./plugins/with-react.js",
-      "types": "./plugins/with-react.d.ts"
+      "@nx/nx-source": "./plugins/with-react.ts",
+      "types": "./dist/plugins/with-react.d.ts",
+      "default": "./dist/plugins/with-react.js"
     },
-    "./src/utils": {
-      "import": "./src/utils/index.js",
-      "require": "./src/utils/index.js",
-      "types": "./src/utils/index.d.ts"
+    "./typings/*.d.ts": {
+      "@nx/nx-source": "./typings/*.d.ts",
+      "types": "./dist/typings/*.d.ts",
+      "default": "./dist/typings/*.d.ts"
     },
-    "./src/utils/*": {
-      "import": "./src/utils/*.js",
-      "require": "./src/utils/*.js",
-      "types": "./src/utils/*.d.ts"
-    },
-    "./src/generators/utils": {
-      "import": "./src/generators/utils/index.js",
-      "require": "./src/generators/utils/index.js",
-      "types": "./src/generators/utils/index.d.ts"
-    },
-    "./src/generators/*": {
-      "import": "./src/generators/*.js",
-      "require": "./src/generators/*.js",
-      "types": "./src/generators/*.d.ts"
-    },
-    "./src/generators/*/lib/*": {
-      "import": "./src/generators/*/lib/*.js",
-      "require": "./src/generators/*/lib/*.js",
-      "types": "./src/generators/*/lib/*.d.ts"
-    },
-    "./src/generators/*/*": {
-      "import": "./src/generators/*/*.js",
-      "require": "./src/generators/*/*.js",
-      "types": "./src/generators/*/*.d.ts"
-    },
-    "./src/generators/*/schema.json": "./src/generators/*/schema.json",
-    "./src/executors/*/schema.json": "./src/executors/*/schema.json",
-    "./src/executors/*.impl": {
-      "import": "./src/executors/*.impl.js",
-      "require": "./src/executors/*.impl.js",
-      "types": "./src/executors/*.impl.d.ts"
-    },
-    "./src/executors/*": {
-      "import": "./src/executors/*.js",
-      "require": "./src/executors/*.js",
-      "types": "./src/executors/*.d.ts"
-    },
-    "./src/executors/*/lib/*": {
-      "import": "./src/executors/*/lib/*.js",
-      "require": "./src/executors/*/lib/*.js",
-      "types": "./src/executors/*/lib/*.d.ts"
-    },
-    "./src/module-federation/*": {
-      "import": "./src/module-federation/*.js",
-      "require": "./src/module-federation/*.js",
-      "types": "./src/module-federation/*.d.ts"
-    },
-    "./src/plugins/*": {
-      "import": "./src/plugins/*.js",
-      "require": "./src/plugins/*.js",
-      "types": "./src/plugins/*.d.ts"
-    },
-    "./src/rules/*": {
-      "import": "./src/rules/*.js",
-      "require": "./src/rules/*.js",
-      "types": "./src/rules/*.d.ts"
-    },
-    "./src/*": {
-      "import": "./src/*.js",
-      "require": "./src/*.js",
-      "types": "./src/*.d.ts"
-    },
-    "./plugins/*": {
-      "import": "./plugins/*.js",
-      "require": "./plugins/*.js",
-      "types": "./plugins/*.d.ts"
-    },
-    "./mf/*": {
-      "import": "./mf/*.js",
-      "require": "./mf/*.js",
-      "types": "./mf/*.d.ts"
-    },
-    "./typings/*.d.ts": "./typings/*.d.ts"
+    "./internal": {
+      "@nx/nx-source": "./internal.ts",
+      "types": "./dist/internal.d.ts",
+      "default": "./dist/internal.js"
+    }
   }
 }

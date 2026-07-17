@@ -1,13 +1,12 @@
 // nx-ignore-next-line
 import { FileChange } from 'nx/src/devkit-exports';
 // nx-ignore-next-line
-import { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
-// nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
 
 import { PlayIcon } from '@heroicons/react/24/outline';
 import { useCallback, useMemo, useState } from 'react';
 import { MigrationCard } from './migration-card';
+import { MigrationsJsonMetadata } from '../migration-shape';
 import type { Interpreter } from 'xstate';
 import type {
   AutomaticMigrationState,
@@ -32,6 +31,7 @@ export function MigrationList(props: {
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
 }) {
   const [selectedMigrations, setSelectedMigrations] = useState<
     Record<string, boolean>
@@ -131,7 +131,7 @@ export function MigrationList(props: {
           </label>
           {anySelected && (
             <button
-              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={handleRunMany}
             >
               <PlayIcon className="h-5 w-5"></PlayIcon>
@@ -140,7 +140,7 @@ export function MigrationList(props: {
           )}
           {numberFailed > 0 && (
             <button
-              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
+              className="flex items-center gap-2 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-sm font-medium text-slate-700 shadow-xs hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:dark:bg-slate-700"
               onClick={handleRerunFailed}
             >
               <PlayIcon className="h-5 w-5"></PlayIcon>
@@ -169,6 +169,9 @@ export function MigrationList(props: {
             }}
             onViewDocumentation={() => {
               props.onViewDocumentation(migration);
+            }}
+            onViewPrompt={() => {
+              props.onViewPrompt(migration);
             }}
             onFileClick={(file) => {
               props.onFileClick(migration, file);

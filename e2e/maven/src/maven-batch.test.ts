@@ -12,9 +12,8 @@ describe('Maven Batch Mode', () => {
   const projectName = uniq('batch-test');
 
   // Helper to run CLI with batch mode enabled
-  const runBatchCLI = (cmd: string, opts: { verbose?: boolean } = {}) => {
+  const runBatchCLI = (cmd: string) => {
     return runCLI(cmd, {
-      ...opts,
       env: { NX_BATCH_MODE: 'true' },
     });
   };
@@ -31,8 +30,8 @@ describe('Maven Batch Mode', () => {
   afterAll(() => cleanupProject());
 
   it('should build multiple projects with run-many in batch mode', () => {
-    const output = runBatchCLI('run-many -t verify', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    const output = runBatchCLI('run-many -t verify');
+    expect(output).toContain('Successfully ran target verify');
     checkFilesExist(
       'app/target/app-1.0.0-SNAPSHOT.jar',
       'lib/target/lib-1.0.0-SNAPSHOT.jar',
@@ -78,7 +77,7 @@ class AppApplicationTests {
     // Regression test for https://github.com/nrwl/nx/issues/34757
     // clean targets are fast and run in parallel, which previously caused
     // workers to exit prematurely when the task queue was momentarily empty.
-    const output = runBatchCLI('run-many -t clean', { verbose: true });
-    expect(output).toContain('BUILD SUCCESS');
+    const output = runBatchCLI('run-many -t clean');
+    expect(output).toContain('Successfully ran target clean');
   });
 });

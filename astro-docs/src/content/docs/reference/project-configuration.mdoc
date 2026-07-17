@@ -209,7 +209,7 @@ A large portion of project configuration is related to defining the tasks for th
 
 ### Cache
 
-In Nx 17 and higher, caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
+Caching is configured by specifying `"cache": true` in a target's configuration. This will tell Nx that it's ok to cache the results of a given target. For instance, if you have a target that runs tests, you can specify `"cache": true` in the target default configuration for `test` and Nx will cache the results of running tests.
 
 ```json
 // project.json
@@ -585,7 +585,7 @@ And the E2E project's `e2e` task has a dependency on the `serve` task, which ens
 
 ### Sync generators
 
-In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph. Sync generators are available in Nx 19.8+.
+In the same way that `dependsOn` tells Nx to run another task before running this task, the `syncGenerator` property tells Nx to run a generator to ensure that your files are in the correct state before this task is run. [Sync generators](/docs/concepts/sync-generators) are especially useful for keeping configuration files up to date with the project graph.
 
 ```json
 {
@@ -630,6 +630,63 @@ In the case of an explicit target using an executor, you can specify the executo
   }
 }
 ```
+
+### Spread token
+
+By default, each configuration source overwrites the previous one for every property it defines. The spread token (`"..."`) lets you control merge priority rather than always replacing.
+
+**In arrays**, `"..."` is substituted with the items from the base array at that position:
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "inputs": ["my-project-input", "..."]
+    }
+  }
+}
+```
+
+If the inferred target has `inputs: ["default", "^production"]`, the result is `["my-project-input", "default", "^production"]`.
+
+**In objects**, a key of `"..."` set to `true` spreads base properties at that position. Keys defined after `"..."` override base values; keys defined before `"..."` can be overridden by base values.
+
+```json
+// project.json
+{
+  "targets": {
+    "build": {
+      "options": {
+        "env": {
+          "MY_VAR": "my-value",
+          "...": true
+        }
+      }
+    }
+  }
+}
+```
+
+Nx processes target configuration down to `options[x]` and `configurations[x][y]`; values below that are opaque to the merge pipeline. Spread is therefore resolved at these levels:
+
+| Level                                              | Example                                                                     |
+| -------------------------------------------------- | --------------------------------------------------------------------------- |
+| Target root                                        | `"build": { "dependsOn": ["lint"], "...": true }`                           |
+| `inputs`, `outputs`, `dependsOn`, `syncGenerators` | `"inputs": ["my-input", "..."]`                                             |
+| `options`                                          | `"options": { "...": true, "outputPath": "dist/custom" }`                   |
+| `options[x]`                                       | `"options": { "env": { "MY_VAR": "val", "...": true } }`                    |
+| `configurations`                                   | `"configurations": { "my-config": { ... }, "...": true }`                   |
+| `configurations[x]`                                | `"configurations": { "prod": { "...": true, "sourceMap": false } }`         |
+| `configurations[x][y]`                             | `"configurations": { "prod": { "env": { "MY_VAR": "val", "...": true } } }` |
+
+{% aside type="caution" title="Spread does not apply to deeply nested options" %}
+Because `options[x]` and `configurations[x][y]` are the innermost levels Nx inspects, a spread token nested any deeper has no effect. For example, `options.webpack = { "...": true }` works (the spread is at `options[x]`), but `options.webpack.plugins = { "...": true }` is ignored because the spread sits inside the opaque value Nx assigns to `options.webpack`.
+{% /aside %}
+
+{% aside type="note" title="Spread does not apply to `tags` and `implicitDependencies`" %}
+`tags` and `implicitDependencies` always merge across configuration sources — later sources contribute additional entries rather than replacing earlier ones. The spread token is neither needed nor supported for these properties.
+{% /aside %}
 
 ### Target metadata
 

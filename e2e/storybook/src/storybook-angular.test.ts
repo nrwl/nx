@@ -3,6 +3,7 @@ import {
   cleanupProject,
   killPorts,
   newProject,
+  reservePort,
   runCLI,
   runCommandUntil,
   uniq,
@@ -25,12 +26,14 @@ describe('Storybook executors for Angular', () => {
   });
 
   describe('serve and build storybook', () => {
-    afterAll(() => killPorts(4400));
+    let storybookPort: number;
+    afterAll(() => storybookPort && killPorts(storybookPort));
 
     // TODO(jack): re-enable when lodash@4.18.0 assignWith bug is resolved
     it.skip('should serve an Angular based Storybook setup', async () => {
+      storybookPort = await reservePort();
       const p = await runCommandUntil(
-        `run ${angularStorybookLib}:storybook --port 4400`,
+        `run ${angularStorybookLib}:storybook --port ${storybookPort}`,
         (output) => {
           return /Storybook.*(started|ready)/gi.test(output);
         }

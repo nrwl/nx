@@ -411,6 +411,7 @@ describe('convert-to-inferred', () => {
     });
     expect(projectConfig.targets['test-android']).toEqual({
       command: 'nx run demo-e2e:test',
+      dependsOn: ['demo-e2e:build-android'],
       options: {
         args: [
           '--args="-c android.emu.debug"',
@@ -430,6 +431,7 @@ describe('convert-to-inferred', () => {
     });
     expect(projectConfig.targets['test-ios']).toEqual({
       command: 'nx run demo-e2e:test',
+      dependsOn: ['demo-e2e:build-ios'],
       options: {
         args: [
           '--args="-c ios.sim.debug"',

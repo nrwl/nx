@@ -24,10 +24,26 @@
  */
 
 import * as ts from 'typescript';
-import { type CompilerHost as AngularCompilerHost } from '@angular/compiler-cli';
 import { normalize } from 'path';
 import { createHash } from 'node:crypto';
 import { InlineStyleLanguage } from '../models';
+
+/**
+ * Minimal local shape of `@angular/compiler-cli`'s `CompilerHost`. Hand-declared
+ * because the package's `"type": "module"` typings don't resolve those members
+ * under `nodenext`; we only need the resource hooks below.
+ */
+interface AngularCompilerHost extends ts.CompilerHost {
+  readResource?(fileName: string): string | Promise<string>;
+  transformResource?(
+    data: string,
+    context: {
+      type: string;
+      containingFile: string;
+      resourceFile?: string | null;
+    }
+  ): Promise<{ content: string } | null>;
+}
 
 /**
  *

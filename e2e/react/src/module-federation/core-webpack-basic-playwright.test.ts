@@ -2,11 +2,13 @@ import { stripIndents } from '@nx/devkit';
 import {
   checkFilesExist,
   killProcessAndPorts,
+  reservePorts,
   runCLIAsync,
   runCommandUntil,
   runE2ETests,
   uniq,
   updateFile,
+  updateJson,
 } from '@nx/e2e-utils';
 import { readPort, runCLI } from './utils';
 import {
@@ -14,10 +16,7 @@ import {
   cleanupCoreWebpackTest,
 } from './core-webpack-setup';
 
-// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
-// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('React Module Federation - Webpack Basic - Playwright', () => {
+describe('React Module Federation - Webpack Basic - Playwright', () => {
   beforeAll(() => {
     setupCoreWebpackTest();
   });
@@ -29,10 +28,25 @@ describe.skip('React Module Federation - Webpack Basic - Playwright', () => {
     const remote1 = uniq('remote1');
     const remote2 = uniq('remote2');
     const remote3 = uniq('remote3');
+    const [shellPort, remote1Port, remote2Port, remote3Port] =
+      await reservePorts(4);
 
     runCLI(
-      `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
+      `generate @nx/react:host apps/${shell} --name=${shell} --remotes=${remote1},${remote2},${remote3} --bundler=webpack --devServerPort=${shellPort} --e2eTestRunner=playwright --style=css --no-interactive --skipFormat`
     );
+
+    updateJson(`apps/${remote1}/project.json`, (project) => {
+      project.targets.serve.options.port = remote1Port;
+      return project;
+    });
+    updateJson(`apps/${remote2}/project.json`, (project) => {
+      project.targets.serve.options.port = remote2Port;
+      return project;
+    });
+    updateJson(`apps/${remote3}/project.json`, (project) => {
+      project.targets.serve.options.port = remote3Port;
+      return project;
+    });
 
     checkFilesExist(`apps/${shell}/module-federation.config.ts`);
     checkFilesExist(`apps/${remote1}/module-federation.config.ts`);

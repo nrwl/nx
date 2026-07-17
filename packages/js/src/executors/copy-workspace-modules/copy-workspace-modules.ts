@@ -19,6 +19,7 @@ import { dirname, join, relative, sep } from 'path';
 import { lstatSync } from 'fs';
 // eslint-disable-next-line @typescript-eslint/no-restricted-imports
 import { getWorkspacePackagesFromGraph } from 'nx/src/plugins/js/utils/get-workspace-packages-from-graph';
+import { stripGlobToBaseDir } from '../../utils/strip-glob-to-base-dir';
 
 export default async function copyWorkspaceModules(
   schema: CopyWorkspaceModulesOptions,
@@ -195,6 +196,7 @@ function getOutputDir(
 }
 
 function normalizeOutputPath(outputPath: string) {
+  outputPath = stripGlobToBaseDir(outputPath);
   if (!outputPath.startsWith(workspaceRoot)) {
     outputPath = join(workspaceRoot, outputPath);
   }

@@ -12,6 +12,7 @@ import { DetoxBuildOptions } from '../build/schema';
 import { runCliBuild } from '../build/build.impl';
 
 import { DetoxTestOptions } from './schema';
+import { warnDetoxExecutorsDeprecation } from '../../utils/deprecation';
 
 export interface DetoxTestOutput {
   success: boolean;
@@ -23,6 +24,8 @@ export default async function* detoxTestExecutor(
   options: DetoxTestOptions,
   context: ExecutorContext
 ): AsyncGenerator<DetoxTestOutput> {
+  warnDetoxExecutorsDeprecation();
+
   const projectRoot =
     context.projectsConfigurations.projects[context.projectName].root;
 

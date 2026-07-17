@@ -56,11 +56,8 @@ The following resource classes are available:
 
 - `docker_linux_amd64/small`
 - `docker_linux_amd64/medium`
-- `docker_linux_amd64/medium+`
 - `docker_linux_amd64/large`
-- `docker_linux_amd64/large+`
 - `docker_linux_amd64/extra_large`
-- `docker_linux_amd64/extra_large+`
 - `docker_linux_arm64/medium`
 - `docker_linux_arm64/large`
 - `docker_linux_arm64/extra_large`
@@ -74,9 +71,13 @@ A launch template's `image` defines the available base software for the agent ma
 
 {% aside type="tip" title="Looking for Docker in Docker support?" %}
 
-Docker in Docker support (DinD) is currently limited to Organizations on the enterprise plan.
+Docker-in-Docker (DinD) runs on a
+[dedicated compute cluster](/docs/features/ci-features/dedicated-compute-cluster). Every agent in
+the cluster can run DinD, so your tasks can build and push container images or run Testcontainers.
+Request the add-on under [**Settings > Add-ons**](https://cloud.nx.app/go/organization/add-ons).
 
-If you're interested in our [Enterprise plan please reach out!](/contact/sales)
+Nx Enterprise [single-tenant](/docs/enterprise/single-tenant/overview) customers get DinD through
+their dedicated deployment.
 {% /aside %}
 
 ```yaml
@@ -191,9 +192,9 @@ You can find the [list of Nx Cloud reusable steps here](https://github.com/nrwl/
 launch-templates:
   template-one:
     init-steps:
-      - uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/checkout/main.yaml'
+      - uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/checkout/main.yaml'
       - name: 'Install Node Modules'
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/install-node-modules/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/install-node-modules/main.yaml'
 ```
 
 ### `launch-templates.<template-name>.init-steps[*].script`
@@ -239,7 +240,7 @@ launch-templates:
   template-one:
     init-steps:
       - name: Restore Node Modules Cache
-        uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+        uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
         inputs:
           # Include patches directories to ensure cache is busted when patches change
           key: 'package-lock.json|yarn.lock|pnpm-lock.yaml|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -320,7 +321,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
 - group-name: Restore Cache
   steps:
     - name: Restore Node Modules Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**'
@@ -328,7 +329,7 @@ grouped together logically. The below cache steps will also be collapsed togethe
           ~/.npm
         base-branch: 'main'
     - name: Restore Browser Binary Cache
-      uses: 'nrwl/nx-cloud-workflows/v5/workflow-steps/cache/main.yaml'
+      uses: 'nrwl/nx-cloud-workflows/v6/workflow-steps/cache/main.yaml'
       inputs:
         # Include patches directories to ensure cache is busted when patches change
         key: 'package-lock.json|patches/**|.yarn/patches/**|pnpm-patches/**|"browsers"'

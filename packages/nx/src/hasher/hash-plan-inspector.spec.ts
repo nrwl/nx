@@ -268,7 +268,7 @@ describe('HashPlanInspector', () => {
 
     it('should handle extraTargetDependencies parameter', () => {
       const extraTargetDependencies = {
-        build: [{ target: 'test', projects: 'self' }],
+        build: [{ target: 'test' }],
       };
       const result = inspector.inspectHashPlan(
         ['test-app'],
@@ -368,7 +368,7 @@ describe('HashPlanInspector', () => {
     it('should handle extraTargetDependencies parameter', () => {
       const target = { project: 'test-app', target: 'build' };
       const extraTargetDependencies = {
-        build: [{ target: 'test', projects: 'self' }],
+        build: [{ target: 'test' }],
       };
       const result = inspector.inspectTask(target, {}, extraTargetDependencies);
 

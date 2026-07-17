@@ -301,7 +301,7 @@ export async function generateGraph(
       output.warn({
         title: `${
           errors?.length > 1 ? `${errors.length} errors` : `An error`
-        } occured while processing the project graph. Showing partial graph.`,
+        } occurred while processing the project graph. Showing partial graph.`,
       });
     }
   }
@@ -649,8 +649,6 @@ async function startServer(
     // Avoid https://en.wikipedia.org/wiki/Directory_traversal_attack
     // e.g curl --path-as-is http://localhost:9000/../fileInDanger.txt
     // by limiting the path to current directory only
-
-    res.setHeader('Access-Control-Allow-Origin', '*');
 
     const sanitizePath = basename(parsedUrl.pathname);
     if (sanitizePath === 'project-graph.json') {

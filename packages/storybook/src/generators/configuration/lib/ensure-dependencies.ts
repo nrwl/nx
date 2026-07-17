@@ -4,17 +4,11 @@ import {
   readJson,
   type Tree,
 } from '@nx/devkit';
-import { coerce, gte } from 'semver';
 import {
   getInstalledStorybookVersion,
   storybookMajorVersion,
 } from '../../../utils/utilities';
-import {
-  litVersion,
-  reactVersion,
-  storybookVersion,
-  viteVersion,
-} from '../../../utils/versions';
+import { litVersion, viteVersion } from '../../../utils/versions';
 import type { StorybookConfigureSchema } from '../schema';
 
 export type EnsureDependenciesOptions = {
@@ -28,8 +22,10 @@ export function ensureDependencies(
   const storybookVersionToInstall = getInstalledStorybookVersion(tree);
   const installedStorybookMajorVersion = storybookMajorVersion(tree);
   const dependencies: Record<string, string> = {};
+  // Storybook v8 ships `@storybook/core-server` and `@storybook/addon-essentials`
+  // as separate packages; v9 folds them into `storybook`.
   const devDependencies: Record<string, string> =
-    installedStorybookMajorVersion < 9
+    installedStorybookMajorVersion === 8
       ? {
           '@storybook/core-server': storybookVersionToInstall,
           '@storybook/addon-essentials': storybookVersionToInstall,
@@ -39,23 +35,6 @@ export function ensureDependencies(
   const packageJson = readJson(tree, 'package.json');
   packageJson.dependencies ??= {};
   packageJson.devDependencies ??= {};
-
-  if (!gte(coerce(storybookVersionToInstall), '8.0.0')) {
-    // Needed for Storybook 7
-    // https://github.com/storybookjs/storybook/blob/next/MIGRATION.md#react-peer-dependencies-required
-    if (
-      !packageJson.dependencies['react'] &&
-      !packageJson.devDependencies['react']
-    ) {
-      dependencies['react'] = reactVersion;
-    }
-    if (
-      !packageJson.dependencies['react-dom'] &&
-      !packageJson.devDependencies['react-dom']
-    ) {
-      dependencies['react-dom'] = reactVersion;
-    }
-  }
 
   if (options.uiFramework) {
     devDependencies[options.uiFramework] = storybookVersionToInstall;
@@ -109,5 +88,11 @@ export function ensureDependencies(
     }
   }
 
-  return addDependenciesToPackageJson(tree, dependencies, devDependencies);
+  return addDependenciesToPackageJson(
+    tree,
+    dependencies,
+    devDependencies,
+    undefined,
+    true
+  );
 }

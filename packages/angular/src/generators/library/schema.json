@@ -112,11 +112,6 @@
       "description": "Whether or not to configure the ESLint `parserOptions.project` option. We do not do this by default for lint performance reasons.",
       "default": false
     },
-    "addTailwind": {
-      "type": "boolean",
-      "description": "Whether to configure Tailwind CSS for the application. It can only be used with buildable and publishable libraries. Non-buildable libraries will use the application's Tailwind configuration.",
-      "default": false
-    },
     "skipModule": {
       "type": "boolean",
       "description": "Whether to skip the creation of a default module when generating the library.",
@@ -152,10 +147,9 @@
       "alias": "v"
     },
     "changeDetection": {
-      "description": "The change detection strategy to use in the new component. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
-      "enum": ["Default", "OnPush"],
+      "description": "The change detection strategy to use in the new component. It defaults to `OnPush` for Angular versions >= 22.0.0 and `Default` for lower versions. _Note: the `Eager` value is only supported in Angular versions >= 22.0.0_. Disclaimer: This option is only valid when `--standalone` is set to `true`.",
+      "enum": ["Default", "Eager", "OnPush"],
       "type": "string",
-      "default": "Default",
       "alias": "c"
     },
     "style": {

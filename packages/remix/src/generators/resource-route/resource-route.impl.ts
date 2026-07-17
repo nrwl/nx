@@ -1,11 +1,14 @@
 import { formatFiles, Tree } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import actionGenerator from '../action/action.impl';
 import loaderGenerator from '../loader/loader.impl';
 import { RemixRouteSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
+  assertSupportedRemixVersion(tree);
+
   const { filePath: routeFilePath } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       path: options.path.replace(/^\//, '').replace(/\/$/, ''),

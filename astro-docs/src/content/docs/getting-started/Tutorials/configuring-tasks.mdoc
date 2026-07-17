@@ -5,7 +5,7 @@ sidebar:
   order: 3
 ---
 
-{% llm_copy_prompt title="Tutorial 3/8: Configure tasks for your projects" %}
+{% llm_copy_prompt title="Tutorial 3/7: Configure tasks for your projects" %}
 Help me configure tasks (build, test, lint, serve) for my Nx workspace projects.
 Use my existing workspace and projects for hands-on examples.
 
@@ -29,7 +29,6 @@ The examples below use Vite and Vitest, but the concepts apply to any tool. Subs
 5. [Caching](/docs/getting-started/tutorials/caching)
 6. [Understanding your workspace](/docs/getting-started/tutorials/understanding-your-workspace)
 7. [Reducing boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate)
-8. [Setting up CI](/docs/getting-started/tutorials/self-healing-ci-tutorial)
 
 {% /aside %}
 
@@ -114,7 +113,7 @@ The `^` prefix means "the same task on projects this project depends on." So `nx
 
 You can also define dependencies without `^` for tasks within the same project:
 
-{% tabs %}
+{% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
 
 ```jsonc
@@ -161,7 +160,7 @@ Here, `build` always runs `generate-api-types` first within the same project.
 
 Some tasks, like development servers, never exit. If another task depends on a long-running process, it would wait forever. Mark these tasks as `continuous` so Nx starts them alongside their dependents instead of waiting for them to finish:
 
-{% tabs %}
+{% tabs syncKey="project-config-file" %}
 {% tabitem label="package.json" %}
 
 ```jsonc
@@ -228,6 +227,47 @@ When many projects share the same task configuration, defining it in every `proj
 ```
 
 Individual projects can still override these defaults when needed. The cascade order is: project-level config > target defaults > defaults.
+
+### Extending target defaults for a project
+
+By default, when a project redefines a property it replaces the target default entirely. So if `build` defaults to `dependsOn: ["^build"]` and a project sets its own `dependsOn`, the `^build` entry is lost.
+
+Use the spread token (`"..."`) to extend that configuration rather than replace it:
+
+{% tabs syncKey="project-config-file" %}
+{% tabitem label="package.json" %}
+
+```jsonc
+// apps/my-app/package.json
+{
+  "nx": {
+    "targets": {
+      "build": {
+        "dependsOn": ["...", "generate-api-types"],
+      },
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% tabitem label="project.json" %}
+
+```jsonc
+// apps/my-app/project.json
+{
+  "targets": {
+    "build": {
+      "dependsOn": ["...", "generate-api-types"],
+    },
+  },
+}
+```
+
+{% /tabitem %}
+{% /tabs %}
+
+The `"..."` expands to whatever configuration the target already has, so here `my-app`'s `build` keeps `^build` and adds `generate-api-types`. That existing configuration can come from `targetDefaults` or a plugin's inferred task, not only from target defaults. The token also works in objects and configurations. For the full reference, see [spread token](/docs/reference/project-configuration#spread-token).
 
 For more on reducing configuration, see [Reducing Configuration Boilerplate](/docs/getting-started/tutorials/reducing-configuration-boilerplate).
 

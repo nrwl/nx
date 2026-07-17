@@ -1,23 +1,22 @@
 import {
-  CreateNodesContextV2,
+  calculateHashesForCreateNodes,
+  clearRequireCache,
+  loadConfigFile,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   normalizePath,
   NxJsonConfiguration,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import {
-  clearRequireCache,
-  loadConfigFile,
-} from '@nx/devkit/src/utils/config-utils';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { minimatch } from 'minimatch';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import {
@@ -39,7 +38,7 @@ import { getLockFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import { getInstalledJestMajorVersion } from '../utils/versions';
 
 const REPORTER_BUILTINS = new Set(['default', 'github-actions', 'summary']);
@@ -77,27 +76,14 @@ type IsolatedModulesResult = {
 
 type JestTargets = Awaited<ReturnType<typeof buildJestTargets>>;
 
-function readTargetsCache(cachePath: string): Record<string, JestTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath: string,
-  results: Record<string, JestTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 const jestConfigGlob = '**/jest.config.{cjs,mjs,js,cts,mts,ts}';
 
-export const createNodes: CreateNodesV2<JestPluginOptions> = [
+export const createNodes: CreateNodes<JestPluginOptions> = [
   jestConfigGlob,
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `jest-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<JestTargets>(cachePath);
     // Cache jest preset(s) to avoid penalties of module load times. Most of jest configs will use the same preset.
     const presetCache: Record<string, unknown> = {};
     // Cache tsconfig reads + isolatedModules resolution. Many projects share
@@ -203,18 +189,23 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
           const hash = hashes[idx];
           const { rawConfig, needsDtsInputs } = loadedConfigs[idx];
 
-          targetsCache[hash] ??= await buildJestTargets(
-            rawConfig,
-            needsDtsInputs,
-            configFilePath,
-            projectRoot,
-            options,
-            context,
-            presetCache,
-            pmc
-          );
+          if (!targetsCache.has(hash)) {
+            targetsCache.set(
+              hash,
+              await buildJestTargets(
+                rawConfig,
+                needsDtsInputs,
+                configFilePath,
+                projectRoot,
+                options,
+                context,
+                presetCache,
+                pmc
+              )
+            );
+          }
 
-          const { targets, metadata } = targetsCache[hash];
+          const { targets, metadata } = targetsCache.get(hash);
 
           return {
             projects: {
@@ -231,7 +222,7 @@ export const createNodes: CreateNodesV2<JestPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -256,7 +247,7 @@ function checkIfConfigFileShouldBeProject(
   configFilePath: string,
   projectRoot: string,
   isInPackageManagerWorkspaces: (path: string) => boolean,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
@@ -297,7 +288,7 @@ async function buildJestTargets(
   configFilePath: string,
   projectRoot: string,
   options: JestPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   presetCache: Record<string, unknown>,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ): Promise<Pick<ProjectConfiguration, 'targets' | 'metadata'>> {
@@ -424,7 +415,6 @@ async function buildJestTargets(
         const targetName = `${options.ciTargetName}--${relativePath}`;
         dependsOn.push({
           target: targetName,
-          projects: 'self',
           params: 'forward',
           options: 'forward',
         });
@@ -530,7 +520,10 @@ async function buildJestTargets(
           : // @ts-expect-error Jest v29 doesn't have the projectConfig parameter
             await source.getTestPaths(config.globalConfig);
 
-      const testPaths = new Set(specs.tests.map(({ path }) => path));
+      // Sort to keep atomized target name insertion order stable.
+      // jest.SearchSource.getTestPaths walks via jest-haste-map's
+      // parallel workers, so its output order isn't guaranteed.
+      const testPaths = new Set(specs.tests.map(({ path }) => path).sort());
 
       if (testPaths.size > 0) {
         const targetGroup = [];
@@ -565,7 +558,6 @@ async function buildJestTargets(
           const targetName = `${options.ciTargetName}--${relativePath}`;
           dependsOn.push({
             target: targetName,
-            projects: 'self',
             params: 'forward',
             options: 'forward',
           });
@@ -913,7 +905,7 @@ function getOutputs(
   projectRoot: string,
   coverageDirectory: string | undefined,
   outputFile: string | undefined,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): string[] {
   function getOutput(path: string): string {
     const relativePath = relative(
@@ -990,7 +982,7 @@ async function getTestPaths(
   projectRoot: string,
   rawConfig: any,
   rootDir: string,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   presetCache: Record<string, unknown>
 ): Promise<{ specs: string[]; testMatch: string[] }> {
   const testMatch = await getJestOption<string[]>(

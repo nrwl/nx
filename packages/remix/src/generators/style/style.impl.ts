@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -6,8 +7,8 @@ import {
   Tree,
 } from '@nx/devkit';
 import { RemixStyleSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import { dirname, relative } from 'path';
 import { insertImport } from '../../utils/insert-import';
 import { insertStatementAfterImports } from '../../utils/insert-statement-after-imports';
@@ -17,6 +18,8 @@ import {
 } from '../../utils/remix-route-utils';
 
 export default async function (tree: Tree, options: RemixStyleSchema) {
+  assertSupportedRemixVersion(tree);
+
   const {
     project: projectName,
     directory,

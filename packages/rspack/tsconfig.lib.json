@@ -2,25 +2,37 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "resolveJsonModule": true,
-    "outDir": "../../dist/packages/rspack",
-    "esModuleInterop": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "declarationMap": false,
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "types": ["node"],
-    "tsBuildInfoFile": "../../dist/packages/rspack/tsconfig.tsbuildinfo"
+    "composite": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true
   },
-  "include": ["**/*.ts"],
-  "exclude": ["jest.config.ts", "**/*.spec.ts", "**/*.test.ts"],
+  "include": ["*.ts", "src/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "jest.config.ts",
+    "**/*.spec.ts",
+    "**/*.test.ts",
+    "eslint.config.mjs"
+  ],
   "references": [
-    {
-      "path": "../module-federation/tsconfig.lib.json"
-    },
     {
       "path": "../web/tsconfig.lib.json"
     },
     {
-      "path": "../devkit/tsconfig.lib.json"
+      "path": "../module-federation/tsconfig.lib.json"
     },
     {
       "path": "../js/tsconfig.lib.json"
+    },
+    {
+      "path": "../devkit/tsconfig.lib.json"
     },
     {
       "path": "../nest/tsconfig.lib.json"

@@ -1,3 +1,5 @@
+import { ensureRootProjectName } from '@nx/devkit/internal';
+import { assertSupportedReactVersion } from '../../utils/assert-supported-react-version';
 import {
   addDependenciesToPackageJson,
   formatFiles,
@@ -15,16 +17,13 @@ import {
 } from '@nx/devkit';
 import { join } from 'path';
 
-import { ensureRootProjectName } from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { isValidVariable } from '@nx/js';
-import {
-  getProjectSourceRoot,
-  isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot, isUsingTsSolutionSetup } from '@nx/js/internal';
 import { updateModuleFederationProject } from '../../rules/update-module-federation-project';
 import { addMfEnvToTargetDefaultInputs } from '../../utils/add-mf-env-to-inputs';
 import { normalizeRemoteName } from '../../utils/normalize-remote';
 import { maybeJs } from '../../utils/maybe-js';
+import { warnReactRemoteGeneratorDeprecation } from '../../utils/module-federation-deprecation';
 import {
   moduleFederationEnhancedVersion,
   nxVersion,
@@ -132,6 +131,8 @@ export function addModuleFederationFiles(
 }
 
 export async function remoteGenerator(host: Tree, schema: Schema) {
+  assertSupportedReactVersion(host);
+  warnReactRemoteGeneratorDeprecation();
   const tasks: GeneratorCallback[] = [];
   const name = await normalizeRemoteName(host, schema.name, schema);
   const options: NormalizedSchema<Schema> = {
@@ -287,7 +288,9 @@ export async function remoteGenerator(host: Tree, schema: Schema) {
       '@module-federation/enhanced': moduleFederationEnhancedVersion,
       '@nx/web': nxVersion,
       '@nx/module-federation': nxVersion,
-    }
+    },
+    undefined,
+    true
   );
   tasks.push(installTask);
 

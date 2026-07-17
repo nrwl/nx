@@ -16,7 +16,6 @@ export interface Schema {
   babelJest?: boolean;
   js?: boolean;
   setParserOptionsProject?: boolean;
-  standaloneConfig?: boolean;
   bundler?: 'esbuild' | 'webpack';
   framework?: NodeJsFrameWorks;
   port?: number;
@@ -27,6 +26,7 @@ export interface Schema {
   addPlugin?: boolean;
   useTsSolution?: boolean;
   useProjectJson?: boolean;
+  keepExistingVersions?: boolean;
 }
 
 export type NodeJsFrameWorks = 'express' | 'koa' | 'fastify' | 'nest' | 'none';

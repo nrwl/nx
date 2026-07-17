@@ -11,7 +11,8 @@ import {
   updateNxJson,
   updateProjectConfiguration,
 } from '@nx/devkit';
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { findTargetDefault, upsertTargetDefault } from '@nx/devkit/internal';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import type { NormalizedGeneratorOptions } from '../schema';
 import {
   DEFAULT_BROWSER_DIR,
@@ -66,11 +67,7 @@ export function updateProjectConfigForApplicationBuilder(
   buildTarget.options.ssr = {
     entry: joinPathFragments(sourceRoot, options.serverFileName),
   };
-  if (options.serverRouting) {
-    buildTarget.options.outputMode = 'server';
-  } else {
-    buildTarget.options.prerender = true;
-  }
+  buildTarget.options.outputMode = 'server';
 
   updateProjectConfiguration(tree, options.project, project);
 }
@@ -96,7 +93,9 @@ export function updateProjectConfigForBrowserBuilder(
 
   projectConfig.targets.server = {
     dependsOn: ['build'],
-    executor: buildTarget.executor.startsWith('@angular-devkit/build-angular:')
+    executor: options.buildTargetExecutor.startsWith(
+      '@angular-devkit/build-angular:'
+    )
       ? '@angular-devkit/build-angular:server'
       : '@nx/angular:webpack-server',
     options: {
@@ -145,7 +144,7 @@ export function updateProjectConfigForBrowserBuilder(
 
   updateProjectConfiguration(tree, options.project, projectConfig);
 
-  const nxJson = readNxJson(tree);
+  const nxJson = readNxJson(tree) ?? {};
   if (
     nxJson.tasksRunnerOptions?.default?.options?.cacheableOperations &&
     !nxJson.tasksRunnerOptions.default.options.cacheableOperations.includes(
@@ -156,9 +155,12 @@ export function updateProjectConfigForBrowserBuilder(
       'server'
     );
   }
-  nxJson.targetDefaults ??= {};
-  nxJson.targetDefaults.server ??= {};
-  nxJson.targetDefaults.server.cache ??= true;
+  const existing = findTargetDefault(nxJson.targetDefaults, {
+    target: 'server',
+  });
+  if (!existing || existing.cache === undefined) {
+    upsertTargetDefault(tree, nxJson, { target: 'server', cache: true });
+  }
   updateNxJson(tree, nxJson);
 }
 

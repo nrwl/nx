@@ -1,3 +1,4 @@
+import { camelize } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   applyChangesToString,
@@ -11,13 +12,12 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { camelize } from '@nx/devkit/src/utils/string-utils';
 import { join } from 'path';
 import * as ts from 'typescript';
 import { workspaceLintPluginDir } from '../../utils/workspace-lint-rules';
 import { lintWorkspaceRulesProjectGenerator } from '../workspace-rules-project/workspace-rules-project';
-import { useFlatConfig } from '../../utils/flat-config';
-import { eslint9__typescriptESLintVersion } from '../../utils/versions';
+import { assertSupportedEslintVersion } from '../../utils/assert-supported-eslint-version';
+import { versions } from '../../utils/versions';
 
 export interface LintWorkspaceRuleGeneratorOptions {
   name: string;
@@ -28,9 +28,14 @@ export async function lintWorkspaceRuleGenerator(
   tree: Tree,
   options: LintWorkspaceRuleGeneratorOptions
 ) {
+  assertSupportedEslintVersion(tree);
+
   const tasks: GeneratorCallback[] = [];
 
-  const flatConfig = useFlatConfig(tree);
+  // ESLint v9 dropped the eslintrc-style `RuleTester` API. typescript-eslint's
+  // recommended replacement is the separate `@typescript-eslint/rule-tester`
+  // package, whose flat-style API works for both flat and eslintrc workspaces.
+  const { typescriptESLintVersion } = versions(tree);
 
   const nxJson = readNxJson(tree);
   // Ensure that the workspace rules project has been created
@@ -43,15 +48,15 @@ export async function lintWorkspaceRuleGenerator(
     })
   );
 
-  if (flatConfig) {
-    tasks.push(
-      addDependenciesToPackageJson(
-        tree,
-        {},
-        { '@typescript-eslint/rule-tester': eslint9__typescriptESLintVersion }
-      )
-    );
-  }
+  tasks.push(
+    addDependenciesToPackageJson(
+      tree,
+      {},
+      { '@typescript-eslint/rule-tester': typescriptESLintVersion },
+      undefined,
+      true
+    )
+  );
 
   const ruleDir = joinPathFragments(
     workspaceLintPluginDir,
@@ -62,7 +67,6 @@ export async function lintWorkspaceRuleGenerator(
   generateFiles(tree, join(__dirname, 'files'), ruleDir, {
     tmpl: '',
     name: options.name,
-    flatConfig,
   });
 
   const nameCamelCase = camelize(options.name);

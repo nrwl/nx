@@ -5,6 +5,7 @@
   "description": "Jest target options for Build Facade.",
   "cli": "nx",
   "type": "object",
+  "x-deprecated": "The `@nx/jest:jest` executor is deprecated and will be removed in Nx v24. Run `nx g @nx/jest:convert-to-inferred` to migrate to the `@nx/jest/plugin` inferred plugin. See https://nx.dev/docs/guides/tasks--caching/convert-to-inferred for details.",
   "presets": [
     {
       "name": "Pass Without Tests",
@@ -64,11 +65,6 @@
       "type": "string",
       "x-completion-type": "file",
       "x-completion-glob": "tsconfig.*.json"
-    },
-    "setupFile": {
-      "description": "The name of a setup file used by Jest.",
-      "type": "string",
-      "x-deprecated": "Use the `setupFilesAfterEnv` option in the Jest configuration file instead. See https://jestjs.io/docs/configuration#setupfilesafterenv-array. It will be removed in Nx v22."
     },
     "bail": {
       "alias": "b",

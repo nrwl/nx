@@ -1,4 +1,4 @@
-import { PerformanceObserver } from 'perf_hooks';
+import { PerformanceMeasure, PerformanceObserver } from 'perf_hooks';
 
 import type { TrackedDetail } from './perf-hooks';
 
@@ -11,7 +11,8 @@ function isTrackedDetail(detail: unknown): detail is TrackedDetail {
 }
 
 new PerformanceObserver((list) => {
-  const entries = list.getEntries();
+  // observer is configured for 'measure' entries only (see .observe call below)
+  const entries = list.getEntries() as PerformanceMeasure[];
   const logEnabled = process.env.NX_PERF_LOGGING === 'true';
   const tracked = entries.filter((e) => isTrackedDetail(e.detail));
 
@@ -24,9 +25,10 @@ new PerformanceObserver((list) => {
       require('../daemon/is-on-daemon') as typeof import('../daemon/is-on-daemon');
     const { serverLogger } =
       require('../daemon/logger') as typeof import('../daemon/logger');
+    const { logger } = require('./logger') as typeof import('./logger');
     const log = isOnDaemon()
       ? (msg: string) => serverLogger.log(msg)
-      : console.log;
+      : (msg: string) => logger.warn(msg);
     for (const entry of entries) {
       log(`Time taken for '${entry.name}' ${entry.duration}ms`);
     }

@@ -16,7 +16,7 @@ describe('React Rspack SSR Module Federation', () => {
   // TODO: @columferry please investigate why this test cauess agents to run out of memory
   xdescribe('ssr', () => {
     beforeEach(() => {
-      newProject({ packages: ['@nx/react'] });
+      newProject({ packages: ['@nx/react', '@nx/rspack', '@nx/cypress'] });
     });
 
     afterEach(() => cleanupProject());

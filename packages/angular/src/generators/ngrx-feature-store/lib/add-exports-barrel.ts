@@ -1,7 +1,7 @@
 import type { Tree } from '@nx/devkit';
 import { joinPathFragments, names } from '@nx/devkit';
 import { NormalizedNgRxFeatureStoreGeneratorOptions } from './normalize-options';
-import { ensureTypescript } from '@nx/js/src/utils/typescript/ensure-typescript';
+import { ensureTypescript } from '@nx/js/internal';
 
 import { addGlobal } from '@nx/js';
 

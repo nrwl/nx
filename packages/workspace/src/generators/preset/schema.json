@@ -33,6 +33,7 @@
       "description": "The file extension to be used for style files.",
       "type": "string",
       "default": "css",
+      "enum": ["css", "scss"],
       "x-prompt": {
         "message": "Which stylesheet format would you like to use?",
         "type": "list",
@@ -43,11 +44,7 @@
           },
           {
             "value": "scss",
-            "label": "SASS(.scss)  [ https://sass-lang.com   ]"
-          },
-          {
-            "value": "less",
-            "label": "LESS         [ https://lesscss.org     ]"
+            "label": "SASS(.scss)  [ https://sass-lang.com ]"
           }
         ]
       }
@@ -56,12 +53,6 @@
       "description": "Use Standalone Components if generating an Angular application.",
       "type": "boolean",
       "default": false
-    },
-    "standaloneConfig": {
-      "description": "Split the project configurations into `<projectRoot>/project.json` rather than including it inside `workspace.json`.",
-      "type": "boolean",
-      "default": true,
-      "x-deprecated": "Nx only supports standaloneConfig"
     },
     "packageManager": {
       "description": "The package manager used to install dependencies.",

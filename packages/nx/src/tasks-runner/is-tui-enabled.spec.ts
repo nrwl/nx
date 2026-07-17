@@ -2,6 +2,12 @@ import { withEnvironmentVariables } from '../internal-testing-utils/with-environ
 import { shouldUseTui } from './is-tui-enabled';
 import { logger } from '../utils/logger';
 
+jest.mock('../native', () => ({
+  ...jest.requireActual('../native'),
+  isAiAgent: jest.fn(() => false),
+  IS_WASM: false,
+}));
+
 describe('shouldUseTui', () => {
   it('should return true by default', () =>
     withEnvironmentVariables(

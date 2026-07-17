@@ -22,7 +22,17 @@ describe('React Applications', () => {
   let proj: string;
   describe('Crystal Supported Tests', () => {
     beforeAll(() => {
-      proj = newProject({ packages: ['@nx/react'] });
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/vite',
+          '@nx/vitest',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
       ensureCypressInstallation();
     });
 
@@ -249,100 +259,6 @@ describe('React Applications', () => {
       );
     }, 500_000);
 
-    describe('React Applications: --style option', () => {
-      // TODO(crystal, @jaysoo): Investigate why this is failng
-      xit('should support styled-jsx', async () => {
-        const appName = uniq('app');
-        runCLI(
-          `generate @nx/react:app ${appName} --style=styled-jsx --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
-        );
-
-        // update app to use styled-jsx
-        updateFile(
-          `apps/${appName}/src/app/app.tsx`,
-          `
-       import NxWelcome from './nx-welcome';
-
-        export function App() {
-          return (
-            <div>
-              <style jsx>{'h1 { color: red }'}</style>
-
-              <NxWelcome title="${appName}" />
-            </div>
-          );
-        }
-
-        export default App;
-
-       `
-        );
-
-        // update e2e test to check for styled-jsx change
-
-        updateFile(
-          `apps/${appName}-e2e/src/e2e/app.cy.ts`,
-          `
-       describe('react-test', () => {
-        beforeEach(() => cy.visit('/'));
-      
-        it('should have red colour', () => {
-
-          cy.get('h1').should('have.css', 'color', 'rgb(255, 0, 0)');
-        });
-      });
-      
-       `
-        );
-        if (runE2ETests()) {
-          const e2eResults = runCLI(`e2e ${appName}-e2e --verbose`);
-          expect(e2eResults).toContain('All specs passed!');
-        }
-      }, 250_000);
-
-      it('should support tailwind', async () => {
-        const appName = uniq('app');
-        runCLI(
-          `generate @nx/react:app apps/${appName} --style=tailwind --bundler=vite --no-interactive --skipFormat --linter=eslint --unitTestRunner=vitest`
-        );
-
-        // update app to use styled-jsx
-        updateFile(
-          `apps/${appName}/src/app/app.tsx`,
-          `
-       import NxWelcome from './nx-welcome';
-
-        export function App() {
-          return (
-            <div className="w-20 h-20">
-              <NxWelcome title="${appName}" />
-            </div>
-          );
-        }
-
-        export default App;
-
-       `
-        );
-
-        runCLI(`build ${appName}`);
-        const outputAssetFiles = listFiles(`dist/apps/${appName}/assets`);
-        const styleFile = outputAssetFiles.find((filename) =>
-          filename.endsWith('.css')
-        );
-        if (!styleFile) {
-          throw new Error('Could not find bundled css file');
-        }
-        const styleFileContents = readFile(
-          `dist/apps/${appName}/assets/${styleFile}`
-        );
-        const isStyleFileUsingTWClasses =
-          styleFileContents.includes('w-20') &&
-          styleFileContents.includes('h-20');
-        expect(isStyleFileUsingTWClasses).toBeTruthy();
-      }, 250_000);
-    });
-
     describe('--format', () => {
       it('should be formatted on freshly created apps', async () => {
         const appName = uniq('app');
@@ -362,7 +278,15 @@ describe('React Applications', () => {
   describe('Non-Crystal Tests', () => {
     beforeAll(() => {
       process.env.NX_ADD_PLUGINS = 'false';
-      proj = newProject({ packages: ['@nx/react'] });
+      proj = newProject({
+        packages: [
+          '@nx/react',
+          '@nx/webpack',
+          '@nx/jest',
+          '@nx/cypress',
+          '@nx/eslint',
+        ],
+      });
       ensureCypressInstallation();
     });
 
@@ -407,7 +331,6 @@ describe('React Applications', () => {
       style
       ${'css'}
       ${'scss'}
-      ${'less'}
     `('should support global and css modules', async ({ style }) => {
       const appName = uniq('app');
       runCLI(

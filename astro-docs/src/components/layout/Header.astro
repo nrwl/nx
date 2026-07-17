@@ -19,7 +19,8 @@ const nxDevUrl = import.meta.env.SITE || 'https://nx.dev';
 
 // Version options
 const versions = [
-  { version: 'v22', href: '/docs/getting-started/intro', current: true },
+  { version: 'v23', href: '/docs/getting-started/intro', current: true },
+  { version: 'v22', href: 'https://22.nx.dev/docs' },
   { version: 'v21', href: 'https://21.nx.dev/docs' },
   { version: 'v20', href: 'https://20.nx.dev/docs' },
   { version: 'v19', href: 'https://19.nx.dev/docs' },
@@ -31,8 +32,18 @@ const currentVersion = versions.find((v) => v.current);
 <div class="flex items-center justify-between h-full gap-4">
   <div class="flex items-center gap-2 flex-shrink-0">
     <a href={import.meta.env.SITE} class="flex items-center no-underline">
-      <Image src={nxLogoDark} alt="Nx" class="h-12 w-auto dark:hidden" loading="eager" />
-      <Image src={nxLogoLight} alt="Nx" class="h-12 w-auto hidden dark:block" loading="eager" />
+      <Image
+        src={nxLogoDark}
+        alt="Nx"
+        class="h-12 w-auto dark:hidden"
+        loading="eager"
+      />
+      <Image
+        src={nxLogoLight}
+        alt="Nx"
+        class="h-12 w-auto hidden dark:block"
+        loading="eager"
+      />
     </a>
     <a
       id="header-docs-home-link"
@@ -125,30 +136,7 @@ const currentVersion = versions.find((v) => v.current);
               Learn
             </h5>
             <a
-              href={`${nxDevUrl}/podcast`}
-              class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
-            >
-              <svg
-                class="w-5 h-5 text-slate-400 dark:text-slate-500"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke-width="1.5"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
-                ></path>
-              </svg>
-              <span
-                class="text-sm font-medium text-slate-900 dark:text-slate-200"
-                >Podcasts</span
-              >
-            </a>
-            <a
-              href={`${nxDevUrl}/webinar`}
+              href={`${nxDevUrl}/webinars`}
               class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
             >
               <svg
@@ -263,7 +251,7 @@ const currentVersion = versions.find((v) => v.current);
               >
             </a>
             <a
-              href={`${nxDevUrl}/resources-library?filterBy=book`}
+              href={`${nxDevUrl}/resources?filterBy=book`}
               class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
             >
               <svg
@@ -286,7 +274,7 @@ const currentVersion = versions.find((v) => v.current);
               >
             </a>
             <a
-              href={`${nxDevUrl}/resources-library?filterBy=case-study`}
+              href={`${nxDevUrl}/resources?filterBy=case-study`}
               class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
             >
               <svg
@@ -309,7 +297,7 @@ const currentVersion = versions.find((v) => v.current);
               >
             </a>
             <a
-              href={`${nxDevUrl}/resources-library?filterBy=whitepaper`}
+              href={`${nxDevUrl}/resources?filterBy=whitepaper`}
               class="flex items-center gap-3 px-2 py-2 rounded-md no-underline hover:bg-slate-50 transition-colors dark:hover:bg-slate-800/60"
             >
               <svg
@@ -485,14 +473,14 @@ const currentVersion = versions.find((v) => v.current);
         Contact
       </a>
       <a
-        id="header-try-nx-cloud-btn"
+        id="header-get-started-btn"
         href="https://cloud.nx.app/get-started?utm_source=nx-dev&utm_medium=documentation-header&utm_campaign=try-nx-cloud"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-blue-500 dark:bg-sky-500 text-white hover:bg-blue-600 dark:hover:bg-sky-600 shadow-sm"
-        title="Try Nx Cloud for free"
+        class="inline-flex items-center justify-center px-2.5 py-1.5 text-sm font-medium rounded-md transition no-underline bg-zinc-950 dark:bg-zinc-100 text-white dark:text-zinc-950 hover:bg-zinc-900 dark:hover:bg-white shadow-sm"
+        title="Get started"
       >
-        Try Nx Cloud for free
+        Get started
       </a>
     </div>
     <!-- Social Icons - Hide on screens smaller than 2xl (1536px) -->
@@ -518,7 +506,7 @@ const currentVersion = versions.find((v) => v.current);
     const pricingLink = document.getElementById('header-pricing-link');
     const enterpriseLink = document.getElementById('header-enterprise-link');
     const contactBtn = document.getElementById('header-contact-btn');
-    const tryNxCloudBtn = document.getElementById('header-try-nx-cloud-btn');
+    const getStartedBtn = document.getElementById('header-get-started-btn');
 
     docsHomeLink?.addEventListener('click', () => {
       sendCustomEventViaGtm(
@@ -568,7 +556,7 @@ const currentVersion = versions.find((v) => v.current);
       );
     });
 
-    tryNxCloudBtn?.addEventListener('click', () => {
+    getStartedBtn?.addEventListener('click', () => {
       sendCustomEventViaGtm(
         'login-click',
         'header-cta',

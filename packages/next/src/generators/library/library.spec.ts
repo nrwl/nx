@@ -1,4 +1,4 @@
-import { getInstalledCypressMajorVersion } from '@nx/cypress/src/utils/versions';
+import { getInstalledCypressMajorVersion } from '@nx/cypress/internal';
 import {
   readJson,
   readProjectConfiguration,
@@ -12,8 +12,8 @@ import { Schema } from './schema';
 
 // need to mock cypress otherwise it'll use the nx installed version from package.json
 //  which is v9 while we are testing for the new v10 version
-jest.mock('@nx/cypress/src/utils/versions', () => ({
-  ...jest.requireActual('@nx/cypress/src/utils/versions'),
+jest.mock('@nx/cypress/internal', () => ({
+  ...jest.requireActual('@nx/cypress/internal'),
   getInstalledCypressMajorVersion: jest.fn(),
 }));
 
@@ -41,37 +41,6 @@ describe('next library', () => {
       .compilerOptions.types;
 
     expect(tsconfigTypes).toContain('@nx/next/typings/image.d.ts');
-  });
-
-  it('should add jsxImportSource in tsconfig.json for @emotion/styled', async () => {
-    const baseOptions: Schema = {
-      directory: '',
-      linter: 'eslint',
-      skipFormat: false,
-      skipTsConfig: false,
-      unitTestRunner: 'jest',
-      style: 'css',
-      component: true,
-    };
-
-    const appTree = createTreeWithEmptyWorkspace();
-
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib',
-    });
-    await libraryGenerator(appTree, {
-      ...baseOptions,
-      directory: 'my-lib2',
-      style: '@emotion/styled',
-    });
-
-    expect(
-      readJson(appTree, 'my-lib/tsconfig.json').compilerOptions.jsxImportSource
-    ).not.toBeDefined();
-    expect(
-      readJson(appTree, 'my-lib2/tsconfig.json').compilerOptions.jsxImportSource
-    ).toEqual('@emotion/react');
   });
 
   it('should generate a buildable library', async () => {

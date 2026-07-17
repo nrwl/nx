@@ -21,10 +21,6 @@ import {
 import {
   resolveCommandSyntacticSugar,
   resolveNxTokensInOptions,
-  readTargetDefaultsForTarget,
-  isCompatibleTarget,
-  mergeTargetDefaultWithTargetDefinition,
-  deepClone,
 } from './target-merging';
 
 import type { ConfigurationSourceMaps } from './source-maps';
@@ -137,33 +133,6 @@ function normalizeTargets(
       projects,
       [project.root, targetName].join(':')
     );
-
-    const projectSourceMaps = sourceMaps[project.root];
-
-    const targetConfig = project.targets[targetName];
-    const targetDefaults = deepClone(
-      readTargetDefaultsForTarget(
-        targetName,
-        nxJsonConfiguration.targetDefaults,
-        targetConfig.executor
-      )
-    );
-
-    // We only apply defaults if they exist
-    if (targetDefaults && isCompatibleTarget(targetConfig, targetDefaults)) {
-      project.targets[targetName] = mergeTargetDefaultWithTargetDefinition(
-        targetName,
-        project,
-        normalizeTarget(
-          targetDefaults,
-          project,
-          workspaceRoot,
-          projects,
-          ['nx.json[targetDefaults]', targetName].join(':')
-        ),
-        projectSourceMaps
-      );
-    }
 
     const target = project.targets[targetName];
 

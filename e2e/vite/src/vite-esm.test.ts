@@ -11,7 +11,7 @@ import {
 describe('Vite ESM tests', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/vite'],
     })
   );
 

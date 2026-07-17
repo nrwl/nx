@@ -13,6 +13,7 @@ module.exports = {
   // The mock for widnow.matchMedia has to be in a separete file and imported before the components to test
   // for more info check : // https://jestjs.io/docs/manual-mocks#mocking-methods-which-are-not-implemented-in-jsdom
   modulePathIgnorePatterns: [
+    ...(nxPreset.modulePathIgnorePatterns ?? []),
     '/graph/client/src/app/machines/match-media-mock.spec.ts',
   ],
 };

@@ -1,7 +1,7 @@
 import {
   cleanupProject,
   fileExists,
-  getAvailablePorts,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   readJson,
@@ -14,19 +14,16 @@ import {
 } from '@nx/e2e-utils';
 import { runCLI } from './utils';
 
-// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
-// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('Dynamic Module Federation', () => {
+describe('Dynamic Module Federation', () => {
   beforeAll(() => {
-    newProject({ packages: ['@nx/react'] });
+    newProject({ packages: ['@nx/react', '@nx/webpack', '@nx/cypress'] });
   });
 
   afterAll(() => cleanupProject());
   it('should load remote dynamic module', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const [shellPort, remotePort] = await getAvailablePorts(2);
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --dynamic=true --no-interactive --skipFormat`

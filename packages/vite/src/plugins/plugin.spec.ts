@@ -1,8 +1,8 @@
-import { CreateNodesContextV2 } from '@nx/devkit';
+import { CreateNodesContext } from '@nx/devkit';
 import { createNodesV2 } from './plugin';
 import { TempFs } from 'nx/src/internal-testing-utils/temp-fs';
 import { loadViteDynamicImport } from '../utils/executor-utils';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { isUsingTsSolutionSetup } from '@nx/js/internal';
 
 jest.mock('../utils/executor-utils', () => ({
   loadViteDynamicImport: jest.fn().mockResolvedValue({
@@ -10,14 +10,14 @@ jest.mock('../utils/executor-utils', () => ({
   }),
 }));
 
-jest.mock('@nx/js/src/utils/typescript/ts-solution-setup', () => ({
-  ...jest.requireActual('@nx/js/src/utils/typescript/ts-solution-setup'),
+jest.mock('@nx/js/internal', () => ({
+  ...jest.requireActual('@nx/js/internal'),
   isUsingTsSolutionSetup: jest.fn(),
 }));
 
 describe('@nx/vite/plugin', () => {
   let createNodesFunction = createNodesV2[1];
-  let context: CreateNodesContextV2;
+  let context: CreateNodesContext;
 
   beforeEach(() => {
     (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(false);
@@ -217,6 +217,76 @@ describe('@nx/vite/plugin', () => {
       ).toEqual(['@nx/js:typescript-sync']);
     });
 
+    it('should use tsgo for typecheck when compiler option is tsgo', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'tsgo',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`tsgo --noEmit -p tsconfig.json`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['@typescript/native-preview'],
+      });
+    });
+
+    it('should use tsgo with --build flag when compiler is tsgo and using TS solution setup', async () => {
+      (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'tsgo',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`tsgo --build --emitDeclarationOnly`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['@typescript/native-preview'],
+      });
+    });
+
+    it('should use vue-tsc when compiler option is vue-tsc (for non-detected Vue setups)', async () => {
+      tempFs.createFileSync('tsconfig.json', '');
+
+      const nodes = await createNodesFunction(
+        ['vite.config.ts'],
+        {
+          buildTargetName: 'build',
+          serveTargetName: 'serve',
+          previewTargetName: 'preview',
+          testTargetName: 'test',
+          serveStaticTargetName: 'serve-static',
+          compiler: 'vue-tsc',
+        },
+        context
+      );
+
+      const typecheck = nodes[0][1].projects['.'].targets.typecheck;
+      expect(typecheck.command).toEqual(`vue-tsc --noEmit -p tsconfig.json`);
+      expect(typecheck.inputs).toContainEqual({
+        externalDependencies: ['vue-tsc', 'typescript'],
+      });
+    });
+
     it('should infer the sync generator when using TS solution setup', async () => {
       (isUsingTsSolutionSetup as jest.Mock).mockReturnValue(true);
       tempFs.createFileSync('tsconfig.json', '');
@@ -318,114 +388,6 @@ describe('@nx/vite/plugin', () => {
         ]
       `);
     });
-  });
-
-  it('should add ancestor tsconfig.json to test inputs when it exists outside the project root', async () => {
-    const tempFs = new TempFs('vite-tsconfig-ancestor');
-    context = {
-      nxJsonConfiguration: {
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-    };
-    tempFs.createFileSync('tsconfig.json', JSON.stringify({}));
-    tempFs.createFileSync('apps/my-app/tsconfig.json', JSON.stringify({}));
-    tempFs.createFileSync(
-      'apps/my-app/project.json',
-      JSON.stringify({ name: 'my-app' })
-    );
-    tempFs.createFileSync('apps/my-app/vitest.config.ts', '');
-    tempFs.createFileSync('package-lock.json', '{}');
-
-    const nodes = await createNodesFunction(
-      ['apps/my-app/vitest.config.ts'],
-      { testTargetName: 'test' },
-      context
-    );
-
-    const inputs = nodes[0][1].projects['apps/my-app'].targets.test.inputs;
-    expect(inputs).toContainEqual({
-      json: '{workspaceRoot}/tsconfig.json',
-      fields: ['compilerOptions'],
-    });
-    tempFs.cleanup();
-  });
-
-  it('should add tsconfig files from the extends chain outside the project root', async () => {
-    const tempFs = new TempFs('vite-tsconfig-extends');
-    context = {
-      nxJsonConfiguration: {
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-    };
-    tempFs.createFileSync('tsconfig.shared.json', JSON.stringify({}));
-    tempFs.createFileSync(
-      'apps/my-app/tsconfig.json',
-      JSON.stringify({ extends: '../../tsconfig.shared.json' })
-    );
-    tempFs.createFileSync(
-      'apps/my-app/project.json',
-      JSON.stringify({ name: 'my-app' })
-    );
-    tempFs.createFileSync('apps/my-app/vitest.config.ts', '');
-    tempFs.createFileSync('package-lock.json', '{}');
-
-    const nodes = await createNodesFunction(
-      ['apps/my-app/vitest.config.ts'],
-      { testTargetName: 'test' },
-      context
-    );
-
-    const inputs = nodes[0][1].projects['apps/my-app'].targets.test.inputs;
-    expect(inputs).toContainEqual({
-      json: '{workspaceRoot}/tsconfig.shared.json',
-      fields: ['compilerOptions'],
-    });
-    tempFs.cleanup();
-  });
-
-  it('should not add the root tsconfig handled by the native TsConfiguration hasher', async () => {
-    const tempFs = new TempFs('vite-tsconfig-root-skip');
-    context = {
-      nxJsonConfiguration: {
-        namedInputs: {
-          default: ['{projectRoot}/**/*'],
-          production: ['!{projectRoot}/**/*.spec.ts'],
-        },
-      },
-      workspaceRoot: tempFs.tempDir,
-    };
-    tempFs.createFileSync('tsconfig.base.json', JSON.stringify({}));
-    tempFs.createFileSync(
-      'apps/my-app/tsconfig.json',
-      JSON.stringify({ extends: '../../tsconfig.base.json' })
-    );
-    tempFs.createFileSync(
-      'apps/my-app/project.json',
-      JSON.stringify({ name: 'my-app' })
-    );
-    tempFs.createFileSync('apps/my-app/vitest.config.ts', '');
-    tempFs.createFileSync('package-lock.json', '{}');
-
-    const nodes = await createNodesFunction(
-      ['apps/my-app/vitest.config.ts'],
-      { testTargetName: 'test' },
-      context
-    );
-
-    const inputs = nodes[0][1].projects['apps/my-app'].targets.test.inputs;
-    expect(inputs).not.toContainEqual({
-      json: '{workspaceRoot}/tsconfig.base.json',
-      fields: ['compilerOptions'],
-    });
-    tempFs.cleanup();
   });
 
   describe('Library mode', () => {
@@ -640,7 +602,7 @@ describe('@nx/vite/plugin', () => {
                       },
                     },
                     "watch-deps": {
-                      "command": "npx nx watch --projects my-lib --includeDependentProjects -- npx nx build-deps my-lib",
+                      "command": "npx nx watch --projects my-lib --includeDependencies -- npx nx build-deps my-lib",
                       "continuous": true,
                       "dependsOn": [
                         "build-deps",

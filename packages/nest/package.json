@@ -2,6 +2,13 @@
   "name": "@nx/nest",
   "version": "0.0.1",
   "private": false,
+  "type": "commonjs",
+  "files": [
+    "dist",
+    "!dist/tsconfig.tsbuildinfo",
+    "migrations.json",
+    "generators.json"
+  ],
   "description": "The Nx Plugin for Nest contains executors and generators for allowing your workspace to create powerful Nest best in class APIs.",
   "repository": {
     "type": "git",
@@ -17,9 +24,8 @@
     "CLI",
     "Backend"
   ],
-  "main": "./index.js",
-  "type": "commonjs",
-  "types": "./index.d.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "author": "Victor Savkin",
   "license": "MIT",
   "bugs": {
@@ -29,7 +35,28 @@
   "generators": "./generators.json",
   "ng-update": {
     "requirements": {},
-    "migrations": "./migrations.json"
+    "migrations": "./migrations.json",
+    "supportsOptionalMigrations": true
+  },
+  "exports": {
+    ".": {
+      "@nx/nx-source": "./index.ts",
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json",
+    "./migrations.json": "./migrations.json",
+    "./generators.json": "./generators.json",
+    "./src/*": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    },
+    "./src/*.js": {
+      "@nx/nx-source": "./src/*.ts",
+      "types": "./dist/src/*.d.ts",
+      "default": "./dist/src/*.js"
+    }
   },
   "dependencies": {
     "@nestjs/schematics": "^11.0.0",
@@ -37,7 +64,28 @@
     "@nx/js": "workspace:*",
     "@nx/eslint": "workspace:*",
     "@nx/node": "workspace:*",
+    "semver": "catalog:",
     "tslib": "catalog:typescript"
+  },
+  "peerDependencies": {
+    "@nestjs/core": ">=10.0.0 <12.0.0",
+    "@nestjs/common": ">=10.0.0 <12.0.0",
+    "reflect-metadata": ">=0.1.0 <0.3.0",
+    "rxjs": "^7.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/core": {
+      "optional": true
+    },
+    "@nestjs/common": {
+      "optional": true
+    },
+    "reflect-metadata": {
+      "optional": true
+    },
+    "rxjs": {
+      "optional": true
+    }
   },
   "publishConfig": {
     "access": "public"

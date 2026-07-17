@@ -4,6 +4,20 @@ jest.mock('fs', () => ({
 }));
 jest.mock('../../../utils/fileutils');
 
+// Fixtures below reference `@nx/devkit` as a graph external node.
+// `recursivelyCollectPeerDependencies` then runs
+// `require('@nx/devkit/package.json')` to discover peer deps, which resolves
+// to the real `packages/devkit/package.json` via this monorepo's pnpm
+// symlinks and shows up as a sandbox-violating cross-project read. Stub it
+// with the only field this code path consumes — `peerDependencies` —
+// preserving the assertion that `nx` is collected as a transitive peer dep
+// of `@nx/devkit`.
+jest.mock(
+  '@nx/devkit/package.json',
+  () => ({ peerDependencies: { nx: '*' } }),
+  { virtual: true }
+);
+
 import * as fs from 'fs';
 import * as configModule from '../../../config/configuration';
 import {
@@ -760,7 +774,7 @@ describe('createPackageJson', () => {
           }
         })
       );
-      const consoleWarnSpy = jest.spyOn(process.stdout, 'write');
+      const consoleWarnSpy = jest.spyOn(process.stderr, 'write');
       spies.push(consoleWarnSpy);
       spies.push(
         jest
@@ -1005,6 +1019,96 @@ describe('createPackageJson', () => {
           bar: '1.0.0',
         },
       });
+    });
+
+    it('should drop npm overrides that target a direct dependency', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                overrides: {
+                  // `typescript` is a direct dependency of the generated
+                  // package.json - npm would reject this with EOVERRIDE.
+                  typescript: '5.0.0',
+                  // transitive-only override - must be carried through.
+                  foo: '1.0.0',
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      expect(
+        createPackageJson('lib1', graph, {
+          root: '',
+        })
+      ).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+        overrides: {
+          foo: '1.0.0',
+        },
+      });
+    });
+
+    it('should omit npm overrides when every entry targets a direct dependency', () => {
+      spies.push(
+        jest
+          .spyOn(fs, 'existsSync')
+          .mockImplementation(
+            (path) =>
+              path === 'libs/lib1/package.json' || path === 'package.json'
+          )
+      );
+      spies.push(
+        jest
+          .spyOn(fileutilsModule, 'readJsonFile')
+          .mockImplementation((path) => {
+            if (path === 'package.json') {
+              return {
+                ...rootPackageJson(),
+                overrides: {
+                  typescript: '5.0.0',
+                  random: '2.0.0',
+                },
+              };
+            }
+            if (path === 'libs/lib1/package.json') {
+              return projectPackageJson();
+            }
+          })
+      );
+
+      const result = createPackageJson('lib1', graph, {
+        root: '',
+      });
+      expect(result).toEqual({
+        dependencies: {
+          random: '1.0.0',
+          typescript: '^4.8.4',
+        },
+        name: 'other-name',
+        version: '1.2.3',
+      });
+      expect(result).not.toHaveProperty('overrides');
     });
 
     it('should add resolutions (yarn)', () => {

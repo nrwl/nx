@@ -1,14 +1,15 @@
 import {
   createProjectGraphAsync,
+  getPackageManagerCommand,
   joinPathFragments,
   workspaceRoot,
 } from '@nx/devkit';
 import {
   calculateProjectBuildableDependencies,
   createTmpTsConfig,
-} from '@nx/js/src/utils/buildable-libs-utils';
-import { resolvePathsBaseUrl } from '@nx/js/src/utils/typescript/ts-config';
-import { isUsingTsSolutionSetup } from '@nx/js/src/utils/typescript/ts-solution-setup';
+  isUsingTsSolutionSetup,
+} from '@nx/js/internal';
+import { resolvePathsBaseUrl } from '@nx/js';
 import { copyFileSync, existsSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 import {
@@ -18,6 +19,7 @@ import {
   MatchPath,
 } from 'tsconfig-paths';
 import { Plugin } from 'vite';
+import { warnNxViteTsPathsDeprecation } from '../src/utils/deprecation';
 import { findFile } from '../src/utils/nx-tsconfig-paths-find-file';
 import { getProjectTsConfigPath } from '../src/utils/options-utils';
 import { nxViteBuildCoordinationPlugin } from './nx-vite-build-coordination.plugin';
@@ -47,9 +49,27 @@ export interface nxViteTsPathsOptions {
    * @default true
    */
   buildLibsFromSource?: boolean;
+  /**
+   * The target to use for building the library dependencies.
+   * @default 'build'
+   */
+  buildTarget?: string;
+  /**
+   * The target to use for testing the library.
+   * @default 'test'
+   */
+  testTarget?: string;
 }
 
+/**
+ * @deprecated Will be removed in Nx v24. Replace with `tsconfigPaths()` from
+ * the `vite-tsconfig-paths` package. The inferred `@nx/vite/plugin` already
+ * ensures projects extend the workspace base tsconfig, so the community
+ * plugin handles monorepo path resolution end-to-end. See
+ * https://nx.dev/docs/technologies/build-tools/vite/configure-vite for details.
+ */
 export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
+  warnNxViteTsPathsDeprecation();
   let foundTsConfigPath: string;
   let matchTsPathEsm: MatchPath;
   let matchTsPathFallback: MatchPath | undefined;
@@ -71,6 +91,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
     '.less',
   ];
   options.mainFields ??= [['exports', '.', 'import'], 'module', 'main'];
+  options.buildTarget ??= 'build';
+  options.testTarget ??= 'test';
   options.buildLibsFromSource ??= true;
   let projectRoot = '';
   let projectRootFromWorkspaceRoot: string;
@@ -105,8 +127,8 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         // we need to get the deps for the 'build' target instead.
         const depsBuildTarget =
           process.env.NX_TASK_TARGET_TARGET === 'serve' ||
-          process.env.NX_TASK_TARGET_TARGET === 'test'
-            ? 'build'
+          process.env.NX_TASK_TARGET_TARGET === options.testTarget
+            ? options.buildTarget
             : process.env.NX_TASK_TARGET_TARGET;
         const { dependencies } = calculateProjectBuildableDependencies(
           undefined,
@@ -132,14 +154,18 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
             true
           );
           process.env.NX_GENERATED_TSCONFIG_PATH = foundTsConfigPath;
-        }
-        if (config.command === 'serve') {
-          const buildableLibraryDependencies = dependencies
-            .filter((dep) => dep.node.type === 'lib')
-            .map((dep) => dep.node.name)
-            .join(',');
-          const buildCommand = `npx nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
-          config.plugins.push(nxViteBuildCoordinationPlugin({ buildCommand }));
+          if (config.command === 'serve') {
+            const buildableLibraryDependencies = dependencies
+              .filter((dep) => dep.node.type === 'lib')
+              .map((dep) => dep.node.name)
+              .join(',');
+            const buildCommand = `${
+              getPackageManagerCommand().exec
+            } nx run-many --target=${depsBuildTarget} --projects=${buildableLibraryDependencies}`;
+            config.plugins.push(
+              nxViteBuildCoordinationPlugin({ buildCommand })
+            );
+          }
         }
       }
 
@@ -268,27 +294,33 @@ export function nxViteTsPaths(options: nxViteTsPathsOptions = {}) {
         importPath === normalizedImport ||
         importPath.startsWith(normalizedImport + '/')
       ) {
-        const joinedPath = joinPathFragments(
-          tsconfig.absoluteBaseUrl,
-          paths[0].replace(/\/\*$/, '')
-        );
-
-        resolvedFile = findFile(
-          importPath.replace(normalizedImport, joinedPath),
-          options.extensions
-        );
-
-        if (
-          resolvedFile === undefined &&
-          options.extensions.some((ext) => importPath.endsWith(ext))
-        ) {
-          const foundExtension = options.extensions.find((ext) =>
-            importPath.endsWith(ext)
+        for (const path of paths) {
+          const joinedPath = joinPathFragments(
+            tsconfig.absoluteBaseUrl,
+            path.replace(/\/\*$/, '')
           );
-          const pathWithoutExtension = importPath
-            .replace(normalizedImport, joinedPath)
-            .slice(0, -foundExtension.length);
-          resolvedFile = findFile(pathWithoutExtension, options.extensions);
+
+          resolvedFile = findFile(
+            importPath.replace(normalizedImport, joinedPath),
+            options.extensions
+          );
+
+          if (
+            resolvedFile === undefined &&
+            options.extensions.some((ext) => importPath.endsWith(ext))
+          ) {
+            const foundExtension = options.extensions.find((ext) =>
+              importPath.endsWith(ext)
+            );
+            const pathWithoutExtension = importPath
+              .replace(normalizedImport, joinedPath)
+              .slice(0, -foundExtension.length);
+            resolvedFile = findFile(pathWithoutExtension, options.extensions);
+          }
+
+          if (resolvedFile !== undefined) {
+            return resolvedFile;
+          }
         }
       }
     }

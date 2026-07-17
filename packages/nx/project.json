@@ -6,17 +6,10 @@
   "implicitDependencies": ["graph-client"],
   "release": {
     "version": {
-      "generator": "@nx/js:release-version",
-      "preserveLocalDependencyProtocols": true,
-      "manifestRootsToUpdate": ["packages/{projectName}"]
+      "generator": "@nx/js:release-version"
     }
   },
   "targets": {
-    "nx-release-publish": {
-      "options": {
-        "packageRoot": "packages/{projectName}"
-      }
-    },
     "build-native-wasm": {
       "cache": true,
       "inputs": ["native"],
@@ -107,6 +100,9 @@
       }
     },
     "test-native": {},
+    "test": {
+      "inputs": ["...", "{workspaceRoot}/scripts/patched-jest-resolver.js"]
+    },
     "format-native": {
       "command": "cargo fmt",
       "cache": true,

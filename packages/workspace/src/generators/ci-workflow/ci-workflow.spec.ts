@@ -383,7 +383,7 @@ describe('CI Workflow generator', () => {
           main:
             runs-on: ubuntu-latest
             steps:
-              - uses: actions/checkout@v4
+              - uses: actions/checkout@v7
                 with:
                   filter: tree:0
                   fetch-depth: 0
@@ -395,9 +395,9 @@ describe('CI Workflow generator', () => {
               # - run: npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
               # Cache node_modules
-              - uses: actions/setup-node@v4
+              - uses: actions/setup-node@v6
                 with:
-                  node-version: 20
+                  node-version: 24
                   cache: 'npm'
 
               - run: npm ci
@@ -534,7 +534,7 @@ describe('CI Workflow generator', () => {
 
       expect(tree.read('bitbucket-pipelines.yml', 'utf-8'))
         .toMatchInlineSnapshot(`
-        "image: node:20
+        "image: node:24
 
         clone:
           depth: full
@@ -588,9 +588,10 @@ describe('CI Workflow generator', () => {
       await ciWorkflowGenerator(tree, { ci: 'gitlab', name: 'CI' });
 
       expect(tree.read('.gitlab-ci.yml', 'utf-8')).toMatchInlineSnapshot(`
-        "image: node:20
+        "image: node:24
         variables:
           CI: 'true'
+          GIT_DEPTH: 0
 
         # Main job
         CI:
@@ -606,8 +607,8 @@ describe('CI Workflow generator', () => {
             # - npx nx start-ci-run --distribute-on="3 linux-medium-js" --stop-agents-after="build"
 
             - npm ci
-            - NX_HEAD=$CI_COMMIT_SHA
-            - NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$CI_COMMIT_BEFORE_SHA}
+            - export NX_HEAD=$CI_COMMIT_SHA
+            - export NX_BASE=\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-$(git rev-parse HEAD~1 2>/dev/null || git rev-parse HEAD)}
 
             # Prepend any command with "nx record --" to record its logs to Nx Cloud
             # - npx nx record -- echo Hello World

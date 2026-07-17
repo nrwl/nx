@@ -9,7 +9,7 @@ import {
 } from '@nx/devkit';
 import { createTreeWithEmptyWorkspace } from '@nx/devkit/testing';
 import libraryGenerator from './library';
-import { hasPlugin as hasRollupPlugin } from '@nx/rollup/src/utils/has-plugin';
+import { hasPlugin as hasRollupPlugin } from '@nx/rollup/internal';
 import { Schema } from './schema';
 
 describe('lib', () => {
@@ -260,7 +260,7 @@ describe('lib', () => {
           "compilerOptions": {
             "outDir": "../dist/out-tsc",
             "module": "commonjs",
-            "moduleResolution": "node10",
+            "moduleResolution": "bundler",
             "jsx": "react-jsx",
             "types": ["jest", "node"]
           },
@@ -377,6 +377,8 @@ describe('lib', () => {
       });
 
       expect(appTree.exists('my-lib/src/index.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.js')).toBe(true);
+      expect(appTree.exists('my-lib/src/lib/my-lib.tsx')).toBe(false);
     });
   });
 
@@ -506,8 +508,8 @@ describe('lib', () => {
           "main": "./src/index.ts",
           "name": "@proj/my-lib",
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "~0.79.3",
+            "react": "^19.2.0",
+            "react-native": "~0.84.1",
           },
           "types": "./src/index.ts",
           "version": "0.0.1",
@@ -634,8 +636,8 @@ describe('lib', () => {
             }
           },
           "peerDependencies": {
-            "react": "^19.0.0",
-            "react-native": "~0.79.3"
+            "react": "^19.2.0",
+            "react-native": "~0.84.1"
           }
         }
         "

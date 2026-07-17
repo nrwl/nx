@@ -2,10 +2,9 @@
 import { FileChange } from 'nx/src/devkit-exports';
 // nx-ignore-next-line
 import type { MigrationDetailsWithId } from 'nx/src/config/misc-interfaces';
-// nx-ignore-next-line
-import type { MigrationsJsonMetadata } from 'nx/src/command-line/migrate/migrate-ui-api';
 
 import { useSelector } from '@xstate/react';
+import type { MigrationsJsonMetadata } from '../migration-shape';
 import {
   currentMigrationHasChanges,
   getCurrentMigrationType,
@@ -23,12 +22,14 @@ export function AutomaticMigration(props: {
   onRunMigration: (migration: MigrationDetailsWithId) => void;
   onSkipMigration: (migration: MigrationDetailsWithId) => void;
   onUndoMigration: (migration: MigrationDetailsWithId) => void;
+  onAcknowledgePrompt: (migration: MigrationDetailsWithId) => void;
   onFileClick: (
     migration: MigrationDetailsWithId,
     file: Omit<FileChange, 'content'>
   ) => void;
   onViewImplementation: (migration: MigrationDetailsWithId) => void;
   onViewDocumentation: (migration: MigrationDetailsWithId) => void;
+  onViewPrompt: (migration: MigrationDetailsWithId) => void;
   actor: Interpreter<
     AutomaticMigrationState,
     any,
@@ -92,9 +93,11 @@ export function AutomaticMigration(props: {
       onRunMigration={props.onRunMigration}
       onSkipMigration={props.onSkipMigration}
       onUndoMigration={props.onUndoMigration}
+      onAcknowledgePrompt={props.onAcknowledgePrompt}
       onFileClick={props.onFileClick}
       onViewImplementation={props.onViewImplementation}
       onViewDocumentation={props.onViewDocumentation}
+      onViewPrompt={props.onViewPrompt}
       onReviewMigration={handleReviewMigration}
     />
   );

@@ -47,8 +47,11 @@ describe('Maven', () => {
   });
 
   it('should build Maven project with dependencies without batch mode', () => {
-    // Build app which depends on lib, which depends on utils
-    let buildOutput = runCLI('run app:install --no-batch', { verbose: true });
+    // Avoid `verbose: true`: it sets NX_VERBOSE_LOGGING, which makes every
+    // --no-batch fork run `mvn -X`.
+    let buildOutput = runCLI('run app:install --no-batch', {
+      timeout: 15 * 60 * 1000,
+    });
 
     // Should build dependencies first
     expect(buildOutput).toContain('BUILD SUCCESS');
@@ -117,8 +120,9 @@ describe('Maven', () => {
     expect(output).toContain('- mvn-package:');
     expect(output).toContain('- mvn-install-ci:');
 
-    // Verify prefixed target works
-    const buildOutput = runCLI('run app:mvn-compile --no-batch');
+    const buildOutput = runCLI('run app:mvn-compile --no-batch', {
+      timeout: 15 * 60 * 1000,
+    });
     expect(buildOutput).toContain('BUILD SUCCESS');
   });
 });

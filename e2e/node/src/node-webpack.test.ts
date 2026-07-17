@@ -19,7 +19,7 @@ import { join } from 'path';
 describe('Node Applications + webpack', () => {
   beforeAll(() =>
     newProject({
-      packages: ['@nx/node'],
+      packages: ['@nx/node', '@nx/webpack', '@nx/esbuild'],
     })
   );
 

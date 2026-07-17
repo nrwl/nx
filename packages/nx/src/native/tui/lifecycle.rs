@@ -95,6 +95,42 @@ pub enum BatchStatus {
     Failure,
 }
 
+/// A docs link rendered as an OSC 8 hyperlink. Both fields come from TS so the
+/// popup never hardcodes a URL.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct Link {
+    pub text: String,
+    pub href: String,
+}
+
+/// Cache hits vs total; present only when there was a cache outcome. A bypassed
+/// cache is signalled separately by `cache_skipped`.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct CacheStat {
+    pub hits: u32,
+    pub total: u32,
+}
+
+/// Structured run report shown in the exit-countdown popup. The TUI builds the
+/// visual from these numbers rather than receiving a pre-formatted string.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct PerformanceSummaryPayload {
+    pub run_duration_ms: f64,
+    pub critical_path_ms: f64,
+    pub critical_path_task_count: u32,
+    pub recoverable_ms: f64,
+    pub cache: Option<CacheStat>,
+    pub cache_skipped: bool,
+    /// Already in display order; a multi-line entry embeds a task list.
+    pub recommendations: Vec<String>,
+    /// Phrases already in `recommendations` to hyperlink in place (e.g. the
+    /// remote-cache CTA); empty when none apply.
+    pub links: Vec<Link>,
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum TuiMode {
     FullScreen,
@@ -186,7 +222,7 @@ impl Clone for TuiAppInstance {
 /// Returns `Some(new_mode)` on success, `None` on failure.
 /// On failure, the caller should break out of the event loop.
 #[cfg(not(test))]
-fn switch_mode(
+async fn switch_mode(
     shared_app: &SharedAppInstance,
     tui: &mut Tui,
     target_mode: TuiMode,
@@ -229,11 +265,13 @@ fn switch_mode(
         (guard.get_shared_state(), item)
     };
 
-    // Switch terminal viewport
-    if let Err(e) = tui.switch_mode(target_mode) {
+    // Switch terminal viewport. On failure `tui.switch_mode` rolls the terminal
+    // back to the current mode, so don't tear down the whole run over a viewport
+    // hiccup — tell the user and stay where we are.
+    if let Err(e) = tui.switch_mode(target_mode).await {
         debug!("Failed to switch terminal mode: {}", e);
-        shared_state.lock().quit_immediately();
-        return None;
+        let _ = action_tx.send(Action::ShowHint(format!("Couldn't switch view: {e}")));
+        return Some(tui.current_mode);
     }
 
     // Create new app instance with same state
@@ -319,6 +357,7 @@ impl AppLifeCycle {
         title_text: String,
         workspace_root: String,
         task_graph: TaskGraph,
+        is_cloud_enabled: Option<bool>,
     ) -> Self {
         // Get the target names from nx_args.targets
         let rust_tui_cli_args = tui_cli_args.into();
@@ -330,7 +369,7 @@ impl AppLifeCycle {
         let tasks = tasks.into_iter().collect();
 
         // Create shared state first - this is the same regardless of mode
-        let shared_state = Arc::new(Mutex::new(TuiState::new(
+        let mut state = TuiState::new(
             tasks,
             initiating_tasks,
             run_mode,
@@ -340,7 +379,9 @@ impl AppLifeCycle {
             task_graph,
             std::collections::HashMap::new(), // estimated_task_timings - will be set later
             None,
-        )));
+        );
+        state.set_cloud_enabled(is_cloud_enabled.unwrap_or(false));
+        let shared_state = Arc::new(Mutex::new(state));
 
         // Default to FullScreen mode for the constructor
         let tui_mode = TuiMode::FullScreen;
@@ -402,8 +443,13 @@ impl AppLifeCycle {
     }
 
     #[napi(async_runtime)]
-    pub fn end_command(&self) -> napi::Result<()> {
-        self.with_app(|app| app.end_command());
+    pub fn end_command(&self, summary: Option<PerformanceSummaryPayload>) -> napi::Result<()> {
+        self.with_app(|app| {
+            if let Some(summary) = summary {
+                app.set_exit_summary(summary);
+            }
+            app.end_command();
+        });
         Ok(())
     }
 
@@ -477,11 +523,10 @@ impl AppLifeCycle {
         let mut tui_mode = initial_mode;
 
         // Spawn unified async task (identical for both modes!)
+        // The TUI event reader is already running — enter() called start()
+        // synchronously so EventStream::new() ran before any stdin bytes had
+        // a chance to leak into the read buffer.
         spawn(async move {
-            // Start the TUI event loop. This must happen inside the async block
-            // because start() uses tokio::spawn() which requires a runtime context.
-            tui.start();
-
             // Set up console messenger (identical for both modes)
             {
                 let connection = NxConsoleMessageConnection::new(&workspace_root).await;
@@ -608,7 +653,7 @@ impl AppLifeCycle {
                         // Only switch if target mode differs from current
                         if target_mode != tui_mode {
                             // switch_mode updates the shared app reference in place
-                            match switch_mode(&app, &mut tui, target_mode, &action_tx) {
+                            match switch_mode(&app, &mut tui, target_mode, &action_tx).await {
                                 Some(new_mode) => {
                                     tui_mode = new_mode;
                                     // Force an immediate render
@@ -718,12 +763,25 @@ impl AppLifeCycle {
         self.with_app(|app| app.set_batch_status(batch_id, status));
         Ok(())
     }
+
+    /// Set a clickable Nx Cloud link in the TUI: `label` is the text shown,
+    /// `url` is opened when it's clicked. This is a `LifeCycle` method so the Nx
+    /// Cloud client can call it via the lifecycle it already receives.
+    #[napi]
+    pub fn set_cloud_link(&self, label: String, url: String) -> napi::Result<()> {
+        self.with_app(|app| app.set_cloud_link(label, url));
+        Ok(())
+    }
 }
 
 #[napi]
 pub fn restore_terminal() -> napi::Result<()> {
     // Clear terminal progress indicator
     App::clear_terminal_progress();
+
+    // Disable mouse capture (safe even if it was never enabled) so the terminal
+    // stops emitting mouse escape sequences once the TUI tears down.
+    let _ = super::tui::disable_mouse_capture();
 
     // Drain pending terminal responses (e.g., OSC color query responses)
     // to prevent escape sequences from leaking to the terminal on exit

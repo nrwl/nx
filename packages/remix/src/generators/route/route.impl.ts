@@ -1,5 +1,5 @@
 import { formatFiles, names, stripIndents, Tree } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import { basename, dirname } from 'path';
 import { checkRoutePathForErrors } from '../../utils/remix-route-utils';
 import ActionGenerator from '../action/action.impl';
@@ -7,8 +7,11 @@ import LoaderGenerator from '../loader/loader.impl';
 import MetaGenerator from '../meta/meta.impl';
 import StyleGenerator from '../style/style.impl';
 import { RemixRouteSchema } from './schema';
+import { assertSupportedRemixVersion } from '../../utils/versions';
 
 export default async function (tree: Tree, options: RemixRouteSchema) {
+  assertSupportedRemixVersion(tree);
+
   const { artifactName: name, filePath: routeFilePath } =
     await determineArtifactNameAndDirectoryOptions(tree, {
       path: options.path.replace(/^\//, '').replace(/\/$/, ''),
@@ -32,7 +35,6 @@ export default async function (tree: Tree, options: RemixRouteSchema) {
   tree.write(
     routeFilePath,
     stripIndents`
-
 
     export default function ${componentName}() {
     ${

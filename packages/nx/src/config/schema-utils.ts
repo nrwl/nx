@@ -1,10 +1,60 @@
 import { existsSync } from 'fs';
-import { extname, join } from 'path';
+import { join, relative } from 'path';
 import { resolve as resolveExports } from 'resolve.exports';
+import {
+  loadTsFile,
+  requireWithTsconfigFallback,
+} from '../plugins/js/utils/register';
 import { getWorkspacePackagesMetadata } from '../plugins/js/utils/packages';
-import { registerPluginTSTranspiler } from '../project-graph/plugins';
+import { getRootTsConfigResolveExportsConditions } from '../plugins/js/utils/typescript';
+import {
+  createProjectRootMappingsFromProjectConfigurations,
+  findProjectForPath,
+} from '../project-graph/utils/find-project-for-path';
+import { readJsonFile } from '../utils/fileutils';
+import {
+  getMetadataFromPackageJson,
+  PackageJsonProjectMetadata,
+  type PackageJson,
+} from '../utils/package-json';
 import { normalizePath } from '../utils/path';
+import { workspaceRoot } from '../utils/workspace-root';
 import type { ProjectConfiguration } from './workspace-json-project-json';
+
+/**
+ * Thrown when the schema file of an executor or generator cannot be resolved.
+ */
+export class SchemaResolutionError extends Error {
+  constructor(
+    public readonly schemaPath: string,
+    public readonly directory: string,
+    options?: { cause?: unknown }
+  ) {
+    super(
+      `Could not resolve schema "${schemaPath}" from "${directory}".`,
+      options
+    );
+    this.name = 'SchemaResolutionError';
+  }
+}
+
+/**
+ * Thrown when the implementation module of an executor or generator cannot be
+ * resolved.
+ */
+export class ImplementationResolutionError extends Error {
+  constructor(
+    public readonly implementationModulePath: string,
+    public readonly directory: string,
+    options?: { cause?: unknown }
+  ) {
+    super(
+      `Could not resolve "${implementationModulePath}" from "${directory}".`,
+      options
+    );
+    this.name = 'ImplementationResolutionError';
+  }
+}
 
 /**
  * This function is used to get the implementation factory of an executor or generator.
@@ -27,10 +77,14 @@ export function getImplementationFactory<T>(
       packageName,
       projects
     );
-    if (extname(modulePath) === '.ts') {
-      registerPluginTSTranspiler();
-    }
-    const module = require(modulePath);
+    // Route .ts entrypoints through loadTsFile so the native-strip ->
+    // swc/ts-node fallback chain runs. Plain require() bypasses the matcher
+    // set and bubbles errors like extensionless `./schema` imports (strict
+    // ESM resolution failures) straight to the CLI. JS entrypoints use
+    // requireWithTsconfigFallback so workspace-alias imports still resolve.
+    const module = /\.[cm]?ts$/.test(modulePath)
+      ? loadTsFile(modulePath)
+      : requireWithTsconfigFallback(modulePath);
     return implementationExportName
       ? module[implementationExportName]
       : (module.default ?? module);
@@ -83,9 +137,7 @@ export function resolveImplementation(
     } catch {}
   }
 
-  throw new Error(
-    `Could not resolve "${implementationModulePath}" from "${directory}".`
-  );
+  throw new ImplementationResolutionError(implementationModulePath, directory);
 }
 
 export function resolveSchema(
@@ -114,35 +166,86 @@ export function resolveSchema(
     return maybeSchemaPath;
   }
 
-  return require.resolve(schemaPath, {
-    paths: [directory],
-  });
+  try {
+    return require.resolve(schemaPath, {
+      paths: [directory],
+    });
+  } catch (e) {
+    throw new SchemaResolutionError(schemaPath, directory, { cause: e });
+  }
 }
 
-let packageToProjectMap: Record<string, ProjectConfiguration>;
+let projectRootMappings: Map<string, string>;
+function getProjectForDirectory(
+  directory: string,
+  projects: Record<string, ProjectConfiguration>
+): ProjectConfiguration | null {
+  projectRootMappings ??=
+    createProjectRootMappingsFromProjectConfigurations(projects);
+  const projectName = findProjectForPath(
+    relative(workspaceRoot, directory),
+    projectRootMappings
+  );
+  return projectName ? projects[projectName] : null;
+}
+
+/**
+ * Reads the JS package metadata (package name and exports) for a project
+ * directly from its `package.json`. Used as a fallback when a project's graph
+ * metadata doesn't include the JS metadata.
+ */
+function readJsPackageMetadata(
+  project: ProjectConfiguration
+): PackageJsonProjectMetadata['js'] | null {
+  const packageJsonPath = join(workspaceRoot, project.root, 'package.json');
+  if (!existsSync(packageJsonPath)) {
+    return null;
+  }
+  try {
+    const packageJson = readJsonFile<PackageJson>(packageJsonPath);
+    return (
+      getMetadataFromPackageJson(
+        packageJson,
+        false
+      ) as PackageJsonProjectMetadata
+    ).js;
+  } catch {
+    return null;
+  }
+}
+
+let packageMetadata: ReturnType<
+  typeof getWorkspacePackagesMetadata<ProjectConfiguration>
+>;
 function tryResolveFromSource(
   path: string,
   directory: string,
   packageName: string,
   projects: Record<string, ProjectConfiguration>
 ): string | null {
-  packageToProjectMap ??=
-    getWorkspacePackagesMetadata(projects).packageToProjectMap;
-  const localProject = packageToProjectMap[packageName];
+  packageMetadata ??= getWorkspacePackagesMetadata(projects);
+  let localProject = packageMetadata.packageToProjectMap[packageName];
+  // The `packageName` might be a path to the collection rather than an actual
+  // package name (e.g. when a generator/executor collection is referenced by
+  // path). In that case, `directory` points inside the local project, so we
+  // find the project that contains it.
+  localProject ??= getProjectForDirectory(directory, projects);
   if (!localProject) {
-    // it doesn't match any of the package names from the local projects
     return null;
   }
+  const js =
+    (localProject.metadata as PackageJsonProjectMetadata)?.js ??
+    readJsPackageMetadata(localProject);
+  if (!js) {
+    return null;
+  }
+  const name = js.packageName;
+  const exports = js.packageExports;
 
   try {
-    const fromExports = resolveExports(
-      {
-        name: localProject.metadata!.js!.packageName,
-        exports: localProject.metadata!.js!.packageExports,
-      },
-      path,
-      { conditions: ['development'] }
-    );
+    const fromExports = resolveExports({ name, exports }, path, {
+      conditions: getRootTsConfigResolveExportsConditions(),
+    });
     if (fromExports && fromExports.length) {
       for (const exportPath of fromExports) {
         if (existsSync(join(directory, exportPath))) {

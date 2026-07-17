@@ -1,7 +1,31 @@
 import {
+  createWorkspace,
   extractConnectUrl,
   resolveTemplateShorthand,
 } from './create-workspace';
+import { mkdtempSync, mkdirSync, rmSync, realpathSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
+
+describe('createWorkspace - template flow', () => {
+  it('refuses to overwrite an existing directory unless scaffolding in place', async () => {
+    const tmpDir = realpathSync(mkdtempSync(join(tmpdir(), 'cnw-cw-')));
+    mkdirSync(join(tmpDir, 'existing'));
+    try {
+      await expect(
+        createWorkspace(undefined, {
+          template: 'nrwl/empty-template',
+          name: 'existing',
+          workingDir: tmpDir,
+          packageManager: 'npm',
+          nxCloud: 'skip',
+        } as any)
+      ).rejects.toMatchObject({ code: 'DIRECTORY_EXISTS' });
+    } finally {
+      rmSync(tmpDir, { recursive: true, force: true });
+    }
+  });
+});
 
 describe('extractConnectUrl', () => {
   test('should extract the correct URL from the given string', () => {

@@ -152,8 +152,13 @@ export async function resolveCurrentVersionFromRegistry(
 
   let registryTxt = '';
 
+  // Skip non-TTY logging — the resolved version is reported through the
+  // project's batched `ProjectLogger` so the spinner step shouldn't emit an
+  // out-of-band line that would bypass the grouped output.
   const spinner = globalSpinner.start(
-    `Resolving the current version for ${projectGraphNode.name} from the configured registry...`
+    `Resolving the current version for ${projectGraphNode.name} from the configured registry...`,
+    undefined,
+    { skipNonTtyLogging: true }
   );
 
   try {
@@ -281,7 +286,7 @@ export async function resolveCurrentVersionFromGitTag(
   if (latestMatchingGitTag && latestMatchingGitTag.extractedVersion) {
     const currentVersion = latestMatchingGitTag.extractedVersion;
     logger.buffer(
-      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}", based on releaseTagPattern "${releaseTagPattern}"`
+      `🏷️  Resolved the current version as ${currentVersion} from git tag "${latestMatchingGitTag.tag}", based on releaseTag.pattern "${releaseTagPattern}"`
     );
     // Write to the cache if the release group is fixed
     if (releaseGroup.projectsRelationship === 'fixed') {

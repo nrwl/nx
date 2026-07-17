@@ -2,6 +2,7 @@ import { names } from '@nx/devkit';
 import {
   checkFilesExist,
   killProcessAndPorts,
+  reservePort,
   runCLI,
   runCommandUntil,
   uniq,
@@ -30,12 +31,12 @@ describe('Angular Module Federation - Host and Remote', () => {
     const sharedLib = uniq('shared-lib');
     const wildcardLib = uniq('wildcard-lib');
     const secondaryEntry = uniq('secondary');
-    const hostPort = 4300;
-    const remotePort = 4301;
+    const hostPort = await reservePort();
+    const remotePort = await reservePort();
 
     // generate host app
     runCLI(
-      `generate @nx/angular:host ${hostApp} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
+      `generate @nx/angular:host ${hostApp} --port=${hostPort} --style=css --no-standalone --unitTestRunner=jest --no-interactive`
     );
     // generate remote app
     runCLI(
@@ -152,7 +153,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`)
+        output.includes(`server ready at http://localhost:${hostPort}`)
     );
     await killProcessAndPorts(processSwc.pid, hostPort, remotePort);
 
@@ -160,7 +161,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${hostApp} --port=${hostPort} --dev-remotes=${remoteApp1}`,
       (output) =>
         !output.includes(`Remote '${remoteApp1}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${hostPort}`),
+        output.includes(`server ready at http://localhost:${hostPort}`),
       { env: { NX_PREFER_TS_NODE: 'true' } }
     );
 
@@ -170,8 +171,8 @@ describe('Angular Module Federation - Host and Remote', () => {
   it('should convert apps to MF successfully', async () => {
     const app1 = uniq('app1');
     const app2 = uniq('app2');
-    const app1Port = 4400;
-    const app2Port = 4401;
+    const app1Port = await reservePort();
+    const app2Port = await reservePort();
 
     // generate apps
     runCLI(
@@ -193,7 +194,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
         !output.includes(`Remote '${app2}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${app1Port}`)
+        output.includes(`server ready at http://localhost:${app1Port}`)
     );
 
     await killProcessAndPorts(processSwc.pid, app1Port, app2Port);
@@ -202,7 +203,7 @@ describe('Angular Module Federation - Host and Remote', () => {
       `serve ${app1} --dev-remotes=${app2}`,
       (output) =>
         !output.includes(`Remote '${app2}' failed to serve correctly`) &&
-        output.includes(`listening on localhost:${app1Port}`),
+        output.includes(`server ready at http://localhost:${app1Port}`),
       { env: { NX_PREFER_TS_NODE: 'true' } }
     );
 

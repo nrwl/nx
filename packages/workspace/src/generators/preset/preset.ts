@@ -335,7 +335,6 @@ async function createPreset(tree: Tree, options: Schema) {
       name: options.workspaces ? undefined : options.name,
       directory: '.',
       linter: options.linter,
-      standaloneConfig: options.standaloneConfig,
       framework: options.framework,
       docker: options.docker,
       rootProject: true,

@@ -3,6 +3,7 @@ import * as jsoncEslintParser from 'jsonc-eslint-parser';
 
 export default [
   ...baseConfig,
+  { ignores: ['dist'] },
   {
     files: ['**/*.ts', '**/*.tsx', '**/*.js', '**/*.jsx'],
     rules: {
@@ -36,17 +37,17 @@ export default [
             'nx',
             'typescript',
             'postcss-loader',
-            '@module-federation/node',
+            '@rspack/cli',
             '@nx/workspace',
             '@nx/react',
             '@nx/nest',
             '@module-federation/sdk',
-            '@module-federation/enhanced',
             'css-loader',
             'webpack',
             'sass-embedded',
             'sass',
             'ts-checker-rspack-plugin',
+            'less-loader',
           ],
         },
       ],

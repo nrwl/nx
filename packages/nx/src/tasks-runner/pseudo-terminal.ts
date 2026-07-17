@@ -1,15 +1,22 @@
 import { Serializable } from 'child_process';
 import * as os from 'os';
 import { getForkedProcessOsSocketPath } from '../daemon/socket-utils';
-import { ChildProcess, IS_WASM, RustPseudoTerminal } from '../native';
+import {
+  ChildProcess,
+  IS_WASM,
+  RustPseudoTerminal,
+  killProcessTree,
+  killProcessTreeGraceful,
+} from '../native';
 import { PseudoIPCServer } from './pseudo-ipc';
 import { RunningTask } from './running-tasks/running-task';
 import { codeToSignal, messageToCode } from '../utils/exit-codes';
 
-// Register single event listeners for all pseudo-terminal instances
-const pseudoTerminalShutdownCallbacks: Array<(s: number) => void> = [];
+// Kill any children still alive when Nx exits. Terminals remove themselves once
+// their children exit (see releaseChild), so finished runs skip a per-terminal scan.
+const activePseudoTerminals = new Set<PseudoTerminal>();
 process.on('exit', (code) => {
-  pseudoTerminalShutdownCallbacks.forEach((cb) => cb(code));
+  activePseudoTerminals.forEach((t) => t.shutdown(code));
 });
 
 export function createPseudoTerminal(skipSupportCheck: boolean = false) {
@@ -17,9 +24,7 @@ export function createPseudoTerminal(skipSupportCheck: boolean = false) {
     throw new Error('Pseudo terminal is not supported on this platform.');
   }
   const pseudoTerminal = new PseudoTerminal(new RustPseudoTerminal());
-  pseudoTerminalShutdownCallbacks.push(
-    pseudoTerminal.shutdown.bind(pseudoTerminal)
-  );
+  activePseudoTerminals.add(pseudoTerminal);
   return pseudoTerminal;
 }
 
@@ -49,13 +54,30 @@ export class PseudoTerminal {
   }
 
   shutdown(code: number) {
+    // Called from process.on('exit') — must be synchronous/best-effort.
+    // Use fire-and-forget killProcessTree, not the async graceful variant.
     for (const cp of this.childProcesses) {
       try {
-        cp.kill(codeToSignal(code));
+        const pid = cp.getPid();
+        if (pid) {
+          killProcessTree(pid, codeToSignal(code));
+        }
       } catch {}
     }
     if (this.initialized) {
       this.pseudoIPC.close();
+    }
+  }
+
+  // Once all children have exited, drop the process-exit handler and close IPC.
+  private releaseChild(cp: PseudoTtyProcess) {
+    this.childProcesses.delete(cp);
+    if (this.childProcesses.size === 0) {
+      activePseudoTerminals.delete(this);
+      if (this.initialized) {
+        this.pseudoIPC.close();
+        this.initialized = false;
+      }
     }
   }
 
@@ -87,6 +109,7 @@ export class PseudoTerminal {
       )
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
     return cp;
   }
 
@@ -126,6 +149,7 @@ export class PseudoTerminal {
       this.pseudoIPC
     );
     this.childProcesses.add(cp);
+    cp.onExit(() => this.releaseChild(cp));
 
     await this.pseudoIPC.waitForChildReady(id);
 
@@ -191,15 +215,22 @@ export class PseudoTtyProcess implements RunningTask {
     return this.childProcess.getPid();
   }
 
-  kill(s?: NodeJS.Signals): void {
+  async kill(s?: NodeJS.Signals): Promise<void> {
     if (this.isAlive) {
-      try {
-        this.childProcess.kill(s || 'SIGTERM');
-      } catch {
-        // when the child process completes before we explicitly call kill, this will throw
-        // do nothing
-      } finally {
-        this.isAlive = false;
+      this.isAlive = false;
+      const pid = this.childProcess.getPid();
+      // Gracefully kill the entire process tree. This snapshots the tree
+      // BEFORE sending signals, so even if the root exits quickly from
+      // the signal, all descendants are already tracked and will be
+      // cleaned up (including any reparented to init/PID 1).
+      if (pid) {
+        await killProcessTreeGraceful(pid, s || 'SIGTERM');
+      } else {
+        try {
+          this.childProcess.kill(s || 'SIGTERM');
+        } catch {
+          // child may have already exited
+        }
       }
     }
   }

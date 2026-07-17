@@ -1,24 +1,28 @@
 import {
-  CreateNodesContextV2,
+  getNamedInputs,
+  calculateHashesForCreateNodes,
+  loadConfigFile,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
+  AggregateCreateNodesError,
+  CreateNodesContext,
   createNodesFromFiles,
   CreateNodesResult,
-  CreateNodesV2,
+  CreateNodesResultArray,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   NxJsonConfiguration,
   readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
 import { dirname, join } from 'path';
 import { getLockFileName } from '@nx/js';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
-import { existsSync, readdirSync } from 'fs';
-import { calculateHashForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
+import { readdirSync } from 'fs';
 import { workspaceDataDirectory } from 'nx/src/utils/cache-directory';
 import { hashObject } from 'nx/src/devkit-internals';
-import { loadConfigFile } from '@nx/devkit/src/utils/config-utils';
-import { addBuildAndWatchDepsTargets } from '@nx/js/src/plugins/typescript/util';
+import { addBuildAndWatchDepsTargets } from '@nx/js/internal';
 
 export interface ExpoPluginOptions {
   startTargetName?: string;
@@ -34,46 +38,65 @@ export interface ExpoPluginOptions {
   watchDepsTargetName?: string;
 }
 
-function readTargetsCache(
-  cachePath: string
-): Record<string, Record<string, TargetConfiguration<ExpoPluginOptions>>> {
-  return existsSync(cachePath) ? readJsonFile(cachePath) : {};
-}
+type ExpoTargets = Record<string, TargetConfiguration<ExpoPluginOptions>>;
 
-function writeTargetsToCache(
-  cachePath: string,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >
-) {
-  const oldCache = readTargetsCache(cachePath);
-  writeJsonFile(cachePath, {
-    ...oldCache,
-    targetsCache,
-  });
-}
-
-export const createNodes: CreateNodesV2<ExpoPluginOptions> = [
+export const createNodes: CreateNodes<ExpoPluginOptions> = [
   '**/app.{json,config.js,config.ts}',
   async (configFiles, options, context) => {
     const optionsHash = hashObject(options);
     const cachePath = join(workspaceDataDirectory, `expo-${optionsHash}.hash`);
-    const targetsCache = readTargetsCache(cachePath);
-    const pmc = getPackageManagerCommand(
-      detectPackageManager(context.workspaceRoot)
-    );
+    const targetsCache = new PluginCache<ExpoTargets>(cachePath);
+    const packageManager = detectPackageManager(context.workspaceRoot);
+    const pmc = getPackageManagerCommand(packageManager);
+    const lockFileName = getLockFileName(packageManager);
+    const normalizedOptions = normalizeOptions(options);
 
     try {
-      return await createNodesFromFiles(
-        (configFile, options, context) =>
-          createNodesInternal(configFile, options, context, targetsCache, pmc),
+      const { entries, preErrors } = await filterExpoConfigs(
         configFiles,
-        options,
         context
       );
+
+      const projectHashes = await calculateHashesForCreateNodes(
+        entries.map((e) => e.projectRoot),
+        normalizedOptions,
+        context,
+        entries.map(() => [lockFileName])
+      );
+
+      let results: CreateNodesResultArray = [];
+      let nodeErrors: Array<[string | null, Error]> = [];
+      try {
+        results = await createNodesFromFiles(
+          (configFile, _, ctx, idx) =>
+            createNodesInternal(
+              configFile,
+              normalizedOptions,
+              ctx,
+              targetsCache,
+              pmc,
+              projectHashes[idx]
+            ),
+          entries.map((e) => e.configFile),
+          options,
+          context
+        );
+      } catch (e) {
+        if (e instanceof AggregateCreateNodesError) {
+          results = e.partialResults ?? [];
+          nodeErrors = e.errors;
+        } else {
+          throw e;
+        }
+      }
+
+      const allErrors = [...preErrors, ...nodeErrors];
+      if (allErrors.length > 0) {
+        throw new AggregateCreateNodesError(allErrors, results);
+      }
+      return results;
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -83,51 +106,24 @@ export const createNodesV2 = createNodes;
 async function createNodesInternal(
   configFile: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContextV2,
-  targetsCache: Record<
-    string,
-    Record<string, TargetConfiguration<ExpoPluginOptions>>
-  >,
-  pmc: ReturnType<typeof getPackageManagerCommand>
+  context: CreateNodesContext,
+  targetsCache: PluginCache<ExpoTargets>,
+  pmc: ReturnType<typeof getPackageManagerCommand>,
+  hash: string
 ): Promise<CreateNodesResult> {
-  options = normalizeOptions(options);
   const projectRoot = dirname(configFile);
 
-  // Do not create a project if package.json or project.json or metro.config.js isn't there.
-  const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
-  if (
-    !siblingFiles.includes('package.json') ||
-    !siblingFiles.includes('metro.config.js')
-  ) {
-    return {};
+  if (!targetsCache.has(hash)) {
+    targetsCache.set(
+      hash,
+      buildExpoTargets(projectRoot, options, context, pmc)
+    );
   }
-
-  // Check if it's an Expo project
-  const packageJson = readJsonFile(
-    join(context.workspaceRoot, projectRoot, 'package.json')
-  );
-  const appConfig = await getAppConfig(configFile, context);
-  if (
-    !appConfig.expo &&
-    !packageJson.dependencies?.['expo'] &&
-    !packageJson.devDependencies?.['expo']
-  ) {
-    return {};
-  }
-
-  const hash = await calculateHashForCreateNodes(
-    projectRoot,
-    options,
-    context,
-    [getLockFileName(detectPackageManager(context.workspaceRoot))]
-  );
-
-  targetsCache[hash] ??= buildExpoTargets(projectRoot, options, context, pmc);
 
   return {
     projects: {
       [projectRoot]: {
-        targets: targetsCache[hash],
+        targets: targetsCache.get(hash),
       },
     },
   };
@@ -136,7 +132,7 @@ async function createNodesInternal(
 function buildExpoTargets(
   projectRoot: string,
   options: ExpoPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>
 ) {
   const namedInputs = getNamedInputs(projectRoot, context);
@@ -171,12 +167,15 @@ function buildExpoTargets(
     },
     [options.installTargetName]: {
       executor: '@nx/expo:install',
+      continuous: false,
     },
     [options.prebuildTargetName]: {
       executor: `@nx/expo:prebuild`,
+      continuous: false,
     },
     [options.buildTargetName]: {
       executor: `@nx/expo:build`,
+      continuous: false,
     },
     [options.submitTargetName]: {
       command: `eas submit`,
@@ -197,11 +196,60 @@ function buildExpoTargets(
 
 function getAppConfig(
   configFilePath: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): Promise<any> {
   const resolvedPath = join(context.workspaceRoot, configFilePath);
 
   return loadConfigFile(resolvedPath);
+}
+
+async function filterExpoConfigs(
+  configFiles: readonly string[],
+  context: CreateNodesContext
+): Promise<{
+  entries: Array<{ configFile: string; projectRoot: string }>;
+  preErrors: Array<[string, Error]>;
+}> {
+  const preErrors: Array<[string, Error]> = [];
+  const candidates = await Promise.all(
+    configFiles.map(
+      async (
+        configFile
+      ): Promise<{ configFile: string; projectRoot: string } | null> => {
+        try {
+          const projectRoot = dirname(configFile);
+          const siblingFiles = readdirSync(
+            join(context.workspaceRoot, projectRoot)
+          );
+          if (
+            !siblingFiles.includes('package.json') ||
+            !siblingFiles.includes('metro.config.js')
+          ) {
+            return null;
+          }
+          const packageJson = readJsonFile(
+            join(context.workspaceRoot, projectRoot, 'package.json')
+          );
+          const appConfig = await getAppConfig(configFile, context);
+          if (
+            !appConfig.expo &&
+            !packageJson.dependencies?.['expo'] &&
+            !packageJson.devDependencies?.['expo']
+          ) {
+            return null;
+          }
+          return { configFile, projectRoot };
+        } catch (e) {
+          preErrors.push([configFile, e as Error]);
+          return null;
+        }
+      }
+    )
+  );
+  return {
+    entries: candidates.filter((c): c is NonNullable<typeof c> => c !== null),
+    preErrors,
+  };
 }
 
 function getInputs(

@@ -4,9 +4,39 @@ description: Learn how to use the nx import command to move projects between rep
 filter: 'type:Guides'
 ---
 
-{% youtube src="https://youtu.be/hnbwoV2-620" title="Importing an existing project into your monorepo" /%}
-
 Nx can help with the process of moving an existing project from another repository into an Nx workspace. In order to communicate clearly about this process, we'll call the repository we're moving the project out of the "source repository" and the repository we're moving the project into the "destination repository". Here's an example of what those repositories might look like.
+
+## Run Nx import with an AI agent
+
+The deterministic `nx import` CLI handles the common path well, but most real migrations have workspace-specific quirks that need a follow-up: missing runtimes, conflicting tooling versions, scripts that reference paths outside the project, and so on. An AI agent (Claude Code, Codex, Cursor, etc.) can fill that gap by driving `nx import` through the CLI and reacting to failures as they come up.
+
+{% youtube src="https://youtu.be/mUG292kkz0w" title="Importing projects with an AI agent" /%}
+
+Before prompting the agent, make sure the Nx skills are installed via `nx configure-ai-agents` so the agent has the `nx import` skill available. See the [AI setup guide](/docs/getting-started/ai-setup) for details.
+
+As an example, say you have the following layout with two source projects sitting next to an empty Nx monorepo:
+
+{% filetree %}
+
+- demo/
+  - nx-mono/
+    - ... (destination Nx workspace)
+  - source-gradle/
+    - ... (Gradle Java project)
+  - source-tanstack/
+    - ... (TanStack Start project)
+
+{% /filetree %}
+
+From inside `nx-mono`, prompt the agent and explicitly mention the `nx import` skill so it gets loaded. For example:
+
+> Can you merge/import the gradle and tanstack projects in `../` into this monorepo. The apps for both should go into the `./apps` folder and the packages into the `./packages` folder. Make sure that git history is preserved and also run some tests like running builds and inspecting the project graph to make sure the migration is successful. Use the `nx import` skill.
+
+The agent observes the migration as it runs, executes builds, inspects the project graph, and fixes workspace-specific issues that the deterministic CLI can't predict (for example installing a missing runtime via `mise`, reconciling dependency versions, or moving shared configuration).
+
+## Run Nx import manually
+
+{% youtube src="https://youtu.be/hnbwoV2-620" title="Importing an existing project into your monorepo" /%}
 
 **Source Repository**
 

@@ -1,7 +1,9 @@
 import { TargetConfiguration, Tree } from '@nx/devkit';
-import { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import {
+  AggregatedLog,
+  type InferredTargetConfiguration,
+} from '@nx/devkit/internal';
 import type { NextServeBuilderOptions } from '../../../utils/types';
-import type { InferredTargetConfiguration } from '@nx/devkit/src/generators/plugin-migrations/executor-to-plugin-migrator';
 
 export function servePosTargetTransformer(migrationLogs: AggregatedLog) {
   return (

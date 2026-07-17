@@ -18,6 +18,7 @@ export default [
       '.netlify/',
       'test-output/',
       'playwright-report/',
+      'src/content/banner.json',
     ],
   },
 ];

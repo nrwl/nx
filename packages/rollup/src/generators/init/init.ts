@@ -1,3 +1,4 @@
+import { addPlugin } from '@nx/devkit/internal';
 import {
   addDependenciesToPackageJson,
   createProjectGraphAsync,
@@ -6,12 +7,17 @@ import {
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import { nxVersion, rollupVersion } from '../../utils/versions';
+import {
+  nxVersion,
+  rollupVersion,
+  assertSupportedRollupVersion,
+} from '../../utils/versions';
 import { Schema } from './schema';
-import { addPlugin } from '@nx/devkit/src/utils/add-plugin';
 import { createNodesV2 } from '../../plugins/plugin';
 
 export async function rollupInitGenerator(tree: Tree, schema: Schema) {
+  assertSupportedRollupVersion(tree);
+
   let task: GeneratorCallback = () => {};
   const nxJson = readNxJson(tree);
   schema.addPlugin ??=
@@ -19,17 +25,18 @@ export async function rollupInitGenerator(tree: Tree, schema: Schema) {
     nxJson.useInferencePlugins !== false;
 
   if (!schema.skipPackageJson) {
-    const devDependencies = { '@nx/rollup': nxVersion };
-    if (schema.addPlugin) {
-      // Ensure user can run Rollup CLI.
-      devDependencies['rollup'] = rollupVersion;
-    }
+    // Rollup is a peer dependency, so ensure it is installed for both the
+    // inferred-plugin (CLI) path and the executor (programmatic) path.
+    const devDependencies = {
+      '@nx/rollup': nxVersion,
+      rollup: rollupVersion,
+    };
     task = addDependenciesToPackageJson(
       tree,
       {},
       devDependencies,
       undefined,
-      schema.keepExistingVersions
+      schema.keepExistingVersions ?? true
     );
   }
 

@@ -2,11 +2,11 @@ import {
   nxBaseCypressPreset,
   NxComponentTestingOptions,
 } from '@nx/cypress/plugins/cypress-preset';
-import type { CypressExecutorOptions } from '@nx/cypress/src/executors/cypress/cypress.impl';
 import {
   createExecutorContext,
+  type CypressExecutorOptions,
   getProjectConfigByPath,
-} from '@nx/cypress/src/utils/ct-helpers';
+} from '@nx/cypress/internal';
 import {
   ExecutorContext,
   joinPathFragments,
@@ -19,7 +19,7 @@ import {
   workspaceRoot,
 } from '@nx/devkit';
 
-import { getProjectSourceRoot } from '@nx/js/src/utils/typescript/ts-solution-setup';
+import { getProjectSourceRoot } from '@nx/js/internal';
 import { existsSync } from 'fs';
 import { dirname, join } from 'path';
 
@@ -260,15 +260,13 @@ function buildTargetWebpack(
     parsed.target
   );
 
+  const { resolveUserDefinedWebpackConfig } = require('@nx/webpack/internal');
   const {
     normalizeOptions,
-  } = require('@nx/webpack/src/executors/webpack/lib/normalize-options');
-  const {
-    resolveUserDefinedWebpackConfig,
-  } = require('@nx/webpack/src/utils/webpack/resolve-user-defined-webpack-config');
-  const { composePluginsSync } = require('@nx/webpack/src/utils/config');
-  const { withNx } = require('@nx/webpack/src/utils/with-nx');
-  const { withWeb } = require('@nx/webpack/src/utils/with-web');
+    composePluginsSync,
+    withNx,
+    withWeb,
+  } = require('@nx/webpack');
 
   const options = normalizeOptions(
     withSchemaDefaults(parsed, context),

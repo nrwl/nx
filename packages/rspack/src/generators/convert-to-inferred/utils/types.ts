@@ -1,5 +1,5 @@
 import type { ProjectGraph } from '@nx/devkit';
-import type { AggregatedLog } from '@nx/devkit/src/generators/plugin-migrations/aggregate-log-util';
+import type { AggregatedLog } from '@nx/devkit/internal';
 
 export type MigrationContext = {
   logger: AggregatedLog;

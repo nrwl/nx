@@ -2,6 +2,7 @@ import { ExecutorContext, logger } from '@nx/devkit';
 import { existsSync, readdirSync, unlinkSync } from 'fs';
 import { basename, dirname } from 'path';
 import { getTempTailwindPath } from '../../utils/ct-helpers';
+import { warnCypressExecutorDeprecation } from '../../utils/deprecation';
 import { startDevServer } from '../../utils/start-dev-server';
 
 const Cypress = require('cypress'); // @NOTE: Importing via ES6 messes the whole test dependencies.
@@ -49,6 +50,8 @@ export default async function cypressExecutor(
   options: CypressExecutorOptions,
   context: ExecutorContext
 ) {
+  warnCypressExecutorDeprecation();
+
   options = normalizeOptions(options, context);
   // this is used by cypress component testing presets to build the executor contexts with the correct configuration options.
   process.env.NX_CYPRESS_TARGET_CONFIGURATION = context.configurationName;

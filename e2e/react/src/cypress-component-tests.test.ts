@@ -22,7 +22,7 @@ describe('React Cypress Component Tests', () => {
     process.env.NX_ADD_PLUGINS = 'false';
     projectName = newProject({
       name: uniq('cy-react'),
-      packages: ['@nx/react'],
+      packages: ['@nx/react', '@nx/webpack', '@nx/jest', '@nx/cypress'],
     });
     ensureCypressInstallation();
 
@@ -219,37 +219,6 @@ describe(Input.name, () => {
 
     runCLI(
       `generate @nx/react:cypress-component-configuration --project=${buildableLibName} --generate-tests --build-target=${appName}:build`
-    );
-
-    if (runE2ETests()) {
-      expect(runCLI(`component-test ${buildableLibName} --no-watch`)).toContain(
-        'All specs passed!'
-      );
-    }
-
-    // add tailwind
-    runCLI(`generate @nx/react:setup-tailwind --project=${buildableLibName}`);
-    updateFile(
-      `libs/${buildableLibName}/src/styles.css`,
-      `
-@tailwind components;
-@tailwind base;
-@tailwind utilities;
-`
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.cy.tsx`,
-      (content) => {
-        // text-green-500 should now apply
-        return content.replace('rgb(0, 0, 0)', 'rgb(34, 197, 94)');
-      }
-    );
-    updateFile(
-      `libs/${buildableLibName}/src/lib/input/input.tsx`,
-      (content) => {
-        return `import '../../styles.css';
-${content}`;
-      }
     );
 
     if (runE2ETests()) {

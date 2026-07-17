@@ -1,20 +1,20 @@
 import {
+  determineProjectNameAndRootOptions,
+  ensureRootProjectName,
+} from '@nx/devkit/internal';
+import {
   getProjects,
   logger,
   normalizePath,
   readNxJson,
   Tree,
 } from '@nx/devkit';
-import {
-  determineProjectNameAndRootOptions,
-  ensureRootProjectName,
-} from '@nx/devkit/src/generators/project-name-and-root-utils';
 import { NormalizedSchema, Schema } from '../schema';
 import {
   getProjectSourceRoot,
   getProjectType,
   isUsingTsSolutionSetup,
-} from '@nx/js/src/utils/typescript/ts-solution-setup';
+} from '@nx/js/internal';
 
 export async function normalizeOptions(
   host: Tree,

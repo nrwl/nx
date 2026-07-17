@@ -1,3 +1,5 @@
+// Must be the first import — see enable-compile-cache.ts.
+import '../../utils/enable-compile-cache';
 import { output } from '../../utils/output';
 import { startServer } from './server';
 import * as process from 'process';

@@ -1,5 +1,5 @@
-import * as rspack from '@rspack/core';
-import { Compiler } from '@rspack/core';
+import type * as rspack from '@rspack/core';
+import type { Compiler } from '@rspack/core';
 import { createHash } from 'crypto';
 import { readFileSync } from 'fs';
 
@@ -38,33 +38,38 @@ export class WriteIndexHtmlPlugin {
     compiler.hooks.thisCompilation.tap(
       'WriteIndexHtmlPlugin',
       (compilation) => {
-        compilation.hooks.processAssets.tap(
+        compilation.hooks.processAssets.tapPromise(
           {
             name: 'WriteIndexHtmlPlugin',
             // After minification and sourcemaps are done
-            stage: rspack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
+            stage:
+              compiler.rspack.Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_INLINE,
           },
-          () => {
+          async () => {
+            const sources = compiler.rspack.sources;
             const moduleFiles = this.getEmittedFiles(compilation);
             const files = moduleFiles.filter((x) => x.extension === '.css');
             let content = readFileSync(indexPath).toString();
             content = this.stripBom(content);
-            compilation.assets[outputPath] = this.augmentIndexHtml({
-              input: outputPath,
-              inputContent: interpolateEnvironmentVariablesToIndex(
-                content,
-                deployUrl
-              ),
-              baseHref,
-              deployUrl,
-              crossOrigin,
-              sri,
-              entrypoints: generateEntryPoints({ scripts, styles }),
-              files: this.filterAndMapBuildFiles(files, ['.js', '.css']),
-              moduleFiles: this.filterAndMapBuildFiles(moduleFiles, ['.js']),
-              loadOutputFile: (filePath) =>
-                compilation.assets[filePath].source().toString(),
-            });
+            compilation.assets[outputPath] = this.augmentIndexHtml(
+              {
+                input: outputPath,
+                inputContent: interpolateEnvironmentVariablesToIndex(
+                  content,
+                  deployUrl
+                ),
+                baseHref,
+                deployUrl,
+                crossOrigin,
+                sri,
+                entrypoints: generateEntryPoints({ scripts, styles }),
+                files: this.filterAndMapBuildFiles(files, ['.js', '.css']),
+                moduleFiles: this.filterAndMapBuildFiles(moduleFiles, ['.js']),
+                loadOutputFile: (filePath) =>
+                  compilation.assets[filePath].source().toString(),
+              },
+              sources
+            );
           }
         );
       }
@@ -108,39 +113,42 @@ export class WriteIndexHtmlPlugin {
     return data.replace(/^\uFEFF/, '');
   }
 
-  private augmentIndexHtml(params: {
-    /* Input file name (e. g. index.html) */
-    input: string;
-    /* Input contents */
-    inputContent: string;
-    baseHref?: string;
-    deployUrl?: string;
-    sri: boolean;
-    /** crossorigin attribute setting of elements that provide CORS support */
-    crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
-    /*
-     * Files emitted by the build.
-     */
-    files: {
-      file: string;
-      name: string;
-      extension: string;
-    }[];
-    /** Files that should be added using 'module'. */
-    moduleFiles?: {
-      file: string;
-      name: string;
-      extension: string;
-    }[];
-    /*
-     * Function that loads a file used.
-     * This allows us to use different routines within the IndexHtmlWebpackPlugin and
-     * when used without this plugin.
-     */
-    loadOutputFile: (file: string) => string;
-    /** Used to sort the inseration of files in the HTML file */
-    entrypoints: string[];
-  }): rspack.sources.Source {
+  private augmentIndexHtml(
+    params: {
+      /* Input file name (e. g. index.html) */
+      input: string;
+      /* Input contents */
+      inputContent: string;
+      baseHref?: string;
+      deployUrl?: string;
+      sri: boolean;
+      /** crossorigin attribute setting of elements that provide CORS support */
+      crossOrigin?: 'none' | 'anonymous' | 'use-credentials';
+      /*
+       * Files emitted by the build.
+       */
+      files: {
+        file: string;
+        name: string;
+        extension: string;
+      }[];
+      /** Files that should be added using 'module'. */
+      moduleFiles?: {
+        file: string;
+        name: string;
+        extension: string;
+      }[];
+      /*
+       * Function that loads a file used.
+       * This allows us to use different routines within the IndexHtmlWebpackPlugin and
+       * when used without this plugin.
+       */
+      loadOutputFile: (file: string) => string;
+      /** Used to sort the inseration of files in the HTML file */
+      entrypoints: string[];
+    },
+    sources: typeof rspack.sources
+  ): rspack.sources.Source {
     const { loadOutputFile, files, moduleFiles = [], entrypoints } = params;
 
     let { crossOrigin = 'none' } = params;
@@ -214,8 +222,8 @@ export class WriteIndexHtmlPlugin {
     }
 
     // Inject into the html
-    const indexSource = new rspack.sources.ReplaceSource(
-      new rspack.sources.RawSource(params.inputContent),
+    const indexSource = new sources.ReplaceSource(
+      new sources.RawSource(params.inputContent),
       params.input
     );
 

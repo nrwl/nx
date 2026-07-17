@@ -1,24 +1,25 @@
 import {
+  calculateHashesForCreateNodes,
+  getNamedInputs,
+  PluginCache,
+} from '@nx/devkit/internal';
+import {
   CreateDependencies,
-  CreateNodesContextV2,
+  CreateNodesContext,
   createNodesFromFiles,
-  CreateNodesV2,
+  CreateNodes,
   detectPackageManager,
   getPackageManagerCommand,
   joinPathFragments,
   normalizePath,
   ProjectConfiguration,
-  readJsonFile,
   TargetConfiguration,
-  writeJsonFile,
 } from '@nx/devkit';
-import { calculateHashesForCreateNodes } from '@nx/devkit/src/utils/calculate-hash-for-create-nodes';
-import { getNamedInputs } from '@nx/devkit/src/utils/get-named-inputs';
 import { getLockFileName, getRootTsConfigFileName } from '@nx/js';
 import {
   walkTsconfigExtendsChain,
   type RawTsconfigJsonCache,
-} from '@nx/js/src/internal';
+} from '@nx/js/internal';
 import { existsSync, readdirSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { hashObject } from 'nx/src/hasher/file-hasher';
@@ -49,19 +50,6 @@ type VitestTargets = Pick<
   'targets' | 'metadata' | 'projectType'
 >;
 
-function readTargetsCache(cachePath: string): Record<string, VitestTargets> {
-  return process.env.NX_CACHE_PROJECT_GRAPH !== 'false' && existsSync(cachePath)
-    ? readJsonFile(cachePath)
-    : {};
-}
-
-function writeTargetsToCache(
-  cachePath,
-  results?: Record<string, VitestTargets>
-) {
-  writeJsonFile(cachePath, results);
-}
-
 /**
  * @deprecated The 'createDependencies' function is now a no-op. This functionality is included in 'createNodesV2'.
  */
@@ -71,7 +59,7 @@ export const createDependencies: CreateDependencies = () => {
 
 const vitestConfigGlob = '**/{vite,vitest}.config.{js,ts,mjs,mts,cjs,cts}';
 
-export const createNodes: CreateNodesV2<VitestPluginOptions> = [
+export const createNodes: CreateNodes<VitestPluginOptions> = [
   vitestConfigGlob,
   async (configFilePaths, options, context) => {
     const pmc = getPackageManagerCommand(
@@ -83,7 +71,7 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
       workspaceDataDirectory,
       `vitest-${optionsHash}.hash`
     );
-    const targetsCache = readTargetsCache(cachePath);
+    const targetsCache = new PluginCache<VitestTargets | null>(cachePath);
 
     const { roots: projectRoots, configFiles: validConfigFiles } =
       configFilePaths.reduce(
@@ -131,15 +119,26 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
           // Adding the config file path to the hash ensures that the final hash value is different
           // for different config files.
           const hash = hashes[idx] + configFile;
-          const { projectType, metadata, targets } = (targetsCache[hash] ??=
-            await buildVitestTargets(
+          if (!targetsCache.has(hash)) {
+            const result = await buildVitestTargets(
               configFile,
               projectRoot,
               normalizedOptions,
               context,
               pmc,
               tsconfigChainsByProjectRoot.get(projectRoot) ?? []
-            ));
+            );
+            // Cache the result even when it's null (a root orchestrator config)
+            // so the config isn't re-resolved on every project-graph build.
+            targetsCache.set(hash, result);
+          }
+          const cached = targetsCache.get(hash);
+          // `buildVitestTargets` returns null for a root orchestrator config
+          // that must not become a project; register no node for it.
+          if (!cached) {
+            return { projects: {} };
+          }
+          const { projectType, metadata, targets } = cached;
 
           const project: ProjectConfiguration = {
             root: projectRoot,
@@ -159,7 +158,7 @@ export const createNodes: CreateNodesV2<VitestPluginOptions> = [
         context
       );
     } finally {
-      writeTargetsToCache(cachePath, targetsCache);
+      targetsCache.writeToDisk();
     }
   },
 ];
@@ -170,10 +169,10 @@ async function buildVitestTargets(
   configFilePath: string,
   projectRoot: string,
   options: VitestPluginOptions,
-  context: CreateNodesContextV2,
+  context: CreateNodesContext,
   pmc: ReturnType<typeof getPackageManagerCommand>,
   tsconfigInputs: string[]
-): Promise<VitestTargets> {
+): Promise<VitestTargets | null> {
   const absoluteConfigFilePath = joinPathFragments(
     context.workspaceRoot,
     configFilePath
@@ -223,8 +222,10 @@ async function buildVitestTargets(
     'build'
   );
 
-  // If this is a root workspace config file with projects property, don't infer targets.
-  // The root config is just an orchestrator - the actual tests live in the individual project configs.
+  // A root config that aggregates project configs via `test.projects` is just an
+  // orchestrator; the actual tests live in the individual project configs. Skip it
+  // entirely so it does not register a project rooted at the workspace root (which
+  // would, for example, make `nx format` treat the whole workspace as one project).
   const isWorkspaceRoot = projectRoot === '.';
   // TODO(jack): Remove this cast when @nx/vitest switches to moduleResolution:
   // "nodenext". Vite 8's rolldown types break vitest's test augmentation.
@@ -232,7 +233,7 @@ async function buildVitestTargets(
     (viteBuildConfig as any)?.test?.projects
   );
   if (isWorkspaceRoot && hasProjectsProperty) {
-    return { targets: {}, metadata: {}, projectType: 'library' };
+    return null;
   }
 
   let metadata: ProjectConfiguration['metadata'] = {};
@@ -370,8 +371,26 @@ async function testTarget(
     options: { cwd: joinPathFragments(projectRoot) },
     cache: true,
     inputs: [
+      // Vitest runs on Vite, which transforms a dependency's sources and
+      // resolves their TypeScript project references. When a dependency's root
+      // tsconfig references its tsconfig.spec.json / tsconfig.storybook.json,
+      // those files are read during resolution, yet the `production` named
+      // input excludes them (so `^production` does not cover them). When
+      // `production` is in use, declare them explicitly so the dependency's
+      // spec/storybook tsconfigs are tracked as inputs.
       ...('production' in namedInputs
-        ? ['default', '^production']
+        ? [
+            'default',
+            '^production',
+            {
+              fileset: '{projectRoot}/tsconfig.spec.json',
+              dependencies: true as const,
+            },
+            {
+              fileset: '{projectRoot}/tsconfig.storybook.json',
+              dependencies: true as const,
+            },
+          ]
         : ['default', '^default']),
       ...tsconfigInputs.map((f) => ({
         json: `{workspaceRoot}/${f}`,
@@ -563,7 +582,7 @@ function collectTsconfigInputsByProjectRoot(
 
 function checkIfConfigFileShouldBeProject(
   projectRoot: string,
-  context: CreateNodesContextV2
+  context: CreateNodesContext
 ): boolean {
   // Do not create a project if package.json and project.json isn't there.
   const siblingFiles = readdirSync(join(context.workspaceRoot, projectRoot));
@@ -591,9 +610,13 @@ async function getTestPathsRelativeToProjectRoot(
   });
   const relevantTestSpecifications =
     await vitest.getRelevantTestSpecifications();
+  // Sort to keep atomized target name insertion order stable.
+  // vitest.getRelevantTestSpecifications uses tinyglobby internally,
+  // which does not sort its filesystem traversal output.
   return relevantTestSpecifications
     .filter((ts) =>
       fullProjectRoot === '.' ? true : ts.moduleId.startsWith(fullProjectRoot)
     )
-    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)));
+    .map((ts) => normalizePath(relative(projectRoot, ts.moduleId)))
+    .sort();
 }

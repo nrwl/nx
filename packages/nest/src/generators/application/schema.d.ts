@@ -7,7 +7,6 @@ export interface ApplicationGeneratorOptions {
   linter?: Linter | LinterType;
   skipFormat?: boolean;
   skipPackageJson?: boolean;
-  standaloneConfig?: boolean;
   tags?: string;
   unitTestRunner?: 'jest' | 'none';
   e2eTestRunner?: 'jest' | 'none';

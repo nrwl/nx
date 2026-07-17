@@ -4,7 +4,7 @@ import {
   type GeneratorCallback,
   type Tree,
 } from '@nx/devkit';
-import { addSwcDependencies } from '@nx/js/src/utils/swc/add-swc-dependencies';
+import { addSwcDependencies } from '@nx/js/internal';
 import {
   reactRefreshVersion,
   reactRefreshWebpackPluginVersion,
@@ -42,7 +42,9 @@ export function ensureDependencies(
     devDependencies['react-refresh'] = reactRefreshVersion;
   }
 
-  tasks.push(addDependenciesToPackageJson(tree, {}, devDependencies));
+  tasks.push(
+    addDependenciesToPackageJson(tree, {}, devDependencies, undefined, true)
+  );
 
   return runTasksInSerial(...tasks);
 }

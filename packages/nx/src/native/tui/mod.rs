@@ -1,5 +1,6 @@
 pub mod action;
 pub mod app;
+pub mod clipboard;
 pub mod components;
 pub mod config;
 pub mod escape_sequences;
@@ -9,6 +10,7 @@ pub mod lifecycle;
 pub mod pty;
 pub mod scroll_momentum;
 pub mod status_icons;
+pub mod strings;
 pub mod theme;
 #[allow(clippy::module_inception)]
 pub mod tui;
@@ -16,6 +18,7 @@ pub mod tui_app;
 pub mod tui_core;
 pub mod tui_state;
 pub mod utils;
+pub mod vt100_adapter;
 
 pub use inline_app::InlineApp;
 pub use lifecycle::BatchInfo;

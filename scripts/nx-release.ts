@@ -74,11 +74,46 @@ const VALID_AUTHORS_FOR_LATEST = [
   };
 
   const packagesToReset = [
+    'packages/angular',
     'packages/angular-rspack',
     'packages/angular-rspack-compiler',
+    'packages/create-nx-plugin',
+    'packages/create-nx-workspace',
+    'packages/devkit',
+    'packages/detox',
     'packages/dotnet',
+    'packages/cypress',
+    'packages/docker',
+    'packages/esbuild',
+    'packages/eslint',
+    'packages/eslint-plugin',
+    'packages/expo',
+    'packages/express',
+    'packages/gradle',
+    'packages/jest',
+    'packages/js',
     'packages/maven',
+    'packages/module-federation',
+    'packages/nest',
+    'packages/next',
+    'packages/node',
+    'packages/nuxt',
     'packages/nx',
+    'packages/playwright',
+    'packages/plugin',
+    'packages/react',
+    'packages/react-native',
+    'packages/remix',
+    'packages/rollup',
+    'packages/rsbuild',
+    'packages/rspack',
+    'packages/storybook',
+    'packages/vite',
+    'packages/vitest',
+    'packages/vue',
+    'packages/web',
+    'packages/webpack',
+    'packages/workspace',
   ];
 
   const packageSnapshots: { [key: string]: string } = {};
@@ -193,7 +228,10 @@ const VALID_AUTHORS_FOR_LATEST = [
         if (proj.data.targets?.['nx-release-publish']) {
           const packageJsonPath = join(
             workspaceRoot,
-            proj.data.targets?.['nx-release-publish']?.options.packageRoot,
+            // Mirror the @nx/js:release-publish executor default: when packageRoot
+            // is not set explicitly, it falls back to the project root.
+            proj.data.targets?.['nx-release-publish']?.options?.packageRoot ??
+              proj.data.root,
             'package.json'
           );
           try {
@@ -433,8 +471,11 @@ function parseArgs() {
 }
 
 function getRegistry() {
+  // nx release publish delegates to `pnpm publish` in this repo, so pnpm's
+  // config resolution decides where packages would go. Note pnpm 11 reads
+  // pnpm_config_* env vars and ~/.npmrc, but ignores npm_config_* env vars.
   return new URL(
-    execSync('npm config get registry', {
+    execSync('pnpm config get registry', {
       windowsHide: false,
     })
       .toString()
@@ -499,7 +540,7 @@ function determineDistTag(
 function hackFixForDevkitPeerDependencies() {
   const { readFileSync, writeFileSync } = require('fs');
   const devkitPackageJson = JSON.parse(
-    readFileSync('./dist/packages/devkit/package.json', 'utf-8')
+    readFileSync('./packages/devkit/package.json', 'utf-8')
   );
 
   const beforeVersion = devkitPackageJson.peerDependencies['nx'];
@@ -512,7 +553,7 @@ function hackFixForDevkitPeerDependencies() {
       majorVersion + 1
     } || ^${majorVersion}.0.0-0`;
     writeFileSync(
-      './dist/packages/devkit/package.json',
+      './packages/devkit/package.json',
       JSON.stringify(devkitPackageJson, null, 2)
     );
   }

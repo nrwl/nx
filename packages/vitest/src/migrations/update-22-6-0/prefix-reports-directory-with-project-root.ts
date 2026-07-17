@@ -1,3 +1,4 @@
+import { forEachExecutorOptions } from '@nx/devkit/internal';
 import {
   readProjectConfiguration,
   type Tree,
@@ -5,7 +6,6 @@ import {
   readNxJson,
   updateNxJson,
 } from '@nx/devkit';
-import { forEachExecutorOptions } from '@nx/devkit/src/generators/executor-options-utils';
 import { isAbsolute } from 'path';
 
 interface VitestExecutorOptions {
@@ -93,6 +93,10 @@ function migrateTargetDefaults(tree: Tree): void {
   let hasChanges = false;
 
   for (const [_key, targetConfig] of Object.entries(nxJson.targetDefaults)) {
+    if (Array.isArray(targetConfig)) {
+      // This migration predates the filtered array value form; values are plain objects here.
+      continue;
+    }
     if (
       targetConfig.executor !== '@nx/vitest:test' &&
       targetConfig.executor !== '@nx/vite:test' &&

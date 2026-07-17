@@ -1,6 +1,6 @@
 import {
   cleanupProject,
-  getAvailablePort,
+  reservePorts,
   killProcessAndPorts,
   newProject,
   runCommandUntil,
@@ -12,14 +12,13 @@ import {
 import { stripIndents } from 'nx/src/utils/strip-indents';
 import { readPort, runCLI } from './utils';
 
-// TODO: re-enable when @module-federation/enhanced supports webpack 5.106.0+
-// webpack 5.106.0 removed lib/util/create-schema-validation.js which @module-federation/enhanced@2.3.1 depends on
-// eslint-disable-next-line jest/no-disabled-tests
-describe.skip('Independent Deployability', () => {
+describe('Independent Deployability', () => {
   let proj: string;
   beforeAll(() => {
     process.env.NX_ADD_PLUGINS = 'false';
-    proj = newProject({ packages: ['@nx/react', '@nx/js'] });
+    proj = newProject({
+      packages: ['@nx/react', '@nx/js', '@nx/webpack', '@nx/cypress'],
+    });
   });
 
   afterAll(() => {
@@ -31,13 +30,16 @@ describe.skip('Independent Deployability', () => {
     const remote = uniq('remote');
     const host = uniq('host');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${host} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --typescriptConfiguration=false --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     // Update remote to be loaded via script
     updateFile(
@@ -156,7 +158,8 @@ describe.skip('Independent Deployability', () => {
       );
       const hostE2eResults = await runCommandUntil(
         `e2e ${host}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(hostE2eResults.pid, hostPort, hostPort + 1);
       await killProcessAndPorts(remoteProcess.pid, remotePort);
@@ -168,17 +171,20 @@ describe.skip('Independent Deployability', () => {
     const remote = uniq('remote');
     const lib = uniq('lib');
 
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --remotes=${remote} --devServerPort=${shellPort} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
+
     runCLI(
       `generate @nx/js:lib ${lib} --importPath=@acme/${lib} --publishable=true --no-interactive --skipFormat`
     );
-
-    const remotePort = readPort(remote);
 
     updateFile(
       `${lib}/src/lib/${lib}.ts`,
@@ -287,7 +293,8 @@ describe.skip('Independent Deployability', () => {
       // test remote e2e
       const remoteE2eResults = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(remoteE2eResults.pid, remotePort);
 
@@ -299,12 +306,14 @@ describe.skip('Independent Deployability', () => {
           return output.includes(
             `Web Development Server is listening at http://localhost:${remotePort}/`
           );
-        }
+        },
+        { timeout: 120000 }
       );
       await killProcessAndPorts(remoteProcess.pid, remotePort);
       const shellE2eResults = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(
         shellE2eResults.pid,
@@ -318,13 +327,16 @@ describe.skip('Independent Deployability', () => {
   it('should support host and remote with library type var', async () => {
     const shell = uniq('shell');
     const remote = uniq('remote');
-    const shellPort = await getAvailablePort();
+    const [shellPort, remotePort] = await reservePorts(2);
 
     runCLI(
       `generate @nx/react:host ${shell} --devServerPort=${shellPort} --remotes=${remote} --bundler=webpack --e2eTestRunner=cypress --no-interactive --skipFormat`
     );
 
-    const remotePort = readPort(remote);
+    updateJson(`${remote}/project.json`, (project) => {
+      project.targets.serve.options.port = remotePort;
+      return project;
+    });
 
     // update host and remote to use library type var
     updateFile(
@@ -404,7 +416,8 @@ describe.skip('Independent Deployability', () => {
     if (runE2ETests()) {
       const hostE2eResultsSwc = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
       await killProcessAndPorts(
         hostE2eResultsSwc.pid,
@@ -415,7 +428,8 @@ describe.skip('Independent Deployability', () => {
 
       const remoteE2eResultsSwc = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
-        (output) => output.includes('All specs passed!')
+        (output) => output.includes('All specs passed!'),
+        { timeout: 120000 }
       );
 
       await killProcessAndPorts(remoteE2eResultsSwc.pid, remotePort);
@@ -423,7 +437,7 @@ describe.skip('Independent Deployability', () => {
       const hostE2eResultsTsNode = await runCommandUntil(
         `e2e ${shell}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!'),
-        { env: { NX_PREFER_TS_NODE: 'true' } }
+        { timeout: 120000, env: { NX_PREFER_TS_NODE: 'true' } }
       );
 
       await killProcessAndPorts(
@@ -436,7 +450,7 @@ describe.skip('Independent Deployability', () => {
       const remoteE2eResultsTsNode = await runCommandUntil(
         `e2e ${remote}-e2e --no-watch --verbose`,
         (output) => output.includes('All specs passed!'),
-        { env: { NX_PREFER_TS_NODE: 'true' } }
+        { timeout: 120000, env: { NX_PREFER_TS_NODE: 'true' } }
       );
 
       await killProcessAndPorts(remoteE2eResultsTsNode.pid, remotePort);

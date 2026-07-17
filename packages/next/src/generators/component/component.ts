@@ -1,3 +1,4 @@
+import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/internal';
 import {
   formatFiles,
   joinPathFragments,
@@ -5,10 +6,10 @@ import {
   runTasksInSerial,
   Tree,
 } from '@nx/devkit';
-import { determineArtifactNameAndDirectoryOptions } from '@nx/devkit/src/generators/artifact-name-and-directory-utils';
 import type { SupportedStyles } from '@nx/react';
 import { componentGenerator as reactComponentGenerator } from '@nx/react';
 import { addStyleDependencies } from '../../utils/styles';
+import { assertSupportedNextVersion } from '../../utils/assert-supported-next-version';
 
 interface Schema {
   path: string;
@@ -22,6 +23,7 @@ interface Schema {
  * extra dependencies for css, sass, less style options.
  */
 export async function componentGenerator(host: Tree, options: Schema) {
+  assertSupportedNextVersion(host);
   // we only need to provide the path to get the project, we let the react
   // generator handle the rest
   const { project: projectName } =

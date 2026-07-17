@@ -3,8 +3,6 @@ import {
   type ConformanceViolation,
 } from '@nx/conformance';
 import { workspaceRoot } from '@nx/devkit';
-import { sync as globSync } from 'glob';
-import { join, relative } from 'node:path';
 import { bundledLanguages } from 'shiki';
 // Common mappings for file extensions that don't match language IDs exactly
 const extensionToLang: Record<string, string> = {

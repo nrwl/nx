@@ -1,5 +1,6 @@
 import { NxJsonConfiguration } from '@nx/devkit';
 import {
+  normalizePerformanceReport,
   cleanupProject,
   newProject,
   runCLI,
@@ -11,7 +12,7 @@ import {
 expect.addSnapshotSerializer({
   serialize(str: string) {
     return (
-      str
+      normalizePerformanceReport(str)
         // Remove all output unique to specific projects to ensure deterministic snapshots
         .replaceAll(/my-pkg-\d+/g, '{project-name}')
         .replaceAll(
@@ -40,7 +41,7 @@ expect.addSnapshotSerializer({
   },
 });
 
-describe('nx release releaseTagPattern', () => {
+describe('nx release releaseTag.pattern', () => {
   let pkg1: string;
 
   beforeEach(async () => {
@@ -53,14 +54,14 @@ describe('nx release releaseTagPattern', () => {
 
     await runCommandAsync(`git add .`);
     await runCommandAsync(`git commit -m "chore: initial commit"`);
-  }, 60000);
+  });
 
   afterEach(() => cleanupProject());
 
   it('should prefer stable versions over prereleases', async () => {
     updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
       nxJson.release = {
-        releaseTagPattern: 'v{version}',
+        releaseTag: { pattern: 'v{version}' },
         version: {
           conventionalCommits: true,
         },
@@ -87,11 +88,11 @@ describe('nx release releaseTagPattern', () => {
     );
   });
 
-  describe('releaseTagPatternCheckAllBranchesWhen', () => {
+  describe('releaseTag.checkAllBranchesWhen', () => {
     it('should check the current branch first, and then fall back to all branches by default/when not specified', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
+          releaseTag: { pattern: 'v{version}' },
           version: {
             conventionalCommits: true,
           },
@@ -134,11 +135,10 @@ describe('nx release releaseTagPattern', () => {
       );
     });
 
-    it('should check all branches immediately when releaseTagPatternCheckAllBranchesWhen is true', async () => {
+    it('should check all branches immediately when releaseTag.checkAllBranchesWhen is true', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternCheckAllBranchesWhen: true,
+          releaseTag: { pattern: 'v{version}', checkAllBranchesWhen: true },
           version: {
             conventionalCommits: true,
           },
@@ -158,7 +158,7 @@ describe('nx release releaseTagPattern', () => {
       // Create a matching tag on the current branch (this should not be found because we are going to create another tag on the other branch)
       await runCommandAsync(`git tag -a v1.1.1 -m "v1.1.1"`);
 
-      // Create a matching tag on a different branch, which it should find (because releaseTagPatternCheckAllBranchesWhen is true)
+      // Create a matching tag on a different branch, which it should find (because releaseTag.checkAllBranchesWhen is true)
       await runCommandAsync(`git checkout -b other-branch`);
       // Update the README.md to create a new commit to tag
       await runCommandAsync(`echo "Hello" > README.md`);
@@ -175,11 +175,10 @@ describe('nx release releaseTagPattern', () => {
       );
     });
 
-    it('should only check the current branch when releaseTagPatternCheckAllBranchesWhen is false, never all branches', async () => {
+    it('should only check the current branch when releaseTag.checkAllBranchesWhen is false, never all branches', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
-          releaseTagPatternCheckAllBranchesWhen: false,
+          releaseTag: { pattern: 'v{version}', checkAllBranchesWhen: false },
           version: {
             conventionalCommits: true,
           },
@@ -226,12 +225,11 @@ describe('nx release releaseTagPattern', () => {
       );
     });
 
-    it('should check all branches when the current branch matches one of the entries in the releaseTagPatternCheckAllBranchesWhen array', async () => {
+    it('should check all branches when the current branch matches one of the entries in the releaseTag.checkAllBranchesWhen array', async () => {
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
           // This means => when we are on a branch called "main", we should check all branches, not just the current one
-          releaseTagPatternCheckAllBranchesWhen: ['main'],
+          releaseTag: { pattern: 'v{version}', checkAllBranchesWhen: ['main'] },
           version: {
             conventionalCommits: true,
           },
@@ -251,7 +249,7 @@ describe('nx release releaseTagPattern', () => {
       // Create a matching tag on the current branch (this should not be found because we are going to create another tag on the other branch)
       await runCommandAsync(`git tag -a v1.1.1 -m "v1.1.1"`);
 
-      // Create a matching tag on a different branch, which it should find (because releaseTagPatternCheckAllBranchesWhen is true)
+      // Create a matching tag on a different branch, which it should find (because releaseTag.checkAllBranchesWhen is true)
       await runCommandAsync(`git checkout -b other-branch`);
       // Update the README.md to create a new commit to tag
       await runCommandAsync(`echo "Hello" > README.md`);
@@ -270,9 +268,11 @@ describe('nx release releaseTagPattern', () => {
       // Change the config to confirm its behavior changes accordingly
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
           // This means => when we are on a branch called "does-not-exist", we should check all branches, not just the current one (this will intentionally not match the current branch)
-          releaseTagPatternCheckAllBranchesWhen: ['does-not-exist'],
+          releaseTag: {
+            pattern: 'v{version}',
+            checkAllBranchesWhen: ['does-not-exist'],
+          },
           version: {
             conventionalCommits: true,
           },
@@ -280,7 +280,7 @@ describe('nx release releaseTagPattern', () => {
         return nxJson;
       });
 
-      // Finds the matching tag on the current branch, because the current branch "main" does not match any entries in the releaseTagPatternCheckAllBranchesWhen array
+      // Finds the matching tag on the current branch, because the current branch "main" does not match any entries in the releaseTag.checkAllBranchesWhen array
       expect(runCLI(`release version -d`)).toContain(
         `Resolved the current version as 1.1.1 from git tag "v1.1.1"`
       );
@@ -288,9 +288,8 @@ describe('nx release releaseTagPattern', () => {
       // Change the config to confirm it supports glob patterns
       updateJson<NxJsonConfiguration>('nx.json', (nxJson) => {
         nxJson.release = {
-          releaseTagPattern: 'v{version}',
           // This means => when we are on a branch that matches the pattern "ma*", we should check all branches, not just the current one (this should match the current branch called "main")
-          releaseTagPatternCheckAllBranchesWhen: ['ma*'],
+          releaseTag: { pattern: 'v{version}', checkAllBranchesWhen: ['ma*'] },
           version: {
             conventionalCommits: true,
           },
