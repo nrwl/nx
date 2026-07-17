@@ -71,13 +71,14 @@ Needed only to **build an unreleased PR's nx** in the sandbox (reproduce-verifie
 docker image inspect nx-review-sandbox:latest >/dev/null 2>&1 && echo "image OK" || echo "image MISSING"
 ```
 
-If MISSING, build it from the repo root (so `mise.toml` is in the build context). This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and takes a while + several GB:
+If MISSING (or stale — check the `created` date against the Dockerfile), build it. The Dockerfile only needs `mise.toml`, so build from a **minimal context** — do NOT pass `.` (the repo root), which would ship the whole monorepo (node_modules / .git / dist — many GB) to the daemon:
 
 ```bash
-docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile .
+mkdir -p tmp/review-sandbox-ctx && cp mise.toml tmp/review-sandbox-ctx/
+docker build -t nx-review-sandbox:latest -f tools/review-sandbox/Dockerfile tmp/review-sandbox-ctx
 ```
 
-Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
+This installs the repo's exact toolchain — node/java/dotnet/maven/rust/bun via mise — and takes a while + several GB. Requires steps 1 + 3 to pass first (build needs working networking). If disk is tight, `/sandbox-prune` first.
 
 ## 5. Verify (smoke test)
 
@@ -85,10 +86,11 @@ Confirm the sandbox actually isolates and carries the tools:
 
 ```bash
 # RUNTIME="--runtime=runsc"  on Linux, ""  on macOS
-docker run --rm $RUNTIME nx-review-sandbox:latest bash -lc '
+docker run --rm $RUNTIME nx-review-sandbox:latest bash -c '
+  cd /work    # mise resolves versions from the mise.toml here; do NOT use bash -l (a login shell resets PATH, dropping the mise dirs)
   echo "kernel: $(uname -r)"       # Linux+gVisor: 4.19.0-gvisor ; macOS: the VM kernel
-  mise ls 2>/dev/null | head
-  node --version; java -version 2>&1 | head -1; dotnet --version
+  mise ls | head
+  node --version; java --version 2>&1 | head -1; dotnet --version
 '
 ```
 
