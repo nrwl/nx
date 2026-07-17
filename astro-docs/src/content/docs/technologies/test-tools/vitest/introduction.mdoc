@@ -152,6 +152,8 @@ The `@nx/vitest` plugin creates a target for any project that has a Vitest or Vi
 - `vite.config.cjs` (with `test` configuration)
 - `vite.config.cts` (with `test` configuration)
 
+The configuration directory must also contain a `package.json` or `project.json`. A root Vitest workspace configuration that only orchestrates child projects is not registered as its own project.
+
 To view inferred tasks, open the [project details view](/docs/concepts/inferred-tasks) in Nx Console or run `nx show project my-app`.
 
 ### Plugin options
@@ -183,6 +185,10 @@ Configure the plugin in `nx.json`:
 | `testMode`       | `watch` or `run` | `watch`                     | Determines whether Nx runs `vitest` (watch) or `vitest run` (single run). |
 
 There is no single "disable" flag for inference. Use `include` and `exclude` to scope which projects each plugin instance applies to.
+
+The inferred test target is cached and tracks Vitest's configured coverage and report outputs. When `ciTargetName` is set, the plugin creates one cached `vitest run` task per test file and a no-op CI orchestration task that depends on them.
+
+A [target defaults](/docs/reference/nx-json#target-defaults) `plugin` filter for these tasks must use the exact identifier `@nx/vitest`.
 
 ### Configure unit and e2e separately
 
