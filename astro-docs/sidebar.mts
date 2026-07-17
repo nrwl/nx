@@ -654,10 +654,6 @@ const knowledgeBaseGroups: SidebarItems = [
             link: 'guides/tips-n-tricks/browser-support',
           },
           {
-            label: 'Define environment variables',
-            link: 'guides/tips-n-tricks/define-environment-variables',
-          },
-          {
             label: 'Including assets in your build',
             link: 'guides/tips-n-tricks/include-assets-in-build',
           },

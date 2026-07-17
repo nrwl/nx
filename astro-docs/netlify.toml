@@ -23,6 +23,11 @@ NX_DOTNET_DISABLE = "true"
 
 # Permanent redirects (301 by default)
 
+# DOC-551: Environment variable docs consolidated into the reference page
+[[redirects]]
+from = "/docs/guides/tips-n-tricks/define-environment-variables"
+to = "/docs/reference/environment-variables#loading-environment-variables"
+
 # Storybook docs consolidation
 [[redirects]]
 from = "/docs/technologies/test-tools/storybook/guides/storybook-9-setup"
